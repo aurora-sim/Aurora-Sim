@@ -1414,7 +1414,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // the top level hashtable may contain more nested hashtables within it each containing an objects representation
                 for (i = 0; i < JSON.Length; i++)
                 {
-                    // m_log.Debug(""+JSON[i]);
+                    // MainConsole.Instance.Debug(""+JSON[i]);
                     switch (JSON[i])
                     {
                         case '{':

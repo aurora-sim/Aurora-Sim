@@ -45,8 +45,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly List<IScene> m_scenes = new List<IScene> ();
 
 		private IMessageTransferModule m_TransferModule;
@@ -99,7 +97,7 @@ namespace Aurora.Modules
             m_TransferModule = m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
 
             if (m_TransferModule == null)
-                m_log.Error("[INSTANT MESSAGE]: No message transfer module, " +
+                MainConsole.Instance.Error("[INSTANT MESSAGE]: No message transfer module, " +
                             "lures will not work!");
         }
 
@@ -245,7 +243,7 @@ namespace Aurora.Modules
             if (im.dialog == (byte)InstantMessageDialog.RequestTeleport)
             {
                 UUID sessionID = new UUID (im.imSessionID);
-                m_log.DebugFormat ("[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID, im.RegionID, im.message);
+                MainConsole.Instance.DebugFormat ("[HG LURE MODULE]: RequestTeleport sessionID={0}, regionID={1}, message={2}", im.imSessionID, im.RegionID, im.message);
                 m_PendingLures.Add (sessionID, im, 7200); // 2 hours
 
                 // Forward. We do this, because the IM module explicitly rejects

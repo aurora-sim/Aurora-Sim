@@ -122,16 +122,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     MethodInfo ev = null;
                     string evname = state == "" ? "" : state + "_event_";
                     evname += kvp.Key;
-                    //m_log.Debug("Trying event "+evname);
+                    //MainConsole.Instance.Debug("Trying event "+evname);
 
                     ev = m_scriptType.GetMethod(evname);
                     if (ev != null)
-                        //m_log.Debug("Found handler for " + kvp.Key);
+                        //MainConsole.Instance.Debug("Found handler for " + kvp.Key);
                         eventFlags |= kvp.Value;
                 }
                 catch (Exception)
                 {
-                    //m_log.Debug("Exeption in GetMethod:\n"+e.ToString());
+                    //MainConsole.Instance.Debug("Exeption in GetMethod:\n"+e.ToString());
                 }
             }
 
@@ -139,7 +139,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             if (eventFlags != 0)
                 m_stateEvents.Add(state, eventFlags);
 
-            //m_log.Debug("Returning {0:x}", eventFlags);
+            //MainConsole.Instance.Debug("Returning {0:x}", eventFlags);
             return eventFlags;
         }
 

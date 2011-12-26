@@ -44,8 +44,6 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IRegistryCore m_registry;
 
         #endregion
@@ -69,11 +67,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     IAgentProcessing agentProcessor = m_registry.RequestModuleInterface<IAgentProcessing>();
                     if (agentProcessor != null)
                         agentProcessor.LogoutAgent(regionClient, true);
-                    m_log.Info("User will be kicked in less than 30 seconds.");
+                    MainConsole.Instance.Info("User will be kicked in less than 30 seconds.");
                     return;
                 }
             }
-            m_log.Info("Could not find user to send message to.");
+            MainConsole.Instance.Info("Could not find user to send message to.");
         }
 
         public void MessageUser(UUID avatarID, string message)
@@ -90,11 +88,11 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                     //Send the message to the client
                     messagePost.Post(regionClient.RegionHandle,
                                      BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
-                    m_log.Info("Message sent, will be delievered in the next 30 seconds to the user.");
+                    MainConsole.Instance.Info("Message sent, will be delievered in the next 30 seconds to the user.");
                     return;
                 }
             }
-            m_log.Info("Could not find user to send message to.");
+            MainConsole.Instance.Info("Could not find user to send message to.");
         }
 
         public void SendAlert(string message)
@@ -107,12 +105,12 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             //Go through all clients, and send the message asyncly to all agents that are root
             foreach (IRegionClientCapsService regionClient in from client in clients from regionClient in client.GetCapsServices() where regionClient.RootAgent select regionClient)
             {
-                m_log.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
+                MainConsole.Instance.Debug("[GridWideMessageModule]: Informed " + regionClient.ClientCaps.AccountInfo.Name);
                 //Send the message to the client
                 messagePost.Post(regionClient.RegionHandle,
                                  BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
             }
-            m_log.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
+            MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
         }
 
         #endregion
@@ -171,7 +169,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             UserAccount account = userService.GetUserAccount(UUID.Zero, user.Split(' ')[0], user.Split(' ')[1]);
             if (account == null)
             {
-                m_log.Info("User does not exist.");
+                MainConsole.Instance.Info("User does not exist.");
                 return;
             }
             MessageUser(account.PrincipalID, message);
@@ -188,7 +186,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             UserAccount account = userService.GetUserAccount(UUID.Zero, user);
             if (account == null)
             {
-                m_log.Info("User does not exist.");
+                MainConsole.Instance.Info("User does not exist.");
                 return;
             }
 

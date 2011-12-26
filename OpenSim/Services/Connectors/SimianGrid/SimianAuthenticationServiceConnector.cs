@@ -44,10 +44,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// </summary>
     public class SimianAuthenticationServiceConnector : IAuthenticationService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private string m_serverUrl = String.Empty;
 
         public string Name
@@ -107,12 +103,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
 #endif
 
                 if (!md5hashFound)
-                    m_log.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + principalID +
+                    MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + principalID +
                                ", no md5hash identity found");
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
                            response["Message"].AsString());
             }
 
@@ -134,7 +130,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Could not verify session for " + principalID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Could not verify session for " + principalID + ": " +
                            response["Message"].AsString());
             }
 
@@ -156,7 +152,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Failed to remove session for " + principalID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Failed to remove session for " + principalID + ": " +
                            response["Message"].AsString());
             }
 
@@ -196,7 +192,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     bool success = response["Success"].AsBoolean();
 
                     if (!success)
-                        m_log.WarnFormat("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier,
+                        MainConsole.Instance.WarnFormat("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier,
                                          principalID);
 
                     return success;
@@ -204,7 +200,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
                            response["Message"].AsString());
             }
 
@@ -244,7 +240,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     bool success = response["Success"].AsBoolean();
 
                     if (!success)
-                        m_log.WarnFormat("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier,
+                        MainConsole.Instance.WarnFormat("[SIMIAN AUTH CONNECTOR]: Failed to set password for {0} ({1})", identifier,
                                          principalID);
 
                     return success;
@@ -252,7 +248,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
             else
             {
-                m_log.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Failed to retrieve identities for " + principalID + ": " +
                            response["Message"].AsString());
             }
 
@@ -303,7 +299,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN AUTH CONNECTOR]: No AuthenticationServerURI specified, disabling connector");
+                MainConsole.Instance.Info("[SIMIAN AUTH CONNECTOR]: No AuthenticationServerURI specified, disabling connector");
         }
 
         private bool CheckPassword(UUID userID, string password, string simianGridCredential, out string authorizeResult)
@@ -322,7 +318,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 }
                 else
                 {
-                    m_log.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + userID +
+                    MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + userID +
                                " using md5hash " + Utils.MD5String(password) + ":" + salt);
                 }
             }
@@ -340,7 +336,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 }
                 else
                 {
-                    m_log.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + userID +
+                    MainConsole.Instance.Warn("[SIMIAN AUTH CONNECTOR]: Authentication failed for " + userID +
                                " using md5hash $1$" + Utils.MD5String(password));
                 }
             }

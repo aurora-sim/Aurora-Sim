@@ -187,7 +187,7 @@ namespace OpenSim.Services.RobustCompat
             Util.FireAndForget(delegate(object o)
             {
                 string reqString = WebUtils.BuildQueryString(sendData);
-                //m_log.DebugFormat("[FRIENDS CONNECTOR]: queryString = {0}", reqString);
+                //MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: queryString = {0}", reqString);
                 if (region == null)
                     return;
 
@@ -251,7 +251,7 @@ namespace OpenSim.Services.RobustCompat
             sendData["RegionID"] = presence.Scene.RegionInfo.RegionID.ToString();
 
             reqString = WebUtils.BuildQueryString(sendData);
-            // m_log.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
+            // MainConsole.Instance.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             foreach (string url in urls)
             {
                 string resp = SynchronousRestFormsRequester.MakeRequest("POST",

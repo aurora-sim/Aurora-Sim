@@ -44,10 +44,16 @@ namespace OpenSim.Framework
         string Name { get; }
 
         /// <summary>
+        /// Called before any other calls are made, before the console is setup, and before the HTTP server is ready
+        /// </summary>
+        /// <param name="simBase"></param>
+        void PreStartup(ISimulationBase simBase);
+
+        /// <summary>
         ///   Initialize the Plugin
         /// </summary>
         /// <param name = "openSim">The Application instance</param>
-        void Initialize(ISimulationBase openSim);
+        void Initialize(ISimulationBase simBase);
 
         /// <summary>
         ///   Called when the application initialization is completed

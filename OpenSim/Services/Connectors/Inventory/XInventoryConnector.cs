@@ -43,10 +43,6 @@ namespace OpenSim.Services.Connectors
 {
     public class XInventoryServicesConnector : IInventoryService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         public virtual string Name
@@ -146,7 +142,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetFolderContent: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetFolderContent: {0}", e.Message);
             }
 
             return inventory;
@@ -466,7 +462,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetItem: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetItem: {0}", e.Message);
             }
 
             return null;
@@ -494,7 +490,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetFolder: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetFolder: {0}", e.Message);
             }
 
             return null;
@@ -595,7 +591,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception building folder: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception building folder: {0}", e.Message);
             }
 
             return folder;
@@ -631,7 +627,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception building item: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception building item: {0}", e.Message);
             }
 
             return item;

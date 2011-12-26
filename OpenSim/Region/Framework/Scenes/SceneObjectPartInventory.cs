@@ -41,8 +41,6 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public class SceneObjectPartInventory : IEntityInventory
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private string m_inventoryFileName = String.Empty;
         private byte[] m_fileData = new byte[0];
         private uint m_inventoryFileNameSerial = 0;
@@ -348,7 +346,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public void CreateScriptInstance (TaskInventoryItem item, int startParam, bool postOnRez, StateSource stateSource)
         {
-            // m_log.InfoFormat(
+            // MainConsole.Instance.InfoFormat(
             //     "[PRIM INVENTORY]: " +
             //     "Starting script {0}, {1} in prim {2}, {3}",
             //     item.Name, item.ItemID, Name, UUID);
@@ -392,7 +390,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
                 if (null == asset)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
                         "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
                         item.Name, item.ItemID, m_part.AbsolutePosition,
@@ -433,7 +431,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (item != null)
                 CreateScriptInstance(item, startParam, postOnRez, stateSource);
             else
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: " +
                     "Couldn't start script with ID {0} since it couldn't be found for prim {1}, {2} at {3} in {4}",
                     itemId, m_part.Name, m_part.UUID, 
@@ -467,7 +465,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: " +
                     "Couldn't stop script with ID {0} since it couldn't be found for prim {1}, {2} at {3} in {4}",
                     itemId, m_part.Name, m_part.UUID, 
@@ -660,7 +658,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (null == rezAsset)
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[PRIM INVENTORY]: Could not find asset {0} for inventory item {1} in {2}", 
                     item.AssetID, item.Name, m_part.Name);
                 return null;
@@ -764,7 +762,7 @@ namespace OpenSim.Region.Framework.Scenes
                 HasInventoryChanged = true;
                 return true;
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[PRIM INVENTORY]: " +
                 "Tried to retrieve item ID {0} from prim {1}, {2} at {3} in {4} but the item does not exist in this inventory",
                 item.ItemID, m_part.Name, m_part.UUID, 
@@ -909,8 +907,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             m_fileData = Utils.StringToBytes(invString.BuildString.ToString());
 
-            //m_log.Debug(Utils.BytesToString(fileData));
-            //m_log.Debug("[PRIM INVENTORY]: RequestInventoryFile fileData: " + Utils.BytesToString(fileData));
+            //MainConsole.Instance.Debug(Utils.BytesToString(fileData));
+            //MainConsole.Instance.Debug("[PRIM INVENTORY]: RequestInventoryFile fileData: " + Utils.BytesToString(fileData));
 
             if (m_fileData.Length > 2)
             {

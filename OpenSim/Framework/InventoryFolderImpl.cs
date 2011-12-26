@@ -34,7 +34,7 @@ namespace OpenSim.Framework
 {
     public sealed class InventoryFolderImpl : InventoryFolderBase
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static readonly string PATH_DELIMITER = "/";
 
@@ -491,7 +491,7 @@ namespace OpenSim.Framework
                 itemList.AddRange(Items.Values);
             }
 
-            //m_log.DebugFormat("[INVENTORY FOLDER IMPL]: Found {0} items", itemList.Count);
+            //MainConsole.Instance.DebugFormat("[INVENTORY FOLDER IMPL]: Found {0} items", itemList.Count);
 
             return itemList;
         }

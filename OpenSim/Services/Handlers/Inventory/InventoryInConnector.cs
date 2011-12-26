@@ -121,8 +121,6 @@ namespace OpenSim.Services
 
     public class InventoryConnectorPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IInventoryService m_InventoryService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -144,7 +142,7 @@ namespace OpenSim.Services
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -236,11 +234,11 @@ namespace OpenSim.Services
                                 return FailureResult();
                         return HandleGetFolder(request);
                 }
-                m_log.DebugFormat("[XINVENTORY HANDLER]: unknown method request: {0}", method);
+                MainConsole.Instance.DebugFormat("[XINVENTORY HANDLER]: unknown method request: {0}", method);
             }
             catch (Exception e)
             {
-                m_log.Debug("[XINVENTORY HANDLER]: Exception {0}", e);
+                MainConsole.Instance.Debug("[XINVENTORY HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();
@@ -299,7 +297,7 @@ namespace OpenSim.Services
                 result["folder"] = EncodeFolder(rfolder);
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -320,7 +318,7 @@ namespace OpenSim.Services
                 result["folder"] = EncodeFolder(folder);
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -356,7 +354,7 @@ namespace OpenSim.Services
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -384,7 +382,7 @@ namespace OpenSim.Services
             result["ITEMS"] = sitems;
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -500,7 +498,7 @@ namespace OpenSim.Services
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[XINVENTORY IN CONNECTOR]: Exception in HandleMoveItems: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[XINVENTORY IN CONNECTOR]: Exception in HandleMoveItems: {0}", e.Message);
                 return FailureResult();
             }
 
@@ -541,7 +539,7 @@ namespace OpenSim.Services
                 result["item"] = EncodeItem(item);
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -558,7 +556,7 @@ namespace OpenSim.Services
                 result["folder"] = EncodeFolder(folder);
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[XXX]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[XXX]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

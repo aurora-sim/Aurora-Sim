@@ -40,8 +40,6 @@ namespace OpenSim.Framework
     /// </summary>
     public sealed class AvatarAppearance
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public static readonly int VISUALPARAM_COUNT = 218;
 
         public static readonly int TEXTURE_COUNT = 21;
@@ -61,8 +59,8 @@ namespace OpenSim.Framework
 
         public AvatarAppearance(UUID owner)
         {
-            m_log.Info("[AvatarAppearence] Initilizing-" + owner);
-            // m_log.WarnFormat("[AVATAR APPEARANCE]: create empty appearance for {0}",owner);
+            MainConsole.Instance.Info("[AvatarAppearence] Initilizing-" + owner);
+            // MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE]: create empty appearance for {0}",owner);
 
             m_serial = 1;
             m_owner = owner;
@@ -77,7 +75,7 @@ namespace OpenSim.Framework
 
         public AvatarAppearance(UUID avatarID, OSDMap map)
         {
-            //            m_log.WarnFormat("[AVATAR APPEARANCE]: create appearance for {0} from OSDMap",avatarID);
+            //            MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE]: create appearance for {0} from OSDMap",avatarID);
 
             m_owner = avatarID;
             Unpack(map);
@@ -87,7 +85,7 @@ namespace OpenSim.Framework
         public AvatarAppearance(UUID avatarID, AvatarWearable[] wearables, Primitive.TextureEntry textureEntry,
                                 byte[] visualParams)
         {
-            //            m_log.WarnFormat("[AVATAR APPEARANCE] create initialized appearance for {0}",avatarID);
+            //            MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE] create initialized appearance for {0}",avatarID);
 
             m_serial = 1;
             m_owner = avatarID;
@@ -119,7 +117,7 @@ namespace OpenSim.Framework
 
         public AvatarAppearance(AvatarAppearance appearance, bool copyWearables)
         {
-            //            m_log.WarnFormat("[AVATAR APPEARANCE] create from an existing appearance");
+            //            MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE] create from an existing appearance");
 
             if (appearance == null)
             {
@@ -294,14 +292,14 @@ namespace OpenSim.Framework
                             ChangedTextures.Add(oldface.TextureID);
 
                     //                if (newface != null)
-                    //                    m_log.WarnFormat("[AVATAR APPEARANCE]: index {0}, new texture id {1}",i,newface.TextureID);
+                    //                    MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE]: index {0}, new texture id {1}",i,newface.TextureID);
                 }
             }
 
             if (changed)
             {
                 Serial++;
-                m_log.Debug("[Appearance]: Incrementing Serial (Textures) to " + Serial);
+                MainConsole.Instance.Debug("[Appearance]: Incrementing Serial (Textures) to " + Serial);
             }
 
             m_texture = textureEntry;
@@ -327,7 +325,7 @@ namespace OpenSim.Framework
                 if (visualParams[i] != m_visualparams[i])
                 {
                     // DEBUG ON
-                    //                    m_log.WarnFormat("[AVATARAPPEARANCE] vparams changed [{0}] {1} ==> {2}",
+                    //                    MainConsole.Instance.WarnFormat("[AVATARAPPEARANCE] vparams changed [{0}] {1} ==> {2}",
                     //                                     i,m_visualparams[i],visualParams[i]);
                     // DEBUG OFF
                     m_visualparams[i] = visualParams[i];
@@ -340,7 +338,7 @@ namespace OpenSim.Framework
             {
                 SetHeight();
                 Serial++;
-                m_log.Debug("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
+                MainConsole.Instance.Debug("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
             }
 
             return changed;
@@ -368,7 +366,7 @@ namespace OpenSim.Framework
         public void SetWearable(int wearableId, AvatarWearable wearable)
         {
             // DEBUG ON
-            //          m_log.WarnFormat("[AVATARAPPEARANCE] set wearable {0} --> {1}:{2}",wearableId,wearable.ItemID,wearable.AssetID);
+            //          MainConsole.Instance.WarnFormat("[AVATARAPPEARANCE] set wearable {0} --> {1}:{2}",wearableId,wearable.ItemID,wearable.AssetID);
             // DEBUG OFF
             m_wearables[wearableId].Clear();
             for (int i = 0; i < wearable.Count; i++)
@@ -627,7 +625,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    m_log.Warn("[AVATAR APPEARANCE]: failed to unpack wearables");
+                    MainConsole.Instance.Warn("[AVATAR APPEARANCE]: failed to unpack wearables");
                 }
 
                 // Avatar Textures
@@ -645,7 +643,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    m_log.Warn("[AVATAR APPEARANCE]: failed to unpack textures");
+                    MainConsole.Instance.Warn("[AVATAR APPEARANCE]: failed to unpack textures");
                 }
 
                 // Visual Parameters
@@ -657,7 +655,7 @@ namespace OpenSim.Framework
                 }
                 else
                 {
-                    m_log.Warn("[AVATAR APPEARANCE]: failed to unpack visual parameters");
+                    MainConsole.Instance.Warn("[AVATAR APPEARANCE]: failed to unpack visual parameters");
                 }
 
                 // Attachments
@@ -671,7 +669,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}{1}", e, e.StackTrace);
+                MainConsole.Instance.ErrorFormat("[AVATAR APPEARANCE]: unpack failed badly: {0}{1}", e, e.StackTrace);
             }
         }
 

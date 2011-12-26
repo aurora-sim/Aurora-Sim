@@ -483,10 +483,8 @@ namespace OpenSim.Framework
     /// <summary>
     ///   A console that processes commands internally
     /// </summary>
-    public class CommandConsole : ICommandConsole
+    public class CommandConsole : BaseConsole, ICommandConsole
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
         public List<string> m_promptOptions = new List<string>();
@@ -502,6 +500,7 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", Help);
@@ -527,7 +526,7 @@ namespace OpenSim.Framework
 
             if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
             {
-                m_log.Info("[CONSOLE] Invalid command");
+                MainConsole.Instance.Info("[CONSOLE] Invalid command");
             }
         }
 
@@ -565,101 +564,28 @@ namespace OpenSim.Framework
             return cmdinput;
         }
 
-        public string CmdPrompt(string p)
+        public string Prompt(string prompt)
         {
-            m_isPrompting = true;
-            string line = ReadLine(String.Format("{0}: ", p), false, true);
-            m_isPrompting = false;
-            return line;
+            return Prompt(prompt, "");
         }
 
-        public string CmdPrompt(string p, string def)
+        public string Prompt(string prompt, string defaultResponse)
         {
-            m_isPrompting = true;
-            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
-            if (ret == String.Empty)
-                ret = def;
-
-            m_isPrompting = false;
-            return ret;
+            return Prompt(prompt, defaultResponse, new List<string>());
         }
 
-        public string CmdPrompt(string p, List<char> excludedCharacters)
+        public string Prompt(string prompt, string defaultResponse, List<char> excludedCharacters)
         {
-            m_isPrompting = true;
-
-            bool itisdone = false;
-            string ret = String.Empty;
-            while (!itisdone)
-            {
-                itisdone = true;
-                ret = CmdPrompt(p);
-
-                string ret1 = ret;
-#if (!ISWIN)
-                foreach (char c in excludedCharacters)
-                {
-                    if (ret1.Contains(c.ToString()))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-                }
-#else
-                foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
-                {
-                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                    itisdone = false;
-                }
-#endif
-            }
-
-            m_isPrompting = false;
-            return ret;
+            return Prompt(prompt, defaultResponse, new List<string>(), excludedCharacters);
         }
 
-        public string CmdPrompt(string p, string def, List<char> excludedCharacters)
+        public string Prompt(string prompt, string defaultresponse, List<string> options)
         {
-            m_isPrompting = true;
-            bool itisdone = false;
-            string ret = String.Empty;
-            while (!itisdone)
-            {
-                itisdone = true;
-                ret = CmdPrompt(p, def);
-
-                if (ret == String.Empty)
-                {
-                    ret = def;
-                }
-                else
-                {
-                    string ret1 = ret;
-#if (!ISWIN)
-                    foreach (char c in excludedCharacters)
-                    {
-                        if (ret1.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                        }
-                    }
-#else
-                    foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-#endif
-                }
-            }
-            m_isPrompting = false;
-
-            return ret;
+            return Prompt(prompt, defaultresponse, options, new List<char>());
         }
 
         // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
-        public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
+        public string Prompt(string prompt, string defaultresponse, List<string> options, List<char> excludedCharacters)
         {
             m_isPrompting = true;
             m_promptOptions = new List<string>(options);
@@ -673,8 +599,8 @@ namespace OpenSim.Framework
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 #endif
 
-            string temp = CmdPrompt(prompt, defaultresponse);
-            while (itisdone == false)
+            string temp = InternalPrompt(prompt, defaultresponse, options);
+            while (itisdone == false && options.Count > 0)
             {
                 if (options.Contains(temp))
                 {
@@ -683,17 +609,54 @@ namespace OpenSim.Framework
                 else
                 {
                     Console.WriteLine("Valid options are" + optstr);
-                    temp = CmdPrompt(prompt, defaultresponse);
+                    temp = InternalPrompt(prompt, defaultresponse, options);
                 }
+            }
+            itisdone = false;
+            while (!itisdone && excludedCharacters.Count > 0)
+            {
+                #if (!ISWIN)
+                    bool found = false;
+                    foreach (char c in excludedCharacters)
+                    {
+                        if (temp.Contains(c.ToString()))
+                        {
+                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                            itisdone = false;
+                            found = true;
+                        }
+                    }
+                    if (!found)
+                        itisdone = true;
+                    else
+                        temp = InternalPrompt(prompt, defaultresponse, options);
+#else
+                    foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
+                    {
+                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                        itisdone = false;
+                    }
+#endif
             }
             m_isPrompting = false;
             m_promptOptions.Clear();
             return temp;
         }
 
+        private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
+        {
+            string ret = ReadLine(String.Format("{0}{2} [{1}]: ", prompt, defaultresponse,
+                options.Count == 0 ? "" :
+                ", Options are [" + string.Join(", ", options.ToArray()) + "]"), false, true);
+            if (ret == String.Empty)
+                ret = defaultresponse;
+
+            return ret;
+        }
+
         // Displays a prompt and waits for the user to enter a string, then returns that string
         // (Done with no echo and suitable for passwords)
-        public string PasswdPrompt(string p)
+        public string PasswordPrompt(string p)
         {
             m_isPrompting = true;
             string line = ReadLine(p + ": ", false, false);

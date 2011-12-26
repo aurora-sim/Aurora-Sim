@@ -44,11 +44,6 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
     public class EmailModule : ISharedRegionModule, IEmailModule
     {
         //
-        // Log
-        //
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        //
         // Module vars
         //
         private readonly Dictionary<UUID, DateTime> m_LastGetEmailCall = new Dictionary<UUID, DateTime>();
@@ -103,13 +98,13 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             bool isEMailStrictMatch = EMailreStrict.IsMatch(address);
             if (!isEMailStrictMatch)
             {
-                m_log.Error("[EMAIL] REGEX Problem in EMail Address: " + address);
+                MainConsole.Instance.Error("[EMAIL] REGEX Problem in EMail Address: " + address);
                 return;
             }
             //FIXME:Check if subject + body = 4096 Byte
             if ((subject.Length + body.Length) > 1024)
             {
-                m_log.Error("[EMAIL] subject + body > 1024 Byte");
+                MainConsole.Instance.Error("[EMAIL] subject + body > 1024 Byte");
                 return;
             }
 
@@ -156,12 +151,12 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
                         //Log
                         if (!didError)
-                            m_log.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() +
+                            MainConsole.Instance.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() +
                                        "@" + m_HostName);
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[EMAIL] DefaultEmailModule Exception: " + e.Message);
+                        MainConsole.Instance.Error("[EMAIL] DefaultEmailModule Exception: " + e.Message);
                         didError = true;
                     }
                 }
@@ -330,14 +325,14 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             {
                 if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
                 {
-                    m_log.InfoFormat("[SMTP] SMTP server not configured");
+                    MainConsole.Instance.InfoFormat("[SMTP] SMTP server not configured");
                     m_Enabled = false;
                     return;
                 }
                 m_Enabled = SMTPConfig.GetBoolean("enabled", true);
                 if (!m_Enabled)
                 {
-                    //m_log.InfoFormat("[SMTP] module disabled in configuration");
+                    //MainConsole.Instance.InfoFormat("[SMTP] module disabled in configuration");
                     m_Enabled = false;
                     return;
                 }
@@ -351,7 +346,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
             catch (Exception e)
             {
-                m_log.Error("[EMAIL] DefaultEmailModule not configured: " + e.Message);
+                MainConsole.Instance.Error("[EMAIL] DefaultEmailModule not configured: " + e.Message);
                 m_Enabled = false;
                 return;
             }
@@ -378,7 +373,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     }
                 }
 
-                //m_log.Info("[EMAIL] Activated DefaultEmailModule");
+                //MainConsole.Instance.Info("[EMAIL] Activated DefaultEmailModule");
             }
         }
 

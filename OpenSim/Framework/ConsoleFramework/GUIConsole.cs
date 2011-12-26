@@ -46,10 +46,8 @@ namespace OpenSim.Framework
     ///   the server instance to allow for the input and output to the server to be redirected
     ///   by an external application, in this case a GUI based application on Windows.
     /// </summary>
-    public class GUIConsole : ICommandConsole
+    public class GUIConsole : BaseConsole, ICommandConsole
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
         public List<string> m_promptOptions = new List<string>();
@@ -65,11 +63,12 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", Help);
 
-            m_log.Info("[GUIConsole] initialised.");
+            MainConsole.Instance.Info("[GUIConsole] initialised.");
         }
 
         public void Help(string[] cmd)
@@ -94,7 +93,7 @@ namespace OpenSim.Framework
 
 //            if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
 //            {
-//                m_log.Info("[GUICONSOLE] Invalid command");
+//                MainConsole.Instance.Info("[GUICONSOLE] Invalid command");
 //            }
         }
 
@@ -144,7 +143,7 @@ namespace OpenSim.Framework
             return cmdinput;
         }
 
-        public string CmdPrompt(string p)
+        public string Prompt(string p)
         {
             m_isPrompting = true;
             string line = ReadLine(String.Format("{0}: ", p), false, true);
@@ -152,7 +151,7 @@ namespace OpenSim.Framework
             return line;
         }
 
-        public string CmdPrompt(string p, string def)
+        public string Prompt(string p, string def)
         {
             m_isPrompting = true;
             string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
@@ -163,41 +162,7 @@ namespace OpenSim.Framework
             return ret;
         }
 
-        public string CmdPrompt(string p, List<char> excludedCharacters)
-        {
-            m_isPrompting = true;
-
-            bool itisdone = false;
-            string ret = String.Empty;
-            while (!itisdone)
-            {
-                itisdone = true;
-                ret = CmdPrompt(p);
-
-                string ret1 = ret;
-#if (!ISWIN)
-                foreach (char c in excludedCharacters)
-                {
-                    if (ret1.Contains(c.ToString()))
-                    {
-                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                        itisdone = false;
-                    }
-                }
-#else
-                foreach (char c in excludedCharacters.Where(c => ret1.Contains(c.ToString())))
-                {
-                    Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                    itisdone = false;
-                }
-#endif
-            }
-
-            m_isPrompting = false;
-            return ret;
-        }
-
-        public string CmdPrompt(string p, string def, List<char> excludedCharacters)
+        public string Prompt(string p, string def, List<char> excludedCharacters)
         {
             m_isPrompting = true;
             bool itisdone = false;
@@ -205,7 +170,7 @@ namespace OpenSim.Framework
             while (!itisdone)
             {
                 itisdone = true;
-                ret = CmdPrompt(p, def);
+                ret = Prompt(p, def);
 
                 if (ret == String.Empty)
                 {
@@ -238,7 +203,7 @@ namespace OpenSim.Framework
         }
 
         // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
-        public string CmdPrompt(string prompt, string defaultresponse, List<string> options)
+        public string Prompt(string prompt, string defaultresponse, List<string> options)
         {
             m_isPrompting = true;
             m_promptOptions = new List<string>(options);
@@ -252,7 +217,7 @@ namespace OpenSim.Framework
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 #endif
 
-            string temp = CmdPrompt(prompt, defaultresponse);
+            string temp = Prompt(prompt, defaultresponse);
             while (itisdone == false)
             {
                 if (options.Contains(temp))
@@ -262,7 +227,7 @@ namespace OpenSim.Framework
                 else
                 {
                     Console.WriteLine("Valid options are" + optstr);
-                    temp = CmdPrompt(prompt, defaultresponse);
+                    temp = Prompt(prompt, defaultresponse);
                 }
             }
             m_isPrompting = false;
@@ -272,7 +237,7 @@ namespace OpenSim.Framework
 
         // Displays a prompt and waits for the user to enter a string, then returns that string
         // (Done with no echo and suitable for passwords)
-        public string PasswdPrompt(string p)
+        public string PasswordPrompt(string p)
         {
             m_isPrompting = true;
             string line = ReadLine(p + ": ", false, false);

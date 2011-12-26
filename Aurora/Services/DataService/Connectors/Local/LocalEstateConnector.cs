@@ -40,7 +40,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalEstateConnector : IEstateConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IGenericData GD;
         private IRegistryCore m_registry;
 
@@ -146,7 +145,7 @@ namespace Aurora.Services.DataService
 
             if (estateInfo["EstatePass"].AsString() != es.EstatePass)
             {
-                m_log.Warn("[ESTATE SERVICE]: Wrong estate password in updating of estate " + es.EstateName +
+                MainConsole.Instance.Warn("[ESTATE SERVICE]: Wrong estate password in updating of estate " + es.EstateName +
                            "! Possible attempt to hack this estate!");
                 return;
             }

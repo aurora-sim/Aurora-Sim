@@ -47,7 +47,6 @@ namespace Aurora.Modules
     /// </summary>
     public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IAssetService AssetService;
         private IAvatarService AvatarService;
         private IInventoryService InventoryService;
@@ -64,10 +63,10 @@ namespace Aurora.Modules
         public void LoadAvatarArchive(string FileName, string Name)
         {
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
-            m_log.Info("[AvatarArchive] Loading archive from " + FileName);
+            MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
-                m_log.Error("[AvatarArchive] User not found!");
+                MainConsole.Instance.Error("[AvatarArchive] User not found!");
                 return;
             }
 
@@ -117,7 +116,7 @@ namespace Aurora.Modules
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
+                MainConsole.Instance.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
 
             //Now update the client about the new items
@@ -134,7 +133,7 @@ namespace Aurora.Modules
                     SP.ControllingClient.SendBulkUpdateInventory(itemCopy);
                 }
             }
-            m_log.Info("[AvatarArchive] Loaded archive from " + FileName);
+            MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
         }
 
         #endregion
@@ -199,7 +198,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Info("[AvatarArchive] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
                 return;
             }
             LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
@@ -270,12 +269,12 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 7)
             {
-                m_log.Info("[AvatarArchive] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
-                m_log.Error("[AvatarArchive] User not found!");
+                MainConsole.Instance.Error("[AvatarArchive] User not found!");
                 return;
             }
 
@@ -335,7 +334,7 @@ namespace Aurora.Modules
             writer.Write(OSDParser.SerializeLLSDXmlString(map));
             writer.Close();
             writer.Dispose();
-            m_log.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            MainConsole.Instance.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
         }
 
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
@@ -346,20 +345,20 @@ namespace Aurora.Modules
                 if (asset != null)
                 {
                     OSDMap assetData = new OSDMap();
-                    m_log.Info("[AvatarArchive]: Saving asset " + asset.ID);
+                    MainConsole.Instance.Info("[AvatarArchive]: Saving asset " + asset.ID);
                     CreateMetaDataMap(asset, assetData);
                     assetData.Add("AssetData", OSD.FromBinary(asset.Data));
                     assetMap.Add(asset.ID.ToString(), assetData);
                 }
                 else
                 {
-                    m_log.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
+                    MainConsole.Instance.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
                     return;
                 }
             }
             catch (Exception ex)
             {
-                m_log.Warn("[AvatarArchive]: Could not save asset: " + AssetID.ToString() + ", " + ex);
+                MainConsole.Instance.Warn("[AvatarArchive]: Could not save asset: " + AssetID.ToString() + ", " + ex);
             }
         }
 
@@ -395,10 +394,10 @@ namespace Aurora.Modules
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
             if (saveItem == null)
             {
-                m_log.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
+                MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
                 return;
             }
-            m_log.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
+            MainConsole.Instance.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
             string serialization = UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);
         }
@@ -410,7 +409,7 @@ namespace Aurora.Modules
                 UUID AssetID = UUID.Parse(kvp.Key);
                 OSDMap assetMap = (OSDMap) kvp.Value;
                 AssetBase asset = AssetService.Get(AssetID.ToString());
-                m_log.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
+                MainConsole.Instance.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
                 if (asset == null) //Don't overwrite
                 {
                     asset = LoadAssetBase(assetMap);
@@ -427,7 +426,7 @@ namespace Aurora.Modules
             {
                 string serialization = kvp.Value.AsString();
                 InventoryItemBase item = UserInventoryItemSerializer.Deserialize(serialization);
-                m_log.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
+                MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
                 item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
                 litems.Add(item);
             }

@@ -41,7 +41,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     /// </summary>
     public class AppDomainManager
     {
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly List<AppDomainStructure> appDomains =
             new List<AppDomainStructure>();

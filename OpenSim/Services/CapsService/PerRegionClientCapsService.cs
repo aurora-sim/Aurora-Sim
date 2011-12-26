@@ -49,8 +49,6 @@ namespace OpenSim.Services.CapsService
     {
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private List<ICapsServiceConnector> m_connectors = new List<ICapsServiceConnector>();
         private bool m_disabled = true;
         private AgentCircuitData m_circuitData;
@@ -277,7 +275,7 @@ namespace OpenSim.Services.CapsService
         public virtual string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            m_log.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
+            MainConsole.Instance.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
             return OSDParser.SerializeLLSDXmlString(registeredCAPS);
         }
 

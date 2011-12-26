@@ -40,7 +40,6 @@ namespace OpenSim.Services.MessagingService
 {
     public class MessagingServiceInPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly string m_SessionID;
         private readonly IAsyncMessageRecievedService m_handler;
         private readonly ulong m_ourRegionHandle;
@@ -67,7 +66,7 @@ namespace OpenSim.Services.MessagingService
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -77,7 +76,7 @@ namespace OpenSim.Services.MessagingService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[GRID HANDLER]: Exception {0}", e);
+                MainConsole.Instance.WarnFormat("[GRID HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();

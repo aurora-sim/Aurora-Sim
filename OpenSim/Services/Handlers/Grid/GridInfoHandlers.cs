@@ -33,14 +33,12 @@ using System.Text;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenSim.Framework.Servers.HttpServer;
-using log4net;
+using OpenSim.Framework;
 
 namespace OpenSim.Services
 {
     public class GridInfoHandlers
     {
-        private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Hashtable _info = new Hashtable();
 
         /// <summary>
@@ -100,20 +98,20 @@ namespace OpenSim.Services
             }
             catch (Exception)
             {
-                _log.Warn("[GRID INFO SERVICE]: Cannot get grid info from config source, using minimal defaults");
+                MainConsole.Instance.Warn("[GRID INFO SERVICE]: Cannot get grid info from config source, using minimal defaults");
             }
 
-            _log.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys", _info.Count);
+            MainConsole.Instance.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys", _info.Count);
         }
 
         private void IssueWarning()
         {
-            _log.Warn("[GRID INFO SERVICE]: found no [GridInfo] section in your configuration files");
-            _log.Warn("[GRID INFO SERVICE]: trying to guess sensible defaults, you might want to provide better ones:");
+            MainConsole.Instance.Warn("[GRID INFO SERVICE]: found no [GridInfo] section in your configuration files");
+            MainConsole.Instance.Warn("[GRID INFO SERVICE]: trying to guess sensible defaults, you might want to provide better ones:");
 
             foreach (string k in _info.Keys)
             {
-                _log.WarnFormat("[GRID INFO SERVICE]: {0}: {1}", k, _info[k]);
+                MainConsole.Instance.WarnFormat("[GRID INFO SERVICE]: {0}: {1}", k, _info[k]);
             }
         }
 
@@ -122,7 +120,7 @@ namespace OpenSim.Services
             XmlRpcResponse response = new XmlRpcResponse();
             Hashtable responseData = new Hashtable();
 
-            _log.Debug("[GRID INFO SERVICE]: Request for grid info");
+            MainConsole.Instance.Debug("[GRID INFO SERVICE]: Request for grid info");
 
             foreach (string k in _info.Keys)
             {

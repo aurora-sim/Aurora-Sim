@@ -80,9 +80,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly string remoteParcelRequestPath = "0009/";
 
         private readonly List<UUID> m_hasSentParcelOverLay = new List<UUID>();
@@ -335,10 +332,10 @@ namespace OpenSim.Region.CoreModules.World.Land
                             tr.SendInstantMessage(msg);
 
                         if (ret.Value.Groups.Count > 1)
-                            m_log.InfoFormat("[LandManagement]: Returning {0} objects due to parcel auto return.",
+                            MainConsole.Instance.InfoFormat("[LandManagement]: Returning {0} objects due to parcel auto return.",
                                              ret.Value.Groups.Count);
                         else
-                            m_log.Info("[LandManagement]: Returning 1 object due to parcel auto return.");
+                            MainConsole.Instance.Info("[LandManagement]: Returning 1 object due to parcel auto return.");
                     }
                     IAsyncSceneObjectGroupDeleter asyncDelete =
                         m_scene.RequestModuleInterface<IAsyncSceneObjectGroupDeleter>();
@@ -416,7 +413,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[LandManagement]: Failed to check for parcel returns: {0}", e);
             }
         }
@@ -468,21 +465,21 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             while (fullSimParcel.LandData.OwnerID == UUID.Zero || account == null)
             {
-                m_log.Warn(
+                MainConsole.Instance.Warn(
                     "[ParcelManagement]: Could not find user for parcel, please give a valid user to make the owner");
-                string userName = MainConsole.Instance.CmdPrompt("User Name:", "");
+                string userName = MainConsole.Instance.Prompt("User Name:", "");
                 if (userName == "")
                 {
-                    m_log.Warn("Put in a valid username.");
+                    MainConsole.Instance.Warn("Put in a valid username.");
                     continue;
                 }
                 account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName);
                 if (account != null)
                     fullSimParcel.LandData.OwnerID = account.PrincipalID;
                 else
-                    m_log.Warn("Could not find the user.");
+                    MainConsole.Instance.Warn("Could not find the user.");
             }
-            m_log.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
+            MainConsole.Instance.Info("[ParcelManagement]: No land found for region " + m_scene.RegionInfo.RegionName +
                        ", setting owner to " + fullSimParcel.LandData.OwnerID);
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             fullSimParcel.SetInfoID();
@@ -915,7 +912,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             else
             {
-                m_log.WarnFormat("[LAND]: Invalid local land ID {0}", landLocalID);
+                MainConsole.Instance.WarnFormat("[LAND]: Invalid local land ID {0}", landLocalID);
             }
         }
 
@@ -933,7 +930,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     {
                         if (m_landIDList[x, y] == local_id)
                         {
-                            m_log.WarnFormat("[LAND]: Not removing land object {0}; still being used at {1}, {2}",
+                            MainConsole.Instance.WarnFormat("[LAND]: Not removing land object {0}; still being used at {1}, {2}",
                                              local_id, x, y);
                             return;
                             //throw new Exception("Could not remove land object. Still being used at " + x + ", " + y);
@@ -1471,7 +1468,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             else
             {
-                m_log.WarnFormat("[PARCEL]: Invalid land object {0} passed for parcel object owner request", local_id);
+                MainConsole.Instance.WarnFormat("[PARCEL]: Invalid land object {0} passed for parcel object owner request", local_id);
             }
         }
 
@@ -1823,7 +1820,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IClientAPI client;
             if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
-                m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
+                MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());
             }
             OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
@@ -1843,7 +1840,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             IClientAPI client;
             if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
-                m_log.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
+                MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());
             }
 
@@ -1885,7 +1882,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 land.UpdateLandProperties(land_update, client);
             else
             {
-                m_log.WarnFormat("[LAND] unable to find parcelID {0}", parcelID);
+                MainConsole.Instance.WarnFormat("[LAND] unable to find parcelID {0}", parcelID);
             }
             return OSDParser.SerializeLLSDXmlString(new OSDMap());
         }
@@ -1941,17 +1938,17 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[LAND] Fetch error: {0}", e.Message);
-                m_log.ErrorFormat("[LAND] ... in request {0}", request);
+                MainConsole.Instance.ErrorFormat("[LAND] Fetch error: {0}", e.Message);
+                MainConsole.Instance.ErrorFormat("[LAND] ... in request {0}", request);
             }
 
             if (parcelID == UUID.Zero)
-                m_log.Warn("[RemoteParcelRequest]: Failed to find parcel, " + request);
+                MainConsole.Instance.Warn("[RemoteParcelRequest]: Failed to find parcel, " + request);
 
             OSDMap res = new OSDMap();
             res["parcel_id"] = parcelID;
             if (parcelID != UUID.Zero)
-                m_log.DebugFormat("[RemoteParcelRequest]: Found parcelID {0}", parcelID);
+                MainConsole.Instance.DebugFormat("[RemoteParcelRequest]: Found parcelID {0}", parcelID);
 
             return OSDParser.SerializeLLSDXmlString(res);
         }
@@ -1973,7 +1970,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                                                        nearestParcel);
                 if (nearestPoint != null)
                 {
-                    //m_log.Info("Found a sane previous position based on velocity, sending them to: " + nearestPoint.ToString());
+                    //MainConsole.Instance.Info("Found a sane previous position based on velocity, sending them to: " + nearestPoint.ToString());
                     //Fix Z pos
                     nearestPoint = new Vector3(nearestPoint.Value.X, nearestPoint.Value.Y, avatar.AbsolutePosition.Z);
                     return nearestPoint.Value;
@@ -1987,12 +1984,12 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                                               nearestParcel);
                 if (nearestPoint != null)
                 {
-                    //m_log.Info("They had a zero velocity, sending them to: " + nearestPoint.ToString());
+                    //MainConsole.Instance.Info("They had a zero velocity, sending them to: " + nearestPoint.ToString());
                     return nearestPoint.Value;
                 }
 
                 //Ultimate backup if we have no idea where they are 
-                //m_log.Info("Have no idea where they are, sending them to the center of the parcel");
+                //MainConsole.Instance.Info("Have no idea where they are, sending them to the center of the parcel");
                 return GetParcelCenterAtGround(nearestParcel);
             }
 
@@ -2267,7 +2264,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             uint X, Y, Z;
             Util.ParseFakeParcelID(parcelID, out RegionHandle,
                                    out X, out Y, out Z);
-            m_log.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
+            MainConsole.Instance.DebugFormat("[LAND] got parcelinfo request for regionHandle {0}, x/y {1}/{2}",
                               RegionHandle, X, Y);
             IDirectoryServiceConnector DSC = DataManager.RequestPlugin<IDirectoryServiceConnector>();
             if (DSC != null)
@@ -2293,20 +2290,20 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     if (info == null)
                     {
-                        m_log.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1} {2}", parcelID, X, Y);
+                        MainConsole.Instance.WarnFormat("[LAND]: Failed to find region having parcel {0} @ {1} {2}", parcelID, X, Y);
                         return;
                     }
                     // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
-                    m_log.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
+                    MainConsole.Instance.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
                                       data.Name, RegionHandle);
                     remoteClient.SendParcelInfo(data, parcelID, (uint) (info.RegionLocX + data.UserLocation.X),
                                                 (uint) (info.RegionLocY + data.UserLocation.Y), info.RegionName);
                 }
                 else
-                    m_log.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID);
+                    MainConsole.Instance.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID);
             }
             else
-                m_log.Debug("[LAND] got no directory service; not sending");
+                MainConsole.Instance.Debug("[LAND] got no directory service; not sending");
         }
 
         public void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime)

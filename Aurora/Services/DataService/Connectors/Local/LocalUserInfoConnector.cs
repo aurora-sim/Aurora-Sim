@@ -40,10 +40,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalUserInfoConnector : IAgentInfoConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD;
         protected bool m_allowDuplicatePresences = true;
         protected bool m_checkLastSeen = true;
@@ -183,7 +179,7 @@ namespace Aurora.Services.DataService
                 if (user.CurrentRegionID != AgentInfoHelpers.LOGIN_STATUS_LOCKED)
                     //The login status can be locked with this so that it cannot be changed with this method
                 {
-                    m_log.Warn("[UserInfoService]: Found a user (" + user.UserID +
+                    MainConsole.Instance.Warn("[UserInfoService]: Found a user (" + user.UserID +
                                ") that was not seen within the last hour " +
                                "(since " + timeLastSeen.ToLocalTime().ToString() + ", time elapsed " +
                                (timeNow - timeLastSeen).Days + " days, " + (timeNow - timeLastSeen).Hours +

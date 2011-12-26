@@ -52,9 +52,6 @@ namespace Aurora.Modules.FileBasedSimulationData
     /// </summary>
     public class FileBasedSimulationData : ISimulationDataStore
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected Timer m_backupSaveTimer;
 
         protected string m_fileName = "";
@@ -229,7 +226,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch (Exception ex)
             {
-                m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
             }
         }
 
@@ -342,7 +339,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+                    MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
                 }
                 m_saveTimer.Start(); //Restart it as we just did a backup
             }
@@ -367,12 +364,12 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+                    MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
                 }
                 m_saveTimer.Start(); //Restart it as we just did a backup
             }
             else
-                m_log.Info("[FileBasedSimulationData]: Not saving backup, not required");
+                MainConsole.Instance.Info("[FileBasedSimulationData]: Not saving backup, not required");
         }
 
         /// <summary>
@@ -388,7 +385,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch (Exception ex)
             {
-                m_log.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
+                MainConsole.Instance.Error("[FileBasedSimulationData]: Failed to save backup, exception occured " + ex);
             }
         }
 
@@ -403,7 +400,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule>();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
             {
-                m_log.Info("[Backup]: Not saving backup because the backup module is loading prims");
+                MainConsole.Instance.Info("[Backup]: Not saving backup because the backup module is loading prims");
                 return;
             }
 
@@ -431,10 +428,10 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
 
-            m_log.Info("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
             string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
             if (File.Exists(fileName))
             {
@@ -496,7 +493,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                     }
                 }
 
@@ -528,7 +525,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                        MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                         entitiesToSave.Add(entity.UUID);
                     }
                 }
@@ -558,12 +555,12 @@ namespace Aurora.Modules.FileBasedSimulationData
                 }
                 catch (Exception ex)
                 {
-                    m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                    MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                 }
 
                 if (entitiesToSave.Count > 0)
                 {
-                    m_log.Fatal(entitiesToSave.Count + " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
+                    MainConsole.Instance.Fatal(entitiesToSave.Count + " PRIMS WERE NOT GOING TO BE SAVED! FORCE SAVING NOW! ");
                     foreach (ISceneEntity entity in saveentities)
                     {
                         if (entitiesToSave.Contains(entity.UUID))
@@ -593,7 +590,7 @@ namespace Aurora.Modules.FileBasedSimulationData
                         }
                         catch (Exception ex)
                         {
-                            m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                            MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
                         }
                     }
                 }
@@ -669,11 +666,11 @@ namespace Aurora.Modules.FileBasedSimulationData
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[Backup]: Exception caught: {0}", ex);
+                MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
             //Now make it the full file again
             File.Move(fileName + ".tmp", fileName);
-            m_log.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
         }
 
         private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
@@ -681,7 +678,7 @@ namespace Aurora.Modules.FileBasedSimulationData
             if (asset != null)
                 writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.Pack()));
             else
-                m_log.WarnFormat("Could not find asset {0}", id);
+                MainConsole.Instance.WarnFormat("Could not find asset {0}", id);
         }
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
@@ -700,7 +697,7 @@ namespace Aurora.Modules.FileBasedSimulationData
 
         protected virtual void ReadBackup(IScene scene)
         {
-            m_log.Info("[FileBasedSimulationData]: Reading file for " + scene.RegionInfo.RegionName);
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Reading file for " + scene.RegionInfo.RegionName);
             List<uint> foundLocalIDs = new List<uint>();
             GZipStream m_loadStream;
             try
@@ -868,20 +865,20 @@ More configuration options and info can be found in the Configuration/Data/FileB
         private void DoNoGUIWarning()
         {
             //Some people don't have winforms, which is fine
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("Your sim has been updated to use the FileBased Simulation Service.");
-            m_log.Error(
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("Your sim has been updated to use the FileBased Simulation Service.");
+            MainConsole.Instance.Error(
                 "Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
-            m_log.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
-            m_log.Error("---------------------");
+            MainConsole.Instance.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
+            MainConsole.Instance.Error("---------------------");
         }
 
         private ITerrainChannel ReadFromData(byte[] data, IScene scene)

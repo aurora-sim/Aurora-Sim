@@ -45,8 +45,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     /// </summary>
     public class ArchiveWriteRequestPreparation
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected string m_checkPermissions;
         protected Guid m_requestId;
         protected Stream m_saveStream;
@@ -71,10 +69,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             catch (EntryPointNotFoundException e)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Mismatch between Mono and zlib1g library version when trying to create compression stream."
                     + "If you've manually installed Mono, have you appropriately updated zlib1g as well?");
-                m_log.Error(e);
+                MainConsole.Instance.Error(e);
             }
 
             m_requestId = requestId;
@@ -139,13 +137,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 assetGatherer.GatherAssetUuids(sceneObject, assetUuids, m_scene);
             }
 
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[ARCHIVER]: {0} scene objects to serialize requiring save of {1} assets",
                 sceneObjects.Count, assetUuids.Count);
 
             if (numObjectsSkippedPermissions > 0)
             {
-                m_log.DebugFormat(
+                MainConsole.Instance.DebugFormat(
                     "[ARCHIVER]: {0} scene objects skipped due to lack of permissions",
                     numObjectsSkippedPermissions);
             }
@@ -243,7 +241,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     partPermitted = false;
 
                 //string name = (objGroup.PrimCount == 1) ? objGroup.Name : string.Format("{0} ({1}/{2})", obj.Name, primNumber, objGroup.PrimCount);
-                //m_log.DebugFormat("[ARCHIVER]: Object permissions: {0}: Base={1:X4}, Owner={2:X4}, Everyone={3:X4}, permissionClass={4}, checkPermissions={5}, canCopy={6}, canTransfer={7}, permitted={8}",
+                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Object permissions: {0}: Base={1:X4}, Owner={2:X4}, Everyone={3:X4}, permissionClass={4}, checkPermissions={5}, canCopy={6}, canTransfer={7}, permitted={8}",
                 //    name, obj.BaseMask, obj.OwnerMask, obj.EveryoneMask,
                 //    permissionClass, checkPermissions, canCopy, canTransfer, permitted);
 

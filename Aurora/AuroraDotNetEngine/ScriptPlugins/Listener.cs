@@ -37,7 +37,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 {
     public class ListenerPlugin : IScriptPlugin
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly List<IWorldComm> m_modules = new List<IWorldComm>();
         public ScriptEngine m_ScriptEngine;

@@ -42,8 +42,6 @@ namespace OpenSim.Services.Handlers.AbuseReports
 {
     public class AbuseReportsHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IAbuseReports m_AbuseReportsService;
         private readonly string m_SessionID;
         private readonly IRegistryCore m_registry;
@@ -64,7 +62,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -101,11 +99,11 @@ namespace OpenSim.Services.Handlers.AbuseReports
                                 return FailureResult();
                         return GetAbuseReports(request);
                 }
-                m_log.DebugFormat("[ABUSEREPORT HANDLER]: unknown method {0} request {1}", method.Length, method);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT HANDLER]: unknown method {0} request {1}", method.Length, method);
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ABUSEREPORT HANDLER]: Exception {0}", e);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();
@@ -117,7 +115,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
         {
             AbuseReport ar = new AbuseReport(request);
             m_AbuseReportsService.AddAbuseReport(ar);
-            //m_log.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
+            //MainConsole.Instance.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             return SuccessResult();
         }
@@ -126,7 +124,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
         {
             AbuseReport ar = new AbuseReport(request);
             m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
-            //m_log.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
+            //MainConsole.Instance.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
             return SuccessResult();
         }
@@ -136,7 +134,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
             string xmlString = WebUtils.BuildXmlResponse(
                 m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()),
                                                      request["Password"].ToString()).ToKeyValuePairs());
-            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -155,7 +153,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
 #endif
 
             string xmlString = WebUtils.BuildXmlResponse(returnvalue);
-            //m_log.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

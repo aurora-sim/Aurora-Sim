@@ -34,8 +34,6 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public partial class SceneObjectGroup : EntityBase
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region ISceneObject Members
 
         public void BackupPreparation()
@@ -148,7 +146,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 return true;
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[PRIM INVENTORY]: " +
                 "Couldn't find prim local ID {0} in group {1}, {2} to add inventory item ID {3}",
                 localID, Name, UUID, newItemId);
@@ -169,7 +167,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 return part.Inventory.GetInventoryItem(itemID);
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[PRIM INVENTORY]: " +
                 "Couldn't find prim local ID {0} in prim {1}, {2} to get inventory item ID {3}",
                 primID, "unknown", "unknown", itemID);
@@ -192,7 +190,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 return true;
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[PRIM INVENTORY]: " +
                 "Couldn't find prim ID {0} to update item {1}, {2}",
                 item.ParentPartID, item.Name, item.ItemID);

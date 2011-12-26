@@ -47,7 +47,6 @@ namespace OpenSim.Services.MessagingService
     {
         #region Declares
 
-        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected int MaxVariableRegionSight = 512;
         protected bool VariableRegionSight;
         protected bool m_enabled = true;
@@ -97,7 +96,7 @@ namespace OpenSim.Services.MessagingService
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             if (capsService == null)
             {
-                //m_log.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
+                //MainConsole.Instance.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
                 return new OSDMap();
             }
             IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
@@ -350,7 +349,7 @@ namespace OpenSim.Services.MessagingService
 
             foreach (GridRegion neighbor in neighbors)
             {
-                //m_log.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
+                //MainConsole.Instance.WarnFormat("--> Going to send child agent to {0}, new agent {1}", neighbour.RegionName, newAgent);
 
                 IRegionCapsService regionCaps =
                     m_registry.RequestModuleInterface<ICapsService>().GetCapsForRegion(neighbor.RegionHandle);
@@ -393,7 +392,7 @@ namespace OpenSim.Services.MessagingService
                                                UUID.Zero, x, y);
                                        if (ourRegion == null)
                                        {
-                                           m_log.Info(
+                                           MainConsole.Instance.Info(
                                                "[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
                                            return;
                                        }
@@ -496,7 +495,7 @@ namespace OpenSim.Services.MessagingService
                 reason = "The region you are attempting to teleport to is offline";
                 return false;
             }*/
-            m_log.Info("[AgentProcessing]: Starting to inform client about neighbor " + neighbor.RegionName);
+            MainConsole.Instance.Info("[AgentProcessing]: Starting to inform client about neighbor " + neighbor.RegionName);
 
             //Notes on this method
             // 1) the SimulationService.CreateAgent MUST have a fixed CapsUrl for the region, so we have to create (if needed)
@@ -617,19 +616,19 @@ namespace OpenSim.Services.MessagingService
                     if (!useCallbacks)
                         Thread.Sleep(3000); //Give it a bit of time, only for OpenSim...
 
-                    m_log.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
+                    MainConsole.Instance.Info("[AgentProcessing]: Completed inform client about neighbor " + neighbor.RegionName);
                 }
                 else
                 {
                     clientCaps.RemoveCAPS(neighbor.RegionHandle);
-                    m_log.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName +
+                    MainConsole.Instance.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName +
                                 ", reason: " + reason);
                     return false;
                 }
                 return true;
             }
             reason = "SimulationService does not exist";
-            m_log.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName +
+            MainConsole.Instance.Error("[AgentProcessing]: Failed to inform client about neighbor " + neighbor.RegionName +
                         ", reason: " + reason + "!");
             return false;
         }
@@ -724,7 +723,7 @@ namespace OpenSim.Services.MessagingService
                     {
                         if (!callWasCanceled)
                         {
-                            m_log.Warn("[AgentProcessing]: Callback never came for teleporting agent " +
+                            MainConsole.Instance.Warn("[AgentProcessing]: Callback never came for teleporting agent " +
                                        AgentID + ". Resetting.");
                         }
                         //Close the agent at the place we just created if it isn't a neighbor
@@ -755,7 +754,7 @@ namespace OpenSim.Services.MessagingService
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[AgentProcessing]: Exception occured during agent teleport, {0}", ex);
+                MainConsole.Instance.WarnFormat("[AgentProcessing]: Exception occured during agent teleport, {0}", ex);
                 reason = "Exception occured.";
             }
             //All done
@@ -816,7 +815,7 @@ namespace OpenSim.Services.MessagingService
 
                                            if (byebyeRegions.Count > 0)
                                            {
-                                               m_log.Info("[AgentProcessing]: Closing " + byebyeRegions.Count +
+                                               MainConsole.Instance.Info("[AgentProcessing]: Closing " + byebyeRegions.Count +
                                                           " child agents around " + oldRegion.RegionName);
                                                SendCloseChildAgent(AgentID, byebyeRegions);
                                            }
@@ -831,7 +830,7 @@ namespace OpenSim.Services.MessagingService
             //Close all agents that we've been given regions for
             foreach (GridRegion region in regionsToClose)
             {
-                m_log.Info("[AgentProcessing]: Closing child agent in " + region.RegionName);
+                MainConsole.Instance.Info("[AgentProcessing]: Closing child agent in " + region.RegionName);
                 IRegionClientCapsService regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                 if (regionClientCaps != null)
                 {
@@ -860,7 +859,7 @@ namespace OpenSim.Services.MessagingService
 
             if (clientCaps.InTeleport)
             {
-                m_log.Warn("[AgentProcessing]: Got a request to teleport during another teleport for agent " + AgentID +
+                MainConsole.Instance.Warn("[AgentProcessing]: Got a request to teleport during another teleport for agent " + AgentID +
                            "!");
                 return false; //What??? Stop here and don't go forward
             }
@@ -881,7 +880,7 @@ namespace OpenSim.Services.MessagingService
             int count = 1000;
             while (!clientCaps.CallbackHasCome && count > 0)
             {
-                //m_log.Debug("  >>> Waiting... " + count);
+                //MainConsole.Instance.Debug("  >>> Waiting... " + count);
                 if (clientCaps.RequestToCancelTeleport)
                 {
                     //If the call was canceled, we need to break here 
@@ -906,7 +905,7 @@ namespace OpenSim.Services.MessagingService
             int count = 100;
             while (!clientCaps.CallbackHasCome && count > 0)
             {
-                //m_log.Debug("  >>> Waiting... " + count);
+                //MainConsole.Instance.Debug("  >>> Waiting... " + count);
                 Thread.Sleep(100);
                 count--;
             }
@@ -1017,7 +1016,7 @@ namespace OpenSim.Services.MessagingService
                         cAgent.IsCrossing = true;
                         if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                         {
-                            m_log.Warn("[AgentProcessing]: Failed to cross agent " + AgentID +
+                            MainConsole.Instance.Warn("[AgentProcessing]: Failed to cross agent " + AgentID +
                                        " because region did not accept it. Resetting.");
                             reason = "Failed to update an agent";
                         }
@@ -1047,7 +1046,7 @@ namespace OpenSim.Services.MessagingService
                             result = WaitForCallback(AgentID);
                             if (!result)
                             {
-                                m_log.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +
+                                MainConsole.Instance.Warn("[AgentProcessing]: Callback never came in crossing agent " + circuit.AgentID +
                                            ". Resetting.");
                                 reason = "Crossing timed out";
                             }
@@ -1075,7 +1074,7 @@ namespace OpenSim.Services.MessagingService
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[AgentProcessing]: Failed to cross an agent into a new region. {0}", ex);
+                MainConsole.Instance.WarnFormat("[AgentProcessing]: Failed to cross an agent into a new region. {0}", ex);
             }
             ResetFromTransit(AgentID);
             reason = "Exception occured";
@@ -1126,13 +1125,13 @@ namespace OpenSim.Services.MessagingService
                     {
                         if (!SimulationService.UpdateAgent(region, agentpos))
                         {
-                            m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
+                            MainConsole.Instance.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
                         }
                     }
 #else
                     foreach (GridRegion region in ourNeighbors.Where(region => !SimulationService.UpdateAgent(region, agentpos)))
                     {
-                        m_log.Info("[AgentProcessing]: Failed to inform " + region.RegionName +
+                        MainConsole.Instance.Info("[AgentProcessing]: Failed to inform " + region.RegionName +
                                    " about updating agent. ");
                     }
 #endif

@@ -43,7 +43,7 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<IScene> m_Scenes = new List<IScene>();
         private IGroupsModule GroupsModule;
         private IProfileConnector ProfileFrontend;

@@ -37,8 +37,6 @@ namespace OpenSim.Framework
 {
     public class EntityManager
     {
-        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected readonly DoubleKeyDictionary<UUID, uint, UUID> m_child_2_parent_entities =
             new DoubleKeyDictionary<UUID, uint, UUID>();
 
@@ -61,7 +59,7 @@ namespace OpenSim.Framework
         {
             if (entity.LocalId == 0)
             {
-                m_log.Warn("Entity with 0 localID!");
+                MainConsole.Instance.Warn("Entity with 0 localID!");
                 return false;
             }
 
@@ -94,7 +92,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("Add Entity failed: {0}", e.Message);
+                MainConsole.Instance.ErrorFormat("Add Entity failed: {0}", e.Message);
                 return false;
             }
             return true;
@@ -149,7 +147,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("Remove Entity failed for {0}", entity.UUID, e);
+                MainConsole.Instance.ErrorFormat("Remove Entity failed for {0}", entity.UUID, e);
                 return false;
             }
         }

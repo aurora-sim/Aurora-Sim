@@ -41,8 +41,6 @@ namespace OpenSim.Services
 {
     public class LLLoginHandlers
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly ILoginService m_LocalService;
         private readonly bool m_Proxy;
 
@@ -152,7 +150,7 @@ namespace OpenSim.Services
                     string passwd = requestData["passwd"].ToString();
                     int level = Int32.Parse(requestData["level"].ToString());
 
-                    m_log.InfoFormat("[LOGIN]: XMLRPC Set Level to {2} Requested by {0} {1}", first, last, level);
+                    MainConsole.Instance.InfoFormat("[LOGIN]: XMLRPC Set Level to {2} Requested by {0} {1}", first, last, level);
 
                     Hashtable reply = m_LocalService.SetLevel(first, last, passwd, level, remoteClient);
 
@@ -188,7 +186,7 @@ namespace OpenSim.Services
                     if (map.ContainsKey("scope_id"))
                         scopeID = new UUID(map["scope_id"].AsString());
 
-                    m_log.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" +
+                    MainConsole.Instance.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" +
                                map["last"].AsString() + "' / " + startLocation);
 
                     LoginResponse reply = null;

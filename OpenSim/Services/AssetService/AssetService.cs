@@ -39,10 +39,6 @@ namespace OpenSim.Services.AssetService
 {
     public class AssetService : IAssetService, IService
     {
-        private static readonly ILog m_Log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IAssetDataPlugin m_database;
         protected IRegistryCore m_registry;
 
@@ -79,7 +75,7 @@ namespace OpenSim.Services.AssetService
                                                          "Delete asset from database", HandleDeleteAsset);
             }
 
-            m_Log.Debug("[ASSET SERVICE]: Local asset service enabled");
+            MainConsole.Instance.Debug("[ASSET SERVICE]: Local asset service enabled");
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -136,14 +132,14 @@ namespace OpenSim.Services.AssetService
 
         public virtual bool Get(String id, Object sender, AssetRetrieved handler)
         {
-            //m_log.DebugFormat("[AssetService]: Get asset async {0}", id);
+            //MainConsole.Instance.DebugFormat("[AssetService]: Get asset async {0}", id);
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null && asset != null && asset.Data.Length != 0)
                 cache.Cache(asset);
 
-            //m_log.DebugFormat("[AssetService]: Got asset {0}", asset);
+            //MainConsole.Instance.DebugFormat("[AssetService]: Got asset {0}", asset);
 
             handler(id, sender, asset);
 
@@ -152,7 +148,7 @@ namespace OpenSim.Services.AssetService
 
         public virtual UUID Store(AssetBase asset)
         {
-            //m_log.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
+            //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
@@ -164,15 +160,15 @@ namespace OpenSim.Services.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        public virtual bool UpdateContent(UUID id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            m_database.UpdateContent(id, data);
+            m_database.UpdateContent(id, data, out newID);
             return true;
         }
 
         public virtual bool Delete(UUID id)
         {
-            m_Log.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
+            MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             return m_database.Delete(id);
         }
 
@@ -194,7 +190,7 @@ namespace OpenSim.Services.AssetService
         {
             if (args.Length < 3)
             {
-                m_Log.Info("Syntax: show digest <ID>");
+                MainConsole.Instance.Info("Syntax: show digest <ID>");
                 return;
             }
 
@@ -202,17 +198,17 @@ namespace OpenSim.Services.AssetService
 
             if (asset == null || asset.Data.Length == 0)
             {
-                m_Log.Info("Asset not found");
+                MainConsole.Instance.Info("Asset not found");
                 return;
             }
 
             int i;
 
-            m_Log.Info(String.Format("Name: {0}", asset.Name));
-            m_Log.Info(String.Format("Description: {0}", asset.Description));
-            m_Log.Info(String.Format("Type: {0}", asset.TypeAsset));
-            m_Log.Info(String.Format("Content-type: {0}", asset.TypeAsset.ToString()));
-            m_Log.Info(String.Format("Flags: {0}", asset.Flags));
+            MainConsole.Instance.Info(String.Format("Name: {0}", asset.Name));
+            MainConsole.Instance.Info(String.Format("Description: {0}", asset.Description));
+            MainConsole.Instance.Info(String.Format("Type: {0}", asset.TypeAsset));
+            MainConsole.Instance.Info(String.Format("Content-type: {0}", asset.TypeAsset.ToString()));
+            MainConsole.Instance.Info(String.Format("Flags: {0}", asset.Flags));
 
             for (i = 0; i < 5; i++)
             {
@@ -227,7 +223,7 @@ namespace OpenSim.Services.AssetService
                 Array.Copy(asset.Data, off, line, 0, len);
 
                 string text = BitConverter.ToString(line);
-                m_Log.Info(String.Format("{0:x4}: {1}", off, text));
+                MainConsole.Instance.Info(String.Format("{0:x4}: {1}", off, text));
             }
         }
 
@@ -235,7 +231,7 @@ namespace OpenSim.Services.AssetService
         {
             if (args.Length < 3)
             {
-                m_Log.Info("Syntax: delete asset <ID>");
+                MainConsole.Instance.Info("Syntax: delete asset <ID>");
                 return;
             }
 
@@ -243,13 +239,13 @@ namespace OpenSim.Services.AssetService
 
             if (asset == null || asset.Data.Length == 0)
             {
-                m_Log.Info("Asset not found");
+                MainConsole.Instance.Info("Asset not found");
                 return;
             }
 
             Delete(UUID.Parse(args[2]));
 
-            m_Log.Info("Asset deleted");
+            MainConsole.Instance.Info("Asset deleted");
         }
     }
 }

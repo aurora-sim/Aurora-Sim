@@ -39,8 +39,6 @@ namespace Aurora.BotManager
 {
     public class BotManager : ISharedRegionModule, IBotManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
 
         #region ISharedRegionModule Members
@@ -154,7 +152,7 @@ namespace Aurora.BotManager
             m_bots.Add(m_character.AgentId, m_character);
             AddTagToBot(m_character.AgentId, "AllBots", m_character.AvatarCreatorID);
 
-            m_log.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
+            MainConsole.Instance.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
         }

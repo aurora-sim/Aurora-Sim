@@ -47,9 +47,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         /// </value>
         protected const string DEFAULT_OAR_BACKUP_FILENAME = "region.oar";
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -67,14 +64,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public void Initialise(IConfigSource source)
         {
-            //m_log.Debug("[ARCHIVER] Initialising");
+            //MainConsole.Instance.Debug("[ARCHIVER] Initialising");
         }
 
         public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IRegionArchiverModule>(this);
-            //m_log.DebugFormat("[ARCHIVER]: Enabled for region {0}", scene.RegionInfo.RegionName);
+            //MainConsole.Instance.DebugFormat("[ARCHIVER]: Enabled for region {0}", scene.RegionInfo.RegionName);
         }
 
         public void RegionLoaded(IScene scene)
@@ -210,7 +207,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public void ArchiveRegion(string savePath, Guid requestId, string permissions)
         {
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[ARCHIVER]: Writing archive for region {0} to {1}", m_scene.RegionInfo.RegionName, savePath);
 
             new ArchiveWriteRequestPreparation(m_scene, savePath, requestId, permissions).ArchiveRegion();
@@ -230,7 +227,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                     bool skipAssets, int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY,
                                     bool useParcelOwnership, bool checkOwnership)
         {
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[ARCHIVER]: Loading archive to region {0} from {1}", m_scene.RegionInfo.RegionName, loadPath);
 
             new ArchiveReadRequest(m_scene, loadPath, merge, skipAssets, offsetX,

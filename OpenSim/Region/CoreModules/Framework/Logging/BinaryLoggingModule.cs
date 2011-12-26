@@ -38,7 +38,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
 {
     public class BinaryLoggingModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static StatLogger m_statLog;
         private static TimeSpan m_statLogPeriod = TimeSpan.FromSeconds(300);
         private static string m_statsDir = String.Empty;
@@ -156,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Attachments
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("statistics gathering failed: " + ex.Message, ex);
+                    MainConsole.Instance.Error("statistics gathering failed: " + ex.Message, ex);
                     if (m_statLog != null && m_statLog.Log != null)
                     {
                         m_statLog.Log.Close();

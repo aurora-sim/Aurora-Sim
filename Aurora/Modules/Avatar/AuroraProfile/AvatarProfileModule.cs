@@ -59,7 +59,6 @@ namespace Aurora.Modules
             Online = 16
         }
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<IScene> m_Scenes = new List<IScene>();
         private IProfileConnector ProfileFrontend;
         private bool m_ProfileEnabled = true;
@@ -74,7 +73,7 @@ namespace Aurora.Modules
             IConfig profileConfig = config.Configs["Profile"];
             if (profileConfig == null)
             {
-                m_log.Info("[AuroraProfile] Not configured, disabling");
+                MainConsole.Instance.Info("[AuroraProfile] Not configured, disabling");
                 return;
             }
             if (profileConfig.GetString("ProfileModule", Name) != Name)
@@ -427,7 +426,7 @@ namespace Aurora.Modules
         {
             if (!(sender is IClientAPI))
             {
-                m_log.Debug("sender isnt IClientAPI");
+                MainConsole.Instance.Debug("sender isnt IClientAPI");
                 return;
             }
 

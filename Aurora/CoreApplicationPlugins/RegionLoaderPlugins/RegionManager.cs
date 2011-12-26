@@ -44,8 +44,6 @@ namespace Aurora.Modules.RegionLoader
 {
     public partial class RegionManager : Form
     {
-        private static readonly ILog m_log
-           = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public delegate void NewRegion(RegionInfo info);
         public delegate void NoOp();
         public event NewRegion OnNewRegion;
@@ -165,7 +163,7 @@ namespace Aurora.Modules.RegionLoader
                 Application.Exit();
                 return;
             }
-            m_log.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             manager.AllRegions++;
             manager.StartNewRegion(region);
@@ -367,6 +365,7 @@ namespace Aurora.Modules.RegionLoader
                 return;
             }
             ChangeRegionInfo (region);
+            RegionManager_Load(null, new EventArgs());
         }
 
         private int ConvertStartupType (StartupType startupType2)
@@ -650,8 +649,61 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             if (orsc != null)
             {
                 string navUrl = orsc.AddOpenRegionSettingsHTMLPage(CurrentRegionID);
+                //string navUrl = BuildRegionManagerHTTPPage(CurrentRegionID);
                 webBrowser1.Navigate(navUrl);
             }
+        }
+
+        private string BuildRegionManagerHTTPPage(UUID currentRegionID)
+        {
+            RegionInfo region = m_connector.GetRegionInfo(currentRegionID);
+            string html;
+            string path = Util.BasePathCombine(System.IO.Path.Combine("data", "RegionManager.html"));
+            if (System.IO.File.Exists(path) && region != null)
+            {
+                html = System.IO.File.ReadAllText(path);
+                Dictionary<string, string> vars = new Dictionary<string, string>();
+                vars.Add("Region Name", region.RegionName);
+                vars.Add("Region Location X", (region.RegionLocX / Constants.RegionSize).ToString());
+                vars.Add("Region Location Y", (region.RegionLocY / Constants.RegionSize).ToString());
+                vars.Add("Region Ports", string.Join(", ", region.UDPPorts.ConvertAll<string>(delegate(int i) { return i.ToString(); }).ToArray()));
+                vars.Add("Region Type", region.RegionType);
+                vars.Add("Region Size X", region.RegionSizeX.ToString());
+                vars.Add("Region Size Y", region.RegionSizeY.ToString());
+                vars.Add("Maturity", region.AccessLevel.ToString());
+                vars.Add("Disabled", region.Disabled ? "checked" : "");
+                vars.Add("Startup Type", "");//Placeholder for the list later
+                vars.Add("Normal", region.Startup == StartupType.Normal ? "selected" : "");
+                vars.Add("Medium", region.Startup == StartupType.Medium ? "selected" : "");
+                vars.Add("Infinite Region", region.InfiniteRegion ? "checked" : "");
+                return CSHTMLCreator.AddHTMLPage(html, "", "RegionManager", vars, RegionMangerHTMLChanged);
+            }
+            return "";
+        }
+
+        private string RegionMangerHTMLChanged(Dictionary<string, string> vars)
+        {
+            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            region.RegionName = vars["Region Name"];
+            region.RegionLocX = int.Parse(vars["Region Location X"]) * Constants.RegionSize;
+            region.RegionLocY = int.Parse(vars["Region Location Y"]) * Constants.RegionSize;
+            string[] ports = vars["Region Ports"].Split(',');
+
+            region.UDPPorts.Clear();
+            foreach (string port in ports)
+            {
+                string tPort = port.Trim();
+                int iPort = 0;
+                if (int.TryParse(tPort, out iPort))
+                    region.UDPPorts.Add(iPort);
+            }
+            region.RegionSizeX = int.Parse(vars["Region Size X"]);
+            region.RegionSizeY = int.Parse(vars["Region Size Y"]);
+            region.AccessLevel = byte.Parse(vars["Maturity"]);
+            region.Disabled = vars["Disabled"] != null;
+            region.Startup = vars["Startup Type"] == "Normal" ? StartupType.Normal : StartupType.Medium;
+            region.InfiniteRegion = vars["Infinite Region"] != null;
+            return BuildRegionManagerHTTPPage(CurrentRegionID);
         }
 
         private void button20_Click(object sender, EventArgs e)

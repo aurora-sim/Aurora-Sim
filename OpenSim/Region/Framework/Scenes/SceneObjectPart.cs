@@ -52,8 +52,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </value>
         public const int ALL_SIDES = -1;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public virtual Quaternion GroupRotation
         {
             get { return ParentGroup.GroupRotation; }
@@ -340,7 +338,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_physActor; }
             set
             {
-//                m_log.DebugFormat("[SOP]: PhysActor set to {0} for {1} {2}", value, Name, UUID);
+//                MainConsole.Instance.DebugFormat("[SOP]: PhysActor set to {0} for {1} {2}", value, Name, UUID);
                 m_physActor = value;
             }
         }
@@ -1852,7 +1850,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return _flags; }
             set
             {
-//                m_log.DebugFormat("[SOP]: Setting flags for {0} {1} to {2}", UUID, Name, value);
+//                MainConsole.Instance.DebugFormat("[SOP]: Setting flags for {0} {1} to {2}", UUID, Name, value);
                 //if (ParentGroup != null && _flags != value)
                 //    ParentGroup.HasGroupChanged = true;
                 _flags = value;
@@ -2167,7 +2165,7 @@ namespace OpenSim.Region.Framework.Scenes
             // PrimFlags prevflag = Flags;
             if ((Flags & flag) == 0)
             {
-                //m_log.Debug("Adding flag: " + ((PrimFlags) flag).ToString());
+                //MainConsole.Instance.Debug("Adding flag: " + ((PrimFlags) flag).ToString());
                 Flags |= flag;
 
                 if (flag == PrimFlags.TemporaryOnRez)
@@ -2180,7 +2178,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return true;
             }
             return false;
-            // m_log.Debug("Aprev: " + prevflag.ToString() + " curr: " + Flags.ToString());
+            // MainConsole.Instance.Debug("Aprev: " + prevflag.ToString() + " curr: " + Flags.ToString());
         }
 
         public void AddNewParticleSystem(Primitive.ParticleSystem pSystem)
@@ -2564,7 +2562,7 @@ namespace OpenSim.Region.Framework.Scenes
             // PrimFlags prevflag = Flags;
             if ((Flags & flag) != 0)
             {
-                //m_log.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
+                //MainConsole.Instance.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
                 Flags &= ~flag;
                 object[] o = new object[2];
                 o[0] = this;
@@ -2573,7 +2571,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return true;
             }
             return false;
-            //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
+            //MainConsole.Instance.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
         }
 
@@ -3368,7 +3366,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Get our plane normals
             for (int i = 0; i < 6; i++)
             {
-                //m_log.Info("[FACECALCULATION]: FaceA[" + i + "]=" + FaceA[i] + " FaceB[" + i + "]=" + FaceB[i] + " FaceC[" + i + "]=" + FaceC[i] + " FaceD[" + i + "]=" + FaceD[i]);
+                //MainConsole.Instance.Info("[FACECALCULATION]: FaceA[" + i + "]=" + FaceA[i] + " FaceB[" + i + "]=" + FaceB[i] + " FaceC[" + i + "]=" + FaceC[i] + " FaceD[" + i + "]=" + FaceD[i]);
 
                 // Our Plane direction
                 AmBa = FaceA[i] - FaceB[i];
@@ -3379,7 +3377,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // normalize the cross product to get the normal.
                 normals[i] = cross/cross.Length();
 
-                //m_log.Info("[NORMALS]: normals[ " + i + "]" + normals[i].ToString());
+                //MainConsole.Instance.Info("[NORMALS]: normals[ " + i + "]" + normals[i].ToString());
                 //distance[i] = (normals[i].X * AmBa.X + normals[i].Y * AmBa.Y + normals[i].Z * AmBa.Z) * -1;
             }
 
@@ -3493,9 +3491,9 @@ namespace OpenSim.Region.Framework.Scenes
                         result.distance = distance2;
                         result.HitTF = true;
                         result.ipoint = q;
-                        //m_log.Info("[FACE]:" + i.ToString());
-                        //m_log.Info("[POINT]: " + q.ToString());
-                        //m_log.Info("[DIST]: " + distance2.ToString());
+                        //MainConsole.Instance.Info("[FACE]:" + i.ToString());
+                        //MainConsole.Instance.Info("[POINT]: " + q.ToString());
+                        //MainConsole.Instance.Info("[DIST]: " + distance2.ToString());
                         if (faceCenters)
                         {
                             result.normal = AAfacenormals[i]*AXrot;
@@ -3912,7 +3910,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_parentGroup == null)
             {
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "[SCENE OBJECT PART]: Scheduling part {0} {1} for full update in aggregateScriptEvents() since m_parentGroup == null", Name, LocalId);
                 ScheduleUpdate(PrimUpdateFlags.FullUpdate);
                 return;
@@ -3926,7 +3924,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "[SCENE OBJECT PART]: Scheduling part {0} {1} for full update in aggregateScriptEvents()", Name, LocalId);
                 ScheduleUpdate(PrimUpdateFlags.PrimFlags);
             }
@@ -4038,21 +4036,21 @@ namespace OpenSim.Region.Framework.Scenes
                         if (_parentID == 0)
                         {
                             actor.Orientation = value;
-                            //m_log.Info("[PART]: RO1:" + actor.Orientation.ToString());
+                            //MainConsole.Instance.Info("[PART]: RO1:" + actor.Orientation.ToString());
                         }
                         else if (single || !actor.IsPhysical)
                         {
                             // Child prim we have to calculate it's world rotationwel
                             Quaternion resultingrotation = GetWorldRotation();
                             actor.Orientation = resultingrotation;
-                            //m_log.Info("[PART]: RO2:" + actor.Orientation.ToString());
+                            //MainConsole.Instance.Info("[PART]: RO2:" + actor.Orientation.ToString());
                         }
                         m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         //}
                     }
                     catch (Exception ex)
                     {
-                        m_log.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
+                        MainConsole.Instance.Error("[SCENEOBJECTPART]: ROTATIONOFFSET" + ex.Message);
                     }
                 }
             }
@@ -4119,7 +4117,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     catch (Exception e)
                     {
-                        m_log.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
+                        MainConsole.Instance.Error("[SCENEOBJECTPART]: GROUP POSITION. " + e.Message);
                     }
                 }
             }
@@ -4264,7 +4262,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (asset != null)
                 this.Shape.SculptData = asset.Data; //Set the asset data
 
-            bool isMesh = (asset.Type == (int) AssetType.Mesh);
+            bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
                 this.Shape.SculptType = (byte) SculptType.Mesh;
             if ((bool) sender && this.PhysActor != null) //Update physics
@@ -4340,7 +4338,7 @@ namespace OpenSim.Region.Framework.Scenes
                     startedCollider = collissionswith[localID];
                     startedColliders.Add(localID);
                 }
-                //m_log.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
+                //MainConsole.Instance.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
             }
 
             // calculate things that ended colliding
@@ -4975,7 +4973,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void PhysicsOutOfBounds(Vector3 pos)
         {
-            m_log.Error("[Physics]: Physical Object " + Name + " @ " + AbsolutePosition + " went out of bounds.");
+            MainConsole.Instance.Error("[Physics]: Physical Object " + Name + " @ " + AbsolutePosition + " went out of bounds.");
             if (!ParentGroup.Scene.PhysicsReturns.Contains(ParentGroup))
                 ParentGroup.Scene.PhysicsReturns.Add(ParentGroup);
         }
@@ -5389,7 +5387,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception ex)
             {
-                m_log.Error("[Physics] " + ex);
+                MainConsole.Instance.Error("[Physics] " + ex);
             }
         }
 

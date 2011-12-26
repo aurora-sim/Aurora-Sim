@@ -47,9 +47,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        protected static readonly ILog m_log
-                = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        
         protected SceneManager m_manager;
         protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
         // the minimum time that must elapse before a changed object will be considered for persisted
@@ -133,7 +130,7 @@ namespace Aurora.Modules
             {
                 scene.SimulationDataService.SaveBackups = false;
             });
-            m_log.Warn ("Disabled backup");
+            MainConsole.Instance.Warn ("Disabled backup");
         }
 
         public void EnableBackup (string[] cmdparams)
@@ -143,7 +140,7 @@ namespace Aurora.Modules
                 scene.SimulationDataService.SaveBackups = true;
             });
             if(cmdparams != null)//so that it doesn't show on startup
-                m_log.Warn ("Enabled backup");
+                MainConsole.Instance.Warn ("Enabled backup");
         }
 
         #endregion
@@ -238,7 +235,7 @@ namespace Aurora.Modules
                         break;
                 }
 
-                m_log.Warn("Deleting " + deletes.Count + " objects.");
+                MainConsole.Instance.Warn("Deleting " + deletes.Count + " objects.");
                 DeleteSceneObjects(deletes.ToArray(), true, true);
             }
 
@@ -263,13 +260,13 @@ namespace Aurora.Modules
                             group.RootChild.Shape.PCode == (byte)PCode.Prim ||
                             group.RootChild.Shape.PCode == (byte)PCode.Avatar))))
                         {
-                            m_log.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
+                            MainConsole.Instance.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
                         if (group.RootChild.Shape == null)
                         {
-                            m_log.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
+                            MainConsole.Instance.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
@@ -278,7 +275,7 @@ namespace Aurora.Modules
                             group.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY + 10 ||
                             group.AbsolutePosition.Y < -10)
                         {
-                            m_log.Warn ("[BackupModule]: Object outside the region (" + group.Name + ", " + group.AbsolutePosition + ") found while loading objects, removing it from the database.");
+                            MainConsole.Instance.Warn ("[BackupModule]: Object outside the region (" + group.Name + ", " + group.AbsolutePosition + ") found while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
@@ -287,7 +284,7 @@ namespace Aurora.Modules
 
                         if (group.RootChild == null)
                         {
-                            m_log.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
+                            MainConsole.Instance.ErrorFormat("[BackupModule] Found a SceneObjectGroup with m_rootPart == null and {0} children",
                                               group.ChildrenEntities().Count);
                             continue;
                         }
@@ -295,11 +292,11 @@ namespace Aurora.Modules
                     }
                     catch(Exception ex)
                     {
-                        m_log.WarnFormat("[BackupModule]: Exception attempting to load object from the database, {0}, continuing...", ex.ToString());
+                        MainConsole.Instance.WarnFormat("[BackupModule]: Exception attempting to load object from the database, {0}, continuing...", ex.ToString());
                     }
                 }
                 LoadingPrims = false;
-                m_log.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
+                MainConsole.Instance.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
                 PrimsFromDB.Clear ();
             }
 
@@ -308,7 +305,7 @@ namespace Aurora.Modules
             /// </summary>
             public void LoadAllLandObjectsFromStorage()
             {
-                m_log.Debug ("[BackupModule]: Loading Land Objects from database... ");
+                MainConsole.Instance.Debug ("[BackupModule]: Loading Land Objects from database... ");
                 m_scene.EventManager.TriggerIncomingLandDataFromStorage(m_scene.SimulationDataService.LoadLandObjects(m_scene.RegionInfo.RegionID), Vector2.Zero);
             }
 
@@ -327,7 +324,7 @@ namespace Aurora.Modules
             /// </summary>
             public void CreateScriptInstances()
             {
-                m_log.Info("[BackupModule]: Starting scripts in " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Info("[BackupModule]: Starting scripts in " + m_scene.RegionInfo.RegionName);
                 //Set loading prims here to block backup
                 LoadingPrims = true;
                 ISceneEntity[] entities = m_scene.Entities.GetEntities();
@@ -484,7 +481,7 @@ namespace Aurora.Modules
             /// <param name="removeFromDatabase">Remove from the database?</param>
             protected bool DeleteSceneObject(ISceneEntity group, bool DeleteScripts, bool removeFromDatabase)
             {
-                //m_log.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
+                //MainConsole.Instance.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
                 lock (group.SitTargetAvatar)
                 {
@@ -532,7 +529,7 @@ namespace Aurora.Modules
                     return true;
                 }
 
-                //m_log.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
+                //MainConsole.Instance.DebugFormat("[SCENE]: Exit DeleteSceneObject() for {0} {1}", group.Name, group.UUID);
                 return false;
             }
 
@@ -555,7 +552,7 @@ namespace Aurora.Modules
             {
                 m_isArchiving = true;
 
-                m_log.Info("[Archive]: Writing parcels to archive");
+                MainConsole.Instance.Info("[Archive]: Writing parcels to archive");
 
                 writer.WriteDir("parcels");
 
@@ -571,8 +568,8 @@ namespace Aurora.Modules
                     }
                 }
 
-                m_log.Info("[Archive]: Finished writing parcels to archive");
-                m_log.Info ("[Archive]: Writing terrain to archive");
+                MainConsole.Instance.Info("[Archive]: Finished writing parcels to archive");
+                MainConsole.Instance.Info ("[Archive]: Writing terrain to archive");
 
                 writer.WriteDir ("newstyleterrain");
                 writer.WriteDir ("newstylerevertterrain");
@@ -606,12 +603,12 @@ namespace Aurora.Modules
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
+                        MainConsole.Instance.WarnFormat ("[Backup]: Exception caught: {0}", ex.ToString ());
                     }
                 }
                 
-                m_log.Info("[Archive]: Finished writing terrain to archive");
-                m_log.Info("[Archive]: Writing entities to archive");
+                MainConsole.Instance.Info("[Archive]: Finished writing terrain to archive");
+                MainConsole.Instance.Info("[Archive]: Writing entities to archive");
                 ISceneEntity[] entities = scene.Entities.GetEntities();
                 //Get all entities, then start writing them to the database
                 writer.WriteDir("entities");
@@ -621,7 +618,7 @@ namespace Aurora.Modules
                 IAuroraBackupArchiver archiver = m_scene.RequestModuleInterface<IAuroraBackupArchiver> ();
                 bool saveAssets = false;
                 if(archiver.AllowPrompting)
-                    saveAssets = MainConsole.Instance.CmdPrompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
+                    saveAssets = MainConsole.Instance.Prompt ("Save assets? (Will not be able to load on other grids)", "false").Equals ("true", StringComparison.CurrentCultureIgnoreCase);
 
                 int count = 0;
                 foreach (ISceneEntity entity in entities)
@@ -644,13 +641,13 @@ namespace Aurora.Modules
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex);
+                        MainConsole.Instance.WarnFormat ("[Backup]: Exception caught: {0}", ex);
                     }
                 }
                 entities = null;
 
-                m_log.Info("[Archive]: Finished writing entities to archive");
-                m_log.Info("[Archive]: Writing assets for entities to archive");
+                MainConsole.Instance.Info("[Archive]: Finished writing entities to archive");
+                MainConsole.Instance.Info("[Archive]: Writing assets for entities to archive");
 
                 bool foundAllAssets = true;
                 foreach (UUID assetID in new List<UUID> (assets.Keys))
@@ -669,13 +666,13 @@ namespace Aurora.Modules
                     }
                     catch (Exception ex)
                     {
-                        m_log.WarnFormat ("[Backup]: Exception caught: {0}", ex);
+                        MainConsole.Instance.WarnFormat ("[Backup]: Exception caught: {0}", ex);
                     }
                 }
                 if (foundAllAssets)
                     m_isArchiving = false; //We're done if all the assets were found
 
-                m_log.Info("[Archive]: Finished writing assets for entities to archive");
+                MainConsole.Instance.Info("[Archive]: Finished writing assets for entities to archive");
             }
 
             private static byte[] WriteTerrainToStream (ITerrainChannel tModule)
@@ -707,7 +704,7 @@ namespace Aurora.Modules
                 if (asset != null)
                     writer.WriteFile ("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.Pack()));
                 else
-                    m_log.WarnFormat ("Could not find asset {0}", id);
+                    MainConsole.Instance.WarnFormat ("Could not find asset {0}", id);
             }
 
             public void BeginLoadModuleFromArchive(IScene scene)
@@ -725,14 +722,14 @@ namespace Aurora.Modules
                 if (backup != null)
                 {
                     backup.LoadingPrims = true;
-                    m_loadAssets = MainConsole.Instance.CmdPrompt("Should any stored assets be loaded? (If you got this .abackup from another grid, choose yes", "no").ToLower() == "yes";
-                    m_merge = MainConsole.Instance.CmdPrompt("Should we merge prims together (keep the prims from the old region too)?", "no").ToLower() == "yes";
+                    m_loadAssets = MainConsole.Instance.Prompt("Should any stored assets be loaded? (If you got this .abackup from another grid, choose yes", "no").ToLower() == "yes";
+                    m_merge = MainConsole.Instance.Prompt("Should we merge prims together (keep the prims from the old region too)?", "no").ToLower() == "yes";
                     if (!m_merge)
                     {
                         DateTime before = DateTime.Now;
-                        m_log.Info("[ARCHIVER]: Clearing all existing scene objects");
+                        MainConsole.Instance.Info("[ARCHIVER]: Clearing all existing scene objects");
                         backup.DeleteAllSceneObjects();
-                        m_log.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
+                        MainConsole.Instance.Info("[ARCHIVER]: Cleared all existing scene objects in " + (DateTime.Now - before).Minutes + ":" + (DateTime.Now - before).Seconds);
                         if (parcelModule != null)
                             parcelModule.ClearAllParcels ();
                     }

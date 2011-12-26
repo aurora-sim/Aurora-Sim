@@ -44,8 +44,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         #endregion
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Setting this to false for now... it seems to contribute to the HTTP server freaking out and crashing
         /// </summary>
@@ -66,7 +64,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         public static void MakeRequest<TRequest, TResponse>(string verb,
                                                             string requestUrl, TRequest obj, Action<TResponse> action)
         {
-            //            m_log.DebugFormat("[ASYNC REQUEST]: Starting {0} {1}", verb, requestUrl);
+            //            MainConsole.Instance.DebugFormat("[ASYNC REQUEST]: Starting {0} {1}", verb, requestUrl);
 
             Type type = typeof(TRequest);
 
@@ -152,6 +150,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     try
                     {
                         respStream = response.GetResponseStream();
+                        if (response.ContentType.EndsWith("/gzip"))
+                            respStream = Util.DecompressStream(respStream);
                         if (respStream != null)
                             deserial = (TResponse)deserializer.Deserialize(respStream);
                     }
@@ -176,7 +176,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             {
                                 // We don't appear to be handling any other status codes, so log these feailures to that
                                 // people don't spend unnecessary hours hunting phantom bugs.
-                                m_log.DebugFormat(
+                                MainConsole.Instance.DebugFormat(
                                     "[ASYNC REQUEST]: Request {0} {1} failed with unexpected status code {2}",
                                     verb, requestUrl, httpResponse.StatusCode);
                             }
@@ -184,19 +184,19 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     else
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}",
                             verb, requestUrl, e.Status, e);
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[ASYNC REQUEST]: Request {0} {1} failed with exception {2}", verb,
                         requestUrl, e);
                 }
 
-                //  m_log.DebugFormat("[ASYNC REQUEST]: Received {0}", deserial.ToString());
+                //  MainConsole.Instance.DebugFormat("[ASYNC REQUEST]: Received {0}", deserial.ToString());
 
                 try
                 {
@@ -205,7 +205,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[ASYNC REQUEST]: Request {0} {1} callback failed with exception {2}",
                         verb, requestUrl, e);
                 }
@@ -251,7 +251,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
+                        MainConsole.Instance.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
                         return;
                     }
                     finally
@@ -294,7 +294,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                                     {
                                         // We don't appear to be handling any other status codes, so log these feailures to that
                                         // people don't spend unnecessary hours hunting phantom bugs.
-                                        m_log.DebugFormat(
+                                        MainConsole.Instance.DebugFormat(
                                             "[ASYNC REQUEST]: Request {0} {1} failed with unexpected status code {2}",
                                             verb, requestUrl, httpResponse.StatusCode);
                                     }
@@ -302,14 +302,14 @@ namespace OpenSim.Framework.Servers.HttpServer
                             }
                             else
                             {
-                                m_log.ErrorFormat(
+                                MainConsole.Instance.ErrorFormat(
                                     "[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}",
                                     verb, requestUrl, e.Status, e);
                             }
                         }
                         catch (Exception e)
                         {
-                            m_log.ErrorFormat(
+                            MainConsole.Instance.ErrorFormat(
                                 "[ASYNC REQUEST]: Request {0} {1} failed with exception {2}",
                                 verb, requestUrl, e);
                         }
@@ -352,7 +352,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
+                        MainConsole.Instance.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
                         return;
                     }
                     finally
@@ -401,7 +401,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                                     {
                                         // We don't appear to be handling any other status codes, so log these feailures to that
                                         // people don't spend unnecessary hours hunting phantom bugs.
-                                        m_log.DebugFormat(
+                                        MainConsole.Instance.DebugFormat(
                                             "[ASYNC REQUEST]: Request {0} {1} failed with unexpected status code {2}",
                                             verb, requestUrl, httpResponse.StatusCode);
                                     }
@@ -409,14 +409,14 @@ namespace OpenSim.Framework.Servers.HttpServer
                             }
                             else
                             {
-                                m_log.ErrorFormat(
+                                MainConsole.Instance.ErrorFormat(
                                     "[ASYNC REQUEST]: Request {0} {1} failed with status {2} and message {3}",
                                     verb, requestUrl, e.Status, e);
                             }
                         }
                         catch (Exception e)
                         {
-                            m_log.ErrorFormat(
+                            MainConsole.Instance.ErrorFormat(
                                 "[ASYNC REQUEST]: Request {0} {1} failed with exception {2}",
                                 verb, requestUrl, e);
                         }

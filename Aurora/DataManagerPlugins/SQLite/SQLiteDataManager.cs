@@ -43,7 +43,6 @@ namespace Aurora.DataManager.SQLite
 {
     public class SQLiteLoader : DataManagerBase
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private SQLiteConnection m_Connection;
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
@@ -103,13 +102,13 @@ namespace Aurora.DataManager.SQLite
             }
             catch (SQLiteException ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
                 //throw ex;
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
                 throw ex;
             }
@@ -132,13 +131,13 @@ namespace Aurora.DataManager.SQLite
             }
             catch (SQLiteException ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
                 //throw ex;
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
                 throw ex;
             }
@@ -192,12 +191,12 @@ namespace Aurora.DataManager.SQLite
             }
             catch (SQLiteException ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
             }
             catch (Exception ex)
             {
-                m_log.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
+                MainConsole.Instance.Warn("[SQLiteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
                            ex);
                 throw ex;
             }

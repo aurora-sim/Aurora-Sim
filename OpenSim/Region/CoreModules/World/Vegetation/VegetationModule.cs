@@ -38,8 +38,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
 {
     public class VegetationModule : INonSharedRegionModule, IVegetationModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected static readonly PCode[] creationCapabilities = new[] {PCode.Grass, PCode.NewTree, PCode.Tree};
         protected IScene m_scene;
 
@@ -112,7 +110,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         {
             if (Array.IndexOf(creationCapabilities, (PCode) shape.PCode) < 0)
             {
-                m_log.DebugFormat("[VEGETATION]: PCode {0} not handled by {1}", shape.PCode, Name);
+                MainConsole.Instance.DebugFormat("[VEGETATION]: PCode {0} not handled by {1}", shape.PCode, Name);
                 return null;
             }
 

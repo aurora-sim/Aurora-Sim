@@ -41,7 +41,6 @@ namespace OpenSim.Services
 {
     public class AgentHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ISimulationService m_SimulationService;
 
         protected bool m_Proxy;
@@ -61,13 +60,13 @@ namespace OpenSim.Services
 
         public Hashtable Handler(Hashtable request)
         {
-            //m_log.Debug("[CONNECTION DEBUGGING]: AgentHandler Called");
+            //MainConsole.Instance.Debug("[CONNECTION DEBUGGING]: AgentHandler Called");
 
-            //m_log.Debug("---------------------------");
-            //m_log.Debug(" >> uri=" + request["uri"]);
-            //m_log.Debug(" >> content-type=" + request["content-type"]);
-            //m_log.Debug(" >> http-method=" + request["http-method"]);
-            //m_log.Debug("---------------------------\n");
+            //MainConsole.Instance.Debug("---------------------------");
+            //MainConsole.Instance.Debug(" >> uri=" + request["uri"]);
+            //MainConsole.Instance.Debug(" >> content-type=" + request["content-type"]);
+            //MainConsole.Instance.Debug(" >> http-method=" + request["http-method"]);
+            //MainConsole.Instance.Debug("---------------------------\n");
 
             Hashtable responsedata = new Hashtable();
             responsedata["content_type"] = "text/html";
@@ -85,7 +84,7 @@ namespace OpenSim.Services
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
             {
-                m_log.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
+                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: Invalid parameters for agent message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
                 responsedata["str_response_string"] = "false";
 
@@ -146,7 +145,7 @@ namespace OpenSim.Services
             }
             else
             {
-                m_log.InfoFormat("[AGENT HANDLER]: method {0} not supported in agent message", method);
+                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: method {0} not supported in agent message", method);
                 responsedata["int_response_code"] = HttpStatusCode.MethodNotAllowed;
                 responsedata["str_response_string"] = "Method not allowed";
 
@@ -182,11 +181,11 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_x") && args["destination_x"] != null)
                 Int32.TryParse(args["destination_x"].AsString(), out x);
             else
-                m_log.WarnFormat("  -- request didn't have destination_x");
+                MainConsole.Instance.WarnFormat("  -- request didn't have destination_x");
             if (args.ContainsKey("destination_y") && args["destination_y"] != null)
                 Int32.TryParse(args["destination_y"].AsString(), out y);
             else
-                m_log.WarnFormat("  -- request didn't have destination_y");
+                MainConsole.Instance.WarnFormat("  -- request didn't have destination_y");
             if (args.ContainsKey("destination_uuid") && args["destination_uuid"] != null)
                 UUID.TryParse(args["destination_uuid"].AsString(), out uuid);
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
@@ -205,7 +204,7 @@ namespace OpenSim.Services
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
+                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
                 }
             }
 
@@ -219,7 +218,7 @@ namespace OpenSim.Services
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
+                MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildCreate message {0}", ex);
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
@@ -300,7 +299,7 @@ namespace OpenSim.Services
                 messageType = args["message_type"].AsString();
             else
             {
-                m_log.Warn("[AGENT HANDLER]: Agent Put Message Type not found. ");
+                MainConsole.Instance.Warn("[AGENT HANDLER]: Agent Put Message Type not found. ");
                 messageType = "AgentData";
             }
 
@@ -314,7 +313,7 @@ namespace OpenSim.Services
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
+                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                     responsedata["str_response_string"] = "Bad request";
                     return;
@@ -333,7 +332,7 @@ namespace OpenSim.Services
                 }
                 catch (Exception ex)
                 {
-                    m_log.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
+                    MainConsole.Instance.InfoFormat("[AGENT HANDLER]: exception on unpacking ChildAgentUpdate message {0}", ex);
                     return;
                 }
                 //agent.Dump();
@@ -357,7 +356,7 @@ namespace OpenSim.Services
         {
             if (m_SimulationService == null)
             {
-                m_log.Debug("[AGENT HANDLER]: Agent GET called. Harmless but useless.");
+                MainConsole.Instance.Debug("[AGENT HANDLER]: Agent GET called. Harmless but useless.");
                 responsedata["content_type"] = "application/json";
                 responsedata["int_response_code"] = HttpStatusCode.NotImplemented;
                 responsedata["str_response_string"] = string.Empty;
@@ -384,7 +383,7 @@ namespace OpenSim.Services
                     }
                     catch (Exception e)
                     {
-                        m_log.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
+                        MainConsole.Instance.WarnFormat("[AGENT HANDLER]: Exception thrown on serialization of DoAgentGet: {0}", e);
                         responsedata["int_response_code"] = HttpStatusCode.InternalServerError;
                         // ignore. buffer will be empty, caller should check.
                     }
@@ -409,7 +408,7 @@ namespace OpenSim.Services
 
         protected void DoAgentDelete(Hashtable request, Hashtable responsedata, UUID id, string action, UUID regionID)
         {
-            m_log.Debug(" >>> DoDelete action:" + action + "; RegionID:" + regionID);
+            MainConsole.Instance.Debug(" >>> DoDelete action:" + action + "; RegionID:" + regionID);
 
             GridRegion destination = new GridRegion {RegionID = regionID};
 
@@ -430,7 +429,7 @@ namespace OpenSim.Services
             map["Agent"] = id;
             responsedata["str_response_string"] = OSDParser.SerializeJsonString(map);
 
-            m_log.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
+            MainConsole.Instance.Debug("[AGENT HANDLER]: Agent Released/Deleted.");
         }
     }
 }

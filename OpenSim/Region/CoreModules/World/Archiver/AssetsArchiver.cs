@@ -37,8 +37,6 @@ namespace OpenSim.Region.CoreModules.World.Archiver
     /// </summary>
     public class AssetsArchiver
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <value>
         ///   Post a message to the log every x assets as a progress bar
         /// </value>
@@ -128,7 +126,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Unrecognized asset type {0} with uuid {1}.  This asset will be saved but not reloaded",
                     asset.Type, asset.ID);
             }
@@ -139,10 +137,10 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             m_assetsWritten++;
 
-            //m_log.DebugFormat("[ARCHIVER]: Added asset {0}", m_assetsWritten);
+            //MainConsole.Instance.DebugFormat("[ARCHIVER]: Added asset {0}", m_assetsWritten);
 
             if (m_assetsWritten%LOG_ASSET_LOAD_NOTIFICATION_INTERVAL == 0)
-                m_log.InfoFormat("[ARCHIVER]: Added {0} assets to archive", m_assetsWritten);
+                MainConsole.Instance.InfoFormat("[ARCHIVER]: Added {0} assets to archive", m_assetsWritten);
         }
 
         /// <summary>

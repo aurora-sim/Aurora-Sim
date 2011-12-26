@@ -55,8 +55,6 @@ namespace OpenSim.Framework
     ///</remarks>
     public class RestClient
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region member variables
 
         //public static ManualResetEvent _allDone = new ManualResetEvent(false);
@@ -164,11 +162,11 @@ namespace OpenSim.Framework
             }
             catch (ArgumentException)
             {
-                m_log.Error("[REST]: Query parameter " + name + " is already added.");
+                MainConsole.Instance.Error("[REST]: Query parameter " + name + " is already added.");
             }
             catch (Exception e)
             {
-                m_log.Error("[REST]: An exception was raised adding query parameter to dictionary. Exception: {0}", e);
+                MainConsole.Instance.Error("[REST]: An exception was raised adding query parameter to dictionary. Exception: {0}", e);
             }
         }
 
@@ -184,11 +182,11 @@ namespace OpenSim.Framework
             }
             catch (ArgumentException)
             {
-                m_log.Error("[REST]: Query parameter " + name + " is already added.");
+                MainConsole.Instance.Error("[REST]: Query parameter " + name + " is already added.");
             }
             catch (Exception e)
             {
-                m_log.Error("[REST]: An exception was raised adding query parameter to dictionary. Exception: {0}", e);
+                MainConsole.Instance.Error("[REST]: An exception was raised adding query parameter to dictionary. Exception: {0}", e);
             }
         }
 
@@ -236,7 +234,7 @@ namespace OpenSim.Framework
                 }
             }
             // realuri = sb.ToString();
-            //m_log.InfoFormat("[REST CLIENT]: RestURL: {0}", realuri);
+            //MainConsole.Instance.InfoFormat("[REST CLIENT]: RestURL: {0}", realuri);
             return new Uri(sb.ToString());
         }
 
@@ -264,12 +262,12 @@ namespace OpenSim.Framework
                     HttpWebResponse errorResponse = e.Response as HttpWebResponse;
                     if (null != errorResponse && HttpStatusCode.NotFound == errorResponse.StatusCode)
                     {
-                        m_log.Warn("[REST CLIENT] Resource not found (404)");
+                        MainConsole.Instance.Warn("[REST CLIENT] Resource not found (404)");
                     }
                     else
                     {
-                        m_log.Error("[REST CLIENT] Error fetching resource from server " + _request.Address);
-                        m_log.Debug(e.ToString());
+                        MainConsole.Instance.Error("[REST CLIENT] Error fetching resource from server " + _request.Address);
+                        MainConsole.Instance.Debug(e.ToString());
                     }
 
                     return null;
@@ -314,16 +312,16 @@ namespace OpenSim.Framework
             _asyncException = null;
             _request.ContentLength = src.Length;
 
-            m_log.InfoFormat("[REST]: Request Length {0}", _request.ContentLength);
-            m_log.InfoFormat("[REST]: Sending Web Request {0}", buildUri());
+            MainConsole.Instance.InfoFormat("[REST]: Request Length {0}", _request.ContentLength);
+            MainConsole.Instance.InfoFormat("[REST]: Sending Web Request {0}", buildUri());
             src.Seek(0, SeekOrigin.Begin);
-            m_log.Info("[REST]: Seek is ok");
+            MainConsole.Instance.Info("[REST]: Seek is ok");
             Stream dst = _request.GetRequestStream();
-            m_log.Info("[REST]: GetRequestStream is ok");
+            MainConsole.Instance.Info("[REST]: GetRequestStream is ok");
 
             byte[] buf = new byte[1024];
             int length = src.Read(buf, 0, 1024);
-            m_log.Info("[REST]: First Read is ok");
+            MainConsole.Instance.Info("[REST]: First Read is ok");
             while (length > 0)
             {
                 dst.Write(buf, 0, length);

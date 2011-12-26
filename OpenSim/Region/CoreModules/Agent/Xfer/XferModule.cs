@@ -38,7 +38,6 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
 {
     public class XferModule : INonSharedRegionModule, IXfer
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<string, FileData> NewFiles = new Dictionary<string, FileData>();
         private readonly Dictionary<ulong, XferDownLoad> Transfers = new Dictionary<ulong, XferDownLoad>();
         private IScene m_scene;
@@ -164,7 +163,7 @@ namespace OpenSim.Region.CoreModules.Agent.Xfer
                     }
                 }
                 else
-                    m_log.WarnFormat("[Xfer]: {0} not found", fileName);
+                    MainConsole.Instance.WarnFormat("[Xfer]: {0} not found", fileName);
             }
         }
 

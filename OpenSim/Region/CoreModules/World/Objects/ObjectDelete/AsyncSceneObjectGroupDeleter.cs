@@ -52,9 +52,6 @@ namespace OpenSim.Region.CoreModules
     /// </summary>
     public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
         private bool DeleteLoopInUse;
 
@@ -134,7 +131,7 @@ namespace OpenSim.Region.CoreModules
             if (!DeleteLoopInUse)
             {
                 DeleteLoopInUse = true;
-                //m_log.Debug("[SCENE]: Starting delete loop");
+                //MainConsole.Instance.Debug("[SCENE]: Starting delete loop");
                 Util.FireAndForget(DoDeleteObject);
             }
         }
@@ -165,7 +162,7 @@ namespace OpenSim.Region.CoreModules
             else
             {
                 DeleteLoopInUse = false;
-                //m_log.Debug("[SCENE]: Ending delete loop");
+                //MainConsole.Instance.Debug("[SCENE]: Ending delete loop");
             }
         }
 
@@ -193,7 +190,7 @@ namespace OpenSim.Region.CoreModules
                         if (backup != null)
                             backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
 
                     if (x.permissionToTake)
@@ -207,7 +204,7 @@ namespace OpenSim.Region.CoreModules
                         }
                         catch (Exception e)
                         {
-                            m_log.ErrorFormat(
+                            MainConsole.Instance.ErrorFormat(
                                 "[ASYNC DELETER]: Exception background sending object: {0}{1}", e.Message, e.StackTrace);
                         }
                     }
@@ -218,13 +215,13 @@ namespace OpenSim.Region.CoreModules
             {
                 // We can't put the object group details in here since the root part may have disappeared (which is where these sit).
                 // FIXME: This needs to be fixed.
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[SCENE]: Queued sending of scene object to agent {0} {1} failed: {2}",
                     (x != null ? x.agentId.ToString() : "unavailable"),
                     (x != null ? x.agentId.ToString() : "unavailable"), e);
             }
 
-            //m_log.Debug("[SCENE]: No objects left in delete queue.");
+            //MainConsole.Instance.Debug("[SCENE]: No objects left in delete queue.");
             return false;
         }
 

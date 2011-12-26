@@ -53,8 +53,7 @@ namespace Aurora.Simulation.Base
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        
         private static int m_requestNumber;
         private const int m_defaultTimeout = 20000;
 
@@ -239,7 +238,7 @@ namespace Aurora.Simulation.Base
 
         public static Dictionary<string, object> ParseXmlResponse(string data)
         {
-            //m_log.DebugFormat("[XXX]: received xml string: {0}", data);
+            //MainConsole.Instance.DebugFormat("[XXX]: received xml string: {0}", data);
 
             Dictionary<string, object> ret = new Dictionary<string, object>();
 
@@ -335,7 +334,7 @@ namespace Aurora.Simulation.Base
                                                bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
         {
             int reqnum = m_requestNumber++;
-            // m_log.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
+            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
 
             string errorMessage = "unknown error";
             int tickstart = Util.EnvironmentTickCount();
@@ -388,7 +387,7 @@ namespace Aurora.Simulation.Base
                         {
                             string responseStr = null;
                             responseStr = responseStream.GetStreamString();
-                            // m_log.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
+                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
                             return CanonicalizeResults(responseStr, deserializeResponse, returnRawResult);
                         }
                         else
@@ -413,22 +412,22 @@ namespace Aurora.Simulation.Base
             {
                 // This just dumps a warning for any operation that takes more than 500 ms
                 int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                if (m_log.IsEnabled(Level.Trace))
+                if (MainConsole.Instance.IsEnabled(Level.Trace))
                 {
-                    m_log.TraceFormat(
+                    MainConsole.Instance.TraceFormat(
                         "[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
                         reqnum, url, method, tickdiff, tickdata, tickserialize);
                 }
                 else
                 {
                     if (tickdiff > LongCallTime)
-                        m_log.InfoFormat(
+                        MainConsole.Instance.InfoFormat(
                             "[WebUtils]: osd request took too long <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
                             reqnum, url, method, tickdiff, tickdata, tickserialize);
                 }
             }
 
-            m_log.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url,
+            MainConsole.Instance.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url,
                              data != null ? data.AsString() : "");
             return ErrorResponseMap(errorMessage);
         }
@@ -483,7 +482,7 @@ namespace Aurora.Simulation.Base
                 catch (Exception e)
                 {
                     // don't need to treat this as an error... we're just guessing anyway
-                    m_log.InfoFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
+                    MainConsole.Instance.InfoFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
                 }
             }
 
@@ -494,7 +493,7 @@ namespace Aurora.Simulation.Base
         {
             int reqnum = m_requestNumber++;
             string method = (data != null && data["RequestMethod"] != null) ? data["RequestMethod"] : "unknown";
-            // m_log.DebugFormat("[WEB UTIL]: <{0}> start form request for {1}, method {2}",reqnum,url,method);
+            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start form request for {1}, method {2}",reqnum,url,method);
 
             string errorMessage = "unknown error";
             int tickstart = Util.EnvironmentTickCount();
@@ -555,12 +554,12 @@ namespace Aurora.Simulation.Base
             {
                 int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
                 if (tickdiff > LongCallTime)
-                    m_log.InfoFormat(
+                    MainConsole.Instance.InfoFormat(
                         "[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
                         reqnum, url, method, tickdiff, tickdata);
             }
 
-            m_log.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
+            MainConsole.Instance.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
             return ErrorResponseMap(errorMessage);
         }
 
@@ -714,13 +713,13 @@ namespace Aurora.Simulation.Base
                     return args;
                 }
                 // uh?
-                m_log.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                MainConsole.Instance.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
                 return null;
             }
             catch (Exception ex)
             {
-                m_log.Warn("[WebUtils]: exception on parse of REST message " + ex);
-                m_log.Warn("[WebUtils]: bad data: " + data);
+                MainConsole.Instance.Warn("[WebUtils]: exception on parse of REST message " + ex);
+                MainConsole.Instance.Warn("[WebUtils]: bad data: " + data);
                 return null;
             }
         }

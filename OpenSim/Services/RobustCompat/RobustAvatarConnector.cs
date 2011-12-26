@@ -52,7 +52,7 @@ namespace OpenSim.Services.RobustCompat
 
             ResetAvatar(userID);
             string reqString = WebUtils.BuildQueryString(sendData);
-            //m_log.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
+            //MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: queryString = {0}", reqString);
             try
             {
                 List<string> serverURIs =
@@ -70,15 +70,15 @@ namespace OpenSim.Services.RobustCompat
                                 return true;
                         }
                         else
-                            m_log.DebugFormat("[AVATAR CONNECTOR]: SetAvatar reply data does not contain result field");
+                            MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetAvatar reply data does not contain result field");
                     }
                     else
-                        m_log.DebugFormat("[AVATAR CONNECTOR]: SetAvatar received empty reply");
+                        MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: SetAvatar received empty reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[AVATAR CONNECTOR]: Exception when contacting avatar server: {0}", e.Message);
             }
 
             return false;

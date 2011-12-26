@@ -43,8 +43,6 @@ namespace OpenSim.Services
 {
     public class AvatarServerPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IAvatarService m_AvatarService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -65,7 +63,7 @@ namespace OpenSim.Services
             sr.Close();
             body = body.Trim();
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -102,11 +100,11 @@ namespace OpenSim.Services
                                 return FailureResult();
                         return CacheWearableData(request);
                 }
-                m_log.DebugFormat("[AVATAR HANDLER]: unknown method request: {0}", method);
+                MainConsole.Instance.DebugFormat("[AVATAR HANDLER]: unknown method request: {0}", method);
             }
             catch (Exception e)
             {
-                m_log.Debug("[AVATAR HANDLER]: Exception {0}" + e);
+                MainConsole.Instance.Debug("[AVATAR HANDLER]: Exception {0}" + e);
             }
 
             return FailureResult();

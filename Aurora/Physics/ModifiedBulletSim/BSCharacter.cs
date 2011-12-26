@@ -36,7 +36,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 {
     public class BSCharacter : PhysicsCharacter
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly string LogHeader = "[BULLETS CHAR]";
 
         private readonly float _mass = 80f;
@@ -168,7 +167,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set
             {
                 _force = value;
-                // m_log.DebugFormat("{0}: Force = {1}", LogHeader, _force);
+                // MainConsole.Instance.DebugFormat("{0}: Force = {1}", LogHeader, _force);
 #if (!ISWIN)
                 _scene.TaintedObject(delegate()
                 {
@@ -357,7 +356,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
             else
             {
-                m_log.WarnFormat("{0}: Got a NaN force applied to a Character", LogHeader);
+                MainConsole.Instance.WarnFormat("{0}: Got a NaN force applied to a Character", LogHeader);
             }
             //m_lastUpdateSent = false;
         }
@@ -548,7 +547,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         public void Collide(uint collidingWith, ActorTypes type, Vector3 contactPoint, Vector3 contactNormal,
                             float pentrationDepth)
         {
-            // m_log.DebugFormat("{0}: Collide: ms={1}, id={2}, with={3}", LogHeader, _subscribedEventsMs, LocalID, collidingWith);
+            // MainConsole.Instance.DebugFormat("{0}: Collide: ms={1}, id={2}, with={3}", LogHeader, _subscribedEventsMs, LocalID, collidingWith);
 
             // The following makes IsColliding() and IsCollidingGround() work
             _collidingStep = _scene.SimulationStep;

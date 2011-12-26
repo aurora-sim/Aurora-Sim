@@ -39,8 +39,6 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class LoadRegionsPlugin : IApplicationPlugin
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public bool Enabled = true;
 
         private const string m_name = "LoadRegionsPlugin";
@@ -53,6 +51,9 @@ namespace OpenSim.CoreApplicationPlugins
             get { return m_name; }
         }
 
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
 
         public void Initialize(ISimulationBase openSim)
         {
@@ -88,7 +89,7 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!loader.Enabled)
                     continue;
 
-                m_log.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
+                MainConsole.Instance.Info("[LoadRegionsPlugin]: Checking for region configurations from " + loader.Name + " plugin...");
                 RegionInfo[] regionsToLoad = loader.LoadRegions();
                 if (regionsToLoad == null)
                     continue; //No regions, end for this module
@@ -96,7 +97,7 @@ namespace OpenSim.CoreApplicationPlugins
                 string reason;
                 if (!CheckRegionsForSanity(regionsToLoad, out reason))
                 {
-                    m_log.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
+                    MainConsole.Instance.Error("[LoadRegionsPlugin]: Halting startup due to conflicts in region configurations");
                     if (!loader.FailedToStartRegions(reason))
                         throw new Exception(); //If it doesn't fix it, end the program
                 }
@@ -149,7 +150,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     if (regions[i].RegionID == regions[j].RegionID)
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same UUID {2}",
                             regions[i].RegionName, regions[j].RegionName, regions[i].RegionID);
                         reason = "Same UUID for regions " + regions[i].RegionName + ", " + regions[j].RegionName;
@@ -158,7 +159,7 @@ namespace OpenSim.CoreApplicationPlugins
                     if (
                         regions[i].RegionLocX == regions[j].RegionLocX && regions[i].RegionLocY == regions[j].RegionLocY)
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same grid location ({2}, {3})",
                             regions[i].RegionName, regions[j].RegionName, regions[i].RegionLocX, regions[i].RegionLocY);
                         reason = "Same grid location for regions " + regions[i].RegionName + ", " +
@@ -167,7 +168,7 @@ namespace OpenSim.CoreApplicationPlugins
                     }
                     if (regions[i].InternalEndPoint.Port == regions[j].InternalEndPoint.Port)
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[LOADREGIONS]: Regions {0} and {1} have the same internal IP port {2}",
                             regions[i].RegionName, regions[j].RegionName, regions[i].InternalEndPoint.Port);
                         reason = "Same internal end point for regions " + regions[i].RegionName + ", " +

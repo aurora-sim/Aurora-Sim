@@ -44,8 +44,6 @@ namespace OpenSim.Region.CoreModules.World.Land
     {
         #region Member Variables
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected LandData m_landData = new LandData();
         private int m_lastSeqId;
         protected IParcelManagementModule m_parcelManagementModule;
@@ -350,7 +348,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[LAND]: Error updating land object " + this.LandData.Name + " in region " +
+                    MainConsole.Instance.Warn("[LAND]: Error updating land object " + this.LandData.Name + " in region " +
                                this.m_scene.RegionInfo.RegionName + " : " + ex);
                 }
             }
@@ -567,7 +565,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                  }
                                                  catch (Exception)
                                                  {
-                                                     m_log.Warn("[LAND]: " + "unable to get land at x: " +
+                                                     MainConsole.Instance.Warn("[LAND]: " + "unable to get land at x: " +
                                                                 Util.Clamp((int) Math.Round(avatar.AbsolutePosition.X),
                                                                            0, (m_scene.RegionInfo.RegionSizeX - 1)) +
                                                                 " y: " +
@@ -591,7 +589,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                  }
                                                  else
                                                  {
-                                                     m_log.Warn("[LAND]: " + "unable to get land at x: " +
+                                                     MainConsole.Instance.Warn("[LAND]: " + "unable to get land at x: " +
                                                                 Util.Clamp((int) Math.Round(avatar.AbsolutePosition.X),
                                                                            0, (m_scene.RegionInfo.RegionSizeX - 1)) +
                                                                 " y: " +
@@ -848,7 +846,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
                 catch (InvalidOperationException)
                 {
-                    m_log.Error("[LAND]: Unable to force select the parcel objects. Arr.");
+                    MainConsole.Instance.Error("[LAND]: Unable to force select the parcel objects. Arr.");
                 }
 
                 remote_client.SendForceClientSelectObjects(resultLocalIDs);

@@ -48,12 +48,6 @@ namespace OpenSim.Region.CoreModules
         private const double m_SeasonalCycle = 2.0D*Math.PI; // Ditto
         private const int TICKS_PER_SECOND = 10000000;
 
-        /// <summary>
-        ///   Note:  Sun Hour can be a little deceaving.  Although it's based on a 24 hour clock
-        ///   it is not based on ~06:00 == Sun Rise.   Rather it is based on 00:00 being sun-rise.
-        /// </summary>
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private double HorizonShift; // Axis offset to skew day and night
         private float Magnitude; // Normal tilt
         private float OrbitalPosition; // Orbital placement at a point in time
@@ -201,7 +195,7 @@ namespace OpenSim.Region.CoreModules
 
             TimeZone local = TimeZone.CurrentTimeZone;
             TicksUTCOffset = local.GetUtcOffset(local.ToLocalTime(DateTime.Now)).Ticks;
-            //m_log.Debug("[SUN]: localtime offset is " + TicksUTCOffset);
+            //MainConsole.Instance.Debug("[SUN]: localtime offset is " + TicksUTCOffset);
 
             // Align ticks with Second Life
 
@@ -250,7 +244,7 @@ namespace OpenSim.Region.CoreModules
             }
             catch (Exception e)
             {
-                m_log.Debug("[SUN]: Configuration access failed, using defaults. Reason: " + e.Message);
+                MainConsole.Instance.Debug("[SUN]: Configuration access failed, using defaults. Reason: " + e.Message);
                 m_RegionMode = d_mode;
                 m_YearLengthDays = d_year_length;
                 m_DayLengthHours = d_day_length;
@@ -295,11 +289,11 @@ namespace OpenSim.Region.CoreModules
 
                     ready = true;
 
-                    //m_log.Debug("[SUN]: Mode is " + m_RegionMode);
-                    //m_log.Debug("[SUN]: Initialization completed. Day is " + SecondsPerSunCycle + " seconds, and year is " + m_YearLengthDays + " days");
-                    //m_log.Debug("[SUN]: Axis offset is " + m_HorizonShift);
-                    //m_log.Debug("[SUN]: Percentage of time for daylight " + m_DayTimeSunHourScale);
-                    //m_log.Debug("[SUN]: Positional data updated every " + m_UpdateInterval + " frames");
+                    //MainConsole.Instance.Debug("[SUN]: Mode is " + m_RegionMode);
+                    //MainConsole.Instance.Debug("[SUN]: Initialization completed. Day is " + SecondsPerSunCycle + " seconds, and year is " + m_YearLengthDays + " days");
+                    //MainConsole.Instance.Debug("[SUN]: Axis offset is " + m_HorizonShift);
+                    //MainConsole.Instance.Debug("[SUN]: Percentage of time for daylight " + m_DayTimeSunHourScale);
+                    //MainConsole.Instance.Debug("[SUN]: Positional data updated every " + m_UpdateInterval + " frames");
 
                     break;
             }
@@ -417,8 +411,8 @@ namespace OpenSim.Region.CoreModules
                 m_SunFixedHour = FixedSunHour;
                 m_SunFixed = FixedSun;
 
-                //m_log.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
-                //m_log.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
+                //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Fixed Sun? : {0}", m_SunFixed.ToString());
+                //MainConsole.Instance.DebugFormat("[SUN]: Sun Settings Update: Sun Hour   : {0}", m_SunFixedHour.ToString());
 
                 // Generate shared values
                 GenSunPos();
@@ -427,7 +421,7 @@ namespace OpenSim.Region.CoreModules
                 SunUpdateToAllClients();
 
 
-                //m_log.DebugFormat("[SUN]: PosTime : {0}", PosTime.ToString());
+                //MainConsole.Instance.DebugFormat("[SUN]: PosTime : {0}", PosTime.ToString());
             }
         }
 
@@ -500,8 +494,8 @@ namespace OpenSim.Region.CoreModules
             Tilt.W = (float) (m_AverageTilt + (m_SeasonalTilt*Math.Sin(SeasonalOffset)));
                 // Calculate seasonal orbital N/S tilt
 
-            // m_log.Debug("[SUN] Total distance travelled = "+TotalDistanceTravelled+", present position = "+OrbitalPosition+".");
-            // m_log.Debug("[SUN] Total seasonal progress = "+SeasonalOffset+", present tilt = "+Tilt.W+".");
+            // MainConsole.Instance.Debug("[SUN] Total distance travelled = "+TotalDistanceTravelled+", present position = "+OrbitalPosition+".");
+            // MainConsole.Instance.Debug("[SUN] Total seasonal progress = "+SeasonalOffset+", present tilt = "+Tilt.W+".");
 
             // The sun rotates about the Z axis
 
@@ -522,7 +516,7 @@ namespace OpenSim.Region.CoreModules
             Position.Z = Position.Z + (float) HorizonShift;
             Position = Vector3.Normalize(Position);
 
-            // m_log.Debug("[SUN] Position("+Position.X+","+Position.Y+","+Position.Z+")");
+            // MainConsole.Instance.Debug("[SUN] Position("+Position.X+","+Position.Y+","+Position.Z+")");
 
             Velocity.X = 0;
             Velocity.Y = 0;
@@ -560,15 +554,15 @@ namespace OpenSim.Region.CoreModules
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
             {
-                m_log.InfoFormat("[Sun]: Console Scene is not my scene.");
+                MainConsole.Instance.InfoFormat("[Sun]: Console Scene is not my scene.");
                 return;
             }
 
-            m_log.InfoFormat("[Sun]: Processing command.");
+            MainConsole.Instance.InfoFormat("[Sun]: Processing command.");
 
             foreach (string output in ParseCmdParams(cmdparams))
             {
-                m_log.Info("[SUN] " + output);
+                MainConsole.Instance.Info("[SUN] " + output);
             }
         }
 

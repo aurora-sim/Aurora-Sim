@@ -44,8 +44,6 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
     /// </summary>
     public class GenericSystemDrawing : ITerrainLoader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         #region ITerrainLoader Members
 
         public string FileExtension
@@ -78,7 +76,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             int xoffset = w*x;
             int yoffset = h*(fileHeight - y);
 
-            //m_log.DebugFormat(
+            //MainConsole.Instance.DebugFormat(
             //    "[TERRAIN]: Loading tile {0},{1} (offset {2},{3}) from tilemap size of {4},{5}",
             //    x, y, xoffset, yoffset, fileWidth, fileHeight);
 
@@ -93,7 +91,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
             {
                 // This error WILL appear if the number of Y tiles is too high because of how it works from the bottom up
                 // However, this still spits out ugly unreferenced object errors on the console
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[TERRAIN]: Couldn't load tile {0},{1} (from bitmap coordinates {2},{3}). Number of specified Y tiles may be too high: {4}",
                     x, y, xoffset, yoffset, e);
             }

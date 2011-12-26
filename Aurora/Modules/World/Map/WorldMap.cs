@@ -47,9 +47,6 @@ namespace Aurora.Modules
 {
     public class AuroraWorldMapModule : INonSharedRegionModule, IWorldMapModule
 	{
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private const string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
         //private static readonly UUID STOP_UUID = UUID.Random();
 
@@ -84,7 +81,7 @@ namespace Aurora.Modules
                         "AuroraWorldMapModule")
                     return;
                 m_Enabled = true;
-                //m_log.Info("[AuroraWorldMap] Initializing");
+                //MainConsole.Instance.Info("[AuroraWorldMap] Initializing");
                 m_config = source;
                 m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
                 minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
@@ -212,7 +209,7 @@ namespace Aurora.Modules
 		{
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
             regionimage = regionimage.Replace("-", "");
-            m_log.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
+            MainConsole.Instance.Debug("[WORLD MAP]: JPEG Map location: " + MainServer.Instance.ServerURI + "/index.php?method=" + regionimage);
 
             MainServer.Instance.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
 
@@ -397,7 +394,7 @@ namespace Aurora.Modules
             else
             {
                 if (flag != 2) //Land sales
-                    m_log.Warn("[World Map] : Got new flag, " + flag + " RequestMapBlocks()");
+                    MainConsole.Instance.Warn("[World Map] : Got new flag, " + flag + " RequestMapBlocks()");
             }
 		}
 
@@ -703,7 +700,7 @@ namespace Aurora.Modules
             regionImage = regionImage.Replace("-", "");
             if (keysvals["method"].ToString() != regionImage)
                 return reply;
-            m_log.Debug("[WORLD MAP]: Sending map image jpeg");
+            MainConsole.Instance.Debug("[WORLD MAP]: Sending map image jpeg");
             const int statuscode = 200;
             byte[] jpeg = new byte[0];
 
@@ -745,7 +742,7 @@ namespace Aurora.Modules
                 catch (Exception)
                 {
                     // Dummy!
-                    m_log.Warn("[WORLD MAP]: Unable to generate Map image");
+                    MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
                 }
                 finally
                 {
@@ -809,7 +806,7 @@ namespace Aurora.Modules
 
             string exportPath = cmdparams.Length > 1 ? cmdparams[1] : DEFAULT_WORLD_MAP_EXPORT_PATH;
 
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[WORLD MAP]: Exporting world map for {0} to {1}", m_scene.RegionInfo.RegionName, exportPath);
 
             List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
@@ -858,7 +855,7 @@ namespace Aurora.Modules
 
             mapTexture.Save(exportPath, ImageFormat.Jpeg);
 
-            m_log.InfoFormat(
+            MainConsole.Instance.InfoFormat(
                 "[WORLD MAP]: Successfully exported world map for {0} to {1}",
                 m_scene.RegionInfo.RegionName, exportPath);
         }
@@ -904,56 +901,14 @@ namespace Aurora.Modules
             if (heightmap == null)
                 return;
 
-            //m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
-
-            //Delete the old assets and make sure the UUIDs exist
-            bool changed = false;
-            if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)
-            {
-                m_scene.RegionInfo.RegionSettings.TerrainImageID = UUID.Random ();
-                changed = true;
-            }
-
-            if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
-            {
-                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = UUID.Random ();
-                changed = true;
-            }
-
-            AssetBase Mapasset = new AssetBase(
-                m_scene.RegionInfo.RegionSettings.TerrainImageID,
-                "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                AssetType.Simstate,
-                m_scene.RegionInfo.RegionID)
-                                     {
-                                         Description = m_scene.RegionInfo.RegionName,
-                                         Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
-                                     };
-
-            AssetBase Terrainasset = new AssetBase(
-                m_scene.RegionInfo.RegionSettings.TerrainMapImageID,
-                "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                AssetType.Simstate,
-                m_scene.RegionInfo.RegionID)
-                                         {
-                                             Description = m_scene.RegionInfo.RegionName,
-                                             Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
-                                         };
-
-            if(changed)
-                m_scene.RegionInfo.RegionSettings.Save();
-
             if (!m_asyncMapTileCreation)
             {
-                CreateMapTileAsync(Mapasset, Terrainasset);
+                CreateMapTileAsync(null);
             }
             else
             {
-                CreateMapTile d = CreateMapTileAsync;
-                d.BeginInvoke(Mapasset, Terrainasset, CreateMapTileAsyncCompleted, d);
+                Util.FireAndForget(CreateMapTileAsync);
             }
-            Mapasset = null;
-            Terrainasset = null;
         }
 
         #region Async map tile
@@ -970,36 +925,72 @@ namespace Aurora.Modules
 
         #region Generate map tile
 
-        public void CreateMapTileAsync(AssetBase Mapasset, AssetBase Terrainasset)
+        public void CreateMapTileAsync(object worthless)
         {
             IMapImageGenerator terrain = m_scene.RequestModuleInterface<IMapImageGenerator>();
 
             if (terrain == null)
                 return;
 
+            bool changed = false;
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);
             if (terraindata != null)
             {
-                Terrainasset.Data = terraindata;
-                Terrainasset.ID = m_scene.AssetService.Store(Terrainasset);
-                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != Terrainasset.ID)
+                UUID newID;
+                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
                 {
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = Terrainasset.ID;
-                    m_scene.RegionInfo.RegionSettings.Save();
+                    AssetBase Terrainasset = new AssetBase(
+                        UUID.Random(),
+                        "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
+                        AssetType.Simstate,
+                        m_scene.RegionInfo.RegionID)
+                        {
+                            Data = terraindata,
+                            Description = m_scene.RegionInfo.RegionName,
+                            Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                        };
+                    newID = m_scene.AssetService.Store(Terrainasset);
+                }
+                else
+                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata, out newID);
+                
+                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != newID)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = newID;
+                    changed = true;
                 }
             }
 
             if (mapdata != null)
             {
-                Mapasset.Data = mapdata;
-                Mapasset.ID = m_scene.AssetService.Store(Mapasset);
-                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != Mapasset.ID)
+                UUID newID;
+                if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)
                 {
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = Mapasset.ID;
-                    m_scene.RegionInfo.RegionSettings.Save();
+                    AssetBase Mapasset = new AssetBase(
+                        UUID.Random(),
+                        "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
+                        AssetType.Simstate,
+                        m_scene.RegionInfo.RegionID)
+                            {
+                                Data = mapdata,
+                                Description = m_scene.RegionInfo.RegionName,
+                                Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                    };
+                    newID = m_scene.AssetService.Store(Mapasset);
+                }
+                else
+                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata, out newID);
+
+                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != newID)
+                {
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = newID;
+                    changed = true;
                 }
             }
+
+            if (changed)//Make sure to update the db with the new settings
+                m_scene.RegionInfo.RegionSettings.Save();
 
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
@@ -1039,7 +1030,7 @@ namespace Aurora.Modules
             catch (Exception)
             {
                 // Dummy!
-                m_log.Warn("[WORLD MAP]: Unable to generate Map image");
+                MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
             }
             finally
             {

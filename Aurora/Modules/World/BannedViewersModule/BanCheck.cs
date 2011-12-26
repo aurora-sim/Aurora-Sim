@@ -98,8 +98,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IPresenceInfo presenceInfo = null;
 
         private AllowLevel GrieferAllowLevel = AllowLevel.AllowCleanOnly;
@@ -244,7 +242,7 @@ namespace Aurora.Modules
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, cmdparams[1], cmdparams[2]);
                 if (account == null)
                 {
-                    m_log.Warn("Cannot find user.");
+                    MainConsole.Instance.Warn("Cannot find user.");
                     return;
                 }
                 AgentID = account.PrincipalID;
@@ -252,7 +250,7 @@ namespace Aurora.Modules
             info = GetInformation(AgentID);
             if (info == null)
             {
-                m_log.Warn("Cannot find user.");
+                MainConsole.Instance.Warn("Cannot find user.");
                 return;
             }
             DisplayUserInfo(info);
@@ -267,7 +265,7 @@ namespace Aurora.Modules
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 2));
                 if (account == null)
                 {
-                    m_log.Warn("Cannot find user.");
+                    MainConsole.Instance.Warn("Cannot find user.");
                     return;
                 }
                 AgentID = account.PrincipalID;
@@ -275,12 +273,12 @@ namespace Aurora.Modules
             info = GetInformation(AgentID);
             if (info == null)
             {
-                m_log.Warn("Cannot find user.");
+                MainConsole.Instance.Warn("Cannot find user.");
                 return;
             }
             info.Flags = PresenceInfo.PresenceInfoFlags.Banned;
             presenceInfo.UpdatePresenceInfo(info);
-            m_log.Fatal("User blocked from logging in");
+            MainConsole.Instance.Fatal("User blocked from logging in");
         }
 
         protected void UnBlockUser(string[] cmdparams)
@@ -292,7 +290,7 @@ namespace Aurora.Modules
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 2));
                 if (account == null)
                 {
-                    m_log.Warn("Cannot find user.");
+                    MainConsole.Instance.Warn("Cannot find user.");
                     return;
                 }
                 AgentID = account.PrincipalID;
@@ -300,12 +298,12 @@ namespace Aurora.Modules
             info = GetInformation(AgentID);
             if (info == null)
             {
-                m_log.Warn("Cannot find user.");
+                MainConsole.Instance.Warn("Cannot find user.");
                 return;
             }
             info.Flags = PresenceInfo.PresenceInfoFlags.Clean;
             presenceInfo.UpdatePresenceInfo(info);
-            m_log.Fatal("User block removed");
+            MainConsole.Instance.Fatal("User block removed");
         }
 
         protected void SetUserInfo(string[] cmdparams)
@@ -318,7 +316,7 @@ namespace Aurora.Modules
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, cmdparams[1], cmdparams[2]);
                 if (account == null)
                 {
-                    m_log.Warn("Cannot find user.");
+                    MainConsole.Instance.Warn("Cannot find user.");
                     return;
                 }
                 AgentID = account.PrincipalID;
@@ -327,7 +325,7 @@ namespace Aurora.Modules
             info = GetInformation(AgentID);
             if (info == null)
             {
-                m_log.Warn("Cannot find user.");
+                MainConsole.Instance.Warn("Cannot find user.");
                 return;
             }
             try
@@ -336,23 +334,23 @@ namespace Aurora.Modules
             }
             catch
             {
-                m_log.Warn("Please choose a valid flag: Clean, Suspected, Known, Banned");
+                MainConsole.Instance.Warn("Please choose a valid flag: Clean, Suspected, Known, Banned");
                 return;
             }
-            m_log.Info("Set Flags for " + info.AgentID.ToString() + " to " + info.Flags.ToString());
+            MainConsole.Instance.Info("Set Flags for " + info.AgentID.ToString() + " to " + info.Flags.ToString());
             presenceInfo.UpdatePresenceInfo(info);
         }
 
         private void DisplayUserInfo(PresenceInfo info)
         {
-            m_log.Info("User Info for " + info.AgentID);
-            m_log.Info("   AgentID: " + info.AgentID);
-            m_log.Info("   Flags: " + info.Flags);
-            /*m_log.Info("   ID0: " + info.LastKnownID0);
-            m_log.Info("   IP: " + info.LastKnownIP);
-            m_log.Info("   Mac: " + info.LastKnownMac);
-            m_log.Info("   Viewer: " + info.LastKnownViewer);
-            m_log.Info("   Platform: " + info.Platform);*/
+            MainConsole.Instance.Info("User Info for " + info.AgentID);
+            MainConsole.Instance.Info("   AgentID: " + info.AgentID);
+            MainConsole.Instance.Info("   Flags: " + info.Flags);
+            /*MainConsole.Instance.Info("   ID0: " + info.LastKnownID0);
+            MainConsole.Instance.Info("   IP: " + info.LastKnownIP);
+            MainConsole.Instance.Info("   Mac: " + info.LastKnownMac);
+            MainConsole.Instance.Info("   Viewer: " + info.LastKnownViewer);
+            MainConsole.Instance.Info("   Platform: " + info.Platform);*/
         }
 
         private bool CheckClient(UUID AgentID, out string message)

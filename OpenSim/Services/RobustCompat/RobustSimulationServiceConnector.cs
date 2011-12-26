@@ -38,10 +38,6 @@ namespace OpenSim.Services.RobustCompat
 {
     public class RobustSimulationServicesConnector : SimulationServiceConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         public override void Initialize(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlers = config.Configs["Handlers"];

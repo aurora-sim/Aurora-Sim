@@ -98,17 +98,17 @@ namespace Aurora.Modules.World.WorldShader
                 MainConsole.Instance.Output("Select a scene first");
                 return;
             }
-            bool greyScale = MainConsole.Instance.CmdPrompt("Greyscale (yes or no)?").ToLower() == "yes";
+            bool greyScale = MainConsole.Instance.Prompt("Greyscale (yes or no)?").ToLower() == "yes";
             int R = 0;
             int G = 0;
             int B = 0;
             float percent = 0;
             if (!greyScale)
             {
-                R = int.Parse(MainConsole.Instance.CmdPrompt("R color (0 - 255)"));
-                G = int.Parse(MainConsole.Instance.CmdPrompt("G color (0 - 255)"));
-                B = int.Parse(MainConsole.Instance.CmdPrompt("B color (0 - 255)"));
-                percent = float.Parse(MainConsole.Instance.CmdPrompt("Percent to merge in the shade (0 - 100)"));
+                R = int.Parse(MainConsole.Instance.Prompt("R color (0 - 255)"));
+                G = int.Parse(MainConsole.Instance.Prompt("G color (0 - 255)"));
+                B = int.Parse(MainConsole.Instance.Prompt("B color (0 - 255)"));
+                percent = float.Parse(MainConsole.Instance.Prompt("Percent to merge in the shade (0 - 100)"));
             }
             if (percent > 1)
                 percent /= 100;

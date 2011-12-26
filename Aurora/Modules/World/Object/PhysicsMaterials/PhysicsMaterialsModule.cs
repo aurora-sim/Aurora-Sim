@@ -42,7 +42,7 @@ namespace Aurora.Modules
 {
     public class PhysicsMaterialsModule : INonSharedRegionModule
     {
-        //private static readonly ILog m_log =
+        //private static readonly ILog MainConsole.Instance =
         //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 

@@ -127,11 +127,11 @@ namespace Aurora.Modules
             return retVal;
         }
 
-        public bool UpdateContent(UUID id, byte[] data)
+        public bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            bool asset = m_localService.UpdateContent(id, data);
+            bool asset = m_localService.UpdateContent(id, data, out newID);
             if (!asset)
-                asset = m_remoteService.UpdateContent(id, data);
+                asset = m_remoteService.UpdateContent(id, data, out newID);
             return asset;
         }
 

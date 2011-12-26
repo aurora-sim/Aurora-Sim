@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 {
     public class WorldCommModule : INonSharedRegionModule, IWorldComm
     {
-        // private static readonly ILog m_log =
+        // private static readonly ILog MainConsole.Instance =
         //     LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected static Vector3 CenterOfRegion = new Vector3(128, 128, 20);
@@ -376,7 +376,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_scriptModule.PokeThreads(UUID.Zero);
             if (BlockedChannels.Contains(channel))
                 return;
-            // m_log.DebugFormat("[WorldComm] got[2] type {0}, channel {1}, name {2}, id {3}, msg {4}",
+            // MainConsole.Instance.DebugFormat("[WorldComm] got[2] type {0}, channel {1}, name {2}, id {3}, msg {4}",
             //                   type, channel, name, id, msg);
 
             // Determine which listen event filters match the given set of arguments, this results

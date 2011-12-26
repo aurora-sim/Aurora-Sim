@@ -39,8 +39,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
     public class RegionLoaderWebServer : IRegionLoader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IConfigSource m_configSource;
         private bool m_enabled;
 
@@ -79,19 +77,19 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 string url = RegionStartupConfig.GetString("WebServerURL", String.Empty).Trim();
                 if (url == String.Empty)
                 {
-                    //m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
+                    //MainConsole.Instance.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;
                 }
                 HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(url);
                 webRequest.Timeout = 30000; //30 Second Timeout
 
-                m_log.Debug("[WEBLOADER]: Sending Download Request...");
+                MainConsole.Instance.Debug("[WEBLOADER]: Sending Download Request...");
                 HttpWebResponse webResponse = (HttpWebResponse) webRequest.GetResponse();
 
-                m_log.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
+                MainConsole.Instance.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
                 StreamReader reader = new StreamReader(webResponse.GetResponseStream());
 
-                m_log.Debug("[WEBLOADER]: Done downloading region information from server.");
+                MainConsole.Instance.Debug("[WEBLOADER]: Done downloading region information from server.");
 
                 List<RegionInfo> regionInfos = new List<RegionInfo>();
 

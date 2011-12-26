@@ -74,11 +74,6 @@ namespace Aurora.Simulation.Base
     public class BaseApplication
     {
         /// <summary>
-        ///   Text Console Logger
-        /// </summary>
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
         ///   Save Crashes in the bin/crashes folder.  Configurable with m_crashDir
         /// </summary>
         public static bool m_saveCrashDumps;
@@ -121,30 +116,30 @@ namespace Aurora.Simulation.Base
             if (logConfigFile != String.Empty)
             {
                 XmlConfigurator.Configure(new FileInfo(logConfigFile));
-                //m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
+                //MainConsole.Instance.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file",
                 //                 logConfigFile);
             }
             else
             {
                 XmlConfigurator.Configure();
-                //m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
+                //MainConsole.Instance.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
             }
 
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             int workerThreads, iocpThreads;
             ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
-            //m_log.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
+            //MainConsole.Instance.InfoFormat("[OPENSIM MAIN]: Runtime gave us {0} worker threads and {1} IOCP threads", workerThreads, iocpThreads);
             if (workerThreads < 500 || iocpThreads < 1000)
             {
                 workerThreads = 500;
                 iocpThreads = 1000;
-                //m_log.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
+                //MainConsole.Instance.Info("[OPENSIM MAIN]: Bumping up to 500 worker threads and 1000 IOCP threads");
                 ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
             }
 
             // Check if the system is compatible with OpenSimulator.
             // Ensures that the minimum system requirements are met
-            //m_log.Info("[Setup]: Performing compatibility checks... \n");
+            //MainConsole.Instance.Info("[Setup]: Performing compatibility checks... \n");
             string supported = String.Empty;
             if (Util.IsEnvironmentSupported(ref supported))
             {
@@ -152,11 +147,11 @@ namespace Aurora.Simulation.Base
                 // Get the current settings.
                 ThreadPool.GetMinThreads(out minWorker, out minIOC);
 
-                //m_log.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
+                //MainConsole.Instance.InfoFormat("[Setup]: Environment is compatible. Thread Workers: {0}, IO Workers {1}\n", minWorker, minIOC);
             }
             else
             {
-                m_log.Warn("[Setup]: Environment is unsupported (" + supported + ")\n");
+                MainConsole.Instance.Warn("[Setup]: Environment is unsupported (" + supported + ")\n");
 #if BlockUnsupportedVersions
                     Thread.Sleep(10000); //Sleep 10 seconds
                     return;
@@ -304,7 +299,7 @@ namespace Aurora.Simulation.Base
             msg += "\r\n";
             msg += "Application is terminating: " + isTerminating.ToString() + "\r\n";
 
-            m_log.ErrorFormat("[APPLICATION]: {0}", msg);
+            MainConsole.Instance.ErrorFormat("[APPLICATION]: {0}", msg);
 
             handleException(msg, ex);
         }
@@ -338,7 +333,7 @@ namespace Aurora.Simulation.Base
                 }
                 catch (Exception e2)
                 {
-                    m_log.ErrorFormat("[CRASH LOGGER CRASHED]: {0}", e2);
+                    MainConsole.Instance.ErrorFormat("[CRASH LOGGER CRASHED]: {0}", e2);
                 }
             }
 

@@ -25,8 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Nini.Config;
+using log4net;
 using log4net.Core;
 
 namespace OpenSim.Framework
@@ -93,7 +95,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name = "prompt">The message that will be displayed to the console before a prompt is started</param>
         /// <returns></returns>
-        string CmdPrompt(string prompt);
+        string Prompt(string prompt);
 
         /// <summary>
         ///   Reads a line of text from the console, and if the user presses enter with no text, defaultReturn is returned for this method
@@ -101,15 +103,7 @@ namespace OpenSim.Framework
         /// <param name = "prompt">The message that will be displayed to the console before a prompt is started</param>
         /// <param name = "defaultReturn">The default response to return if "" is given</param>
         /// <returns></returns>
-        string CmdPrompt(string prompt, string defaultReturn);
-
-        /// <summary>
-        ///   Reads a line of text from the console, and refuses to read if the line contains any of the excluded characters
-        /// </summary>
-        /// <param name = "prompt">The message that will be displayed to the console before a prompt is started</param>
-        /// <param name = "excludedCharacters">The characters that cannot be in the response</param>
-        /// <returns></returns>
-        string CmdPrompt(string prompt, List<char> excludedCharacters);
+        string Prompt(string prompt, string defaultReturn);
 
         /// <summary>
         ///   Reads a line of text from the console, excluding the given characters and will return defaultResponse if enter is pressed with ""
@@ -118,7 +112,7 @@ namespace OpenSim.Framework
         /// <param name = "defaultResponse">The default response to return if "" is given</param>
         /// <param name = "excludedCharacters">The characters that cannot be in the response</param>
         /// <returns></returns>
-        string CmdPrompt(string prompt, string defaultResponse, List<char> excludedCharacters);
+        string Prompt(string prompt, string defaultResponse, List<char> excludedCharacters);
 
         /// <summary>
         ///   Reads a line of text from the console, returning defaultResponse if no response is given, only the given options are valid entries for the user to use
@@ -127,23 +121,14 @@ namespace OpenSim.Framework
         /// <param name = "defaultresponse">The default response to return if "" is given</param>
         /// <param name = "options">The options that the user has to select from</param>
         /// <returns></returns>
-        string CmdPrompt(string prompt, string defaultresponse, List<string> options);
+        string Prompt(string prompt, string defaultresponse, List<string> options);
 
         /// <summary>
         ///   Sets up a prompt for secure information (hides the user text and disallows viewing of the text typed later)
         /// </summary>
         /// <param name = "prompt">The message that will be displayed to the console before a prompt is started</param>
         /// <returns></returns>
-        string PasswdPrompt(string prompt);
-
-        /// <summary>
-        ///   Read a line from the console
-        /// </summary>
-        /// <param name = "prompt">The message that will be displayed to the console before a prompt is started</param>
-        /// <param name = "isCommand">Should this execute a command if it matches a command (runs RunCommand method)</param>
-        /// <param name = "echo">Should what is typed for this line be able to be seen? (hides what the user types for things like passwords)</param>
-        /// <returns></returns>
-        string ReadLine(string prompt, bool isCommand, bool echo);
+        string PasswordPrompt(string prompt);
 
         /// <summary>
         ///   Run the given command (acts like it was typed from the console)
@@ -160,5 +145,65 @@ namespace OpenSim.Framework
         ///   Stops the reading of the console and closes/restarts the console thread
         /// </summary>
         void EndConsoleProcessing();
+
+
+
+
+        bool IsDebugEnabled { get; }
+        bool IsErrorEnabled { get; }
+        bool IsFatalEnabled { get; }
+        bool IsInfoEnabled { get; }
+        bool IsWarnEnabled { get; }
+
+        void Debug(object message);
+        void Debug(object message, Exception exception);
+        void DebugFormat(string format, object arg0);
+        void DebugFormat(string format, params object[] args);
+        void DebugFormat(IFormatProvider provider, string format, params object[] args);
+        void DebugFormat(string format, object arg0, object arg1);
+        void DebugFormat(string format, object arg0, object arg1, object arg2);
+        void Error(object message);
+        void Error(object message, Exception exception);
+        void ErrorFormat(string format, object arg0);
+        void ErrorFormat(string format, params object[] args);
+        void ErrorFormat(IFormatProvider provider, string format, params object[] args);
+        void ErrorFormat(string format, object arg0, object arg1);
+        void ErrorFormat(string format, object arg0, object arg1, object arg2);
+        void Fatal(object message);
+        void Fatal(object message, Exception exception);
+        void FatalFormat(string format, object arg0);
+        void FatalFormat(string format, params object[] args);
+        void FatalFormat(IFormatProvider provider, string format, params object[] args);
+        void FatalFormat(string format, object arg0, object arg1);
+        void FatalFormat(string format, object arg0, object arg1, object arg2);
+        void Format(Level level, string format, object arg0);
+        void Format(Level level, string format, params object[] args);
+        void Format(Level level, IFormatProvider provider, string format, params object[] args);
+        void Format(Level level, string format, object arg0, object arg1);
+        void Format(Level level, string format, object arg0, object arg1, object arg2);
+        void Info(object message);
+        void Info(object message, Exception exception);
+        void InfoFormat(string format, object arg0);
+        void InfoFormat(string format, params object[] args);
+        void InfoFormat(IFormatProvider provider, string format, params object[] args);
+        void InfoFormat(string format, object arg0, object arg1);
+        void InfoFormat(string format, object arg0, object arg1, object arg2);
+        bool IsEnabled(Level level);
+        void Log(Level level, object message);
+        void Log(Level level, object message, Exception exception);
+        void Trace(object message);
+        void Trace(object message, Exception exception);
+        void TraceFormat(string format, object arg0);
+        void TraceFormat(string format, params object[] args);
+        void TraceFormat(IFormatProvider provider, string format, params object[] args);
+        void TraceFormat(string format, object arg0, object arg1);
+        void TraceFormat(string format, object arg0, object arg1, object arg2);
+        void Warn(object message);
+        void Warn(object message, Exception exception);
+        void WarnFormat(string format, object arg0);
+        void WarnFormat(string format, params object[] args);
+        void WarnFormat(IFormatProvider provider, string format, params object[] args);
+        void WarnFormat(string format, object arg0, object arg1);
+        void WarnFormat(string format, object arg0, object arg1, object arg2);
     }
 }

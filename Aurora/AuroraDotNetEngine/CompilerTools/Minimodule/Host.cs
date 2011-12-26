@@ -34,7 +34,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
     internal class Host : MarshalByRefObject, IHost
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IExtension m_extend;
         private readonly IGraphics m_graphics;
         private readonly IObject m_obj;
@@ -56,11 +55,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         public IObject Object
         {
             get { return m_obj; }
-        }
-
-        public ILog Console
-        {
-            get { return m_log; }
         }
 
         public IGraphics Graphics

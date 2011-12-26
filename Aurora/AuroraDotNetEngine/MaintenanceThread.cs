@@ -46,7 +46,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         #region Declares
 
         private const int EMPTY_WORK_KILL_THREAD_TIME = 250;
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly EventManager EventManager;
 
         /// <summary>
@@ -250,7 +249,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
+                        MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
                     }
                 }
                 else if (item.Action == LUType.Reupload)
@@ -263,7 +262,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     catch (Exception ex)
                     {
-                        m_log.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
+                        MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
                     }
                 }
             }
@@ -299,7 +298,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             catch (Exception ex)
             {
-                m_log.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
+                MainConsole.Instance.WarnFormat("[{0}]: Error in CmdHandlerPass, {1}", m_ScriptEngine.ScriptEngineName, ex);
             }
 
             if (module != null)
@@ -456,7 +455,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEvents.Enqueue(QIS);
                 ScriptEventCount++;
 #if Debug
-                m_log.Warn (ScriptEventCount + ", " + QIS.functionName);
+                MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
 #endif
             }
 
@@ -488,7 +487,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEvents.Enqueue(QIS);
                 ScriptEventCount++;
 #if Debug
-                m_log.Warn (ScriptEventCount + ", " + QIS.functionName);
+                MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
 #endif
             }
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
@@ -583,7 +582,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (QIS != null)
                     {
 #if Debug
-                        m_log.Warn(QIS.functionName + "," + ScriptEvents.Count);
+                        MainConsole.Instance.Warn(QIS.functionName + "," + ScriptEvents.Count);
 #endif
                         EventSchExec(QIS);
                         lock (ScriptEvents)
@@ -628,7 +627,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                     numberOfEmptyWork /= 2; //Cut it down, but don't zero it out, as this may just be one event
 #if Debug
-                m_log.Warn ("Sleep: " + timeToSleep);
+                MainConsole.Instance.Warn ("Sleep: " + timeToSleep);
 #endif
                 Interlocked.Increment(ref scriptThreadpool.nSleepingthreads);
                 Thread.Sleep(timeToSleep);
@@ -655,7 +654,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (QIS.functionName != "link_message" &&
                 QIS.VersionID != Interlocked.Read(ref QIS.ID.VersionID))
             {
-                m_log.WarnFormat("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}", QIS.VersionID,
+                MainConsole.Instance.WarnFormat("FOUND BAD VERSION ID, OLD {0}, NEW {1}, FUNCTION NAME {2}", QIS.VersionID,
                                  Interlocked.Read(ref QIS.ID.VersionID), QIS.functionName);
                 //return;
             }

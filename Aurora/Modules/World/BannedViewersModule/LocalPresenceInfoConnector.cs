@@ -39,8 +39,6 @@ namespace Aurora.Modules
 {
     public class LocalPresenceInfoConnector : IPresenceInfo, IAuroraDataPlugin
 	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD = null;
         private string DatabaseToAuthTable = "auth";
 

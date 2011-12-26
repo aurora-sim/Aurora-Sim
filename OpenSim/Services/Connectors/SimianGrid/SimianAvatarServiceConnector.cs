@@ -47,10 +47,6 @@ namespace OpenSim.Services.Connectors.SimianGrid
     /// </summary>
     public class SimianAvatarServiceConnector : IAvatarService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private string m_serverUrl = String.Empty;
 
         public string Name
@@ -104,7 +100,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             if (String.IsNullOrEmpty(m_serverUrl))
-                m_log.Info("[SIMIAN AVATAR CONNECTOR]: No AvatarServerURI specified, disabling connector");
+                MainConsole.Instance.Info("[SIMIAN AVATAR CONNECTOR]: No AvatarServerURI specified, disabling connector");
         }
 
         #region IAvatarService
@@ -138,16 +134,16 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 {
                     AvatarAppearance appearance = new AvatarAppearance(map);
                     // DEBUG ON
-                    m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] retrieved appearance for {0}:\n{1}", userID, appearance);
+                    MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR] retrieved appearance for {0}:\n{1}", userID, appearance);
                     // DEBUG OFF
                     return appearance;
                 }
 
-                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to decode appearance for {0}", userID);
+                MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to decode appearance for {0}", userID);
                 return null;
             }
 
-            m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to get appearance for {0}: {1}",
+            MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to get appearance for {0}: {1}",
                              userID, response["Message"].AsString());
             return null;
         }
@@ -160,12 +156,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
             OSDMap map = appearance.Pack();
             if (map == null)
             {
-                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to encode appearance for {0}", userID);
+                MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to encode appearance for {0}", userID);
                 return false;
             }
 
             // DEBUG ON
-            m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR] save appearance for {0}", userID);
+            MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR] save appearance for {0}", userID);
             // DEBUG OFF
 
             NameValueCollection requestArgs = new NameValueCollection
@@ -179,7 +175,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                m_log.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to save appearance for {0}: {1}",
+                MainConsole.Instance.WarnFormat("[SIMIAN AVATAR CONNECTOR]: Failed to save appearance for {0}: {1}",
                                  userID, response["Message"].AsString());
 
             return success;
@@ -253,14 +249,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 }
                 else
                 {
-                    m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID +
+                    MainConsole.Instance.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID +
                                ", LLAppearance is missing or invalid");
                     return null;
                 }
             }
             else
             {
-                m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID + ": " +
+                MainConsole.Instance.Warn("[SIMIAN AVATAR CONNECTOR]: Failed to get user appearance for " + userID + ": " +
                            response["Message"].AsString());
             }
 
@@ -272,7 +268,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         // <param name=""></param>
         public bool SetAvatar(UUID userID, AvatarData avatar)
         {
-            m_log.Debug("[SIMIAN AVATAR CONNECTOR]: SetAvatar called for " + userID);
+            MainConsole.Instance.Debug("[SIMIAN AVATAR CONNECTOR]: SetAvatar called for " + userID);
 
             if (avatar.AvatarType == 1) // LLAvatar
             {
@@ -338,14 +334,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 bool success = response["Success"].AsBoolean();
 
                 if (!success)
-                    m_log.Warn("[SIMIAN AVATAR CONNECTOR]: Failed saving appearance for " + userID + ": " +
+                    MainConsole.Instance.Warn("[SIMIAN AVATAR CONNECTOR]: Failed saving appearance for " + userID + ": " +
                                response["Message"].AsString());
 
                 return success;
             }
             else
             {
-                m_log.Error("[SIMIAN AVATAR CONNECTOR]: Can't save appearance for " + userID +
+                MainConsole.Instance.Error("[SIMIAN AVATAR CONNECTOR]: Can't save appearance for " + userID +
                             ". Unhandled avatar type " + avatar.AvatarType);
                 return false;
             }
@@ -353,7 +349,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public bool ResetAvatar(UUID userID)
         {
-            m_log.Error("[SIMIAN AVATAR CONNECTOR]: ResetAvatar called for " + userID + ", implement this");
+            MainConsole.Instance.Error("[SIMIAN AVATAR CONNECTOR]: ResetAvatar called for " + userID + ", implement this");
             return false;
         }
 

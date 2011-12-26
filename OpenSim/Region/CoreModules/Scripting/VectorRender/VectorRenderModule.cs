@@ -46,7 +46,6 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 {
     public class VectorRenderModule : ISharedRegionModule, IDynamicTextureRender
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string m_fontName = "Arial";
         private Graphics m_graph;
 
@@ -347,7 +346,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             }
             catch (Exception)
             {
-                m_log.Error(
+                MainConsole.Instance.Error(
                     "[VECTORRENDERMODULE]: OpenJpeg Encode Failed.  Empty byte data returned!");
             }
 
@@ -367,7 +366,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             catch (Exception)
             {
                 //Ckrinke: Add a WriteLine to remove the warning about 'e' defined but not used
-                // m_log.Debug("Problem with Draw. Please verify parameters." + e.ToString());
+                // MainConsole.Instance.Debug("Problem with Draw. Please verify parameters." + e.ToString());
                 parsed = -1;
             }
 

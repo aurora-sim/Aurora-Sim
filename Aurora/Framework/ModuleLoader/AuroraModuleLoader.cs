@@ -38,7 +38,6 @@ namespace Aurora.Framework
     public static class AuroraModuleLoader
     {
         private static bool ALLOW_CACHE = true;
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static List<string> dllBlackList;
         private static readonly List<string> firstLoad = new List<string>();
         private static readonly Dictionary<string, List<Type>> LoadedDlls = new Dictionary<string, List<Type>>();
@@ -240,7 +239,7 @@ namespace Aurora.Framework
             List<T> modules = new List<T>();
             if (dllBlackList.Contains(dllName))
                 return modules;
-            //m_log.Info ("[ModuleLoader]: Loading " + dllName);
+            //MainConsole.Instance.Info ("[ModuleLoader]: Loading " + dllName);
 
             Assembly pluginAssembly;
             if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
@@ -289,7 +288,7 @@ namespace Aurora.Framework
                         }
                         catch (Exception ex)
                         {
-                            m_log.Warn("[MODULELOADER]: Error loading module " + pluginType.Name + " in file " + dllName +
+                            MainConsole.Instance.Warn("[MODULELOADER]: Error loading module " + pluginType.Name + " in file " + dllName +
                                        " : " + ex);
                         }
                     }
@@ -358,7 +357,7 @@ namespace Aurora.Framework
             {
                 foreach (Exception e2 in e.LoaderExceptions)
                 {
-                    m_log.Error(e2.ToString());
+                    MainConsole.Instance.Error(e2.ToString());
                 }
                 throw e;
             }
@@ -421,7 +420,7 @@ namespace Aurora.Framework
             {
                 foreach (Exception e2 in e.LoaderExceptions)
                 {
-                    m_log.Error(e2.ToString());
+                    MainConsole.Instance.Error(e2.ToString());
                 }
                 throw e;
             }
@@ -484,7 +483,7 @@ namespace Aurora.Framework
                             catch (Exception e)
                             {
                                 if (!(e is MissingMethodException))
-                                    m_log.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName,
+                                    MainConsole.Instance.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName,
                                                       e.InnerException);
                                 return null;
                             }
@@ -498,7 +497,7 @@ namespace Aurora.Framework
             }
             catch (Exception e)
             {
-                m_log.Error(string.Format("Error loading plugin from {0}", dllName), e);
+                MainConsole.Instance.Error(string.Format("Error loading plugin from {0}", dllName), e);
                 return null;
             }
         }

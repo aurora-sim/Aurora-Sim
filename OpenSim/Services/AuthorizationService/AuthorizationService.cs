@@ -38,10 +38,6 @@ namespace OpenSim.Services.AuthorizationService
 {
     public class AuthorizationService : IAuthorizationService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IAuthorizationService Members
@@ -81,7 +77,7 @@ namespace OpenSim.Services.AuthorizationService
             registry.RegisterModuleInterface<IAuthorizationService>(this);
             m_registry = registry;
 
-            m_log.Debug("[AuthorizationService]: Local Authorization service enabled");
+            MainConsole.Instance.Debug("[AuthorizationService]: Local Authorization service enabled");
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

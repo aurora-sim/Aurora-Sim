@@ -39,7 +39,7 @@ namespace OpenSim.Framework
     /// </summary>
     public class LocalConsole : CommandConsole
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private readonly object m_syncRoot = new object();
 
@@ -85,6 +85,7 @@ namespace OpenSim.Framework
                 return;
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
+            MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help",
                                   "Get a general command list", base.Help);

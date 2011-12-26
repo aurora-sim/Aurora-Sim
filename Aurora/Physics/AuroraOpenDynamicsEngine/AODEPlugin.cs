@@ -43,7 +43,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     /// </summary>
     public class AuroraODEPlugin : IPhysicsPlugin
     {
-        //private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly log4net.ILog MainConsole.Instance = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private static bool m_initialized;
         private AuroraODEPhysicsScene _mScene;

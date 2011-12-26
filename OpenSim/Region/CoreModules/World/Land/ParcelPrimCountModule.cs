@@ -53,9 +53,6 @@ namespace OpenSim.Region.CoreModules.World.Land
 
     public class PrimCountModule : IPrimCountModule, INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly Dictionary<UUID, UUID> m_OwnerMap =
             new Dictionary<UUID, UUID>();
 
@@ -514,7 +511,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 catch (Exception e)
                 {
                     // Catch it and move on. This includes situations where splist has inconsistent info
-                    m_log.WarnFormat("[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
+                    MainConsole.Instance.WarnFormat("[ParcelPrimCountModule]: Problem processing action in Recount: {0}", e);
                 }
             }
 

@@ -48,7 +48,6 @@ namespace Aurora.Modules
     {
         #region Declarations
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         //ONLY create this once so that the UUID stays constant so that it isn't repeatedly sent to the client
         private readonly RegionLightShareData m_defaultWindLight = new RegionLightShareData();
         private readonly Dictionary<UUID, UUID> m_preivouslySentWindLight = new Dictionary<UUID, UUID>();
@@ -348,7 +347,7 @@ namespace Aurora.Modules
             if (SP == null)
                 return responsedata; //They don't exist
 
-            m_log.Info("[WindLightSettings]: Got a request to update WindLight from " + SP.Name);
+            MainConsole.Instance.Info("[WindLightSettings]: Got a request to update WindLight from " + SP.Name);
 
             OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
 

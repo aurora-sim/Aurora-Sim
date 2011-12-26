@@ -44,7 +44,6 @@ namespace OpenSim.Framework
         public const string OSPA_NAME_VALUE_SEPARATOR = " ";
         public const string OSPA_TUPLE_SEPARATOR = "|";
         public const string OSPA_PAIR_SEPARATOR = "=";
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static readonly char[] OSPA_TUPLE_SEPARATOR_ARRAY = OSPA_TUPLE_SEPARATOR.ToCharArray();
 
         /// <summary>
@@ -89,7 +88,7 @@ namespace OpenSim.Framework
             if (!ospa.StartsWith(OSPA_PREFIX))
                 return UUID.Zero;
 
-//            m_log.DebugFormat("[OSP RESOLVER]: Resolving {0}", ospa);
+//            MainConsole.Instance.DebugFormat("[OSP RESOLVER]: Resolving {0}", ospa);
 
             string ospaMeat = ospa.Substring(OSPA_PREFIX.Length);
             string[] ospaTuples = ospaMeat.Split(OSPA_TUPLE_SEPARATOR_ARRAY);
@@ -100,7 +99,7 @@ namespace OpenSim.Framework
 
                 if (tupleSeparatorIndex < 0)
                 {
-                    m_log.WarnFormat("[OSP RESOLVER]: Ignoring non-tuple component {0} in OSPA {1}", tuple, ospa);
+                    MainConsole.Instance.WarnFormat("[OSP RESOLVER]: Ignoring non-tuple component {0} in OSPA {1}", tuple, ospa);
                     continue;
                 }
 
@@ -142,7 +141,7 @@ namespace OpenSim.Framework
 
             if (nameSeparatorIndex < 0)
             {
-                m_log.WarnFormat("[OSP RESOLVER]: Ignoring unseparated name {0}", name);
+                MainConsole.Instance.WarnFormat("[OSP RESOLVER]: Ignoring unseparated name {0}", name);
                 return UUID.Zero;
             }
 
@@ -160,7 +159,7 @@ namespace OpenSim.Framework
             tempUserProfile.SurName = lastName;
             tempUserProfile.ID = HashName(tempUserProfile.Name);
             
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[OSP RESOLVER]: Adding temporary user profile for {0} {1}", tempUserProfile.Name, tempUserProfile.ID);
             commsManager.UserService.AddTemporaryUserProfile(tempUserProfile);
             

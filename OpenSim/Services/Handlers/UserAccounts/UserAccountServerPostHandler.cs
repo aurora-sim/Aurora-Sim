@@ -43,8 +43,6 @@ namespace OpenSim.Services
 {
     public class UserAccountServerPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IUserAccountService m_UserAccountService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -69,7 +67,7 @@ namespace OpenSim.Services
             // We need to check the authorization header
             //httpRequest.Headers["authorization"] ...
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
             string method = string.Empty;
             try
             {
@@ -100,11 +98,11 @@ namespace OpenSim.Services
                                 return new byte[0];
                         return StoreAccount(request);
                 }
-                m_log.DebugFormat("[USER SERVICE HANDLER]: unknown method request: {0}", method);
+                MainConsole.Instance.DebugFormat("[USER SERVICE HANDLER]: unknown method request: {0}", method);
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[USER SERVICE HANDLER]: Exception in method {0}: {1}", method, e);
+                MainConsole.Instance.DebugFormat("[USER SERVICE HANDLER]: Exception in method {0}: {1}", method, e);
             }
 
             return FailureResult();
@@ -186,7 +184,7 @@ namespace OpenSim.Services
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

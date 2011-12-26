@@ -35,10 +35,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class SynchronousRestFormsRequester
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         ///<summary>
         ///  Perform a synchronous REST request.
         ///</summary>
@@ -87,7 +83,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (Exception e)
                     {
-                        m_log.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
+                        MainConsole.Instance.DebugFormat("[FORMS]: exception occured on sending request to {0}: " + e, requestUrl);
                         return (respstring);
                     }
                     finally
@@ -115,7 +111,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             }
                             catch (Exception e)
                             {
-                                m_log.DebugFormat("[FORMS]: exception occured on receiving reply " + e);
+                                MainConsole.Instance.DebugFormat("[FORMS]: exception occured on receiving reply " + e);
                             }
                             finally
                             {
@@ -128,7 +124,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 catch (InvalidOperationException)
                 {
                     // This is what happens when there is invalid XML
-                    m_log.DebugFormat("[FORMS]: InvalidOperationException on receiving request");
+                    MainConsole.Instance.DebugFormat("[FORMS]: InvalidOperationException on receiving request");
                 }
             }
             return respstring;

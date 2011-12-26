@@ -40,9 +40,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
     {
         private const int DEBUG_CHANNEL = 2147483647;
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly Vector3 CenterOfRegion = new Vector3(128, 128, 30);
         private readonly List<IScene> m_scenes = new List<IScene>();
         internal IConfig m_config;
@@ -62,14 +59,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             if (null == m_config)
             {
-                //m_log.Info("[CHAT]: no config found, plugin disabled");
+                //MainConsole.Instance.Info("[CHAT]: no config found, plugin disabled");
                 m_enabled = false;
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", true))
             {
-                //m_log.Info("[CHAT]: plugin disabled by configuration");
+                //MainConsole.Instance.Info("[CHAT]: plugin disabled by configuration");
                 m_enabled = false;
                 return;
             }
@@ -92,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 scene.EventManager.OnChatBroadcast += OnChatBroadcast;
             }
 
-            //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
+            //MainConsole.Instance.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
@@ -166,7 +163,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             // sanity check:
             if (c.Sender == null)
             {
-                m_log.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
+                MainConsole.Instance.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
                 return;
             }
 
@@ -212,7 +209,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             if (message.Length >= 1000) // libomv limit
                 message = message.Substring(0, 1000);
 
-            // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
+            // MainConsole.Instance.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
             foreach (IScene s in m_scenes)
             {
@@ -264,7 +261,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 fromID = c.SenderUUID;
             }
 
-            // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
+            // MainConsole.Instance.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
             c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)

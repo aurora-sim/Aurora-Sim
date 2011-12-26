@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteGroupsServiceConnector : IGroupsServiceConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IGroupsServiceConnector Members
@@ -103,7 +99,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -139,7 +135,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -171,7 +167,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return "No Title Could Be Found";
         }
@@ -206,7 +202,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
             return "No Title Could Be Found";
         }
@@ -237,7 +233,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -271,7 +267,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -307,7 +303,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -336,7 +332,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -370,7 +366,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -402,7 +398,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -435,7 +431,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -463,7 +459,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -493,7 +489,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -523,7 +519,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -568,7 +564,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -628,7 +624,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRecord>();
@@ -674,7 +670,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -732,7 +728,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -789,7 +785,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -827,7 +823,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return UUID.Zero;
@@ -884,7 +880,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -942,7 +938,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -999,7 +995,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -1053,7 +1049,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupMembershipData>();
@@ -1110,7 +1106,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<DirGroupsReplyData>();
@@ -1165,7 +1161,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRolesData>();
@@ -1219,7 +1215,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRolesData>();
@@ -1272,7 +1268,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupMembersData>();
@@ -1326,7 +1322,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupRoleMembersData>();
@@ -1389,7 +1385,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupNoticeData>();
@@ -1441,7 +1437,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
             return 0;
         }
@@ -1493,7 +1489,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
             return new List<GroupInviteInfo>();
@@ -1551,7 +1547,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
             return 0;
         }

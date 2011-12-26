@@ -39,7 +39,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 {
     public class LLImageManager
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly IAssetService m_assetCache; //Asset Cache
         private readonly LLClientView m_client; //Client we're assigned to
         private readonly IJ2KDecoder m_j2kDecodeModule; //Our J2K module
@@ -57,7 +56,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_missingImage = pAssetCache.Get("5748decc-f629-461c-9a36-a35a221fe21f");
 
             if (m_missingImage == null)
-                m_log.Error(
+                MainConsole.Instance.Error(
                     "[ClientView] - Couldn't set missing image asset, falling back to missing image packet. This is known to crash the client");
 
             m_j2kDecodeModule = pJ2kDecodeModule;
@@ -89,7 +88,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (newRequest.DiscardLevel == -1 && newRequest.Priority == 0f)
                     {
-                        //m_log.Debug("[TEX]: (CAN) ID=" + newRequest.RequestedAssetID);
+                        //MainConsole.Instance.Debug("[TEX]: (CAN) ID=" + newRequest.RequestedAssetID);
 
                         try
                         {
@@ -102,7 +101,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     else
                     {
-                        //m_log.DebugFormat("[TEX]: (UPD) ID={0}: D={1}, S={2}, P={3}",
+                        //MainConsole.Instance.DebugFormat("[TEX]: (UPD) ID={0}: D={1}, S={2}, P={3}",
                         //    newRequest.RequestedAssetID, newRequest.DiscardLevel, newRequest.PacketNumber, newRequest.Priority);
 
                         //Check the packet sequence to make sure this isn't older than 
@@ -132,13 +131,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     if (newRequest.DiscardLevel == -1 && newRequest.Priority == 0f)
                     {
-                        //m_log.Debug("[TEX]: (CAN) ID=" + newRequest.RequestedAssetID);
-                        //m_log.DebugFormat("[TEX]: (IGN) ID={0}: D={1}, S={2}, P={3}",
+                        //MainConsole.Instance.Debug("[TEX]: (CAN) ID=" + newRequest.RequestedAssetID);
+                        //MainConsole.Instance.DebugFormat("[TEX]: (IGN) ID={0}: D={1}, S={2}, P={3}",
                         //    newRequest.RequestedAssetID, newRequest.DiscardLevel, newRequest.PacketNumber, newRequest.Priority);
                     }
                     else
                     {
-                        //m_log.DebugFormat("[TEX]: (NEW) ID={0}: D={1}, S={2}, P={3}",
+                        //MainConsole.Instance.DebugFormat("[TEX]: (NEW) ID={0}: D={1}, S={2}, P={3}",
                         //    newRequest.RequestedAssetID, newRequest.DiscardLevel, newRequest.PacketNumber, newRequest.Priority);
 
                         imgrequest = new J2KImage(this)

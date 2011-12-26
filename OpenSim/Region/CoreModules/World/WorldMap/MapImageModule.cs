@@ -65,9 +65,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
     public class MapImageModule : IMapImageGenerator, INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IConfigSource m_config;
         private Dictionary<UUID, Color> m_mapping;
         private IScene m_scene;
@@ -100,7 +97,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 terrainRenderer = new WarpTileRenderer();
                 drawPrimVolume = false;
             }
-            m_log.Debug("[MAPTILE]: Generating Maptile using " + tileRenderer);
+            MainConsole.Instance.Debug("[MAPTILE]: Generating Maptile using " + tileRenderer);
 
             terrainRenderer.Initialise(m_scene, m_config);
 
@@ -201,7 +198,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Bitmap DrawObjectVolume(IScene whichScene, Bitmap mapbmp)
         {
             ITerrainChannel heightmap = whichScene.RequestModuleInterface<ITerrainChannel>();
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
+            //MainConsole.Instance.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
             ISceneEntity[] objs = whichScene.Entities.GetEntities();
             Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
@@ -526,7 +523,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             } // lock entities objs
 
-            //m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
+            //MainConsole.Instance.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
             return mapbmp;
         }
 
@@ -624,7 +621,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Bitmap fetchTexture(UUID id)
         {
             AssetBase asset = m_scene.AssetService.Get(id.ToString());
-            //m_log.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
+            //MainConsole.Instance.DebugFormat("Fetched texture {0}, found: {1}", id, asset != null);
             if (asset == null) return null;
 
             try
@@ -635,18 +632,18 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (DllNotFoundException)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[TexturedMapTileRenderer]: OpenJpeg is not installed correctly on this system.   Asset Data is emtpy for {0}",
                     id);
             }
             catch (IndexOutOfRangeException)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
             }
             catch (Exception)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[TexturedMapTileRenderer]: OpenJpeg was unable to encode this.   Asset Data is emtpy for {0}", id);
             }
             return null;

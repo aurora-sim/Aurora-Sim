@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -39,11 +40,9 @@ using log4net;
 
 namespace OpenSim.Region.Framework.Scenes.Components
 {
-    public class ComponentManager : ISharedRegionModule, IComponentManager, ISOPSerializerModule
+    public class ComponentManager : IService, IComponentManager, ISOPSerializerModule
     {
         #region Declares
-
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         ///   Dictionary of all the components that we have by name, component
@@ -70,7 +69,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if (m_componentsBaseType.ContainsKey(component.BaseType))
                 {
                     //We only register one base type per session
-                    m_log.Warn(
+                    MainConsole.Instance.Warn(
                         "[COMPONENTMANAGER]: Tried registering a component while another base type was already registed by the same base type! The previously registered module was " +
                         m_componentsBaseType[component.BaseType]);
                     return;
@@ -79,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             //Now check for name duplication
             if (m_components.ContainsKey(component.Name))
             {
-                m_log.Warn(
+                MainConsole.Instance.Warn(
                     "[COMPONENTMANAGER]: Tried registering a component while another module already has used this name '" +
                     component.Name + "'!");
                 return;
@@ -135,7 +134,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
             }
             else
             {
-                m_log.Warn("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
+                MainConsole.Instance.Warn("PUT THIS IN THE AURORA-SIM IRC CHANNEL IF POSSIBLE: " + Name);
                 DefaultComponents com = new DefaultComponents(Name, 0);
                 RegisterComponent(com);
                 return m_components[Name].GetState(obj.UUID);
@@ -171,16 +170,16 @@ namespace OpenSim.Region.Framework.Scenes.Components
             if (obj == UUID.Zero)
                 return;
             //Check whether a Component exists for this name
-            if (m_components.ContainsKey(Name))
+            if (m_components.ContainsKey(name))
             {
                 //Set the State
-                m_components[Name].RemoveState(obj);
+                m_components[name].RemoveState(obj);
             }
             else
             {
-                DefaultComponents com = new DefaultComponents(Name, 0);
+                DefaultComponents com = new DefaultComponents(name, 0);
                 RegisterComponent(com);
-                m_components[Name].RemoveState(obj);
+                m_components[name].RemoveState(obj);
             }
         }
 
@@ -274,59 +273,6 @@ namespace OpenSim.Region.Framework.Scenes.Components
 
         #endregion
 
-        #region ISharedRegionModule Members
-
-        public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public void AddRegion(IScene scene)
-        {
-            if (!m_hasStarted)
-            {
-                RegisterDefaultComponents();
-                SceneObjectSerializer.AddSerializer("Components", this);
-                m_hasStarted = true;
-            }
-            scene.RegisterModuleInterface<IComponentManager>(this);
-        }
-
-        public void RemoveRegion(IScene scene)
-        {
-            //Commented out until we can verify that objects arn't requiring this as backup does need this,
-            //   but shouldn't backup come before this?
-            /*scene.UnregisterModuleInterface<IComponentManager>(this);
-            if (m_hasStarted) //This only needs removed once
-            {
-                SceneObjectSerializer.RemoveSerializer("Components");
-                m_hasStarted = false;
-            }*/
-        }
-
-        public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public string Name
-        {
-            get { return "ComponentManager"; }
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        #endregion
-
         #region ISOPSerializerModule Members
 
         public void Deserialization(SceneObjectPart obj, XmlTextReader reader)
@@ -340,7 +286,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex);
+                    MainConsole.Instance.Warn("[COMPONENTMANAGER]: Error on deserializing Components! " + ex);
                 }
             }
         }
@@ -351,6 +297,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
         }
 
         #endregion
+
+        #region Register Default Components
 
         /// <summary>
         ///   Register a few default Components that are in the SOP
@@ -458,6 +406,31 @@ namespace OpenSim.Region.Framework.Scenes.Components
             com = new DefaultComponents("KeyframeAnimation", null);
             RegisterComponent(com);
         }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            if (!m_hasStarted)
+            {
+                RegisterDefaultComponents();
+                SceneObjectSerializer.AddSerializer("Components", this);
+                m_hasStarted = true;
+            }
+            registry.RegisterModuleInterface<IComponentManager>(this);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
     }
 
     /// <summary>

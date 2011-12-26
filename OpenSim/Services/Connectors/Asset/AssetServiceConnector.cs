@@ -31,21 +31,18 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Aurora.Simulation.Base;
+using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.Connectors
 {
     public class AssetServicesConnector : IAssetServiceConnector, IService
     {
-        protected static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IImprovedAssetCache m_Cache;
         protected IRegistryCore m_registry;
         protected string m_serverURL = "";
@@ -268,23 +265,17 @@ namespace OpenSim.Services.Connectors
             }
 
             UUID newID = UUID.Zero;
+            string request = asset.CompressedPack();
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string mServerUri in serverURIs)
             {
-                string uri = mServerUri + "/";
-                try
-                {
-                    UUID.TryParse(SynchronousRestObjectRequester.MakeRequest<AssetBase, string>("POST", uri, asset), out newID);
-                }
-                catch (Exception e)
-                {
-                    m_log.WarnFormat("[ASSET CONNECTOR]: Unable to send asset {0} to asset server. Reason: {1}", asset.ID, e.Message);
-                }
-
-                if (newID != UUID.Zero)
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request);
+                if (resp == "")
+                    continue;
+                if (UUID.TryParse(resp, out newID))
                 {
                     // Placing this here, so that this work with old asset servers that don't send any reply back
                     // SynchronousRestObjectRequester returns somethins that is not an empty string
@@ -297,47 +288,28 @@ namespace OpenSim.Services.Connectors
             return newID;
         }
 
-        public virtual bool UpdateContent(UUID id, byte[] data)
+        public virtual bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            AssetBase asset = null;
-
-            if (m_Cache != null)
-                asset = m_Cache.Get(id.ToString());
-
-            if (asset == null)
-            {
-                asset = Get(id.ToString());
-                if (asset == null)
-                    return false;
-            }
-            asset.Data = data;
+            OSDMap map = new OSDMap();
+            map["Data"] = data;
+            map["ID"] = id;
+            map["Method"] = "UpdateContent";
+            string request = Util.Compress(OSDParser.SerializeJsonString(map));
 
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
-#if (!ISWIN)
+
             foreach (string mServerUri in serverURIs)
             {
-                string uri = mServerUri + "/" + id;
-                if (SynchronousRestObjectRequester.MakeRequest<AssetBase, bool>("POST", uri, asset))
-                {
-                    if (m_Cache != null)
-                        m_Cache.Cache(asset);
-
+                string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request);
+                if (resp == "")
+                    continue;
+                if (UUID.TryParse(resp, out newID))
                     return true;
-                }
             }
-#else
-            if (serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id).Any(uri => SynchronousRestObjectRequester.
-                                                                                        MakeRequest<AssetBase, bool>("POST", uri, asset)))
-            {
-                if (m_Cache != null)
-                    m_Cache.Cache(asset);
-
-                return true;
-            }
-#endif
+            newID = id;
             return false;
         }
 
@@ -411,7 +383,7 @@ namespace OpenSim.Services.Connectors
         {
             if (args.Length != 4)
             {
-                m_log.Info("Syntax: dump asset <id> <file>");
+                MainConsole.Instance.Info("Syntax: dump asset <id> <file>");
                 return;
             }
 
@@ -419,13 +391,13 @@ namespace OpenSim.Services.Connectors
 
             if (!UUID.TryParse(args[2], out assetID))
             {
-                m_log.Info("Invalid asset ID");
+                MainConsole.Instance.Info("Invalid asset ID");
                 return;
             }
 
             if (m_Cache == null)
             {
-                m_log.Info("Instance uses no cache");
+                MainConsole.Instance.Info("Instance uses no cache");
                 return;
             }
 
@@ -433,7 +405,7 @@ namespace OpenSim.Services.Connectors
 
             if (asset == null)
             {
-                m_log.Info("Asset not found in cache");
+                MainConsole.Instance.Info("Asset not found in cache");
                 return;
             }
 

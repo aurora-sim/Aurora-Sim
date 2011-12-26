@@ -44,7 +44,6 @@ namespace Aurora.Modules
 {
     public class CrossRegionBanSystem : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<IScene> m_scenes = new List<IScene>();
         public string OurGetPassword = "";
         private IConfigSource m_config;
@@ -146,7 +145,7 @@ namespace Aurora.Modules
 
                         if (replyData["result"].ToString() == "WrongPassword")
                         {
-                            m_log.Warn("[CRBS]: Unable to connect successfully to " + URL +
+                            MainConsole.Instance.Warn("[CRBS]: Unable to connect successfully to " + URL +
                                        ", the foreign password was incorrect.");
                             return false;
                         }
@@ -169,7 +168,7 @@ namespace Aurora.Modules
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[CRBS]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[CRBS]: Exception when contacting server: {0}", e);
             }
             return false;
         }
@@ -242,7 +241,6 @@ namespace Aurora.Modules
 
     public class CRBSIncoming : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly CrossRegionBanSystem CRBS;
 
         public CRBSIncoming(CrossRegionBanSystem crbs) :
@@ -275,11 +273,11 @@ namespace Aurora.Modules
                     case "getbans":
                         return NewConnection(request);
                 }
-                m_log.DebugFormat("[IWCConnector]: unknown method {0} request {1}", method.Length, method);
+                MainConsole.Instance.DebugFormat("[IWCConnector]: unknown method {0} request {1}", method.Length, method);
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[IWCConnector]: Exception {0} in " + method, e);
+                MainConsole.Instance.DebugFormat("[IWCConnector]: Exception {0} in " + method, e);
             }
 
             return FailureResult();
@@ -314,7 +312,7 @@ namespace Aurora.Modules
         private byte[] Return(Dictionary<string, object> result)
         {
             string xmlString = WebUtils.BuildXmlResponse(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

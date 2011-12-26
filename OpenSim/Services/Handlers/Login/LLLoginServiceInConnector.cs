@@ -38,10 +38,9 @@ namespace OpenSim.Services
 {
     public class LLLoginServiceInConnector : IService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IConfigSource m_Config;
 
-        private ILoginService m_LoginService;
+        private ILoginService m_loginService;
         private bool m_Proxy;
 
         public string Name
@@ -64,9 +63,9 @@ namespace OpenSim.Services
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
                     (uint) handlerConfig.GetInt("LLLoginHandlerPort"));
-            m_log.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
+            MainConsole.Instance.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             ReadLocalServiceFromConfig(config);
-            m_LoginService = registry.RequestModuleInterface<ILoginService>();
+            m_loginService = registry.RequestModuleInterface<ILoginService>();
 
             InitializeHandlers(server);
         }
@@ -89,7 +88,7 @@ namespace OpenSim.Services
 
         private void InitializeHandlers(IHttpServer server)
         {
-            LLLoginHandlers loginHandlers = new LLLoginHandlers(m_LoginService, m_Config, m_Proxy);
+            LLLoginHandlers loginHandlers = new LLLoginHandlers(m_loginService, m_Config, m_Proxy);
             server.AddXmlRPCHandler("login_to_simulator", loginHandlers.HandleXMLRPCLogin, false);
             server.AddXmlRPCHandler("set_login_level", loginHandlers.HandleXMLRPCSetLoginLevel, false);
             server.AddLLSDHandler("/", loginHandlers.HandleLLSDLogin);

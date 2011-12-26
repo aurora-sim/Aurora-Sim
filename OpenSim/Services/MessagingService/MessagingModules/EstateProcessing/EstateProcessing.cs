@@ -45,9 +45,6 @@ namespace OpenSim.Services.MessagingService
     {
         #region Declares
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IRegistryCore m_registry;
 
         #endregion
@@ -139,7 +136,7 @@ namespace OpenSim.Services.MessagingService
                                 if (estateConnector.LoadEstateSettings(regionID, out es))
                                 {
                                     s.RegionInfo.EstateSettings = es;
-                                    m_log.Debug("[EstateProcessor]: Updated estate information.");
+                                    MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");
                                 }
                             }
                         }

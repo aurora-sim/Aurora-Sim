@@ -45,8 +45,6 @@ namespace OpenSim.Services
 {
     public class AgentInfoServerPostHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IAgentInfoService m_AgentInfoService;
         private readonly string m_SessionID;
         private readonly IRegistryCore m_registry;
@@ -63,12 +61,9 @@ namespace OpenSim.Services
         public override byte[] Handle(string path, Stream requestData,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            StreamReader sr = new StreamReader(requestData);
-            string body = sr.ReadToEnd();
-            sr.Close();
-            body = body.Trim();
+            string body = GetBodyAsString(requestData);
 
-            //m_log.DebugFormat("[XXX]: query String: {0}", body);
+            //MainConsole.Instance.DebugFormat("[XXX]: query String: {0}", body);
 
             try
             {
@@ -105,7 +100,7 @@ namespace OpenSim.Services
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[AGENT INFO HANDLER]: Exception {0}", e);
+                MainConsole.Instance.WarnFormat("[AGENT INFO HANDLER]: Exception {0}", e);
             }
 
             return FailureResult();

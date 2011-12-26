@@ -41,7 +41,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class OSHttpRequest
     {
-        private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Encoding _contentEncoding;
         private readonly string _contentType;
         private readonly Hashtable _query;
@@ -78,7 +77,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                     string[] strPorts = req.Headers["remote_port"].Split(new[] {','});
                     if (strPorts.Length > 1)
                     {
-                        _log.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
+                        MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
                                          req.Headers["remote_addr"], req.Headers["remote_port"]);
                     }
                     int port = Int32.Parse(strPorts[0]);
@@ -86,7 +85,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (FormatException)
                 {
-                    _log.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
+                    MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
                                      req.Headers["remote_addr"], req.Headers["remote_port"]);
                 }
             }
@@ -104,20 +103,20 @@ namespace OpenSim.Framework.Servers.HttpServer
                     }
                     catch (InvalidCastException)
                     {
-                        _log.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
+                        MainConsole.Instance.DebugFormat("[OSHttpRequest]: error parsing {0} query item, skipping it", item.Name);
                         continue;
                     }
                 }
             }
             catch (Exception)
             {
-                _log.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
+                MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
             }
 
 //            Form = new Hashtable();
 //            foreach (HttpInputItem item in req.Form)
 //            {
-//                _log.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
+//                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
 //                Form.Add(item.Name, item.Value);
 //            }
         }

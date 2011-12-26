@@ -53,7 +53,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                            GroupPowers.StartProposal |
                                                            GroupPowers.VoteOnProposal;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IUserAccountService m_accountService;
         private int m_cacheTimeout = 30;
 
@@ -780,12 +779,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     return;
                 }
 
-                m_log.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
+                MainConsole.Instance.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
 
                 m_groupsServerURI = groupsConfig.GetString("GroupsServerURI", string.Empty);
                 if (string.IsNullOrEmpty(m_groupsServerURI))
                 {
-                    m_log.ErrorFormat("Please specify a valid URL for GroupsServerURI in Aurora.ini, [Groups]");
+                    MainConsole.Instance.ErrorFormat("Please specify a valid URL for GroupsServerURI in Aurora.ini, [Groups]");
                     m_connectorEnabled = false;
                     return;
                 }
@@ -799,11 +798,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 m_cacheTimeout = groupsConfig.GetInt("GroupsCacheTimeout", 30);
                 if (m_cacheTimeout == 0)
                 {
-                    m_log.WarnFormat("[XMLRPC-GROUPS-CONNECTOR]: Groups Cache Disabled.");
+                    MainConsole.Instance.WarnFormat("[XMLRPC-GROUPS-CONNECTOR]: Groups Cache Disabled.");
                 }
                 else
                 {
-                    m_log.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Groups Cache Timeout set to {0}.", m_cacheTimeout);
+                    MainConsole.Instance.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Groups Cache Timeout set to {0}.", m_cacheTimeout);
                 }
 
                 // If we got all the config options we need, lets start'er'up
@@ -814,7 +813,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void Close()
         {
-            m_log.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Closing {0}", this.Name);
+            MainConsole.Instance.InfoFormat("[XMLRPC-GROUPS-CONNECTOR]: Closing {0}", this.Name);
         }
 
         public void AddRegion(IScene scene)
@@ -942,22 +941,22 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[XMLRPC-GROUPS-CONNECTOR]: An error has occured while attempting to access the XmlRpcGroups server method {0} at {1}",
                         function, m_groupsServerURI);
 
-                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}{1}", e.Message, e.StackTrace);
+                    MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}{1}", e.Message, e.StackTrace);
 
                     foreach (
                         string ResponseLine in
                             req.RequestResponse.Split(new[] {Environment.NewLine}, StringSplitOptions.None))
                     {
-                        m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} ", ResponseLine);
+                        MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} ", ResponseLine);
                     }
 
                     foreach (string key in param.Keys)
                     {
-                        m_log.WarnFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} :: {1}", key, param[key]);
+                        MainConsole.Instance.WarnFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} :: {1}", key, param[key]);
                     }
 
                     Hashtable respData = new Hashtable {{"error", e.ToString()}};
@@ -976,23 +975,23 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 return respData;
             }
 
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[XMLRPC-GROUPS-CONNECTOR]: The XmlRpc server returned a {1} instead of a hashtable for {0}", function,
                 resp.Value.GetType());
 
             if (resp.Value is ArrayList)
             {
                 ArrayList al = (ArrayList) resp.Value;
-                m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Contains {0} elements", al.Count);
+                MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Contains {0} elements", al.Count);
 
                 foreach (object o in al)
                 {
-                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} :: {1}", o.GetType(), o);
+                    MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} :: {1}", o.GetType(), o);
                 }
             }
             else
             {
-                m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Function returned: {0}", resp.Value);
+                MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Function returned: {0}", resp.Value);
             }
 
             Hashtable error = new Hashtable {{"error", "invalid return value"}};
@@ -1001,16 +1000,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         private void LogRespDataToConsoleError(Hashtable respData)
         {
-            m_log.Error("[XMLRPC-GROUPS-CONNECTOR]: Error:");
+            MainConsole.Instance.Error("[XMLRPC-GROUPS-CONNECTOR]: Error:");
 
             foreach (string key in respData.Keys)
             {
-                m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Key: {0}", key);
+                MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Key: {0}", key);
 
                 string[] lines = respData[key].ToString().Split(new[] {'\n'});
                 foreach (string line in lines)
                 {
-                    m_log.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}", line);
+                    MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}", line);
                 }
             }
         }

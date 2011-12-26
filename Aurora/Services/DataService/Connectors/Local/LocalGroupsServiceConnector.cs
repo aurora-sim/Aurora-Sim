@@ -39,9 +39,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalGroupsServiceConnector : IGroupsServiceConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData data;
         List<UUID> agentsCanBypassGroupNoticePermsCheck = new List<UUID>();
 
@@ -182,7 +179,7 @@ namespace Aurora.Services.DataService
                                           GroupID
                                       }, "osgroupmembership", "*").Count != 0)
             {
-                m_log.Error("[AGM]: Agent " + AgentID + " is already in " + GroupID);
+                MainConsole.Instance.Error("[AGM]: Agent " + AgentID + " is already in " + GroupID);
                 return;
             }
             else
@@ -701,7 +698,7 @@ namespace Aurora.Services.DataService
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
                 if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMemberLimited))
                 {
-                    m_log.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
+                    MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
                                " to group " + GroupID + ", but did not have permissions to do so!");
                     return;
                 }

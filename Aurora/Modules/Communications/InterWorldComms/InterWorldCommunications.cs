@@ -49,8 +49,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        protected static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   All connections that we have to other hosts
         ///   (Before sending the initial connection requests, 
@@ -125,7 +123,7 @@ namespace Aurora.Modules
         /// <param name = "cmds"></param>
         private void AddIWCConnection(string[] cmds)
         {
-            string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            string Url = MainConsole.Instance.Prompt("Url to the connection");
             //Be user friendly, add the http:// if needed as well as the final /
             Url = (Url.StartsWith("http://") || Url.StartsWith("https://")) ? Url : "http://" + Url;
             Url = Url.EndsWith("/") ? Url + "iwcconnection" : Url + "/iwcconnection";
@@ -137,15 +135,15 @@ namespace Aurora.Modules
 
         private void RemoveIWCConnection(string[] cmds)
         {
-            string Url = MainConsole.Instance.CmdPrompt("Url to the connection");
+            string Url = MainConsole.Instance.Prompt("Url to the connection");
         }
 
         private void ShowIWCConnections(string[] cmds)
         {
-            m_log.InfoFormat("Showing {0} active IWC connections.", Connections.Count);
+            MainConsole.Instance.InfoFormat("Showing {0} active IWC connections.", Connections.Count);
             foreach (string t in Connections)
             {
-                m_log.Info("Url: " + t);
+                MainConsole.Instance.Info("Url: " + t);
             }
         }
 
@@ -201,7 +199,7 @@ namespace Aurora.Modules
         {
             if ((((RegionFlags) region.Flags) & RegionFlags.Foreign) != RegionFlags.Foreign)
             {
-                m_log.Debug("[IWC]: Not a foreign region");
+                MainConsole.Instance.Debug("[IWC]: Not a foreign region");
                 return null;
             }
             string host = userID.ToString();
@@ -217,7 +215,7 @@ namespace Aurora.Modules
                 string url = region.GenericMap["URL"];
                 if (url == "")
                 {
-                    m_log.Warn("[IWC]: Foreign region with no URL");
+                    MainConsole.Instance.Warn("[IWC]: Foreign region with no URL");
                     return null; //What the hell? Its a foreign region, it better have a URL!
                 }
                 //Remove the /Grid.... stuff
@@ -307,7 +305,6 @@ namespace Aurora.Modules
     /// </summary>
     public class IWCOutgoingConnections
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly InterWorldCommunications IWC;
 
         public IWCOutgoingConnections(InterWorldCommunications iwc)
@@ -336,7 +333,7 @@ namespace Aurora.Modules
                 if (result["Success"])
                 {
                     //Add their URLs back again
-                    m_log.Warn("Successfully Connected to " + host);
+                    MainConsole.Instance.Warn("Successfully Connected to " + host);
                     IWC.AddNewConnectionFromRequest(result["OurIdentifier"], result);
                     return true;
                 }
@@ -363,7 +360,6 @@ namespace Aurora.Modules
     /// </summary>
     public class IWCIncomingConnections : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly InterWorldCommunications IWC;
 
         public IWCIncomingConnections(InterWorldCommunications iwc) :
@@ -435,7 +431,7 @@ namespace Aurora.Modules
                     result = module.GetUrlForRegisteringClient(theirIdent);
                     IWC.IsGettingUrlsForIWCConnection = false;
                     result["OurIdentifier"] = Utilities.GetAddress();
-                    m_log.Warn(theirIdent + " successfully connected to us");
+                    MainConsole.Instance.Warn(theirIdent + " successfully connected to us");
                     IWC.AddNewConnectionFromRequest(theirIdent, args);
                     result["Success"] = true;
                 }

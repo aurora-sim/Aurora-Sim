@@ -61,7 +61,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #endregion
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static ScriptProtectionModule ScriptProtection;
 
         private readonly List<IScene> m_Scenes = new List<IScene>();
@@ -433,7 +432,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         protected void AuroraDotNetRestart(string[] cmdparams)
         {
             string go =
-                MainConsole.Instance.CmdPrompt(
+                MainConsole.Instance.Prompt(
                     "Are you sure you want to restart all scripts? (This also wipes the script state saves database, which could cause loss of information in your scripts)",
                     "no");
             if (go.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
@@ -461,31 +460,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #else
                 MaintenanceThread.StartScripts(scripts.Select(ID => new LUStruct { Action = LUType.Load, ID = ID }).ToArray());
 #endif
-                m_log.Warn("[ADNE]: All scripts have been restarted.");
+                MainConsole.Instance.Warn("[ADNE]: All scripts have been restarted.");
             }
             else
             {
-                m_log.Info("Not restarting all scripts");
+                MainConsole.Instance.Info("Not restarting all scripts");
             }
         }
 
         protected void AuroraDotNetStop(string[] cmdparams)
         {
-            string go = MainConsole.Instance.CmdPrompt("Are you sure you want to stop all scripts?", "no");
+            string go = MainConsole.Instance.Prompt("Are you sure you want to stop all scripts?", "no");
             if (go.Contains("yes") || go.Contains("Yes"))
             {
                 StopAllScripts();
-                m_log.Warn("[ADNE]: All scripts have been stopped.");
+                MainConsole.Instance.Warn("[ADNE]: All scripts have been stopped.");
             }
             else
             {
-                m_log.Info("Not restarting all scripts");
+                MainConsole.Instance.Info("Not restarting all scripts");
             }
         }
 
         protected void AuroraDotNetStats(string[] cmdparams)
         {
-            m_log.Info("Aurora DotNet Script Engine Stats:"
+            MainConsole.Instance.Info("Aurora DotNet Script Engine Stats:"
                        + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
                        + "\nMax allowed threat level: " + ScriptProtection.GetThreatLevel()
                        + "\nNumber of scripts running now: " + ScriptProtection.GetAllScripts().Length
@@ -503,14 +502,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         protected void AuroraDotNetDisable(string[] cmdparams)
         {
             ConsoleDisabled = true;
-            m_log.Warn("[ADNE]: ADNE has been disabled.");
+            MainConsole.Instance.Warn("[ADNE]: ADNE has been disabled.");
         }
 
         protected void AuroraDotNetEnable(string[] cmdparams)
         {
             ConsoleDisabled = false;
             MaintenanceThread.Started = true;
-            m_log.Warn("[ADNE]: ADNE has been enabled.");
+            MainConsole.Instance.Warn("[ADNE]: ADNE has been enabled.");
         }
 
         #endregion
@@ -530,7 +529,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 catch (Exception)
                 {
-                    m_log.Error("Lease found dead!" + script.ItemID);
+                    MainConsole.Instance.Error("Lease found dead!" + script.ItemID);
                 }
             }
         }
@@ -689,7 +688,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             ScriptData ID = ScriptProtection.GetScript(primID, itemID);
             if (ID == null)
             {
-                m_log.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.", ScriptEngineName,
+                MainConsole.Instance.ErrorFormat("[{0}]: SetMinEventDelay found no InstanceData for script {1}.", ScriptEngineName,
                                   itemID.ToString());
                 return;
             }
@@ -952,7 +951,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //No SOP, no compile.
             if (id.Part == null)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[{0}]: Could not find scene object part corresponding " + "to localID {1} to start script",
                     ScriptEngineName, partID);
                 return;
@@ -1351,7 +1350,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
                 catch (Exception ex)
                 {
-                    m_log.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex);
+                    MainConsole.Instance.Warn("[" + Name + "]: Error attempting to get serialization data, " + ex);
                 }
             }
 

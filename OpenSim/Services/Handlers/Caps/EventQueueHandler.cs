@@ -116,8 +116,6 @@ namespace OpenSim.Services
 
     public class EQMEventPoster : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly string m_SessionID;
         private readonly ICapsService m_capsService;
         private readonly IEventQueueService m_eventQueueService;
@@ -197,11 +195,11 @@ namespace OpenSim.Services
                         response["success"] = enqueueResult;
                     }
                     else
-                        m_log.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
+                        MainConsole.Instance.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT'S REGION");
                 }
                 else
                 {
-                    m_log.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
+                    MainConsole.Instance.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
                     bool enqueueResult = false;
                     foreach (OSD ev in OSDEvents)
                     {
@@ -214,7 +212,7 @@ namespace OpenSim.Services
             }
             catch (Exception ex)
             {
-                m_log.Error("[EQMHandler]: ERROR IN THE HANDLER: " + ex);
+                MainConsole.Instance.Error("[EQMHandler]: ERROR IN THE HANDLER: " + ex);
                 response = new OSDMap();
                 response["success"] = false;
             }

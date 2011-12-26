@@ -43,8 +43,6 @@ namespace Aurora.Modules
     /// </summary>
     public class AuroraDialogModule : INonSharedRegionModule, IDialogModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected bool m_enabled = true;
         protected IMuteListModule m_muteListModule;
         protected IScene m_scene;
@@ -312,7 +310,7 @@ namespace Aurora.Modules
             {
                 string message = Util.CombineParams(cmdparams, 2);
 
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending general alert in region {0} with message {1}", m_scene.RegionInfo.RegionName,
                     message);
                 SendGeneralAlert(message);
@@ -323,7 +321,7 @@ namespace Aurora.Modules
                 string lastName = cmdparams[2];
                 string message = Util.CombineParams(cmdparams, 3);
 
-                m_log.InfoFormat(
+                MainConsole.Instance.InfoFormat(
                     "[DIALOG]: Sending alert in region {0} to {1} {2} with message {3}",
                     m_scene.RegionInfo.RegionName, firstName, lastName, message);
                 SendAlertToUser(firstName, lastName, message, false);

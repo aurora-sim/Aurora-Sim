@@ -46,8 +46,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected string m_DefaultLSLScript = "default\n{\n    state_entry()\n    {\n        llSay(0, \"Script running.\");\n    }\n    touch_start(integer number)\n    {\n        llSay(0,\"Touched.\");\n    }\n}\n";
 
         /// <summary>
@@ -175,7 +173,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ownerID"></param>
         protected void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
-            //m_log.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
+            //MainConsole.Instance.Warn("[Scene.PacketHandler]: Depriated UDP Inventory request!");
             InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
             item = m_scene.InventoryService.GetItem(item);
 
@@ -198,7 +196,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void HandleFetchInventoryDescendents(IClientAPI remoteClient, UUID folderID, UUID ownerID,
                                                     bool fetchFolders, bool fetchItems, int sortOrder)
         {
-            //m_log.Warn("[Scene.PacketHandler]: Depriated UDP FetchInventoryDescendents request!");
+            //MainConsole.Instance.Warn("[Scene.PacketHandler]: Depriated UDP FetchInventoryDescendents request!");
             if (folderID == UUID.Zero)
                 return;
 
@@ -237,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryFolderBase folder = new InventoryFolderBase(folderID, folderName, remoteClient.AgentId, (short)folderType, parentID, 1);
             if (!m_scene.InventoryService.AddFolder(folder))
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                      "[AGENT INVENTORY]: Failed to move create folder for user {0} {1}",
                      remoteClient.Name, remoteClient.AgentId);
             }
@@ -259,7 +257,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void HandleUpdateInventoryFolder(IClientAPI remoteClient, UUID folderID, ushort type, string name,
                                                 UUID parentID)
         {
-            //            m_log.DebugFormat(
+            //            MainConsole.Instance.DebugFormat(
             //                "[AGENT INVENTORY]: Updating inventory folder {0} {1} for {2} {3}", folderID, name, remoteClient.Name, remoteClient.AgentId);
 
             InventoryFolderBase folder = new InventoryFolderBase(folderID, remoteClient.AgentId);
@@ -271,7 +269,7 @@ namespace OpenSim.Region.Framework.Scenes
                 folder.ParentID = parentID;
                 if (!m_scene.InventoryService.UpdateFolder(folder))
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                          "[AGENT INVENTORY]: Failed to update folder for user {0} {1}",
                          remoteClient.Name, remoteClient.AgentId);
                 }
@@ -292,13 +290,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 folder.ParentID = parentID;
                 if (!m_scene.InventoryService.MoveFolder(folder))
-                    m_log.WarnFormat("[AGENT INVENTORY]: could not move folder {0}", folderID);
+                    MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not move folder {0}", folderID);
                 else
-                    m_log.DebugFormat("[AGENT INVENTORY]: folder {0} moved to parent {1}", folderID, parentID);
+                    MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} moved to parent {1}", folderID, parentID);
             }
             else
             {
-                m_log.WarnFormat("[AGENT INVENTORY]: request to move folder {0} but folder not found", folderID);
+                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: request to move folder {0} but folder not found", folderID);
             }
         }
 
@@ -316,9 +314,9 @@ namespace OpenSim.Region.Framework.Scenes
         private void PurgeFolderAsync(object folder)
         {
             if (m_scene.InventoryService.PurgeFolder((InventoryFolderBase)folder))
-                m_log.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", ((InventoryFolderBase)folder).ID);
+                MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: folder {0} purged successfully", ((InventoryFolderBase)folder).ID);
             else
-                m_log.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", ((InventoryFolderBase)folder).ID, ((InventoryFolderBase)folder).Owner);
+                MainConsole.Instance.WarnFormat("[AGENT INVENTORY]: could not purge folder {0} for client {1}", ((InventoryFolderBase)folder).ID, ((InventoryFolderBase)folder).Owner);
         }
 
         /// <summary>
@@ -457,7 +455,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="itemIDs"></param>
         protected void RemoveInventoryItem(IClientAPI remoteClient, List<UUID> itemIDs)
         {
-            //m_log.Debug("[SCENE INVENTORY]: user " + remoteClient.AgentId);
+            //MainConsole.Instance.Debug("[SCENE INVENTORY]: user " + remoteClient.AgentId);
             m_scene.InventoryService.DeleteItems(remoteClient.AgentId, itemIDs);
         }
 
@@ -469,7 +467,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="folderIDs"></param>
         protected void RemoveInventoryFolder(IClientAPI remoteClient, List<UUID> folderIDs)
         {
-            m_log.DebugFormat("[SCENE INVENTORY]: RemoveInventoryFolders count {0}", folderIDs.Count);
+            MainConsole.Instance.DebugFormat("[SCENE INVENTORY]: RemoveInventoryFolders count {0}", folderIDs.Count);
             m_scene.InventoryService.DeleteFolders(remoteClient.AgentId, folderIDs);
         }
 
@@ -527,7 +525,7 @@ namespace OpenSim.Region.Framework.Scenes
                 IDialogModule module = m_scene.RequestModuleInterface<IDialogModule>();
                 if (module != null)
                     module.SendAlertToUser(remoteClient, "Failed to create item");
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "Failed to add item for {0} in CreateNewInventoryItem!",
                      remoteClient.Name);
             }
@@ -553,7 +551,7 @@ namespace OpenSim.Region.Framework.Scenes
                                            sbyte assetType,
                                            byte wearableType, uint nextOwnerMask, int creationDate)
         {
-            //m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item {0} in folder {1}", name, folderID);
+            //MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item {0} in folder {1}", name, folderID);
 
             if (!m_scene.Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
@@ -601,7 +599,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "ScenePresence for agent uuid {0} unexpectedly not found in CreateNewInventoryItem",
                         remoteClient.AgentId);
                 }
@@ -659,7 +657,7 @@ namespace OpenSim.Region.Framework.Scenes
                                              uint callbackID, string description, string name,
                                              sbyte invType, sbyte type, UUID olditemID)
         {
-            //m_log.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item link {0} in folder {1} pointing to {2}", name, folderID, olditemID);
+            //MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: Received request to create inventory item link {0} in folder {1} pointing to {2}", name, folderID, olditemID);
 
             if (!m_scene.Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
@@ -685,7 +683,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "ScenePresence for agent uuid {0} unexpectedly not found in HandleLinkInventoryItem",
                     remoteClient.AgentId);
             }
@@ -698,11 +696,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="items"></param>
         protected void MoveInventoryItem(IClientAPI remoteClient, List<InventoryItemBase> items)
         {
-            //m_log.DebugFormat(
+            //MainConsole.Instance.DebugFormat(
             //    "[AGENT INVENTORY]: Moving {0} items for user {1}", items.Count, remoteClient.AgentId);
 
             if (!m_scene.InventoryService.MoveItems(remoteClient.AgentId, items))
-                m_log.Warn("[AGENT INVENTORY]: Failed to move items for user " + remoteClient.AgentId);
+                MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to move items for user " + remoteClient.AgentId);
         }
 
         /// <summary>
@@ -717,7 +715,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void CopyInventoryItem(IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID,
                                       UUID newFolderID, string newName)
         {
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[AGENT INVENTORY]: CopyInventoryItem received by {0} with oldAgentID {1}, oldItemID {2}, new FolderID {3}, newName {4}",
                 remoteClient.AgentId, oldAgentID, oldItemID, newFolderID, newName);
 
@@ -725,7 +723,7 @@ namespace OpenSim.Region.Framework.Scenes
             item = m_scene.InventoryService.GetItem(item);
             if (item == null)
             {
-                m_log.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
+                MainConsole.Instance.Error("[AGENT INVENTORY]: Failed to find item " + oldItemID.ToString());
                 return;
             }
 
@@ -764,7 +762,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[AGENT INVENTORY]: Could not copy item {0} since asset {1} could not be found",
                     item.Name, item.AssetID);
             }
@@ -826,7 +824,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.Error(
+                MainConsole.Instance.Error(
                     "[AGENTINVENTORY]: Item ID " + itemID + " not found for an inventory item update.");
             }
         }
@@ -851,7 +849,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.Error(
+                MainConsole.Instance.Error(
                     "[AGENTINVENTORY]: Item ID " + itemID + " not found for an inventory item update.");
             }
         }
@@ -870,7 +868,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.ErrorFormat (
+                MainConsole.Instance.ErrorFormat (
                     "[PRIM INVENTORY]: " +
                     "Couldn't find part {0} to request inventory data",
                     primLocalID);
@@ -901,7 +899,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
                         "Removal of item {0} requested of prim {1} but this prim does not exist",
                         itemID,
@@ -925,7 +923,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (null == part)
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[PRIM INVENTORY]: " +
                     "Move of inventory item {0} from prim with local id {1} failed because the prim could not be found",
                     itemId, primLocalId);
@@ -937,7 +935,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (null == taskItem)
             {
-                m_log.WarnFormat("[PRIM INVENTORY]: Move of inventory item {0} from prim with local id {1} failed"
+                MainConsole.Instance.WarnFormat("[PRIM INVENTORY]: Move of inventory item {0} from prim with local id {1} failed"
                     + " because the inventory item could not be found",
                     itemId, primLocalId);
 
@@ -973,7 +971,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="checkPermissions"></param>
         protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
-            m_log.DebugFormat(
+            MainConsole.Instance.DebugFormat(
                 "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
                 itemId, part.Name, folderId, remoteClient.Name);
 
@@ -1012,7 +1010,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryFolderBase containingFolder = new InventoryFolderBase(folder.ID, client.AgentId);
             containingFolder = m_scene.InventoryService.GetFolder(containingFolder);
 
-            //m_log.DebugFormat("[AGENT INVENTORY]: Sending inventory folder contents ({0} nodes) for \"{1}\" to {2} {3}",
+            //MainConsole.Instance.DebugFormat("[AGENT INVENTORY]: Sending inventory folder contents ({0} nodes) for \"{1}\" to {2} {3}",
             //    contents.Folders.Count + contents.Items.Count, containingFolder.Name, client.FirstName, client.LastName);
 
             if (containingFolder != null)
@@ -1061,7 +1059,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (item != null)
                         {
                             part.ParentEntity.AddInventoryItem (remoteClient, primLocalID, item, copyID);
-                            m_log.InfoFormat(
+                            MainConsole.Instance.InfoFormat(
                                 "[PRIM INVENTORY]: Update with item {0} requested of prim {1} for {2}",
                                 item.Name, primLocalID, remoteClient.Name);
                             part.GetProperties(remoteClient);
@@ -1076,7 +1074,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            m_log.ErrorFormat(
+                            MainConsole.Instance.ErrorFormat(
                                 "[PRIM INVENTORY]: Could not find inventory item {0} to update for {1}!",
                                 itemID, remoteClient.Name);
                         }
@@ -1137,7 +1135,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[PRIM INVENTORY]: " +
                     "Update with item {0} requested of prim {1} for {2} but this prim does not exist",
                     itemID, primLocalID, remoteClient.Name);
@@ -1172,14 +1170,14 @@ namespace OpenSim.Region.Framework.Scenes
                         part.ParentEntity.AddInventoryItem (remoteClient, localID, item, copyID);
                         part.Inventory.CreateScriptInstance(copyID, 0, false, 0);
 
-                        //                        m_log.InfoFormat("[PRIMINVENTORY]: " +
+                        //                        MainConsole.Instance.InfoFormat("[PRIMINVENTORY]: " +
                         //                                         "Rezzed script {0} into prim local ID {1} for user {2}",
                         //                                         item.inventoryName, localID, remoteClient.Name);
                         part.GetProperties(remoteClient);
                     }
                     else
                     {
-                        m_log.ErrorFormat(
+                        MainConsole.Instance.ErrorFormat(
                             "[PRIM INVENTORY]: " +
                             "Could not rez script {0} into prim local ID {1} for user {2}"
                             + " because the prim could not be found in the region!",
@@ -1188,7 +1186,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: Could not find script inventory item {0} to rez for {1}!",
                         itemID, remoteClient.Name);
                 }
@@ -1261,7 +1259,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (null == taskItem)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for creating an avatar"
                         + " inventory item from a prim's inventory item "
                         + " but the required item does not exist in the prim's inventory",
@@ -1349,7 +1347,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        m_log.WarnFormat(
+                        MainConsole.Instance.WarnFormat(
                             "[LLClientInventory]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
                             item.Owner, item.Name);
                         return false;
@@ -1359,7 +1357,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_scene.InventoryService.AddItem(item))
                 return true;
-            m_log.WarnFormat(
+            MainConsole.Instance.WarnFormat(
                 "[LLClientInventory]: Agent {0} could not add item {1} {2}",
                 item.Owner, item.Name, item.ID);
 
@@ -1594,7 +1592,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 return itemCopy;
             }
-            m_log.WarnFormat("[LLClientInventory]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
+            MainConsole.Instance.WarnFormat("[LLClientInventory]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
             return null;
         }
 
@@ -1619,7 +1617,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryFolderBase folder = m_scene.InventoryService.GetFolder(new InventoryFolderBase(folderId));
             if (null == folder)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                      "[LLClientInventory]: Could not find inventory folder {0} to give", folderId);
                 return null;
             }
@@ -1632,7 +1630,7 @@ namespace OpenSim.Region.Framework.Scenes
                     recipientParentFolderId = recipientRootFolder.ID;
                 else
                 {
-                    m_log.WarnFormat("[LLClientInventory]: Unable to find root folder for receiving agent");
+                    MainConsole.Instance.WarnFormat("[LLClientInventory]: Unable to find root folder for receiving agent");
                     return null;
                 }
             }
@@ -1675,7 +1673,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (srcTaskItem == null)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for rezzing a script but the "
                         + " item does not exist in this inventory",
                     srcId, srcPart.Name, srcPart.UUID);
@@ -1686,7 +1684,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (destPart == null)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
                         "Could not find script for ID {0}",
                         destId);
@@ -1709,7 +1707,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (destPart.ScriptAccessPin != pin)
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                         "[PRIM INVENTORY]: " +
                         "Script in object {0} : {1}, attempted to load script {2} : {3} into object {4} : {5} with invalid pin {6}",
                         srcPart.Name, srcId, srcTaskItem.Name, srcTaskItem.ItemID, destPart.Name, destId, pin);
@@ -1810,7 +1808,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (srcTaskItem == null)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for moving"
                         + " but the item does not exist in this inventory",
                     itemId, part.Name, part.UUID);
@@ -1822,7 +1820,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (destPart == null)
             {
-                m_log.ErrorFormat(
+                MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
                         "Could not find prim for ID {0}",
                         destId);
@@ -2041,8 +2039,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
-                m_log.Debug("[Scene]: ScriptTaskInventory Request in region: " + m_scene.RegionInfo.RegionName);
-                //m_log.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
+                MainConsole.Instance.Debug("[Scene]: ScriptTaskInventory Request in region: " + m_scene.RegionInfo.RegionName);
+                //MainConsole.Instance.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
@@ -2073,7 +2071,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                m_log.Error("[CAPS]: " + e);
+                MainConsole.Instance.Error("[CAPS]: " + e);
             }
 
             return null;
@@ -2092,8 +2090,8 @@ namespace OpenSim.Region.Framework.Scenes
         public string NoteCardAgentInventory(UUID AgentID, string request, string path, string param,
                                              OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            //m_log.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
-            //m_log.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
+            //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
+            //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
 
             OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
 
@@ -2202,7 +2200,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    //                    m_log.InfoFormat("[CAPS]: " +
+                    //                    MainConsole.Instance.InfoFormat("[CAPS]: " +
                     //                                     "TaskInventoryScriptUpdater received data: {0}, path: {1}, param: {2}",
                     //                                     data, path, param));
 
@@ -2224,13 +2222,13 @@ namespace OpenSim.Region.Framework.Scenes
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
 
-                    //                    m_log.InfoFormat("[CAPS]: TaskInventoryScriptUpdater.uploaderCaps res: {0}", res);
+                    //                    MainConsole.Instance.InfoFormat("[CAPS]: TaskInventoryScriptUpdater.uploaderCaps res: {0}", res);
 
                     return res;
                 }
                 catch (Exception e)
                 {
-                    m_log.Error("[CAPS]: " + e);
+                    MainConsole.Instance.Error("[CAPS]: " + e);
                 }
 
                 // XXX Maybe this should be some meaningful error packet
@@ -2258,7 +2256,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
                 if(null == part || null == part.ParentEntity)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
                         "Prim inventory update requested for item ID {0} in prim ID {1} but this prim does not exist",
                         itemId, primId);
@@ -2271,7 +2269,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (null == item)
                 {
-                    m_log.ErrorFormat(
+                    MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: Tried to retrieve item ID {0} from prim {1}, {2} for caps script update "
                             + " but the item does not exist in this inventory",
                         itemId, part.Name, part.UUID);

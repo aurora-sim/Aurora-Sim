@@ -38,8 +38,11 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class UpdaterPlugin : IApplicationPlugin
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private const string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
+
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
 
         public void Initialize(ISimulationBase openSim)
         {
@@ -53,7 +56,7 @@ namespace OpenSim.CoreApplicationPlugins
                 if (!updateConfig.GetBoolean("Enabled", false))
                     return;
                 
-                m_log.Info("[AuroraUpdator]: Checking for updates...");
+                MainConsole.Instance.Info("[AuroraUpdator]: Checking for updates...");
                 const string CurrentVersion = VersionInfo.VERSION_NUMBER;
                 string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", VersionInfo.VERSION_NUMBER);
 

@@ -462,7 +462,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_rootPart.Shape == null)
             {
-                m_log.Warn("[SceneObjectGroup]: Found null shape for prim " + UUID + ", creating default box shape");
+                MainConsole.Instance.Warn("[SceneObjectGroup]: Found null shape for prim " + UUID + ", creating default box shape");
                 m_rootPart.Shape = new PrimitiveBaseShape();
             }
 
@@ -1080,7 +1080,7 @@ namespace OpenSim.Region.Framework.Scenes
                             offsetHeight *= -1;
                         }
             */
-            // m_log.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
+            // MainConsole.Instance.InfoFormat("BoundingBox is {0} , {1} , {2} ", boundingBox.X, boundingBox.Y, boundingBox.Z);
             return boundingBox;
         }
 
@@ -1509,7 +1509,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     startedColliders.Add(localid);
                 }
-                //m_log.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
+                //MainConsole.Instance.Debug("[OBJECT]: Collided with:" + localid.ToString() + " at depth of: " + collissionswith[localid].ToString());
             }
 
             // calculate things that ended colliding
@@ -2168,68 +2168,81 @@ namespace OpenSim.Region.Framework.Scenes
             try
             {
                 int currentTime = m_KeyframeAnimation.TimeList[m_KeyframeAnimation.CurrentAnimationPosition];
-                if (m_KeyframeAnimation.PositionList.Length != 0)
+                float timeAmt = (1f / (float)currentTime);
+                Vector3 currentTarget = m_KeyframeAnimation.PositionList.Length == 0 ? Vector3.Zero :
+                    m_KeyframeAnimation.PositionList[m_KeyframeAnimation.CurrentAnimationPosition];
+                Quaternion target = m_KeyframeAnimation.RotationList.Length == 0 ? Quaternion.Identity :
+                    m_KeyframeAnimation.RotationList[m_KeyframeAnimation.CurrentAnimationPosition];
+                m_KeyframeAnimation.CurrentFrame++; //Add one to the current frame so that we know when to stops
+                bool AllDoneMoving = false;
+                bool MadeItToCheckpoint = false;
+                if (m_KeyframeAnimation.CurrentFrame == currentTime)
                 {
-                    Vector3 currentTarget = m_KeyframeAnimation.PositionList[m_KeyframeAnimation.CurrentAnimationPosition];
-                    Vector3 _target_velocity =
-                                new Vector3(
-                                    ((m_KeyframeAnimation.InitialPosition.X + currentTarget.X) - m_KeyframeAnimation.InitialPosition.X) * (1f / (float)currentTime),
-                                    ((m_KeyframeAnimation.InitialPosition.Y + currentTarget.Y) - m_KeyframeAnimation.InitialPosition.Y) * (1f / (float)currentTime),
-                                    ((m_KeyframeAnimation.InitialPosition.Z + currentTarget.Z) - m_KeyframeAnimation.InitialPosition.Z) * (1f / (float)currentTime)
-                                    );
-                    if ((m_KeyframeAnimation.InitialPosition + currentTarget).ApproxEquals(AbsolutePosition, 1f))
+                    if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
                     {
-                        if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Forward)
+                        m_KeyframeAnimation.CurrentAnimationPosition += 1;
+                        if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                        {
+                            //All done moving...
+                            AllDoneMoving = true;
+                            m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                        }
+                    }
+                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Reverse)
+                    {
+                        m_KeyframeAnimation.CurrentAnimationPosition -= 1;
+                        if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
+                        {
+                            //All done moving...
+                            AllDoneMoving = true;
+                            m_scene.EventManager.OnFrame -= moveKeyframeMotion;
+                        }
+                    }
+                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Loop)
+                    {
+                        m_KeyframeAnimation.CurrentAnimationPosition += 1;
+                        if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
+                            m_KeyframeAnimation.CurrentAnimationPosition = 0;
+                    }
+                    else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.PingPong)
+                    {
+                        if (m_KeyframeAnimation.PingPongForwardMotion)
                         {
                             m_KeyframeAnimation.CurrentAnimationPosition += 1;
                             if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
                             {
-                                //All done moving...
-                                Velocity = Vector3.Zero;
-                                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
-                                return;
+                                m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
+                                m_KeyframeAnimation.CurrentAnimationPosition -= 2;
                             }
                         }
-                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Reverse)
+                        else
                         {
                             m_KeyframeAnimation.CurrentAnimationPosition -= 1;
                             if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
                             {
-                                //All done moving...
-                                Velocity = Vector3.Zero;
-                                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
-                                return;
+                                m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
+                                m_KeyframeAnimation.CurrentAnimationPosition += 2;
                             }
                         }
-                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.Loop)
-                        {
-                            m_KeyframeAnimation.CurrentAnimationPosition += 1;
-                            if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
-                                m_KeyframeAnimation.CurrentAnimationPosition = 0;
-                        }
-                        else if (m_KeyframeAnimation.CurrentMode == KeyframeAnimation.Modes.PingPong)
-                        {
-                            if (m_KeyframeAnimation.PingPongForwardMotion)
-                            {
-                                m_KeyframeAnimation.CurrentAnimationPosition += 1;
-                                if (m_KeyframeAnimation.CurrentAnimationPosition == m_KeyframeAnimation.TimeList.Length)
-                                {
-                                    m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
-                                    m_KeyframeAnimation.CurrentAnimationPosition -= 2;
-                                }
-                            }
-                            else
-                            {
-                                m_KeyframeAnimation.CurrentAnimationPosition -= 1;
-                                if (m_KeyframeAnimation.CurrentAnimationPosition < 0)
-                                {
-                                    m_KeyframeAnimation.PingPongForwardMotion = !m_KeyframeAnimation.PingPongForwardMotion;
-                                    m_KeyframeAnimation.CurrentAnimationPosition += 2;
-                                }
-                            }
-                        }
-                        SetAbsolutePosition(true, m_KeyframeAnimation.InitialPosition + currentTarget);
-                        m_KeyframeAnimation.InitialPosition = AbsolutePosition;
+                    }
+                    m_KeyframeAnimation.CurrentFrame = 0;
+                    MadeItToCheckpoint = true;
+                }
+
+                if (m_KeyframeAnimation.PositionList.Length != 0)
+                {
+                    Vector3 _target_velocity =
+                                new Vector3(
+                                    (currentTarget.X - m_KeyframeAnimation.InitialPosition.X) * timeAmt,
+                                    (currentTarget.Y - m_KeyframeAnimation.InitialPosition.Y) * timeAmt,
+                                    (currentTarget.Z - m_KeyframeAnimation.InitialPosition.Z) * timeAmt
+                                    );
+                    if (MadeItToCheckpoint)
+                    {
+                        if(AllDoneMoving)
+                            Velocity = Vector3.Zero;
+                        SetAbsolutePosition(true, currentTarget);
+                        m_KeyframeAnimation.InitialPosition = currentTarget;
                     }
                     else
                     {
@@ -2239,18 +2252,15 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (m_KeyframeAnimation.RotationList.Length != 0)
                 {
-                    Quaternion currentRot = m_KeyframeAnimation.RotationList[m_KeyframeAnimation.CurrentAnimationPosition];
-                    Quaternion rot = RootPart.RotationOffset;
-                    Quaternion dir = (rot - currentRot);
-                    float speed = (float)(Math.PI / 180.0f);
-                    if (dir.Z > speed)
-                        rot.Z -= speed;
-
-                    if (dir.Z < -speed)
-                        rot.Z += speed;
-
-                    rot.Normalize();
-                    m_rootPart.UpdateRotation(rot);
+                    Quaternion source = m_rootPart.RotationOffset;
+                    Quaternion newInterpolation = Quaternion.Slerp(source, target, 1f / ((float)currentTime - (float)m_KeyframeAnimation.CurrentFrame));
+                    m_rootPart.UpdateRotation(newInterpolation);
+                    if (MadeItToCheckpoint)
+                    {
+                        //Force set it to the right position, just to be sure
+                        m_rootPart.UpdateRotation(target);
+                        m_KeyframeAnimation.InitialRotation = target;
+                    }
                 }
             }
             catch
@@ -2444,6 +2454,26 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+        }
+
+        public void GeneratedMesh(ISceneChildEntity part, IMesh mesh)
+        {
+            //This destroys the mesh if it is added... this needs added in a way that won't corrupt the mesh
+            /*if (part.Shape.SculptType == (byte)SculptType.Mesh && !mesh.WasCached)//If it was cached, we don't want to resave it
+            {
+                //We can cache meshes into the mesh itself, saving time generating it next time around
+                OSDMap meshOsd = (OSDMap)OSDParser.DeserializeLLSDBinary(part.Shape.SculptData);
+                meshOsd["physics_cached"] = new OSDMap();
+                mesh.Serialize();
+                mesh.WasCached = true;
+                UUID newSculptTexture;
+                if (m_scene.AssetService.UpdateContent(part.Shape.SculptTexture,
+                    OSDParser.SerializeLLSDBinary(meshOsd), out newSculptTexture))
+                {
+                    part.Shape.SculptTexture = newSculptTexture;
+                    HasGroupChanged = true;
+                }
+            }*/
         }
 
         public void TriggerScriptMovingStartEvent()
@@ -3268,7 +3298,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "grp">The group of prims which should be linked to this group</param>
         public void LinkToGroup(ISceneEntity grp)
         {
-            //m_log.DebugFormat(
+            //MainConsole.Instance.DebugFormat(
             //    "[SCENE OBJECT GROUP]: Linking group with root part {0}, {1} to group with root part {2}, {3}",
             //    objectGroup.RootPart.Name, objectGroup.RootPart.UUID, RootPart.Name, RootPart.UUID);
 
@@ -3373,7 +3403,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!(part is SceneObjectPart))
                 return null;
             SceneObjectPart linkPart = part as SceneObjectPart;
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "[SCENE OBJECT GROUP]: Delinking part {0}, {1} from group with root part {2}, {3}",
 //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);
 
@@ -3578,8 +3608,8 @@ namespace OpenSim.Region.Framework.Scenes
                             // save and update old orientation
                             Quaternion old = m_rootPart.SpinOldOrientation;
                             m_rootPart.SpinOldOrientation = newOrientation;
-                            //m_log.Error("[SCENE OBJECT GROUP]: Old orientation is " + old);
-                            //m_log.Error("[SCENE OBJECT GROUP]: Incoming new orientation is " + newOrientation);
+                            //MainConsole.Instance.Error("[SCENE OBJECT GROUP]: Old orientation is " + old);
+                            //MainConsole.Instance.Error("[SCENE OBJECT GROUP]: Incoming new orientation is " + newOrientation);
 
                             // compute difference between previous old rotation and new incoming rotation
                             Quaternion minimalRotationFromQ1ToQ2 = Quaternion.Inverse(old)*newOrientation;
@@ -3589,7 +3619,7 @@ namespace OpenSim.Region.Framework.Scenes
                             minimalRotationFromQ1ToQ2.GetAxisAngle(out rotationAxis, out rotationAngle);
                             rotationAxis.Normalize();
 
-                            //m_log.Error("SCENE OBJECT GROUP]: rotation axis is " + rotationAxis);
+                            //MainConsole.Instance.Error("SCENE OBJECT GROUP]: rotation axis is " + rotationAxis);
                             Vector3 spinforce = new Vector3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z);
                             spinforce = (spinforce/8)*m_rootPart.PhysActor.Mass;
                                 // 8 is an arbitrary torque scaling factor
@@ -4144,7 +4174,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                         }
                         //The group should have crossed a region, but no region was found so return it instead
-                        m_log.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition +
+                        MainConsole.Instance.Info("[SceneObjectGroup]: Returning prim " + Name + " @ " + AbsolutePosition +
                                    " because it has gone out of bounds.");
                         ILLClientInventory inventoryModule = Scene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)

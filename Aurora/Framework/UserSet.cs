@@ -70,7 +70,7 @@ namespace Aurora.Framework
             {
             }
 
-            //m_log.DebugFormat("[PERMISSIONS]: {0} {1}", settingName, userSet);
+            //MainConsole.Instance.DebugFormat("[PERMISSIONS]: {0} {1}", settingName, userSet);
 
             return userSet;
         }

@@ -42,7 +42,6 @@ namespace Aurora.Modules
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected bool m_Enabled = true;
         protected Dictionary<UUID, UUID> m_pendingCallingcardRequests = new Dictionary<UUID, UUID>();
         protected List<IScene> m_scenes = new List<IScene>();
@@ -138,7 +137,7 @@ namespace Aurora.Modules
         /// <param name = "name"></param>
         public void CreateCallingCard(IClientAPI client, UUID creator, UUID folder, string name)
         {
-            m_log.Debug("[AURORA CALLING CARD MODULE]: Creating calling card for " + client.Name);
+            MainConsole.Instance.Debug("[AURORA CALLING CARD MODULE]: Creating calling card for " + client.Name);
             InventoryItemBase item = new InventoryItemBase
                                          {
                                              AssetID = UUID.Zero,
@@ -177,7 +176,7 @@ namespace Aurora.Modules
         /// <param name = "transactionID"></param>
         private void OnOfferCallingCard(IClientAPI client, UUID destID, UUID transactionID)
         {
-            m_log.DebugFormat("[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
+            MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: got offer from {0} for {1}, transaction {2}",
                               client.AgentId, destID, transactionID);
 
             IClientAPI friendClient = LocateClientObject(destID);
@@ -203,7 +202,7 @@ namespace Aurora.Modules
         /// <param name = "folderID"></param>
         private void OnAcceptCallingCard(IClientAPI client, UUID transactionID, UUID folderID)
         {
-            m_log.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} ({1} {2}) accepted tid {3}, folder {4}",
+            MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} ({1} {2}) accepted tid {3}, folder {4}",
                               client.AgentId,
                               client.FirstName, client.LastName,
                               transactionID, folderID);
@@ -212,7 +211,7 @@ namespace Aurora.Modules
             {
                 if (!m_pendingCallingcardRequests.TryGetValue(transactionID, out destID))
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[AURORA CALLING CARD MODULE]: Got a AcceptCallingCard from {0} without an offer before.",
                         client.Name);
                     return;
@@ -238,14 +237,14 @@ namespace Aurora.Modules
         /// <param name = "transactionID"></param>
         private void OnDeclineCallingCard(IClientAPI client, UUID transactionID)
         {
-            m_log.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} (ID:{1}) declined card, tid {2}",
+            MainConsole.Instance.DebugFormat("[AURORA CALLING CARD MODULE]: User {0} (ID:{1}) declined card, tid {2}",
                               client.Name, client.AgentId, transactionID);
             UUID destID;
             lock (m_pendingCallingcardRequests)
             {
                 if (!m_pendingCallingcardRequests.TryGetValue(transactionID, out destID))
                 {
-                    m_log.WarnFormat(
+                    MainConsole.Instance.WarnFormat(
                         "[AURORA CALLING CARD MODULE]: Got a AcceptCallingCard from {0} without an offer before.",
                         client.Name);
                     return;

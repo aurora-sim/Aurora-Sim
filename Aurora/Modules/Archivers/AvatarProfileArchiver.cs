@@ -45,7 +45,6 @@ namespace Aurora.Modules
     /// </summary>
     public class AuroraAvatarProfileArchiver : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 
         private IUserAccountService UserAccountService
@@ -114,7 +113,7 @@ namespace Aurora.Modules
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             StreamReader reader = new StreamReader(cmdparams[5]);
@@ -153,20 +152,20 @@ namespace Aurora.Modules
 
             profileData.UpdateUserProfile(UPI);
 
-            m_log.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
+            MainConsole.Instance.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
         }
 
         protected void HandleSaveAvatarProfile(string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
-                m_log.Info("[AvatarProfileArchiver] Not enough parameters!");
+                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
-                m_log.Info("Account could not be found, stopping now.");
+                MainConsole.Instance.Info("Account could not be found, stopping now.");
                 return;
             }
             IProfileConnector data = DataManager.DataManager.RequestPlugin<IProfileConnector>();
@@ -192,7 +191,7 @@ namespace Aurora.Modules
             writer.Write("</profile>\n");
             writer.Close();
             writer.Dispose();
-            m_log.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
+            MainConsole.Instance.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
         }
     }
 }

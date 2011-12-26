@@ -33,21 +33,18 @@ namespace Aurora.Server
 {
     public class AuroraBase : SimulationBase
     {
-        public override void SetUpConsole()
-        {
-            base.SetUpConsole();
-            //Fix the default prompt
-            if (m_console != null)
-                m_console.DefaultPrompt = "Aurora.Server ";
-        }
-
         /// <summary>
         ///   Performs initialisation of the scene, such as loading configuration from disk.
         /// </summary>
         public override void Startup()
         {
             base.Startup();
-            m_log.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
+
+            //Fix the default prompt
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.DefaultPrompt = "Aurora.Server ";
+
+            MainConsole.Instance.Info("[AURORASTARTUP]: Startup completed in " + (DateTime.Now - this.StartupTime).TotalSeconds);
         }
 
         public override ISimulationBase Copy()

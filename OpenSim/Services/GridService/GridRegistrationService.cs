@@ -48,7 +48,6 @@ namespace OpenSim.Services.GridService
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, IGridRegistrationUrlModule> m_modules = new Dictionary<string, IGridRegistrationUrlModule>();
         protected Dictionary<string, ThreatLevel> m_cachedThreatLevels = new Dictionary<string, ThreatLevel>();
         protected LoadBalancerUrls m_loadBalancer = new LoadBalancerUrls();
@@ -275,7 +274,7 @@ namespace OpenSim.Services.GridService
                     {
                         if (CheckModuleNames(urls))
                         {
-                            m_log.Warn("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
+                            MainConsole.Instance.Warn("[GridRegService]: Null stuff in GetUrls, HostNames " + (urls.HostNames == null) + ", Ports " +
                                 (urls.Ports == null) + ", URLS " + (urls.URLS == null) + ", SessionID 1 " + SessionID + ", SessionID 2 " + urls.SessionID +
                                 ", checkModuleNames: " + CheckModuleNames(urls));
                         }
@@ -369,7 +368,7 @@ namespace OpenSim.Services.GridService
                 "GridRegistrationUrls", SessionID, new GridRegistrationURLs ());
             if (urls != null)
             {
-                m_log.WarnFormat ("[GridRegService]: Removing URLs for {0}", SessionID);
+                MainConsole.Instance.WarnFormat ("[GridRegService]: Removing URLs for {0}", SessionID);
                 //Remove all the handlers from the HTTP Server
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
@@ -406,10 +405,10 @@ namespace OpenSim.Services.GridService
                 //Remove it first just to make sure it is replaced
                 m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID);
                 m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD ());
-                m_log.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
+                MainConsole.Instance.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
             else
-                m_log.ErrorFormat ("[GridRegistrationService]: Failed to find URLs to update for {0}", "unknown");
+                MainConsole.Instance.ErrorFormat ("[GridRegistrationService]: Failed to find URLs to update for {0}", "unknown");
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)
@@ -430,7 +429,7 @@ namespace OpenSim.Services.GridService
                 //Past time for it to expire
                 if (m_useSessionTime && urls.Expiration < DateTime.UtcNow)
                 {
-                    m_log.Warn ("[GridRegService]: URLs expired for " + SessionID);
+                    MainConsole.Instance.Warn ("[GridRegService]: URLs expired for " + SessionID);
                     RemoveUrlsForClient(SessionID);
                     return false;
                 }
@@ -441,10 +440,10 @@ namespace OpenSim.Services.GridService
                 ThreatLevel regionThreatLevel = FindRegionThreatLevel (SessionID);
                 //Return whether the region threat level is higher than the function threat level
                 if(!(functionThreatLevel <= regionThreatLevel))
-                    m_log.Warn ("[GridRegService]: checkThreatLevel failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
+                    MainConsole.Instance.Warn ("[GridRegService]: checkThreatLevel failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
                 return functionThreatLevel <= regionThreatLevel;
             }
-            m_log.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");
+            MainConsole.Instance.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");
             return false;
         }
 
@@ -720,8 +719,6 @@ namespace OpenSim.Services.GridService
 
             public class RemoteLoadBalancingPostHandler : BaseStreamHandler
             {
-                private static readonly ILog m_log = LogManager.GetLogger (MethodBase.GetCurrentMethod ().DeclaringType);
-
                 private readonly GridRegistrationService m_service;
                 private readonly string m_password;
 

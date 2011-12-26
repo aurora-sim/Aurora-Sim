@@ -68,8 +68,6 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
 
         #endregion Constants
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
-
         /// <summary>
         ///   Builds a composited terrain texture given the region texture
         ///   and heightmap settings
@@ -119,7 +117,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                             }
                             catch (Exception ex)
                             {
-                                m_log.Warn("Failed to decode cached terrain texture " + cacheID +
+                                MainConsole.Instance.Warn("Failed to decode cached terrain texture " + cacheID +
                                            " (textureID: " + textureIDs[i] + "): " + ex.Message);
                             }
                         }
@@ -136,7 +134,7 @@ namespace OpenSim.Region.CoreModules.World.Warp3DMap
                                 }
                                 catch (Exception ex)
                                 {
-                                    m_log.Warn("Failed to decode terrain texture " + asset.ID + ": " + ex.Message);
+                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + asset.ID + ": " + ex.Message);
                                 }
                             }
 

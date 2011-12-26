@@ -43,10 +43,6 @@ namespace OpenSim.Services.ConfigurationService
     {
         #region Declares
 
-        protected static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected Dictionary<string, OSDMap> m_allConfigs = new Dictionary<string, OSDMap>();
         protected OSDMap m_autoConfig = new OSDMap();
         protected IConfigSource m_config;
@@ -55,6 +51,10 @@ namespace OpenSim.Services.ConfigurationService
         #endregion
 
         #region IApplicationPlugin Members
+
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
 
         public void Initialize(ISimulationBase openSim)
         {

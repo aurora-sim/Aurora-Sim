@@ -43,8 +43,6 @@ namespace Aurora.Services.DataService
 {
     public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private IGenericData GD;
         private IRegistryCore m_registry;
 

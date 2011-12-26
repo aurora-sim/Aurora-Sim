@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteEstateConnector : IEstateConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IEstateConnector Members
@@ -102,7 +98,7 @@ namespace Aurora.Services.DataService
                         return true;
                     }
                     else
-                        m_log.DebugFormat(
+                        MainConsole.Instance.DebugFormat(
                             "[AuroraRemoteEstateConnector]: LoadEstateSettings {0} received null response",
                             regionID);
                     return false;
@@ -110,7 +106,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.WarnFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -137,7 +133,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -166,13 +162,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: CreateEstate {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: CreateEstate {0} received null response",
                                           RegionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }
@@ -218,13 +214,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                                           search);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return null;
@@ -277,14 +273,14 @@ namespace Aurora.Services.DataService
                         }
 
                         else
-                            m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                            MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                                 owner);
                     }
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e.ToString());
             }
 
             return null;
@@ -317,13 +313,13 @@ namespace Aurora.Services.DataService
                         return true;
                     }
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
                                           regionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -355,13 +351,13 @@ namespace Aurora.Services.DataService
                         return true;
                     }
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: LinkRegion {0} received null response",
                                           regionID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -393,13 +389,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: DeleteEstate {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: DeleteEstate {0} received null response",
                                           estateID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return false;
@@ -437,13 +433,13 @@ namespace Aurora.Services.DataService
                     }
 
                     else
-                        m_log.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: GetEstates {0} received null response",
                                           estateID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteEstateConnector]: Exception when contacting server: {0}", e);
             }
 
             return Regions;

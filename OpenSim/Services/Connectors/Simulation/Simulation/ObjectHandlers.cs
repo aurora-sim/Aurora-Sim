@@ -42,7 +42,6 @@ namespace OpenSim.Services
 {
     public class ObjectHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ISimulationService m_SimulationService;
         private readonly bool m_allowForeignIncomingObjects;
 
@@ -61,13 +60,13 @@ namespace OpenSim.Services
 
         public Hashtable Handler(Hashtable request)
         {
-            //m_log.Debug("[CONNECTION DEBUGGING]: ObjectHandler Called");
+            //MainConsole.Instance.Debug("[CONNECTION DEBUGGING]: ObjectHandler Called");
 
-            //m_log.Debug("---------------------------");
-            //m_log.Debug(" >> uri=" + request["uri"]);
-            //m_log.Debug(" >> content-type=" + request["content-type"]);
-            //m_log.Debug(" >> http-method=" + request["http-method"]);
-            //m_log.Debug("---------------------------\n");
+            //MainConsole.Instance.Debug("---------------------------");
+            //MainConsole.Instance.Debug(" >> uri=" + request["uri"]);
+            //MainConsole.Instance.Debug(" >> content-type=" + request["content-type"]);
+            //MainConsole.Instance.Debug(" >> http-method=" + request["http-method"]);
+            //MainConsole.Instance.Debug("---------------------------\n");
 
             Hashtable responsedata = new Hashtable();
             responsedata["content_type"] = "text/html";
@@ -78,7 +77,7 @@ namespace OpenSim.Services
             if (!WebUtils.GetParams((string) request["uri"], out objectID, out regionID, out action) ||
                 m_allowForeignIncomingObjects)
             {
-                //m_log.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
+                //MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
                 responsedata["int_response_code"] = 404;
                 responsedata["str_response_string"] = "false";
 
@@ -104,7 +103,7 @@ namespace OpenSim.Services
                 //}
             else
             {
-                m_log.InfoFormat("[OBJECT HANDLER]: method {0} not supported in object message", method);
+                MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: method {0} not supported in object message", method);
                 responsedata["int_response_code"] = HttpStatusCode.MethodNotAllowed;
                 responsedata["str_response_string"] = "Mthod not allowed";
 
@@ -145,7 +144,7 @@ namespace OpenSim.Services
             ISceneObject sog = null;
             try
             {
-                //m_log.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
+                //MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: received {0}", sogXmlStr);
                 IRegionSerialiserModule mod = s.RequestModuleInterface<IRegionSerialiserModule>();
                 if (mod != null)
                 {
@@ -156,7 +155,7 @@ namespace OpenSim.Services
             }
             catch (Exception ex)
             {
-                m_log.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex);
+                MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: exception on deserializing scene object {0}", ex);
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
                 responsedata["str_response_string"] = "Bad request";
                 return;
@@ -166,7 +165,7 @@ namespace OpenSim.Services
 
             if (sog == null)
             {
-                m_log.ErrorFormat("[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
+                MainConsole.Instance.ErrorFormat("[OBJECT HANDLER]: error on deserializing scene object as the object was null!");
 
                 responsedata["int_response_code"] = HttpStatusCode.OK;
                 responsedata["str_response_string"] = result.ToString();
@@ -179,7 +178,7 @@ namespace OpenSim.Services
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[OBJECT HANDLER]: Exception in CreateObject: {0}", e.StackTrace);
+                MainConsole.Instance.DebugFormat("[OBJECT HANDLER]: Exception in CreateObject: {0}", e.StackTrace);
             }
 
             responsedata["int_response_code"] = HttpStatusCode.OK;

@@ -44,8 +44,6 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 {
     public class BasicInventoryAccessModule : INonSharedRegionModule, IInventoryAccessModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected bool m_Enabled = false;
         protected IScene m_scene;
         protected ILLClientInventory m_LLCLientInventoryModule;
@@ -71,7 +69,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 if (name == Name)
                 {
                     m_Enabled = true;
-                    //m_log.InfoFormat("[INVENTORY ACCESS MODULE]: {0} enabled.", Name);
+                    //MainConsole.Instance.InfoFormat("[INVENTORY ACCESS MODULE]: {0} enabled.", Name);
                 }
             }
         }
@@ -162,10 +160,11 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         return FailedPermissionsNotecardCAPSUpdate(UUID.Zero, itemID);
                     }
 
-                    AssetBase asset =
-                    CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                    asset.ID = m_scene.AssetService.Store(asset);
-                    item.AssetID = asset.ID;
+                    UUID newID;
+                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                        item.AssetID = newID;
+                    else
+                        remoteClient.SendAlertMessage("Failed to update notecard asset");
 
                     m_scene.InventoryService.UpdateItem(item);
 
@@ -176,18 +175,18 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     if (!m_scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
-                    IScriptModule ScriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
-
-                    AssetBase asset =
-                        CreateAsset(item.Name, item.Description, (sbyte)item.AssetType, data, remoteClient.AgentId.ToString());
-                    asset.ID = m_scene.AssetService.Store(asset);
-                    item.AssetID = asset.ID;
+                    UUID newID;
+                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                        item.AssetID = newID;
+                    else
+                        remoteClient.SendAlertMessage("Failed to update script asset");
 
                     m_scene.InventoryService.UpdateItem(item);
 
+                    IScriptModule ScriptEngine = m_scene.RequestModuleInterface<IScriptModule>();
                     if (ScriptEngine != null)
                     {
-                        string Errors = ScriptEngine.TestCompileScript(asset.ID, itemID);
+                        string Errors = ScriptEngine.TestCompileScript(item.AssetID, itemID);
                         if (Errors != "")
                             return FailedCompileScriptCAPSUpdate(item.AssetID, itemID, Errors);
                     }
@@ -196,7 +195,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 }
                 return "";
             }
-            m_log.ErrorFormat(
+            MainConsole.Instance.ErrorFormat(
                 "[AGENT INVENTORY]: Could not find item {0} for caps inventory update",
                 itemID);
 
@@ -362,7 +361,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
                 if (null == item)
                 {
-                    m_log.DebugFormat(
+                    MainConsole.Instance.DebugFormat(
                         "[AGENT INVENTORY]: Object {0} {1} scheduled for save to inventory has already been deleted.",
                         objectGroups[0].Name, objectGroups[0].UUID);
                     return UUID.Zero;
@@ -765,7 +764,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
             // process causes some clients to fail to display the attachment properly.
             m_scene.SceneGraph.AddPrimToScene (group);
 
-            //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+            //  MainConsole.Instance.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
             //  Set it's position in world.
             const float offsetHeight = 0;
             //The OOBsize is only half the size, x2
@@ -775,12 +774,12 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 BypassRayCast, bRayEndIsIntersection, true, newSize, false);
             pos.Z += offsetHeight;
             group.AbsolutePosition = pos;
-            //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+            //   MainConsole.Instance.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
             ISceneChildEntity rootPart = group.GetChildPart(group.UUID);
             if (rootPart == null)
             {
-                m_log.Error ("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
+                MainConsole.Instance.Error ("[AGENT INVENTORY]: Error rezzing ItemID: " + itemID + " object has no rootpart.");
                 return null;
             }
 
@@ -905,7 +904,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                 // process causes some clients to fail to display the attachment properly.
                 m_scene.SceneGraph.AddPrimToScene(group);
 
-                //  m_log.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
+                //  MainConsole.Instance.InfoFormat("ray end point for inventory rezz is {0} {1} {2} ", RayEnd.X, RayEnd.Y, RayEnd.Z);
                 // if attachment we set it's asset id so object updates can reflect that
                 // if not, we set it's position in world.
                 float offsetHeight = 0;
@@ -914,7 +913,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     BypassRayCast, bRayEndIsIntersection, true, group.GetAxisAlignedBoundingBox(out offsetHeight), false);
                 pos.Z += offsetHeight;
                 //group.AbsolutePosition = pos;
-                //   m_log.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
+                //   MainConsole.Instance.InfoFormat("rezx point for inventory rezz is {0} {1} {2}  and offsetheight was {3}", pos.X, pos.Y, pos.Z, offsetHeight);
 
                 SceneObjectPart rootPart = (SceneObjectPart)group.GetChildPart (group.UUID);
 
@@ -1039,7 +1038,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
 
             if (assetRequestItem.AssetID != requestID)
             {
-                m_log.WarnFormat(
+                MainConsole.Instance.WarnFormat(
                     "[CLIENT]: {0} requested asset {1} from item {2} but this does not match item's asset {3}",
                     Name, requestID, itemID, assetRequestItem.AssetID);
                 return false;

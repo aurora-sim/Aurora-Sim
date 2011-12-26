@@ -42,10 +42,6 @@ namespace OpenSim.Services.Connectors
 {
     public class FriendsServicesConnector : IFriendsService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IFriendsService
@@ -74,7 +70,7 @@ namespace OpenSim.Services.Connectors
                             continue;
 
                         Dictionary<string, object>.ValueCollection finfosList = replyData.Values;
-                        //m_log.DebugFormat("[FRIENDS CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
+                        //MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: get neighbours returned {0} elements", rinfosList.Count);
                         foreach (object f in finfosList)
                         {
                             if (f is Dictionary<string, object>)
@@ -83,20 +79,20 @@ namespace OpenSim.Services.Connectors
                                 finfos.Add(finfo);
                             }
                             else
-                                m_log.DebugFormat(
+                                MainConsole.Instance.DebugFormat(
                                     "[FRIENDS CONNECTOR]: GetFriends {0} received invalid response type {1}",
                                     PrincipalID, f.GetType());
                         }
                     }
 
                     else
-                        m_log.DebugFormat("[FRIENDS CONNECTOR]: GetFriends {0} received null response",
+                        MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: GetFriends {0} received null response",
                                           PrincipalID);
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
             }
 
             // Success
@@ -136,16 +132,16 @@ namespace OpenSim.Services.Connectors
                                 return success;
                         }
                         else
-                            m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
+                            MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend {0} {1} received null response",
                                               PrincipalID, Friend);
                     }
                     else
-                        m_log.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend received null reply");
+                        MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: StoreFriend received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return false;
             }
 
@@ -183,16 +179,16 @@ namespace OpenSim.Services.Connectors
                                 return success;
                         }
                         else
-                            m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend {0} {1} received null response",
+                            MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend {0} {1} received null response",
                                               PrincipalID, Friend);
                     }
                     else
-                        m_log.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend received null reply");
+                        MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: DeleteFriend received null reply");
                 }
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[FRIENDS CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return false;
             }
             return false;

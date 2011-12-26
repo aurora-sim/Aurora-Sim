@@ -56,7 +56,6 @@ namespace OpenSim.Framework
     public class AssetBase : IDisposable
     {
         private static readonly SHA256Managed SHA256Managed = new SHA256Managed();
-        private static readonly ILog m_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private string idString = "";
         private byte[] myData = new byte[] {};
         private string myHashCode = "";
@@ -117,7 +116,7 @@ namespace OpenSim.Framework
             if (assetType == AssetType.Unknown)
             {
                 StackTrace trace = new StackTrace(true);
-                m_Log.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
+                MainConsole.Instance.ErrorFormat("[ASSETBASE]: Creating asset '{0}' ({1}) with an unknown asset type\n{2}",
                                   name, assetID, trace);
             }
 
@@ -292,7 +291,8 @@ namespace OpenSim.Framework
         {
             OSDMap assetMap = new OSDMap
                                   {
-                                      {"Flags", OSD.FromInteger((int) Flags)},
+                                      {"AssetFlags", OSD.FromInteger((int) Flags)},
+                                      {"AssetID", ID},
                                       {"CreationDate", OSD.FromDate(CreationDate)},
                                       {"CreatorID", OSD.FromUUID(CreatorID)},
                                       {"Data", OSD.FromBinary(Data)},

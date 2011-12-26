@@ -38,10 +38,6 @@ namespace OpenSim.Framework.Servers.HttpServer
 
     public class PollServiceWorkerThread
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly BlockingQueue<PollServiceHttpRequest> m_request;
         private readonly BaseHttpServer m_server;
         private readonly int m_timeout = 250;
@@ -108,7 +104,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("Exception in poll service thread: " + e);
+                    MainConsole.Instance.ErrorFormat("Exception in poll service thread: " + e);
                 }
             }
         }

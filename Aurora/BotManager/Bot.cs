@@ -79,8 +79,6 @@ namespace Aurora.BotManager
         private bool m_UseJumpDecisionTree = true;
 
         private bool m_paused;
-
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
 
         private uint m_movementFlag;
@@ -634,7 +632,7 @@ namespace Aurora.BotManager
             List<Vector3> waypoints = new List<Vector3>();
             if (points.Contains("no_path"))
             {
-                m_log.Debug("I'm sorry I could not find a solution to that path. Teleporting instead");
+                MainConsole.Instance.Debug("I'm sorry I could not find a solution to that path. Teleporting instead");
                 return waypoints;
             }
 
@@ -697,7 +695,7 @@ namespace Aurora.BotManager
             }
             if (FollowSP == null || FollowSP.IsChildAgent)
             {
-                m_log.Warn("Could not find avatar " + avatarName + " for bot " + Name + " to follow");
+                MainConsole.Instance.Warn("Could not find avatar " + avatarName + " for bot " + Name + " to follow");
                 return;
             }
             FollowSP.PhysicsActor.OnRequestTerseUpdate += EventManager_OnClientMovement;
@@ -913,9 +911,9 @@ namespace Aurora.BotManager
                     }
                 }
 
-                m_log.Warn(line.Remove(line.Length - 1));
+                MainConsole.Instance.Warn(line.Remove(line.Length - 1));
             }
-            m_log.Warn("\n");
+            MainConsole.Instance.Warn("\n");
         }
 
         private int resolution = 10;

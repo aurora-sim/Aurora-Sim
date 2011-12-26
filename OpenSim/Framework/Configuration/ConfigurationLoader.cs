@@ -42,8 +42,6 @@ namespace OpenSim.Framework
     /// </summary>
     public class ConfigurationLoader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public string defaultIniFile = "Aurora.ini";
 
         public string iniFilePath = "";
@@ -167,7 +165,7 @@ namespace OpenSim.Framework
 
                 if (iniDirName != "" && Directory.Exists(iniDirName))
                 {
-                    m_log.InfoFormat("Searching folder {0} for config ini files",
+                    MainConsole.Instance.InfoFormat("Searching folder {0} for config ini files",
                                      iniDirName);
 
                     string[] fileEntries = Directory.GetFiles(iniDirName);
@@ -237,12 +235,12 @@ namespace OpenSim.Framework
             IConfigSource m_config = new IniConfigSource();
             IConfigSource m_fakeconfig = new IniConfigSource();
 
-            //m_log.Info("[Config]: Reading configuration settings");
+            //MainConsole.Instance.Info("[Config]: Reading configuration settings");
 
             if (sources.Count == 0)
             {
-                m_log.FatalFormat("[CONFIG]: Could not load any configuration");
-                m_log.FatalFormat("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
+                MainConsole.Instance.FatalFormat("[CONFIG]: Could not load any configuration");
+                MainConsole.Instance.FatalFormat("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
                                   "?");
                 throw new NotSupportedException();
             }
@@ -276,8 +274,8 @@ namespace OpenSim.Framework
 
             if (!iniFileExists)
             {
-                m_log.FatalFormat("[CONFIG]: Could not load any configuration");
-                m_log.FatalFormat("[CONFIG]: Configuration exists, but there was an error loading it!");
+                MainConsole.Instance.FatalFormat("[CONFIG]: Could not load any configuration");
+                MainConsole.Instance.FatalFormat("[CONFIG]: Configuration exists, but there was an error loading it!");
                 throw new NotSupportedException();
             }
             // Make sure command line options take precedence
@@ -470,7 +468,7 @@ namespace OpenSim.Framework
             if (!IsUri(iniPath))
             {
                 if (showIniLoading)
-                    m_log.InfoFormat("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath));
+                    MainConsole.Instance.InfoFormat("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath));
 
                 source.Merge(new IniConfigSource(iniPath, IniFileType.AuroraStyle));
                 if (inidbg)
@@ -481,7 +479,7 @@ namespace OpenSim.Framework
             }
             else
             {
-                m_log.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
+                MainConsole.Instance.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
 
                 // The ini file path is a http URI
                 // Try to read it
@@ -495,7 +493,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception e)
                 {
-                    m_log.FatalFormat("[CONFIG]: Exception reading config from URI {0}\n" + e, iniPath);
+                    MainConsole.Instance.FatalFormat("[CONFIG]: Exception reading config from URI {0}\n" + e, iniPath);
                     Environment.Exit(1);
                 }
             }
@@ -505,7 +503,7 @@ namespace OpenSim.Framework
         private void WriteConfigFile(int i, IConfigSource m_config)
         {
             string m_fileName = "ConfigFileDump" + i + ".ini";
-            m_log.Info("Writing config dump file to " + m_fileName);
+            MainConsole.Instance.Info("Writing config dump file to " + m_fileName);
             try
             {
                 //Add the user

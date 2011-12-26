@@ -46,9 +46,6 @@ namespace OpenSim.Framework
     /// </summary>
     public static class NetworkUtil
     {
-        // Logger
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static bool m_disabled = true;
 
         // IPv4Address, Subnet
@@ -86,14 +83,14 @@ namespace OpenSim.Framework
             {
                 if (host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + simulator + "'");
+                    MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + simulator + "'");
                     return host;
                 }
             }
 #else
             foreach (IPAddress host in Dns.GetHostAddresses(Dns.GetHostName()).Where(host => host.Equals(user) && host.AddressFamily == AddressFamily.InterNetwork))
             {
-                m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
+                MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
                            simulator + "'");
                 return host;
             }
@@ -130,7 +127,7 @@ namespace OpenSim.Framework
 
                 if (valid)
                 {
-                    m_log.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
+                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
                                simulator + "'");
                     return subnet.Key;
                 }
@@ -150,14 +147,14 @@ namespace OpenSim.Framework
                 {
                     if (host.AddressFamily == AddressFamily.InterNetworkV6)
                     {
-                        m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
+                        MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
                         return host;
                     }
                 }
 #else
                 foreach (IPAddress host in Dns.GetHostAddresses(defaultHostname).Where(host => host.AddressFamily == AddressFamily.InterNetworkV6))
                 {
-                    m_log.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
+                    MainConsole.Instance.Info("[NetworkUtil] Localhost user detected, sending them '" + host + "' instead of '" +
                                defaultHostname + "'");
                     return host;
                 }
@@ -174,14 +171,14 @@ namespace OpenSim.Framework
                 IPAddress host = pair.Value;
                 if (host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    m_log.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
+                    MainConsole.Instance.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" + defaultHostname + "'");
                     return destination;
                 }
             }
 #else
             foreach (IPAddress host in m_subnets.Select(pair => pair.Value).Where(host => host.Equals(destination) && host.AddressFamily == AddressFamily.InterNetwork))
             {
-                m_log.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" +
+                MainConsole.Instance.Info("[NATROUTING] Localhost user detected, sending them '" + host + "' instead of '" +
                            defaultHostname + "'");
                 return destination;
             }
@@ -218,7 +215,7 @@ namespace OpenSim.Framework
 
                 if (valid)
                 {
-                    m_log.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
+                    MainConsole.Instance.Info("[NetworkUtil] Local LAN user detected, sending them '" + subnet.Key + "' instead of '" +
                                defaultHostname + "'");
                     return subnet.Key;
                 }

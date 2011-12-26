@@ -32,7 +32,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using log4net;
+using OpenSim.Framework;
 
 namespace Aurora.DataManager
 {
@@ -67,8 +67,6 @@ namespace Aurora.DataManager
     ///</summary>
     public class LegacyMigration
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected Assembly _assem;
         protected DbConnection _conn;
 
@@ -200,9 +198,9 @@ namespace Aurora.DataManager
                 return;
 
             // to prevent people from killing long migrations.
-            m_log.InfoFormat("[MIGRATIONS]: Upgrading {0} to latest revision {1}.", _type,
+            MainConsole.Instance.InfoFormat("[MIGRATIONS]: Upgrading {0} to latest revision {1}.", _type,
                              migrations.Keys[migrations.Count - 1]);
-            m_log.Info("[MIGRATIONS]: NOTE - this may take a while, don't interrupt this process!");
+            MainConsole.Instance.Info("[MIGRATIONS]: NOTE - this may take a while, don't interrupt this process!");
 
             foreach (KeyValuePair<int, string[]> kvp in migrations)
             {
@@ -221,8 +219,8 @@ namespace Aurora.DataManager
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[MIGRATIONS]: Cmd was {0}", e.Message.Replace("\n", " "));
-                    m_log.Warn(
+                    MainConsole.Instance.WarnFormat("[MIGRATIONS]: Cmd was {0}", e.Message.Replace("\n", " "));
+                    MainConsole.Instance.Warn(
                         "[MIGRATIONS]: An error has occurred in the migration.  If you're running OpenSim for the first time then you can probably safely ignore this, since certain migration commands attempt to fetch data out of old tables.  However, if you're using an existing database and you see database related errors while running OpenSim then you will need to fix these problems manually. Continuing.");
                     ExecuteScript("ROLLBACK;");
                 }
@@ -267,13 +265,13 @@ namespace Aurora.DataManager
 
         private void InsertVersion(string type, int version)
         {
-            m_log.InfoFormat("[MIGRATIONS]: Creating {0} at version {1}", type, version);
+            MainConsole.Instance.InfoFormat("[MIGRATIONS]: Creating {0} at version {1}", type, version);
             ExecuteScript("insert into migrations(name, version) values('" + type + "', " + version + ")");
         }
 
         private void UpdateVersion(string type, int version)
         {
-            m_log.InfoFormat("[MIGRATIONS]: Updating {0} to version {1}", type, version);
+            MainConsole.Instance.InfoFormat("[MIGRATIONS]: Updating {0} to version {1}", type, version);
             ExecuteScript("update migrations set version=" + version + " where name='" + type + "'");
         }
 
@@ -388,7 +386,7 @@ namespace Aurora.DataManager
 
                                     if (!int.TryParse(sLine.Substring(9).Trim(), out nVersion))
                                     {
-                                        m_log.ErrorFormat(
+                                        MainConsole.Instance.ErrorFormat(
                                             "[MIGRATIONS]: invalid version marker at {0}: line {1}. Migration failed!", sFile,
                                             nLineNo);
                                         break;
@@ -431,7 +429,7 @@ namespace Aurora.DataManager
             }
 
             if (migrations.Count < 1)
-                m_log.DebugFormat("[MIGRATIONS]: {0} data tables already up to date at revision {1}", _type, after);
+                MainConsole.Instance.DebugFormat("[MIGRATIONS]: {0} data tables already up to date at revision {1}", _type, after);
 
             return migrations;
         }

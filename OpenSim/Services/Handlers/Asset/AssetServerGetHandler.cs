@@ -40,8 +40,6 @@ namespace OpenSim.Services
 {
     public class AssetServerGetHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly IAssetService m_AssetService;
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -108,7 +106,7 @@ namespace OpenSim.Services
                 catch (Exception ex)
                 {
                     result = new byte[0];
-                    m_log.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] +
+                    MainConsole.Instance.Warn("[AssetServerGetHandler]: Error serializing the result for /exists for asset " + p[0] +
                                ", " + ex);
                 }
             }
@@ -119,11 +117,11 @@ namespace OpenSim.Services
                 if (asset != null)
                 {
                     XmlSerializer xs = new XmlSerializer(typeof (AssetBase));
-                    result = WebUtils.SerializeResult(xs, asset);
+                    result = Util.CompressBytes(WebUtils.SerializeResult(xs, asset));
 
                     httpResponse.StatusCode = (int) HttpStatusCode.OK;
                     httpResponse.ContentType =
-                        SLUtil.SLAssetTypeToContentType(asset.Type);
+                        SLUtil.SLAssetTypeToContentType(asset.Type) + "/gzip";
                 }
                 else
                 {

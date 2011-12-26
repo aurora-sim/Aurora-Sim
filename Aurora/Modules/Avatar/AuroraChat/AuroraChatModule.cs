@@ -49,7 +49,6 @@ namespace Aurora.Modules
     {
         private const int DEBUG_CHANNEL = 2147483647;
         private const int DEFAULT_CHANNEL = 0;
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private readonly Dictionary<UUID, MuteList[]> MuteListCache = new Dictionary<UUID, MuteList[]>();
         private readonly List<IScene> m_scenes = new List<IScene>();
@@ -227,7 +226,7 @@ namespace Aurora.Modules
             if (message.Length >= 1000) // libomv limit
                 message = message.Substring(0, 1000);
 
-            // m_log.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
+            // MainConsole.Instance.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
 
             foreach (IScenePresence presence in from s in m_scenes
                                                 select s.GetScenePresences() into ScenePresences
@@ -359,14 +358,14 @@ namespace Aurora.Modules
 
             if (null == m_config)
             {
-                m_log.Info("[AURORACHAT]: no config found, plugin disabled");
+                MainConsole.Instance.Info("[AURORACHAT]: no config found, plugin disabled");
                 m_enabled = false;
                 return;
             }
 
             if (!m_config.GetBoolean("enabled", true))
             {
-                m_log.Info("[AURORACHAT]: plugin disabled by configuration");
+                MainConsole.Instance.Info("[AURORACHAT]: plugin disabled by configuration");
                 m_enabled = false;
                 return;
             }
@@ -395,7 +394,7 @@ namespace Aurora.Modules
             scene.RegisterModuleInterface<IMuteListModule>(this);
             scene.RegisterModuleInterface<IChatModule>(this);
             FindChatPlugins();
-            //m_log.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
+            //MainConsole.Instance.InfoFormat("[CHAT]: Initialized for {0} w:{1} s:{2} S:{3}", scene.RegionInfo.RegionName,
             //                 m_whisperdistance, m_saydistance, m_shoutdistance);
         }
 
@@ -413,7 +412,7 @@ namespace Aurora.Modules
 
                 if (m_TransferModule == null)
                 {
-                    m_log.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
+                    MainConsole.Instance.Error("[CONFERANCE MESSAGE]: No message transfer module, IM will not work!");
 
                     m_scenes.Clear();
                     m_enabled = false;
@@ -527,7 +526,7 @@ namespace Aurora.Modules
             // sanity check:
             if (c.Sender == null)
             {
-                m_log.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
+                MainConsole.Instance.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
                 return;
             }
 
@@ -605,7 +604,7 @@ namespace Aurora.Modules
                 sourceType = ChatSourceType.Agent;
             }
 
-            // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
+            // MainConsole.Instance.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
 
             c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
@@ -897,7 +896,7 @@ namespace Aurora.Modules
             }
             else
             {
-                m_log.Warn("ChatSessionRequest : " + method);
+                MainConsole.Instance.Warn("ChatSessionRequest : " + method);
                 return "";
             }
         }

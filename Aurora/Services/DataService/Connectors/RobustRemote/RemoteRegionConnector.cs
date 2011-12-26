@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteRegionConnector : IRegionConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IRegionConnector Members
@@ -86,7 +82,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -111,7 +107,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -149,7 +145,7 @@ namespace Aurora.Services.DataService
                     }
                     else
                     {
-                        m_log.DebugFormat("[AuroraRemoteRegionConnector]: RemoveTelehub {0} received null response",
+                        MainConsole.Instance.DebugFormat("[AuroraRemoteRegionConnector]: RemoveTelehub {0} received null response",
                                           regionID.ToString());
                     }
                 }
@@ -157,7 +153,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteRegionConnector]: Exception when contacting server: {0}", e);
             }
             return null;
         }

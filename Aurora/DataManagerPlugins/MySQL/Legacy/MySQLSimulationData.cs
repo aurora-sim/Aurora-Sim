@@ -47,8 +47,6 @@ namespace OpenSim.Data.MySQL
     /// </summary>
     public class MySQLSimulationData : ILegacySimulationDataStore
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly object m_dbLock = new object();
         private string m_connectionString;
 
@@ -119,7 +117,7 @@ namespace OpenSim.Data.MySQL
 
                                 ++count;
                                 if (count%ROWS_PER_QUERY == 0)
-                                    m_log.Info("[REGION DB]: Loaded " + count + " prims...");
+                                    MainConsole.Instance.Info("[REGION DB]: Loaded " + count + " prims...");
                             }
                         }
                     }
@@ -164,7 +162,7 @@ namespace OpenSim.Data.MySQL
                     }
                     else
                     {
-                        m_log.WarnFormat(
+                        MainConsole.Instance.WarnFormat(
                             "[REGION DB]: Database contains an orphan child prim {0} {1} in region {2} pointing to missing parent {3}.  This prim will not be loaded.",
                             prim.Name, prim.UUID, regionID, prim.ParentUUID);
                     }
@@ -173,7 +171,7 @@ namespace OpenSim.Data.MySQL
 
             #endregion SceneObjectGroup Creation
 
-            m_log.DebugFormat("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
+            MainConsole.Instance.DebugFormat("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
 
             #region Prim Inventory Loading
 
@@ -214,7 +212,7 @@ namespace OpenSim.Data.MySQL
 
             #endregion Prim Inventory Loading
 
-            m_log.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
+            MainConsole.Instance.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
 
             return new List<ISceneEntity>(objects.Values);
         }
@@ -303,7 +301,7 @@ namespace OpenSim.Data.MySQL
                             {
                                 if (!hasX || !hasRevert || reader["X"].ToString() == "-1")
                                 {
-                                    m_log.Warn("Found double terrain");
+                                    MainConsole.Instance.Warn("Found double terrain");
                                     byte[] heightmap = (byte[]) reader["Heightfield"];
                                     short[] map = new short[RegionSizeX*RegionSizeX];
                                     double[,] terrain = null;
@@ -335,7 +333,7 @@ namespace OpenSim.Data.MySQL
                                 }
                                 else
                                 {
-                                    m_log.Warn("Found single terrain");
+                                    MainConsole.Instance.Warn("Found single terrain");
                                     byte[] heightmap = (byte[]) reader["Heightfield"];
                                     short[] map = new short[RegionSizeX*RegionSizeX];
                                     int ii = 0;
@@ -494,7 +492,7 @@ namespace OpenSim.Data.MySQL
             }
             catch (Exception)
             {
-                //m_log.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
+                //MainConsole.Instance.Error("[REGION DB]: MySQL error in ExecuteReader: " + e.Message);
                 throw;
             }
 
@@ -509,7 +507,7 @@ namespace OpenSim.Data.MySQL
             }
             catch (Exception)
             {
-                //m_log.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
+                //MainConsole.Instance.Error("[REGION DB]: MySQL error in ExecuteNonQuery: " + e.Message);
                 throw;
             }
         }
@@ -923,7 +921,7 @@ namespace OpenSim.Data.MySQL
                                 s.Media = PrimitiveBaseShape.MediaList.FromXml((string) o[i]);
                             break;
                         default:
-                            m_log.Warn("[MySQL]: Unknown database row: " + name);
+                            MainConsole.Instance.Warn("[MySQL]: Unknown database row: " + name);
                             break;
                     }
 
@@ -932,7 +930,7 @@ namespace OpenSim.Data.MySQL
             }
             catch (Exception ex)
             {
-                m_log.Warn("[MySQL]: Exception loading a SceneObject, " + ex + ", not loading..");
+                MainConsole.Instance.Warn("[MySQL]: Exception loading a SceneObject, " + ex + ", not loading..");
                 return null;
             }
             s.Scale = new Vector3(ScaleX, ScaleY, ScaleZ);
@@ -1123,7 +1121,7 @@ namespace OpenSim.Data.MySQL
             {
                 newData.UserLocation = Vector3.Zero;
                 newData.UserLookAt = Vector3.Zero;
-                m_log.ErrorFormat("[PARCEL]: unable to get parcel telehub settings for {1}", newData.Name);
+                MainConsole.Instance.ErrorFormat("[PARCEL]: unable to get parcel telehub settings for {1}", newData.Name);
             }
 
             newData.MediaDescription = (string) row["MediaDescription"];

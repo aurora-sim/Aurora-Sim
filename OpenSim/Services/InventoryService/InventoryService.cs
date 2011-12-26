@@ -42,10 +42,6 @@ namespace OpenSim.Services.InventoryService
 {
     public class InventoryService : IInventoryService, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         protected bool m_AllowDelete = true;
 
         protected IAssetService m_AssetService;
@@ -410,7 +406,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual InventoryFolderBase GetFolderForType(UUID principalID, InventoryType invType, AssetType type)
         {
-//            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
+//            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
             if (invType == InventoryType.Snapshot)
                 type = AssetType.SnapshotFolder;
                     //Fix for snapshots, as they get the texture asset type, but need to get checked as snapshotfolder types
@@ -421,11 +417,11 @@ namespace OpenSim.Services.InventoryService
 
             if (folders.Count == 0)
             {
-//                m_log.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
+//                MainConsole.Instance.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
                 return null;
             }
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[XINVENTORY SERVICE]: Found folder {0} {1} for type {2} for user {3}", 
 //                folders[0].folderName, folders[0].folderID, type, principalID);
 
@@ -438,7 +434,7 @@ namespace OpenSim.Services.InventoryService
             // connector. So we disregard the principal and look
             // by ID.
             //
-            m_log.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
+            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
             InventoryCollection inventory = new InventoryCollection
                                                 {
                                                     UserID = principalID,
@@ -457,7 +453,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
-            //            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -468,7 +464,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
         {
-            //            m_log.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -479,7 +475,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
         {
-            //            m_log.DebugFormat("[XINVENTORY]: Fetch folders for folder {0}", folderID);
+            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch folders for folder {0}", folderID);
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -620,7 +616,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
 
             if (doParentFolderCheck)
@@ -795,11 +791,11 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void FixInventory(string[] cmd)
         {
-            string userName = MainConsole.Instance.CmdPrompt("Name of user");
+            string userName = MainConsole.Instance.Prompt("Name of user");
             UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, userName);
             if (account == null)
             {
-                m_log.Warn("Could not find user");
+                MainConsole.Instance.Warn("Could not find user");
                 return;
             }
             InventoryFolderBase rootFolder = GetRootFolder(account.PrincipalID);
@@ -807,7 +803,7 @@ namespace OpenSim.Services.InventoryService
             //Fix having a default root folder
             if (rootFolder == null)
             {
-                m_log.Warn("Fixing default root folder...");
+                MainConsole.Instance.Warn("Fixing default root folder...");
                 List<InventoryFolderBase> skel = GetInventorySkeleton(account.PrincipalID);
                 if (skel.Count == 0)
                 {
@@ -839,14 +835,14 @@ namespace OpenSim.Services.InventoryService
                 {
                     if (!badFolders.Contains(f.ID) && f.ID != rootFolder.ID)
                     {
-                        m_log.Warn("Removing duplicate root folder " + f.Name);
+                        MainConsole.Instance.Warn("Removing duplicate root folder " + f.Name);
                         badFolders.Add(f.ID);
                     }
                 }
 #else
                 foreach (InventoryFolderBase f in rootFolders.Where(f => !badFolders.Contains(f.ID) && f.ID != rootFolder.ID))
                 {
-                    m_log.Warn("Removing duplicate root folder " + f.Name);
+                    MainConsole.Instance.Warn("Removing duplicate root folder " + f.Name);
                     badFolders.Add(f.ID);
                 }
 #endif
@@ -874,14 +870,14 @@ namespace OpenSim.Services.InventoryService
                     //We need to put it back in the My Inventory folder, as the sub folders are right for some reason
                     f.ParentID = rootFolder.ID;
                     m_Database.StoreFolder(f);
-                    m_log.WarnFormat("Fixing folder {0}", f.Name);
+                    MainConsole.Instance.WarnFormat("Fixing folder {0}", f.Name);
                 }
                 else if (badFolders.Contains(f.ParentID))
                 {
                     //Put it back in the My Inventory folder
                     f.ParentID = rootFolder.ID;
                     m_Database.StoreFolder(f);
-                    m_log.WarnFormat("Fixing folder {0}", f.Name);
+                    MainConsole.Instance.WarnFormat("Fixing folder {0}", f.Name);
                 }
                 else if (f.Type == (short) AssetType.CurrentOutfitFolder)
                 {
@@ -951,16 +947,16 @@ namespace OpenSim.Services.InventoryService
                 {
                     //Delete the dup
                     ForcePurgeFolder(folder);
-                    m_log.Warn("Purging duplicate default inventory type folder " + folder.Name);
+                    MainConsole.Instance.Warn("Purging duplicate default inventory type folder " + folder.Name);
                 }
                 if (changedFolders.ContainsKey(folder.ParentID))
                 {
                     folder.ParentID = changedFolders[folder.ParentID];
-                    m_log.Warn("Merging child folder of default inventory type " + folder.Name);
+                    MainConsole.Instance.Warn("Merging child folder of default inventory type " + folder.Name);
                     m_Database.StoreFolder(folder);
                 }
             }
-            m_log.Warn("Completed the check");
+            MainConsole.Instance.Warn("Completed the check");
         }
 
         protected InventoryFolderBase CreateFolder(UUID principalID, UUID parentID, int type, string name)
@@ -983,7 +979,7 @@ namespace OpenSim.Services.InventoryService
 
         protected virtual InventoryFolderBase[] GetSystemFolders(UUID principalID)
         {
-//            m_log.DebugFormat("[XINVENTORY SERVICE]: Getting system folders for {0}", principalID);
+//            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Getting system folders for {0}", principalID);
 
             InventoryFolderBase[] allFolders = m_Database.GetFolders(
                 new[] {"agentID"},
@@ -998,7 +994,7 @@ namespace OpenSim.Services.InventoryService
                         return false;
                     });
 
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[XINVENTORY SERVICE]: Found {0} system folders for {1}", sysFolders.Length, principalID);
 
             return sysFolders;

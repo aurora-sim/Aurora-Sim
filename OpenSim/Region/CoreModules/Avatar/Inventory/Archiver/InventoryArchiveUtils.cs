@@ -39,7 +39,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
     /// </summary>
     public static class InventoryArchiveUtils
     {
-//        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // Character used for escaping the path delimter ("\/") and itself ("\\") in human escaped strings
         public static readonly char ESCAPE_CHARACTER = '\\';
@@ -118,7 +118,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             // If the path isn't just / then trim any starting extraneous slashes
             path = path.TrimStart(new[] {PATH_DELIMITER});
 
-//            m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Adjusted path in FindFolderByPath() is [{0}]", path);
+//            MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Adjusted path in FindFolderByPath() is [{0}]", path);
 
             string[] components = SplitEscapedPath(path);
             components[0] = UnescapePath(components[0]);
@@ -216,13 +216,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             if (components.Length == 1)
             {
-//                m_log.DebugFormat(
+//                MainConsole.Instance.DebugFormat(
 //                    "FOUND SINGLE COMPONENT [{0}].  Looking for this in [{1}] {2}", 
 //                    components[0], startFolder.Name, startFolder.ID);
 
                 List<InventoryItemBase> items = inventoryService.GetFolderItems(startFolder.Owner, startFolder.ID);
 
-//                m_log.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
+//                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
 
 #if (!ISWIN)
                 foreach (InventoryItemBase item in items)
@@ -236,7 +236,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             }
             else
             {
-//                m_log.DebugFormat("FOUND COMPONENTS [{0}] and [{1}]", components[0], components[1]);
+//                MainConsole.Instance.DebugFormat("FOUND COMPONENTS [{0}] and [{1}]", components[0], components[1]);
 
                 InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
 
@@ -257,7 +257,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </returns>
         public static string[] SplitEscapedPath(string path)
         {
-//            m_log.DebugFormat("SPLITTING PATH {0}", path);
+//            MainConsole.Instance.DebugFormat("SPLITTING PATH {0}", path);
 
             bool singleEscapeChar = false;
 
@@ -287,7 +287,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <returns></returns>
         public static string UnescapePath(string path)
         {
-//            m_log.DebugFormat("ESCAPING PATH {0}", path);
+//            MainConsole.Instance.DebugFormat("ESCAPING PATH {0}", path);
 
             StringBuilder sb = new StringBuilder();
 
@@ -310,7 +310,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                 }
             }
 
-//            m_log.DebugFormat("ESCAPED PATH TO {0}", sb);
+//            MainConsole.Instance.DebugFormat("ESCAPED PATH TO {0}", sb);
 
             return sb.ToString();
         }

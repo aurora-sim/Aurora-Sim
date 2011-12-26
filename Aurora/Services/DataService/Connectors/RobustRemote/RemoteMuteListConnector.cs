@@ -42,10 +42,6 @@ namespace Aurora.Services.DataService
 {
     public class RemoteMuteListConnector : IMuteListConnector
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IMuteListConnector Members
@@ -105,7 +101,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
             return Mutes.ToArray();
         }
@@ -133,7 +129,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -161,7 +157,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
         }
 
@@ -189,7 +185,7 @@ namespace Aurora.Services.DataService
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
+                MainConsole.Instance.DebugFormat("[AuroraRemoteMuteListConnector]: Exception when contacting server: {0}", e);
             }
             return false;
         }

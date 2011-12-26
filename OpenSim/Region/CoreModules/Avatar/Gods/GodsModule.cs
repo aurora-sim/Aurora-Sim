@@ -41,8 +41,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
 {
     public class GodsModule : INonSharedRegionModule, IGodsModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         /// <summary>
         ///   Special UUID for actions that apply to all agents
         /// </summary>
@@ -80,7 +78,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     if (sp.GodLevel == 0)
                         sp.GodLevel = 255;
 
-                    m_log.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
+                    MainConsole.Instance.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
                     sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
                 }
                 else
@@ -88,7 +86,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                     if (m_dialogModule != null)
                         m_dialogModule.SendAlertToUser(agentID,
                                                        "Request for god powers denied. This request has been logged.");
-                    m_log.Info("[GODS]: God powers requested by " + sp.Name + ", user is not allowed to have god powers");
+                    MainConsole.Instance.Info("[GODS]: God powers requested by " + sp.Name + ", user is not allowed to have god powers");
                 }
             }
         }

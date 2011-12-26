@@ -39,9 +39,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 {
     public class MapSearchModule : ISharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly List<IScene> m_scenes = new List<IScene>();
         private bool Enabled = true;
         private IScene m_scene; // only need one for communication with GridService

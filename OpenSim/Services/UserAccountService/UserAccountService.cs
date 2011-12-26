@@ -41,8 +41,6 @@ namespace OpenSim.Services.UserAccountService
 {
     public class UserAccountService : IUserAccountService, IService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected IAuthenticationService m_AuthenticationService;
         protected IUserAccountData m_Database;
         protected IGridService m_GridService;
@@ -85,7 +83,7 @@ namespace OpenSim.Services.UserAccountService
         public UserAccount GetUserAccount(UUID scopeID, string firstName,
                                           string lastName)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[USER ACCOUNT SERVICE]: Retrieving account by username for {0} {1}, scope {2}",
 //                firstName, lastName, scopeID);
 
@@ -194,7 +192,7 @@ namespace OpenSim.Services.UserAccountService
 
         public bool StoreUserAccount(UserAccount data)
         {
-//            m_log.DebugFormat(
+//            MainConsole.Instance.DebugFormat(
 //                "[USER ACCOUNT SERVICE]: Storing user account for {0} {1} {2}, scope {3}",
 //                data.FirstName, data.LastName, data.PrincipalID, data.ScopeID);
 
@@ -225,17 +223,17 @@ namespace OpenSim.Services.UserAccountService
             string lastName;
             string title;
 
-            firstName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[4];
+            firstName = cmdparams.Length < 5 ? MainConsole.Instance.Prompt("First name") : cmdparams[4];
 
-            lastName = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[5];
+            lastName = cmdparams.Length < 6 ? MainConsole.Instance.Prompt("Last name") : cmdparams[5];
 
             UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
             if (account == null)
             {
-                m_log.Info("No such user");
+                MainConsole.Instance.Info("No such user");
                 return;
             }
-            title = cmdparams.Length < 7 ? MainConsole.Instance.CmdPrompt("User Title") : Util.CombineParams(cmdparams, 6);
+            title = cmdparams.Length < 7 ? MainConsole.Instance.Prompt("User Title") : Util.CombineParams(cmdparams, 6);
             account.UserTitle = title;
             Aurora.Framework.IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IProfileConnector>();
             if (profileConnector != null)
@@ -247,9 +245,9 @@ namespace OpenSim.Services.UserAccountService
             }
             bool success = StoreUserAccount(account);
             if (!success)
-                m_log.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName, lastName);
+                MainConsole.Instance.InfoFormat("Unable to set user profile title for account {0} {1}.", firstName, lastName);
             else
-                m_log.InfoFormat("User profile title set for user {0} {1} to {2}", firstName, lastName, title);
+                MainConsole.Instance.InfoFormat("User profile title set for user {0} {1} to {2}", firstName, lastName, title);
         }
 
         protected void HandleSetUserLevel(string[] cmdparams)
@@ -259,22 +257,22 @@ namespace OpenSim.Services.UserAccountService
             string rawLevel;
             int level;
 
-            firstName = cmdparams.Length < 4 ? MainConsole.Instance.CmdPrompt("First name") : cmdparams[3];
+            firstName = cmdparams.Length < 4 ? MainConsole.Instance.Prompt("First name") : cmdparams[3];
 
-            lastName = cmdparams.Length < 5 ? MainConsole.Instance.CmdPrompt("Last name") : cmdparams[4];
+            lastName = cmdparams.Length < 5 ? MainConsole.Instance.Prompt("Last name") : cmdparams[4];
 
             UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
             if (account == null)
             {
-                m_log.Info("No such user");
+                MainConsole.Instance.Info("No such user");
                 return;
             }
 
-            rawLevel = cmdparams.Length < 6 ? MainConsole.Instance.CmdPrompt("User level") : cmdparams[5];
+            rawLevel = cmdparams.Length < 6 ? MainConsole.Instance.Prompt("User level") : cmdparams[5];
 
             if (int.TryParse(rawLevel, out level) == false)
             {
-                m_log.Info("Invalid user level");
+                MainConsole.Instance.Info("Invalid user level");
                 return;
             }
 
@@ -282,9 +280,9 @@ namespace OpenSim.Services.UserAccountService
 
             bool success = StoreUserAccount(account);
             if (!success)
-                m_log.InfoFormat("Unable to set user level for account {0} {1}.", firstName, lastName);
+                MainConsole.Instance.InfoFormat("Unable to set user level for account {0} {1}.", firstName, lastName);
             else
-                m_log.InfoFormat("User level set for user {0} {1} to {2}", firstName, lastName, level);
+                MainConsole.Instance.InfoFormat("User level set for user {0} {1} to {2}", firstName, lastName, level);
         }
 
         protected void HandleShowAccount(string[] cmdparams)
@@ -302,17 +300,17 @@ namespace OpenSim.Services.UserAccountService
 
             if (ua == null)
             {
-                m_log.InfoFormat("No user named {0} {1}", firstName, lastName);
+                MainConsole.Instance.InfoFormat("No user named {0} {1}", firstName, lastName);
                 return;
             }
 
-            m_log.InfoFormat("Name:    {0}", ua.Name);
-            m_log.InfoFormat("ID:      {0}", ua.PrincipalID);
-            m_log.InfoFormat("Title:   {0}", ua.UserTitle);
-            m_log.InfoFormat("E-mail:  {0}", ua.Email);
-            m_log.InfoFormat("Created: {0}", Utils.UnixTimeToDateTime(ua.Created));
-            m_log.InfoFormat("Level:   {0}", ua.UserLevel);
-            m_log.InfoFormat("Flags:   {0}", ua.UserFlags);
+            MainConsole.Instance.InfoFormat("Name:    {0}", ua.Name);
+            MainConsole.Instance.InfoFormat("ID:      {0}", ua.PrincipalID);
+            MainConsole.Instance.InfoFormat("Title:   {0}", ua.UserTitle);
+            MainConsole.Instance.InfoFormat("E-mail:  {0}", ua.Email);
+            MainConsole.Instance.InfoFormat("Created: {0}", Utils.UnixTimeToDateTime(ua.Created));
+            MainConsole.Instance.InfoFormat("Level:   {0}", ua.UserLevel);
+            MainConsole.Instance.InfoFormat("Flags:   {0}", ua.UserFlags);
         }
 
         /// <summary>
@@ -325,11 +323,11 @@ namespace OpenSim.Services.UserAccountService
             string password;
             string email;
 
-            name = MainConsole.Instance.CmdPrompt("Name", "Default User");
+            name = MainConsole.Instance.Prompt("Name", "Default User");
 
-            password = MainConsole.Instance.PasswdPrompt("Password");
+            password = MainConsole.Instance.PasswordPrompt("Password");
 
-            email = MainConsole.Instance.CmdPrompt("Email", "");
+            email = MainConsole.Instance.Prompt("Email", "");
 
             CreateUser(name, Util.Md5Hash(password), email);
         }
@@ -339,22 +337,22 @@ namespace OpenSim.Services.UserAccountService
             string name;
             string newPassword;
 
-            name = MainConsole.Instance.CmdPrompt("Name");
+            name = MainConsole.Instance.Prompt("Name");
 
-            newPassword = MainConsole.Instance.PasswdPrompt("New password");
+            newPassword = MainConsole.Instance.PasswordPrompt("New password");
 
             UserAccount account = GetUserAccount(UUID.Zero, name);
             if (account == null)
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: No such user");
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: No such user");
 
             bool success = false;
             if (m_AuthenticationService != null)
                 success = m_AuthenticationService.SetPassword(account.PrincipalID, "UserAccount", newPassword);
             if (!success)
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0}.",
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Unable to reset password for account {0}.",
                                   name);
             else
-                m_log.InfoFormat("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
+                MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Password reset for user {0}", name);
         }
 
         #endregion
@@ -392,22 +390,22 @@ namespace OpenSim.Services.UserAccountService
                     {
                         success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
                         if (!success)
-                            m_log.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
+                            MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
                                              name);
                     }
 
-                    m_log.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
+                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
                     m_cache.Cache(account.PrincipalID, account);
                 }
                 else
                 {
-                    m_log.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
+                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
                 }
             }
             else
             {
-                m_log.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
             }
         }
 

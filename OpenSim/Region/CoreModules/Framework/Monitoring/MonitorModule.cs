@@ -51,7 +51,6 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
     {
         #region Declares
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         protected Dictionary<string, MonitorRegistry> m_registry = new Dictionary<string, MonitorRegistry>();
         protected ISimulationBase m_simulationBase;
 
@@ -313,7 +312,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             private void OnTriggerAlert(Type reporter, string reason, bool fatal)
             {
                 string regionName = m_currentScene != null ? " for " + m_currentScene.RegionInfo.RegionName : "";
-                m_log.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason + " (Fatal: " + fatal + ")");
+                MainConsole.Instance.Error("[Monitor] " + reporter.Name + regionName + " reports " + reason + " (Fatal: " + fatal + ")");
             }
 
             #endregion
@@ -720,8 +719,8 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             //Dump all monitors to the console
             foreach (MonitorRegistry registry in m_registry.Values)
             {
-                m_log.Info("[Stats] " + registry.Report());
-                m_log.Info("");
+                MainConsole.Instance.Info("[Stats] " + registry.Report());
+                MainConsole.Instance.Info("");
             }
         }
 
@@ -736,15 +735,15 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             if (manager != null)
             {
                 //Dump the all instance one first
-                m_log.Info("[Stats] " + m_registry[""].Report());
-                m_log.Info("");
+                MainConsole.Instance.Info("[Stats] " + m_registry[""].Report());
+                MainConsole.Instance.Info("");
 
                 //Then dump for each scene
                 manager.ForEachCurrentScene(delegate(IScene scene)
                                                 {
-                                                    m_log.Info("[Stats] " +
+                                                    MainConsole.Instance.Info("[Stats] " +
                                                                m_registry[scene.RegionInfo.RegionID.ToString()].Report());
-                                                    m_log.Info("");
+                                                    MainConsole.Instance.Info("");
                                                 });
             }
             else
@@ -756,12 +755,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
 
         protected void HandleShowThreads(string[] cmd)
         {
-            m_log.Info(GetThreadsReport());
+            MainConsole.Instance.Info(GetThreadsReport());
         }
 
         protected void HandleShowUptime(string[] cmd)
         {
-            m_log.Info(GetUptimeReport());
+            MainConsole.Instance.Info(GetUptimeReport());
         }
 
         protected void HandleShowStats(string[] cmd)
@@ -774,7 +773,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
             List<string> args = new List<string>(cmd);
             args.RemoveAt(0);
             string[] showParams = args.ToArray();
-            m_log.Info(GetQueuesReport(showParams));
+            MainConsole.Instance.Info(GetQueuesReport(showParams));
         }
 
         /// <summary>
@@ -912,7 +911,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         /// </summary>
         private void LogDiagnostics(object source, ElapsedEventArgs e)
         {
-            m_log.Debug(LogDiagnostics());
+            MainConsole.Instance.Debug(LogDiagnostics());
         }
 
         public string LogDiagnostics()
@@ -990,6 +989,10 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring
         #endregion
 
         #region IApplicationPlugin Members
+
+        public void PreStartup(ISimulationBase simBase)
+        {
+        }
 
         public void Initialize(ISimulationBase simulationBase)
         {

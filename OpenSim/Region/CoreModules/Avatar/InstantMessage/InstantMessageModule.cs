@@ -39,9 +39,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {
     public class InstantMessageModule : ISharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(
-            MethodBase.GetCurrentMethod().DeclaringType);
-
         private readonly List<IScene> m_scenes = new List<IScene>();
 
         private IMessageTransferModule m_TransferModule;
@@ -92,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
                 if (m_TransferModule == null)
                 {
-                    m_log.Error("[INSTANT MESSAGE]: No message transfer module, IM will not work!");
+                    MainConsole.Instance.Error("[INSTANT MESSAGE]: No message transfer module, IM will not work!");
                     scene.EventManager.OnNewClient -= EventManager_OnNewClient;
                     scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
                     scene.EventManager.OnIncomingInstantMessage -= OnGridInstantMessage;

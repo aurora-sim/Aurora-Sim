@@ -79,8 +79,6 @@ namespace OpenSim.Framework
     /// </summary>
     public class Util
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private static uint nextXferID = 5000;
         private static readonly Random randomClass = new Random();
         // Get a list of invalid file characters (OS dependent)
@@ -727,7 +725,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.Error(e.ToString());
+                MainConsole.Instance.Error(e.ToString());
             }
             finally
             {
@@ -754,7 +752,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.Error(e.ToString());
+                MainConsole.Instance.Error(e.ToString());
             }
             finally
             {
@@ -815,6 +813,25 @@ namespace OpenSim.Framework
             return Convert.ToBase64String(compressedBuffer);
         }
 
+        public static byte[] CompressBytes(byte[] buffer)
+        {
+            MemoryStream memory = new MemoryStream();
+            using (GZipStream compressor = new GZipStream(memory, CompressionMode.Compress, true))
+            {
+                compressor.Write(buffer, 0, buffer.Length);
+            }
+
+            memory.Position = 0;
+
+            byte[] compressed = new byte[memory.Length];
+            memory.Read(compressed, 0, compressed.Length);
+
+            byte[] compressedBuffer = new byte[compressed.Length + 4];
+            Buffer.BlockCopy(compressed, 0, compressedBuffer, 4, compressed.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, compressedBuffer, 0, 4);
+            return compressedBuffer;
+        }
+
         public static string Decompress(string compressedText)
         {
             byte[] compressedBuffer = Convert.FromBase64String(compressedText);
@@ -833,6 +850,60 @@ namespace OpenSim.Framework
 
                 return UTF8.GetString(buffer);
             }
+        }
+
+        public static Stream DecompressStream(Stream compressedStream)
+        {
+            byte[] compressedBuffer = ReadToEnd(compressedStream);
+            using (MemoryStream memory = new MemoryStream())
+            {
+                int msgLength = BitConverter.ToInt32(compressedBuffer, 0);
+                memory.Write(compressedBuffer, 4, compressedBuffer.Length - 4);
+
+                byte[] buffer = new byte[msgLength];
+
+                memory.Position = 0;
+                using (GZipStream decompressor = new GZipStream(memory, CompressionMode.Decompress))
+                {
+                    decompressor.Read(buffer, 0, buffer.Length);
+                }
+
+                return new MemoryStream(buffer);
+            }
+        }
+
+        public static byte[] ReadToEnd(System.IO.Stream stream)
+        {
+            byte[] readBuffer = new byte[4096];
+
+            int totalBytesRead = 0;
+            int bytesRead;
+
+            while ((bytesRead = stream.Read(readBuffer, totalBytesRead, readBuffer.Length - totalBytesRead)) > 0)
+            {
+                totalBytesRead += bytesRead;
+
+                if (totalBytesRead == readBuffer.Length)
+                {
+                    int nextByte = stream.ReadByte();
+                    if (nextByte != -1)
+                    {
+                        byte[] temp = new byte[readBuffer.Length * 2];
+                        Buffer.BlockCopy(readBuffer, 0, temp, 0, readBuffer.Length);
+                        Buffer.SetByte(temp, totalBytesRead, (byte)nextByte);
+                        readBuffer = temp;
+                        totalBytesRead++;
+                    }
+                }
+            }
+
+            byte[] buffer = readBuffer;
+            if (readBuffer.Length != totalBytesRead)
+            {
+                buffer = new byte[totalBytesRead];
+                Buffer.BlockCopy(readBuffer, 0, buffer, 0, totalBytesRead);
+            }
+            return buffer;
         }
 
         public static XmlRpcResponse XmlRpcCommand(string url, string methodName, params object[] args)
@@ -1166,13 +1237,13 @@ namespace OpenSim.Framework
                 else
                 {
                     // uh?
-                    m_log.Debug(("[UTILS]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                    MainConsole.Instance.Debug(("[UTILS]: Got OSD of unexpected type " + buffer.Type.ToString()));
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                m_log.Debug("[UTILS]: exception on GetOSDMap " + ex);
+                MainConsole.Instance.Debug("[UTILS]: exception on GetOSDMap " + ex);
                 return null;
             }
         }
@@ -1374,7 +1445,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception ex)
                 {
-                    m_log.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
+                    MainConsole.Instance.Error("[UTIL]: Asynchronous method threw an exception: " + ex, ex);
                 }
 
                 ar.AsyncWaitHandle.Close();
@@ -1547,7 +1618,7 @@ namespace OpenSim.Framework
             // write call stack method names
             foreach (StackFrame stackFrame in stackFrames)
             {
-                m_log.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
+                MainConsole.Instance.Debug(stackFrame.GetMethod().DeclaringType + "." + stackFrame.GetMethod().Name);
                 // write method name
             }
         }
@@ -1850,7 +1921,6 @@ namespace OpenSim.Framework
 
     public class NetworkUtils
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private static bool m_noInternetConnection;
         private static int m_nextInternetConnectionCheck;
         private static bool useLocalhostLoopback=false;
@@ -1955,7 +2025,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
+                    MainConsole.Instance.WarnFormat("[UTIL]: Exception parsing XFF header {0}: {1}", xff, e.Message);
                 }
             }
 
@@ -1974,7 +2044,7 @@ namespace OpenSim.Framework
                 }
                 catch (Exception e)
                 {
-                    m_log.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
+                    MainConsole.Instance.WarnFormat("[UTIL]: exception in GetCallerIP: {0}", e.Message);
                 }
             }
             return string.Empty;
@@ -2111,7 +2181,7 @@ namespace OpenSim.Framework
             }
             catch (Exception e)
             {
-                m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
+                MainConsole.Instance.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
                 InternetFailure();
                 // Still going to throw the exception on for now, since this was what was happening in the first place

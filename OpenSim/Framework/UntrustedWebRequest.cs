@@ -47,10 +47,6 @@ namespace OpenSim.Framework
         /// </summary>
         private const bool DEBUG = true;
 
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private static readonly ICollection<string> allowableSchemes = new List<string> {"http", "https"};
 
         /// <summary>
@@ -118,7 +114,7 @@ namespace OpenSim.Framework
             }
             catch (Exception ex)
             {
-                m_log.Warn("POST to untrusted URL " + url + " failed: " + ex.Message);
+                MainConsole.Instance.Warn("POST to untrusted URL " + url + " failed: " + ex.Message);
                 return null;
             }
         }
@@ -137,7 +133,7 @@ namespace OpenSim.Framework
             }
             catch (Exception ex)
             {
-                m_log.Warn("GET from untrusted URL " + url + " failed: " + ex.Message);
+                MainConsole.Instance.Warn("GET from untrusted URL " + url + " failed: " + ex.Message);
                 return null;
             }
         }
@@ -155,7 +151,7 @@ namespace OpenSim.Framework
         {
             if (!allowableSchemes.Contains(uri.Scheme))
             {
-                m_log.WarnFormat("Rejecting URL {0} because it uses a disallowed scheme.", uri);
+                MainConsole.Instance.WarnFormat("Rejecting URL {0} because it uses a disallowed scheme.", uri);
                 return false;
             }
 
@@ -176,19 +172,19 @@ namespace OpenSim.Framework
                     case AddressFamily.InterNetwork:
                         if (!allowLoopback && (addressBytes[0] == 127 || addressBytes[0] == 10))
                         {
-                            m_log.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
+                            MainConsole.Instance.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
                             return false;
                         }
                         break;
                     case AddressFamily.InterNetworkV6:
                         if (!allowLoopback && IsIPv6Loopback(hostIPAddress))
                         {
-                            m_log.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
+                            MainConsole.Instance.WarnFormat("Rejecting URL {0} because it is a loopback address.", uri);
                             return false;
                         }
                         break;
                     default:
-                        m_log.WarnFormat("Rejecting URL {0} because it does not use an IPv4 or IPv6 address.", uri);
+                        MainConsole.Instance.WarnFormat("Rejecting URL {0} because it does not use an IPv4 or IPv6 address.", uri);
                         return false;
                 }
             }
@@ -198,7 +194,7 @@ namespace OpenSim.Framework
                 // help make sure it's not an internal address.
                 if (!allowLoopback && !uri.Host.Contains("."))
                 {
-                    m_log.WarnFormat("Rejecting URL {0} because it does not contain a period in the host name.", uri);
+                    MainConsole.Instance.WarnFormat("Rejecting URL {0} because it does not contain a period in the host name.", uri);
                     return false;
                 }
             }

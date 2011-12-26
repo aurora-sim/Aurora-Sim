@@ -42,8 +42,6 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 {
     public class DefaultInventoryIARLoader : IDefaultLibraryLoader
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         protected Dictionary<string, AssetType> m_assetTypes = new Dictionary<string, AssetType>();
         protected IRegistryCore m_registry;
         protected ILibraryService m_service;
@@ -118,7 +116,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             //Make the user account for the default IAR
             if (uinfo == null)
             {
-                m_log.Warn("Creating user " + m_service.LibraryOwnerName);
+                MainConsole.Instance.Warn("Creating user " + m_service.LibraryOwnerName);
                 m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwner, m_service.LibraryOwnerName, "", "");
                 uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwner);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
@@ -143,11 +141,11 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
 #endif
             if (alreadyExists)
             {
-                m_log.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
+                MainConsole.Instance.InfoFormat("[LIBRARY INVENTORY]: Found previously loaded iar file {0}, ignoring.", iarFileName);
                 return;
             }
 
-            m_log.InfoFormat("[LIBRARY INVENTORY]: Loading iar file {0}", iarFileName);
+            MainConsole.Instance.InfoFormat("[LIBRARY INVENTORY]: Loading iar file {0}", iarFileName);
             InventoryFolderBase rootFolder = m_MockScene.InventoryService.GetRootFolder(uinfo.PrincipalID);
 
             if (null == rootFolder)
@@ -176,7 +174,7 @@ namespace Aurora.Modules.World.DefaultInventoryIARLoader
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}", iarFileName,
+                MainConsole.Instance.DebugFormat("[LIBRARY MODULE]: Exception when processing archive {0}: {1}", iarFileName,
                                   e.StackTrace);
             }
             finally

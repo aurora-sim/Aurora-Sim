@@ -51,7 +51,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                                                            GroupPowers.StartProposal |
                                                            GroupPowers.VoteOnProposal;
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private IGroupsServiceConnector GroupsConnector;
         private IUserAccountService m_accountService;
@@ -408,7 +407,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     return;
                 }
 
-                //m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
+                //MainConsole.Instance.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Initializing {0}", this.Name);
 
                 m_connectorEnabled = true;
             }
@@ -416,7 +415,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public void Close()
         {
-            m_log.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Closing {0}", this.Name);
+            MainConsole.Instance.InfoFormat("[AURORA-GROUPS-CONNECTOR]: Closing {0}", this.Name);
         }
 
         public void AddRegion(IScene scene)
@@ -424,7 +423,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             GroupsConnector = DataManager.RequestPlugin<IGroupsServiceConnector>();
             if (GroupsConnector == null)
             {
-                m_log.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
+                MainConsole.Instance.Warn("[AURORA-GROUPS-CONNECTOR]: GroupsConnector is null");
                 m_connectorEnabled = false;
             }
             if (m_connectorEnabled)

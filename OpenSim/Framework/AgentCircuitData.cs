@@ -41,13 +41,6 @@ namespace OpenSim.Framework
     /// </summary>
     public class AgentCircuitData
     {
-        // DEBUG ON
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
-        // DEBUG OFF
-
         /// <summary>
         ///   Avatar Unique Agent Identifier
         /// </summary>
@@ -176,7 +169,7 @@ namespace OpenSim.Framework
                 args["packed_appearance"] = appmap;
             }
             else
-                m_log.Error("[AgentCircuitData]: NOT PACKING APPEARANCE FOR " + firstname + " " + lastname +
+                MainConsole.Instance.Error("[AgentCircuitData]: NOT PACKING APPEARANCE FOR " + firstname + " " + lastname +
                             ", user may be messed up");
 
             if (ServiceURLs != null && ServiceURLs.Count > 0)
@@ -257,7 +250,7 @@ namespace OpenSim.Framework
                 DrawDistance = args["draw_distance"];
 
             // DEBUG ON
-            //m_log.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
+            //MainConsole.Instance.WarnFormat("[AGENTCIRCUITDATA] agentid={0}, child={1}, startpos={2}", AgentID, child, startpos.ToString());
             // DEBUG OFF
 
             try
@@ -274,18 +267,18 @@ namespace OpenSim.Framework
                 {
                     Appearance.Unpack((OSDMap) args["packed_appearance"]);
                     // DEBUG ON
-                    //m_log.WarnFormat("[AGENTCIRCUITDATA] unpacked appearance");
+                    //MainConsole.Instance.WarnFormat("[AGENTCIRCUITDATA] unpacked appearance");
                     // DEBUG OFF
                 }
                     // DEBUG ON
                 else
-                    m_log.Warn("[AGENTCIRCUITDATA] failed to find a valid packed_appearance, dne ? " +
+                    MainConsole.Instance.Warn("[AGENTCIRCUITDATA] failed to find a valid packed_appearance, dne ? " +
                                !args.ContainsKey("packed_appearance"));
                 // DEBUG OFF
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[AGENTCIRCUITDATA] failed to unpack appearance; {0}", e);
+                MainConsole.Instance.ErrorFormat("[AGENTCIRCUITDATA] failed to unpack appearance; {0}", e);
             }
 
             if (args.ContainsKey("otherInfo"))

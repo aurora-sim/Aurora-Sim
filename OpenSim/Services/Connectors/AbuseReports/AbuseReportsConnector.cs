@@ -40,10 +40,6 @@ namespace OpenSim.Services.Connectors
 {
     public class AbuseReportsConnector : IAbuseReports, IService
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
-
         private IRegistryCore m_registry;
 
         #region IAbuseReports
@@ -66,7 +62,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
             }
         }
 
@@ -87,7 +83,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return null;
             }
         }
@@ -113,7 +109,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
                 return null;
             }
         }
@@ -133,7 +129,7 @@ namespace OpenSim.Services.Connectors
             }
             catch (Exception e)
             {
-                m_log.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
+                MainConsole.Instance.DebugFormat("[ABUSEREPORT CONNECTOR]: Exception when contacting friends server: {0}", e.Message);
             }
         }
 

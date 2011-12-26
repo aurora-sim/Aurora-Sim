@@ -46,7 +46,6 @@ namespace OpenSim.Services
 {
     public class AuroraDataServerPostOSDHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly DirectoryInfoOSDHandler DirectoryHandler;
         private readonly OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
         private readonly ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
@@ -263,7 +262,7 @@ namespace OpenSim.Services
             OSDMap result = UserProfile != null ? UserProfile.ToOSD() : new OSDMap();
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -277,7 +276,7 @@ namespace OpenSim.Services
             result["result"] = "Successful";
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -290,7 +289,7 @@ namespace OpenSim.Services
             OSDMap result = Classified != null ? Classified.ToOSD() : new OSDMap();
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -309,7 +308,7 @@ namespace OpenSim.Services
             result["Result"] = array;
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -322,7 +321,7 @@ namespace OpenSim.Services
             OSDMap result = Pick != null ? Pick.ToOSD() : new OSDMap();
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -341,7 +340,7 @@ namespace OpenSim.Services
             result["Result"] = array;
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -353,7 +352,7 @@ namespace OpenSim.Services
             ProfileConnector.RemovePick(principalID);
 
             string xmlString = OSDParser.SerializeJsonString(new OSDMap());
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -365,7 +364,7 @@ namespace OpenSim.Services
             ProfileConnector.RemoveClassified(principalID);
 
             string xmlString = OSDParser.SerializeJsonString(new OSDMap());
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -378,7 +377,7 @@ namespace OpenSim.Services
             ProfileConnector.AddPick(info);
 
             string xmlString = OSDParser.SerializeJsonString(new OSDMap());
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -391,7 +390,7 @@ namespace OpenSim.Services
             ProfileConnector.AddClassified(info);
 
             string xmlString = OSDParser.SerializeJsonString(new OSDMap());
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }
@@ -454,7 +453,7 @@ namespace OpenSim.Services
             }
 
             string xmlString = OSDParser.SerializeJsonString(result);
-            //m_log.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);
         }

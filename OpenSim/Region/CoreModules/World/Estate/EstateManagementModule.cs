@@ -47,8 +47,6 @@ namespace OpenSim.Region.CoreModules.World.Estate
 {
     public class EstateManagementModule : IEstateModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private delegate void LookupUUIDS(List<UUID> uuidLst);
 
         private IScene m_scene;
@@ -370,8 +368,8 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
                 TriggerEstateSunUpdate();
 
-                //m_log.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
-                //m_log.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
+                //MainConsole.Instance.Debug("[ESTATE]: UFS: " + UseFixedSun.ToString());
+                //MainConsole.Instance.Debug("[ESTATE]: SunHour: " + SunHour.ToString());
 
                 sendRegionInfoPacketToAll();
                 m_scene.RegionInfo.RegionSettings.Save();
@@ -829,13 +827,13 @@ namespace OpenSim.Region.CoreModules.World.Estate
             {
                 if (ScriptEngine)
                 {
-                    m_log.Info("[SCENEDEBUG]: Stopping all Scripts in Scene");
+                    MainConsole.Instance.Info("[SCENEDEBUG]: Stopping all Scripts in Scene");
                     IScriptModule mod = m_scene.RequestModuleInterface<IScriptModule>();
                     mod.StopAllScripts();
                 }
                 else
                 {
-                    m_log.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
+                    MainConsole.Instance.Info("[SCENEDEBUG]: Starting all Scripts in Scene");
 
                     ISceneEntity[] entities = m_scene.Entities.GetEntities ();
                     foreach (ISceneEntity ent in entities)
@@ -930,7 +928,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
 
             if (terr != null)
             {
-                m_log.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
 
                 try
                 {
@@ -964,28 +962,28 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 }
                 catch (IOException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
+                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was an IO Exception loading your terrain.  Please check free space.");
 
                     return;
                 }
                 catch (SecurityException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
+                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
+                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error Saving a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a security Exception loading your terrain.  Please check the security on the simulator drive");
 
                     return;
                 }
                 catch (Exception e)
                 {
-                    m_log.ErrorFormat("[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
+                    MainConsole.Instance.ErrorFormat("[TERRAIN]: Error loading a terrain file uploaded via the estate tools.  It gave us the following error: {0}", e);
                     remoteClient.SendAlertMessage("There was a general error loading your terrain.  Please fix the terrain file and try again");
                 }
             }
@@ -1023,7 +1021,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             
             if (terr != null)
             {
-                m_log.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Warn("[CLIENT]: Got Request to Send Terrain in region " + m_scene.RegionInfo.RegionName);
                 if (File.Exists(Util.dataDir() + "/terrain.raw"))
                 {
                     File.Delete(Util.dataDir() + "/terrain.raw");
@@ -1038,7 +1036,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                 if(xfer != null)
                     xfer.AddNewFile("terrain.raw", bdata);
                 // Tell client about it
-                m_log.Warn("[CLIENT]: Sending Terrain to " + remote_client.Name);
+                MainConsole.Instance.Warn("[CLIENT]: Sending Terrain to " + remote_client.Name);
                 remote_client.SendInitiateDownload("terrain.raw", clientFileName);
             }
         }
@@ -1359,7 +1357,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     int corner = int.Parse(num);
                     UUID texture = UUID.Parse(uuid);
 
-                    m_log.Debug("[ESTATEMODULE] Setting terrain textures for " + m_scene.RegionInfo.RegionName +
+                    MainConsole.Instance.Debug("[ESTATEMODULE] Setting terrain textures for " + m_scene.RegionInfo.RegionName +
                                 string.Format(" (C#{0} = {1})", corner, texture));
 
                     switch (corner)
@@ -1401,7 +1399,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     float lowValue = float.Parse(min, Culture.NumberFormatInfo);
                     float highValue = float.Parse(max, Culture.NumberFormatInfo);
 
-                    m_log.Debug("[ESTATEMODULE] Setting terrain heights " + m_scene.RegionInfo.RegionName +
+                    MainConsole.Instance.Debug("[ESTATEMODULE] Setting terrain heights " + m_scene.RegionInfo.RegionName +
                                 string.Format(" (C{0}, {1}-{2}", corner, lowValue, highValue));
 
                     switch (corner)
