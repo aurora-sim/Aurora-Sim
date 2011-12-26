@@ -616,6 +616,8 @@ namespace OpenSim.Framework
             return landData;
         }
 
+        #region IDataTransferable
+
         public override Dictionary<string, object> ToKeyValuePairs()
         {
             return Util.OSDToDictionary(ToOSD());
@@ -727,5 +729,7 @@ namespace OpenSim.Framework
             m.FromOSD(ToOSD());
             return m;
         }
+
+        #endregion
     }
 }

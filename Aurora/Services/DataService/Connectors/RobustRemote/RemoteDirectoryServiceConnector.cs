@@ -145,6 +145,80 @@ namespace Aurora.Services.DataService
             return Land.ToArray();
         }
 
+        public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        {
+            List<LandData> resp = new List<LandData>(0);
+            if (count == 0)
+            {
+                return resp;
+            }
+            OSDMap mess = new OSDMap();
+            mess["Method"] = "GetParcelsByRegion";
+            mess["start"] = OSD.FromUInteger(start);
+            mess["count"] = OSD.FromUInteger(count);
+            mess["RegionID"] = OSD.FromUUID(RegionID);
+            mess["scopeID"] = OSD.FromUUID(scopeID);
+            mess["owner"] = OSD.FromUUID(owner);
+            mess["flags"] = OSD.FromUInteger((uint)flags);
+            mess["category"] = OSD.FromInteger((int)category);
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            resp = new List<LandData>();
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson(results["_RawResult"]);
+
+                OSDArray parcels = (OSDArray)innerResults["Parcels"];
+                foreach (OSD o in parcels)
+                {
+                    LandData result = new LandData();
+                    result.FromOSD((OSDMap)o);
+                    resp.Add(result);
+                }
+                break;
+            }
+            return resp;
+        }
+
+        public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        {
+            Dictionary<string, object> mess = new Dictionary<string, object>();
+            mess["RegionID"] = RegionID;
+            mess["scopeID"] = scopeID;
+            mess["owner"] = owner;
+            mess["flags"] = (uint)flags;
+            mess["category"] = (int)category;
+            string reqString = WebUtils.BuildXmlResponse(mess);
+
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                         m_ServerURI,
+                                                                         reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        uint numParcels = 0;
+                        foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numParcels)))
+                        {
+                            break;
+                        }
+                        // Success
+                        return numParcels;
+                    }
+                }
+            }
+            return 0;
+        }
+
         public DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery, uint Flags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
