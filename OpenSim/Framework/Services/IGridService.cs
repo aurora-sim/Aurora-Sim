@@ -31,6 +31,7 @@ using System.Net;
 using OpenSim.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -204,8 +205,10 @@ namespace OpenSim.Services.Interfaces
         void FinishedStartup ();
     }
 
-    public class GridRegion
+    public class GridRegion : IDataTransferable
     {
+        #region GridRegion
+
         /// <summary>
         /// The port by which http communication occurs with the region 
         /// </summary>
@@ -418,29 +421,6 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> kvp = new Dictionary<string, object>();
-            kvp["uuid"] = RegionID.ToString();
-            kvp["locX"] = RegionLocX.ToString();
-            kvp["locY"] = RegionLocY.ToString();
-            kvp["regionName"] = RegionName;
-            kvp["regionType"] = RegionType;
-            kvp["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
-            kvp["serverHttpPort"] = HttpPort.ToString();
-            kvp["serverURI"] = ServerURI;
-            if(InternalEndPoint != null)
-                kvp["serverPort"] = InternalEndPoint.Port.ToString();
-            kvp["regionMapTexture"] = TerrainImage.ToString();
-            kvp["regionTerrainTexture"] = TerrainMapImage.ToString();
-            kvp["access"] = Access.ToString();
-            kvp["owner_uuid"] = EstateOwner.ToString();
-            kvp["Token"] = AuthToken;
-            kvp["sizeX"] = RegionSizeX.ToString();
-            kvp["sizeY"] = RegionSizeY.ToString();
-            return kvp;
-        }
-
         public GridRegion(Dictionary<string, object> kvp)
         {
             Flags = 0;
@@ -508,7 +488,11 @@ namespace OpenSim.Services.Interfaces
                 m_RegionSizeY = int.Parse(kvp["sizeY"].ToString());
         }
 
-        public OSDMap ToOSD()
+        #endregion
+
+        #region IDataTransferable
+
+        public override OSDMap ToOSD()
         {
             OSDMap map = new OSDMap();
             map["uuid"] = RegionID;
@@ -534,6 +518,7 @@ namespace OpenSim.Services.Interfaces
             map["SessionID"] = SessionID;
             map["Flags"] = Flags;
             map["GenericMap"] = GenericMap;
+            map["EstateOwner"] = EstateOwner;
 
             // We send it along too so that it doesn't need resolved on the other end
             if (ExternalEndPoint != null)
@@ -545,7 +530,7 @@ namespace OpenSim.Services.Interfaces
             return map;
         }
 
-        public void FromOSD(OSDMap map)
+        public override void FromOSD(OSDMap map)
         {
             if (map.ContainsKey("uuid"))
                 RegionID = map["uuid"].AsUUID();
@@ -625,6 +610,27 @@ namespace OpenSim.Services.Interfaces
                 m_remoteEndPoint = new IPEndPoint(add, port);
             }
         }
+
+        public override Dictionary<string, object> ToKeyValuePairs()
+        {
+            return Util.OSDToDictionary(ToOSD());
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            FromOSD(Util.DictionaryToOSD(KVP));
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            GridRegion m = new GridRegion();
+            m.FromOSD(ToOSD());
+            return m;
+        }
+
+
+        #endregion
+
     }
 
     /// <summary>
