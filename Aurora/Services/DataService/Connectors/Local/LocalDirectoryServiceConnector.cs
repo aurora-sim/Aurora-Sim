@@ -173,40 +173,15 @@ namespace Aurora.Services.DataService
             GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
         }
 
-        /// <summary>
-        ///   Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
-        /// </summary>
-        /// <param name = "ParcelID"></param>
-        /// <returns></returns>
-        public LandData GetParcelInfo(UUID InfoUUID)
+        private static List<LandData> Query2LandData(List<string> Query)
         {
-            //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
-            int RegionX, RegionY;
-            uint X, Y;
-            ulong RegionHandle;
-            Util.ParseFakeParcelID(InfoUUID, out RegionHandle, out X, out Y);
-
-            Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
-
-            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, RegionX,
-                                                                                                 RegionY);
-            if (r == null)
-            {
-                MainConsole.Instance.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
-                return null;
-            }
-            //Get info about a specific parcel somewhere in the metaverse
-            List<string> Query = GD.Query("RegionID", r.RegionID, "searchparcel", "*");
-            //Cant find it, return
-            if (Query.Count == 0)
-                return null;
-
             List<LandData> Lands = new List<LandData>();
-            //Parse and return
-            LandData LandData = new LandData();
-            //Add all the parcels belonging to the owner to the list
+
+            LandData LandData;
+
             for (int i = 0; i < Query.Count; i += 23)
             {
+                LandData = new LandData();
                 LandData.RegionID = UUID.Parse(Query[i]);
                 LandData.GlobalID = UUID.Parse(Query[i + 1]);
                 LandData.LocalID = int.Parse(Query[i + 2]);
@@ -233,9 +208,40 @@ namespace Aurora.Services.DataService
                 LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
-                LandData = new LandData();
             }
-            LandData = null;
+            return Lands;
+        }
+
+        /// <summary>
+        ///   Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
+        /// </summary>
+        /// <param name = "ParcelID"></param>
+        /// <returns></returns>
+        public LandData GetParcelInfo(UUID InfoUUID)
+        {
+            //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
+            int RegionX, RegionY;
+            uint X, Y;
+            ulong RegionHandle;
+            Util.ParseFakeParcelID(InfoUUID, out RegionHandle, out X, out Y);
+
+            Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
+
+            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, RegionX,
+                                                                                                 RegionY);
+            if (r == null)
+            {
+//                m_log.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
+                return null;
+            }
+            //Get info about a specific parcel somewhere in the metaverse
+            List<string> Query = GD.Query("RegionID", r.RegionID, "searchparcel", "*");
+            //Cant find it, return
+            if (Query.Count == 0)
+                return null;
+
+            List<LandData> Lands = Query2LandData(Query);
+            LandData LandData = null;
 
             bool[,] tempConvertMap = new bool[r.RegionSizeX/4,r.RegionSizeX/4];
             tempConvertMap.Initialize();
@@ -282,33 +288,65 @@ namespace Aurora.Services.DataService
             if (Query.Count == 0)
                 return Lands.ToArray();
 
-            LandData LandData = new LandData();
-            //Add all the parcels belonging to the owner to the list
-            for (int i = 0; i < Query.Count; i += 23)
-            {
-                LandData.RegionID = UUID.Parse(Query[i]);
-                LandData.GlobalID = UUID.Parse(Query[i + 1]);
-                LandData.LocalID = int.Parse(Query[i + 2]);
-                LandData.UserLocation = new Vector3(float.Parse(Query[i + 3]), float.Parse(Query[i + 4]),
-                                                    float.Parse(Query[i + 5]));
-                LandData.Name = Query[i + 6];
-                LandData.Description = Query[i + 7];
-                LandData.Flags = uint.Parse(Query[i + 8]);
-                LandData.Dwell = int.Parse(Query[i + 9]);
-                LandData.InfoUUID = UUID.Parse(Query[i + 10]);
-                LandData.AuctionID = uint.Parse(Query[i + 13]);
-                LandData.Area = int.Parse(Query[i + 14]);
-                LandData.Maturity = int.Parse(Query[i + 16]);
-                LandData.OwnerID = UUID.Parse(Query[i + 17]);
-                LandData.GroupID = UUID.Parse(Query[i + 18]);
-                LandData.SnapshotID = UUID.Parse(Query[i + 20]);
-                LandData.Bitmap = OSDParser.DeserializeLLSDXml(Query[i + 21]);
-                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
+            return Query2LandData(Query).ToArray();
+        }
 
-                Lands.Add(LandData);
-                LandData = new LandData();
+        private static string GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        {
+            string whereClause = string.Format("RegionID = '{0}'", RegionID);
+
+            if (owner != UUID.Zero)
+            {
+                whereClause += string.Format(" AND OwnerID = '{0}'", owner);
             }
-            return Lands.ToArray();
+
+            if (flags != ParcelFlags.None)
+            {
+                whereClause += string.Format(" AND Flags & {0}", flags);
+            }
+
+            if (category != ParcelCategory.Any)
+            {
+                whereClause += string.Format(" AND Category = {0,D}", category);
+            }
+            return whereClause;
+        }
+        
+        public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        {
+            List<LandData> resp = new List<LandData>(0);
+            if (count == 0)
+            {
+                return resp;
+            }
+
+            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
+            {
+                GridRegion region = regiondata.Get(RegionID, scopeID);
+                if (region != null)
+                {
+                    string whereClause = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
+                    whereClause += " ORDER BY OwnerID DESC, Name DESC";
+                    whereClause += string.Format(" LIMIT {0}, {1}", start, count);
+                    return Query2LandData(GD.Query(whereClause, "searchparcel", "*"));
+                }
+            }
+            return resp;
+        }
+
+        public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        {
+            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
+            {
+                GridRegion region = regiondata.Get(RegionID, scopeID);
+                if (region != null)
+                {
+                    return uint.Parse(GD.Query(GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category), "searchparcel", "COUNT(ParcelID)")[0]);
+                }
+            }
+            return 0;
         }
 
         /// <summary>

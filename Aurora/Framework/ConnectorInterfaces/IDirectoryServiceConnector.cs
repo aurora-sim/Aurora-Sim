@@ -61,6 +61,30 @@ namespace Aurora.Framework
         LandData[] GetParcelByOwner(UUID OwnerID);
 
         /// <summary>
+        /// Gets all parcels in a region, optionally filtering by owner, parcel flags and category.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="RegionID"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="owner"></param>
+        /// <param name="flags"></param>
+        /// <param name="category"></param>
+        /// <returns></returns>
+        List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category);
+
+        /// <summary>
+        /// Get the number of parcels in the specified region that match the specified filters.
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <param name="scopeID"></param>
+        /// <param name="owner"></param>
+        /// <param name="flags"></param>
+        /// <param name="category"></param>
+        /// <returns></returns>
+        uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category);
+
+        /// <summary>
         ///   Searches for parcels around the grid
         /// </summary>
         /// <param name = "queryText"></param>
