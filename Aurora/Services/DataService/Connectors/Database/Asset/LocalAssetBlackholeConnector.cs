@@ -307,10 +307,31 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void UpdateContent(UUID id, byte[] assetdata, out UUID newID)
         {
-            AssetBase asset = GetMeta(id);
-            asset.Data = assetdata;
-            bool success;
-            newID = StoreAsset(asset, out success).ID;
+            try
+            {
+                AssetBase asset = GetMeta(id);
+                if (asset != null)
+                {
+                    asset.Data = assetdata;
+
+                    bool success;
+                    AssetBase newasset = StoreAsset(asset, out success);
+                    if (success)
+                    {
+                        newID = newasset.ID;
+                        return;
+                    }
+                    MainConsole.Instance.ErrorFormat("[LocalAssetBlackholeConnector] - UpdateContent {0} - Failed to save ", id);
+                }
+                else
+                    MainConsole.Instance.ErrorFormat("[LocalAssetBlackholeConnector] - Updating asset content to a asset that does not exisxt {0}", id);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.ErrorFormat("[LocalAssetBlackholeConnector] UpdateContent", e);
+            }
+            newID = UUID.Zero;
+
         }
 
         private AssetBase StoreAsset(AssetBase asset, out bool successful)

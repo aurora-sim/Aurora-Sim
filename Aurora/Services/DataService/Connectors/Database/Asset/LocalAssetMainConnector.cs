@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void UpdateContent(UUID id, byte[] asset, out UUID newID)
         {
-            newID = id;
+            newID = UUID.Zero;
 
             AssetBase oldAsset = GetAsset(id);
             if (oldAsset == null)

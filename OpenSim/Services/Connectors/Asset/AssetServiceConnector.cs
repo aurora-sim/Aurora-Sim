@@ -301,15 +301,23 @@ namespace OpenSim.Services.Connectors
             if (m_serverURL != string.Empty)
                 serverURIs = new List<string>(new string[1] {m_serverURL});
 
+#if (!ISWIN)
             foreach (string mServerUri in serverURIs)
             {
                 string resp = SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request);
                 if (resp == "")
                     continue;
-                if (UUID.TryParse(resp, out newID))
+                if ((UUID.TryParse(resp, out newID)) && (newID != UUID.Zero))
                     return true;
             }
-            newID = id;
+#else
+            foreach (string resp in serverURIs.Select(mServerUri => SynchronousRestFormsRequester.MakeRequest("POST", mServerUri + "/", request)).Where(resp => resp != ""))
+            {
+                if ((UUID.TryParse(resp, out newID)) && (newID != UUID.Zero))
+                    return true;
+            }
+#endif
+            newID = UUID.Zero;
             return false;
         }
 
