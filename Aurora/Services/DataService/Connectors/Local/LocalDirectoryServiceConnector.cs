@@ -274,6 +274,25 @@ namespace Aurora.Services.DataService
             return LandData;
         }
 
+        public LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName)
+        {
+            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
+            {
+                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                if (region != null)
+                {
+                    UUID parcelInfoID = UUID.Zero;
+                    if (UUID.TryParse(GD.Query(string.Format("Name = '{0}' AND RegionID = '{1}' LIMIT 0,1", ParcelName, RegionID), "searchparcel", "InfoUUID")[0], out parcelInfoID))
+                    {
+                        return GetParcelInfo(parcelInfoID);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         ///   Gets all parcels owned by the given user
         /// </summary>

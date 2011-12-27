@@ -106,11 +106,32 @@ namespace Aurora.Services.DataService
             foreach (string m_ServerURI in m_ServerURIs)
             {
                 OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
-                OSDMap innerResults = (OSDMap) OSDParser.DeserializeJson(results["_RawResult"]);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson(results["_RawResult"]);
                 if (innerResults["Success"])
                 {
-                    LandData result = new LandData();
-                    result.FromOSD(innerResults);
+                    LandData result = new LandData(innerResults);
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        public LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName)
+        {
+            OSDMap mess = new OSDMap();
+            mess["Method"] = "GetParcelInfo";
+            mess["RegionID"] = RegionID;
+            mess["ScopeID"] = ScopeID;
+            mess["ParcelName"] = ParcelName;
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson(results["_RawResult"]);
+                if (innerResults["Success"])
+                {
+                    LandData result = new LandData(innerResults);
                     return result;
                 }
             }
@@ -133,9 +154,7 @@ namespace Aurora.Services.DataService
                 OSDArray parcels = (OSDArray) innerResults["Parcels"];
                 foreach (OSD o in parcels)
                 {
-                    LandData result = new LandData();
-                    result.FromOSD((OSDMap) o);
-                    Land.Add(result);
+                    Land.Add(new LandData((OSDMap)o));
                 }
             }
             return Land.ToArray();
@@ -164,13 +183,10 @@ namespace Aurora.Services.DataService
             {
                 OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
                 OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson(results["_RawResult"]);
-
                 OSDArray parcels = (OSDArray)innerResults["Parcels"];
                 foreach (OSD o in parcels)
                 {
-                    LandData result = new LandData();
-                    result.FromOSD((OSDMap)o);
-                    resp.Add(result);
+                    resp.Add(new LandData((OSDMap)o));
                 }
                 break;
             }

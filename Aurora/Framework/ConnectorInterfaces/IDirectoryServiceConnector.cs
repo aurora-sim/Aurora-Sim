@@ -54,6 +54,15 @@ namespace Aurora.Framework
         LandData GetParcelInfo(UUID ParcelID);
 
         /// <summary>
+        /// Gets the first parcel from the search database in the specified region with the specified name
+        /// </summary>
+        /// <param name="RegionID"></param>
+        /// <param name="ScopeID"></param>
+        /// <param name="ParcelName"></param>
+        /// <returns></returns>
+        LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName);
+
+        /// <summary>
         ///   Gets all parcels owned by the given user
         /// </summary>
         /// <param name = "OwnerID"></param>

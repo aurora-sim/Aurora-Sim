@@ -100,6 +100,11 @@ namespace OpenSim.Framework
             _globalID = UUID.Random();
         }
 
+        public LandData(OSDMap map)
+        {
+            FromOSD(map);
+        }
+
         /// <summary>
         ///   Whether to obscure parcel media URL
         /// </summary>
