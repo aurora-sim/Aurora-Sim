@@ -249,7 +249,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool m_allowJump = true;
         public bool m_usepreJump = true;
         public int m_preJumpTime = 15;
-        public float m_preJumpForceMultiplier = 4;
+        public float m_preJumpForceMultiplierX = 6;
+        public float m_preJumpForceMultiplierY = 6;
+        public float m_preJumpForceMultiplierZ = 4.5f;
         public float m_AvFlySpeed = 4.0f;
 
 
@@ -493,7 +495,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_allowJump = physicsconfig.GetBoolean("AllowJump", m_allowJump);
                     m_usepreJump = physicsconfig.GetBoolean("UsePreJump", m_usepreJump);
                     m_preJumpTime = physicsconfig.GetInt("PreJumpTime", m_preJumpTime);
-                    m_preJumpForceMultiplier = physicsconfig.GetFloat("PreJumpMultiplier", m_preJumpForceMultiplier);
+                    m_preJumpForceMultiplierX = physicsconfig.GetFloat("PreJumpMultiplierX", m_preJumpForceMultiplierX);
+                    m_preJumpForceMultiplierY = physicsconfig.GetFloat("PreJumpMultiplierY", m_preJumpForceMultiplierY);
+                    m_preJumpForceMultiplierZ = physicsconfig.GetFloat("PreJumpMultiplierZ", m_preJumpForceMultiplierZ);
 
                     contactsurfacelayer = physicsconfig.GetFloat("world_contact_surface_layer", 0.001f);
 

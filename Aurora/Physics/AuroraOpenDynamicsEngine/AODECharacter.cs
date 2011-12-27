@@ -505,7 +505,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_isJumping = true;
                         m_preJumpCounter = _parent_scene.m_preJumpTime;
                         TriggerMovementUpdate();
-                        force *= _parent_scene.m_preJumpForceMultiplier;
+                        //Leave the / 2, its there so that the jump doesn't go crazy
+                        force.X *= _parent_scene.m_preJumpForceMultiplierX / 2;
+                        force.Y *= _parent_scene.m_preJumpForceMultiplierY / 2;
+                        force.Z *= _parent_scene.m_preJumpForceMultiplierZ;
                     }
                 }
             }
@@ -832,7 +835,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (IsJumping)
             {
 //                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
-                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 20)
+                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
@@ -847,13 +850,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_preJumpCounter == _parent_scene.m_preJumpTime)
                 {
                     m_ispreJumping = false;
-                    if (!m_iscolliding)
-                        //not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
-                    {
-                        _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplier*5;
-                        _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplier*5;
-                    }
-                    _target_velocity.Z = m_preJumpForce.Z*_parent_scene.m_preJumpForceMultiplier;
+                    _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplierX;
+                    _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplierY;
+                    _target_velocity.Z = m_preJumpForce.Z*_parent_scene.m_preJumpForceMultiplierZ;
 
                     m_preJumpCounter = 0;
                     m_isJumping = true;

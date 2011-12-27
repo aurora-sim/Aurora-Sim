@@ -6,7 +6,7 @@
     ;; Bring up the stats popup box in your viewer (cntr shift 1)
     ;; Look at the Physics FPS stat and find the average value of it (can be rough) and place it here
     ;;Normally, this value is around 22.5
-    BasePhysicsFPS = 22.5
+    BasePhysicsFPS = 45
 
 [AuroraODEPhysicsSettings]
     ;; ##
@@ -45,10 +45,12 @@
     UsePreJump = true
     
     ;; The time to wait before jumping (for prejump) in frames
-    PreJumpTime = 5
+    PreJumpTime = 15
     
     ;; The amount to multiply the jump by (can have a decimal point)
-    PreJumpMultiplier = 3
+    PreJumpMultiplierX = 6
+    PreJumpMultiplierY = 6
+    PreJumpMultiplierZ = 4.5
 
     ;; ##
     ;; ## Gravity Settings
