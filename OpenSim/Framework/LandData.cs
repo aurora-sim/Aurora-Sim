@@ -48,7 +48,7 @@ namespace OpenSim.Framework
         private uint _auctionID; //Unemplemented. If set to 0, not being auctioned
         private UUID _authBuyerID = UUID.Zero; //Unemplemented. Authorized Buyer's UUID
         private byte[] _bitmap = new byte[512];
-        private ParcelCategory _category = ParcelCategory.None; //Unemplemented. Parcel's chosen category
+        private ParcelCategory _category = ParcelCategory.None; //Unimplemented. Parcel's chosen category
         private int _claimDate;
         private int _claimPrice; //Unemplemented
         private string _description = String.Empty;
