@@ -179,7 +179,13 @@ namespace Aurora.Services.DataService
 
             LandData LandData;
 
-            for (int i = 0; i < Query.Count; i += 23)
+            int increment = 22;
+            if (Query.Count % 23 == 0)
+            {
+                increment = 23;
+            }
+
+            for (int i = 0; i < Query.Count; i += increment)
             {
                 LandData = new LandData();
                 LandData.RegionID = UUID.Parse(Query[i]);
@@ -205,7 +211,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = increment == 23 ? (ParcelCategory)int.Parse(Query[i + 22]) : ParcelCategory.Any;
 
                 Lands.Add(LandData);
             }
