@@ -323,7 +323,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (assetDoesExist)
                 {
                     string databaseTable = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
-                    AssetBase oldasset = GetAsset(asset.ID, true, false);
+                    // AssetBase oldasset = GetAsset(asset.ID, true, false);
                     List<string> results = m_Gd.Query("id", asset.ID, databaseTable, "asset_flags");
                     AssetFlags thisassetflag;
                     if ((results != null) && (results.Count >= 1))
