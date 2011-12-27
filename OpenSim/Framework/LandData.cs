@@ -682,6 +682,7 @@ namespace OpenSim.Framework
             LocalID = map["LocalID"].AsInteger();
             SalePrice = map["SalePrice"].AsInteger();
             UserLocation = map["UserLocation"].AsVector3();
+            UserLookAt = map["UserLookAt"].AsVector3();
             Name = map["Name"].AsString();
             Description = map["Description"].AsString();
             Flags = (uint) map["Flags"].AsInteger();
@@ -692,6 +693,7 @@ namespace OpenSim.Framework
             Maturity = map["Maturity"].AsInteger();
             OwnerID = map["OwnerID"].AsUUID();
             GroupID = map["GroupID"].AsUUID();
+            IsGroupOwned = (GroupID != UUID.Zero);
             SnapshotID = map["SnapshotID"].AsUUID();
             MediaDescription = map["MediaDescription"].AsString();
             MediaWidth = map["MediaWidth"].AsInteger();
@@ -712,15 +714,11 @@ namespace OpenSim.Framework
             LandingType = (byte) map["LandingType"].AsInteger();
             PassHours = (float) map["PassHours"].AsReal();
             PassPrice = map["PassPrice"].AsInteger();
-            UserLookAt = map["UserLookAt"].AsVector3();
             AuthBuyerID = map["AuthBuyerID"].AsUUID();
             OtherCleanTime = map["OtherCleanTime"].AsInteger();
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
             GenericData = map["GenericData"].AsString();
-
-            if (GroupID != UUID.Zero)
-                IsGroupOwned = true;
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)
