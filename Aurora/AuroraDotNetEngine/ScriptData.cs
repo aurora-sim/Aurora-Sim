@@ -754,6 +754,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     MainConsole.Instance.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
+                    m_ScriptEngine.StateSave.SaveStateTo(this, true);
                 }
                 // we get new rez events on sim restart, too
                 // but if there is state, then we fire the change

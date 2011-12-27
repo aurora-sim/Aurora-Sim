@@ -505,7 +505,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_isJumping = true;
                         m_preJumpCounter = _parent_scene.m_preJumpTime;
                         TriggerMovementUpdate();
-                        force *= _parent_scene.m_preJumpForceMultiplier;
+                        //Leave the / 2, its there so that the jump doesn't go crazy
+                        force.X *= _parent_scene.m_preJumpForceMultiplierX / 2;
+                        force.Y *= _parent_scene.m_preJumpForceMultiplierY / 2;
+                        force.Z *= _parent_scene.m_preJumpForceMultiplierZ;
                     }
                 }
             }
@@ -514,7 +517,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
-            _target_velocity = force;
+            if(force != Vector3.Zero)
+                _target_velocity = force;
         }
 
         #endregion
@@ -630,6 +634,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Move
+
+        private int m_lastForceApplied = 0;
 
         /// <summary>
         ///   Called from Simulate
@@ -829,7 +835,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (IsJumping)
             {
 //                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
-                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 20)
+                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
@@ -844,13 +850,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_preJumpCounter == _parent_scene.m_preJumpTime)
                 {
                     m_ispreJumping = false;
-                    if (!m_iscolliding)
-                        //not Ground collision, as we cleared it out before calling this, and the ground allows normal jumps
-                    {
-                        _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplier*5;
-                        _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplier*5;
-                    }
-                    _target_velocity.Z = m_preJumpForce.Z*_parent_scene.m_preJumpForceMultiplier;
+                    _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplierX;
+                    _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplierY;
+                    _target_velocity.Z = m_preJumpForce.Z*_parent_scene.m_preJumpForceMultiplierZ;
 
                     m_preJumpCounter = 0;
                     m_isJumping = true;
@@ -936,15 +938,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (flying)
                     {
                         // we're flying
-                        vec.X += (_target_velocity.X*movementmult - vel.X)*PID_D*0.75f;
-                        vec.Y += (_target_velocity.Y*movementmult - vel.Y)*PID_D*0.75f;
+                        vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
+                        vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
                     }
                     else
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X += (_target_velocity.X - vel.X)*PID_D*0.85f;
-                        vec.Y += (_target_velocity.Y - vel.Y)*PID_D*0.85f;
+                        vec.X += (_target_velocity.X - vel.X) * PID_D * 0.85f;
+                        vec.Y += (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
 
@@ -1110,7 +1112,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!d.BodyIsEnabled(Body))
                         d.BodyEnable(Body);
 
-                    doForce(vec);
+                    if (vec == Vector3.Zero) //if we arn't moving, STOP
+                    {
+                        if (m_lastForceApplied != -1)
+                        {
+                            m_lastForceApplied = -1;
+                            d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                        }
+                    }
+                    else
+                    {
+                        if (m_lastForceApplied < 5)
+                            vec *= m_lastForceApplied / 5;
+                        doForce(vec);
+                        m_lastForceApplied++;
+                    }
 
 //                    if (!_zeroFlag && (!flying || m_iscolliding))
 //                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
@@ -1135,11 +1151,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     //Decay out the target velocity DON'T it forces tons of updates
-/*
+
                     _target_velocity *= _parent_scene.m_avDecayTime;
                     if (!_zeroFlag && _target_velocity.ApproxEquals (Vector3.Zero, _parent_scene.m_avStopDecaying))
                         _target_velocity = Vector3.Zero;
- */
+
                 }
                 else
                 {

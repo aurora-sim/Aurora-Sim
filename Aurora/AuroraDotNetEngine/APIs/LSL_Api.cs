@@ -2573,6 +2573,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // This function has been deprecated
             // see http://www.lslwiki.net/lslwiki/wakka.php?wakka=llSound
             Deprecated("llSound");
+            if (loop == 1)
+                llLoopSound(sound, volume);
+            else
+                llPlaySound(sound, volume);
+            llSetSoundQueueing(queue);
         }
 
         // Xantor 20080528 PlaySound updated so it accepts an objectinventory name -or- a key to a sound
@@ -3807,6 +3812,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             Deprecated("llTakeCamera");
+            
         }
 
         public void llReleaseCamera(string avatar)
@@ -3814,6 +3820,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             Deprecated("llReleaseCamera");
+            llClearCameraParams();
         }
 
         public LSL_String llGetOwner()
@@ -11532,9 +11539,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                 scriptTime += mod.GetScriptTime(m_itemID);
                             ret.Add(scriptTime);
                         }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PRIM_EQUIVALENCE)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SERVER_COST)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_STREAMING_COST)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PHYSICS_COST)
+                        {
+                            ret.Add(0);
+                        }
                         else
                         {
-                            ret.Add (ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
+                            ret.Add(ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
                         }
                     }
                     return ret;
@@ -11637,7 +11660,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         internal void Deprecated(string command)
         {
-            throw new Exception("Command deprecated: " + command);
+            ShoutError("Command deprecated: " + command);
+            //throw new Exception("Command deprecated: " + command);
         }
 
         internal void LSLError(string msg)

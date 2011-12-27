@@ -581,6 +581,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger OBJECT_TOTAL_SCRIPT_COUNT = 10;
         public static readonly LSL_Types.LSLInteger OBJECT_SCRIPT_MEMORY = 11;
         public static readonly LSL_Types.LSLInteger OBJECT_SCRIPT_TIME = 12;
+        public static readonly LSL_Types.LSLInteger OBJECT_PRIM_EQUIVALENCE = 13;
+        public static readonly LSL_Types.LSLInteger OBJECT_SERVER_COST = 14;
+        public static readonly LSL_Types.LSLInteger OBJECT_STREAMING_COST = 15;
+        public static readonly LSL_Types.LSLInteger OBJECT_PHYSICS_COST = 16;
 
         public static readonly vector ZERO_VECTOR = new vector(0.0, 0.0, 0.0);
         public static readonly rotation ZERO_ROTATION = new rotation(0.0, 0.0, 0.0, 1.0);
