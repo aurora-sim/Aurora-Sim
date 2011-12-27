@@ -653,6 +653,7 @@ namespace OpenSim.Framework
         {
             OSDMap map = new OSDMap();
             map["GroupID"] = OSD.FromUUID(GroupID);
+            map["IsGroupOwned"] = OSD.FromBoolean(IsGroupOwned);
             map["OwnerID"] = OSD.FromUUID(OwnerID);
             map["Maturity"] = OSD.FromInteger(Maturity);
             map["Area"] = OSD.FromInteger(Area);
