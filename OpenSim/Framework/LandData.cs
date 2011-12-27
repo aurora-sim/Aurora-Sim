@@ -49,6 +49,7 @@ namespace OpenSim.Framework
         private UUID _authBuyerID = UUID.Zero; //Unemplemented. Authorized Buyer's UUID
         private byte[] _bitmap = new byte[512];
         private ParcelCategory _category = ParcelCategory.None; //Unimplemented. Parcel's chosen category
+        private bool _firstParty = false;
         private int _claimDate;
         private int _claimPrice; //Unemplemented
         private string _description = String.Empty;
@@ -95,6 +96,8 @@ namespace OpenSim.Framework
         private Vector3 _userLookAt;
         private OSDMap m_GenericMap = new OSDMap();
 
+        #region constructor
+
         public LandData()
         {
             _globalID = UUID.Random();
@@ -104,6 +107,10 @@ namespace OpenSim.Framework
         {
             FromOSD(map);
         }
+
+        #endregion
+
+        #region properties
 
         /// <summary>
         ///   Whether to obscure parcel media URL
@@ -214,7 +221,19 @@ namespace OpenSim.Framework
         public ParcelCategory Category
         {
             get { return _category; }
-            set { _category = value; }
+            set {
+                _category = value;
+                if (value == ParcelCategory.Linden)
+                {
+                    FirstParty = true;
+                }
+            }
+        }
+
+        public bool FirstParty
+        {
+            get { return _firstParty; }
+            set { _firstParty = value; }
         }
 
         /// <summary>
@@ -526,6 +545,8 @@ namespace OpenSim.Framework
             set { _private = value; }
         }
 
+        #endregion
+
         public void AddGenericData(string Key, object Value)
         {
             if (Value is OSD)
@@ -660,6 +681,7 @@ namespace OpenSim.Framework
             map["MusicURL"] = OSD.FromString(MusicURL);
             map["Bitmap"] = OSD.FromBinary(Bitmap);
             map["Category"] = OSD.FromInteger((int) Category);
+            map["FirstParty"] = OSD.FromBoolean(FirstParty);
             map["ClaimDate"] = OSD.FromInteger(ClaimDate);
             map["ClaimPrice"] = OSD.FromInteger(ClaimPrice);
             map["Status"] = OSD.FromInteger((int) Status);
@@ -708,6 +730,7 @@ namespace OpenSim.Framework
             MusicURL = map["MusicURL"].AsString();
             Bitmap = map["Bitmap"].AsBinary();
             Category = (ParcelCategory) map["Category"].AsInteger();
+            FirstParty = map["FirstParty"].AsBoolean();
             ClaimDate = map["ClaimDate"].AsInteger();
             ClaimPrice = map["ClaimPrice"].AsInteger();
             Status = (ParcelStatus) map["Status"].AsInteger();
