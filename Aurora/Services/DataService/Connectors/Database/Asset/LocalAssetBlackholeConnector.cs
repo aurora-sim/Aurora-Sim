@@ -323,7 +323,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (assetDoesExist)
                 {
                     string databaseTable = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
-                    // AssetBase oldasset = GetAsset(asset.ID, true, false);
                     List<string> results = m_Gd.Query("id", asset.ID, databaseTable, "asset_flags");
                     AssetFlags thisassetflag;
                     if ((results != null) && (results.Count >= 1))
@@ -1101,41 +1100,50 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private int TaskGetHashCodeUseCount(string hash_code)
         {
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_old", "id").Count >= 1)
+            try
+            {
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count >= 1)
+                    return 1;
+                if (m_Gd.Query("hash_code", hash_code, "auroraassets_old", "id").Count >= 1)
+                    return 1;
+                return 0;
+            }
+            catch
+            {
+                // because this function checks to see if a asset file is being used, and deletes it if not,
+                // I am saying it is being used if there is a error
                 return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count >= 1)
-                return 1;
-            if (m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count >= 1)
-                return 1;
-            return 0;
+            }
         }
 
         #endregion
