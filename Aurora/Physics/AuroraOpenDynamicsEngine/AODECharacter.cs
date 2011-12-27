@@ -514,7 +514,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 TriggerMovementUpdate();
                 return;
             }
-            _target_velocity = force;
+            if(force != Vector3.Zero)
+                _target_velocity = force;
         }
 
         #endregion
@@ -630,6 +631,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Move
+
+        private int m_lastForceApplied = 0;
 
         /// <summary>
         ///   Called from Simulate
@@ -936,15 +939,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (flying)
                     {
                         // we're flying
-                        vec.X += (_target_velocity.X*movementmult - vel.X)*PID_D*0.75f;
-                        vec.Y += (_target_velocity.Y*movementmult - vel.Y)*PID_D*0.75f;
+                        vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 0.75f;
+                        vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 0.75f;
                     }
                     else
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X += (_target_velocity.X - vel.X)*PID_D*0.85f;
-                        vec.Y += (_target_velocity.Y - vel.Y)*PID_D*0.85f;
+                        vec.X += (_target_velocity.X - vel.X) * PID_D * 0.85f;
+                        vec.Y += (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
                     }
                 }
 
@@ -1110,7 +1113,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!d.BodyIsEnabled(Body))
                         d.BodyEnable(Body);
 
-                    doForce(vec);
+                    if (vec == Vector3.Zero) //if we arn't moving, STOP
+                    {
+                        if (m_lastForceApplied != -1)
+                        {
+                            m_lastForceApplied = -1;
+                            d.BodySetLinearVel(Body, vec.X, vec.Y, vec.Z);
+                        }
+                    }
+                    else
+                    {
+                        if (m_lastForceApplied < 5)
+                            vec *= m_lastForceApplied / 5;
+                        doForce(vec);
+                        m_lastForceApplied++;
+                    }
 
 //                    if (!_zeroFlag && (!flying || m_iscolliding))
 //                        AlignAvatarTiltWithCurrentDirectionOfMovement (vec, gravForce);
@@ -1135,11 +1152,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     //Decay out the target velocity DON'T it forces tons of updates
-/*
+
                     _target_velocity *= _parent_scene.m_avDecayTime;
                     if (!_zeroFlag && _target_velocity.ApproxEquals (Vector3.Zero, _parent_scene.m_avStopDecaying))
                         _target_velocity = Vector3.Zero;
- */
+
                 }
                 else
                 {

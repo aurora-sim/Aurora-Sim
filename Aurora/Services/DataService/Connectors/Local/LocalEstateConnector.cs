@@ -207,14 +207,18 @@ namespace Aurora.Services.DataService
                 return null;
             foreach (string val in RetVal)
             {
-                OSD oval = OSDParser.DeserializeLLSDXml (val);
-                if (oval is OSDMap)
+                try
                 {
-                    OSDMap estateInfo = (OSDMap)oval;
-                    EstateSettings es = LoadEstateSettings (estateInfo["EstateID"].AsInteger ());
-                    if(es != null)
-                        result.Add (es);
+                    OSD oval = OSDParser.DeserializeLLSDXml(val);
+                    if (oval is OSDMap)
+                    {
+                        OSDMap estateInfo = (OSDMap)oval;
+                        EstateSettings es = LoadEstateSettings(estateInfo["EstateID"].AsInteger());
+                        if (es != null)
+                            result.Add(es);
+                    }
                 }
+                catch { }
             }
             return result;
         }

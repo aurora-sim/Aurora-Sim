@@ -1919,7 +1919,7 @@ namespace OpenSim.Region.Framework.Scenes
             PhysicsCharacter actor = m_physicsActor;
             if (actor != null)
             {
-                Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
+                /*Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 if (direc == Vector3.Zero)
                     PhysicsActor.Velocity = Vector3.Zero;
@@ -1927,7 +1927,11 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     direc.Normalize();
                     PhysicsActor.SetMovementForce(direc * 1.5f);
-                }
+                }*/
+                Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
+                Rotation = rotation;
+                direc.Normalize();
+                actor.SetMovementForce(direc * 1.2f);
             }
         }
         #endregion
