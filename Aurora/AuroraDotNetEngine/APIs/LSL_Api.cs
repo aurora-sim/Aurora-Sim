@@ -11539,9 +11539,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                 scriptTime += mod.GetScriptTime(m_itemID);
                             ret.Add(scriptTime);
                         }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PRIM_EQUIVALENCE)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SERVER_COST)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_STREAMING_COST)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PHYSICS_COST)
+                        {
+                            ret.Add(0);
+                        }
                         else
                         {
-                            ret.Add (ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
+                            ret.Add(ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
                         }
                     }
                     return ret;
