@@ -196,11 +196,80 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
             Dictionary<string, object> mess = new Dictionary<string, object>();
+            mess["Method"] = "GetNumberOfParcelsByRegion";
             mess["RegionID"] = RegionID;
             mess["scopeID"] = scopeID;
             mess["owner"] = owner;
             mess["flags"] = (uint)flags;
             mess["category"] = (int)category;
+            string reqString = WebUtils.BuildXmlResponse(mess);
+
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                         m_ServerURI,
+                                                                         reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        uint numParcels = 0;
+                        foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numParcels)))
+                        {
+                            break;
+                        }
+                        // Success
+                        return numParcels;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name)
+        {
+            List<LandData> resp = new List<LandData>(0);
+            if (count == 0)
+            {
+                return resp;
+            }
+            OSDMap mess = new OSDMap();
+            mess["Method"] = "GetParcelsWithNameByRegion";
+            mess["start"] = OSD.FromUInteger(start);
+            mess["count"] = OSD.FromUInteger(count);
+            mess["RegionID"] = OSD.FromUUID(RegionID);
+            mess["ScopeID"] = OSD.FromUUID(ScopeID);
+            mess["name"] = OSD.FromString(name);
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            resp = new List<LandData>();
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
+                OSDMap innerResults = (OSDMap)OSDParser.DeserializeJson(results["_RawResult"]);
+                OSDArray parcels = (OSDArray)innerResults["Parcels"];
+                foreach (OSD o in parcels)
+                {
+                    resp.Add(new LandData((OSDMap)o));
+                }
+                break;
+            }
+            return resp;
+        }
+
+        public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name)
+        {
+            Dictionary<string, object> mess = new Dictionary<string, object>();
+            mess["Method"] = "GetNumberOfParcelsWithNameByRegion";
+            mess["RegionID"] = RegionID;
+            mess["ScopeID"] = ScopeID;
+            mess["name"] = name;
             string reqString = WebUtils.BuildXmlResponse(mess);
 
             List<string> m_ServerURIs =
