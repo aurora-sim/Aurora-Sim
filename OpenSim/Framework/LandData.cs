@@ -678,7 +678,7 @@ namespace OpenSim.Framework
             map["OtherCleanTime"] = OSD.FromInteger(OtherCleanTime);
             map["RegionHandle"] = OSD.FromULong(RegionHandle);
             map["Private"] = OSD.FromBoolean(Private);
-            map["GenericDataMap"] = OSD.FromString(GenericData);
+            map["GenericDataMap"] = GenericData;
             return map;
         }
 
@@ -726,7 +726,8 @@ namespace OpenSim.Framework
             OtherCleanTime = map["OtherCleanTime"].AsInteger();
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
-            GenericData = map.ContainsKey("GenericDataMap") ? (OSDMap)map["GenericDataMap"] : new OSDMap();
+            GenericData = map.ContainsKey("GenericDataMap") && map["GenericDataMap"].Type == OSDType.Map ? 
+                (OSDMap)map["GenericDataMap"] : new OSDMap();
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)
