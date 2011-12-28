@@ -340,6 +340,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     LandData.Flags = args.ParcelFlags;
 
+                    LandData.Status = LandData.OwnerID == m_parcelManagementModule.GodParcelOwner ? ParcelStatus.Abandoned : LandData.AuthBuyerID != UUID.Zero ? ParcelStatus.LeasePending : ParcelStatus.Leased;
+
                     m_parcelManagementModule.UpdateLandObject(this);
 
                     SendLandUpdateToAvatarsOverMe(snap_selection);

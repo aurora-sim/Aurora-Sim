@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private bool m_UpdateDirectoryOnTimer = true;
         private bool m_UpdateDirectoryOnUpdate;
         private Timer m_UpdateDirectoryTimer = new Timer();
-        public UUID GodParcelOwner = UUID.Zero;
+        public UUID GodParcelOwner { get; set; }
         private string _godParcelOwner = "";
 
         /// <value>
@@ -156,8 +156,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryTimer.Start();
             }
 
+            UUID godParcelOwner = UUID.Zero;
             if (_godParcelOwner != "")
-                UUID.TryParse(_godParcelOwner, out GodParcelOwner);
+            {
+                UserAccount acc = m_scene.UserAccountService.GetUserAccount(UUID.Zero, _godParcelOwner);
+                if (acc != null)
+                    godParcelOwner = acc.PrincipalID;
+            }
+            GodParcelOwner = godParcelOwner;
 
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateBuyLand += EventManagerOnValidateLandBuy;
