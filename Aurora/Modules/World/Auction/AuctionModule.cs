@@ -34,13 +34,12 @@ using OpenSim.Framework;
 using OpenSim.Framework.Capabilities;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {
-    public class AuctionModule : INonSharedRegionModule
+    public class AuctionModule : IAuctionModule, INonSharedRegionModule
     {
-        //private static readonly ILog MainConsole.Instance =
-        //    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private IScene m_scene;
 
         #region INonSharedRegionModule Members
@@ -84,35 +83,28 @@ namespace Aurora.Modules
 
         #endregion
 
-        public void PostInitialise()
-        {
-        }
+        #region Client members
 
         public void OnNewClient(IClientAPI client)
         {
-            client.OnViewerStartAuction += client_OnViewerStartAuction;
+            client.OnViewerStartAuction += StartAuction;
         }
 
         private void OnClosingClient(IClientAPI client)
         {
-            client.OnViewerStartAuction -= client_OnViewerStartAuction;
+            client.OnViewerStartAuction -= StartAuction;
         }
 
-        private void client_OnViewerStartAuction(IClientAPI client, int LocalID, UUID SnapshotID)
+        public void StartAuction(IClientAPI client, int LocalID, UUID SnapshotID)
         {
             if (!m_scene.Permissions.IsGod(client.AgentId))
                 return;
-            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            if (parcelManagement != null)
-            {
-                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
-                if (landObject == null)
-                    return;
-                landObject.LandData.SnapshotID = SnapshotID;
-                landObject.LandData.AuctionID = (uint)Util.RandomClass.Next(0, int.MaxValue);
-                landObject.SendLandUpdateToAvatarsOverMe();
-            }
+            StartAuction(LocalID, SnapshotID);
         }
+
+        #endregion
+
+        #region CAPS
 
         public OSDMap RegisterCaps(UUID agentID, IHttpServer server)
         {
@@ -136,5 +128,103 @@ namespace Aurora.Modules
             responsedata["str_response_string"] = "";
             return responsedata;
         }
+
+        #endregion
+
+        #region IAuctionModule members
+
+        public void StartAuction(int LocalID, UUID SnapshotID)
+        {
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
+                if (landObject == null)
+                    return;
+                landObject.LandData.SnapshotID = SnapshotID;
+                landObject.LandData.AuctionID = (uint)Util.RandomClass.Next(0, int.MaxValue);
+                landObject.SendLandUpdateToAvatarsOverMe();
+            }
+        }
+
+        public void SetAuctionInfo(int LocalID, AuctionInfo info)
+        {
+            SaveAuctionInfo(LocalID, info);
+        }
+
+        public void AddAuctionBid(int LocalID, UUID userID, int bid)
+        {
+            AuctionInfo info = GetAuctionInfo(LocalID);
+            info.AuctionBids.Add(new AuctionBid() { Amount = bid, AuctionBidder = userID, TimeBid = DateTime.Now });
+            SaveAuctionInfo(LocalID, info);
+        }
+
+        public void AuctionEnd(int LocalID)
+        {
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
+                if (landObject == null)
+                    return;
+
+                AuctionInfo info = GetAuctionInfo(LocalID);
+                AuctionBid highestBid = new AuctionBid() { Amount = 0 };
+                foreach (AuctionBid bid in info.AuctionBids)
+                    if (highestBid.Amount < bid.Amount)
+                        highestBid = bid;
+
+                IOfflineMessagesConnector offlineMessages = Aurora.DataManager.DataManager.RequestPlugin<IOfflineMessagesConnector>();
+                if (offlineMessages != null)
+                    offlineMessages.AddOfflineMessage(new GridInstantMessage()
+                    {
+                        binaryBucket = new byte[0],
+                        dialog = (byte)InstantMessageDialog.MessageBox,
+                        fromAgentID = UUID.Zero,
+                        fromAgentName = "System",
+                        fromGroup = false,
+                        imSessionID = UUID.Random(),
+                        message = "You won the auction for the parcel " + landObject.LandData.Name + ", paying " + highestBid.Amount + " for it",
+                        offline = 0,
+                        ParentEstateID = 0,
+                        Position = Vector3.Zero,
+                        RegionID = m_scene.RegionInfo.RegionID,
+                        timestamp = (uint)Util.UnixTimeSinceEpoch(),
+                        toAgentID = highestBid.AuctionBidder
+                    });
+                landObject.UpdateLandSold(highestBid.AuctionBidder, UUID.Zero, false, landObject.LandData.AuctionID,
+                    highestBid.Amount, landObject.LandData.Area);
+            }
+        }
+
+        private void SaveAuctionInfo(int LocalID, AuctionInfo info)
+        {
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
+                if (landObject == null)
+                    return;
+                landObject.LandData.GenericData["AuctionInfo"] = info.ToOSD();
+            }
+        }
+
+        private AuctionInfo GetAuctionInfo(int LocalID)
+        {
+            IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                ILandObject landObject = parcelManagement.GetLandObject(LocalID);
+                if (landObject == null)
+                    return null;
+                OSDMap map = (OSDMap)landObject.LandData.GenericData["AuctionInfo"];
+                AuctionInfo info = new AuctionInfo();
+                info.FromOSD(map);
+                return info;
+            }
+            return null;
+        }
+
+        #endregion
     }
 }

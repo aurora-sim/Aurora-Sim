@@ -368,24 +368,12 @@ namespace OpenSim.Framework
             set { _regionHandle = value; }
         }
 
-        public string GenericData
-        {
-            get { return OSDParser.SerializeLLSDXmlString(m_GenericMap); }
-            set
-            {
-                if (value == "")
-                    return;
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(value);
-                m_GenericMap = map;
-            }
-        }
-
         [XmlIgnore]
-        public OSDMap GenericDataMap
+        public OSDMap GenericData
         {
             get { return m_GenericMap; }
+            set { m_GenericMap = value; }
         }
-
 
         public UUID RegionID
         {
@@ -690,7 +678,7 @@ namespace OpenSim.Framework
             map["OtherCleanTime"] = OSD.FromInteger(OtherCleanTime);
             map["RegionHandle"] = OSD.FromULong(RegionHandle);
             map["Private"] = OSD.FromBoolean(Private);
-            map["GenericData"] = OSD.FromString(GenericData);
+            map["GenericDataMap"] = OSD.FromString(GenericData);
             return map;
         }
 
@@ -738,7 +726,7 @@ namespace OpenSim.Framework
             OtherCleanTime = map["OtherCleanTime"].AsInteger();
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
-            GenericData = map["GenericData"].AsString();
+            GenericData = (OSDMap)map["GenericDataMap"];
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)

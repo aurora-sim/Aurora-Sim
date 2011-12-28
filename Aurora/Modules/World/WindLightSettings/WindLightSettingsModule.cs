@@ -284,7 +284,7 @@ namespace Aurora.Modules
                     {
                         foreach (ILandObject land in parcelManagement.AllParcels())
                         {
-                            OSDMap map = land.LandData.GenericDataMap;
+                            OSDMap map = land.LandData.GenericData;
                             if (map.ContainsKey("WindLight"))
                             {
                                 OSDMap parcelWindLight = (OSDMap) map["WindLight"];
@@ -309,7 +309,7 @@ namespace Aurora.Modules
                     if (parcelManagement != null)
                     {
                         ILandObject land = parcelManagement.GetLandObject(rm["ParcelID"].AsInteger());
-                        OSDMap map = land.LandData.GenericDataMap;
+                        OSDMap map = land.LandData.GenericData;
                         if (map.ContainsKey("WindLight"))
                         {
                             OSDMap parcelWindLight = (OSDMap) map["WindLight"];
@@ -400,10 +400,10 @@ namespace Aurora.Modules
                             return responsedata;
                         }
 
-                        OSDMap map = land.LandData.GenericDataMap;
+                        OSDMap map = land.LandData.GenericData;
 
                         OSDMap innerMap = new OSDMap();
-                        if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
+                        if (land.LandData.GenericData.ContainsKey("WindLight"))
                             innerMap = (OSDMap) map["WindLight"];
 
                         if (innerMap.ContainsKey(lsd.minEffectiveAltitude.ToString()))
@@ -453,10 +453,10 @@ namespace Aurora.Modules
                             return responsedata;
                         }
 
-                        OSDMap map = land.LandData.GenericDataMap;
+                        OSDMap map = land.LandData.GenericData;
 
                         OSDMap innerMap = new OSDMap();
-                        if (land.LandData.GenericDataMap.ContainsKey("WindLight"))
+                        if (land.LandData.GenericData.ContainsKey("WindLight"))
                             innerMap = (OSDMap) map["WindLight"];
 
                         foreach (KeyValuePair<string, OSD> kvp in innerMap)
@@ -568,7 +568,7 @@ namespace Aurora.Modules
                 {
                     land = parcelManagement.GetLandObject(presence.AbsolutePosition.X, presence.AbsolutePosition.Y);
                 }
-                OSDMap map = land != null ? land.LandData.GenericDataMap : new OSDMap();
+                OSDMap map = land != null ? land.LandData.GenericData : new OSDMap();
                 if (map.ContainsKey("WindLight"))
                 {
                     IOpenRegionSettingsModule ORSM = presence.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
