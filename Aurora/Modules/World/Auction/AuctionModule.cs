@@ -109,7 +109,7 @@ namespace Aurora.Modules
                 if (landObject == null)
                     return;
                 landObject.LandData.SnapshotID = SnapshotID;
-                landObject.LandData.AuctionID++;
+                landObject.LandData.AuctionID = (uint)Util.RandomClass.Next(0, int.MaxValue);
                 landObject.SendLandUpdateToAvatarsOverMe();
             }
         }

@@ -45,13 +45,13 @@ namespace OpenSim.Framework
         private int _Maturity;
         private float _MediaLoopSet;
         private int _area;
-        private uint _auctionID; //Unemplemented. If set to 0, not being auctioned
-        private UUID _authBuyerID = UUID.Zero; //Unemplemented. Authorized Buyer's UUID
+        private uint _auctionID;
+        private UUID _authBuyerID = UUID.Zero;
         private byte[] _bitmap = new byte[512];
-        private ParcelCategory _category = ParcelCategory.None; //Unimplemented. Parcel's chosen category
+        private ParcelCategory _category = ParcelCategory.None;
         private bool _firstParty = false;
         private int _claimDate;
-        private int _claimPrice; //Unemplemented
+        private int _claimPrice;
         private string _description = String.Empty;
         private int _dwell;
 
