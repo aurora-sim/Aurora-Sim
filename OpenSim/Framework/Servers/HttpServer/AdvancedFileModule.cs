@@ -230,6 +230,11 @@ namespace HttpServer.HttpModules
                 }
             }
 
+            if (query == "")
+            {
+                query = File.Exists(_basePath + "index.php") ? "index.php" : File.Exists(_basePath + "index.html") ? "index.html" : "";
+            }
+
             string path = _basePath + query;
             return path.Replace('/', Path.DirectorySeparatorChar);
         }

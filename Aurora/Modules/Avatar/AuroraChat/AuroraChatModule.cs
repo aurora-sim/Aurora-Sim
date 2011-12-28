@@ -518,7 +518,8 @@ namespace Aurora.Modules
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            c.Scene.EventManager.TriggerOnChatFromClient(sender, c);
+            if(c.Message != "")
+                c.Scene.EventManager.TriggerOnChatFromClient(sender, c);
 
             // early return if not on public or debug channel
             if (c.Channel != DEFAULT_CHANNEL && c.Channel != DEBUG_CHANNEL) return;
