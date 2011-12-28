@@ -3388,7 +3388,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         }
 
                         // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
-                        return PScriptSleep((int)((groupmass * velmag) / 10) + 100);
+                        return PScriptSleep(100);
                     }
                 }
 
