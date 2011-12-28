@@ -91,6 +91,11 @@ namespace OpenSim.Services
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
                                 return FailureResult();
                         return ProfileHandler.UpdateProfile(args);
+                    case "updateagent":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
+                                return FailureResult();
+                        return ProfileHandler.UpdateAgent(args);
                     case "getclassified":
                         if (urlModule != null)
                             if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.High))
@@ -247,10 +252,12 @@ namespace OpenSim.Services
     public class ProfileInfoHandler
     {
         private readonly IProfileConnector ProfileConnector;
+        private readonly IAgentConnector AgentConnector;
 
         public ProfileInfoHandler()
         {
             ProfileConnector = DataManager.RequestPlugin<IProfileConnector>("IProfileConnectorLocal");
+            AgentConnector = DataManager.RequestPlugin<IAgentConnector>("IAgentConnectorLocal");
         }
 
         public byte[] GetProfile(OSDMap request)
@@ -270,8 +277,26 @@ namespace OpenSim.Services
         public byte[] UpdateProfile(OSDMap request)
         {
             IUserProfileInfo UserProfile = new IUserProfileInfo();
-            UserProfile.FromOSD((OSDMap) request["Profile"]);
+            UserProfile.FromOSD((OSDMap)request["Profile"]);
             ProfileConnector.UpdateUserProfile(UserProfile);
+            OSDMap result = new OSDMap();
+            result["result"] = "Successful";
+
+            string xmlString = OSDParser.SerializeJsonString(result);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] UpdateAgent(OSDMap request)
+        {
+            IAgentInfo UserProfile = new IAgentInfo();
+            UserProfile.FromOSD((OSDMap)request["Agent"]);
+            IAgentInfo oldAgent = AgentConnector.GetAgent(UserProfile.PrincipalID);
+            foreach (KeyValuePair<string, OSD> kvp in UserProfile.OtherAgentInformation)
+                if (!oldAgent.OtherAgentInformation.ContainsKey(kvp.Key))
+                    oldAgent.OtherAgentInformation[kvp.Key] = kvp.Value;
+            AgentConnector.UpdateAgent(oldAgent);
             OSDMap result = new OSDMap();
             result["result"] = "Successful";
 

@@ -122,7 +122,23 @@ namespace Aurora.Services.DataService
 
         public void UpdateAgent(IAgentInfo agent)
         {
-            //No creating from sims!
+            try
+            {
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
+                        agent.PrincipalID.ToString(), "RemoteServerURI");
+                foreach (string url in serverURIs)
+                {
+                    OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+                    map["Method"] = "updateagent";
+                    map["Agent"] = agent.ToOSD();
+                    WebUtils.PostToService(url + "osd", map, false, false);
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.DebugFormat("[AuroraRemoteAgentConnector]: Exception when contacting server: {0}", e);
+            }
         }
 
         public void CreateNewAgent(UUID PrincipalID)
