@@ -31,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Aurora.Framework;
 using DotNetOpenMail;
 using DotNetOpenMail.SmtpAuth;
 using Nini.Config;
@@ -191,7 +192,13 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             else
             {
                 // inter object email, keep it in the family
-                Email email = new Email
+                string guid = address.Substring(0, address.IndexOf("@"));
+                UUID toID = new UUID(guid);
+
+                if (IsLocal(toID))
+                {
+                    // object in this region
+                    InsertEmail(toID, new Email
                                   {
                                       time =
                                           ((int) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
@@ -200,31 +207,47 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                                       sender = objectID.ToString() + "@" + m_InterObjectHostname,
                                       message = "Object-Name: " + LastObjectName +
                                                 "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                                LastObjectPosition + "\n\n" + body
-                                  };
-
-                string guid = address.Substring(0, address.IndexOf("@"));
-                UUID toID = new UUID(guid);
-
-                if (IsLocal(toID))
-                {
-                    // object in this region
-                    InsertEmail(toID, email);
+                                                LastObjectPosition + "\n\n" + body,
+                                      toPrimID = toID
+                                  });
                 }
                 else
                 {
                     // object on another region
 
-                    //This should be dealt with by other modules, not us
+                    Email email = new Email
+                    {
+                        time =
+                            ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
+                            ToString(),
+                        subject = subject,
+                        sender = objectID.ToString() + "@" + m_InterObjectHostname,
+                        message = body,
+                        toPrimID = toID
+                    };
+                    Aurora.Framework.IEmailConnector conn = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEmailConnector>();
+                    conn.InsertEmail(email);
                 }
             }
-
-            //DONE: Message as Second Life style
-            //20 second delay - AntiSpam System - for now only 10 seconds
-            DelayInSeconds(10);
         }
 
         ///<summary>
+        ///   Gets any emails that a prim may have asyncronously
+        ///</summary>
+        ///<param name = "objectID"></param>
+        ///<param name = "sender"></param>
+        ///<param name = "subject"></param>
+        ///<returns></returns>
+        public void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail handler)
+        {
+            Util.FireAndForget((o) =>
+                {
+                    handler(GetNextEmail(objectID, sender, subject));
+                });
+        }
+
+        ///<summary>
+        ///   Gets any emails that a prim may have
         ///</summary>
         ///<param name = "objectID"></param>
         ///<param name = "sender"></param>
@@ -265,6 +288,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 }
             }
 
+            GetRemoteEmails(objectID);
             lock (m_MailQueues)
             {
                 if (m_MailQueues.ContainsKey(objectID))
@@ -309,6 +333,30 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
 
             return null;
+        }
+
+        private void GetRemoteEmails(UUID objectID)
+        {
+            IEmailConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEmailConnector>();
+            List<Email> emails = conn.GetEmails(objectID);
+            if (emails.Count > 0)
+            {
+                if (!m_MailQueues.ContainsKey(objectID))
+                    m_MailQueues.Add(objectID, new List<Email>());
+                foreach (Email email in emails)
+                {
+                    string LastObjectName = string.Empty;
+                    string LastObjectPosition = string.Empty;
+                    string LastObjectRegionName = string.Empty;
+
+                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
+
+                    email.message = "Object-Name: " + LastObjectName +
+                                  "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                  LastObjectPosition + "\n\n" + email.message;
+                    InsertEmail(objectID, email);
+                }
+            }
         }
 
         #endregion
@@ -429,18 +477,6 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        /// <summary>
-        ///   Delay function using thread in seconds
-        /// </summary>
-        /// <param name = "seconds"></param>
-        private void DelayInSeconds(int delay)
-        {
-            delay = (int) ((float) delay*1000);
-            if (delay == 0)
-                return;
-            Thread.Sleep(delay);
-        }
-
         private bool IsLocal(UUID objectID)
         {
             string unused;
@@ -486,13 +522,9 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 ObjectRegionName = m_ObjectRegionName;
                 return;
             }
-            objectLocX = (int) part.AbsolutePosition.X;
-            objectLocY = (int) part.AbsolutePosition.Y;
-            objectLocZ = (int) part.AbsolutePosition.Z;
-            ObjectAbsolutePosition = "(" + objectLocX + ", " + objectLocY + ", " + objectLocZ + ")";
-            ObjectName = part.Name;
-            ObjectRegionName = m_ObjectRegionName;
-            return;
+            ObjectName = null;
+            ObjectAbsolutePosition = null;
+            ObjectRegionName = null;
         }
     }
 }

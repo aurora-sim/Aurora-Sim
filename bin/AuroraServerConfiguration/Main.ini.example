@@ -57,6 +57,7 @@
     DirectoryServiceConnector = LocalConnector
     MuteListConnector = LocalConnector
     ParcelConnector = LocalConnector
+	EmailConnector = LocalConnector
 	
 	;; Max non-group chat messages that the server will store per user
 	MaxOfflineMessages = 20

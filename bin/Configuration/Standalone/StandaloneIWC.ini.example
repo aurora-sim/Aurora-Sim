@@ -53,6 +53,7 @@
     ParcelConnector = LocalConnector
     WebStatsDataConnector = LocalConnector
     GroupsConnector = LocalConnector
+	EmailConnector = LocalConnector
     
     MuteListConnector = IWCConnector
     OfflineMessagesConnector = IWCConnector

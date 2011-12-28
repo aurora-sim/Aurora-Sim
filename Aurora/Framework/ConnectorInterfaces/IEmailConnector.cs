@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,17 +25,63 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
-namespace OpenSim.Region.Framework.Interfaces
+namespace Aurora.Framework
 {
-    public delegate void NextEmail(Email email);
-    public interface IEmailModule : ISharedRegionModule
+    public class Email : IDataTransferable
     {
-        void SendEmail(UUID objectID, string address, string subject, string body);
-        Email GetNextEmail(UUID objectID, string sender, string subject);
-        void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail eventHandler);
+        public string message;
+        public int numLeft;
+        public string sender;
+        public string subject;
+        public string time;
+        public UUID toPrimID;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["message"] = message;
+            map["numLeft"] = numLeft;
+            map["sender"] = sender;
+            map["subject"] = subject;
+            map["time"] = time;
+            map["toPrimID"] = toPrimID;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            message = map["message"];
+            numLeft = map["numLeft"];
+            sender = map["sender"];
+            subject = map["subject"];
+            time = map["time"];
+            toPrimID = map["toPrimID"];
+        }
+
+        public override IDataTransferable Duplicate()
+        {
+            return new Email();
+        }
+    }
+
+    public interface IEmailConnector : IAuroraDataPlugin
+    {
+        /// <summary>
+        ///   Adds an email to the database for the prim to get later
+        /// </summary>
+        /// <param name = "email"></param>
+        void InsertEmail(Email email);
+
+        /// <summary>
+        ///   Finds previously saved AA data.
+        /// </summary>
+        /// <param name = "token"></param>
+        /// <param name = "key"></param>
+        /// <returns></returns>
+        List<Email> GetEmails(UUID primID);
     }
 }

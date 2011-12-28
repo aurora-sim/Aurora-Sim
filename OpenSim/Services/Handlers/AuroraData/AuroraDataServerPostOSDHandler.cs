@@ -49,6 +49,7 @@ namespace OpenSim.Services
         private readonly DirectoryInfoOSDHandler DirectoryHandler;
         private readonly OfflineMessagesInfoHandler OfflineMessagesHandler = new OfflineMessagesInfoHandler();
         private readonly ProfileInfoHandler ProfileHandler = new ProfileInfoHandler();
+        private readonly EmailHandler EmailHandler = new EmailHandler();
 
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -154,7 +155,22 @@ namespace OpenSim.Services
 
                         #endregion
 
-                        #region Directory Messages
+                        #region Emails
+                        
+                    case "insertemail":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Low))
+                                return FailureResult();
+                        return EmailHandler.InsertEmail(args);
+                    case "getemails":
+                        if (urlModule != null)
+                            if (!urlModule.CheckThreatLevel(m_SessionID, method, ThreatLevel.Medium))
+                                return FailureResult();
+                        return EmailHandler.GetEmails(args);
+
+                        #endregion
+
+                    #region Directory Messages
 
                     case "addregion":
                         if (urlModule != null)
@@ -528,6 +544,81 @@ namespace OpenSim.Services
         }
     }
 
+    public class EmailHandler
+    {
+        private readonly IEmailConnector EmailConnector;
+
+        public EmailHandler()
+        {
+            EmailConnector =
+                DataManager.RequestPlugin<IEmailConnector>("IEmailConnectorLocal");
+        }
+
+        public byte[] GetEmails(OSDMap request)
+        {
+            OSDArray result = new OSDArray();
+
+            UUID ObjectID = request["ObjectID"].AsUUID();
+            List<Email> Messages = EmailConnector.GetEmails(ObjectID);
+
+            int i = 0;
+            foreach (Email Message in Messages)
+            {
+                result.Add(Message.ToOSD());
+                i++;
+            }
+
+            string xmlString = OSDParser.SerializeJsonString(result);
+            //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        public byte[] InsertEmail(OSDMap request)
+        {
+            Email message = new Email();
+            message.FromOSD(request);
+            OSDMap map = new OSDMap();
+            map["Result"] = true;
+            EmailConnector.InsertEmail(message);
+
+            string xmlString = OSDParser.SerializeJsonString(map);
+            UTF8Encoding encoding = new UTF8Encoding();
+            return encoding.GetBytes(xmlString);
+        }
+
+        private byte[] SuccessResult()
+        {
+            XmlDocument doc = new XmlDocument();
+
+            XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
+                                             "", "");
+
+            doc.AppendChild(xmlnode);
+
+            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
+                                                       "");
+
+            doc.AppendChild(rootElement);
+
+            XmlElement result = doc.CreateElement("", "Result", "");
+            result.AppendChild(doc.CreateTextNode("Success"));
+
+            rootElement.AppendChild(result);
+
+            return DocToBytes(doc);
+        }
+
+        private byte[] DocToBytes(XmlDocument doc)
+        {
+            MemoryStream ms = new MemoryStream();
+            XmlTextWriter xw = new XmlTextWriter(ms, null) { Formatting = Formatting.Indented };
+            doc.WriteTo(xw);
+            xw.Flush();
+
+            return ms.ToArray();
+        }
+    }
 
     public class DirectoryInfoOSDHandler
     {

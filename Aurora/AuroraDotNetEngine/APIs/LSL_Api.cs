@@ -3906,20 +3906,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
             }
 
-            Email email = emailModule.GetNextEmail(m_host.UUID, address, subject);
+            emailModule.GetNextEmailAsync(m_host.UUID, address, subject, (email) =>
+            {
+                if (email == null)
+                    return;
 
-            if (email == null)
-                return;
-
-            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "email",
-                    new Object[] {
+                m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "email",
+                        new Object[] {
                         new LSL_String(email.time),
                         new LSL_String(email.sender),
                         new LSL_String(email.subject),
                         new LSL_String(email.message),
                         new LSL_Integer(email.numLeft)}
-                    );
-
+                        );
+            });
         }
 
         public LSL_String llGetKey()
