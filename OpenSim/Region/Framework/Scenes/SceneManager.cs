@@ -163,6 +163,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Register us!
             m_OpenSimBase.ApplicationRegistry.RegisterModuleInterface<SceneManager>(this);
+            m_OpenSimBase.EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
         }
 
         public void ReloadConfiguration(IConfigSource config)
@@ -577,13 +578,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Update region info
 
-        public void UpdateRegionInfo (string oldRegionName, RegionInfo region)
+        public object RegionInfoChanged(string funcName, object param)
         {
-            if(oldRegionName != region.RegionName)
-            {
-                //Move .abackup files if possible
-                m_simulationDataService.RenameBackupFiles(oldRegionName, region.RegionName, ConfigSource);
-            }
+            UpdateRegionInfo((RegionInfo)((object[])param)[0], (RegionInfo)((object[])param)[1]);
+            return null;
+        }
+
+        public void UpdateRegionInfo (RegionInfo oldRegion, RegionInfo region)
+        {
             foreach(IScene scene in m_localScenes)
             {
                 if(scene.RegionInfo.RegionID == region.RegionID)
