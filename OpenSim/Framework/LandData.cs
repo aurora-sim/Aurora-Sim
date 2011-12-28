@@ -45,13 +45,13 @@ namespace OpenSim.Framework
         private int _Maturity;
         private float _MediaLoopSet;
         private int _area;
-        private uint _auctionID; //Unemplemented. If set to 0, not being auctioned
-        private UUID _authBuyerID = UUID.Zero; //Unemplemented. Authorized Buyer's UUID
+        private uint _auctionID;
+        private UUID _authBuyerID = UUID.Zero;
         private byte[] _bitmap = new byte[512];
-        private ParcelCategory _category = ParcelCategory.None; //Unimplemented. Parcel's chosen category
+        private ParcelCategory _category = ParcelCategory.None;
         private bool _firstParty = false;
         private int _claimDate;
-        private int _claimPrice; //Unemplemented
+        private int _claimPrice;
         private string _description = String.Empty;
         private int _dwell;
 
@@ -223,10 +223,6 @@ namespace OpenSim.Framework
             get { return _category; }
             set {
                 _category = value;
-                if (value == ParcelCategory.Linden)
-                {
-                    FirstParty = true;
-                }
             }
         }
 
@@ -372,24 +368,12 @@ namespace OpenSim.Framework
             set { _regionHandle = value; }
         }
 
-        public string GenericData
-        {
-            get { return OSDParser.SerializeLLSDXmlString(m_GenericMap); }
-            set
-            {
-                if (value == "")
-                    return;
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(value);
-                m_GenericMap = map;
-            }
-        }
-
         [XmlIgnore]
-        public OSDMap GenericDataMap
+        public OSDMap GenericData
         {
             get { return m_GenericMap; }
+            set { m_GenericMap = value; }
         }
-
 
         public UUID RegionID
         {
@@ -694,7 +678,7 @@ namespace OpenSim.Framework
             map["OtherCleanTime"] = OSD.FromInteger(OtherCleanTime);
             map["RegionHandle"] = OSD.FromULong(RegionHandle);
             map["Private"] = OSD.FromBoolean(Private);
-            map["GenericData"] = OSD.FromString(GenericData);
+            map["GenericDataMap"] = GenericData;
             return map;
         }
 
@@ -742,7 +726,8 @@ namespace OpenSim.Framework
             OtherCleanTime = map["OtherCleanTime"].AsInteger();
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
-            GenericData = map["GenericData"].AsString();
+            GenericData = map.ContainsKey("GenericDataMap") && map["GenericDataMap"].Type == OSDType.Map ? 
+                (OSDMap)map["GenericDataMap"] : new OSDMap();
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)

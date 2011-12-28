@@ -39,6 +39,11 @@ namespace OpenSim.Region.Framework.Interfaces
         int[,] LandIDList { get; }
 
         /// <summary>
+        /// Gets the UUID of the user who is the "default" parcel owner
+        /// </summary>
+        UUID GodParcelOwner { get; }
+
+        /// <summary>
         ///   Get all parcels
         /// </summary>
         /// <returns></returns>

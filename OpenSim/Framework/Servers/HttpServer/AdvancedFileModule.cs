@@ -53,6 +53,7 @@ namespace HttpServer.HttpModules
 
             _serveUnknownTypes = false;
             _mimeTypes.Add("default", "application/octet-stream");
+            AddDefaultMimeTypes();
         }
 
         /// <summary>
@@ -229,6 +230,11 @@ namespace HttpServer.HttpModules
                 }
             }
 
+            if (query == "")
+            {
+                query = File.Exists(_basePath + "index.php") ? "index.php" : File.Exists(_basePath + "index.html") ? "index.html" : "";
+            }
+
             string path = _basePath + query;
             return path.Replace('/', Path.DirectorySeparatorChar);
         }
@@ -273,6 +279,9 @@ namespace HttpServer.HttpModules
 
                 if (!directory_exists && !file_exists)
                 {
+                    if (!path.EndsWith("favicon.ico"))
+                        OpenSim.Framework.MainConsole.Instance.Output("Failed to find " + path);
+                    return false;
                     throw new NotFoundException("Failed to proccess request: " + path);
                 }
 
@@ -335,7 +344,6 @@ namespace HttpServer.HttpModules
 
                     if (!File.Exists(_cgiApplications[extension]))
                         throw new InternalServerException("Cgi executable not found: " + _cgiApplications[extension]);
-
 
                     string output = CGI.Execute(_cgiApplications[extension], path, request);
 
@@ -582,6 +590,10 @@ namespace HttpServer.HttpModules
         private static void SetCgiEnvironmentVariables(ProcessStartInfo info, IHttpRequest request, string path)
         {
             // not request-specific
+
+            info.EnvironmentVariables["REQUEST_URI"] = request.QueryString["path"].Value;
+
+            info.EnvironmentVariables["HTTP_ACCEPT_ENCODING"] = (request.Headers["Accept-Encoding"]) == null ? "" : request.Headers["Accept-Encoding"];
 
             // The name and version of the information server software answering the request 
             // (and running the gateway). Format: name/version 

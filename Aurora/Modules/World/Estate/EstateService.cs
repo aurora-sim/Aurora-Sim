@@ -648,7 +648,7 @@ namespace Aurora.Modules
                     {
                         agentInfo.OtherAgentInformation.Add("Prelude" + scene.RegionInfo.RegionID,
                                                             OSD.FromInteger((int) IAgentFlags.PastPrelude));
-                        AgentConnector.UpdateAgent(agentInfo); //This only works for standalones... and thats ok
+                        AgentConnector.UpdateAgent(agentInfo);
                     }
                 }
             }

@@ -38,13 +38,15 @@ namespace Aurora.Services.DataService
     public class LocalRegionInfoConnector : IRegionInfoConnector
     {
         private IGenericData GD = null;
+        private IRegistryCore m_registry = null;
         private const string m_regionSettingsRealm = "regionsettings";
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore reg, string defaultConnectionString)
         {
             if (source.Configs["AuroraConnectors"].GetString("RegionInfoConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
+                m_registry = reg;
 
                 if (source.Configs[Name] != null)
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
@@ -67,6 +69,11 @@ namespace Aurora.Services.DataService
 
         public void UpdateRegionInfo(RegionInfo region)
         {
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("RegionInfoChanged", new[] 
+            {
+                GetRegionInfo(region.RegionID),
+                region
+            });
             List<object> Values = new List<object>
                                       {
                                           region.RegionID,

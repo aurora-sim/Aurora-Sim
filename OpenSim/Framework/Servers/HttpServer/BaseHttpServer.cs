@@ -710,7 +710,8 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             try
             {
-                xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
+                if(requestBody.StartsWith("<?xml"))
+                    xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
             }
             catch (XmlException)
             {

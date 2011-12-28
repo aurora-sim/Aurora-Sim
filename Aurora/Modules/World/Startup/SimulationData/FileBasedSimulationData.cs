@@ -243,20 +243,6 @@ namespace Aurora.Modules.FileBasedSimulationData
 
         public virtual void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource)
         {
-            IConfig config = configSource.Configs["FileBasedSimulationData"];
-            if (config != null)
-            {
-                m_loadAppenedFileName = config.GetString("ApendedLoadFileName", m_loadAppenedFileName);
-                m_saveAppenedFileName = config.GetString("ApendedSaveFileName", m_saveAppenedFileName);
-                m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
-                m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
-                m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
-                m_oldSaveDirectory = config.GetString("PreviousBackupDirectory", m_oldSaveDirectory);
-                m_loadDirectory = config.GetString("LoadBackupDirectory", m_loadDirectory);
-                m_saveDirectory = config.GetString("SaveBackupDirectory", m_saveDirectory);
-                m_saveBackupChanges = config.GetBoolean("SaveTimedPreviousBackup", m_keepOldSave);
-                m_timeBetweenBackupSaves = config.GetInt("TimeBetweenBackupSaves", m_timeBetweenBackupSaves);
-            }
             if (File.Exists(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup"))
                 File.Move(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup",
                           m_saveDirectory + newRegionName + m_saveAppenedFileName + ".abackup");
@@ -280,6 +266,14 @@ namespace Aurora.Modules.FileBasedSimulationData
 
         #endregion
 
+        public object RegionInfoChanged(string funcName, object param)
+        {
+            RegionInfo oldRegion = (RegionInfo)((object[])param)[0];
+            RegionInfo newRegion = (RegionInfo)((object[])param)[1];
+            RenameBackupFiles(oldRegion.RegionName, newRegion.RegionName, m_scene.Config);
+            return null;
+        }
+
         /// <summary>
         ///   Read the config for the data loader
         /// </summary>
@@ -287,6 +281,7 @@ namespace Aurora.Modules.FileBasedSimulationData
         /// <param name = "config"></param>
         protected virtual void ReadConfig(IScene scene, IConfig config)
         {
+            scene.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
             if (config != null)
             {
                 m_loadAppenedFileName = config.GetString("ApendedLoadFileName", m_loadAppenedFileName);

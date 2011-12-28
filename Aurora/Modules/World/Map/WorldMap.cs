@@ -937,7 +937,14 @@ namespace Aurora.Modules
             terrain.CreateMapTile(out terraindata, out mapdata);
             if (terraindata != null)
             {
-                UUID newID;
+                UUID newID = UUID.Zero;
+                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != UUID.Zero)
+                {
+                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata, out newID);
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = newID;
+                    changed = true;
+                }
+
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
                 {
                     AssetBase Terrainasset = new AssetBase(
@@ -945,16 +952,14 @@ namespace Aurora.Modules
                         "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
                         AssetType.Simstate,
                         m_scene.RegionInfo.RegionID)
-                        {
-                            Data = terraindata,
-                            Description = m_scene.RegionInfo.RegionName,
-                            Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
-                        };
+                    {
+                        Data = terraindata,
+                        Description = m_scene.RegionInfo.RegionName,
+                        Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                    };
                     newID = m_scene.AssetService.Store(Terrainasset);
                 }
-                else
-                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata, out newID);
-                
+
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != newID)
                 {
                     m_scene.RegionInfo.RegionSettings.TerrainMapImageID = newID;
@@ -964,7 +969,14 @@ namespace Aurora.Modules
 
             if (mapdata != null)
             {
-                UUID newID;
+                UUID newID = UUID.Zero;
+                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != UUID.Zero)
+                {
+                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata, out newID);
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = newID;
+                    changed = true;
+                }
+
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)
                 {
                     AssetBase Mapasset = new AssetBase(
@@ -972,15 +984,13 @@ namespace Aurora.Modules
                         "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
                         AssetType.Simstate,
                         m_scene.RegionInfo.RegionID)
-                            {
-                                Data = mapdata,
-                                Description = m_scene.RegionInfo.RegionName,
-                                Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                    {
+                        Data = mapdata,
+                        Description = m_scene.RegionInfo.RegionName,
+                        Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
                     };
                     newID = m_scene.AssetService.Store(Mapasset);
                 }
-                else
-                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata, out newID);
 
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID != newID)
                 {
@@ -994,7 +1004,7 @@ namespace Aurora.Modules
 
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
-            if(gridRegModule != null)
+            if (gridRegModule != null)
                 gridRegModule.UpdateGridRegion(m_scene);
         }
 

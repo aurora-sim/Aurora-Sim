@@ -96,6 +96,8 @@ namespace OpenSim.Region.CoreModules.World.Land
         private bool m_UpdateDirectoryOnTimer = true;
         private bool m_UpdateDirectoryOnUpdate;
         private Timer m_UpdateDirectoryTimer = new Timer();
+        public UUID GodParcelOwner { get; set; }
+        private string _godParcelOwner = "";
 
         /// <value>
         ///   Local land ids at specified region co-ordinates (region size / 4)
@@ -135,6 +137,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryOnTimer = config.GetBoolean("UpdateOnTimer", m_UpdateDirectoryOnTimer);
                 m_UpdateDirectoryOnUpdate = config.GetBoolean("UpdateOnUpdate", m_UpdateDirectoryOnUpdate);
                 m_minutesBeforeTimer = config.GetInt("MinutesBeforeTimerUpdate", m_minutesBeforeTimer);
+                _godParcelOwner = config.GetString("GodParcelOwner", "");
                 UseDwell = config.GetBoolean("AllowDwell", true);
                 m_usePrivateParcelAsBan = config.GetBoolean("UsePrivateParcelAsBan", m_usePrivateParcelAsBan);
             }
@@ -152,6 +155,15 @@ namespace OpenSim.Region.CoreModules.World.Land
                 m_UpdateDirectoryTimer.Elapsed += UpdateDirectoryTimerElapsed;
                 m_UpdateDirectoryTimer.Start();
             }
+
+            UUID godParcelOwner = UUID.Zero;
+            if (_godParcelOwner != "")
+            {
+                UserAccount acc = m_scene.UserAccountService.GetUserAccount(UUID.Zero, _godParcelOwner);
+                if (acc != null)
+                    godParcelOwner = acc.PrincipalID;
+            }
+            GodParcelOwner = godParcelOwner;
 
             m_scene.EventManager.OnAvatarEnteringNewParcel += EventManagerOnAvatarEnteringNewParcel;
             m_scene.EventManager.OnValidateBuyLand += EventManagerOnValidateLandBuy;
@@ -2183,6 +2195,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelAbandonRequest += ClientOnParcelAbandonRequest;
             client.OnParcelGodForceOwner += ClientOnParcelGodForceOwner;
             client.OnParcelReclaim += ClientOnParcelReclaim;
+            client.OnGodlikeMessage += client_OnGodlikeMessage;
+            client.OnParcelGodMark += client_OnParcelGodMark;
             client.OnParcelInfoRequest += ClientOnParcelInfoRequest;
             client.OnParcelDwellRequest += ClientOnParcelDwellRequest;
             client.OnParcelDeedToGroup += ClientOnParcelDeedToGroup;
@@ -2213,6 +2227,37 @@ namespace OpenSim.Region.CoreModules.World.Land
                     };
                 }*/
                 SendParcelOverlay(client);
+            }
+        }
+
+        void client_OnGodlikeMessage(IClientAPI client, UUID requester, string Method, List<string> Parameter)
+        {
+            if (Method == "claimpublicland")
+            {
+                if (m_scene.Permissions.IsGod(client.AgentId))
+                {
+                    foreach (ILandObject landObject in AllParcels())
+                    {
+                        landObject.LandData.OwnerID = client.AgentId;
+                        landObject.SendLandUpdateToAvatarsOverMe();
+                        landObject.SendLandUpdateToClient(client);
+                    }
+                }
+            }
+        }
+
+        void client_OnParcelGodMark(IClientAPI client, UUID agentID, int ParcelLocalID)
+        {
+            if (m_scene.Permissions.IsGod(client.AgentId))
+            {
+                ILandObject parcel = GetLandObject(ParcelLocalID);
+                if (parcel != null)
+                {
+                    parcel.LandData.OwnerID = GodParcelOwner;
+                    parcel.LandData.Flags |= (uint)ParcelFlags.LindenHome;
+                    parcel.LandData.FirstParty = !parcel.LandData.FirstParty;
+                    parcel.SendLandUpdateToAvatarsOverMe();
+                }
             }
         }
 

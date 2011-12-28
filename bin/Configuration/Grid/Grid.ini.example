@@ -24,6 +24,7 @@
     OfflineMessagesConnector = RemoteConnector
     DirectoryServiceConnector = RemoteConnector
     MuteListConnector = RemoteConnector
+	EmailConnector = RemoteConnector
     
 [Configuration]
     UseRegistrationService = false

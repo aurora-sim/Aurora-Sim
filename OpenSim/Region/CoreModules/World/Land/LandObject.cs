@@ -264,9 +264,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.FindPlaces))
-                    {
                         LandData.Category = args.Category;
-                    }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.ChangeMedia))
                     {
@@ -342,6 +340,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
                     LandData.Flags = args.ParcelFlags;
 
+                    LandData.Status = LandData.OwnerID == m_parcelManagementModule.GodParcelOwner ? ParcelStatus.Abandoned : LandData.AuthBuyerID != UUID.Zero ? ParcelStatus.LeasePending : ParcelStatus.Leased;
+
                     m_parcelManagementModule.UpdateLandObject(this);
 
                     SendLandUpdateToAvatarsOverMe(snap_selection);
@@ -387,7 +387,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             LandData.OwnerID = avatarID;
             LandData.GroupID = groupID;
             LandData.IsGroupOwned = groupOwned;
-            //LandData.auctionID = AuctionID;
+            LandData.AuctionID = 0;
             LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             LandData.ClaimPrice = claimprice;
             LandData.SalePrice = 0;
@@ -543,7 +543,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void SendLandUpdateToAvatarsOverMe()
         {
-            SendLandUpdateToAvatarsOverMe(false);
+            SendLandUpdateToAvatarsOverMe(true);
         }
 
         public void SendLandUpdateToAvatarsOverMe(bool snap_selection)
@@ -553,48 +553,16 @@ namespace OpenSim.Region.CoreModules.World.Land
                                                  if (avatar.IsChildAgent)
                                                      return;
 
-                                                 ILandObject over = null;
-                                                 try
+                                                 if (avatar.CurrentParcel.LandData.LocalID == LandData.LocalID)
                                                  {
-                                                     over =
-                                                         m_parcelManagementModule.GetLandObject(
-                                                             Util.Clamp((int) Math.Round(avatar.AbsolutePosition.X), 0,
-                                                                        (m_scene.RegionInfo.RegionSizeX - 1)),
-                                                             Util.Clamp((int) Math.Round(avatar.AbsolutePosition.Y), 0,
-                                                                        (m_scene.RegionInfo.RegionSizeY - 1)));
-                                                 }
-                                                 catch (Exception)
-                                                 {
-                                                     MainConsole.Instance.Warn("[LAND]: " + "unable to get land at x: " +
-                                                                Util.Clamp((int) Math.Round(avatar.AbsolutePosition.X),
-                                                                           0, (m_scene.RegionInfo.RegionSizeX - 1)) +
-                                                                " y: " +
-                                                                Util.Clamp((int) Math.Round(avatar.AbsolutePosition.Y),
-                                                                           0, (m_scene.RegionInfo.RegionSizeY - 1)));
-                                                 }
+                                                     if (((avatar.CurrentParcel.LandData.Flags & (uint)ParcelFlags.AllowDamage) !=
+                                                          0) ||
+                                                         m_scene.RegionInfo.RegionSettings.AllowDamage)
+                                                         avatar.Invulnerable = false;
+                                                     else
+                                                         avatar.Invulnerable = true;
 
-                                                 if (over != null)
-                                                 {
-                                                     if (over.LandData.LocalID == LandData.LocalID)
-                                                     {
-                                                         if (((over.LandData.Flags & (uint) ParcelFlags.AllowDamage) !=
-                                                              0) ||
-                                                             m_scene.RegionInfo.RegionSettings.AllowDamage)
-                                                             avatar.Invulnerable = false;
-                                                         else
-                                                             avatar.Invulnerable = true;
-
-                                                         SendLandUpdateToClient(snap_selection, avatar.ControllingClient);
-                                                     }
-                                                 }
-                                                 else
-                                                 {
-                                                     MainConsole.Instance.Warn("[LAND]: " + "unable to get land at x: " +
-                                                                Util.Clamp((int) Math.Round(avatar.AbsolutePosition.X),
-                                                                           0, (m_scene.RegionInfo.RegionSizeX - 1)) +
-                                                                " y: " +
-                                                                Util.Clamp((int) Math.Round(avatar.AbsolutePosition.Y),
-                                                                           0, (m_scene.RegionInfo.RegionSizeY - 1)));
+                                                     SendLandUpdateToClient(snap_selection, avatar.ControllingClient);
                                                  }
                                              });
         }

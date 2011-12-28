@@ -161,8 +161,10 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                     }
 
                     UUID newID;
-                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
+                    {
                         item.AssetID = newID;
+                    }
                     else
                         remoteClient.SendAlertMessage("Failed to update notecard asset");
 
@@ -176,7 +178,7 @@ namespace OpenSim.Region.CoreModules.Framework.InventoryAccess
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
                     UUID newID;
-                    if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID))
+                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
                         item.AssetID = newID;
                     else
                         remoteClient.SendAlertMessage("Failed to update script asset");

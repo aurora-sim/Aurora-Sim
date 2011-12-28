@@ -346,18 +346,8 @@ textures 1
 
                 // If something changed in the appearance then queue an appearance save
                 if (texturesChanged || visualParamsChanged)
-                {
-                    if (texturesChanged)
-                    {
-                        MainConsole.Instance.Warn("Textured changed");
-                        QueueAppearanceSave(client.AgentId);
-                    }
-                    else
-                    {
-                        MainConsole.Instance.Warn("Non Textured changed");
-                        QueueAppearanceSave(client.AgentId);
-                    }
-                }
+                    QueueAppearanceSave(client.AgentId);
+
                 appearance.Appearance.Serial++;
             }
             // And always queue up an appearance update to send out

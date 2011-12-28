@@ -14,6 +14,9 @@
     
     ;; Should FreeSwitch be used?
     ;Module = FreeSwitchVoice
+	
+	;; Enable vivox voice
+	;Module = VivoxVoice
 
 [GenericVoice]
     ;; This needs to be disabled if another voice module is being used!

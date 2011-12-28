@@ -375,7 +375,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// <returns></returns>
         public bool UpdateContent(UUID id, byte[] data, out UUID newID)
         {
-            newID = id;
+            newID = UUID.Zero;
             AssetBase asset = Get(id.ToString());
 
             if (asset == null)

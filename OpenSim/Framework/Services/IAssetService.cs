@@ -103,7 +103,7 @@ namespace OpenSim.Services.Interfaces
         UUID Store(AssetBase asset);
 
         /// <summary>
-        ///   Update an asset's content
+        ///   Update an asset's content. Will return false, and UUID.ZERO if it fails
         /// </summary>
         /// Attachments and bare scripts need this!!
         /// <param name = "id"> </param>

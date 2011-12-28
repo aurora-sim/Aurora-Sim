@@ -99,6 +99,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UUID toAgentID = im.toAgentID;
 
+            ISceneChildEntity childPrim = null;
+
             //Look locally first
             foreach (IScene scene in m_Scenes)
             {
@@ -106,6 +108,12 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 if (scene.TryGetScenePresence(toAgentID, out user))
                 {
                     user.ControllingClient.SendInstantMessage(im);
+                    return;
+                }
+                if ((childPrim = scene.GetSceneObjectPart(toAgentID)) != null)
+                {
+                    im.toAgentID = childPrim.OwnerID;
+                    SendInstantMessage(im);
                     return;
                 }
             }
