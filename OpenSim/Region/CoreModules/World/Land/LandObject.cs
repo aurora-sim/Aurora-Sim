@@ -264,9 +264,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.FindPlaces))
-                    {
                         LandData.Category = args.Category;
-                    }
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this, GroupPowers.ChangeMedia))
                     {

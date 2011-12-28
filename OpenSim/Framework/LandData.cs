@@ -223,10 +223,6 @@ namespace OpenSim.Framework
             get { return _category; }
             set {
                 _category = value;
-                if (value == ParcelCategory.Linden)
-                {
-                    FirstParty = true;
-                }
             }
         }
 
