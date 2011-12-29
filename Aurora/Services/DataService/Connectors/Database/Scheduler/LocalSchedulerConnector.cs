@@ -87,11 +87,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         {
             if (SchedulerExist(I.id))
             {
-                m_Gd.Update("SchedulerItem", GetDBValues(I), theFields, new[] { "id" }, new object[] { I.id });
+                m_Gd.Update("Scheduler", GetDBValues(I), theFields, new[] { "id" }, new object[] { I.id });
             }
             else
             {
-                m_Gd.Insert("SchedulerItem", theFields, GetDBValues(I));
+                m_Gd.Insert("Scheduler", theFields, GetDBValues(I));
             }
             return I.id;
         }
@@ -108,14 +108,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public bool SchedulerExist(string id)
         {
-            return m_Gd.Query("id", id, "SchedulerItem", "id").Count >= 1;
+            return m_Gd.Query("id", id, "Scheduler", "id").Count >= 1;
         }
 
 
         public List<SchedulerItem> ToRun()
         {
             List<SchedulerItem> returnValue = new List<SchedulerItem>();
-            IDataReader dr = m_Gd.QueryData("WHERE enabled = 1 ORDER BY runs_next desc", "schudler", string.Join(", ", theFields));
+            IDataReader dr = m_Gd.QueryData("WHERE enabled = 1 ORDER BY runs_next desc", "Scheduler", string.Join(", ", theFields));
             if (dr != null)
             {
                 while (dr.Read())
@@ -129,7 +129,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public SchedulerItem SaveHistory(SchedulerItem I)
         {
             string his_id = UUID.Random().ToString();
-            m_Gd.Insert("schudler_history",
+            m_Gd.Insert("Scheduler_history",
                         new[]
                             {"id", "scheduler_id", "ran_time", "run_time", "is_complete", "complete_time", "reciept"},
                         new object[]
@@ -141,7 +141,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public SchedulerItem SaveHistoryComplete(SchedulerItem I)
         {
-            m_Gd.Update("schudler_history", new object[] { 1, Util.ToUnixTime(I.TimeToRun), "" },
+            m_Gd.Update("Scheduler_history", new object[] { 1, Util.ToUnixTime(I.TimeToRun), "" },
                         new[] { "is_complete", "complete_time", "reciept" }, new[] { "id" },
                         new object[] { I.HistoryLastID });
             return I;
@@ -149,7 +149,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public void SaveHistoryCompleteReciept(string historyID, string reciept)
         {
-            m_Gd.Update("schudler_history", new object[] { 1, Util.ToUnixTime(DateTime.UtcNow), reciept },
+            m_Gd.Update("Scheduler_history", new object[] { 1, Util.ToUnixTime(DateTime.UtcNow), reciept },
                         new[] { "is_complete", "complete_time", "reciept" }, new[] { "id" },
                         new object[] { historyID });
         }
@@ -157,7 +157,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public void HisotryDeleteOld(SchedulerItem I)
         {
             if ((I.id != "") && (I.HistoryLastID != ""))
-                m_Gd.Delete("schudler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");
+                m_Gd.Delete("Scheduler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");
         }
 
         private SchedulerItem LoadFromDataReader(IDataReader dr)
