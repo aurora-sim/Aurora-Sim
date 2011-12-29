@@ -205,7 +205,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = (Query[i + 22] == string.Empty) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
             }
@@ -363,6 +363,46 @@ namespace Aurora.Services.DataService
                 if (region != null)
                 {
                     return uint.Parse(GD.Query(GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category), "searchparcel", "COUNT(ParcelID)")[0]);
+                }
+            }
+            return 0;
+        }
+
+        public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name)
+        {
+            List<LandData> resp = new List<LandData>(0);
+            if (count == 0)
+            {
+                return resp;
+            }
+
+            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
+            {
+                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                if (region != null)
+                {
+                    return Query2LandData(GD.Query(string.Format("RegionID = '{0}' AND Name = '{1}' ORDER BY OwnerID DESC LIMIT {2}, {3}",
+                        RegionID,
+                        name,
+                        start,
+                        count
+                    ), "searchparcel", "*"));
+                }
+            }
+
+            return resp;
+        }
+
+        public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name)
+        {
+            IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
+            {
+                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                if (region != null)
+                {
+                    return uint.Parse(GD.Query(string.Format("RegionID = '{0}' AND Name = '{1}'", RegionID, name), "searchparcel", "COUNT(ParcelID)")[0]);
                 }
             }
             return 0;

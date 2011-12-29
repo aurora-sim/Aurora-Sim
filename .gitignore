@@ -66,6 +66,7 @@ bin/AuroraServerConfiguration/*/*.ini
 bin/AuroraServerConfiguration/*.ini
 bin/Configuration/*/*.ini
 bin/Configuration/*.ini
+bin/MapTiles/*
 Examples/*.dll
 Aurora.build
 Aurora.sln
