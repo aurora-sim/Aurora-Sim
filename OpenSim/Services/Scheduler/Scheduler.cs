@@ -37,7 +37,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    class Scheduler : IScheduleService, IService
+    public class Scheduler : IScheduleService, IService
     {
         public AuroraEventManager EventManager = new AuroraEventManager();
         private ISchedulerDataPlugin m_database;
@@ -72,7 +72,7 @@ namespace OpenSim.Services
         public void FinishedStartup()
         {
             m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
-            if (m_database == null) 
+            if (m_database != null) 
                 m_enabled = true;
 
             if (m_enabled)

@@ -32,33 +32,33 @@ using C5;
 
 namespace Aurora.DataManager.Migration.Migrators.Scheduler
 {
-    public class SchudlerMigrator_1 : Migrator
+    public class SchedulerMigrator_1 : Migrator
     {
-        public SchudlerMigrator_1()
+        public SchedulerMigrator_1()
         {
             Version = new Version(0, 0, 1);
-            MigrationName = "Schudler";
+            MigrationName = "Scheduler";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
-            AddSchema("schudler", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                                                ColDef("fire_function", ColumnTypes.String128, true),
+            AddSchema("Scheduler", ColDefs(ColDef("id", ColumnTypes.String36, true),
+                                                ColDef("fire_function", ColumnTypes.String128),
                                                 ColDef("fire_params", ColumnTypes.String1024),
-                                                ColDef("run_once", ColumnTypes.TinyInt1, true),
-                                                ColDef("run_every", ColumnTypes.Integer30, true),
+                                                ColDef("run_once", ColumnTypes.TinyInt1),
+                                                ColDef("run_every", ColumnTypes.Integer30),
                                                 ColDef("runs_next", ColumnTypes.Integer30, true),
                                                 ColDef("keep_history", ColumnTypes.TinyInt1),
-                                                ColDef("require_reciept", ColumnTypes.TinyInt1, true),
+                                                ColDef("require_reciept", ColumnTypes.TinyInt1),
                                                 ColDef("last_history_id", ColumnTypes.String36),
                                                 ColDef("create_time", ColumnTypes.Integer30),
                                                 ColDef("enabled", ColumnTypes.TinyInt1)
                                             ));
 
-            AddSchema("schudler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
+            AddSchema("Scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
                                                 ColDef("scheduler_id", ColumnTypes.String36, true),
-                                                ColDef("ran_time", ColumnTypes.Integer30, true),
-                                                ColDef("run_time", ColumnTypes.Integer30, true),
-                                                ColDef("reciept", ColumnTypes.String1024, true),
+                                                ColDef("ran_time", ColumnTypes.Integer30),
+                                                ColDef("run_time", ColumnTypes.Integer30),
+                                                ColDef("reciept", ColumnTypes.String1024),
                                                 ColDef("is_complete", ColumnTypes.TinyInt1),
                                                 ColDef("complete_time", ColumnTypes.Integer30)
                                             ));

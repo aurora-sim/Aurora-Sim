@@ -36,7 +36,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 {
-    class LocalSchedulerConnector : ISchedulerDataPlugin
+    public class LocalSchedulerConnector : ISchedulerDataPlugin
     {
         private IGenericData m_Gd;
 
@@ -69,6 +69,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         {
             if (source.Configs["AuroraConnectors"].GetString("SchedulerConnector", "LocalConnector") != "LocalConnector")
                 return;
+
+            if (source.Configs[Name] != null)
+                DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
+            GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
+                                          source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;
             DataManager.DataManager.RegisterPlugin(Name, this);
