@@ -2942,18 +2942,42 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             primContactParam.bounce = _parent_entity.Restitution;
         }
 
-        public void GetContactParam(out AuroraODEPhysicsScene.ContactParameter cp)
+        public void GetContactParam(ActorTypes actorType, ref d.Contact contact)
         {
             if ((_parent != null && _parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
                 VehicleType != (int)Vehicle.TYPE_NONE)
             {
-                cp = vehicleContactParam;
-                return;
+                contact.surface.bounce = vehicleContactParam.bounce;
+                contact.surface.bounce_vel = 0;
+                contact.surface.mu = vehicleContactParam.mu;
             }
             else
             {
-                cp = primContactParam;
-                return;
+                float restSquared = _parent_entity.Restitution * _parent_entity.Restitution * _parent_entity.Restitution;
+                float maxVel = Velocity.Z < -1f ? -1f : Velocity.Z > 1f ? 1f : Velocity.Z;
+                contact.surface.bounce = (maxVel * -(restSquared));//Its about 1:1 surprisingly, even though this constant was for havok
+                if (contact.surface.bounce > 1.5f)
+                    contact.surface.bounce = 0.5f; //Limit the bouncing please...
+                if (contact.surface.bounce <= 0)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                }
+                else
+                    contact.surface.bounce_vel = 0.01f * restSquared * (-maxVel * restSquared); //give it a good amount of bounce and have it depend on how much velocity is there too
+                contact.surface.mu = 800;
+                if (contact.surface.bounce_vel != 0)
+                    contact.surface.mode |= d.ContactFlags.Bounce;
+                else
+                    contact.surface.mode &= d.ContactFlags.Bounce;
+                if (actorType == ActorTypes.Prim)
+                    contact.surface.mu *= _parent_entity.Friction;
+                else if (actorType == ActorTypes.Ground)
+                    contact.surface.mu *= 2;
+                else
+                    contact.surface.mu /= 2;
+                if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
+                    contact.surface.mu *= 0.05f;
             }
         }
 

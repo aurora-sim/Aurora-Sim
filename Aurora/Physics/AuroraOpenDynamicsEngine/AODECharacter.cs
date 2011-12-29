@@ -918,11 +918,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (!flying) //If there is a ground collision, it sets flying to false, so check against real flying
                     {
                         // We're standing or walking on something
+                        if (_target_velocity.X != 0.0f)
+                            vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
+                        if (_target_velocity.Y != 0.0f)
+                            vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
+                        if (_target_velocity.Z != 0.0f)
+                            vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;
+                        /*// We're standing or walking on something
                         vec.X += (_target_velocity.X*movementmult - vel.X)*PID_D*2;
                         vec.Y += (_target_velocity.Y*movementmult - vel.Y)*PID_D*2;
                         if (_target_velocity.Z > 0.0f)
                             vec.Z += (_target_velocity.Z*movementmult - vel.Z)*PID_D;
-                                // + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here
+                                // + (_zeroPosition.Z - tempPos.Z) * PID_P)) _zeropos maybe bad here*/
                     }
                     else
                     {

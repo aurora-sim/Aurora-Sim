@@ -653,7 +653,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
 
-        private IntPtr CreateContacJoint(ref d.ContactGeom geom, float mu, float bounce)
+        private IntPtr CreateContacJoint(ref d.ContactGeom geom)
         {
             if (GlobalContactsArray == IntPtr.Zero || m_global_contactcount >= m_currentmaxContactsbeforedeath)
                 return IntPtr.Zero;
@@ -666,8 +666,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             newGlobalcontact.geom.normal = geom.normal;
             newGlobalcontact.geom.side1 = geom.side1;
             newGlobalcontact.geom.side2 = geom.side2;
-            newGlobalcontact.surface.mu = FrictionScale*mu;
-            newGlobalcontact.surface.bounce = bounce;
 
             IntPtr contact =
                 new IntPtr(GlobalContactsArray.ToInt64() + (m_global_contactcount*d.Contact.unmanagedSizeOf));
@@ -772,10 +770,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #region Contact Loop
 
             IntPtr joint = IntPtr.Zero;
-            ContactParameter contactParam1;
-            ContactParameter contactParam2;
-            float mu;
-            float bounce;
 
             for (int i = 0; i < count; i++)
             {
@@ -842,43 +836,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            ((AuroraODEPrim) p2).GetContactParam(out contactParam2);
+                            ((AuroraODEPrim)p2).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
 
-                            mu = (float) Math.Sqrt(contactParam2.mu*0.5f); // grass friction
-
-                            if ((p2).Velocity.LengthSquared() > 0.1f)
-                                mu *= FrictionMovementMultiplier;
-
-                            bounce = contactParam2.bounce*0.2f; // grass ?
-                            joint = CreateContacJoint(ref curContact, mu, bounce);
+                            joint = CreateContacJoint(ref curContact);
                         }
                         //Can't collide against anything else, agents do their own ground checks
                     }
                     else if ((p1.PhysicsActorType == (int) ActorTypes.Agent) &&
                              (p2.PhysicsActorType == (int) ActorTypes.Agent))
                     {
-                        mu = 0.0f;
-                        bounce = AvatarContactBounce;
+                        GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
 
                         if (m_filterCollisions)
                             _perloopContact.Add(curContact);
 
-                        joint = CreateContacJoint(ref curContact, mu, bounce);
+                        joint = CreateContacJoint(ref curContact);
                     }
 
                     else if (p1.PhysicsActorType == (int) ActorTypes.Prim)
                     {
                         if (p2.PhysicsActorType == (int) ActorTypes.Agent)
                         {
-                            ((AuroraODEPrim) p1).GetContactParam(out contactParam1);
-
-                            mu = 0.0f;
-                            bounce = AvatarContactBounce*contactParam1.bounce;
-
+                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            joint = CreateContacJoint(ref curContact, mu, bounce);
+                            joint = CreateContacJoint(ref curContact);
                         }
                         else if (p2.PhysicsActorType == (int) ActorTypes.Prim)
                         {
@@ -886,16 +869,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            ((AuroraODEPrim) p2).GetContactParam(out contactParam2);
-                            ((AuroraODEPrim) p1).GetContactParam(out contactParam1);
+                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
 
-                            mu = (float) Math.Sqrt(contactParam1.mu*contactParam2.mu);
-                            bounce = contactParam1.bounce*contactParam2.bounce;
-
-                            if (((p2).Velocity - (p1).Velocity).LengthSquared() > 0.1f)
-                                mu *= FrictionMovementMultiplier;
-
-                            joint = CreateContacJoint(ref curContact, mu, bounce);
+                            joint = CreateContacJoint(ref curContact);
                         }
                     }
 
@@ -928,6 +904,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             collision_accounting_events(p1, p2, maxDepthContact);
             m_StatCollisionAccountingTime = Util.EnvironmentTickCountSubtract(CollisionAccountingTime);
+        }
+
+        private void GetContactParam(float mu, float AvatarContactBounce, ref d.Contact newGlobalcontact)
+        {
+            newGlobalcontact.surface.bounce_vel = 0;
+            newGlobalcontact.surface.bounce = AvatarContactBounce;
+            newGlobalcontact.surface.mu = mu;
         }
 
         private bool checkDupe(d.ContactGeom contactGeom, int atype)
