@@ -146,7 +146,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private IntPtr GlobalContactsArray = IntPtr.Zero;
 
         public const d.ContactFlags CommumContactFlags =
-            d.ContactFlags.SoftERP | d.ContactFlags.SoftCFM | d.ContactFlags.Bounce | d.ContactFlags.Approx1;
+            d.ContactFlags.SoftERP | d.ContactFlags.Bounce | d.ContactFlags.Approx1;
 
         private d.Contact newGlobalcontact;
 
