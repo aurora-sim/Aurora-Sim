@@ -69,11 +69,15 @@ namespace Aurora.Services.DataService
 
         public void UpdateRegionInfo(RegionInfo region)
         {
-            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("RegionInfoChanged", new[] 
+            RegionInfo oldRegion = GetRegionInfo(region.RegionID);
+            if (oldRegion != null)
             {
-                GetRegionInfo(region.RegionID),
-                region
-            });
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("RegionInfoChanged", new[] 
+                {
+                    oldRegion,
+                    region
+                });
+            }
             List<object> Values = new List<object>
                                       {
                                           region.RegionID,
