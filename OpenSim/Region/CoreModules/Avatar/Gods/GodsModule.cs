@@ -76,7 +76,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gods
                 {
                     sp.GodLevel = sp.UserLevel;
                     if (sp.GodLevel == 0)
-                        sp.GodLevel = 255;
+                        sp.GodLevel = 250;
 
                     MainConsole.Instance.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
                     sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);

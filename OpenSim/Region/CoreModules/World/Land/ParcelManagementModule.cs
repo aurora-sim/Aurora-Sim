@@ -2254,8 +2254,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 if (parcel != null)
                 {
                     parcel.LandData.OwnerID = GodParcelOwner;
-                    parcel.LandData.Flags |= (uint)ParcelFlags.LindenHome;
                     parcel.LandData.FirstParty = !parcel.LandData.FirstParty;
+                    parcel.LandData.Status = ParcelStatus.Abandoned;
                     parcel.SendLandUpdateToAvatarsOverMe();
                 }
             }

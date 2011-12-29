@@ -30,6 +30,18 @@ namespace HttpServer.HttpModules
         private Index _index;
         private bool _serveUnknownTypes;
 
+
+        public static void CreateHTTPServer(string filePath, string httpServerPath,
+            string PHPCGIPath, uint port, bool allowDirectoryListing)
+        {
+            HttpServer server = new HttpServer();
+            AdvancedFileModule afm = new AdvancedFileModule(httpServerPath, filePath, false, allowDirectoryListing);
+            afm.ServeUnknownTypes(true, "php");
+            afm.AddCgiApplication("php", PHPCGIPath);
+            server.Add(afm);
+            server.Start(IPAddress.Any, (int)port);
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FileModule"/> class.
         /// </summary>

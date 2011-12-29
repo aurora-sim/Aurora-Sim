@@ -143,6 +143,7 @@ namespace Aurora.Modules
                     return;
                 landObject.LandData.SnapshotID = SnapshotID;
                 landObject.LandData.AuctionID = (uint)Util.RandomClass.Next(0, int.MaxValue);
+                landObject.LandData.Status = ParcelStatus.Abandoned;
                 landObject.SendLandUpdateToAvatarsOverMe();
             }
         }

@@ -845,13 +845,18 @@ More configuration options and info can be found in the Configuration/Data/FileB
             m_groups = simStore.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
             if (m_groups.Count != 0 || m_parcels.Count != 0)
             {
-                m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX,
-                                                      m_scene.RegionInfo.RegionSizeY);
-                m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX,
-                                                            m_scene.RegionInfo.RegionSizeY);
-                //Remove these so that we don't get stuck loading them later
-                conn.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
-                simStore.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
+                try
+                {
+                    m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX,
+                                                          m_scene.RegionInfo.RegionSizeY);
+                    m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX,
+                                                                m_scene.RegionInfo.RegionSizeY);
+                    //Remove these so that we don't get stuck loading them later
+                    conn.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
+                    simStore.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
+                }
+                catch
+                { }
                 return true;
             }
             return false;
