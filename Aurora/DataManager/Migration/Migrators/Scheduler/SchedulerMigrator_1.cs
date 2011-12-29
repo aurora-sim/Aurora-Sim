@@ -51,7 +51,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                                                 ColDef("require_reciept", ColumnTypes.TinyInt1),
                                                 ColDef("last_history_id", ColumnTypes.String36),
                                                 ColDef("create_time", ColumnTypes.Integer30),
-                                                ColDef("enabled", ColumnTypes.TinyInt1)
+                                                ColDef("enabled", ColumnTypes.TinyInt1, true)
                                             ));
 
             AddSchema("Scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
