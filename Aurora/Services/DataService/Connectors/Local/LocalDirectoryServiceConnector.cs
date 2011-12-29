@@ -205,7 +205,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = (Query[i + 22] == string.Empty) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
             }
