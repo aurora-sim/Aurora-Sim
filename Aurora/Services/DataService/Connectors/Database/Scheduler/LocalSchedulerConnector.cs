@@ -115,14 +115,24 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public List<SchedulerItem> ToRun()
         {
             List<SchedulerItem> returnValue = new List<SchedulerItem>();
-            IDataReader dr = m_Gd.QueryData("WHERE enabled = 1 AND runs_next < " + Util.ToUnixTime(DateTime.UtcNow) + " ORDER BY runs_next desc", "Scheduler", string.Join(", ", theFields));
-            if (dr != null)
+            IDataReader dr = null;
+            try
             {
-                while (dr.Read())
+                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < " + Util.ToUnixTime(DateTime.UtcNow) + " ORDER BY runs_next desc", "Scheduler", string.Join(", ", theFields));
+                if (dr != null)
                 {
-                    returnValue.Add(LoadFromDataReader(dr));
+                    while (dr.Read())
+                    {
+                        returnValue.Add(LoadFromDataReader(dr));
+                    }
                 }
             }
+            catch{}
+            finally
+            {
+                if (dr != null) dr.Close();
+            }
+            
             return returnValue;
         }
 
