@@ -125,8 +125,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             DTFunctions.Add(info.Name);
             }
             m_scriptApis = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
+            List<string> functionKeys = new List<string>(m_scriptApis.Keys);
+            functionKeys = OpenSim.Framework.StringUtils.SizeSort(functionKeys, false);
             foreach (string function in m_scriptApis.Keys)
-                m_functionRegex += "(" + function + ")";
+                m_functionRegex += function + "|";
+            m_functionRegex = m_functionRegex.Remove(m_functionRegex.Length - 1);
             bool success = RunTest1();
         }
 
@@ -562,32 +565,37 @@ state testing
         {
             Match vectorMatches;
             RegexContains(Script, "<.*,.*,.*>", out vectorMatches);
-            foreach (Match m in vectorMatches.Groups)
+            while ((vectorMatches = vectorMatches.NextMatch()).Success)
             {
-                if (m.Value != "")
-                    Script = Script.Replace(m.Value, "new vector(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+                if (vectorMatches.Value != "")
+                    Script = Script.Replace(vectorMatches.Value, "new vector(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
             }
             RegexContains(Script, "<.*,.*,.*,.*>", out vectorMatches);
-            foreach (Match m in vectorMatches.Groups)
+            while ((vectorMatches = vectorMatches.NextMatch()).Success)
             {
-                if (m.Value != "")
-                    Script = Script.Replace(m.Value, "new rotation(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+                if (vectorMatches.Value != "")
+                    Script = Script.Replace(vectorMatches.Value, "new rotation(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
             }
             RegexContains(Script, "[*]", out vectorMatches);
-            foreach (Match m in vectorMatches.Groups)
+            while ((vectorMatches = vectorMatches.NextMatch()).Success)
             {
-                if (m.Value != "")
-                    Script = Script.Replace(m.Value, "new list(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+                if (vectorMatches.Value != "")
+                    Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
             }
             RegexContains(Script, m_functionRegex, out vectorMatches);
-            foreach (Match m in vectorMatches.Groups)
+            List<string> replacedFunctions = new List<string>();
+            while((vectorMatches = vectorMatches.NextMatch()).Success)
             {
-                IScriptApi api = m_scriptApis[m.Value];
-                string formatedFunction = String.Format("{3}(({0})m_apis[\"{1}\"]).{2}",
-                                          api.InterfaceName,
-                                          api.Name, m.Value,
-                                          DTFunctions.Contains(m.Value) ? "yield return " : "");
-                Script.Replace(m.Value, formatedFunction);
+                if (vectorMatches.Value != "" && !replacedFunctions.Contains(vectorMatches.Value))
+                {
+                    IScriptApi api = m_scriptApis[vectorMatches.Value];
+                    string formatedFunction = String.Format("{3}(({0})m_apis[\"{1}\"]).{2}",
+                                              api.InterfaceName,
+                                              api.Name, vectorMatches.Value,
+                                              DTFunctions.Contains(vectorMatches.Value) ? "yield return " : "");
+                    Script = Script.Replace(vectorMatches.Value, formatedFunction);
+                    replacedFunctions.Add(vectorMatches.Value);
+                }
             }
             Script = Script.Replace("integer", "LSL_Types.LSLInteger");
             Script = Script.Replace("float", "LSL_Types.LSLFloat");

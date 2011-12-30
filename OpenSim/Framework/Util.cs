@@ -1938,6 +1938,17 @@ namespace OpenSim.Framework
                 return len1 - len2;
             }
         }
+
+        public static List<string> SizeSort(List<string> functionKeys, bool smallestToLargest)
+        {
+            functionKeys.Sort((a, b) =>
+                {
+                    return a.Length.CompareTo(b.Length);
+                });
+            if (!smallestToLargest)
+                functionKeys.Reverse();//Flip the order then
+            return functionKeys;
+        }
     }
 
     public class NetworkUtils
