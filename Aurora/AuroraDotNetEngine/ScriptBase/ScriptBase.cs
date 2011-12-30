@@ -604,9 +604,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 m_typeCache = GetType();
             MethodInfo ev = m_typeCache.GetMethod(evName);
             if (ev != null)
-                ev.Invoke(this, parameters);
+                if (ev.ReturnType == typeof(IEnumerator))
+                    return (IEnumerator)ev.Invoke(this, parameters);
+                else
+                    ev.Invoke(this, parameters);
 
-            yield break;
+            return null;
         }
     }
 }

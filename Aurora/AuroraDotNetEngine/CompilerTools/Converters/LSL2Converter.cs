@@ -30,6 +30,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CSharp;
+using System.Text.RegularExpressions;
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -48,7 +49,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private Compiler m_compiler;
         private List<string> DTFunctions;
 
-        #region Event Listing
+        #region Listings
+
+        private List<string> ProtectedCalls = new List<string>(new[]
+            {
+                "for",
+                "while",
+                "do"
+            });
+        private List<string> CalledBeforeProtectedCalls = new List<string>(new[]
+            {
+                "goto"
+            });
 
         private List<string> Events = new List<string>(new[]
             {
@@ -111,7 +123,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             DTFunctions.Add(info.Name);
             }
             
-            bool success = RunTest1();
+            //bool success = RunTest1();
         }
 
         public bool RunTest1()
@@ -127,11 +139,15 @@ string b()
 default { state_entry() { vector a = <0,0,0>; vector b; llSay(0, ""Script running.""); } 
     touch_start(integer number)
     { 
+test:
         for(number = 0; number < 10; number++)
         {
         }
+        for(number = 0; number < 10; number++)
+            llSay(0,""kill me!"");
         llSay(0,""Touched.""); 
         llMessageLinked(-1, 0, ""c"", ""d"");
+goto test;
     }
     link_message(integer num, integer num2, string c, string d)
     {
@@ -194,7 +210,14 @@ state testing
             List<string> csClass = new List<string>();
             Script = Script.Replace("\n", "\r\n");
 
-            string[] lineSplit = ConvertLSLTypes(Script);
+            List<string> GlobalFunctions;
+            string[] lineSplit = ConvertLSLTypes(Script, out GlobalFunctions);
+            Dictionary<string, string[]> EnumerableFunctionInfos = new Dictionary<string, string[]>();
+            foreach (string function in GlobalFunctions)
+            {
+                string[] func = GetInfo(function);
+                EnumerableFunctionInfos[func[1]] = func;
+            }
             List<string> splits = new List<string>();
             List<string> breaksplits = new List<string>();
             foreach (string s in lineSplit)
@@ -211,6 +234,8 @@ state testing
             bool inMethod = false;
             int skipUntil = 0;
             int bracketInsideMethod = 0;
+            List<int> ProtectedBracketLoops = new List<int>();
+            bool AddBracketAfterNextCommand = false;
             foreach (string wword in split)
             {
                 if (i < skipUntil)
@@ -220,11 +245,9 @@ state testing
                 }
                 string word = wword.Replace("\r", "");
                 if (word.StartsWith("//"))
-                {
                     GetUntilBreak(split, breaksplit, i, out skipUntil);
-                    i++;
-                    continue;
-                }
+                else if (word.StartsWith("/*"))
+                    GetUntil(split, "*/", i, out skipUntil);
                 else if (word == "default")
                 {
                     currentState = "default";
@@ -237,7 +260,7 @@ state testing
                         currentState = GetUntilBreak(split, breaksplit, i, out skipUntil).Replace(";", "").Trim();
                         AddToClass(csClass, string.Format(
                             "((ILSL_Api)m_apis[\"ll\"]).state(\"{0}\");",
-                            currentState), split, breaksplit, lineSplit, i, ref map); 
+                            currentState), split, breaksplit, lineSplit, i, ref map);
                     }
                     else
                     {
@@ -260,20 +283,30 @@ state testing
                 }
                 else if (word == "{" || word == "}")
                 {
-                    if(!(word == "{" && bracketInsideMethod == 0 && InState) &&
-                        !(word == "}" && bracketInsideMethod == 1 && InState))
-                        AddToClass(csClass, word,
-                            split, breaksplit, lineSplit, i, ref map);
+                    bool addToClass = !(word == "{" && bracketInsideMethod == 0 && InState) &&
+                        !(word == "}" && bracketInsideMethod == 1 && InState);
                     if (word == "{")
                         bracketInsideMethod++;
                     else
                     {
                         bracketInsideMethod--;
+                        if(ProtectedBracketLoops.Contains(bracketInsideMethod))
+                        {
+                            ProtectedBracketLoops.Remove(bracketInsideMethod);
+                            AddToClass(csClass, GenerateTimeCheck("", true), split, breaksplit, lineSplit, i, ref map);
+                        }
                         if (bracketInsideMethod == (InState ? 1 : 0))
+                        {
+                            //We're inside an enumerable function, add the yield return/break
+                            AddToClass(csClass, GenerateReturn(""), split, breaksplit, lineSplit, i, ref map);
                             inMethod = false;
+                        }
                         if (bracketInsideMethod == 0)
                             InState = false;
                     }
+                    if(addToClass)
+                        AddToClass(csClass, word,
+                            split, breaksplit, lineSplit, i, ref map);
                 }
                 else if (inMethod)
                 {
@@ -282,7 +315,38 @@ state testing
                         GetUntilBreak(split, breaksplit, i, out skipUntil)
                         :
                         GetUntilSemicolanOrBreak(split, breaksplit, i, out skipUntil, out wasSemicolan);
+                    if (wasSemicolan && csLine.StartsWith("return"))
+                        csLine = GenerateReturn(csLine);
                     AddDefaultInitializers(ref csLine);
+                    if (AddBracketAfterNextCommand)
+                    {
+                        AddBracketAfterNextCommand = false;
+                        csLine += "\n }";
+                    }
+
+                    foreach (string call in ProtectedCalls)
+                        if (csLine.StartsWith(call))
+                        {
+                            if (!GetNextWord(split, skipUntil-1).StartsWith("{"))//Someone is trying to do while(TRUE) X();
+                            {
+                                csLine += " { ";
+                                csLine = GenerateTimeCheck(csLine, false);
+                                AddBracketAfterNextCommand = true;
+                            }
+                            else
+                                ProtectedBracketLoops.Add(bracketInsideMethod);//Make sure no loops are created as well
+                        }
+                    foreach (string call in CalledBeforeProtectedCalls)
+                        if (csLine.StartsWith(call))
+                            csLine = GenerateTimeCheck(csLine, true);//Make sure no other loops are created as well
+
+                    string noSpacedLine = csLine.Replace(" ", "");
+                    Match match;
+                    foreach (string[] globFunc in EnumerableFunctionInfos.Values)
+                        if (RegexContains(csLine, GenerateRegex(globFunc[1], int.Parse(globFunc[3])), out match))
+                            csLine = GenerateNewFunction(csLine, globFunc, match);
+
+
                     AddToClass(csClass, csLine,
                             split, breaksplit, lineSplit, i, ref map);
                 }
@@ -291,14 +355,7 @@ state testing
                     bool wasSemicolan;
                     string line = GetUntil(split, ";", ")", i, out skipUntil, out wasSemicolan);
                     if (!wasSemicolan)
-                    {
-                        int spaceCount = line.Substring(0, line.IndexOf('(')).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length - 1;
-                        if (spaceCount == 0)
-                            line = "public void " + line;
-                        else
-                            line = "public " + line;
-                        inMethod = true;
-                    }
+                        GenerateGlobalFunction(ref inMethod, ref line);
                     else
                         AddDefaultInitializers(ref line);
 
@@ -309,7 +366,7 @@ state testing
                 {
                     AddToClass(csClass, "fake", split, breaksplit, lineSplit, i, ref map);
                     m_compiler.AddError(String.Format("({0},{1}): {3}: {2}\n",
-                                             map[csClass.Count-1], 1, "Invalid expression term '" + word + "'", "Error"));
+                                             map[csClass.Count - 1], 1, "Invalid expression term '" + word + "'", "Error"));
                     CompiledScript = "";
                     PositionMap = null;
                     return;
@@ -319,6 +376,120 @@ state testing
 
             PositionMap = map;
             CompiledScript = CSCodeGenerator.CreateCompilerScript(m_compiler, new List<string>(), string.Join("\n", csClass.ToArray()));
+        }
+
+        private string GenerateRegex(string function, int paramCount)
+        {
+            string regex = function + "(| )";
+            regex = GenerateParametersRegex(paramCount, regex);
+            return regex;
+        }
+
+        private static string GenerateParametersRegex(int paramCount, string regex)
+        {
+            regex += "\\(";
+            for (int i = 0; i < paramCount; i++)
+                regex += ".*,";
+            if (paramCount > 0)
+                regex = regex.Remove(regex.Length - 1);
+            regex += "\\)";
+            return regex;
+        }
+
+        private bool RegexContains(string line, string x, out Match match)
+        {
+            /*^a(|.)\(\);*/
+            /*b(|.)\(.*,.*,.*\);*/
+            match = Regex.Match(line, x);
+            return match.Success;
+        }
+
+        private string[] GetInfo(string function)
+        {
+            List<string> sp = new List<string>(function.Substring(0, function.IndexOf('(')).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            int spaceCount = sp.Count - 1;
+            string retType, functionName, param;
+            if (spaceCount == 0)
+                retType = "void";
+            else
+            {
+                retType = sp[0];
+                sp.RemoveAt(0);
+            }
+            functionName = sp[0];
+            int firstPos = function.IndexOf('(');
+            param = function.Substring(firstPos, function.IndexOf(')') - firstPos) + ")";
+            return new[]
+            {
+                retType,
+                functionName,
+                param,
+                (param.Split(',').Length - 1).ToString()
+            };
+        }
+
+        private string GenerateNewFunction(string line, string[] globalFunctionDef, Match match)
+        {
+            string retType = globalFunctionDef[0];
+            string functionName = globalFunctionDef[1];
+            string functionParams = globalFunctionDef[2];
+            int ParamCount = int.Parse(globalFunctionDef[3]);
+
+            Match paramMatch;
+            RegexContains(match.Value, GenerateParametersRegex(ParamCount, ""), out paramMatch);
+
+            string parameters = paramMatch.Value;
+
+            string Mname = OpenSim.Framework.StringUtils.RandomString(10, true);
+            string Exname = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    
+            string newLine = "string " + Exname + " =  \"\";" +
+                                                  "IEnumerator " + Mname + " = " +
+                                                  functionName + parameters +
+                                                  ";" +
+                                                  "while (true) {" +
+                                                  " try {" +
+                                                  "  if(!" + Mname + ".MoveNext())" +
+                                                  "   break;" +
+                                                  "  }" +
+                                                  " catch(Exception ex) " +
+                                                  "  {" +
+                                                  "  " + Exname + " = ex.Message;" +
+                                                  "  }" +
+                                                  " if(" + Exname + " != \"\")" +
+                                                  "   yield return " + Exname + ";" +
+                                                  " else if(" + Mname + ".Current == null || " + Mname +
+                                                           ".Current is DateTime)" +
+                                                  "   yield return " + Mname + ".Current;" +
+                                                  " else break;" +
+                                                  " }";
+            if(retType != "void")
+                newLine += "\n" + line.Replace(functionName + parameters, "(" + retType + ")" + Mname + ".Current");
+            return newLine;
+        }
+
+        private string GenerateTimeCheck(string csLine, bool before)
+        {
+            string check = "if (CheckSlice()) yield return null; ";
+            return before ? check + csLine : csLine + check;
+        }
+
+        private void GenerateGlobalFunction(ref bool inMethod, ref string line)
+        {
+            string[] info = GetInfo(line);
+            inMethod = true;
+            line = "public IEnumerator " + info[1] + info[2];
+        }
+
+        private string GenerateReturn(string csLine)
+        {
+            List<string> split = new List<string>(csLine == "" ? new string[0] :
+                csLine.Trim().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries));
+            if (split.Count < 2)
+                return "yield break;";
+
+            split.RemoveAt(0);
+            return "yield return " + string.Join(" ", split.ToArray());
         }
 
         private void AddDefaultInitializers(ref string csLine)
@@ -379,7 +550,7 @@ state testing
             csline.Add(line);
         }
 
-        private string[] ConvertLSLTypes(string Script)
+        private string[] ConvertLSLTypes(string Script, out List<string> GlobalFunctions)
         {
             Script = Script.Replace("integer", "LSL_Types.LSLInteger");
             Script = Script.Replace("float", "LSL_Types.LSLFloat");
@@ -390,6 +561,9 @@ state testing
             Script = Script.Replace("list", "LSL_Types.list");
             string[] split = Script.Split('\n');
             Dictionary<string, IScriptApi> apiFunctions = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
+            bool beforeStates = true;
+            int bracketCount = 0;
+            GlobalFunctions = new List<string>();
             for (int i = 0; i < split.Length; i++)
             {
                 int subStr = 0;
@@ -424,10 +598,30 @@ state testing
                 {
                     string old = split[i];
                     if ((split[i] = split[i].Replace(function.Key,
-                        String.Format("(({0})m_apis[\"{1}\"]).{2}",
+                        String.Format("{3}(({0})m_apis[\"{1}\"]).{2}",
                                           function.Value.InterfaceName,
-                                          function.Value.Name, function.Key))) != old)
+                                          function.Value.Name, function.Key,
+                                          DTFunctions.Contains(function.Key) ? "yield return " : ""))) != old)
                         break;
+                }
+
+                if (split[i].StartsWith("default") || split[i].StartsWith("state "))
+                    beforeStates = false;
+                else if (split[i].StartsWith("{"))
+                    bracketCount++;
+                else if (split[i].StartsWith("}"))
+                    bracketCount--;
+                else if (split[i].StartsWith("/*"))
+                    bracketCount++;
+                else if (split[i].StartsWith("*/"))
+                    bracketCount--;
+                else if (beforeStates && bracketCount == 0)
+                {
+                    if (!split[i].Trim().EndsWith(";") &&
+                        !split[i].Trim().StartsWith("//") &&
+                        !split[i].Trim().StartsWith("/*") &&
+                        split[i].Trim() != "")
+                        GlobalFunctions.Add(split[i]);
                 }
             }
             return split;
@@ -440,7 +634,7 @@ state testing
 
         private string GenerateEvent(string currentState, string[] split, string[] breaksplit, int i, out int skipUntil)
         {
-            return "public void " + currentState + "_event_" + GetUntil(split, ")", i, out skipUntil);
+            return "public IEnumerator " + currentState + "_event_" + GetUntil(split, ")", i, out skipUntil);
         }
 
         private string GetNextWord(string[] split, int i)
@@ -463,29 +657,29 @@ state testing
                     break;
                 i++;
                 if (i == split.Length)
-                    throw new ParseException("Missing ';'");
+                {
+                    end = int.MaxValue;
+                    return resp;
+                }
             }
             end = ++i;
             return resp;
         }
 
+        private string GetUntil(string[] splita, string[] splitb, string a, string b, int i, out int end, out bool wasA)
+        {
+            int aEnd, bEnd;
+            string aa = "", bb = "";
+            aa = GetUntil(splita, a, i, out aEnd);
+            bb = GetUntil(splitb, b, i, out bEnd);
+            end = aEnd <= bEnd ? aEnd : bEnd;
+            wasA = aEnd <= bEnd;
+            return aEnd <= bEnd ? aa : bb;
+        }
+
         private string GetUntil(string[] split, string a, string b, int i, out int end, out bool wasA)
         {
-            int aEnd = int.MaxValue, bEnd = int.MaxValue;
-            string aa = "", bb = "";
-            try
-            {
-                aa = GetUntil(split, a, i, out aEnd);
-            }
-            catch { }
-            try
-            {
-                bb = GetUntil(split, b, i, out bEnd);
-            }
-            catch { }
-            end = aEnd < bEnd ? aEnd : bEnd;
-            wasA = aEnd < bEnd;
-            return aEnd < bEnd ? aa : bb;
+            return GetUntil(split, split, a, b, i, out end, out wasA);
         }
 
         private string GetUntilSemicolan(string[] split, int i, out int end)
@@ -495,21 +689,7 @@ state testing
 
         private string GetUntilSemicolanOrBreak(string[] split, string[] breaksplit, int i, out int end, out bool wasSemicolan)
         {
-            int semiEnd = int.MaxValue, breakEnd = int.MaxValue;
-            string semi = "", brk = "";
-            try
-            {
-                brk = GetUntilBreak(split, breaksplit, i, out breakEnd);
-            }
-            catch { }
-            try
-            {
-                semi = GetUntilSemicolan(split, i, out semiEnd);
-            }
-            catch { }
-            end = semiEnd < breakEnd ? semiEnd : breakEnd;
-            wasSemicolan = semiEnd < breakEnd;
-            return semiEnd < breakEnd ? semi : brk;
+            return GetUntil(split, breaksplit, ";", "\r", i, out end, out wasSemicolan);
         }
 
         public string Name

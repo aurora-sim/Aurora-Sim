@@ -291,6 +291,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("touch", scriptEvents.touch);
             m_eventFlagsMap.Add("touch_end", scriptEvents.touch_end);
             m_eventFlagsMap.Add("touch_start", scriptEvents.touch_start);
+            m_eventFlagsMap.Add("transaction_event", scriptEvents.touch_start);
             m_eventFlagsMap.Add("object_rez", scriptEvents.object_rez);
         }
 
