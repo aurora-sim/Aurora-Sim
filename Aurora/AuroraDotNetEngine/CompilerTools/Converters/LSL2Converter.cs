@@ -28,6 +28,7 @@
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.CSharp;
 //using Microsoft.JScript;
 
@@ -45,6 +46,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
     {
         private readonly CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private Compiler m_compiler;
+        private List<string> DTFunctions;
+
+        #region Event Listing
+
         private List<string> Events = new List<string>(new[]
             {
                 "at_rot_target",
@@ -84,6 +89,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 "transaction_result"
             });
 
+        #endregion
+
         #region IScriptConverter Members
 
         public string DefaultState
@@ -94,7 +101,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         public void Initialise(Compiler compiler)
         {
             m_compiler = compiler;
-            //bool success = RunTest1();
+            DTFunctions = new List<string>();
+            foreach (IScriptApi api in m_compiler.ScriptEngine.GetAPIs())
+            {
+                MethodInfo[] members = api.GetType().GetMethods();
+                foreach (MethodInfo info in members)
+                    if (info.ReturnType == typeof(DateTime))
+                        if(!DTFunctions.Contains(info.Name))
+                            DTFunctions.Add(info.Name);
+            }
+            
+            bool success = RunTest1();
         }
 
         public bool RunTest1()
@@ -105,11 +122,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 a() { llSay(0, ""a - success""); }
 string b()
 {
-    return ""b - success""asdf;
+    return ""b - success"";
 }
 default { state_entry() { vector a = <0,0,0>; vector b; llSay(0, ""Script running.""); } 
     touch_start(integer number)
     { 
+        for(number = 0; number < 10; number++)
+        {
+        }
         llSay(0,""Touched.""); 
         llMessageLinked(-1, 0, ""c"", ""d"");
     }
@@ -222,6 +242,7 @@ state testing
                     else
                     {
                         currentState = GetNextWord(split, i);
+                        skipUntil = i + 2;
                         InState = true;
                     }
                 }
@@ -256,8 +277,11 @@ state testing
                 }
                 else if (inMethod)
                 {
-                    bool wasSemicolan;
-                    string csLine = split[i] + GetUntilSemicolanOrBreak(split, breaksplit, i, out skipUntil, out wasSemicolan);
+                    bool wasSemicolan = false;
+                    string csLine = split[i].StartsWith("for") ?
+                        GetUntilBreak(split, breaksplit, i, out skipUntil)
+                        :
+                        GetUntilSemicolanOrBreak(split, breaksplit, i, out skipUntil, out wasSemicolan);
                     AddDefaultInitializers(ref csLine);
                     AddToClass(csClass, csLine,
                             split, breaksplit, lineSplit, i, ref map);
@@ -265,7 +289,7 @@ state testing
                 else if (!InState)
                 {
                     bool wasSemicolan;
-                    string line = split[i] + GetUntil(split, ";", ")", i, out skipUntil, out wasSemicolan);
+                    string line = GetUntil(split, ";", ")", i, out skipUntil, out wasSemicolan);
                     if (!wasSemicolan)
                     {
                         int spaceCount = line.Substring(0, line.IndexOf('(')).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length - 1;
@@ -317,7 +341,7 @@ state testing
             else if (csLine.StartsWith("LSL_Types.Vector3"))
             {
                 if (csLine.IndexOf('=') == -1)
-                    csLine = csLine.Remove(csLine.Length - 2) + " = new LSL_Types.Vector(0.0,0.0,0.0);";
+                    csLine = csLine.Remove(csLine.Length - 2) + " = new LSL_Types.Vector3(0.0,0.0,0.0);";
             }
             else if (csLine.StartsWith("LSL_Types.Quaternion"))
             {
@@ -374,15 +398,18 @@ state testing
                 if ((subStr = split[i].IndexOf("<", startIndex)) != -1)
                 {
                     int endSubStr = split[i].IndexOf(">", startIndex);
-                    string subString = split[i].Substring(subStr + 1, endSubStr - subStr - 1);
-                    string[] values = subString.Split(',');
-                    int commaCount = values.Length;
-                    if (commaCount == 3)//Vector
-                        split[i] = split[i].Replace("<" + subString + ">", "new LSL_Types.Vector3(" + subString + ")");
-                    else if (commaCount == 4)//Rotation
-                        split[i] = split[i].Replace("<" + subString + ">", "new LSL_Typers.Quaternion(" + subString + ")");
-                    startIndex = endSubStr;
-                    goto checkAgain;
+                    if (endSubStr != -1)
+                    {
+                        string subString = split[i].Substring(subStr + 1, endSubStr - subStr - 1);
+                        string[] values = subString.Split(',');
+                        int commaCount = values.Length;
+                        if (commaCount == 3)//Vector
+                            split[i] = split[i].Replace("<" + subString + ">", "new LSL_Types.Vector3(" + subString + ")");
+                        else if (commaCount == 4)//Rotation
+                            split[i] = split[i].Replace("<" + subString + ">", "new LSL_Typers.Quaternion(" + subString + ")");
+                        startIndex = endSubStr;
+                        goto checkAgain;
+                    }
                 }
                 if ((subStr = split[i].IndexOf("[", startIndex)) != -1)
                 {
@@ -413,7 +440,7 @@ state testing
 
         private string GenerateEvent(string currentState, string[] split, string[] breaksplit, int i, out int skipUntil)
         {
-            return "public void " + currentState + "_event_" + split[i] + GetUntilBreak(split, breaksplit, i, out skipUntil);
+            return "public void " + currentState + "_event_" + GetUntil(split, ")", i, out skipUntil);
         }
 
         private string GetNextWord(string[] split, int i)
@@ -423,20 +450,7 @@ state testing
 
         private string GetUntilBreak(string[] split, string[] breaksplit, int i, out int end)
         {
-            string resp = " ";
-            int original = i;
-            while (true)
-            {
-                if (i != original)
-                    resp += split[i] + " ";
-                if (breaksplit[i].EndsWith("\r"))
-                    break;
-                i++;
-                if (i == split.Length)
-                    throw new ParseException("Failed miserably");
-            }
-            end = i + 1;
-            return resp;
+            return GetUntil(breaksplit, "\r", i, out end);
         }
 
         private string GetUntil(string[] split, string character, int i, out int end)
@@ -476,18 +490,7 @@ state testing
 
         private string GetUntilSemicolan(string[] split, int i, out int end)
         {
-            string resp = "";
-            while (true)
-            {
-                if (split[i].EndsWith(";"))
-                    break;
-                resp += split[i] + " ";
-                i++;
-                if (i == split.Length)
-                    throw new ParseException("Missing ';'");
-            }
-            end = ++i;
-            return resp;
+            return GetUntil(split, ";", i, out end);
         }
 
         private string GetUntilSemicolanOrBreak(string[] split, string[] breaksplit, int i, out int end, out bool wasSemicolan)
