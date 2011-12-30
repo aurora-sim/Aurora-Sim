@@ -65,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private string DefaultCompileLanguage;
         private string FilePrefix;
-        private Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap;
+        private object PositionMap;
         private bool WriteScriptSourceToDebugFile;
 
         private List<IScriptConverter> converters = new List<IScriptConverter>();
@@ -314,7 +314,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 language = convert.Name;
             }
 #endif
-
             if (!AllowedCompilers.ContainsKey(language))
             {
                 // Not allowed to compile to this language!
@@ -333,7 +332,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             AllowedCompilers.TryGetValue(language, out converter);
-
             converter.Convert(Script, out compileScript, out PositionMap);
         }
 
@@ -546,110 +544,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     // Show 5 errors max, but check entire list for errors
 
                     string errtext = String.Empty;
+                    string text = CompErr.ErrorText;
+                    int LineN = 0;
+                    int CharN = 0;
+                    converter.FindErrorLine(CompErr, PositionMap, originalScript, out LineN, out CharN);
+                    //This will crash some viewers if the pos is 0,0!
+                    if (LineN <= 0 && CharN <= 0)
+                    {
+                        CharN = 1;
+                        LineN = 1;
+                    }
 
+
+                    // The Second Life viewer's script editor begins
+                    // countingn lines and columns at 0, so we subtract 1.
+                    errtext += String.Format("({0},{1}): {3}: {2}\n",
+                                             LineN, CharN, text, severity);
                     if (severity == "Error")
-                    {
-                        string text = CompErr.ErrorText;
-                        int LineN = 0;
-                        int CharN = 0;
-                        // Use LSL type names
-                        if (converter.Name == "lsl")
-                        {
-                            text = ReplaceTypes(CompErr.ErrorText);
-                            text = CleanError(text);
-                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            LineN = lslPos.Key - 1;
-                            CharN = lslPos.Value - 1;
-                            if (LineN <= 0 && CharN != 0)
-                            {
-                                string[] lines = originalScript.Split('\n');
-                                int charCntr = 0;
-                                int lineCntr = 0;
-                                foreach (string line in lines)
-                                {
-                                    if (charCntr + line.Length > CharN)
-                                    {
-                                        //Its in this line
-                                        CharN -= charCntr;
-                                        LineN = lineCntr;
-                                        break;
-                                    }
-                                    charCntr += line.Length - 1;
-                                    lineCntr++;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            LineN = CompErr.Line;
-                            CharN = CompErr.Column;
-                        }
-
-                        //This will crash some viewers if the pos is 0,0!
-                        if (LineN <= 0 && CharN <= 0)
-                        {
-                            CharN = 1;
-                            LineN = 1;
-                        }
-
-
-                        // The Second Life viewer's script editor begins
-                        // countingn lines and columns at 0, so we subtract 1.
-                        errtext += String.Format("({0},{1}): {3}: {2}\n",
-                                                 LineN, CharN, text, severity);
                         AddError(errtext);
-                    }
                     else
-                    {
-                        string text = CompErr.ErrorText;
-                        int LineN = 0;
-                        int CharN = 0;
-                        // Use LSL type names
-                        if (converter.Name == "lsl")
-                        {
-                            text = ReplaceTypes(CompErr.ErrorText);
-                            text = CleanError(text);
-                            lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
-                            LineN = lslPos.Key - 1;
-                            CharN = lslPos.Value - 1;
-                            if (LineN <= 0 && CharN != 0)
-                            {
-                                string[] lines = originalScript.Split('\n');
-                                int charCntr = 0;
-                                int lineCntr = 0;
-                                foreach (string line in lines)
-                                {
-                                    if (charCntr + line.Length > CharN)
-                                    {
-                                        //Its in this line
-                                        CharN -= charCntr;
-                                        LineN = lineCntr;
-                                        break;
-                                    }
-                                    charCntr += line.Length - 1;
-                                    lineCntr++;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            LineN = CompErr.Line;
-                            CharN = CompErr.Column;
-                        }
-
-                        //This will crash some viewers if the pos is 0,0!
-                        if (LineN == 0 && CharN == 0)
-                        {
-                            CharN = 1;
-                            LineN = 1;
-                        }
-
-                        // The Second Life viewer's script editor begins
-                        // countingn lines and columns at 0, so we subtract 1.
-                        errtext += String.Format("({0},{1}): {3}: {2}\n",
-                                                 LineN, CharN, text, severity);
                         AddWarning(errtext);
-                    }
                 }
             }
             results = null;
@@ -676,106 +590,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         internal void FinishCompile(ScriptData scriptData, IScript Script)
         {
             FindConverterForScript(scriptData.Source).FinishCompile(m_scriptEngine, scriptData, Script);
-        }
-
-        public static KeyValuePair<int, int> FindErrorPosition(int line,
-                                                               int col, Dictionary<KeyValuePair<int, int>,
-                                                                            KeyValuePair<int, int>> positionMap)
-        {
-            if (positionMap == null || positionMap.Count == 0)
-                return new KeyValuePair<int, int>(line, col);
-
-            KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
-
-            if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
-                                        out ret))
-                return ret;
-
-            List<KeyValuePair<int, int>> sorted =
-                new List<KeyValuePair<int, int>>(positionMap.Keys);
-
-            sorted.Sort(new kvpSorter());
-
-            int l = 1;
-            int c = 1;
-
-            foreach (KeyValuePair<int, int> cspos in sorted)
-            {
-                if (cspos.Key >= line)
-                {
-                    if (cspos.Key > line)
-                        return new KeyValuePair<int, int>(l, c);
-                    if (cspos.Value > col)
-                        return new KeyValuePair<int, int>(l, c);
-                    c = cspos.Value;
-                    if (c == 0)
-                        c++;
-                }
-                else
-                {
-                    l = cspos.Key;
-                }
-            }
-            return new KeyValuePair<int, int>(l, c);
-        }
-
-        private string ReplaceTypes(string message)
-        {
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString",
-                "string");
-
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger",
-                "integer");
-
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat",
-                "float");
-
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list",
-                "list");
-
-            return message;
-        }
-
-        private string CleanError(string message)
-        {
-            //Remove these long strings
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass.",
-                "");
-            message = message.Replace(
-                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.",
-                "");
-            if (message.Contains("The best overloaded method match for"))
-            {
-                string[] messageSplit = message.Split('\'');
-                string Function = messageSplit[1];
-                string[] FunctionSplit = Function.Split('(');
-                string FunctionName = FunctionSplit[0];
-                string Arguments = FunctionSplit[1].Split(')')[0];
-                message = "Incorrect argument in " + FunctionName + ", arguments should be " + Arguments + "\n";
-            }
-            if (message == "Unexpected EOF")
-            {
-                message = "Missing one or more }." + "\n";
-            }
-            return message;
-        }
-
-        private class kvpSorter : IComparer<KeyValuePair<int, int>>
-        {
-            #region IComparer<KeyValuePair<int,int>> Members
-
-            public int Compare(KeyValuePair<int, int> a,
-                               KeyValuePair<int, int> b)
-            {
-                return a.Key.CompareTo(b.Key);
-            }
-
-            #endregion
         }
 
         #endregion

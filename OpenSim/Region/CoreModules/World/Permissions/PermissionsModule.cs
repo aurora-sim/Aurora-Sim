@@ -813,6 +813,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             switch (scriptType)
             {
                 case "lsl":
+                case "lsl2":
                     if ((m_allowedLSLScriptCompilers == UserSet.Administrators && !IsAdministrator(ownerUUID)) ||
                         (m_allowedLSLScriptCompilers == UserSet.ParcelOwners &&
                          !GenericParcelPermission(ownerUUID, scene.GetScenePresence(ownerUUID).AbsolutePosition, 0)) ||
@@ -867,7 +868,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     }
                     break;
             }
-            return (false);
+            return false;
         }
 
         private bool CanPushObject(UUID userID, ILandObject parcel)

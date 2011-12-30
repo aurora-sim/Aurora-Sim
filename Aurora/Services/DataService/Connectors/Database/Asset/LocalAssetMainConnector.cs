@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (ExistsAsset(asset.ID))
                 {
                     AssetBase oldAsset = GetAsset(asset.ID);
-                    if ((oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
+                    if (oldAsset == null || (oldAsset.Flags & AssetFlags.Rewritable) == AssetFlags.Rewritable)
                     {
                         MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, overwriting - " + asset.ID);
                         Delete(asset.ID, true);

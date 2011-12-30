@@ -303,9 +303,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             m_allMethods.Clear();
         }
 
-        private string CreateCompilerScript(string ScriptClass)
+        public static int GetHeaderCount(Compiler compiler)
+        {
+            int i = 0;
+            foreach (IScriptApi api in compiler.ScriptEngine.GetAPIs())
+                foreach (string nameSpace in api.NamespaceAdditions)
+                    i++;
+            return 13 + i;
+        }
+
+        public static string CreateCompilerScript(Compiler compiler, 
+            List<string> MethodsToAdd, string ScriptClass)
         {
             string compiledScript = "";
+            foreach (IScriptApi api in compiler.ScriptEngine.GetAPIs())
+                foreach (string nameSpace in api.NamespaceAdditions)
+                    compiledScript += "using " + nameSpace + ";\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine;\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n";
@@ -314,9 +327,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             compiledScript += "using System.Collections;\n";
             compiledScript += "using System.Reflection;\n";
             compiledScript += "using System.Timers;\n";
-            foreach (IScriptApi api in m_compiler.ScriptEngine.GetAPIs())
-                foreach (string nameSpace in api.NamespaceAdditions)
-                    compiledScript += "using " + nameSpace + ";\n";
 
             compiledScript += "namespace Script\n";
             compiledScript += "{\n";
@@ -407,7 +417,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             returnstring = returnstring.Replace("\r", "");
 
             CheckEventCasts(returnstring);
-            return CreateCompilerScript(returnstring);
+            return CreateCompilerScript(m_compiler, MethodsToAdd, returnstring);
         }
 
         private string GenerateFireEventMethod()

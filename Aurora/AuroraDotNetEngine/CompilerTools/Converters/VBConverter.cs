@@ -49,7 +49,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         public void Convert(string Script, out string CompiledScript,
-                            out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+                            out object PositionMap)
         {
             // Remove the //vb chars
             Script = Script.Substring(4, Script.Length - 4);
@@ -106,6 +106,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
+        }
+
+        public void FindErrorLine(CompilerError CompErr, object PositionMap, string script, out int LineN, out int CharN)
+        {
+            LineN = CompErr.Line;
+            CharN = CompErr.Column;
         }
 
         #endregion

@@ -53,7 +53,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         public void Convert(string Script, out string CompiledScript,
-                            out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+                            out object PositionMap)
         {
             // Its LSL, convert it to C#
             LSL_Converter = new CSCodeGenerator(m_compiler);
@@ -113,6 +113,133 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
+        }
+
+        public void FindErrorLine(CompilerError CompErr, object map, string script, out int LineN, out int CharN)
+        {
+            Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap = (Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>>)map;
+            string text = ReplaceTypes(CompErr.ErrorText);
+            text = CleanError(text);
+            KeyValuePair<int, int> lslPos = FindErrorPosition(CompErr.Line, CompErr.Column, PositionMap);
+            LineN = lslPos.Key - 1;
+            CharN = lslPos.Value - 1;
+            if (LineN <= 0 && CharN != 0)
+            {
+                string[] lines = script.Split('\n');
+                int charCntr = 0;
+                int lineCntr = 0;
+                foreach (string line in lines)
+                {
+                    if (charCntr + line.Length > CharN)
+                    {
+                        //Its in this line
+                        CharN -= charCntr;
+                        LineN = lineCntr;
+                        break;
+                    }
+                    charCntr += line.Length - 1;
+                    lineCntr++;
+                }
+            }
+        }
+        public static KeyValuePair<int, int> FindErrorPosition(int line,
+                                                               int col, Dictionary<KeyValuePair<int, int>,
+                                                                            KeyValuePair<int, int>> positionMap)
+        {
+            if (positionMap == null || positionMap.Count == 0)
+                return new KeyValuePair<int, int>(line, col);
+
+            KeyValuePair<int, int> ret = new KeyValuePair<int, int>();
+
+            if (positionMap.TryGetValue(new KeyValuePair<int, int>(line, col),
+                                        out ret))
+                return ret;
+
+            List<KeyValuePair<int, int>> sorted =
+                new List<KeyValuePair<int, int>>(positionMap.Keys);
+
+            sorted.Sort(new kvpSorter());
+
+            int l = 1;
+            int c = 1;
+
+            foreach (KeyValuePair<int, int> cspos in sorted)
+            {
+                if (cspos.Key >= line)
+                {
+                    if (cspos.Key > line)
+                        return new KeyValuePair<int, int>(l, c);
+                    if (cspos.Value > col)
+                        return new KeyValuePair<int, int>(l, c);
+                    c = cspos.Value;
+                    if (c == 0)
+                        c++;
+                }
+                else
+                {
+                    l = cspos.Key;
+                }
+            }
+            return new KeyValuePair<int, int>(l, c);
+        }
+
+        private string ReplaceTypes(string message)
+        {
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString",
+                "string");
+
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger",
+                "integer");
+
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat",
+                "float");
+
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.list",
+                "list");
+
+            return message;
+        }
+
+        private string CleanError(string message)
+        {
+            //Remove these long strings
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.Runtime.ScriptBaseClass.",
+                "");
+            message = message.Replace(
+                "Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.",
+                "");
+            if (message.Contains("The best overloaded method match for"))
+            {
+                string[] messageSplit = message.Split('\'');
+                string Function = messageSplit[1];
+                string[] FunctionSplit = Function.Split('(');
+                string FunctionName = FunctionSplit[0];
+                string Arguments = FunctionSplit[1].Split(')')[0];
+                message = "Incorrect argument in " + FunctionName + ", arguments should be " + Arguments + "\n";
+            }
+            if (message == "Unexpected EOF")
+            {
+                message = "Missing one or more }." + "\n";
+            }
+            return message;
+        }
+
+        private class kvpSorter : IComparer<KeyValuePair<int, int>>
+        {
+            #region IComparer<KeyValuePair<int,int>> Members
+
+            public int Compare(KeyValuePair<int, int> a,
+                               KeyValuePair<int, int> b)
+            {
+                return a.Key.CompareTo(b.Key);
+            }
+
+            #endregion
         }
 
         #endregion

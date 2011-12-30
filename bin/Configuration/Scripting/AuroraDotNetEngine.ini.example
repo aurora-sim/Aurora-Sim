@@ -66,7 +66,7 @@
     ;; Valid languages are: lsl, cs, js, yp, ascript, and vb
     ;; *warning*, non lsl languages have access to static methods such as System.IO.File. As long as the 'AppDomainPermissions' option is set properly (Internet or higher), this should not be very risky, but still enable at your own risk.
     ;; Default is lsl.
-    AllowedCompilers = lsl
+    AllowedCompilers = lsl, lsl2
 
     ;; Compile scripts with debugging
     ;; Probably a thousand times slower, but gives you a line number when something goes wrong.

@@ -52,7 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         }
 
         public void Convert(string Script, out string CompiledScript,
-                            out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap)
+                            out object PositionMap)
         {
             CompiledScript = CreateCompilerScript(Script);
             PositionMap = null;
@@ -132,6 +132,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             InitializeMRM(plugin, data, mmb, data.Part.LocalId, data.ItemID);
             mmb.Start();
+        }
+
+        public void FindErrorLine(CompilerError CompErr, object PositionMap, string script, out int LineN, out int CharN)
+        {
+            LineN = CompErr.Line;
+            CharN = CompErr.Column;
         }
 
         #endregion

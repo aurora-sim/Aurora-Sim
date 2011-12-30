@@ -2277,16 +2277,12 @@ namespace OpenSim.Region.Framework.Scenes
                     return new ArrayList();
                 }
 
-                AssetBase asset = new AssetBase(UUID.Random(), item.Name, AssetType.LSLText,
-                                                remoteClient.AgentId) {Description = item.Description, Data = data};
-                asset.ID = m_scene.AssetService.Store(asset);
-
+                UUID newID;
                 // Update item with new asset
-                item.AssetID = asset.ID;
-
-                if (part.ParentEntity.UpdateInventoryItem(item))
-                    if (item.InvType == (int)InventoryType.LSL)
-                        remoteClient.SendAgentAlertMessage("Script saved", false);
+                if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID) && newID == UUID.Zero)
+                    remoteClient.SendAgentAlertMessage("Failed to save your item", false);
+                else
+                    item.AssetID = newID;
 
                 // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
                 ArrayList errors = new ArrayList();

@@ -5086,26 +5086,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             foreach (ISceneChildEntity part in parts)
             {
-                TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)((ICloneable)part.TaskInventory).Clone();
-                foreach (TaskInventoryItem item in itemsDictionary.Values)
-                {
-                    if (item.Type == ScriptBaseClass.INVENTORY_SCRIPT)
-                    {
-                        UUID partItemID = item.ItemID;
-                        int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentEntity.ChildrenEntities().Count == 1)
-                            linkNumber = 0;
+                int linkNumber = m_host.LinkNum;
+                if (m_host.ParentEntity.ChildrenEntities().Count == 1)
+                    linkNumber = 0;
 
-                        object[] resobj = new object[]
+                object[] resobj = new object[]
                                   {
                                       new LSL_Integer(linkNumber), new LSL_Integer(num), new LSL_String(msg), new LSL_String(id)
                                   };
-
-                        m_ScriptEngine.PostScriptEvent(partItemID, part.UUID,
-                                new EventParams("link_message",
-                                resobj, new DetectParams[0]), EventPriority.FirstStart);
-                    }
-                }
+                m_ScriptEngine.PostObjectEvent(part.UUID, "link_message", resobj);
             }
         }
 

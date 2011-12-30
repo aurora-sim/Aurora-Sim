@@ -60,7 +60,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <param name = "CompiledScript">The converted script</param>
         /// <param name = "PositionMap">LSL only</param>
         void Convert(string Script, out string CompiledScript,
-                     out Dictionary<KeyValuePair<int, int>, KeyValuePair<int, int>> PositionMap);
+                     out object PositionMap);
 
         /// <summary>
         ///   Compile the given script that was converted with this module
@@ -78,5 +78,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <param name = "data"></param>
         /// <param name = "Script"></param>
         void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script);
+
+        /// <summary>
+        /// Find the line that is erroring out in the script
+        /// </summary>
+        /// <param name="CompErr"></param>
+        /// <param name="PositionMap"></param>
+        /// <param name="script"></param>
+        /// <param name="LineN"></param>
+        /// <param name="CharN"></param>
+        void FindErrorLine(CompilerError CompErr, object PositionMap, string script, out int LineN, out int CharN);
     }
 }
