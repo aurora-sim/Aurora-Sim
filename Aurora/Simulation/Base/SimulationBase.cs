@@ -191,7 +191,8 @@ namespace Aurora.Simulation.Base
         public virtual void Startup()
         {
             MainConsole.Instance.Warn("====================================================================");
-            MainConsole.Instance.Warn("========================= STARTING AURORA =========================");
+            MainConsole.Instance.Warn(string.Format("====================== STARTING AURORA ({0}) ======================", 
+                (IntPtr.Size == 4 ? "x86" : "x64")));
             MainConsole.Instance.Warn("====================================================================");
             MainConsole.Instance.Warn("[AuroraStartup]: Version: " + Version + "\n");
 
