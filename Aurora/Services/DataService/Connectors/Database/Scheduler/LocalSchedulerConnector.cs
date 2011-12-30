@@ -72,7 +72,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
             if (source.Configs[Name] != null)
                 DefaultConnectionString = source.Configs[Name].GetString("ConnectionString", DefaultConnectionString);
-            GenericData.ConnectToDatabase(DefaultConnectionString, "Scheduler",
+            GenericData.ConnectToDatabase(DefaultConnectionString, "scheduler",
                                           source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;
@@ -87,11 +87,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         {
             if (SchedulerExist(I.id))
             {
-                m_Gd.Update("Scheduler", GetDBValues(I), theFields, new[] { "id" }, new object[] { I.id });
+                m_Gd.Update("scheduler", GetDBValues(I), theFields, new[] { "id" }, new object[] { I.id });
             }
             else
             {
-                m_Gd.Insert("Scheduler", theFields, GetDBValues(I));
+                m_Gd.Insert("scheduler", theFields, GetDBValues(I));
             }
             return I.id;
         }
@@ -108,7 +108,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public bool SchedulerExist(string id)
         {
-            return m_Gd.Query("id", id, "Scheduler", "id").Count >= 1;
+            return m_Gd.Query("id", id, "scheduler", "id").Count >= 1;
         }
 
 
@@ -118,7 +118,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             IDataReader dr = null;
             try
             {
-                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < " + Util.ToUnixTime(DateTime.UtcNow) + " ORDER BY runs_next desc", "Scheduler", string.Join(", ", theFields));
+                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < " + Util.ToUnixTime(DateTime.UtcNow) + " ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
                 if (dr != null)
                 {
                     while (dr.Read())
@@ -139,7 +139,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public SchedulerItem SaveHistory(SchedulerItem I)
         {
             string his_id = UUID.Random().ToString();
-            m_Gd.Insert("Scheduler_history",
+            m_Gd.Insert("scheduler_history",
                         new[]
                             {"id", "scheduler_id", "ran_time", "run_time", "is_complete", "complete_time", "reciept"},
                         new object[]
@@ -151,7 +151,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public SchedulerItem SaveHistoryComplete(SchedulerItem I)
         {
-            m_Gd.Update("Scheduler_history", new object[] { 1, Util.ToUnixTime(I.TimeToRun), "" },
+            m_Gd.Update("scheduler_history", new object[] { 1, Util.ToUnixTime(I.TimeToRun), "" },
                         new[] { "is_complete", "complete_time", "reciept" }, new[] { "id" },
                         new object[] { I.HistoryLastID });
             return I;
@@ -167,7 +167,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public void HisotryDeleteOld(SchedulerItem I)
         {
             if ((I.id != "") && (I.HistoryLastID != ""))
-                m_Gd.Delete("Scheduler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");
+                m_Gd.Delete("scheduler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");
         }
 
         private SchedulerItem LoadFromDataReader(IDataReader dr)
