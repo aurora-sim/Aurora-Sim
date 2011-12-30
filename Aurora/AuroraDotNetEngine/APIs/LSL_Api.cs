@@ -509,42 +509,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Sin(f);
+            return Math.Sin(f);
         }
 
         public LSL_Float llCos(double f)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Cos(f);
+            return Math.Cos(f);
         }
 
         public LSL_Float llTan(double f)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Tan(f);
+            return Math.Tan(f);
         }
 
         public LSL_Float llAtan2(double x, double y)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Atan2(x, y);
+            return Math.Atan2(x, y);
         }
 
         public LSL_Float llSqrt(double f)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Sqrt(f);
+            return Math.Sqrt(f);
         }
 
         public LSL_Float llPow(double fbase, double fexponent)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Pow(fbase, fexponent);
+            return Math.Pow(fbase, fexponent);
         }
 
         public LSL_Integer llAbs(int i)
@@ -554,14 +554,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             if (i == Int32.MinValue)
                 return i;
-            return (int)Math.Abs(i);
+            return Math.Abs(i);
         }
 
         public LSL_Float llFabs(double f)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Abs(f);
+            return Math.Abs(f);
         }
 
         public LSL_Float llFrand(double mag)
@@ -1296,8 +1296,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             float baseheight = heightmap[(int)pos.X, (int)pos.Y];
 
             //Calculate the difference between the actual coordinates and the integer coordinates
-            float xdiff = pos.X - (float)((int)pos.X);
-            float ydiff = pos.Y - (float)((int)pos.Y);
+            float xdiff = pos.X - (int)pos.X;
+            float ydiff = pos.Y - (int)pos.Y;
 
             //Use the equation of the tangent plane to adjust the height to account for slope
 
@@ -1356,6 +1356,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     ISceneEntity group = m_host.ParentEntity;
                     if (group == null)
                         return;
+#if (!ISWIN)
                     bool allow = true;
                     foreach (ISceneChildEntity part in group.ChildrenEntities ())
                     {
@@ -1372,6 +1373,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             }
                         }
                     }
+#else
+                    bool allow = !(from part in @group.ChildrenEntities()
+                                   let WSModule = @group.Scene.RequestModuleInterface<IOpenRegionSettingsModule>()
+                                   where WSModule != null && WSModule.MaximumPhysPrimScale != -1
+                                   let tmp = part.Scale
+                                   where
+                                       tmp.X > WSModule.MaximumPhysPrimScale || tmp.Y > WSModule.MaximumPhysPrimScale ||
+                                       tmp.Z > WSModule.MaximumPhysPrimScale
+                                   select WSModule).Any();
+#endif
+
 
                     if (!allow)
                         return;
@@ -1607,7 +1619,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     tex.DefaultTexture.TexMapType = textype;
                 }
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -1632,7 +1643,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     tex.DefaultTexture.Glow = glow;
                 }
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -1682,7 +1692,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     tex.DefaultTexture.Bump = bump;
                 }
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -1707,7 +1716,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.Fullbright = bright;
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -1727,12 +1735,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int i;
                 double sum = 0.0;
                 for (i = 0 ; i < GetNumberOfSides(part); i++)
-                    sum += (double)tex.GetFace((uint)i).RGBA.A;
+                    sum += tex.GetFace((uint)i).RGBA.A;
                 return sum;
             }
             if (face >= 0 && face < GetNumberOfSides(part))
             {
-                return (double)tex.GetFace((uint)face).RGBA.A;
+                return tex.GetFace((uint)face).RGBA.A;
             }
             return 0.0;
         }
@@ -1922,7 +1930,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     rgb.z += texcolor.B;
                 }
 
-                float tmp = 1f / (float)ns;
+                float tmp = 1f / ns;
                 rgb.x *= tmp;
                 rgb.y *= tmp;
                 rgb.z *= tmp;
@@ -1994,7 +2002,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.TextureID = textureID;
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -2033,7 +2040,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 tex.DefaultTexture.RepeatU = (float)u;
                 tex.DefaultTexture.RepeatV = (float)v;
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -2071,7 +2077,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 tex.DefaultTexture.OffsetU = (float)u;
                 tex.DefaultTexture.OffsetV = (float)v;
                 part.UpdateTexture(tex);
-                return;
             }
         }
 
@@ -2132,13 +2137,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_host.TaskInventory.TryGetValue(texface.TextureID, out item);
                 if (item != null)
                     return item.Name.ToString();
-                else
-                    return texface.TextureID.ToString();
+                return texface.TextureID.ToString();
             }
-            else
-            {
-                return String.Empty;
-            }
+            return String.Empty;
         }
 
         public DateTime llSetPos(LSL_Vector pos)
@@ -2157,8 +2158,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (llVecDist(start, end) > 10.0f * m_ScriptDistanceFactor)
                 return start + m_ScriptDistanceFactor * 10.0f * llVecNorm(end - start);
-            else
-                return end;
+            return end;
         }
 
         protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos)
@@ -2173,7 +2173,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ground = heightmap.GetNormalizedGroundHeight((int)(float)targetPos.x, (int)(float)targetPos.y);
             if (part.ParentEntity == null)
                 return;
-            else if (part.ParentEntity.RootChild == part)
+            if (part.ParentEntity.RootChild == part)
             {
                 ISceneEntity parent = part.ParentEntity;
                 if (!part.IsAttachment)
@@ -2532,7 +2532,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)((DateTime.Now.TimeOfDay.TotalMilliseconds / 1000) % (3600 * 4));
+            return (DateTime.Now.TimeOfDay.TotalMilliseconds / 1000) % (3600 * 4);
         }
 
         public LSL_Float llGetWallclock()
@@ -2547,7 +2547,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
             TimeSpan ScriptTime = DateTime.Now - m_timer;
-            return (double)(ScriptTime.TotalMilliseconds / 1000);
+            return ScriptTime.TotalMilliseconds / 1000;
         }
 
         public void llResetTime()
@@ -2563,7 +2563,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             TimeSpan ScriptTime = DateTime.Now - m_timer;
             m_timer = DateTime.Now;
-            return (double)(ScriptTime.TotalMilliseconds / 1000);
+            return ScriptTime.TotalMilliseconds / 1000;
         }
 
         public void llSound(string sound, double volume, int queue, int loop)
@@ -3360,6 +3360,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         Vector3 llvel = new Vector3((float)vel.x, (float)vel.y, (float)vel.z);
 
                         // need the magnitude later
+                        // this variable is not being used
                         float velmag = (float)Util.GetMagnitude(llvel);
 
                         ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
@@ -3446,12 +3447,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     {
                         // center is on average of all positions
                         // less root prim position
-
+#if (!ISWIN)
                         Vector3 offset = Vector3.Zero;
                         foreach (ISceneChildEntity child in partList)
                         {
                             offset += child.AbsolutePosition;
                         }
+#else
+                        Vector3 offset = partList.Aggregate(Vector3.Zero, (current, child) => current + child.AbsolutePosition);
+#endif
                         offset /= partList.Count;
                         offset -= group.AbsolutePosition;
                         offset += pos;
@@ -3623,7 +3627,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     ISceneChildEntity obj = World.GetSceneObjectPart (key);
                     if (obj != null)
-                        return (double)obj.GetMass();
+                        return obj.GetMass();
                     // the object is null so the key is for an avatar
                     IScenePresence avatar = World.GetScenePresence (key);
                     if (avatar != null)
@@ -3632,7 +3636,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             // child agents have a mass of 1.0
                             return 1;
                         else
-                            return (double)avatar.PhysicsActor.Mass;
+                            return avatar.PhysicsActor.Mass;
                 }
                 catch (KeyNotFoundException)
                 {
@@ -3861,7 +3865,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             msg.dialog = (byte)InstantMessageDialog.MessageFromObject;
             msg.fromGroup = false;
-            msg.offline = (byte)0; 
+            msg.offline = 0; 
             msg.ParentEstateID = 0;
             msg.Position = m_host.AbsolutePosition;
             msg.RegionID = World.RegionInfo.RegionID;
@@ -3906,7 +3910,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
             }
 
-            emailModule.GetNextEmailAsync(m_host.UUID, address, subject, (email) =>
+            emailModule.GetNextEmailAsync(m_host.UUID, address, subject, email =>
             {
                 if (email == null)
                     return;
@@ -4174,6 +4178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
 
+                    // This variable is not being used.. just set
                     ISceneChildEntity rootPart = null;
                     rootPart = group.GetChildPart(group.UUID);
 
@@ -4651,9 +4656,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.TaskInventory)
             {
+#if (!ISWIN)
                 foreach (TaskInventoryItem item in m_host.TaskInventory.Values)
                     if (item.Type == type || type == -1)
                         count++;
+#else
+                count += m_host.TaskInventory.Values.Count(item => item.Type == type || type == -1);
+#endif
             }
 
             return count;
@@ -4844,7 +4853,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (ce == null)
                 {
-                    return (LSL_Key)UUID.Zero.ToString();
+                    return UUID.Zero.ToString();
                 }
                 account = ce.account;
                 pinfo = ce.pinfo;
@@ -4886,7 +4895,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     reply = "0";
                     break;
                 default:
-                    return (LSL_Key) UUID.Zero.ToString(); // Raise no event
+                    return UUID.Zero.ToString(); // Raise no event
             }
 
             UUID rq = UUID.Random();
@@ -4898,7 +4907,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             dataserverPlugin.AddReply(rq.ToString(), reply, 100);
 
             ScriptSleep(200);
-            return (LSL_Key)tid.ToString();
+            return tid.ToString();
             
         }
 
@@ -4939,11 +4948,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         });
 
                     ScriptSleep(1000);
-                    return (LSL_Key)tid.ToString();                   
+                    return tid.ToString();                   
                 }
             }
             ScriptSleep(1000);
-            return (LSL_Key) String.Empty;
+            return String.Empty;
         }
 
         public void llSetDamage(double damage)
@@ -5413,14 +5422,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Acos(val);
+            return Math.Acos(val);
         }
 
         public LSL_Float llAsin(double val)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Asin(val);
+            return Math.Asin(val);
         }
 
         // Xantor 30/apr/2008
@@ -5479,9 +5488,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // sunPosition estate setting is set in OpenSim.Region.CoreModules.SunModule
             // have to convert from Vector3 (float) to LSL_Vector (double)
             Vector3 SunFloatVector3 = World.RegionInfo.RegionSettings.SunVector;
-            SunDoubleVector3.x = (double)SunFloatVector3.X;
-            SunDoubleVector3.y = (double)SunFloatVector3.Y;
-            SunDoubleVector3.z = (double)SunFloatVector3.Z;
+            SunDoubleVector3.x = SunFloatVector3.X;
+            SunDoubleVector3.y = SunFloatVector3.Y;
+            SunDoubleVector3.z = SunFloatVector3.Z;
 
             return SunDoubleVector3;
         }
@@ -6212,10 +6221,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             int neighborX = World.RegionInfo.RegionLocX + (int)dir.x;
             int neighborY = World.RegionInfo.RegionLocY + (int)dir.y;
-
+#if (!ISWIN)
             foreach (GridRegion neighbor in neighbors)
                 if (neighbor.RegionLocX == neighborX && neighbor.RegionLocY == neighborY)
                     return LSL_Integer.TRUE;
+#else
+            if (neighbors.Any(neighbor => neighbor.RegionLocX == neighborX && neighbor.RegionLocY == neighborY))
+            {
+                return LSL_Integer.TRUE;
+            }
+#endif
             return LSL_Integer.FALSE;
         }
 
@@ -6294,7 +6309,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 flags |= ScriptBaseClass.AGENT_MOUSELOOK;
             }
 
-            if ((agent.State & (byte)AgentState.Typing) != (byte)0)
+            if ((agent.State & (byte)AgentState.Typing) != 0)
             {
                 flags |= ScriptBaseClass.AGENT_TYPING;
             }
@@ -6349,18 +6364,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
             
-            Aurora.Framework.IAgentConnector AgentFrontend = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IAgentConnector>();
+            IAgentConnector AgentFrontend = DataManager.DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend == null)
                 return "en-us";
-            Aurora.Framework.IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
+            IAgentInfo Agent = AgentFrontend.GetAgent(new UUID(id));
             if (Agent == null)
                 return "en-us";
             if (Agent.LanguageIsPublic)
             {
                 return Agent.Language;
             }
-            else
-                return "en-us";
+            return "en-us";
         }
 
         public DateTime llAdjustSoundVolume(double volume)
@@ -6817,7 +6831,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)World.TimeDilation;
+            return World.TimeDilation;
         }
 
         /// <summary>
@@ -6998,7 +7012,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_PATTERN)
                         {
-                            int tmpi = (int)rules.GetLSLIntegerItem(i + 1);
+                            int tmpi = rules.GetLSLIntegerItem(i + 1);
                             prules.Pattern = (Primitive.ParticleSystem.SourcePattern)tmpi;
                         }
 
@@ -7009,14 +7023,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_INNERANGLE)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.InnerAngle = (float)tempf;
+                            prules.InnerAngle = tempf;
                             prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_OUTERANGLE)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.OuterAngle = (float)tempf;
+                            prules.OuterAngle = tempf;
                             prules.PartFlags &= 0xFFFFFFFD; // Make sure new angle format is off.
                         }
 
@@ -7028,7 +7042,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RATE)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstRate = (float)tempf;
+                            prules.BurstRate = tempf;
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_PART_COUNT)
@@ -7039,25 +7053,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_RADIUS)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstRadius = (float)tempf;
+                            prules.BurstRadius = tempf;
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MIN)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstSpeedMin = (float)tempf;
+                            prules.BurstSpeedMin = tempf;
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_BURST_SPEED_MAX)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.BurstSpeedMax = (float)tempf;
+                            prules.BurstSpeedMax = tempf;
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_MAX_AGE)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.MaxAge = (float)tempf;
+                            prules.MaxAge = tempf;
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_TARGET_KEY)
@@ -7078,14 +7092,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_BEGIN)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.InnerAngle = (float)tempf;
+                            prules.InnerAngle = tempf;
                             prules.PartFlags |= 0x02; // Set new angle format.
                         }
 
                         else if (rule == (int)ScriptBaseClass.PSYS_SRC_ANGLE_END)
                         {
                             tempf = (float)rules.GetLSLFloatItem(i + 1);
-                            prules.OuterAngle = (float)tempf;
+                            prules.OuterAngle = tempf;
                             prules.PartFlags |= 0x02; // Set new angle format.
                         }
                     }
@@ -7396,9 +7410,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return String.Empty;
             }
+#if (!ISWIN)
             string ret = "";
             foreach (object o in src.Data)
                 ret += o.ToString() + seperator;
+#else
+            string ret = src.Data.Aggregate("", (current, o) => current + (o.ToString() + seperator));
+#endif
 
             ret = ret.Substring(0, ret.Length - seperator.Length);
             return ret;
@@ -7413,10 +7431,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 return 1;
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
 
         public DateTime llDialog(string avatar, string message, LSL_List buttons, int chat_channel)
@@ -7589,7 +7604,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             IXMLRPC xmlrpcMod = World.RequestModuleInterface<IXMLRPC>();
             ScriptSleep(3000);
-            return (LSL_Key)(xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
+            return (xmlrpcMod.SendRemoteData(m_host.UUID, m_itemID, channel, dest, idata, sdata)).ToString();
         }
 
         public DateTime llRemoteDataReply(string channel, string message_id, string sdata, int idata)
@@ -7633,7 +7648,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 holeshape != (int)ScriptBaseClass.PRIM_HOLE_SQUARE &&
                 holeshape != (int)ScriptBaseClass.PRIM_HOLE_TRIANGLE)
             {
-                holeshape = (int)ScriptBaseClass.PRIM_HOLE_DEFAULT;
+                holeshape = ScriptBaseClass.PRIM_HOLE_DEFAULT;
             }
             shapeBlock.ProfileCurve = (byte)holeshape;
             if (cut.x < 0f)
@@ -7961,7 +7976,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_MESH)
             {
                 // default
-                type |= (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE;
+                type |= ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE;
             }
 
             // retain pathcurve
@@ -8000,9 +8015,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_Integer llGetLinkNumberOfSides(int LinkNum)
         {
             List<ISceneChildEntity> Parts = GetLinkParts (LinkNum);
+#if (!ISWIN)
             int faces = 0;
             foreach (ISceneChildEntity part in Parts)
                 faces += GetNumberOfSides(part);
+#else
+            int faces = Parts.Sum(part => GetNumberOfSides(part));
+#endif
             return new LSL_Integer(faces);
         }
 
@@ -8141,7 +8160,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     else
                         return;
 
-                    code = (int)rules.GetLSLIntegerItem(idx++);
+                    code = rules.GetLSLIntegerItem(idx++);
 
                     remain = rules.Length - idx;
                     float hollow;
@@ -8159,7 +8178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 6)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        face = rules.GetLSLIntegerItem(idx++);
                         v = rules.GetVector3Item(idx++); // cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8176,7 +8195,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 6)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); // cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8192,7 +8211,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 6)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); //cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8208,7 +8227,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 5)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); // cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8223,7 +8242,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 11)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); //cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8244,7 +8263,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 11)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); //cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8265,7 +8284,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         if (remain < 11)
                             return;
 
-                        face = (int)rules.GetLSLIntegerItem(idx++); // holeshape
+                        face = rules.GetLSLIntegerItem(idx++); // holeshape
                         v = rules.GetVector3Item(idx++); //cut
                         hollow = (float)rules.GetLSLFloatItem(idx++);
                         twist = rules.GetVector3Item(idx++);
@@ -8287,7 +8306,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             return;
 
                         string map = rules.Data[idx++].ToString();
-                        face = (int)rules.GetLSLIntegerItem(idx++); // type
+                        face = rules.GetLSLIntegerItem(idx++); // type
                         (part as ISceneChildEntity).Shape.PathCurve = (byte)Extrusion.Curve1;
                         SetPrimitiveShapeParams((part as ISceneChildEntity), map, face);
                     }
@@ -8300,11 +8319,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(part is ISceneChildEntity) { }
                     else
                         return;
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     string tex = rules.Data[idx++].ToString();
                     LSL_Vector repeats = rules.GetVector3Item(idx++);
                     LSL_Vector offsets = rules.GetVector3Item(idx++);
-                    double rotation = (double)rules.GetLSLFloatItem(idx++);
+                    double rotation = rules.GetLSLFloatItem(idx++);
 
                     SetTexture((part as ISceneChildEntity), tex, face);
                     ScaleTexture((part as ISceneChildEntity), repeats.x, repeats.y, face);
@@ -8320,9 +8339,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(part is ISceneChildEntity) { }
                     else
                         return;
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     LSL_Vector color = rules.GetVector3Item(idx++);
-                    double alpha = (double)rules.GetLSLFloatItem(idx++);
+                    double alpha = rules.GetLSLFloatItem(idx++);
 
                     (part as ISceneChildEntity).SetFaceColor(new Vector3((float)color.x, (float)color.y, (float)color.z), face);
                     SetAlpha((part as ISceneChildEntity), alpha, face);
@@ -8379,8 +8398,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
                     if(!(part is ISceneChildEntity))
                         return;
-                    face = (int)rules.GetLSLIntegerItem(idx++);
-                    int shiny = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
+                    int shiny = rules.GetLSLIntegerItem(idx++);
                     Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
 
                     SetShiny(part as ISceneChildEntity, face, shiny, bump);
@@ -8554,7 +8573,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             
             Deprecated("llXorBase64Strings");
             ScriptSleep(300);
-            return (LSL_String)String.Empty;
+            return String.Empty;
         }
 
         public void llRemoteDataSetRegion()
@@ -8568,14 +8587,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Log10(val);
+            return Math.Log10(val);
         }
 
         public LSL_Float llLog(double val)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
-            return (double)Math.Log(val);
+            return Math.Log(val);
         }
 
         public LSL_List llGetAnimationList(string id)
@@ -8831,7 +8850,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             int idx = 0;
             while (idx < rules.Length)
             {
-                int code = (int)rules.GetLSLIntegerItem(idx++);
+                int code = rules.GetLSLIntegerItem(idx++);
                 int remain = rules.Length - idx;
                 Primitive.TextureEntry tex = part.Shape.Textures;
                 int face = 0;
@@ -8914,8 +8933,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     PrimitiveBaseShape Shape = part.Shape;
                     int primType = (int)part.GetPrimType();
                     res.Add(new LSL_Integer(primType));
-                    double topshearx = (double)(sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
-                    double topsheary = (double)(sbyte)Shape.PathShearY / 100.0; // and PathShearY.
+                    double topshearx = (sbyte)Shape.PathShearX / 100.0; // Fix negative values for PathShearX
+                    double topsheary = (sbyte)Shape.PathShearY / 100.0; // and PathShearY.
                     if(primType == ScriptBaseClass.PRIM_TYPE_BOX ||
                        primType == ScriptBaseClass.PRIM_TYPE_CYLINDER ||
                        primType == ScriptBaseClass.PRIM_TYPE_PRISM)
@@ -8998,7 +9017,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if(remain < 1)
                         return res;
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
                         for(face = 0; face < GetNumberOfSides(part); face++)
@@ -9037,7 +9056,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if(remain < 1)
                         return res;
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     tex = part.Shape.Textures;
                     Color4 texcolor;
                     if(face == ScriptBaseClass.ALL_SIDES)
@@ -9066,7 +9085,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(remain < 1)
                         return res;
 
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
 
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
@@ -9097,7 +9116,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(remain < 1)
                         return res;
 
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     tex = part.Shape.Textures;
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
@@ -9137,7 +9156,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(remain < 1)
                         return res;
 
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
                         for(face = 0; face < GetNumberOfSides(part); face++)
@@ -9175,7 +9194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if(remain < 1)
                         return res;
 
-                    face = (int)rules.GetLSLIntegerItem(idx++);
+                    face = rules.GetLSLIntegerItem(idx++);
                     if(face == ScriptBaseClass.ALL_SIDES)
                     {
                         for(face = 0; face < GetNumberOfSides(part); face++)
@@ -9486,37 +9505,37 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((digit = c2itable[str[0]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit<<26;
 
             if ((digit = c2itable[str[1]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit<<20;
 
             if ((digit = c2itable[str[2]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit<<14;
 
             if ((digit = c2itable[str[3]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit<<8;
 
             if ((digit = c2itable[str[4]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit<<2;
 
             if ((digit = c2itable[str[5]]) <= 0)
             {
-                return digit < 0 ? (int)0 : number;
+                return digit < 0 ? 0 : number;
             }
             number += --digit>>4;
 
@@ -9734,13 +9753,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public LSL_List llParseString2List(string src, LSL_List separators, LSL_List spacers)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "llParseString2List", m_host, "LSL", m_itemID)) return new LSL_List();
-            return this.ParseString(src, separators, spacers, false);
+            return ParseString(src, separators, spacers, false);
         }
 
         public LSL_List llParseStringKeepNulls(string src, LSL_List separators, LSL_List spacers)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "llParseStringKeepNulls", m_host, "LSL", m_itemID)) return new LSL_List();
-            return this.ParseString(src, separators, spacers, true);
+            return ParseString(src, separators, spacers, true);
         }
 
         public LSL_Integer llGetObjectPermMask(int mask)
@@ -10010,7 +10029,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     dataserverPlugin.AddReply(rq.ToString(), reply, 1000);
                 }
             }
-            catch (Exception)
+            catch
             {
             }
 
@@ -10572,7 +10591,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             ClearPrimMedia(m_host, face);
 
-            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+            return ScriptBaseClass.LSL_STATUS_OK;
         }
 
         public LSL_Integer llClearLinkMedia (LSL_Integer link, LSL_Integer face)
@@ -10582,12 +10601,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             List<ISceneChildEntity> entities = GetLinkParts(link);
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
-                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+                return ScriptBaseClass.LSL_STATUS_OK;
 
             foreach(ISceneChildEntity child in entities)
                 ClearPrimMedia(child, face);
 
-            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+            return ScriptBaseClass.LSL_STATUS_OK;
         }
 
         private void ClearPrimMedia (ISceneChildEntity entity, LSL_Integer face)
@@ -10613,8 +10632,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // Don't perform the media check directly
             if (face < 0 || face > m_host.GetNumberOfSides() - 1)
-                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
-            return (LSL_Integer)SetPrimMediaParams(m_host, face, rules);
+                return ScriptBaseClass.LSL_STATUS_OK;
+            return SetPrimMediaParams(m_host, face, rules);
         }
 
         public LSL_Integer llSetLinkMedia (LSL_Integer link, LSL_Integer face, LSL_List rules)
@@ -10626,10 +10645,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // Don't perform the media check directly
             List<ISceneChildEntity> entities = GetLinkParts(link);
             if(entities.Count == 0 || face < 0 || face > entities[0].GetNumberOfSides() - 1)
-                return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+                return ScriptBaseClass.LSL_STATUS_OK;
             foreach(ISceneChildEntity child in entities)
                 SetPrimMediaParams(child, face, rules);
-            return (LSL_Integer)ScriptBaseClass.LSL_STATUS_OK;
+            return ScriptBaseClass.LSL_STATUS_OK;
         }
 
         public LSL_Integer SetPrimMediaParams(ISceneChildEntity obj, int face, LSL_List rules)
@@ -10687,11 +10706,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS)
                 {
-                    me.Width = (int)rules.GetLSLIntegerItem(i++);
+                    me.Width = rules.GetLSLIntegerItem(i++);
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS)
                 {
-                    me.Height = (int)rules.GetLSLIntegerItem(i++);
+                    me.Height = rules.GetLSLIntegerItem(i++);
                 }
                 else if (code == ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE)
                 {
@@ -10732,7 +10751,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Int64 tmp = 0;
             Math.DivRem(Convert.ToInt64(Math.Pow(a, b)), c, out tmp);
             ScriptSleep(100);
-            return (LSL_Integer)Convert.ToInt32(tmp);
+            return Convert.ToInt32(tmp);
         }
 
         public LSL_Integer llGetInventoryType(string name)
@@ -10907,9 +10926,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (module != null)
                 {
                     bool cached = false; //Unneeded
+#if (!ISWIN)
                     foreach(MuteList mute in  module.GetMutes(avatar.UUID, out cached))
                         if (mute.MuteID == m_host.OwnerID)
                             return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
+#else
+                    if (module.GetMutes(avatar.UUID, out cached).Any(mute => mute.MuteID == m_host.OwnerID))
+                    {
+                        return DateTime.Now;//If the avatar is muted, they don't get any contact from the muted av
+                    }
+#endif
                 }
                 avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
                                                                    new Vector3((float)pos.x, (float)pos.y, (float)pos.z),
@@ -11046,7 +11072,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (data[i] is LSL_Float)
                         parameters.Add(type, (float)((LSL_Float)data[i]).value);
                     else if (data[i] is LSL_Integer)
-                        parameters.Add(type, (float)((LSL_Integer)data[i]).value);
+                        parameters.Add(type, ((LSL_Integer)data[i]).value);
                     else parameters.Add(type, Convert.ToSingle(data[i]));
                 }
             }
@@ -11213,6 +11239,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             const string authregex = @"^(https?:\/\/)(\w+):(\w+)@(.*)$";
             Regex r = new Regex(authregex);
+            // this variable is not used
             int[] gnums = r.GetGroupNumbers();
             Match m = r.Match(url);
             if (m.Success) {
@@ -11374,7 +11401,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
             }
             ScriptSleep(2000);
-            return (LSL_List) ret;
+            return ret;
         }
 
         public LSL_Integer llGetObjectPrimCount(string object_id)
@@ -11476,12 +11503,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_POS)
                         {
                             Vector3 tmp = av.AbsolutePosition;
-                            ret.Add(new LSL_Vector((double)tmp.X, (double)tmp.Y, (double)tmp.Z));
+                            ret.Add(new LSL_Vector(tmp.X, tmp.Y, tmp.Z));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROT)
                         {
                             Quaternion rtmp = av.Rotation;
-                            ret.Add(new LSL_Rotation((double)rtmp.X, (double)rtmp.Y, (double)rtmp.Z, (double)rtmp.W));
+                            ret.Add(new LSL_Rotation(rtmp.X, rtmp.Y, rtmp.Z, rtmp.W));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_VELOCITY)
                         {
@@ -11503,17 +11530,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+#if (!ISWIN)
                             int activeScripts = 0;
                             foreach (IScriptModule mod in modules)
                                 activeScripts += mod.GetActiveScripts(av);
+#else
+                            int activeScripts = modules.Sum(mod => mod.GetActiveScripts(av));
+#endif
                             ret.Add(activeScripts);
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+#if (!ISWIN)
                             int totalScripts = 0;
                             foreach (IScriptModule mod in modules)
                                 totalScripts += mod.GetTotalScripts(av);
+#else
+                            int totalScripts = modules.Sum(mod => mod.GetTotalScripts(av));
+#endif
                             ret.Add(totalScripts);
                         }
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -11523,9 +11558,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_TIME)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+#if (!ISWIN)
                             int scriptTime = 0;
                             foreach (IScriptModule mod in modules)
                                 scriptTime += mod.GetScriptTime(m_itemID);
+#else
+                            int scriptTime = modules.Sum(mod => mod.GetScriptTime(m_itemID));
+#endif
                             ret.Add(scriptTime);
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PRIM_EQUIVALENCE)
@@ -11594,17 +11633,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+#if (!ISWIN)
                             int activeScripts = 0;
                             foreach (IScriptModule mod in modules)
                                 activeScripts += mod.GetActiveScripts(obj);
+#else
+                            int activeScripts = modules.Sum(mod => mod.GetActiveScripts(obj));
+#endif
                             ret.Add(new LSL_Integer(activeScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT)
                         {
                             IScriptModule[] modules = World.RequestModuleInterfaces<IScriptModule>();
+#if (!ISWIN)
                             int totalScripts = 0;
                             foreach (IScriptModule mod in modules)
                                 totalScripts += mod.GetTotalScripts(obj);
+#else
+                            int totalScripts = modules.Sum(mod => mod.GetTotalScripts(obj));
+#endif
                             ret.Add(new LSL_Integer(totalScripts));
                         }
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
@@ -11799,7 +11846,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 if ((dataFlags & ScriptBaseClass.RC_GET_LINK_NUM) == ScriptBaseClass.RC_GET_LINK_NUM)
                     if (entity is ISceneChildEntity)
-                        list.Add(((ISceneChildEntity)entity).LinkNum);
+                        list.Add(entity.LinkNum);
                     else
                         list.Add(0);
 
@@ -11851,7 +11898,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Notecard '" + name + "' could not be found.");
 
-                return (LSL_Key)UUID.Zero.ToString();
+                return UUID.Zero.ToString();
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
@@ -11864,7 +11911,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 dataserverPlugin.AddReply (rq.ToString (),
                     NotecardCache.GetLines(assetID).ToString(), 100);
                 ScriptSleep(100);
-                return (LSL_Key) tid.ToString();
+                return tid.ToString();
             }
 
             WithNotecard(assetID, delegate(UUID id, AssetBase a)
@@ -11898,7 +11945,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Failed to parse uuid for avatar.");
 
-                return (LSL_Key)UUID.Zero.ToString();
+                return UUID.Zero.ToString();
             }
 
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
@@ -11915,7 +11962,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             });
 
             ScriptSleep(100);
-            return (LSL_Key)tid.ToString();
+            return tid.ToString();
         }
 
         public LSL_Key llRequestDisplayName(LSL_Key uuid)
@@ -11927,7 +11974,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Failed to parse uuid for avatar.");
 
-                return (LSL_Key)UUID.Zero.ToString();
+                return UUID.Zero.ToString();
             }
 
             DataserverPlugin dataserverPlugin = (DataserverPlugin)m_ScriptEngine.GetScriptPlugin("Dataserver");
@@ -11948,7 +11995,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             });
 
             ScriptSleep(100);
-            return (LSL_Key)tid.ToString();
+            return tid.ToString();
         }
 
         public LSL_Key llGetNotecardLine(string name, int line)
@@ -11977,7 +12024,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 // => complain loudly, as specified by the LSL docs
                 ShoutError("Notecard '" + name + "' could not be found.");
 
-                return (LSL_Key) UUID.Zero.ToString();
+                return UUID.Zero.ToString();
             }
 
             // was: UUID tid = tid = m_ScriptEngine.
@@ -11990,7 +12037,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 dataserverPlugin.AddReply (rq.ToString (),
                                                                NotecardCache.GetLine(assetID, line, m_notecardLineReadCharsMax), 100);
                 ScriptSleep(100);
-                return (LSL_Key)tid.ToString();
+                return tid.ToString();
             }
 
             WithNotecard(assetID, delegate(UUID id, AssetBase a)
@@ -12011,7 +12058,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                  });
 
             ScriptSleep(100);
-            return (LSL_Key)tid.ToString();
+            return tid.ToString();
         }
 
         public void SetPrimitiveParamsEx(LSL_Key prim, LSL_List rules)
@@ -12067,8 +12114,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 else if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_GROUP_REMOVE)
                     World.RegionInfo.EstateSettings.RemoveEstateGroup(UUID.Parse(avatar));
                 else if (action == ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_ADD)
-                    World.RegionInfo.EstateSettings.AddBan(new EstateBan()
-                    {
+                    World.RegionInfo.EstateSettings.AddBan(new EstateBan
+                                                               {
                         EstateID = World.RegionInfo.EstateSettings.EstateID,
                         BannedUserID = UUID.Parse(avatar)
                     });
@@ -12098,7 +12145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     m_host.ParentEntity.AddKeyframedMotion(null, (KeyframeAnimation.Commands)value.value);
                     break;//Its supposed to be the only option in the list
                 }
-                else if (option == ScriptBaseClass.KFM_MODE)
+                if (option == ScriptBaseClass.KFM_MODE)
                 {
                     currentMode = (KeyframeAnimation.Modes)value.value;
                 }
@@ -12129,8 +12176,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 int time = keyframes.GetLSLIntegerItem(i + (dataType == KeyframeAnimation.Data.Both ? 2 : 1));
                 times.Add(time);
             }
-            KeyframeAnimation animation = new KeyframeAnimation()
-            {
+            KeyframeAnimation animation = new KeyframeAnimation
+                                              {
                 CurrentMode = currentMode,
                 PositionList = positions.ToArray(),
                 RotationList = rotations.ToArray(),
@@ -12169,10 +12216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             else if(moneyMod != null)
             {
                 success = moneyMod.Transfer(UUID.Parse(destination), m_host.OwnerID, amt, "");
-                if (success)
-                    data = llList2CSV(new LSL_List(destination, amt));
-                else
-                    data = llList2CSV(new LSL_Types.list("LINDENDOLLAR_INSUFFICIENTFUNDS"));
+                data = llList2CSV(success ? new LSL_List(destination, amt) : new LSL_Types.list("LINDENDOLLAR_INSUFFICIENTFUNDS"));
             }
             else
                 data = llList2CSV(new LSL_Types.list("SERVICE_ERROR"));
