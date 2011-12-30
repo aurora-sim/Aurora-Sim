@@ -48,6 +48,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private readonly CSharpCodeProvider CScodeProvider = new CSharpCodeProvider();
         private Compiler m_compiler;
         private List<string> DTFunctions;
+        private string m_functionRegex = "";
+        private Dictionary<string, IScriptApi> m_scriptApis;
 
         #region Listings
 
@@ -122,9 +124,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         if(!DTFunctions.Contains(info.Name))
                             DTFunctions.Add(info.Name);
             }
-            
-            //bool success = RunTest1();
+            m_scriptApis = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
+            foreach (string function in m_scriptApis.Keys)
+                m_functionRegex += "(" + function + ")";
+            bool success = RunTest1();
         }
+
+        #region Tests 
 
         public bool RunTest1()
         {
@@ -201,6 +207,8 @@ state testing
             }
             return true;
         }
+
+        #endregion
 
         public void Convert(string Script, out string CompiledScript,
                             out object PositionMap)
@@ -552,6 +560,35 @@ state testing
 
         private string[] ConvertLSLTypes(string Script, out List<string> GlobalFunctions)
         {
+            Match vectorMatches;
+            RegexContains(Script, "<.*,.*,.*>", out vectorMatches);
+            foreach (Match m in vectorMatches.Groups)
+            {
+                if (m.Value != "")
+                    Script = Script.Replace(m.Value, "new vector(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+            }
+            RegexContains(Script, "<.*,.*,.*,.*>", out vectorMatches);
+            foreach (Match m in vectorMatches.Groups)
+            {
+                if (m.Value != "")
+                    Script = Script.Replace(m.Value, "new rotation(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+            }
+            RegexContains(Script, "[*]", out vectorMatches);
+            foreach (Match m in vectorMatches.Groups)
+            {
+                if (m.Value != "")
+                    Script = Script.Replace(m.Value, "new list(" + m.Value.Substring(1, m.Value.Length - 2) + ")");
+            }
+            RegexContains(Script, m_functionRegex, out vectorMatches);
+            foreach (Match m in vectorMatches.Groups)
+            {
+                IScriptApi api = m_scriptApis[m.Value];
+                string formatedFunction = String.Format("{3}(({0})m_apis[\"{1}\"]).{2}",
+                                          api.InterfaceName,
+                                          api.Name, m.Value,
+                                          DTFunctions.Contains(m.Value) ? "yield return " : "");
+                Script.Replace(m.Value, formatedFunction);
+            }
             Script = Script.Replace("integer", "LSL_Types.LSLInteger");
             Script = Script.Replace("float", "LSL_Types.LSLFloat");
             Script = Script.Replace("key", "LSL_Types.LSLString");
@@ -560,51 +597,11 @@ state testing
             Script = Script.Replace("rotation", "LSL_Types.Quaternion");
             Script = Script.Replace("list", "LSL_Types.list");
             string[] split = Script.Split('\n');
-            Dictionary<string, IScriptApi> apiFunctions = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
             bool beforeStates = true;
             int bracketCount = 0;
             GlobalFunctions = new List<string>();
             for (int i = 0; i < split.Length; i++)
             {
-                int subStr = 0;
-                int startIndex = 0;
-            checkAgain:
-                if ((subStr = split[i].IndexOf("<", startIndex)) != -1)
-                {
-                    int endSubStr = split[i].IndexOf(">", startIndex);
-                    if (endSubStr != -1)
-                    {
-                        string subString = split[i].Substring(subStr + 1, endSubStr - subStr - 1);
-                        string[] values = subString.Split(',');
-                        int commaCount = values.Length;
-                        if (commaCount == 3)//Vector
-                            split[i] = split[i].Replace("<" + subString + ">", "new LSL_Types.Vector3(" + subString + ")");
-                        else if (commaCount == 4)//Rotation
-                            split[i] = split[i].Replace("<" + subString + ">", "new LSL_Typers.Quaternion(" + subString + ")");
-                        startIndex = endSubStr;
-                        goto checkAgain;
-                    }
-                }
-                if ((subStr = split[i].IndexOf("[", startIndex)) != -1)
-                {
-                    int endSubStr = split[i].IndexOf("]", startIndex);
-                    string subString = split[i].Substring(subStr + 1, endSubStr - subStr - 1);
-                    split[i] = split[i].Replace("[" + subString + "]", "new LSL_Types.list(" + subString + ")");
-                    startIndex = endSubStr;
-                    goto checkAgain;
-                }
-                
-                foreach (KeyValuePair<string, IScriptApi> function in apiFunctions)
-                {
-                    string old = split[i];
-                    if ((split[i] = split[i].Replace(function.Key,
-                        String.Format("{3}(({0})m_apis[\"{1}\"]).{2}",
-                                          function.Value.InterfaceName,
-                                          function.Value.Name, function.Key,
-                                          DTFunctions.Contains(function.Key) ? "yield return " : ""))) != old)
-                        break;
-                }
-
                 if (split[i].StartsWith("default") || split[i].StartsWith("state "))
                     beforeStates = false;
                 else if (split[i].StartsWith("{"))
@@ -641,6 +638,8 @@ state testing
         {
             return split[i + 1];
         }
+
+        #region GetUntil*
 
         private string GetUntilBreak(string[] split, string[] breaksplit, int i, out int end)
         {
@@ -691,6 +690,8 @@ state testing
         {
             return GetUntil(split, breaksplit, ";", "\r", i, out end, out wasSemicolan);
         }
+
+        #endregion
 
         public string Name
         {

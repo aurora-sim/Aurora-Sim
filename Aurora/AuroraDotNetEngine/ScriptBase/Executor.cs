@@ -74,7 +74,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             link_message = 4294967296,
             no_sensor = 8589934592,
             on_rez = 17179869184,
-            sensor = 34359738368
+            sensor = 34359738368,
+            transaction_event = 68719476736
         }
 
         #endregion
@@ -291,7 +292,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             m_eventFlagsMap.Add("touch", scriptEvents.touch);
             m_eventFlagsMap.Add("touch_end", scriptEvents.touch_end);
             m_eventFlagsMap.Add("touch_start", scriptEvents.touch_start);
-            m_eventFlagsMap.Add("transaction_event", scriptEvents.touch_start);
+            m_eventFlagsMap.Add("transaction_event", scriptEvents.transaction_event);
             m_eventFlagsMap.Add("object_rez", scriptEvents.object_rez);
         }
 
