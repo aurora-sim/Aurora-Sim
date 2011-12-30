@@ -319,9 +319,7 @@ namespace OpenSim.Services.UserAccountService
         /// <param name = "cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
         protected void HandleCreateUser(string[] cmdparams)
         {
-            string name;
-            string password;
-            string email;
+            string name, password, email, uuid;
 
             name = MainConsole.Instance.Prompt("Name", "Default User");
 
@@ -329,7 +327,9 @@ namespace OpenSim.Services.UserAccountService
 
             email = MainConsole.Instance.Prompt("Email", "");
 
-            CreateUser(name, Util.Md5Hash(password), email);
+            uuid = MainConsole.Instance.Prompt("UUID", UUID.Random().ToString());
+            
+            CreateUser(UUID.Parse(uuid), name, Util.Md5Hash(password), email);
         }
 
         protected void HandleResetUserPassword(string[] cmdparams)
