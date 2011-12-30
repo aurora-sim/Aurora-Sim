@@ -41,7 +41,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
 
             schema = new List<Rec<string, ColumnDefinition[]>>();
 
-            AddSchema("Scheduler", ColDefs(ColDef("id", ColumnTypes.String36, true),
+            AddSchema("scheduler", ColDefs(ColDef("id", ColumnTypes.String36, true),
                                                 ColDef("fire_function", ColumnTypes.String128),
                                                 ColDef("fire_params", ColumnTypes.String1024),
                                                 ColDef("run_once", ColumnTypes.TinyInt1),
@@ -54,7 +54,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                                                 ColDef("enabled", ColumnTypes.TinyInt1, true)
                                             ));
 
-            AddSchema("Scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
+            AddSchema("scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
                                                 ColDef("scheduler_id", ColumnTypes.String36, true),
                                                 ColDef("ran_time", ColumnTypes.Integer30),
                                                 ColDef("run_time", ColumnTypes.Integer30),
