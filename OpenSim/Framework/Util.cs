@@ -1819,6 +1819,27 @@ namespace OpenSim.Framework
             return returnvalue;
         }
 
+        /// From http://www.c-sharpcorner.com/UploadFile/mahesh/RandomNumber11232005010428AM/RandomNumber.aspx
+        /// <summary>
+        ///   Generates a random string with the given length
+        /// </summary>
+        /// <param name = "size">Size of the string</param>
+        /// <param name = "lowerCase">If true, generate lowercase string</param>
+        /// <returns>Random string</returns>
+        public static string RandomString(int size, bool lowerCase)
+        {
+            string builder = "t";
+            int off = lowerCase ? 'a' : 'A';
+            int j;
+            for (int i = 0; i < size; i++)
+            {
+                j = Util.RandomClass.Next(25);
+                builder += (char)(j + off);
+            }
+
+            return builder;
+        }
+
         public static string[] AlphanumericSort(List<string> list)
         {
             string[] nList = list.ToArray();

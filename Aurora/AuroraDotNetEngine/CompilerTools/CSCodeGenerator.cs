@@ -2278,83 +2278,6 @@ default
             return retstr + DumpAfterFunc(marc);
         }
 
-        private string GenerateInnerIfStatement(SYMBOL child)
-        {
-            string tmpstr = "";
-            if (child is CompoundStatement)
-            {
-                CompoundStatement cs = child as CompoundStatement;
-                string innerretstr = "";
-
-                // opening brace
-                innerretstr += GenerateIndentedLine("{");
-                //            if (IsParentEnumerable)
-                //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
-                m_braceCount++;
-
-                foreach (SYMBOL kid in cs.kids)
-                {
-                    if (kid is Statement)
-                    {
-                        Statement state = kid as Statement;
-                        bool printSemicolon = true;
-
-                        innerretstr += Indent();
-
-                        if (0 < state.kids.Count)
-                        {
-                            // Jump label prints its own colon, we don't need a semicolon.
-                            printSemicolon = !(state.kids.Top is JumpLabel);
-
-                            // If we encounter a lone Ident, we skip it, since that's a C#
-                            // (MONO) error.
-                            if (!(state.kids.Top is IdentExpression && 1 == state.kids.Count))
-                            {
-                                foreach (SYMBOL stateKid in state.kids)
-                                {
-                                    if (stateKid is FunctionCallExpression)
-                                    {
-                                        foreach (SYMBOL akid in stateKid.kids)
-                                        {
-                                            if (akid is FunctionCall)
-                                            {
-                                                string innerinnerretStr = "";
-                                                innerinnerretStr += GenerateFunctionCall(akid as FunctionCall, false);
-                                                innerretstr += DumpFunc(true) + innerinnerretStr;
-                                            }
-                                            else
-                                                innerretstr += GenerateNode(akid);
-                                        }
-                                    }
-                                    else
-                                        innerretstr += GenerateNode(stateKid);
-                                }
-                            }
-                        }
-
-
-                        //Nasty hack to fix if statements with yield return and yield break;
-                        if (innerretstr[innerretstr.Length - 1] == '}')
-                            printSemicolon = false;
-
-                        if (printSemicolon)
-                            innerretstr += GenerateLine(";");
-                    }
-                    else
-                        innerretstr += GenerateNode(kid);
-                }
-
-                // closing brace
-                m_braceCount--;
-
-                innerretstr += GenerateIndentedLine("}");
-                tmpstr += innerretstr;
-            }
-            else
-                tmpstr += GenerateNode(child);
-            return tmpstr;
-        }
-
         /// <summary>
         ///   Generates the code for a StateChange node.
         /// </summary>
@@ -2833,7 +2756,7 @@ default
                 if (m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                    string MethodName = RandomString(10, true);
+                    string MethodName = OpenSim.Framework.StringUtils.RandomString(10, true);
                     string typeDefs = "";
                     ObjectList arguements = null;
                     if (LocalMethodArguements.TryGetValue(fc.Id, out arguements))
@@ -2855,7 +2778,7 @@ default
                                                      typeDefs);
                     newMethod += (Generate("{"));
                     newMethod += (Generate("ahwowuerogng = true;"));
-                    Mname = RandomString(10, true);
+                    Mname = OpenSim.Framework.StringUtils.RandomString(10, true);
                     newMethod += (Generate("IEnumerator " + Mname + " = "));
                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
                     newMethod += (tempString);
@@ -2875,7 +2798,7 @@ default
                     MethodsToAdd.Add(newMethod);
 
                     List<string> fCalls = new List<string>();
-                    string boolname = RandomString(10, true);
+                    string boolname = OpenSim.Framework.StringUtils.RandomString(10, true);
                     fCalls.Add(Generate("bool " + boolname + " = true;"));
                     retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
                     lock (FuncCalls)
@@ -2884,8 +2807,8 @@ default
                 else
                 {
                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                    Mname = RandomString(10, true);
-                    string Exname = RandomString(10, true);
+                    Mname = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    string Exname = OpenSim.Framework.StringUtils.RandomString(10, true);
                     List<string> fCalls = new List<string>
                                               {
                                                   Generate("string " + Exname + " =  \"\";"),
@@ -3189,27 +3112,6 @@ default
                 }*/
                 return s;
             }
-        }
-
-        /// From http://www.c-sharpcorner.com/UploadFile/mahesh/RandomNumber11232005010428AM/RandomNumber.aspx
-        /// <summary>
-        ///   Generates a random string with the given length
-        /// </summary>
-        /// <param name = "size">Size of the string</param>
-        /// <param name = "lowerCase">If true, generate lowercase string</param>
-        /// <returns>Random string</returns>
-        private string RandomString(int size, bool lowerCase)
-        {
-            string builder = "t";
-            int off = lowerCase ? 'a' : 'A';
-            int j;
-            for (int i = 0; i < size; i++)
-            {
-                j = random.Next(25);
-                builder += (char) (j + off);
-            }
-
-            return builder;
         }
 
         private string DumpFunc(bool marc)
