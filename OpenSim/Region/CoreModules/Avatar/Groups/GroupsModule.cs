@@ -366,10 +366,18 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         {
             lock (m_sceneList)
             {
-                foreach (IScenePresence sp in from scene in m_sceneList where scene.RegionInfo.RegionHandle == regionID from sp in scene.GetScenePresences() where sp.ControllingClient.ActiveGroupId == groupID select sp)
+                foreach (IScene s in from scene in m_sceneList where scene.RegionInfo.RegionHandle == regionID select scene)
                 {
-                    m_cachedGroupTitles.Remove(sp.UUID); //Remove the old title
-                    UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
+                    foreach (IScenePresence sp in s.GetScenePresences())
+                    {
+                        if (sp.ControllingClient.ActiveGroupId == groupID)
+                        {
+                            m_cachedGroupTitles.Remove(sp.UUID); //Remove the old title
+                            UpdateAllClientsWithGroupInfo(sp.UUID, GetGroupTitle(sp.UUID));
+                        }
+                        //Remove their permissions too
+                        RemoveFromGroupPowersCache(sp.UUID, groupID);
+                    }
                 }
             }
         }
@@ -423,22 +431,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                 amps.Post(message, remoteClient.Scene.RegionInfo.RegionHandle);
             }
 
-#if (!ISWIN)
-            foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences())
-            {
-                if (SP.ControllingClient.ActiveGroupId == groupID)
-                {
-                    m_cachedGroupTitles.Remove(SP.UUID);
-                    SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
-                }
-            }
-#else
-            foreach (IScenePresence SP in remoteClient.Scene.GetScenePresences().Where(SP => SP.ControllingClient.ActiveGroupId == groupID))
-            {
-                m_cachedGroupTitles.Remove(SP.UUID);
-                SendAgentGroupDataUpdate(SP.ControllingClient, GetRequestingAgentID(SP.ControllingClient));
-            }
-#endif
+            UpdateUsersForExternalRoleUpdate(groupID, roleID, remoteClient.Scene.RegionInfo.RegionHandle);
         }
 
         public void GroupRoleChanges(IClientAPI remoteClient, UUID groupID, UUID roleID, UUID memberID, uint changes)
@@ -1916,6 +1909,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
                     Groups = new Dictionary<UUID, ulong>();
                 Groups[GroupID] = powers;
                 AgentGroupPowersCache[AgentID] = Groups;
+            }
+        }
+
+        private void RemoveFromGroupPowersCache(UUID AgentID, UUID GroupID)
+        {
+            lock (AgentGroupPowersCache)
+            {
+                Dictionary<UUID, ulong> Groups = new Dictionary<UUID, ulong>();
+                if (AgentGroupPowersCache.TryGetValue(AgentID, out Groups))
+                {
+                    Groups.Remove(GroupID);
+                    AgentGroupPowersCache[AgentID] = Groups;
+                }
             }
         }
 
