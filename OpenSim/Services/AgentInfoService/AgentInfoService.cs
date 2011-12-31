@@ -81,10 +81,15 @@ namespace OpenSim.Services
             {
                 UserInfo user = GetUserInfo(userIDs[i]);
                 if (user != null && user.IsOnline)
-                    infos[i] =
+                {
+                    Interfaces.GridRegion gr =
                         m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero,
-                                                                                          user.CurrentRegionID).
-                            ServerURI;
+                                                                                          user.CurrentRegionID);
+                    if (gr != null)
+                        infos[i] = gr.ServerURI;
+                    else
+                        infos[i] = "NotOnline";
+                }
                 else if (user == null)
                     infos[i] = "NonExistant";
                 else
@@ -136,23 +141,23 @@ namespace OpenSim.Services
                 return; //User is locked, leave them alone
             if (loggingIn)
                 if (enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update(userID, new string[3] {"IsOnline", "LastLogin", "LastSeen"},
-                                                new object[3]
+                    m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogin", "LastSeen"},
+                                                new object[]
                                                     {
                                                         loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
                                                         Util.ToUnixTime(DateTime.Now.ToUniversalTime())
                                                     });
                 else
                     m_agentInfoConnector.Update(userID,
-                                                new string[4] {"IsOnline", "LastLogin", "CurrentRegionID", "LastSeen"},
-                                                new object[4]
+                                                new[] {"IsOnline", "LastLogin", "CurrentRegionID", "LastSeen"},
+                                                new object[]
                                                     {
                                                         loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
                                                         enteringRegion, Util.ToUnixTime(DateTime.Now.ToUniversalTime())
                                                     });
             else
-                m_agentInfoConnector.Update(userID, new string[3] {"IsOnline", "LastLogout", "LastSeen"},
-                                            new object[3]
+                m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogout", "LastSeen"},
+                                            new object[]
                                                 {
                                                     loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
                                                     Util.ToUnixTime(DateTime.Now.ToUniversalTime())
@@ -162,7 +167,7 @@ namespace OpenSim.Services
             {
                 //Trigger an event so listeners know
                 m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                    "UserStatusChange", new object[3] {userID, loggingIn, enteringRegion});
+                    "UserStatusChange", new object[] {userID, loggingIn, enteringRegion});
             }
         }
 
@@ -198,7 +203,7 @@ namespace OpenSim.Services
             if (changed)
                 if (!m_lockedUsers.Contains(userID))
                     m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                        "UserStatusChange", new object[3] {userID, false, UUID.Zero});
+                        "UserStatusChange", new object[] {userID, false, UUID.Zero});
             return info;
         }
 
