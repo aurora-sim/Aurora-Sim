@@ -49,6 +49,9 @@
 	;; Advanced configs
     http_listener_port = 9000
 	
+	;; For UDP connections, you know what it is if you need it
+	;internal_ip = "0.0.0.0"
+	
 	;; HTTPS configs
 	use_https = false
 	;; Path to your HTTPS certificate

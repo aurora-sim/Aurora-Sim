@@ -194,7 +194,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void Initialise(int port, IConfigSource configSource, AgentCircuitManager circuitManager)
         {
-            base.Initialise(IPAddress.Any, port);
+            IConfig networkConfig = configSource.Configs["Network"];
+            IPAddress internalIP = IPAddress.Any;
+            if(networkConfig != null)
+                IPAddress.TryParse(networkConfig.GetString("internal_ip", "0.0.0.0"), out internalIP);
+
+            base.Initialise(internalIP, port);
 
             #region Environment.TickCount Measurement
 
