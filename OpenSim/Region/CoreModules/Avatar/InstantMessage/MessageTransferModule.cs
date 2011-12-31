@@ -99,8 +99,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         {
             UUID toAgentID = im.toAgentID;
 
-            ISceneChildEntity childPrim = null;
-
             //Look locally first
             foreach (IScene scene in m_Scenes)
             {
@@ -110,6 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     user.ControllingClient.SendInstantMessage(im);
                     return;
                 }
+                ISceneChildEntity childPrim = null;
                 if ((childPrim = scene.GetSceneObjectPart(toAgentID)) != null)
                 {
                     im.toAgentID = childPrim.OwnerID;
@@ -211,6 +210,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         /// </summary>
         /// <param name = "request">XMLRPC parameters
         /// </param>
+        /// <param name="remoteClient"> </param>
         /// <returns>Nothing much</returns>
         protected virtual XmlRpcResponse processXMLRPCGridInstantMessage(XmlRpcRequest request, IPEndPoint remoteClient)
         {
@@ -514,19 +514,20 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         IMUsersCache.Remove(users[i]);
                         MainConsole.Instance.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
                                     ", user was not online");
+                        im.toAgentID = users[i];
                         HandleUndeliveredMessage(im, "User is not set as online by presence service.");
                         continue;
                     }
-                    else if (AgentLocations[i] == "NonExistant")
+                    if (AgentLocations[i] == "NonExistant")
                     {
                         IMUsersCache.Remove(users[i]);
                         MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + users[i] +
-                                   ", user does not exist");
+                                                  ", user does not exist");
+                        im.toAgentID = users[i];
                         HandleUndeliveredMessage(im, "User does not exist.");
                         continue;
                     }
-                    else
-                        HTTPPaths.Add(users[i], AgentLocations[i]);
+                    HTTPPaths.Add(users[i], AgentLocations[i]);
                 }
             }
             else
@@ -646,16 +647,15 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                     HandleUndeliveredMessage(im, "User is not set as online by presence service.");
                     return;
                 }
-                else if (AgentLocations[0] == "NonExistant")
+                if (AgentLocations[0] == "NonExistant")
                 {
                     IMUsersCache.Remove(toAgentID);
                     MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " + toAgentID +
-                               ", user does not exist");
+                                              ", user does not exist");
                     HandleUndeliveredMessage(im, "User does not exist.");
                     return;
                 }
-                else //Found the agent, use this location
-                    HTTPPath = AgentLocations[0];
+                HTTPPath = AgentLocations[0];
             }
 
             //We found the agent's location, now ask them about the user
@@ -704,7 +704,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         /// <summary>
         ///   This actually does the XMLRPC Request
         /// </summary>
-        /// <param name = "reginfo">RegionInfo we pull the data out of to send the request to</param>
+        /// <param name = "httpInfo">RegionInfo we pull the data out of to send the request to</param>
         /// <param name = "xmlrpcdata">The Instant Message data Hashtable</param>
         /// <returns>Bool if the message was successfully delivered at the other side.</returns>
         protected virtual bool doIMSending(string httpInfo, Hashtable xmlrpcdata)
@@ -721,11 +721,9 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 {
                     if ((string) responseData["success"] == "TRUE")
                         return true;
-                    else
-                        return false;
-                }
-                else
                     return false;
+                }
+                return false;
             }
             catch (WebException e)
             {
