@@ -539,7 +539,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     string severity = CompErr.IsWarning ? "Warning" : "Error";
 
-                    KeyValuePair<int, int> lslPos;
+                    KeyValuePair<int, int> lslPos = new KeyValuePair<int,int>();
 
                     // Show 5 errors max, but check entire list for errors
 
