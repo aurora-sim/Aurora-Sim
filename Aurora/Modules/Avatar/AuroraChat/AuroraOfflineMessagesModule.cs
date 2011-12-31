@@ -194,17 +194,19 @@ namespace Aurora.Modules
             if (OfflineMessagesConnector == null || im == null)
                 return;
             IClientAPI client = FindClient(im.fromAgentID);
-            if (client == null)
+            if ((client == null) && (im.dialog != 32))
                 return;
             if (!OfflineMessagesConnector.AddOfflineMessage (im))
             {
-                if ((!im.fromGroup) && (reason != "User does not exist."))
-                    client.SendInstantMessage (new GridInstantMessage (
+                if ((!im.fromGroup) && (reason != "User does not exist.") && (client != null))
+                    client.SendInstantMessage(new GridInstantMessage(
                             null, im.toAgentID,
                             "System", im.fromAgentID,
                             (byte)InstantMessageDialog.MessageFromAgent,
                             "User has too many IMs already, please try again later.",
                             false, Vector3.Zero));
+                else if (client == null)
+                    return;
             }
             else if ((im.offline != 0)
                 && (!im.fromGroup || (im.fromGroup && m_ForwardOfflineGroupMessages)))
@@ -214,8 +216,9 @@ namespace Aurora.Modules
                     IGroupsModule module = m_SceneList[0].RequestModuleInterface<IGroupsModule>();
                     if (module != null)
                         im = module.BuildOfflineGroupNotice(im);
+                    return;
                 }
-
+                if (client == null) return;
                 IEmailModule emailModule = m_SceneList[0].RequestModuleInterface<IEmailModule> ();
                 if (emailModule != null && m_SendOfflineMessagesToEmail)
                 {
@@ -248,6 +251,7 @@ namespace Aurora.Modules
             }
             else if (im.offline == 0)
             {
+                if (client == null) return;
                 if(im.dialog == (byte)InstantMessageDialog.MessageFromAgent && !im.fromGroup)
                 {
                     client.SendInstantMessage(new GridInstantMessage(
