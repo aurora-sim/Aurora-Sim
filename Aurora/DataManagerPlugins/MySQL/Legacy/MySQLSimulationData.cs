@@ -438,7 +438,6 @@ namespace OpenSim.Data.MySQL
 
             try
             {
-
                 lock (m_dbLock)
                 {
                     using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))

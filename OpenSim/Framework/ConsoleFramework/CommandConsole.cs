@@ -645,9 +645,11 @@ namespace OpenSim.Framework
 
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
+            m_reading = true;
             string ret = ReadLine(String.Format("{0}{2} [{1}]: ", prompt, defaultresponse,
                 options.Count == 0 ? "" :
                 ", Options are [" + string.Join(", ", options.ToArray()) + "]"), false, true);
+            m_reading = false;
             if (ret == String.Empty)
                 ret = defaultresponse;
 
@@ -733,6 +735,7 @@ namespace OpenSim.Framework
         private PromptEvent action;
         private readonly Object m_consoleLock = new Object();
         private bool m_calledEndInvoke;
+        private bool m_reading;
 #endif
 
         /// <summary>
@@ -757,18 +760,23 @@ namespace OpenSim.Framework
                     }
                     try
                     {
-                        if ((!result.IsCompleted) &&
-                            (!result.AsyncWaitHandle.WaitOne(5000, false) || !result.IsCompleted))
+                        if (m_reading)
+                            System.Threading.Thread.Sleep(1000);
+                        else
                         {
-                        }
-                        else if (action != null &&
-                                 !result.CompletedSynchronously &&
-                                 !m_calledEndInvoke)
-                        {
-                            m_calledEndInvoke = true;
-                            action.EndInvoke(result);
-                            action = null;
-                            result = null;
+                            if ((!result.IsCompleted) &&
+                                (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
+                            {
+                            }
+                            else if (action != null &&
+                                     !result.CompletedSynchronously &&
+                                     !m_calledEndInvoke)
+                            {
+                                m_calledEndInvoke = true;
+                                action.EndInvoke(result);
+                                action = null;
+                                result = null;
+                            }
                         }
                     }
                     catch (Exception ex)
