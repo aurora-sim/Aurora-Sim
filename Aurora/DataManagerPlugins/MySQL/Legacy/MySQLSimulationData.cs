@@ -436,46 +436,51 @@ namespace OpenSim.Data.MySQL
         {
             List<LandData> landData = new List<LandData>();
 
-            lock (m_dbLock)
+            try
             {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+
+                lock (m_dbLock)
                 {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                     {
-                        cmd.CommandText = "select * from land where RegionUUID = ?RegionUUID";
-                        cmd.Parameters.AddWithValue("RegionUUID", regionUUID.ToString());
+                        dbcon.Open();
 
-                        using (IDataReader reader = ExecuteReader(cmd))
+                        using (MySqlCommand cmd = dbcon.CreateCommand())
                         {
-                            while (reader.Read())
-                            {
-                                LandData newLand = BuildLandData(reader);
-                                landData.Add(newLand);
-                            }
-                        }
-                    }
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
-                    {
-                        foreach (LandData land in landData)
-                        {
-                            cmd.Parameters.Clear();
-                            cmd.CommandText = "select * from landaccesslist where LandUUID = ?LandUUID";
-                            cmd.Parameters.AddWithValue("LandUUID", land.GlobalID.ToString());
+                            cmd.CommandText = "select * from land where RegionUUID = ?RegionUUID";
+                            cmd.Parameters.AddWithValue("RegionUUID", regionUUID.ToString());
 
                             using (IDataReader reader = ExecuteReader(cmd))
                             {
                                 while (reader.Read())
                                 {
-                                    land.ParcelAccessList.Add(BuildLandAccessData(reader));
+                                    LandData newLand = BuildLandData(reader);
+                                    landData.Add(newLand);
+                                }
+                            }
+                        }
+
+                        using (MySqlCommand cmd = dbcon.CreateCommand())
+                        {
+                            foreach (LandData land in landData)
+                            {
+                                cmd.Parameters.Clear();
+                                cmd.CommandText = "select * from landaccesslist where LandUUID = ?LandUUID";
+                                cmd.Parameters.AddWithValue("LandUUID", land.GlobalID.ToString());
+
+                                using (IDataReader reader = ExecuteReader(cmd))
+                                {
+                                    while (reader.Read())
+                                    {
+                                        land.ParcelAccessList.Add(BuildLandAccessData(reader));
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            catch { }
 
             return landData;
         }
