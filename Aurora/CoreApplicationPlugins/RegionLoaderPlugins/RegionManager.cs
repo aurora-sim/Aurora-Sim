@@ -184,6 +184,24 @@ namespace Aurora.Modules.RegionLoader
         private void ChangeRegionInfo (RegionInfo region)
         {
             m_changingRegion = true;
+            if (region == null)
+            {
+                CurrentRegionID = UUID.Zero;
+                m_changingRegion = false;
+                textBox11.Text = "";
+                textBox6.Text = ""; 
+                textBox4.Text = "";
+                DisabledEdit.Checked = false;
+                textBox7.Text = "";
+                textBox3.Text = "";
+                textBox5.Text = "";
+                textBox1.Text = "";
+                RegionSizeX.Text = "";
+                RegionSizeY.Text = "";
+                startupType.SelectedIndex = 0;
+                einfiniteRegion.Checked = false;
+                return;
+            }
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString ();
@@ -559,7 +577,10 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
                 if (r == DialogResult.OK)
                 {
+                    takeOffline_Click(sender, e);
                     m_connector.Delete (region);
+                    //Remove everything from the GUI
+                    ChangeRegionInfo(null);
                     //Update the regions in the list box as well
                     RefreshCurrentRegions ();
                 }
