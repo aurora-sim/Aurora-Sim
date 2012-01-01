@@ -39,7 +39,7 @@ using OpenMetaverse.StructuredData;
 using OpenMetaverse;
 using Nini.Config;
 
-namespace Aurora.Module.InventoryAccess
+namespace Aurora.Modules.InventoryAccess
 {
     public class BasicInventoryAccessModule : INonSharedRegionModule, IInventoryAccessModule
     {
