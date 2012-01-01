@@ -430,7 +430,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                             //MainConsole.Instance.Warn("[HTTP]: " + requestBody);
 
                         }
-                        DoHTTPGruntWork(HTTPRequestHandler.Handle(path, keysvals), response);
+                        DoHTTPGruntWork(HTTPRequestHandler.Handle(path, keysvals), response, request);
                         return;
                     }
                     else
@@ -1243,7 +1243,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 if (foundHandler)
                 {
                     Hashtable responsedata1 = requestprocessor(keysvals);
-                    DoHTTPGruntWork(responsedata1, response);
+                    DoHTTPGruntWork(responsedata1, response, request);
 
                     //SendHTML500(response);
                 }
@@ -1260,7 +1260,7 @@ namespace OpenSim.Framework.Servers.HttpServer
                 if (foundHandler)
                 {
                     Hashtable responsedata2 = requestprocessor(keysvals);
-                    DoHTTPGruntWork(responsedata2, response);
+                    DoHTTPGruntWork(responsedata2, response, request);
 
                     //SendHTML500(response);
                 }
@@ -1334,7 +1334,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
         }
 
-        internal void DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response)
+        internal void DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response, OSHttpRequest request)
         {
             //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
             byte[] buffer;
@@ -1405,13 +1405,28 @@ namespace OpenSim.Framework.Servers.HttpServer
                 buffer = Convert.FromBase64String(responseString);
             }
 
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
+            bool sendBuffer = true;
+
+            string ETag = Util.SHA1Hash(buffer.ToString());
+            response.AddHeader("ETag", ETag);
+            List<string> rHeaders = request.Headers.AllKeys.ToList<string>();
+            if (rHeaders.Contains("if-none-match") && request.Headers["if-none-match"].IndexOf(ETag) >= 0)
+            {
+                response.StatusCode = 304;
+                response.StatusDescription = "Not Modified";
+                sendBuffer = false;
+            }
+
 
             try
             {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
+                if (sendBuffer)
+                {
+                    response.SendChunked = false;
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentEncoding = Encoding.UTF8;
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
             }
             catch (Exception ex)
             {
