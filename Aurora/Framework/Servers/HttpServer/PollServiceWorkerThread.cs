@@ -81,9 +81,11 @@ namespace Aurora.Framework.Servers.HttpServer
 
                         Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
                                                                                str.ReadToEnd());
-                        m_server.DoHTTPGruntWork(responsedata,
-                                                 new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),
-                                                                    req.HttpContext));
+                        m_server.DoHTTPGruntWork(
+                            responsedata,
+                            new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
+                            new OSHttpRequest(req.HttpContext, req.Request)
+                        );
                     }
                     else
                     {
@@ -91,7 +93,8 @@ namespace Aurora.Framework.Servers.HttpServer
                         {
                             m_server.DoHTTPGruntWork(
                                 req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                                new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext));
+                                new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
+                                new OSHttpRequest(req.HttpContext, req.Request));
                         }
                         else
                         {

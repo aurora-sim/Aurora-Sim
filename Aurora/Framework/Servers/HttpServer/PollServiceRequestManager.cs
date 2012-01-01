@@ -154,9 +154,11 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             foreach (PollServiceHttpRequest req in m_requests.Cast<PollServiceHttpRequest>())
             {
-                m_server.DoHTTPGruntWork(req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                                         new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request),
-                                                            req.HttpContext));
+                m_server.DoHTTPGruntWork(
+                    req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
+                    new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
+                    new OSHttpRequest(req.HttpContext, req.Request)
+                );
             }
 
             m_requests.Clear();
