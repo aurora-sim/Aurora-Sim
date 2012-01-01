@@ -673,7 +673,7 @@ namespace Aurora.Modules.Land
 #if (!ISWIN)
                 foreach (IScenePresence sp in avatar.Scene.Entities.GetPresences())
                 {
-                    if (sp.UUID != avatar.UUID)
+                    if (sp.UUID != avatar.UUID && !sp.IsChildAgent)
                     {
                         if (sp.CurrentParcel != null)
                         {

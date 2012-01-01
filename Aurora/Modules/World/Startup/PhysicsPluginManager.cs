@@ -101,11 +101,19 @@ namespace Aurora.Modules.Startup
 
             foreach (IPhysicsPlugin plug in physicsPlugins)
             {
-                _PhysPlugins.Add(plug.GetName(), plug);
+                try
+                {
+                    _PhysPlugins.Add(plug.GetName(), plug);
+                }
+                catch { }
             }
             foreach (IMeshingPlugin plug in meshingPlugins)
             {
-                _MeshPlugins.Add(plug.GetName(), plug);
+                try
+                {
+                    _MeshPlugins.Add(plug.GetName(), plug);
+                }
+                catch { }
             }
         }
     }

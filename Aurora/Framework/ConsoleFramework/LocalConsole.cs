@@ -371,7 +371,7 @@ namespace Aurora.Framework
 
         public override void Output(string text, string lvl)
         {
-            Level level = (Level)Enum.Parse(typeof(Level), lvl, true);
+            Level level = GetLevel(lvl);
             lock (cmdline)
             {
                 if (y == -1)

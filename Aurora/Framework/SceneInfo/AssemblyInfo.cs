@@ -32,12 +32,12 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("OpenSim.Framework")]
+[assembly: AssemblyTitle("Aurora.Framework")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("http://opensimulator.org")]
-[assembly: AssemblyProduct("OpenSim.Framework")]
-[assembly: AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2010")]
+[assembly: AssemblyProduct("Aurora.Framework")]
+[assembly: AssemblyCopyright("Copyright (c) OpenSimulator.org Developers 2007-2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

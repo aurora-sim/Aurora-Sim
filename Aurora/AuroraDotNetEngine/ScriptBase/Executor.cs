@@ -167,7 +167,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             string EventName = state == "" ? FunctionName : state + "_event_" + FunctionName;
 
             if (InTimeSlice)
-                //OpenSim.Framework.Console.MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap" + FunctionName);
+                //MainConsole.Instance.Output("ScriptEngine TimeSlice Overlap " + FunctionName);
                 return Start;
 
             IEnumerator thread = null;

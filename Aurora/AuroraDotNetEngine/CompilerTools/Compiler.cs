@@ -495,7 +495,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             if (rootPath != null)
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
-                                                                 "OpenSim.Framework.dll"));
+                                                                 "Aurora.Framework.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
 

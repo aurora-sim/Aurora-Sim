@@ -91,7 +91,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
                                              {Name = String.Format("PollServiceWorkerThread{0}", i)};
-                    //Can't add to thread Tracker here Referencing OpenSim.Framework creates circular reference
+                    //Can't add to thread Tracker here Referencing Aurora.Framework creates circular reference
                     m_workerThreads[i].Start();
                 }
             }

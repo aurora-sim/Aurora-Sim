@@ -197,6 +197,9 @@ namespace Aurora.Simulation.Base
                                                                                        m_urlToPostErrors);
             }
 
+            BinMigratorService service = new BinMigratorService();
+            service.MigrateBin();
+
             bool Running = true;
             //If auto restart is set, then we always run.
             // otherwise, just run the first time that Running == true

@@ -42,7 +42,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
     /// <summary>
     ///   Serialize and deserialize scene objects.
     /// </summary>
-    /// This should really be in OpenSim.Framework.Serialization but this would mean circular dependency problems
+    /// This should really be in Aurora.Framework.Serialization but this would mean circular dependency problems
     /// right now - hopefully this isn't forever.
     public class SceneObjectSerializer
     {

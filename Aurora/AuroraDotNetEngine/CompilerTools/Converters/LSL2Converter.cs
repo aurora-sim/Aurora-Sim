@@ -193,7 +193,7 @@ state testing
             if (rootPath != null)
             {
                 parameters.ReferencedAssemblies.Add(System.IO.Path.Combine(rootPath,
-                                                                 "OpenSim.Framework.dll"));
+                                                                 "Aurora.Framework.dll"));
                 parameters.ReferencedAssemblies.Add(System.IO.Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
             }

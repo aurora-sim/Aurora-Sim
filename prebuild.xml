@@ -947,7 +947,6 @@
       <Reference name="DotNetOpenMail" path="../../bin/"/>
       <Reference name="GlynnTucker.Cache" path="../../bin/"/>
       <Reference name="GoogleTranslateAPI" path="../../bin/"/>
-      <Reference name="HttpServer" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>

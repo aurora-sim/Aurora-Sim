@@ -69,7 +69,7 @@ namespace Aurora.Framework
         // The alternative of simply serializing the list doesn't appear to work on mono, since
         // we get a
         //
-        // System.TypeInitializationException: An exception was thrown by the type initializer for OpenSim.Framework.TaskInventoryDictionary ---> System.ArgumentOutOfRangeException: < 0
+        // System.TypeInitializationException: An exception was thrown by the type initializer for Aurora.Framework.TaskInventoryDictionary ---> System.ArgumentOutOfRangeException: < 0
         // Parameter name: length
         //   at System.String.Substring (Int32 startIndex, Int32 length) [0x00088] in /build/buildd/mono-1.2.4/mcs/class/corlib/System/String.cs:381
         //   at System.Xml.Serialization.TypeTranslator.GetTypeData (System.Type runtimeType, System.String xmlDataType) [0x001f6] in /build/buildd/mono-1.2.4/mcs/class/System.XML/System.Xml.Serialization/TypeTranslator.cs:217

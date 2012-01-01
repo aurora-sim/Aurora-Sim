@@ -175,7 +175,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         ///   Outgoing queues for throttled packets
         /// </summary>
-//        private readonly OpenSim.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new OpenSim.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
+//        private readonly Aurora.Framework.LocklessQueue<OutgoingPacket>[] m_packetOutboxes = new Aurora.Framework.LocklessQueue<OutgoingPacket>[(int)ThrottleOutPacketType.Count];
         private readonly int[] PacketsCounts = new int[(int) ThrottleOutPacketType.Count];
 
         /// <summary>

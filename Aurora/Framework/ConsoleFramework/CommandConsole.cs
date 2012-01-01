@@ -686,9 +686,51 @@ namespace Aurora.Framework
 
         public virtual bool CompareLogLevels(string a, string b)
         {
-            Level aa = (Level)Enum.Parse(typeof(Level), a, true);
-            Level bb = (Level)Enum.Parse(typeof(Level), b, true);
+            Level aa = GetLevel(a);
+            Level bb = GetLevel(b);
             return aa <= bb;
+        }
+
+        public Level GetLevel(string lvl)
+        {
+            switch (lvl.ToLower())
+            {
+                case "alert":
+                    return Level.Alert;
+                case "all":
+                    return Level.All;
+                case "critical":
+                    return Level.Critical;
+                case "debug":
+                    return Level.Debug;
+                case "emergency":
+                    return Level.Emergency;
+                case "error":
+                    return Level.Error;
+                case "fatal":
+                    return Level.Fatal;
+                case "fine":
+                    return Level.Fine;
+                case "finer":
+                    return Level.Finer;
+                case "finest":
+                    return Level.Finest;
+                case "info":
+                    return Level.Info;
+                case "notice":
+                    return Level.Notice;
+                case "off":
+                    return Level.Off;
+                case "severe":
+                    return Level.Severe;
+                case "trace":
+                    return Level.Trace;
+                case "verbose":
+                    return Level.Verbose;
+                case "warn":
+                    return Level.Warn;
+            }
+            return null;
         }
 
         /// <summary>
