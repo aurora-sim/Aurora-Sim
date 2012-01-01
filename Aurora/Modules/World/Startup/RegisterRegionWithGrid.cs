@@ -38,7 +38,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Startup
 {
     public class RegisterRegionWithGridModule : ISharedRegionStartupModule, IGridRegisterModule
     {

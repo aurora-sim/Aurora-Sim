@@ -7,7 +7,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.PhysicsState
 {
     public class PhysicsStateModule : INonSharedRegionModule, IPhysicsStateModule
     {

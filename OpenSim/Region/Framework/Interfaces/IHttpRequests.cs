@@ -26,6 +26,7 @@
  */
 
 using System.Collections.Generic;
+using Aurora.Framework;
 using OpenMetaverse;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -49,5 +50,14 @@ namespace OpenSim.Region.Framework.Interfaces
         IServiceRequest GetNextCompletedRequest();
         int GetRequestCount();
         void RemoveCompletedRequest(IServiceRequest id);
+    }
+
+    public interface IHttpRequestClass : IServiceRequest
+    {
+        string Metadata { get; set; }
+        int Status { get; set; }
+        UUID PrimID { get; set; }
+        string ResponseBody { get; set; }
+        string ReqID { get; set; }
     }
 }

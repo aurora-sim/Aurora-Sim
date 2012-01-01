@@ -32,7 +32,7 @@ using Nini.Config;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.VersionControl
 {
     public class VersionControlModule : ISharedRegionModule
     {

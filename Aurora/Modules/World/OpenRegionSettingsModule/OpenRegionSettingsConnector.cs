@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Web;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.OpenRegionSettingsModule
 {
     public class OpenRegionSettingsConnector : IOpenRegionSettingsConnector
     {

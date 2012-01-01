@@ -34,7 +34,7 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.CallingCards
 {
     public class CallingCardModule : ISharedRegionModule, ICallingCardModule
     {

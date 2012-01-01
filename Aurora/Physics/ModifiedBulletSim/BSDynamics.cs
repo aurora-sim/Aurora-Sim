@@ -43,7 +43,7 @@
 
 using System;
 using OpenMetaverse;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework.Physics;
 
 namespace OpenSim.Region.Physics.BulletSPlugin
 {

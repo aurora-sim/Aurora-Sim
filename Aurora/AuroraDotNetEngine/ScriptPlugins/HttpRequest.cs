@@ -29,7 +29,6 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Scripting.HttpRequest;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
@@ -70,7 +69,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
                 while (httpInfo != null)
                 {
-                    HttpRequestClass info = (HttpRequestClass) httpInfo;
+                    IHttpRequestClass info = (IHttpRequestClass)httpInfo;
                     //MainConsole.Instance.Debug("[AsyncLSL]:" + httpInfo.response_body + httpInfo.status);
 
                     // Deliver data to prim's remote_data handler

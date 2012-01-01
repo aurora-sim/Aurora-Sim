@@ -44,7 +44,7 @@ using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using Timer = System.Timers.Timer;
 
-namespace Aurora.Modules.FileBasedSimulationData
+namespace Aurora.Modules.Startup.FileBasedSimulationData
 {
     /// <summary>
     ///   FileBased DataStore, do not store anything in any databases, instead save .abackup files for it

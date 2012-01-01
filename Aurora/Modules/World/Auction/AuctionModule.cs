@@ -34,9 +34,8 @@ using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using Aurora.Framework;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Auction
 {
     public class AuctionModule : IAuctionModule, INonSharedRegionModule
     {

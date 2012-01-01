@@ -357,10 +357,10 @@ namespace Aurora.Modules.RegionLoader
                 RefreshCurrentRegions();
             RegionListBox.SelectedItem = region.RegionName;
 
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
-                OpenSim.Region.Framework.Interfaces.OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
+                OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
                 ors.MaximumPhysPrimScale = float.Parse(eMaxPhysPrim.Text);
                 ors.MaximumPrimScale = float.Parse(eMaxPrimSize.Text);
                 orsc.SetSettings(region.RegionID, ors);
@@ -664,7 +664,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void RegionManager_Load(object sender, EventArgs e)
         {
-            OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<OpenSim.Region.Framework.Interfaces.IOpenRegionSettingsConnector>();
+            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
                 string navUrl = orsc.AddOpenRegionSettingsHTMLPage(CurrentRegionID);

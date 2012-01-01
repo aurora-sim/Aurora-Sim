@@ -45,6 +45,14 @@ namespace OpenSim.Region.Framework.Interfaces
         UUID GetMessageID();
     }
 
+    public interface ISendRemoteDataRequest : IServiceRequest
+    {
+        UUID GetReqID();
+        string Channel { get; set; }
+        int Idata { get; set; }
+        string Sdata { get; set; }
+    }
+
     public interface IXMLRPC
     {
         int Port { get; }

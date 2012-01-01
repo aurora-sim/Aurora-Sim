@@ -35,7 +35,7 @@ using OpenMetaverse.Packets;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Selection
 {
     public class SelectionModule : ISharedRegionModule
     {

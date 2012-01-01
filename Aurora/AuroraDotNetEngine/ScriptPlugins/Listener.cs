@@ -30,7 +30,6 @@ using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Scripting.WorldComm;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
@@ -65,7 +64,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 {
                     while (comms.HasMessages())
                     {
-                        ListenerInfo lInfo = (ListenerInfo) comms.GetNextMessage();
+                        IWorldCommListenerInfo lInfo = comms.GetNextMessage();
 
                         //Deliver data to prim's listen handler
                         object[] resobj = new object[]

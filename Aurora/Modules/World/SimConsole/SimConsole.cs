@@ -37,10 +37,9 @@ using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net.Core;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace Aurora.Modules.World.SimConsole
+namespace Aurora.Modules.SimConsole
 {
     /// <summary>
     ///   This module allows for the console to be accessed in V2 viewers that support SimConsole
@@ -53,7 +52,7 @@ namespace Aurora.Modules.World.SimConsole
         private readonly Dictionary<UUID, Access> m_authorizedParticipants = new Dictionary<UUID, Access>();
         private readonly List<IScene> m_scenes = new List<IScene>();
         private readonly Dictionary<string, Access> m_userKeys = new Dictionary<string, Access>();
-        private readonly Dictionary<UUID, Level> m_userLogLevel = new Dictionary<UUID, Level>();
+        private readonly Dictionary<UUID, string> m_userLogLevel = new Dictionary<UUID, string>();
         private bool m_enabled;
 
         #region Enums
@@ -227,7 +226,7 @@ namespace Aurora.Modules.World.SimConsole
                 bool firstLogin = false;
                 if (!m_userLogLevel.ContainsKey(sp.UUID))
                 {
-                    m_userLogLevel.Add(sp.UUID, Level.Info);
+                    m_userLogLevel.Add(sp.UUID, "Info");
                     firstLogin = true;
                 }
                 return ParseMessage(sp, message, firstLogin);
@@ -263,7 +262,7 @@ namespace Aurora.Modules.World.SimConsole
                 string[] words = message.Split(' ');
                 if (words.Length == 4)
                 {
-                    m_userLogLevel[sp.UUID] = (Level) Enum.Parse(typeof (Level), words[3]);
+                    m_userLogLevel[sp.UUID] = words[3];
                     SendConsoleEventEQM(sp.UUID, "Set log level successful.");
                 }
                 else
@@ -294,7 +293,7 @@ namespace Aurora.Modules.World.SimConsole
             m_userLogLevel.Remove(presence.UUID);
         }
 
-        public void IncomingLogWrite(Level level, string text)
+        public void IncomingLogWrite(string level, string text)
         {
             if (text == "")
                 return;
@@ -303,7 +302,7 @@ namespace Aurora.Modules.World.SimConsole
             {
                 if (kvp.Value == Access.ReadWrite || kvp.Value == Access.Read)
                 {
-                    if (m_userLogLevel.ContainsKey(kvp.Key) && m_userLogLevel[kvp.Key] <= level)
+                    if (m_userLogLevel.ContainsKey(kvp.Key) && MainConsole.Instance.CompareLogLevels(m_userLogLevel[kvp.Key], level))
                     {
                         //Send the EQM with the message to all people who have read access
                         SendConsoleEventEQM(kvp.Key, text);

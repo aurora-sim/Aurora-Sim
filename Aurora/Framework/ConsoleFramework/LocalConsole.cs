@@ -295,7 +295,7 @@ namespace Aurora.Framework
 
         private void WriteLocalText(string text, Level level)
         {
-            MainConsole.TriggerLog(level, text);
+            MainConsole.TriggerLog(level.Name, text);
             string logtext = "";
             if (text != "")
             {

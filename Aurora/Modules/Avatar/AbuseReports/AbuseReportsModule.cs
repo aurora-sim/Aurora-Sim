@@ -40,7 +40,7 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.AbuseReports
 {
     public class AbuseReportsGUIService : IService
     {

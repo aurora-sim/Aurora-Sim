@@ -38,7 +38,7 @@ using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using Timer = System.Timers.Timer;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.SimProtection
 {
     public class PhysicsMonitor : ISharedRegionModule, IPhysicsMonitor
     {

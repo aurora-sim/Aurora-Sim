@@ -43,7 +43,7 @@ using System.Collections.Generic;
 using System.Linq;
 using OdeAPI;
 using OpenMetaverse;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework.Physics;
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine

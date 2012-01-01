@@ -33,7 +33,7 @@ using OpenSim.Region.Framework.Interfaces;
 using Language = Aurora.GoogleAPIs.Language;
 using Google.API.Translate;
 
-namespace Aurora.Modules.Avatar.AuroraChat
+namespace Aurora.Modules.Chat
 {
     /// <summary>
     ///   This allows you to use a calculator inworld via chat

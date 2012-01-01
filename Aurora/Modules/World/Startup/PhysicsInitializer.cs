@@ -29,9 +29,8 @@ using System;
 using Nini.Config;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using Aurora.Framework.Physics;
 
-namespace OpenSim.Region.CoreModules
+namespace Aurora.Modules.Startup
 {
     public class PhysicsInitializer : ISharedRegionStartupModule
     {

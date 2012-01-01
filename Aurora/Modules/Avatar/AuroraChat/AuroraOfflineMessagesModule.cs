@@ -35,7 +35,7 @@ using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Chat
 {
     public class AuroraOfflineMessageModule : ISharedRegionModule
     {

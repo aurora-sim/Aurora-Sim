@@ -267,6 +267,13 @@ namespace Aurora.Framework
         {
         }
 
+        public virtual bool CompareLogLevels(string a, string b)
+        {
+            Level aa = (Level)Enum.Parse(typeof(Level), a, true);
+            Level bb = (Level)Enum.Parse(typeof(Level), b, true);
+            return aa <= bb;
+        }
+
         /// <summary>
         ///   The default prompt text.
         /// </summary>

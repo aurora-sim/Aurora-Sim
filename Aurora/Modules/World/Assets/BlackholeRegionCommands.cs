@@ -8,7 +8,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules.World.Assets
+namespace Aurora.Modules.Assets
 {
     public class BlackholeRegionCommands : ISharedRegionModule
     {

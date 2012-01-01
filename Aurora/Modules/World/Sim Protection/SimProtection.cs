@@ -32,7 +32,7 @@ using Nini.Config;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.SimProtection
 {
     /// <summary>
     ///   This module helps keep the sim running when it begins to slow down, or if it freezes, restarts it

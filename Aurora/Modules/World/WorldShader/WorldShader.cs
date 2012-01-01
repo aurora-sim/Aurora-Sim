@@ -9,7 +9,7 @@ using OpenMetaverse.Imaging;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules.World.WorldShader
+namespace Aurora.Modules.WorldShader
 {
     public class WorldShader : ISharedRegionModule
     {

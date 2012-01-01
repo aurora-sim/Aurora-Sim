@@ -41,7 +41,7 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules.World.Auction
+namespace Aurora.Modules.SetHome
 {
     public class SetHomeModule : INonSharedRegionModule
     {

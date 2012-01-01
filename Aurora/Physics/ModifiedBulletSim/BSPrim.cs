@@ -32,7 +32,7 @@ using System.Reflection;
 using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Physics.ConvexDecompositionDotNet;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework.Physics;
 using OMV = OpenMetaverse;
 using Quaternion = OpenMetaverse.Quaternion;
 

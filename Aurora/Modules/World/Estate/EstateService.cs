@@ -39,7 +39,7 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Estate
 {
     public class EstateSettingsModule : ISharedRegionStartupModule
     {

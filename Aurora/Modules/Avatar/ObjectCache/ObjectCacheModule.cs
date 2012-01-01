@@ -34,7 +34,7 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.ObjectCache
 {
     public class ObjectCacheModule : INonSharedRegionModule, IObjectCache
     {

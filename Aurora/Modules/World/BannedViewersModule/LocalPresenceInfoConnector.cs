@@ -33,7 +33,7 @@ using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Ban
 {
     public class LocalPresenceInfoConnector : IPresenceInfo, IAuroraDataPlugin
 	{

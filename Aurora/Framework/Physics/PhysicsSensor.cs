@@ -29,7 +29,7 @@ using System;
 using System.Timers;
 using OpenMetaverse;
 
-namespace OpenSim.Region.Physics.Manager
+namespace Aurora.Framework.Physics
 {
     [Flags]
     public enum SenseType : uint

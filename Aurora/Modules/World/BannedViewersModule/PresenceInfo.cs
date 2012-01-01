@@ -30,7 +30,7 @@ using System.Text;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Ban
 {
     public class PresenceInfo
     {

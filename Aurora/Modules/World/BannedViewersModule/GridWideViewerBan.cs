@@ -36,7 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Ban
 {
     public class GridWideViewerBan : IService
     {

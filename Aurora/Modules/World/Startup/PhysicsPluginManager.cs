@@ -29,9 +29,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Aurora.Framework;
+using Aurora.Framework.Physics;
 using Nini.Config;
 
-namespace Aurora.Framework.Physics
+namespace Aurora.Modules.Startup
 {
     /// <summary>
     ///   Description of MyClass.

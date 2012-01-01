@@ -40,7 +40,7 @@ using Aurora.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Startup
 {
     public class Backup : ISharedRegionStartupModule
     {

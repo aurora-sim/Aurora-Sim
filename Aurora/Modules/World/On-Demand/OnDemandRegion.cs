@@ -33,7 +33,7 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules.World.On_Demand
+namespace Aurora.Modules.OnDemand
 {
     /// <summary>
     ///   Some notes on this module, this module just modifies when/where the startup code is executed

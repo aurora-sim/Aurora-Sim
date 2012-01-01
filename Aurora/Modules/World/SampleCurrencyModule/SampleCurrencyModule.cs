@@ -34,7 +34,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.OptionalModules
+namespace Aurora.Modules.SampleCurrencyModule
 {
     /// <summary>
     ///   This is a demo for you to use when making one that works for you.

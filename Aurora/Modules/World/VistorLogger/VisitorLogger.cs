@@ -33,7 +33,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.VisitorLogger
 {
     /// <summary>
     ///   This module logs all visitors to the sim to a specified file

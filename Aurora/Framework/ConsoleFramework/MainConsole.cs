@@ -33,7 +33,7 @@ namespace Aurora.Framework
     {
         #region Delegates
 
-        public delegate void IncomingLogWrite(Level level, string text);
+        public delegate void IncomingLogWrite(string level, string text);
 
         #endregion
 
@@ -41,7 +41,7 @@ namespace Aurora.Framework
         public static INotificationService NotificationService { get; set; }
         public static event IncomingLogWrite OnIncomingLogWrite;
 
-        public static void TriggerLog(Level level, string text)
+        public static void TriggerLog(string level, string text)
         {
             if (OnIncomingLogWrite != null)
                 OnIncomingLogWrite(level, text);

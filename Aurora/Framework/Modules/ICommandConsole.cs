@@ -145,6 +145,14 @@ namespace Aurora.Framework
         /// </summary>
         void EndConsoleProcessing();
 
+        /// <summary>
+        /// Check to see whether level A is lower or equal to levelB
+        /// </summary>
+        /// <param name="levelA"></param>
+        /// <param name="levelB"></param>
+        /// <returns></returns>
+        bool CompareLogLevels(string levelA, string levelB);
+
 
 
 

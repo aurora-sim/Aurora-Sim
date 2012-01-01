@@ -33,11 +33,11 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Avatar.Inventory.Archiver;
+using Aurora.Modules.Archivers;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules.World.DefaultInventoryIARLoader
+namespace Aurora.Modules.DefaultInventoryIARLoader
 {
     public class DefaultInventoryIARLoader : IDefaultLibraryLoader
     {

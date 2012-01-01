@@ -27,7 +27,7 @@
 
 using System;
 
-namespace OpenSim.Region.Physics.Manager
+namespace Aurora.Framework.Physics
 {
     public enum Vehicle
     {

@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
-using OpenSim.Region.CoreModules.Scripting.XMLRPC;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
@@ -59,8 +58,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 if (xmlrpc == null)
                     continue;
-                RPCRequestInfo rInfo = (RPCRequestInfo) xmlrpc.GetNextCompletedRequest();
-                SendRemoteDataRequest srdInfo = (SendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
+                IXmlRpcRequestInfo rInfo = xmlrpc.GetNextCompletedRequest();
+                ISendRemoteDataRequest srdInfo = (ISendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest();
 
                 if (!needToContinue)
                     needToContinue = xmlrpc.hasRequests();
@@ -90,7 +89,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                                                   "remote_data", resobj,
                                                                   new DetectParams[0]), EventPriority.Suspended);
 
-                    rInfo = (RPCRequestInfo) xmlrpc.GetNextCompletedRequest();
+                    rInfo = xmlrpc.GetNextCompletedRequest();
                 }
 
                 while (srdInfo != null)
@@ -113,7 +112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                                                             "remote_data", resobj,
                                                             new DetectParams[0]), EventPriority.Suspended);
 
-                    srdInfo = (SendRemoteDataRequest) xmlrpc.GetNextCompletedSRDRequest();
+                    srdInfo = (ISendRemoteDataRequest)xmlrpc.GetNextCompletedSRDRequest();
                 }
             }
             return needToContinue;

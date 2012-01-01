@@ -28,8 +28,9 @@ using System;
 using System.Collections.Generic;
 using C5;
 using Aurora.Framework;
+using Aurora.DataManager.Migration;
 
-namespace Aurora.DataManager.Migration.Migrators
+namespace Aurora.Modules.Ban
 {
     public class PresenceInfoMigrator_2 : Migrator
     {

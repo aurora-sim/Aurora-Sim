@@ -978,11 +978,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, SceneObjectPart newPart)
+        public void UpdateScriptToNewObject(UUID olditemID, TaskInventoryItem newItem, ISceneChildEntity newPart)
         {
             try
             {
-                if (newPart.ParentGroup.Scene != null)
+                if (newPart.ParentEntity.Scene != null)
                 {
                     ScriptData SD = ScriptProtection.GetScript(olditemID);
                     if (SD == null)
@@ -1019,7 +1019,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     CreateFromData(SD.Part.UUID, SD.ItemID, SD.Part.UUID, Plugins);
 
-                    SD.World = newPart.ParentGroup.Scene;
+                    SD.World = newPart.ParentEntity.Scene;
                     SD.SetApis();
 
                     MaintenanceThread.SetEventSchSetIgnoreNew(SD, false);

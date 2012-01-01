@@ -39,7 +39,7 @@ using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.CrossRegionBanSystem
 {
     public class CrossRegionBanSystem : ISharedRegionModule
     {

@@ -34,7 +34,7 @@ using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Chat
 {
     /// <summary>
     ///   This dialog module has support for mute lists

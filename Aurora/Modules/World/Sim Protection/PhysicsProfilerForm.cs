@@ -34,6 +34,7 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using Timer = System.Timers.Timer;
+using Aurora.Modules.SimProtection;
 
 namespace Aurora.Modules
 {

@@ -39,7 +39,7 @@ using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules
+namespace Aurora.Modules.Ban
 {
     #region Grid BanCheck
 

@@ -34,7 +34,7 @@ using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
+namespace Aurora.Modules.Combat
 {
     public class AuroraCombatModule : INonSharedRegionModule, ICombatModule
     {
