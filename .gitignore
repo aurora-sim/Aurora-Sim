@@ -37,6 +37,7 @@ bin/ScriptEngines/*/*.state
 bin/*.maddin
 bin/*.exe
 bin/*.ini
+bin/*.ini.old
 bin/*.log
 bin/*.abackup
 bin/j2kDecodeCache
@@ -63,9 +64,13 @@ bin/OpenSim.log
 bin/*.manifest
 bin/crashes/
 bin/AuroraServerConfiguration/*/*.ini
+bin/AuroraServerConfiguration/*/*.ini.old
 bin/AuroraServerConfiguration/*.ini
+bin/AuroraServerConfiguration/*.ini.old
 bin/Configuration/*/*.ini
+bin/Configuration/*/*.ini.old
 bin/Configuration/*.ini
+bin/Configuration/*.ini.old
 bin/MapTiles/*
 Examples/*.dll
 Aurora.build
@@ -81,5 +86,6 @@ TAGS
 Makefile.local
 bin/.version
 compile.bat
+compilex64.vs2010.bat
 *.db-journal
 addon-modules/*/
