@@ -30,7 +30,6 @@ using System.Linq;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService

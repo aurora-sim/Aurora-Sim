@@ -31,7 +31,7 @@ using System.Net;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.OptionalModules

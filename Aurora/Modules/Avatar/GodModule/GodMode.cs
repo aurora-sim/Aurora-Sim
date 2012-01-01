@@ -32,7 +32,7 @@ using Aurora.Framework;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules

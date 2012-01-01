@@ -31,7 +31,6 @@ using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
 using C5;
-using OpenSim.Framework;
 
 namespace Aurora.DataManager.Migration
 {
@@ -255,6 +254,7 @@ namespace Aurora.DataManager.Migration
                 {
                     currentMigrator.ClearRestorePoint(genericData);
                 }
+                currentMigrator.FinishedMigration(genericData);
             }
         }
 

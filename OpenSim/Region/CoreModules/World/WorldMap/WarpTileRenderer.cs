@@ -39,11 +39,10 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Rendering;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.CoreModules.World.Warp3DMap;
 using Rednettle.Warp3D;
-using log4net;
-using RegionSettings = OpenSim.Framework.RegionSettings;
+using RegionSettings = Aurora.Framework.RegionSettings;
 using WarpRenderer = Warp3D.Warp3D;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap

@@ -347,7 +347,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                              "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n" +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine;\n" +
                              "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n" +
-                             "using OpenSim.Framework;\n" +
+                             "using Aurora.Framework;\n" +
                              "using OpenSim.Services.Interfaces;\n" +
                              "using OpenSim.Region.Framework.Interfaces;\n" +
                              "using OpenSim.Region.Framework.Scenes;\n" +

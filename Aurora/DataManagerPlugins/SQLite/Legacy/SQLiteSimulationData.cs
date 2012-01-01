@@ -37,9 +37,8 @@ using Aurora.DataManager;
 using System.Data.SQLite;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using log4net;
 
 namespace OpenSim.Data.SQLite
 {

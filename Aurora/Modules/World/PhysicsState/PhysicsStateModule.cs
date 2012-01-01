@@ -4,7 +4,7 @@ using System.Linq;
 using System.Timers;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules

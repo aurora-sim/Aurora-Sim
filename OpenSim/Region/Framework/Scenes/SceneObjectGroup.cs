@@ -34,7 +34,7 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;

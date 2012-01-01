@@ -239,5 +239,9 @@ namespace Aurora.DataManager.Migration
                 genericData.DropTable(tempTableName);
             }
         }
+
+        public virtual void FinishedMigration(IDataConnector genericData)
+        {
+        }
     }
 }

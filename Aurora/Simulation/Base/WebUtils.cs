@@ -40,8 +40,7 @@ using System.Xml.Serialization;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 using log4net.Core;
 
 namespace Aurora.Simulation.Base

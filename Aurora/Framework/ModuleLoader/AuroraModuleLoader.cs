@@ -30,8 +30,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using OpenSim.Framework;
-using log4net;
 
 namespace Aurora.Framework
 {

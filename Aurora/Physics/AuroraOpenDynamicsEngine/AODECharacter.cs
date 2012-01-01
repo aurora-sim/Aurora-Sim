@@ -30,8 +30,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using OdeAPI;
 using OpenMetaverse;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 //using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine

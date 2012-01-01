@@ -31,12 +31,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Aurora.Simulation.Base;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.Connectors

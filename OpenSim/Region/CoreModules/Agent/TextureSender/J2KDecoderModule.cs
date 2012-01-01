@@ -34,11 +34,10 @@ using System.Reflection;
 using System.Text;
 using Aurora.Simulation.Base;
 using CSJ2K;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Agent.TextureSender
 {

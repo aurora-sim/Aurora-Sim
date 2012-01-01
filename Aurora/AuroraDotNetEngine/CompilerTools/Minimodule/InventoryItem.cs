@@ -28,7 +28,7 @@
 using System;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

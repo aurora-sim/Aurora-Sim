@@ -32,11 +32,9 @@ using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Permissions
 {

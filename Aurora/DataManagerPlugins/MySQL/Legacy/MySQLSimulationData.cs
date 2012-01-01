@@ -36,9 +36,8 @@ using Aurora.DataManager;
 using MySql.Data.MySqlClient;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using log4net;
 
 namespace OpenSim.Data.MySQL
 {

@@ -28,14 +28,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using OpenSim.Framework;
-using OpenSim.Services.Interfaces;
 using Aurora.Framework;
 using Aurora.DataManager;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {

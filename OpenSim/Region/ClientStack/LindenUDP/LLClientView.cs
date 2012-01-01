@@ -38,11 +38,10 @@ using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using log4net;
 using RegionFlags = OpenMetaverse.RegionFlags;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
@@ -335,8 +334,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_cachedTextureSerial;
 
-        private readonly OpenSim.Framework.LocklessQueue<object> m_UpdatesQueue =
-            new OpenSim.Framework.LocklessQueue<object>();
+        private readonly Aurora.Framework.LocklessQueue<object> m_UpdatesQueue =
+            new Aurora.Framework.LocklessQueue<object>();
 
         private bool m_disableFacelights;
 
@@ -3838,8 +3837,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// again  presences update preiority was lost. recovering it  fast and dirty
         public void SendAvatarUpdate(IEnumerable<EntityUpdate> updates)
         {
-            OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
-                new OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
+            Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
+                new Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
             List<EntityUpdate> terseUpdates = new List<EntityUpdate>();
 
             foreach (EntityUpdate update in updates)
@@ -3896,14 +3895,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public void SendPrimUpdate(IEnumerable<EntityUpdate> updates)
         {
-            OpenSim.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>> objectUpdateBlocks =
-                new OpenSim.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>>();
-            OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks =
-                new OpenSim.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>>();
-            OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
-                new OpenSim.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
-            OpenSim.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> cachedUpdateBlocks =
-                new OpenSim.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>>();
+            Aurora.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>> objectUpdateBlocks =
+                new Aurora.Framework.Lazy<List<ObjectUpdatePacket.ObjectDataBlock>>();
+            Aurora.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>> compressedUpdateBlocks =
+                new Aurora.Framework.Lazy<List<ObjectUpdateCompressedPacket.ObjectDataBlock>>();
+            Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>> terseUpdateBlocks =
+                new Aurora.Framework.Lazy<List<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>>();
+            Aurora.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>> cachedUpdateBlocks =
+                new Aurora.Framework.Lazy<List<ObjectUpdateCachedPacket.ObjectDataBlock>>();
             List<EntityUpdate> fullUpdates = new List<EntityUpdate>();
             List<EntityUpdate> compressedUpdates = new List<EntityUpdate>();
             List<EntityUpdate> cachedUpdates = new List<EntityUpdate>();

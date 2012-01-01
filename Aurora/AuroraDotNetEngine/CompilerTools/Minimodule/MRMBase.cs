@@ -30,7 +30,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Lifetime;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

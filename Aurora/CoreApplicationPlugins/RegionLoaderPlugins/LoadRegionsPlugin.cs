@@ -31,9 +31,7 @@ using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
-using log4net;
 
 namespace OpenSim.CoreApplicationPlugins
 {

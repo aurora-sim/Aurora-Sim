@@ -27,8 +27,7 @@
 
 using System;
 using System.Reflection;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {

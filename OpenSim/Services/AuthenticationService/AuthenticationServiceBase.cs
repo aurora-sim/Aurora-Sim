@@ -28,8 +28,7 @@
 using System;
 using System.Reflection;
 using OpenMetaverse;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.Services.AuthenticationService
 {

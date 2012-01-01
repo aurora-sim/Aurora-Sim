@@ -28,7 +28,7 @@
 using System;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.Framework
 {

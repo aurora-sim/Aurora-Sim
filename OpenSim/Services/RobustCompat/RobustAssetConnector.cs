@@ -33,11 +33,10 @@ using System.Reflection;
 using System.Xml.Serialization;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.RobustCompat
 {
@@ -65,9 +64,9 @@ namespace OpenSim.Services.RobustCompat
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 
-        public override Framework.AssetBase Get(string id)
+        public override Aurora.Framework.AssetBase Get(string id)
         {
-            Framework.AssetBase asset = null;
+            Aurora.Framework.AssetBase asset = null;
             AssetBase rasset = null;
 
             if (m_Cache != null)
@@ -107,7 +106,7 @@ namespace OpenSim.Services.RobustCompat
             {
                 string uri = m_ServerURI + "/" + id;
 
-                Framework.AssetBase asset = null;
+                Aurora.Framework.AssetBase asset = null;
                 if (m_Cache != null)
                     asset = m_Cache.Get(id);
 
@@ -119,7 +118,7 @@ namespace OpenSim.Services.RobustCompat
                         MakeRequest("GET", uri, 0,
                                     delegate(AssetBase aa)
                                         {
-                                            Framework.AssetBase a = TearDown(aa);
+                                            Aurora.Framework.AssetBase a = TearDown(aa);
                                             if (m_Cache != null)
                                                 m_Cache.Cache(a);
                                             handler(id, sender, a);
@@ -139,7 +138,7 @@ namespace OpenSim.Services.RobustCompat
             return false;
         }
 
-        public override UUID Store(Framework.AssetBase asset)
+        public override UUID Store(Aurora.Framework.AssetBase asset)
         {
             AssetBase rasset = Build(asset);
             if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
@@ -184,7 +183,7 @@ namespace OpenSim.Services.RobustCompat
             return newID;
         }
 
-        public AssetBase Build(Framework.AssetBase asset)
+        public AssetBase Build(Aurora.Framework.AssetBase asset)
         {
             AssetBase r = new AssetBase
                               {
@@ -199,11 +198,11 @@ namespace OpenSim.Services.RobustCompat
             return r;
         }
 
-        public Framework.AssetBase TearDown(AssetBase asset)
+        public Aurora.Framework.AssetBase TearDown(AssetBase asset)
         {
             if (asset == null)
                 return null;
-            Framework.AssetBase r = new Framework.AssetBase
+            Aurora.Framework.AssetBase r = new Aurora.Framework.AssetBase
                                         {
                                             CreatorID = UUID.Parse(asset.CreatorID),
                                             Data = asset.Data,

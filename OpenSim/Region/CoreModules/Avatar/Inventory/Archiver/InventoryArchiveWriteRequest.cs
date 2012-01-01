@@ -32,13 +32,12 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Xml;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
-using OpenSim.Framework.Serialization.External;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
+using Aurora.Framework.Serialization.External;
 using OpenSim.Region.CoreModules.World.Archiver;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 {

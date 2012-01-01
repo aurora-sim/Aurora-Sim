@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

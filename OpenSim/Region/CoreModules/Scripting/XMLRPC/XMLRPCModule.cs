@@ -35,10 +35,9 @@ using System.Threading;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 /*****************************************************
  *

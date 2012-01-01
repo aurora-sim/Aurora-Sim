@@ -30,7 +30,7 @@ using Aurora.Framework;
 using Aurora.Services.DataService;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.Modules
 {

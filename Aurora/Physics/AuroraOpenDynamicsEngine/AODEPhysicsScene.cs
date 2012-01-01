@@ -36,7 +36,7 @@ using System.Threading;
 using Nini.Config;
 using OdeAPI;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 //using Ode.NET;
 #if USE_DRAWSTUFF
 using Drawstuff.NET;
@@ -222,8 +222,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             public changes what;
         }
 
-        public OpenSim.Framework.LocklessQueue<AODEchangeitem> ChangesQueue =
-            new OpenSim.Framework.LocklessQueue<AODEchangeitem>();
+        public Aurora.Framework.LocklessQueue<AODEchangeitem> ChangesQueue =
+            new Aurora.Framework.LocklessQueue<AODEchangeitem>();
 
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
 

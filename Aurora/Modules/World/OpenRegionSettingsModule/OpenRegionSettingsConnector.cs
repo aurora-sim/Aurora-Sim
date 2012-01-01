@@ -1,6 +1,5 @@
 ﻿using System;
 using Aurora.Framework;
-using OpenSim.Framework;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
 using System.Collections;

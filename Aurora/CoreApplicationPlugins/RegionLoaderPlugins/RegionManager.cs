@@ -33,11 +33,10 @@ using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
 using Aurora.Framework;
-using log4net;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.RegionLoader

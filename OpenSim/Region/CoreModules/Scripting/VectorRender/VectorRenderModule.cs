@@ -38,9 +38,8 @@ using BitmapProcessing;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 {

@@ -27,7 +27,7 @@
 
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {

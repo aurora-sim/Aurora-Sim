@@ -30,7 +30,7 @@ using System.Drawing;
 using BitmapProcessing;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 

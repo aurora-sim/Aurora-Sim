@@ -34,11 +34,10 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization.External;
+using Aurora.Framework;
+using Aurora.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace Aurora.Modules
 {

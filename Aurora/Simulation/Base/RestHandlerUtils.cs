@@ -27,7 +27,7 @@
 
 using System;
 using OpenMetaverse;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Simulation.Base
 {

@@ -35,9 +35,7 @@ using System.Windows.Forms;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules

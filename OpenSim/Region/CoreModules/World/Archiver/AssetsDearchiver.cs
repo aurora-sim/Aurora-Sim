@@ -32,10 +32,9 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {

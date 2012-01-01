@@ -32,8 +32,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using OpenMetaverse;
-using log4net;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Serialization;
 

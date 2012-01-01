@@ -30,8 +30,7 @@ using System.Reflection;
 using Aurora.Simulation.Base;
 using GlynnTucker.Cache;
 using Nini.Config;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.Asset
 {

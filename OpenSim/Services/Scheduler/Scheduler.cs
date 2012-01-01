@@ -32,7 +32,7 @@ using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
+using OpenMetaverse;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services

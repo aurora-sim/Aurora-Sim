@@ -29,11 +29,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.CoreModules.Scripting.LSLHttp

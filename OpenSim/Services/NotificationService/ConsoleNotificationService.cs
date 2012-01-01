@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Services.NotificationService
 {

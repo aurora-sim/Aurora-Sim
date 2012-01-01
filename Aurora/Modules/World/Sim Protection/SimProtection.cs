@@ -29,9 +29,8 @@ using System;
 using System.Reflection;
 using System.Timers;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace Aurora.Modules
 {

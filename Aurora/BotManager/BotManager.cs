@@ -31,9 +31,8 @@ using System.Reflection;
 using System.Threading;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace Aurora.BotManager
 {

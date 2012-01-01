@@ -32,8 +32,7 @@ using System.Net;
 using System.Reflection;
 using Nini.Config;
 using Nini.Ini;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {

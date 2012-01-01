@@ -40,9 +40,7 @@ using System.Timers;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset

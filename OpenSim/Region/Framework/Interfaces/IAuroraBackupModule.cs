@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

@@ -32,8 +32,8 @@ using System.Reflection;
 using System.Text;
 using Nini.Config;
 using Nwc.XmlRpc;
-using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework;
 
 namespace OpenSim.Services
 {

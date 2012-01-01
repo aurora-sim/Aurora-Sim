@@ -28,7 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {

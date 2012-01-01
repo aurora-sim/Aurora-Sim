@@ -32,9 +32,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using OpenMetaverse;
-using OpenSim.Framework;
-using log4net;
-using log4net.Core;
+using Aurora.Framework;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {
@@ -66,17 +64,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public int nlevels;
         public int[] promotioncntr;
         public int promotionratemask;
-        public OpenSim.Framework.LocklessQueue<object>[] queues;
+        public Aurora.Framework.LocklessQueue<object>[] queues;
 
         public UDPprioQueue(int NumberOfLevels, int PromRateMask)
         {
             // PromRatemask:  0x03 promotes on each 4 calls, 0x1 on each 2 calls etc
             nlevels = NumberOfLevels;
-            queues = new OpenSim.Framework.LocklessQueue<object>[nlevels];
+            queues = new Aurora.Framework.LocklessQueue<object>[nlevels];
             promotioncntr = new int[nlevels];
             for (int i = 0; i < nlevels; i++)
             {
-                queues[i] = new OpenSim.Framework.LocklessQueue<object>();
+                queues[i] = new Aurora.Framework.LocklessQueue<object>();
                 promotioncntr[i] = 0;
             }
             promotionratemask = PromRateMask;
@@ -183,7 +181,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         ///   ACKs that are queued up, waiting to be sent to the client
         /// </summary>
-        public readonly OpenSim.Framework.LocklessQueue<uint> PendingAcks = new OpenSim.Framework.LocklessQueue<uint>();
+        public readonly Aurora.Framework.LocklessQueue<uint> PendingAcks = new Aurora.Framework.LocklessQueue<uint>();
 
         private readonly int[] Rates;
 
@@ -598,7 +596,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // this queue
                 else if (m_outbox.Dequeue(out packet))
                 {
-                    MainConsole.Instance.Format(new Level(0, "All"), AgentID + " - " + packet.Packet.Type, null);
+                    MainConsole.Instance.Output(AgentID + " - " + packet.Packet.Type, "ALL");
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand ||

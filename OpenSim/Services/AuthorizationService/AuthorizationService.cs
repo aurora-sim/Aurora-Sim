@@ -29,10 +29,9 @@ using System.Linq;
 using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.AuthorizationService
 {

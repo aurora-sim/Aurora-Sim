@@ -28,7 +28,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Aurora.Framework;
-using OpenSim.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;

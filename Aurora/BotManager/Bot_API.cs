@@ -32,7 +32,7 @@ using System.Reflection;
 using System.Runtime.Remoting.Lifetime;
 using Aurora.ScriptEngine.AuroraDotNetEngine;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
 using LSL_Key = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLString;

@@ -31,9 +31,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {

@@ -30,7 +30,6 @@ using System.Threading;
 using System.Windows.Forms;
 using Aurora.Modules.RegionLoader;
 using Nini.Config;
-using OpenSim.Framework;
 using Aurora.DataManager;
 using Aurora.Framework;
 

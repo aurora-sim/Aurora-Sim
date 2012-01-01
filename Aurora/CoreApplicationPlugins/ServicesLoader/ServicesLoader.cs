@@ -27,9 +27,8 @@
 
 using System.Collections.Generic;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Simulation.Base;
 
 namespace OpenSim.CoreApplicationPlugins
 {

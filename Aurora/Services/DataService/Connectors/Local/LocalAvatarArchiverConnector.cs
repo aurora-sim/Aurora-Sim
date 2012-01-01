@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Data;
 using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {

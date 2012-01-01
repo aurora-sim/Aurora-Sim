@@ -34,10 +34,9 @@ using System.Windows.Forms;
 using Aurora.Simulation.Base;
 using Microsoft.Win32;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace Aurora.Modules
 {

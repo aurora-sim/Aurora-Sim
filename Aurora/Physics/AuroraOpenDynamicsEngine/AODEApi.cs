@@ -1839,7 +1839,7 @@ namespace OdeAPI
             }
             catch (Exception ex)
             {
-                OpenSim.Framework.MainConsole.Instance.Output("[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
+                Aurora.Framework.MainConsole.Instance.Output("[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString());
             }
         }
     }

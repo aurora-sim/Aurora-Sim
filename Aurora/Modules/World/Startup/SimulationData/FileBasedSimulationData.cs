@@ -37,12 +37,11 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using log4net;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules.FileBasedSimulationData

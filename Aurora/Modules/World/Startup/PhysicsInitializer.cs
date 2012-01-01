@@ -27,9 +27,9 @@
 
 using System;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework.Physics;
 
 namespace OpenSim.Region.CoreModules
 {

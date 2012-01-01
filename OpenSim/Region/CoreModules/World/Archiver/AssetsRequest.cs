@@ -31,9 +31,8 @@ using System.Linq;
 using System.Reflection;
 using System.Timers;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {

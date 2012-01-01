@@ -31,8 +31,8 @@ using System.Linq;
 using System.Timers;
 using System.Windows.Forms;
 using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using Timer = System.Timers.Timer;
 
 namespace Aurora.Modules

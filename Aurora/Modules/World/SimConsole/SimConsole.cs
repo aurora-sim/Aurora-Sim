@@ -32,9 +32,9 @@ using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using log4net.Core;
@@ -91,7 +91,7 @@ namespace Aurora.Modules.World.SimConsole
                     }
                     else
                         MainConsole.Instance.Output(
-                            "No second configuration option given for SimConsole Users, ignoring", Level.Warn);
+                            "No second configuration option given for SimConsole Users, ignoring", "WARN");
                 }
             }
         }

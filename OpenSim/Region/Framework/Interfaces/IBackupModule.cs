@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
 {

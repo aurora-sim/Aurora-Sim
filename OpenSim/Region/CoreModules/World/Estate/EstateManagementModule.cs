@@ -32,14 +32,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
+using Aurora.Framework.Capabilities;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse.StructuredData;
 using RegionFlags = OpenMetaverse.RegionFlags;
 

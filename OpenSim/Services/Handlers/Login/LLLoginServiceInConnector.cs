@@ -29,10 +29,9 @@ using System;
 using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services
 {

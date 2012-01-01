@@ -30,13 +30,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
-using log4net;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Animation;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenSim.Services.Interfaces;
-using PrimType = OpenSim.Framework.PrimType;
+using PrimType = Aurora.Framework.PrimType;
 
 namespace OpenSim.Region.Framework.Scenes
 {

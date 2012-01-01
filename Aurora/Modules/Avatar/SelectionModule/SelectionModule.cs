@@ -32,9 +32,8 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace Aurora.Modules
 {

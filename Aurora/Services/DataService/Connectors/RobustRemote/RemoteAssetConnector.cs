@@ -30,12 +30,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
-using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using OpenMetaverse;
+using Aurora.Simulation.Base;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace Aurora.Services.DataService
 {

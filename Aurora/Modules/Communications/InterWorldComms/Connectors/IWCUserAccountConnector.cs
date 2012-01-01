@@ -30,7 +30,7 @@ using System.Linq;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.Interfaces;
 using OpenSim.Services.UserAccountService;

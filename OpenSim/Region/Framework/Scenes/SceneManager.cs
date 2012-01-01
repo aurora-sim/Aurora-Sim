@@ -32,8 +32,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
-using log4net;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using Nini.Config;
 using Aurora.Framework;

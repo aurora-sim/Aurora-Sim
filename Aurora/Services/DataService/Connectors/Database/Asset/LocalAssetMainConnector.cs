@@ -4,9 +4,7 @@ using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace Aurora.Services.DataService.Connectors.Database.Asset
 {

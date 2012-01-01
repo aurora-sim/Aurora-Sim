@@ -35,11 +35,10 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
-using ChatSessionMember = OpenSim.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 {

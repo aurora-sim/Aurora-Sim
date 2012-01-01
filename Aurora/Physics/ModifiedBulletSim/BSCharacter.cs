@@ -29,8 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Physics.BulletSPlugin
 {

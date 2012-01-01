@@ -38,10 +38,10 @@ using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Physics.Manager;
 using PrimMesher;
-using log4net;
+using Aurora.Framework.Physics;
 using zlib;
 using Path = System.IO.Path;
 

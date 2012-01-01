@@ -33,10 +33,9 @@ using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using log4net;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 

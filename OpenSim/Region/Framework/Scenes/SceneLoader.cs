@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {

@@ -33,11 +33,10 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Capabilities;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
@@ -1480,7 +1479,7 @@ namespace AvatarArchives
                 return;
             }
             MainConsole.Instance.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
-            string serialization = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
+            string serialization = Aurora.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
             itemMap[ItemID.ToString()] = OSD.FromString(serialization);
 
             SaveAsset(saveItem.AssetID, assets);
@@ -1529,7 +1528,7 @@ namespace AvatarArchives
             foreach (KeyValuePair<string, OSD> kvp in items)
             {
                 string serialization = kvp.Value.AsString();
-                InventoryItemBase item = OpenSim.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
+                InventoryItemBase item = Aurora.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
                 MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
                 UUID oldID = item.ID;
                 item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);

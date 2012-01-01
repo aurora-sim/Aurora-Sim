@@ -32,7 +32,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Data.MSSQL

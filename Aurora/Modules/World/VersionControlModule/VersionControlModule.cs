@@ -29,7 +29,7 @@ using System;
 using System.Linq;
 using System.Timers;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules

@@ -35,10 +35,8 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
 using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules

@@ -28,7 +28,6 @@
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 
 namespace Aurora.Services.DataService
 {

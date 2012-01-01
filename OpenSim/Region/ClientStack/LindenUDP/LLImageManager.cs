@@ -30,10 +30,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using Mischel.Collections;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.ClientStack.LindenUDP
 {

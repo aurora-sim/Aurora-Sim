@@ -29,7 +29,7 @@ using Aurora.DataManager;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 using log4net.Core;
 
@@ -187,11 +187,11 @@ namespace OpenSim.Services.AvatarService
             UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
             if (acc == null)
             {
-                MainConsole.Instance.Output("No known avatar with that name.", Level.Emergency);
+                MainConsole.Instance.Output("No known avatar with that name.");
                 return;
             }
             ResetAvatar(acc.PrincipalID);
-            MainConsole.Instance.Output("Reset avatar's appearance successfully.", Level.Emergency);
+            MainConsole.Instance.Output("Reset avatar's appearance successfully.");
         }
     }
 }

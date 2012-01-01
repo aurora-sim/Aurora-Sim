@@ -32,9 +32,8 @@ using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using Aurora.Framework;
-using log4net;
 using Nini.Config;
-using OpenSim.Framework;
+using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {

@@ -30,9 +30,8 @@ using System.Linq;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.ConfigurationService
 {

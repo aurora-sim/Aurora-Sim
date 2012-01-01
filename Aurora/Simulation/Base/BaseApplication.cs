@@ -62,8 +62,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Nini.Config;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 using log4net.Config;
 
 namespace Aurora.Simulation.Base

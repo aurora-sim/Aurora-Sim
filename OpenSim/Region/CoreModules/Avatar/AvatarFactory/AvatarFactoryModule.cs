@@ -34,10 +34,8 @@ using System.Timers;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
 using Timer = System.Timers.Timer;
 
 namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory

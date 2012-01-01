@@ -33,8 +33,7 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace Aurora.Services.DataService
 {

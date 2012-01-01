@@ -34,10 +34,9 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
-using ChatSessionMember = OpenSim.Framework.ChatSessionMember;
+using ChatSessionMember = Aurora.Framework.ChatSessionMember;
 
 /***************************************************************************
  * Simian Data Map

@@ -34,9 +34,8 @@ using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 

@@ -32,7 +32,7 @@ using System.Timers;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 

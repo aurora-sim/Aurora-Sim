@@ -32,7 +32,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.DataManager
 {

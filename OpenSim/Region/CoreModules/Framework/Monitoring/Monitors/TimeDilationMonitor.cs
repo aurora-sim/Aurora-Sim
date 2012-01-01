@@ -26,7 +26,6 @@
  */
 
 using Aurora.Framework;
-using OpenSim.Framework;
 
 namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 {

@@ -27,7 +27,7 @@
 
 using Aurora.Services.DataService;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.CoreApplicationPlugins
 {

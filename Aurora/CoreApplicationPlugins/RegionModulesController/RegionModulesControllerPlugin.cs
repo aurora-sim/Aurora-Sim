@@ -30,9 +30,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Aurora.Framework;
 using Nini.Config;
-using OpenSim.Framework;
+using OpenMetaverse;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace OpenSim.CoreApplicationPlugins
 {

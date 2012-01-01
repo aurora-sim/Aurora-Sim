@@ -26,15 +26,13 @@
  */
 
 using System;
-using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework;
+using Aurora.Framework.Physics;
 
 namespace OpenSim.Region.Physics.BulletSPlugin
 {
     public class BSPlugin : IPhysicsPlugin
     {
-        //private static readonly log4net.ILog MainConsole.Instance = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         private BSScene _mScene;
 
         #region IPhysicsPlugin Members

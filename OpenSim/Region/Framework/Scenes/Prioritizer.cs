@@ -30,9 +30,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 /*

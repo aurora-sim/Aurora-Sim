@@ -31,7 +31,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 // TODOs for BulletSim (for BSScene, BSPrim, BSCharacter and BulletSim)
 // Parameterize BulletSim. Pass a structure of parameters to the C++ code. Capsule size, friction, ...

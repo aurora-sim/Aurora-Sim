@@ -31,10 +31,9 @@ using System.Reflection;
 using System.Text;
 using Aurora.Simulation.Base;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services.MessagingService
 {

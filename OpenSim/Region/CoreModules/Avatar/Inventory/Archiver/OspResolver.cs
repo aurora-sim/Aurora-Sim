@@ -29,9 +29,8 @@ using System.Reflection;
 using System.Text;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
-using log4net;
 
-namespace OpenSim.Framework
+namespace Aurora.Framework
 {
     /// <summary>
     ///   Resolves OpenSim Profile Anchors (OSPA).  An OSPA is a string used to provide information for 

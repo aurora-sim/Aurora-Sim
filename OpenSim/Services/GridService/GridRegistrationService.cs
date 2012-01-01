@@ -33,14 +33,13 @@ using System.Reflection;
 using System.Text;
 using Nini.Config;
 using Aurora.Simulation.Base;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using log4net;
 
 namespace OpenSim.Services.GridService
 {

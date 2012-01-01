@@ -29,14 +29,12 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
-using log4net;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using Aurora.Framework;
-using OpenSim.Framework;
 
 namespace OpenSim.Services.CapsService
 {

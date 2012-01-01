@@ -27,7 +27,7 @@
 
 using System.Collections;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.CapsService

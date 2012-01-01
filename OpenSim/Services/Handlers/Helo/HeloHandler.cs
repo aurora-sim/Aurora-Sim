@@ -30,9 +30,8 @@ using System.Net;
 using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
-using log4net;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 
 namespace OpenSim.Services
 {

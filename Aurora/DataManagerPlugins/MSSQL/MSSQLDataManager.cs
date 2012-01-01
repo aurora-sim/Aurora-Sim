@@ -799,6 +799,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(2)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
+                case ColumnTypes.String30:
+                    return "VARCHAR(30)";
                 case ColumnTypes.String32:
                     return "VARCHAR(32)";
                 case ColumnTypes.String36:
@@ -813,6 +815,8 @@ namespace Aurora.DataManager.MSSQL
                     return "VARCHAR(50)";
                 case ColumnTypes.String100:
                     return "VARCHAR(100)";
+                case ColumnTypes.String10:
+                    return "VARCHAR(10)";
                 case ColumnTypes.String255:
                     return "VARCHAR(255)";
                 case ColumnTypes.String512:
@@ -835,6 +839,8 @@ namespace Aurora.DataManager.MSSQL
                     return "MEDIUMTEXT";
                 case ColumnTypes.LongText:
                     return "LONGTEXT";
+                case ColumnTypes.Float:
+                    return "float";
                 case ColumnTypes.TinyInt1:
                     return "TINYINT(1)";
                 case ColumnTypes.TinyInt4:
@@ -947,8 +953,12 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.String1;
                 case "varchar(2)":
                     return ColumnTypes.String2;
+                case "varchar(10)":
+                    return ColumnTypes.String10;
                 case "varchar(16)":
                     return ColumnTypes.String16;
+                case "varchar(30)":
+                    return ColumnTypes.String30;
                 case "varchar(32)":
                     return ColumnTypes.String32;
                 case "varchar(36)":
@@ -981,6 +991,8 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.MediumText;
                 case "longtext":
                     return ColumnTypes.LongText;
+                case "float":
+                    return ColumnTypes.Float;
                 case "image":
                     return ColumnTypes.Blob;
                 case "tinyint(1)":

@@ -27,7 +27,7 @@
 
 using System;
 using Aurora.Simulation.Base;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.Server
 {

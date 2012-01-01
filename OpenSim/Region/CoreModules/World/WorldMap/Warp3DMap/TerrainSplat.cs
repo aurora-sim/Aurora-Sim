@@ -33,9 +33,8 @@ using System.IO;
 using System.Reflection;
 using CSJ2K;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Warp3DMap
 {

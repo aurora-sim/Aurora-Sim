@@ -27,7 +27,7 @@
 
 using System.Drawing;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {

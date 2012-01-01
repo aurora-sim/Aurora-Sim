@@ -29,7 +29,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenMetaverse
 {

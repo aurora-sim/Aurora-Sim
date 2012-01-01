@@ -3,9 +3,8 @@ using System.Net;
 using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Services
 {

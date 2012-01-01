@@ -30,14 +30,13 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
 
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse;
-using log4net;
 using Nini.Config;
 
 namespace OpenSim.Region.CoreModules.Framework.InventoryAccess

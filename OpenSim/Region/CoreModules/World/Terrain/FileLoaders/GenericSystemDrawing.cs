@@ -30,9 +30,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders
 {

@@ -30,14 +30,13 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
 using Aurora.Framework;
 using Aurora.DataManager;
 using OpenMetaverse;
-using log4net;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules

@@ -32,7 +32,7 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 using log4net.Core;
 
@@ -140,17 +140,17 @@ namespace OpenSim.Services.InventoryService
             InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);
             while (root != null)
             {
-                MainConsole.Instance.Output("Removing folder " + root.Name, Level.Info);
+                MainConsole.Instance.Info("Removing folder " + root.Name);
                 InventoryService.ForcePurgeFolder(root);
                 root = InventoryService.GetRootFolder(LibraryOwner);
             }
             List<InventoryFolderBase> rootFolders = InventoryService.GetRootFolders(LibraryOwner);
             foreach (InventoryFolderBase rFolder in rootFolders)
             {
-                MainConsole.Instance.Output("Removing folder " + rFolder.Name, Level.Info);
+                MainConsole.Instance.Info("Removing folder " + rFolder.Name);
                 InventoryService.ForcePurgeFolder(rFolder);
             }
-            MainConsole.Instance.Output("Finished removing default inventory", Level.Info);
+            MainConsole.Instance.Info("Finished removing default inventory");
         }
     }
 }

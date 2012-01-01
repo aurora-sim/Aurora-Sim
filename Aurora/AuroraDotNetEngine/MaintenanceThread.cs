@@ -35,9 +35,7 @@ using System.Threading;
 using Aurora.Framework;
 using Mischel.Collections;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

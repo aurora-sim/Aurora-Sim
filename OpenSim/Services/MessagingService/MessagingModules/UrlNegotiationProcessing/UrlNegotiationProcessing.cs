@@ -30,7 +30,7 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage

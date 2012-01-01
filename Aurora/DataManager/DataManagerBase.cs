@@ -31,7 +31,6 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
-using OpenSim.Framework;
 
 namespace Aurora.DataManager
 {

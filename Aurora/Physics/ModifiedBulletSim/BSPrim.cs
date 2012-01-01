@@ -30,10 +30,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Physics.ConvexDecompositionDotNet;
 using OpenSim.Region.Physics.Manager;
-using log4net;
 using OMV = OpenMetaverse;
 using Quaternion = OpenMetaverse.Quaternion;
 

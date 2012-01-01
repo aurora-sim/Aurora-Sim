@@ -31,10 +31,9 @@ using System.Linq;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 {

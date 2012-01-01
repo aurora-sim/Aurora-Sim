@@ -28,12 +28,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using Nini.Config;
 using OpenMetaverse;
 using Aurora.DataManager;
 using Aurora.Framework;
-using log4net;
-using Nini.Config;
-using OpenSim.Framework;
 
 namespace Aurora.Modules
 {

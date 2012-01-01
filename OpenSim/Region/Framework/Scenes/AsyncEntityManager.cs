@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {

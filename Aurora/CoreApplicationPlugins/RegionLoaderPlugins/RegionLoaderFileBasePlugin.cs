@@ -30,9 +30,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using log4net;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
 

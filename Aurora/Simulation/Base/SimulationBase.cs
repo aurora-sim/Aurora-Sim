@@ -30,14 +30,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Timers;
-using log4net;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Repository;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework;
 using System.Security.Authentication;
 

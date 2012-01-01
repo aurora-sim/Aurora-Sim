@@ -34,8 +34,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
 //using Microsoft.JScript;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
@@ -538,9 +538,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 foreach (CompilerError CompErr in results.Errors)
                 {
                     string severity = CompErr.IsWarning ? "Warning" : "Error";
-
-                    KeyValuePair<int, int> lslPos;
-
                     // Show 5 errors max, but check entire list for errors
 
                     string errtext = String.Empty;

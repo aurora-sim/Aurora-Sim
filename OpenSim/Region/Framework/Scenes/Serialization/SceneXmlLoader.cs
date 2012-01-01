@@ -31,7 +31,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Serialization
 {

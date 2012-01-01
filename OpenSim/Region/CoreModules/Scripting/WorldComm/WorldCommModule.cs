@@ -32,11 +32,10 @@ using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
-// using log4net;
-// using System.Reflection;
+// // using System.Reflection;
 
 
 /*****************************************************

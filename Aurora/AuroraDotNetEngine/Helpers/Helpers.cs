@@ -28,7 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

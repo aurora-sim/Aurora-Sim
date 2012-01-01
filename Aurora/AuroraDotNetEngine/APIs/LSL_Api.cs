@@ -35,10 +35,9 @@ using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
 using Nini.Config;
-using log4net.Core;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Framework.Scenes.Serialization;
@@ -48,8 +47,8 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using PrimType = OpenSim.Framework.PrimType;
-using AssetLandmark = OpenSim.Framework.AssetLandmark;
+using PrimType = Aurora.Framework.PrimType;
+using AssetLandmark = Aurora.Framework.AssetLandmark;
 
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
 using LSL_Integer = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLInteger;
@@ -12095,7 +12094,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (World.Permissions.CanRunConsoleCommand(m_host.OwnerID))
                 {
                     // yes, this is a real LSL function. See: http://wiki.secondlife.com/wiki/Print
-                    MainConsole.Instance.Output("LSL print():" + str, Level.Info);
+                    MainConsole.Instance.Output("LSL print():" + str);
                 }
             }
         }

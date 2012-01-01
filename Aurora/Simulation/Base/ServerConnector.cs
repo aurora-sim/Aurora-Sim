@@ -26,7 +26,7 @@
  */
 
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.Simulation.Base
 {

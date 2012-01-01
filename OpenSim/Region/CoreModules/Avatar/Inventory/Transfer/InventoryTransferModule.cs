@@ -31,10 +31,9 @@ using System.Linq;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using log4net;
 
 namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 {

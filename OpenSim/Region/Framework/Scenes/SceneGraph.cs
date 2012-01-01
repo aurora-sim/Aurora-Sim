@@ -32,9 +32,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using log4net;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Components;
 

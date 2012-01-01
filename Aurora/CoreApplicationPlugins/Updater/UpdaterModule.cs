@@ -29,9 +29,7 @@ using System;
 using System.Reflection;
 using System.Xml;
 using System.Windows.Forms;
-using log4net;
 using Nini.Config;
-using OpenSim.Framework;
 using Aurora.Framework;
 
 namespace OpenSim.CoreApplicationPlugins

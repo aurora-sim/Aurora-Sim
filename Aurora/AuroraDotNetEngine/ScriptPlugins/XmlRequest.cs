@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.CoreModules.Scripting.XMLRPC;
 using OpenSim.Region.Framework.Interfaces;
 

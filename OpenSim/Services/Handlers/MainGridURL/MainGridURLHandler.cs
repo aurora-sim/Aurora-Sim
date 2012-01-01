@@ -1,4 +1,4 @@
-﻿using OpenSim.Framework;
+﻿using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;

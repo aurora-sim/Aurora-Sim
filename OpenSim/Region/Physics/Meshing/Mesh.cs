@@ -31,7 +31,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSD = OpenMetaverse.StructuredData.OSD;
 

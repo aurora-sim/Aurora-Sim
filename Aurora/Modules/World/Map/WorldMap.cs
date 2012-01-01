@@ -34,13 +34,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using log4net;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using Aurora.Framework;
 using System.Timers;
 
 namespace Aurora.Modules
@@ -850,7 +848,8 @@ namespace Aurora.Modules
                 int regionSizeOffset = regions[i].RegionSizeX / 2 - 128;
                 int x = ((regions[i].RegionLocX - m_scene.RegionInfo.RegionLocX) / Constants.RegionSize) + 10;
                 int y = ((regions[i].RegionLocY - m_scene.RegionInfo.RegionLocY) / Constants.RegionSize) + 10;
-                g.DrawImage(bitImages[i], (x * offsetSize) + regionXOffset, size - (y * offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX / 2, regions[i].RegionSizeY / 2); // y origin is top
+                if(i < bitImages.Count)
+                    g.DrawImage(bitImages[i], (x * offsetSize) + regionXOffset, size - (y * offsetSize + regionSizeOffset) + regionYOffset, regions[i].RegionSizeX / 2, regions[i].RegionSizeY / 2); // y origin is top
             }
 
             mapTexture.Save(exportPath, ImageFormat.Jpeg);

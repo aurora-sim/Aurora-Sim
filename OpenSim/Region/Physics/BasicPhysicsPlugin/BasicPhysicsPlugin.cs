@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework;
+using Aurora.Framework.Physics;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {

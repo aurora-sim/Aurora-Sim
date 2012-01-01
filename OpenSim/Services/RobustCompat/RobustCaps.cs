@@ -30,12 +30,12 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
-using OpenSim.Framework.Capabilities;
+using Aurora.Framework.Capabilities;
 using Aurora.Simulation.Base;
 
 namespace OpenSim.Services.RobustCompat

@@ -28,7 +28,7 @@
 using System.Collections.Generic;
 using Nini.Config;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {

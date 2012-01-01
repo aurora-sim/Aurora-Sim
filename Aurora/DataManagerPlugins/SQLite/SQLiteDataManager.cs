@@ -36,8 +36,6 @@ using Aurora.DataManager.Migration;
 using Aurora.Framework;
 using System.Data.SQLite;
 using OpenMetaverse;
-using OpenSim.Framework;
-using log4net;
 
 namespace Aurora.DataManager.SQLite
 {
@@ -944,6 +942,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(2)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
+                case ColumnTypes.String30:
+                    return "VARCHAR(30)";
                 case ColumnTypes.String32:
                     return "VARCHAR(32)";
                 case ColumnTypes.String36:
@@ -958,6 +958,8 @@ namespace Aurora.DataManager.SQLite
                     return "VARCHAR(128)";
                 case ColumnTypes.String100:
                     return "VARCHAR(100)";
+                case ColumnTypes.String10:
+                    return "VARCHAR(10)";
                 case ColumnTypes.String255:
                     return "VARCHAR(255)";
                 case ColumnTypes.String512:
@@ -980,6 +982,8 @@ namespace Aurora.DataManager.SQLite
                     return "DATE";
                 case ColumnTypes.DateTime:
                     return "DATETIME";
+                case ColumnTypes.Float:
+                    return "float";
                 case ColumnTypes.Unknown:
                     return "";
                 case ColumnTypes.TinyInt1:
@@ -1039,8 +1043,12 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.String1;
                 case "varchar(2)":
                     return ColumnTypes.String2;
+                case "varchar(10)":
+                    return ColumnTypes.String10;
                 case "varchar(16)":
                     return ColumnTypes.String16;
+                case "varchar(30)":
+                    return ColumnTypes.String30;
                 case "varchar(32)":
                     return ColumnTypes.String32;
                 case "varchar(36)":
@@ -1072,7 +1080,7 @@ namespace Aurora.DataManager.SQLite
                 case "blob":
                     return ColumnTypes.Blob;
                 case "float":
-                    return ColumnTypes.Unknown;
+                    return ColumnTypes.Float;
                 case "tinyint(1)":
                     return ColumnTypes.TinyInt1;
                 case "tinyint(4)":

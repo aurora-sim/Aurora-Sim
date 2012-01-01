@@ -29,8 +29,8 @@
 
 using System;
 using OdeAPI;
-using OpenSim.Framework;
-using OpenSim.Region.Physics.Manager;
+using Aurora.Framework;
+using Aurora.Framework.Physics;
 //using Ode.NET;
 //#if USE_DRAWSTUFF
 //using Drawstuff.NET;

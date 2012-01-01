@@ -26,9 +26,8 @@
  */
 
 using System.Reflection;
-using OpenSim.Framework;
-using OpenSim.Framework.Serialization;
-using log4net;
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 
 namespace OpenSim.Region.CoreModules.World.Archiver
 {

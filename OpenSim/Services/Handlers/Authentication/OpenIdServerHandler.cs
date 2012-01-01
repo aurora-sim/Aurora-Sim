@@ -34,7 +34,7 @@ using System.Web;
 using DotNetOpenId;
 using DotNetOpenId.Provider;
 using OpenMetaverse;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services

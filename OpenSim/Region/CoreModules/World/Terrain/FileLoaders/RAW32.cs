@@ -27,7 +27,7 @@
 
 using System;
 using System.IO;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.CoreModules.World.Terrain.FileLoaders

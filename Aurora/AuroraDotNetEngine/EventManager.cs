@@ -30,9 +30,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
-using log4net;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {

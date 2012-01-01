@@ -92,7 +92,7 @@
       </Options>
     </Configuration>
 
-    <Project frameworkVersion="v3_5" name="OpenSim.Framework" path="OpenSim/Framework" type="Library">
+    <Project frameworkVersion="v3_5" name="Aurora.Framework" path="Aurora/Framework" type="Library">
       <Configuration name="Debug" platform="x86">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -147,108 +147,6 @@
       </Files>
     </Project>
 
-    <Project frameworkVersion="v3_5" name="Aurora.Framework" path="Aurora/Framework" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Core"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      
-      <Reference name="OpenSim.Framework"/>
-
-      <Reference name="log4net" path="../../bin/"/>
-      <Reference name="Nini" path="../../bin/"/>
-      <Reference name="OpenMetaverse" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
-      <Reference name="XMLRPC" path="../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-    
-    <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.Manager" path="OpenSim/Region/Physics/Manager" type="Library">
-      <Configuration name="Debug" platform="x86">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x86">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="x64">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="x64">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Debug" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release" platform="AnyCPU">
-        <Options>
-          <OutputPath>../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      
-      <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
-
-      <Reference name="log4net" path="../../../../bin/"/>
-      <Reference name="Nini" path="../../../../bin/"/>
-      <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
     <!-- Physics Plug-ins -->
     <Project frameworkVersion="v3_5" name="OpenSim.Region.Physics.BasicPhysicsPlugin" path="OpenSim/Region/Physics/BasicPhysicsPlugin" type="Library">
       <Configuration name="Debug" platform="x86">
@@ -285,8 +183,7 @@
       <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="Aurora.Framework"/>
       
       <Reference name="Nini" path="../../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
@@ -333,11 +230,9 @@
 	  <Reference name="System.Core"/>
       <Reference name="System.Drawing"/>
       
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="Aurora.Framework"/>
 
       <Reference name="CSJ2K" path="../../../../bin/"/>
-      <Reference name="log4net" path="../../../../bin/"/>
       <Reference name="Nini" path="../../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
@@ -389,13 +284,10 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="Aurora.Framework"/>
 
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -451,11 +343,10 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="Aurora.Services.DataService"/>
       
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
 
       <Reference name="DotNetOpenId" path="../../bin/"/>
@@ -510,10 +401,8 @@
       <Reference name="System.Xml"/>
       
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
 
       <Reference name="C5" path="../../bin/"/>
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -564,12 +453,10 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
-	  <Reference name="OpenSim.Framework"/>
+	  <Reference name="Aurora.Framework"/>
 	  <Reference name="OpenSim.Region.Framework"/>
 		
       <Reference name="C5" path="../../../bin/"/>
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="MySql.Data" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
@@ -623,7 +510,6 @@
       
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
 	  <Reference name="OpenSim.Region.Framework"/>
 
       <Reference name="C5" path="../../../bin/"/>
@@ -679,11 +565,9 @@
       
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
 
       <Reference name="C5" path="../../../bin/"/>
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
@@ -741,12 +625,10 @@
       <Reference name="Aurora.DataManager.MySQL"/>
       <Reference name="Aurora.DataManager.MSSQL"/>
       <Reference name="Aurora.DataManager.SQLite"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
 
       <Reference name="C5" path="../../../bin/"/>
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -804,17 +686,14 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Services"/>
 
       <Reference name="CSJ2K" path="../../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
       <Reference name="GlynnTucker.Cache" path="../../../bin/"/>
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -868,12 +747,9 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
       
       <Reference name="C5"  path="../../../../bin/"/>
-      <Reference name="log4net" path="../../../../bin/"/>
       <Reference name="Nini"  path="../../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
@@ -886,44 +762,43 @@
     </Project>
 	  
     <!-- Aurora app -->
-    <Project frameworkVersion="v3_5" name="Aurora" path="OpenSim/Region/Application" type="Exe">
+    <Project frameworkVersion="v3_5" name="Aurora" path="Aurora/Application" type="Exe">
       <Configuration name="Debug" platform="x86">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x86">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Debug" platform="x64">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Debug" platform="AnyCPU">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release" platform="AnyCPU">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin/</ReferencePath>
+      <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
 
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -965,11 +840,9 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
 
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
 
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -1019,7 +892,6 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.Framework"/>
-      <Reference name="OpenSim.Framework"/>
       
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
@@ -1074,14 +946,12 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Services.DataService"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
 
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -1136,19 +1006,16 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
 	  <Reference name="Aurora.Services.DataService"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Services"/>
       
       <Reference name="C5" path="../../bin/"/>
       <Reference name="GoogleTranslateAPI" path="../../bin/"/>
       <Reference name="HttpServer" path="../../bin/"/>
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -1199,10 +1066,8 @@
 	  <Reference name="System.Xml"/>
 	  <Reference name="Aurora.Framework"/>
 	  <Reference name="Aurora.DataManager"/>
-	  <Reference name="OpenSim.Framework"/>
+	  <Reference name="Aurora.Framework"/>
 	  <Reference name="OpenSim.Region.Framework"/>
-	  <Reference name="OpenSim.Region.Physics.Manager"/>
-	  <Reference name="log4net" path="../../../bin/"/>
 	  <Reference name="Nini" path="../../../bin/"/>
 	  <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 		  <Files>
@@ -1246,12 +1111,9 @@
       <Reference name="System"/>
       <Reference name="System.Core"/>
 
-      <Reference name="OpenSim.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="Aurora.Framework"/>
       
-      <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
-<!--      <Reference name="Ode.NET" path="../../../bin/"/>  -->
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
 
       <Files>
@@ -1302,14 +1164,11 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.Simulation.Base"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.CoreModules" />
       <Reference name="OpenSim.Region.Framework" />
-      <Reference name="OpenSim.Region.Physics.Manager"/>
       
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
@@ -1362,14 +1221,11 @@
       <Reference name="System.Xml"/>
 
       <Reference name="Aurora.DataManager"/>
-      <Reference name="Aurora.Framework"/>
       <Reference name="Aurora.ScriptEngine.AuroraDotNetEngine"/>
-      <Reference name="OpenSim.Framework"/>
+      <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
-      <Reference name="OpenSim.Region.Physics.Manager"/>
       
-      <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
@@ -1459,10 +1315,10 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
-      
       <Reference name="System.Net"/>
-     
+	  
       <Reference name="Aurora.Framework"/>
+     
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>

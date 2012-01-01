@@ -29,11 +29,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Reflection;
-using log4net;
 using Nini.Config;
 using Aurora.Framework;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 

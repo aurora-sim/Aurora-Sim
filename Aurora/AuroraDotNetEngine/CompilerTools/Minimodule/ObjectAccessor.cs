@@ -29,7 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 {
@@ -105,7 +105,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             get
             {
-                OpenSim.Framework.IEntity ent;
+                Aurora.Framework.IEntity ent;
                 if (m_scene.Entities.TryGetValue(index, out ent))
                     return new SOPObject(m_scene, ent.LocalId, m_security);
                 return null;
@@ -153,7 +153,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public bool Contains(IObject item)
         {
-            OpenSim.Framework.IEntity ent;
+            Aurora.Framework.IEntity ent;
             return m_scene.Entities.TryGetValue(item.GlobalID, out ent);
         }
 

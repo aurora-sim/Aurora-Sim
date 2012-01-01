@@ -34,7 +34,6 @@ using Aurora.DataManager.Migration;
 using Aurora.Framework;
 using MySql.Data.MySqlClient;
 using OpenMetaverse;
-using OpenSim.Framework;
 
 namespace Aurora.DataManager.MySQL
 {
@@ -514,8 +513,8 @@ namespace Aurora.DataManager.MySQL
             {
                 foreach (object v in value)
                 {
-                    parameters[OpenSim.Framework.Util.ConvertDecString(i)] = v;
-                    query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
+                    parameters[Util.ConvertDecString(i)] = v;
+                    query += "?" + Util.ConvertDecString(i++) + ",";
                 }
                 query = query.Remove(query.Length - 1);
                 query += " union all select ";
@@ -540,8 +539,8 @@ namespace Aurora.DataManager.MySQL
             int i = 0;
             foreach (object o in values)
             {
-                parameters[OpenSim.Framework.Util.ConvertDecString(i)] = o;
-                query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
+                parameters[Util.ConvertDecString(i)] = o;
+                query += "?" + Util.ConvertDecString(i++) + ",";
             }
             query = query.Remove(query.Length - 1);
             query += ")";
@@ -677,8 +676,8 @@ namespace Aurora.DataManager.MySQL
             int i = 0;
             foreach (object o in values)
             {
-                param["?" + OpenSim.Framework.Util.ConvertDecString(i)] = o;
-                query += "?" + OpenSim.Framework.Util.ConvertDecString(i++) + ",";
+                param["?" + Util.ConvertDecString(i)] = o;
+                query += "?" + Util.ConvertDecString(i++) + ",";
             }
             query = query.Remove(query.Length - 1);
             query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
@@ -938,8 +937,12 @@ namespace Aurora.DataManager.MySQL
                     return "VARCHAR(1)";
                 case ColumnTypes.String2:
                     return "VARCHAR(2)";
+                case ColumnTypes.String10:
+                    return "VARCHAR(10)";
                 case ColumnTypes.String16:
                     return "VARCHAR(16)";
+                case ColumnTypes.String30:
+                    return "VARCHAR(30)";
                 case ColumnTypes.String32:
                     return "VARCHAR(32)";
                 case ColumnTypes.String36:
@@ -976,6 +979,8 @@ namespace Aurora.DataManager.MySQL
                     return "DATE";
                 case ColumnTypes.DateTime:
                     return "DATETIME";
+                case ColumnTypes.Float:
+                    return "float";
                 case ColumnTypes.TinyInt1:
                     return "TINYINT(1)";
                 case ColumnTypes.TinyInt4:
@@ -1132,8 +1137,12 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.String1;
                 case "varchar(2)":
                     return ColumnTypes.String2;
+                case "varchar(10)":
+                    return ColumnTypes.String10;
                 case "varchar(16)":
                     return ColumnTypes.String16;
+                case "varchar(30)":
+                    return ColumnTypes.String30;
                 case "varchar(32)":
                     return ColumnTypes.String32;
                 case "varchar(36)":
@@ -1166,6 +1175,8 @@ namespace Aurora.DataManager.MySQL
                     return ColumnTypes.MediumText;
                 case "longtext":
                     return ColumnTypes.LongText;
+                case "float":
+                    return ColumnTypes.Float;
                 case "blob":
                     return ColumnTypes.Blob;
                 case "longblob":

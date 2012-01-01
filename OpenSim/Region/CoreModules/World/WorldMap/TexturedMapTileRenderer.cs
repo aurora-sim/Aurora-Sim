@@ -34,8 +34,7 @@ using BitmapProcessing;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
-using log4net;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {

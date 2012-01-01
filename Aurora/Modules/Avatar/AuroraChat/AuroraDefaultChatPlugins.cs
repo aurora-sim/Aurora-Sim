@@ -28,11 +28,10 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
-using Google.API.Translate;
 using OpenMetaverse;
-using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using Language = Aurora.GoogleAPIs.Language;
+using Google.API.Translate;
 
 namespace Aurora.Modules.Avatar.AuroraChat
 {

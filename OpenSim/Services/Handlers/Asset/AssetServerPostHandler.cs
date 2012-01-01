@@ -30,8 +30,8 @@ using System.Text;
 using System.Xml.Serialization;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
-using OpenSim.Framework;
-using OpenSim.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse.StructuredData;
 

@@ -36,12 +36,11 @@ using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
-using OpenSim.Framework;
+using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Components;
 using OpenSim.Region.Framework.Scenes.Serialization;
-using log4net;
-using PrimType = OpenSim.Framework.PrimType;
+using PrimType = Aurora.Framework.PrimType;
 
 namespace OpenSim.Region.Framework.Scenes
 {

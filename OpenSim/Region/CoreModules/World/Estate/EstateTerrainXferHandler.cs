@@ -27,7 +27,7 @@
 
 using System;
 using OpenMetaverse;
-using OpenSim.Framework;
+using Aurora.Framework;
 
 namespace OpenSim.Region.CoreModules.World.Estate
 {

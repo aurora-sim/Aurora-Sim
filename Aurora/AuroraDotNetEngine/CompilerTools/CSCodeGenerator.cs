@@ -2756,7 +2756,7 @@ default
                 if (m_isInEnumeratedDeclaration && NeedRetVal) //Got to have a retVal for do/while
                 {
                     //This is for things like the do/while statement, where a function is in the while() part and can't be dumped in front of the do/while
-                    string MethodName = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    string MethodName = Aurora.Framework.StringUtils.RandomString(10, true);
                     string typeDefs = "";
                     ObjectList arguements = null;
                     if (LocalMethodArguements.TryGetValue(fc.Id, out arguements))
@@ -2778,7 +2778,7 @@ default
                                                      typeDefs);
                     newMethod += (Generate("{"));
                     newMethod += (Generate("ahwowuerogng = true;"));
-                    Mname = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
                     newMethod += (Generate("IEnumerator " + Mname + " = "));
                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
                     newMethod += (tempString);
@@ -2798,7 +2798,7 @@ default
                     MethodsToAdd.Add(newMethod);
 
                     List<string> fCalls = new List<string>();
-                    string boolname = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    string boolname = Aurora.Framework.StringUtils.RandomString(10, true);
                     fCalls.Add(Generate("bool " + boolname + " = true;"));
                     retstr += MethodName + "(" + tempString + ", out " + boolname + ")";
                     lock (FuncCalls)
@@ -2807,8 +2807,8 @@ default
                 else
                 {
                     //Function calls are added to the DumpFunc command, and will be dumped safely before the statement that occurs here, so we don't have to deal with the issues behind having { and } in this area.
-                    Mname = OpenSim.Framework.StringUtils.RandomString(10, true);
-                    string Exname = OpenSim.Framework.StringUtils.RandomString(10, true);
+                    Mname = Aurora.Framework.StringUtils.RandomString(10, true);
+                    string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
                     List<string> fCalls = new List<string>
                                               {
                                                   Generate("string " + Exname + " =  \"\";"),

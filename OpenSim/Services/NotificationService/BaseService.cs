@@ -5,13 +5,13 @@ using System.Reflection;
 using System.Text;
 using Aurora.Framework;
 using Aurora.Simulation.Base;
-using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
 using log4net.Repository;
 using Nini.Config;
-using OpenSim.Framework;
+using Aurora.Framework;
+using log4net;
 
 namespace OpenSim.Services
 {
