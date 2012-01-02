@@ -582,6 +582,22 @@ namespace Aurora.Services.DataService
             return uint.Parse(numGroups[0]);
         }
 
+        private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result){
+            return new GroupRecord{
+                GroupID = UUID.Parse(result[0]),
+                GroupName = result[1],
+                Charter = result[2],
+                GroupPicture = UUID.Parse(result[3]),
+                FounderID = UUID.Parse(result[4]),
+                MembershipFee = int.Parse(result[5]),
+                OpenEnrollment = int.Parse(result[6]) == 1,
+                ShowInList = int.Parse(result[7]) == 1,
+                AllowPublish = int.Parse(result[8]) == 1,
+                MaturePublish = int.Parse(result[9]) == 1,
+                OwnerRoleID = UUID.Parse(result[10])
+            };
+        }
+
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
         {
             GroupRecord record = new GroupRecord();
@@ -598,23 +614,8 @@ namespace Aurora.Services.DataService
                 Keys.Add("Name");
                 Values.Add(GroupName.MySqlEscape(50));
             }
-            List<string> osgroupsData = data.Query(Keys.ToArray(), Values.ToArray(), "osgroup",
-                                                   "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
-            if (osgroupsData.Count == 0)
-                return null;
-            record.GroupID = UUID.Parse(osgroupsData[0]);
-            record.GroupName = osgroupsData[1];
-            record.Charter = osgroupsData[2];
-            record.GroupPicture = UUID.Parse(osgroupsData[3]);
-            record.FounderID = UUID.Parse(osgroupsData[4]);
-            record.MembershipFee = int.Parse(osgroupsData[5]);
-            record.OpenEnrollment = int.Parse(osgroupsData[6]) == 1;
-            record.ShowInList = int.Parse(osgroupsData[7]) == 1;
-            record.AllowPublish = int.Parse(osgroupsData[8]) == 1;
-            record.MaturePublish = int.Parse(osgroupsData[9]) == 1;
-            record.OwnerRoleID = UUID.Parse(osgroupsData[10]);
-
-            return record;
+            List<string> osgroupsData = data.Query(Keys.ToArray(), Values.ToArray(), "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
+            return (osgroupsData.Count == 0) ? null : GroupRecordQueryResult2GroupRecord(osgroupsData);
         }
 
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
@@ -663,30 +664,37 @@ namespace Aurora.Services.DataService
 
 
             List<GroupRecord> Reply = new List<GroupRecord>();
-            GroupRecord group;
-            Dictionary<string, object> groupDict;
 
             List<string> osgroupsData = data.Query(whereClause, "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
             if (osgroupsData.Count < 11)
             {
                 return Reply;
             }
-            for (int i = 0; i < osgroupsData.Count; )
+            for (int i = 0; i < osgroupsData.Count; i+= 11)
             {
-                groupDict = new Dictionary<string, object>();
-                groupDict["GroupID"] = osgroupsData[i++];
-                groupDict["GroupName"] = osgroupsData[i++];
-                groupDict["Charter"] = osgroupsData[i++];
-                groupDict["GroupPicture"] = osgroupsData[i++];
-                groupDict["FounderID"] = osgroupsData[i++];
-                groupDict["MembershipFee"] = osgroupsData[i++];
-                groupDict["OpenEnrollment"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
-                groupDict["ShowInList"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
-                groupDict["AllowPublish"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
-                groupDict["MaturePublish"] = int.Parse(osgroupsData[i++]) == 1 ? "true" : "false";
-                groupDict["OwnerRoleID"] = osgroupsData[i++];
-                group = new GroupRecord(groupDict);
-                Reply.Add(group);
+                Reply.Add(GroupRecordQueryResult2GroupRecord(osgroupsData.GetRange(i, 11)));
+            }
+            return Reply;
+        }
+
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            List<GroupRecord> Reply = new List<GroupRecord>(0);
+            if (GroupIDs.Count <= 0)
+            {
+                return Reply;
+            }
+
+            string whereClause = "GroupID = '" + string.Join("' OR GroupID = '", GroupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'";
+
+            List<string> osgroupsData = data.Query(whereClause, "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
+            if (osgroupsData.Count < 11)
+            {
+                return Reply;
+            }
+            for (int i = 0; i < osgroupsData.Count; i += 11)
+            {
+                Reply.Add(GroupRecordQueryResult2GroupRecord(osgroupsData.GetRange(i, 11)));
             }
             return Reply;
         }

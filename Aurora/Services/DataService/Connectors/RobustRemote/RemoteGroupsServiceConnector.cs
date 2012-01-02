@@ -765,21 +765,13 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        private static List<GroupRecord> remoteGroupRecordsQueryResult(IRegistryCore registry, Dictionary<string, object> sendData)
         {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["METHOD"] = "GetGroupRecords";
-            sendData["requestingAgentID"] = requestingAgentID.ToString();
-            sendData["start"] = start;
-            sendData["count"] = count;
-            sendData["sort"] = sort;
-            sendData["boolFields"] = boolFields;
             string reqString = WebUtils.BuildXmlResponse(sendData);
 
             try
             {
-                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs = registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
 #if (!ISWIN)
                 foreach (string mServerUri in m_ServerURIs)
                 {
@@ -822,7 +814,32 @@ namespace Aurora.Services.DataService
                 MainConsole.Instance.DebugFormat("[AuroraRemoteGroupsServiceConnector]: Exception when contacting server: {0}", e);
             }
 
-            return new List<GroupRecord>();
+            return new List<GroupRecord>(0);
+        }
+
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "GetGroupRecords";
+            sendData["requestingAgentID"] = requestingAgentID.ToString();
+            sendData["start"] = start;
+            sendData["count"] = count;
+            sendData["sort"] = sort;
+            sendData["boolFields"] = boolFields;
+
+            return remoteGroupRecordsQueryResult(m_registry, sendData);
+        }
+
+        public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["METHOD"] = "GetGroupRecords";
+            sendData["requestingAgentID"] = requestingAgentID.ToString();
+            sendData["GroupIDs"] = GroupIDs;
+
+            return remoteGroupRecordsQueryResult(m_registry, sendData);
         }
 
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)

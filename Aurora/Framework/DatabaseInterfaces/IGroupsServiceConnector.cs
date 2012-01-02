@@ -68,6 +68,7 @@ namespace Aurora.Framework
 
         GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName);
         List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields);
+        List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs);
 
         GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID);
 
