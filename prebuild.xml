@@ -206,7 +206,7 @@
       </Configuration>
       <Configuration name="Debug" platform="x64">
         <Options>
-          <OutputPath>../..../bin/Physics/</OutputPath>
+          <OutputPath>../../../bin/Physics/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release" platform="x64">
