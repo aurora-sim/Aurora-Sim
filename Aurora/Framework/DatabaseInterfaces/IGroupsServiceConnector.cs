@@ -40,8 +40,12 @@ namespace Aurora.Framework
         void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
 
         string SetAgentActiveGroup(UUID AgentID, UUID GroupID);
+        UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID);
+
         string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID);
+
         void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID);
+        bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID);
 
         void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers);
         void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers);
@@ -62,8 +66,6 @@ namespace Aurora.Framework
 
         uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields);
 
-        bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID);
-
         GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName);
         List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields);
 
@@ -71,8 +73,6 @@ namespace Aurora.Framework
 
         GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID);
         List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID AgentID);
-
-        UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID);
 
         GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID);
         List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID);

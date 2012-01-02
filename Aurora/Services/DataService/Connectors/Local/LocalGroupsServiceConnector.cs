@@ -42,8 +42,9 @@ namespace Aurora.Services.DataService
 
         #region IGroupsServiceConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        #region IAuroraDataPlugin members
+
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             data = GenericData;
 
@@ -72,10 +73,9 @@ namespace Aurora.Services.DataService
             get { return "IGroupsServiceConnector"; }
         }
 
-        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID,
-                                int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish,
-                                UUID founderID,
-                                ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
+        #endregion
+
+        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
         {
             List<string> Keys = new List<string>
                                     {
@@ -131,6 +131,68 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(founderID, groupID);
         }
 
+        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
+        {
+            if (
+                !CheckGroupPermissions(requestingAgentID, groupID,
+                                       (ulong) (GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
+                return;
+            data.Update("osgroup", new object[]
+                                       {
+                                           charter.MySqlEscape(50),
+                                           insigniaID,
+                                           membershipFee,
+                                           openEnrollment,
+                                           showInList,
+                                           allowPublish,
+                                           maturePublish
+                                       }, new[]
+                                              {
+                                                  "Charter",
+                                                  "InsigniaID",
+                                                  "MembershipFee",
+                                                  "OpenEnrollment",
+                                                  "ShowInList",
+                                                  "AllowPublish",
+                                                  "MaturePublish"
+                                              }, new[] {"GroupID"}, new object[] {groupID});
+        }
+
+        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+                return;
+            List<string> Keys = new List<string>
+                                    {
+                                        "GroupID",
+                                        "NoticeID",
+                                        "Timestamp",
+                                        "FromName",
+                                        "Subject",
+                                        "Message",
+                                        "HasAttachment",
+                                        "ItemID",
+                                        "AssetType",
+                                        "ItemName"
+                                    };
+
+            List<object> Values = new List<object>
+                                      {
+                                          groupID,
+                                          noticeID,
+                                          ((uint) Util.UnixTimeSinceEpoch()),
+                                          fromName.MySqlEscape(50),
+                                          subject.MySqlEscape(50),
+                                          message.MySqlEscape(1024),
+                                          (ItemID != UUID.Zero) ? 1 : 0,
+                                          ItemID,
+                                          AssetType,
+                                          ItemName.MySqlEscape(50)
+                                      };
+
+            data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
+        }
+
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
             if (data.Query("AgentID", AgentID, "osagent", "*").Count != 0)
@@ -148,6 +210,15 @@ namespace Aurora.Services.DataService
                                                   });
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
+        }
+
+        public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
+        {
+            List<string> groups = data.Query("AgentID", AgentID, "osagent", "ActiveGroupID");
+            if (groups.Count != 0)
+                return UUID.Parse(groups[0]);
+            else
+                return UUID.Zero;
         }
 
         public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
@@ -205,8 +276,47 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(AgentID, GroupID);
         }
 
-        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description,
-                                   string Title, ulong Powers)
+        public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
+        {
+            if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
+                (requestingAgentID != AgentID)) //Allow kicking yourself
+                return false;
+            // 1. If group is agent's active group, change active group to uuidZero
+            // 2. Remove Agent from group (osgroupmembership)
+            // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
+            data.Update("osagent", new object[] {UUID.Zero}, new[] {"ActiveGroupID"}, new[]
+                                                                                          {
+                                                                                              "AgentID",
+                                                                                              "ActiveGroupID"
+                                                                                          }, new object[]
+                                                                                                 {
+                                                                                                     AgentID,
+                                                                                                     GroupID
+                                                                                                 });
+
+            data.Delete("osgrouprolemembership", new[]
+                                                     {
+                                                         "AgentID",
+                                                         "GroupID"
+                                                     }, new object[]
+                                                            {
+                                                                AgentID,
+                                                                GroupID
+                                                            });
+            data.Delete("osgroupmembership", new[]
+                                                 {
+                                                     "AgentID",
+                                                     "GroupID"
+                                                 }, new object[]
+                                                        {
+                                                            AgentID,
+                                                            GroupID
+                                                        });
+
+            return true;
+        }
+
+        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
         {
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.CreateRole))
                 return;
@@ -216,32 +326,39 @@ namespace Aurora.Services.DataService
             data.Insert("osrole", Keys.ToArray(), Values.ToArray());
         }
 
-        public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID,
-                                int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
+        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
         {
-            if (
-                !CheckGroupPermissions(requestingAgentID, groupID,
-                                       (ulong) (GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RoleProperties))
                 return;
-            data.Update("osgroup", new object[]
-                                       {
-                                           charter.MySqlEscape(50),
-                                           insigniaID,
-                                           membershipFee,
-                                           openEnrollment,
-                                           showInList,
-                                           allowPublish,
-                                           maturePublish
-                                       }, new[]
-                                              {
-                                                  "Charter",
-                                                  "InsigniaID",
-                                                  "MembershipFee",
-                                                  "OpenEnrollment",
-                                                  "ShowInList",
-                                                  "AllowPublish",
-                                                  "MaturePublish"
-                                              }, new[] {"GroupID"}, new object[] {groupID});
+            List<string> Keys = new List<string> {"RoleID"};
+            if (Name != null)
+                Keys.Add("Name");
+            if (Desc != null)
+                Keys.Add("Description");
+            if (Title != null)
+                Keys.Add("Title");
+
+            Keys.Add("Powers");
+
+            List<object> Values = new List<object> {RoleID};
+            if (Name != null)
+                Values.Add(Name.MySqlEscape(512));
+            if (Desc != null)
+                Values.Add(Desc.MySqlEscape(512));
+            if (Title != null)
+                Values.Add(Title.MySqlEscape(512));
+
+            Values.Add(Powers);
+
+            data.Update("osrole", Values.ToArray(), Keys.ToArray(), new[]
+                                                                        {
+                                                                            "GroupID",
+                                                                            "RoleID"
+                                                                        }, new object[]
+                                                                               {
+                                                                                   GroupID,
+                                                                                   RoleID
+                                                                               });
         }
 
         public void RemoveRoleFromGroup(UUID requestingAgentID, UUID RoleID, UUID GroupID)
@@ -277,40 +394,192 @@ namespace Aurora.Services.DataService
                                              });
         }
 
-        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title,
-                               ulong Powers)
+        public void AddAgentToRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RoleProperties))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
+            {
+                //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
+                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMemberLimited))
+                {
+                    MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
+                               " to group " + GroupID + ", but did not have permissions to do so!");
+                    return;
+                }
+            }
+
+            List<string> query = data.Query(new[]
+                                                {
+                                                    "AgentID",
+                                                    "RoleID",
+                                                    "GroupID"
+                                                }, new object[]
+                                                       {
+                                                           AgentID,
+                                                           RoleID,
+                                                           GroupID
+                                                       }, "osgrouprolemembership", "count(AgentID)");
+            //Make sure they arn't already in this role
+            if (query[0] == "0")
+            {
+                data.Insert("osgrouprolemembership", new[]
+                                                         {
+                                                             "GroupID",
+                                                             "RoleID",
+                                                             "AgentID"
+                                                         }, new object[]
+                                                                {
+                                                                    GroupID,
+                                                                    RoleID,
+                                                                    AgentID
+                                                                });
+            }
+        }
+
+        public void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
                 return;
-            List<string> Keys = new List<string> {"RoleID"};
-            if (Name != null)
-                Keys.Add("Name");
-            if (Desc != null)
-                Keys.Add("Description");
-            if (Title != null)
-                Keys.Add("Title");
+            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
+                                                                                                     {
+                                                                                                         "AgentID",
+                                                                                                         "GroupID",
+                                                                                                         "SelectedRoleID"
+                                                                                                     }, new object[]
+                                                                                                            {
+                                                                                                                AgentID,
+                                                                                                                GroupID,
+                                                                                                                RoleID
+                                                                                                            });
+            data.Delete("osgrouprolemembership", new[]
+                                                     {
+                                                         "AgentID",
+                                                         "GroupID",
+                                                         "RoleID"
+                                                     }, new object[]
+                                                            {
+                                                                AgentID,
+                                                                GroupID,
+                                                                RoleID
+                                                            });
+        }
 
-            Keys.Add("Powers");
+        public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices, int ListInProfile)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ChangeIdentity))
+                return;
 
-            List<object> Values = new List<object> {RoleID};
-            if (Name != null)
-                Values.Add(Name.MySqlEscape(512));
-            if (Desc != null)
-                Values.Add(Desc.MySqlEscape(512));
-            if (Title != null)
-                Values.Add(Title.MySqlEscape(512));
+            data.Update("osgroupmembership", new object[]
+                                                 {
+                                                     AgentID,
+                                                     AcceptNotices,
+                                                     ListInProfile
+                                                 }, new[]
+                                                        {
+                                                            "AgentID",
+                                                            "AcceptNotices",
+                                                            "ListInProfile"
+                                                        }, new[]
+                                                               {
+                                                                   "GroupID",
+                                                                   "AgentID"
+                                                               }, new object[]
+                                                                      {
+                                                                          AgentID,
+                                                                          GroupID
+                                                                      });
+        }
 
-            Values.Add(Powers);
+        public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.Invite))
+                return;
+            data.Delete("osgroupinvite", new[]
+                                             {
+                                                 "AgentID",
+                                                 "GroupID"
+                                             }, new object[]
+                                                    {
+                                                        AgentID,
+                                                        GroupID
+                                                    });
+            data.Insert("osgroupinvite", new[]
+                                             {
+                                                 "InviteID",
+                                                 "GroupID",
+                                                 "RoleID",
+                                                 "AgentID",
+                                                 "TMStamp",
+                                                 "FromAgentName"
+                                             }, new object[]
+                                                    {
+                                                        inviteID,
+                                                        GroupID,
+                                                        roleID,
+                                                        AgentID,
+                                                        Util.UnixTimeSinceEpoch(),
+                                                        FromAgentName.MySqlEscape(50)
+                                                    });
+        }
 
-            data.Update("osrole", Values.ToArray(), Keys.ToArray(), new[]
-                                                                        {
-                                                                            "GroupID",
-                                                                            "RoleID"
-                                                                        }, new object[]
-                                                                               {
-                                                                                   GroupID,
-                                                                                   RoleID
-                                                                               });
+        public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
+        {
+            data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
+        }
+
+        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
+        {
+            GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
+        {
+            List<UUID> GroupIDs = new List<UUID>();
+            GroupIDs.Add(GroupID);
+            return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
+        }
+
+        public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
+        {
+            List<UUID> groupIDs = new List<UUID>();
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
+            {
+                foreach (UUID GroupID in GroupIDs)
+                {
+                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
+                    {
+                        groupIDs.Add(GroupID);
+                    }
+                }
+            }
+            else
+            {
+                groupIDs = GroupIDs;
+            }
+
+            List<string> numGroupNotices = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'", "osgroupnotice", "Count(NoticeID)");
+            return uint.Parse(numGroupNotices[0]);
+        }
+
+        public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
+        {
+            string whereClause = "1=1";
+            List<string> filter = new List<string>();
+            string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
+            foreach (string field in BoolFields)
+            {
+                if (boolFields.ContainsKey(field) == true)
+                {
+                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
+                }
+            }
+            if (filter.Count > 0)
+            {
+                whereClause = string.Join(" AND ", filter.ToArray());
+            }
+
+
+            List<string> numGroups = data.Query(whereClause, "osgroup", "COUNT(GroupID)");
+            return uint.Parse(numGroups[0]);
         }
 
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
@@ -533,66 +802,6 @@ namespace Aurora.Services.DataService
 #endif
         }
 
-        public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices,
-                                      int ListInProfile)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ChangeIdentity))
-                return;
-
-            data.Update("osgroupmembership", new object[]
-                                                 {
-                                                     AgentID,
-                                                     AcceptNotices,
-                                                     ListInProfile
-                                                 }, new[]
-                                                        {
-                                                            "AgentID",
-                                                            "AcceptNotices",
-                                                            "ListInProfile"
-                                                        }, new[]
-                                                               {
-                                                                   "GroupID",
-                                                                   "AgentID"
-                                                               }, new object[]
-                                                                      {
-                                                                          AgentID,
-                                                                          GroupID
-                                                                      });
-        }
-
-        public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID,
-                                        string FromAgentName)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.Invite))
-                return;
-            data.Delete("osgroupinvite", new[]
-                                             {
-                                                 "AgentID",
-                                                 "GroupID"
-                                             }, new object[]
-                                                    {
-                                                        AgentID,
-                                                        GroupID
-                                                    });
-            data.Insert("osgroupinvite", new[]
-                                             {
-                                                 "InviteID",
-                                                 "GroupID",
-                                                 "RoleID",
-                                                 "AgentID",
-                                                 "TMStamp",
-                                                 "FromAgentName"
-                                             }, new object[]
-                                                    {
-                                                        inviteID,
-                                                        GroupID,
-                                                        roleID,
-                                                        AgentID,
-                                                        Util.UnixTimeSinceEpoch(),
-                                                        FromAgentName.MySqlEscape(50)
-                                                    });
-        }
-
         public GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
             GroupInviteInfo invite = new GroupInviteInfo();
@@ -642,228 +851,6 @@ namespace Aurora.Services.DataService
             }
 
             return invites;
-        }
-
-        public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
-        {
-            data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
-        }
-
-        public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
-        {
-            if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
-                (requestingAgentID != AgentID)) //Allow kicking yourself
-                return false;
-            // 1. If group is agent's active group, change active group to uuidZero
-            // 2. Remove Agent from group (osgroupmembership)
-            // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
-            data.Update("osagent", new object[] {UUID.Zero}, new[] {"ActiveGroupID"}, new[]
-                                                                                          {
-                                                                                              "AgentID",
-                                                                                              "ActiveGroupID"
-                                                                                          }, new object[]
-                                                                                                 {
-                                                                                                     AgentID,
-                                                                                                     GroupID
-                                                                                                 });
-
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID
-                                                            });
-            data.Delete("osgroupmembership", new[]
-                                                 {
-                                                     "AgentID",
-                                                     "GroupID"
-                                                 }, new object[]
-                                                        {
-                                                            AgentID,
-                                                            GroupID
-                                                        });
-
-            return true;
-        }
-
-        public void AddAgentToRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
-            {
-                //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
-                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMemberLimited))
-                {
-                    MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
-                               " to group " + GroupID + ", but did not have permissions to do so!");
-                    return;
-                }
-            }
-
-            List<string> query = data.Query(new[]
-                                                {
-                                                    "AgentID",
-                                                    "RoleID",
-                                                    "GroupID"
-                                                }, new object[]
-                                                       {
-                                                           AgentID,
-                                                           RoleID,
-                                                           GroupID
-                                                       }, "osgrouprolemembership", "count(AgentID)");
-            //Make sure they arn't already in this role
-            if (query[0] == "0")
-            {
-                data.Insert("osgrouprolemembership", new[]
-                                                         {
-                                                             "GroupID",
-                                                             "RoleID",
-                                                             "AgentID"
-                                                         }, new object[]
-                                                                {
-                                                                    GroupID,
-                                                                    RoleID,
-                                                                    AgentID
-                                                                });
-            }
-        }
-
-        public void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
-                return;
-            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
-                                                                                                     {
-                                                                                                         "AgentID",
-                                                                                                         "GroupID",
-                                                                                                         "SelectedRoleID"
-                                                                                                     }, new object[]
-                                                                                                            {
-                                                                                                                AgentID,
-                                                                                                                GroupID,
-                                                                                                                RoleID
-                                                                                                            });
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID",
-                                                         "RoleID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID,
-                                                                RoleID
-                                                            });
-        }
-
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery,
-                                                   uint queryflags)
-        {
-            string whereClause = " Name LIKE '%" + search.MySqlEscape(50) + "%' LIMIT " + StartQuery + ",50 ";
-            List<string> retVal = data.Query(whereClause, "osgroup",
-                                             "GroupID,Name,ShowInList,AllowPublish,MaturePublish");
-
-            List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
-            DirGroupsReplyData dirgroup = new DirGroupsReplyData();
-            for (int i = 0; i < retVal.Count; i += 5)
-            {
-                if (retVal[i + 2] == "0") // (ShowInList param) They don't want to be shown in search.. respect this
-                    continue;
-
-                if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) !=
-                    (uint) DirectoryManager.DirFindFlags.IncludeMature)
-                    if (retVal[i + 4] == "1") // (MaturePublish param) Check for pg,mature
-                        continue;
-                dirgroup.groupID = UUID.Parse(retVal[i]);
-                dirgroup.groupName = retVal[i + 1];
-                dirgroup.members =
-                    int.Parse(
-                        data.Query(new[] {"GroupID"}, new object[] {dirgroup.groupID}, "osgroupmembership",
-                                   "count(AgentID)")[0]);
-                Reply.Add(dirgroup);
-                dirgroup = new DirGroupsReplyData();
-            }
-            return Reply;
-        }
-
-        public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
-        {
-            List<string> groups = data.Query("AgentID", AgentID, "osagent", "ActiveGroupID");
-            if (groups.Count != 0)
-                return UUID.Parse(groups[0]);
-            else
-                return UUID.Zero;
-        }
-
-        public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
-                return new List<GroupRolesData>();
-            List<string> RoleIDs = data.Query(new[]
-                                                  {
-                                                      "AgentID",
-                                                      "GroupID"
-                                                  }, new object[]
-                                                         {
-                                                             AgentID,
-                                                             GroupID
-                                                         }, "osgrouprolemembership", "RoleID");
-
-            return (from RoleID in RoleIDs
-                    let Role = data.Query("RoleID", RoleID, "osrole", "Name,Description,Title,Powers")
-                    select new GroupRolesData
-                               {
-                                   RoleID = UUID.Parse(RoleID), Name = Role[0], Description = Role[1], Powers = ulong.Parse(Role[3]), Title = Role[2]
-                               }).ToList();
-        }
-
-        public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
-                return new List<GroupRolesData>();
-            List<GroupRolesData> GroupRoles = new List<GroupRolesData>();
-            List<string> Roles = data.Query("GroupID", GroupID, "osrole", "Name,Description,Title,Powers,RoleID");
-            for (int i = 0; i < Roles.Count; i += 5)
-            {
-                List<string> Count = data.Query(new[]
-                                                    {
-                                                        "GroupID",
-                                                        "RoleID"
-                                                    }, new object[]
-                                                           {
-                                                               GroupID,
-                                                               UUID.Parse(Roles[i + 4])
-                                                           }, "osgrouprolemembership", "count(AgentID)");
-                GroupRolesData roledata = new GroupRolesData
-                                              {
-                                                  Members = int.Parse(Count[0]),
-                                                  RoleID = UUID.Parse(Roles[i + 4]),
-                                                  Name = Roles[i + 0],
-                                                  Description = Roles[i + 1],
-                                                  Powers = ulong.Parse(Roles[i + 3]),
-                                                  Title = Roles[i + 2]
-                                              };
-                GroupRoles.Add(roledata);
-            }
-            return GroupRoles;
-        }
-
-        public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
-                return new List<GroupMembersData>();
-
-            List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
-#if (!ISWIN)
-            List<GroupMembersData> list = new List<GroupMembersData>();
-            foreach (string agent in Agents)
-                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
-            return list;
-#else
-            return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
-#endif
         }
 
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
@@ -925,6 +912,104 @@ namespace Aurora.Services.DataService
 
 
             return GMD;
+        }
+
+        public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
+                return new List<GroupMembersData>();
+
+            List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
+#if (!ISWIN)
+            List<GroupMembersData> list = new List<GroupMembersData>();
+            foreach (string agent in Agents)
+                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
+            return list;
+#else
+            return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
+#endif
+        }
+
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
+        {
+            string whereClause = " Name LIKE '%" + search.MySqlEscape(50) + "%' LIMIT " + StartQuery + ",50 ";
+            List<string> retVal = data.Query(whereClause, "osgroup",
+                                             "GroupID,Name,ShowInList,AllowPublish,MaturePublish");
+
+            List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
+            DirGroupsReplyData dirgroup = new DirGroupsReplyData();
+            for (int i = 0; i < retVal.Count; i += 5)
+            {
+                if (retVal[i + 2] == "0") // (ShowInList param) They don't want to be shown in search.. respect this
+                    continue;
+
+                if ((queryflags & (uint) DirectoryManager.DirFindFlags.IncludeMature) !=
+                    (uint) DirectoryManager.DirFindFlags.IncludeMature)
+                    if (retVal[i + 4] == "1") // (MaturePublish param) Check for pg,mature
+                        continue;
+                dirgroup.groupID = UUID.Parse(retVal[i]);
+                dirgroup.groupName = retVal[i + 1];
+                dirgroup.members =
+                    int.Parse(
+                        data.Query(new[] {"GroupID"}, new object[] {dirgroup.groupID}, "osgroupmembership",
+                                   "count(AgentID)")[0]);
+                Reply.Add(dirgroup);
+                dirgroup = new DirGroupsReplyData();
+            }
+            return Reply;
+        }
+
+        public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
+                return new List<GroupRolesData>();
+            List<string> RoleIDs = data.Query(new[]
+                                                  {
+                                                      "AgentID",
+                                                      "GroupID"
+                                                  }, new object[]
+                                                         {
+                                                             AgentID,
+                                                             GroupID
+                                                         }, "osgrouprolemembership", "RoleID");
+
+            return (from RoleID in RoleIDs
+                    let Role = data.Query("RoleID", RoleID, "osrole", "Name,Description,Title,Powers")
+                    select new GroupRolesData
+                               {
+                                   RoleID = UUID.Parse(RoleID), Name = Role[0], Description = Role[1], Powers = ulong.Parse(Role[3]), Title = Role[2]
+                               }).ToList();
+        }
+
+        public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
+        {
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
+                return new List<GroupRolesData>();
+            List<GroupRolesData> GroupRoles = new List<GroupRolesData>();
+            List<string> Roles = data.Query("GroupID", GroupID, "osrole", "Name,Description,Title,Powers,RoleID");
+            for (int i = 0; i < Roles.Count; i += 5)
+            {
+                List<string> Count = data.Query(new[]
+                                                    {
+                                                        "GroupID",
+                                                        "RoleID"
+                                                    }, new object[]
+                                                           {
+                                                               GroupID,
+                                                               UUID.Parse(Roles[i + 4])
+                                                           }, "osgrouprolemembership", "count(AgentID)");
+                GroupRolesData roledata = new GroupRolesData
+                                              {
+                                                  Members = int.Parse(Count[0]),
+                                                  RoleID = UUID.Parse(Roles[i + 4]),
+                                                  Name = Roles[i + 0],
+                                                  Description = Roles[i + 1],
+                                                  Powers = ulong.Parse(Roles[i + 3]),
+                                                  Title = Roles[i + 2]
+                                              };
+                GroupRoles.Add(roledata);
+            }
+            return GroupRoles;
         }
 
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID)
@@ -1039,98 +1124,6 @@ namespace Aurora.Services.DataService
                 }
             }
             return AllNotices;
-        }
-
-        public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
-        {
-            List<UUID> GroupIDs = new List<UUID>();
-            GroupIDs.Add(GroupID);
-            return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
-        }
-
-        public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
-        {
-            List<UUID> groupIDs = new List<UUID>();
-            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
-            {
-                foreach (UUID GroupID in GroupIDs)
-                {
-                    if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
-                    {
-                        groupIDs.Add(GroupID);
-                    }
-                }
-            }
-            else
-            {
-                groupIDs = GroupIDs;
-            }
-
-            List<string> numGroupNotices = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'", "osgroupnotice", "Count(NoticeID)");
-            return uint.Parse(numGroupNotices[0]);
-        }
-
-        public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject,
-                                   string message, UUID ItemID, int AssetType, string ItemName)
-        {
-            if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong) GroupPowers.SendNotices))
-                return;
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "NoticeID",
-                                        "Timestamp",
-                                        "FromName",
-                                        "Subject",
-                                        "Message",
-                                        "HasAttachment",
-                                        "ItemID",
-                                        "AssetType",
-                                        "ItemName"
-                                    };
-
-            List<object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          noticeID,
-                                          ((uint) Util.UnixTimeSinceEpoch()),
-                                          fromName.MySqlEscape(50),
-                                          subject.MySqlEscape(50),
-                                          message.MySqlEscape(1024),
-                                          (ItemID != UUID.Zero) ? 1 : 0,
-                                          ItemID,
-                                          AssetType,
-                                          ItemName.MySqlEscape(50)
-                                      };
-
-            data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
-        }
-
-        public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
-        {
-            GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
-        }
-
-        public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
-        {
-            string whereClause = "1=1";
-            List<string> filter = new List<string>();
-            string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
-            foreach (string field in BoolFields)
-            {
-                if (boolFields.ContainsKey(field) == true)
-                {
-                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
-                }
-            }
-            if (filter.Count > 0)
-            {
-                whereClause = string.Join(" AND ", filter.ToArray());
-            }
-
-
-            List<string> numGroups = data.Query(whereClause, "osgroup", "COUNT(GroupID)");
-            return uint.Parse(numGroups[0]);
         }
 
         #endregion
