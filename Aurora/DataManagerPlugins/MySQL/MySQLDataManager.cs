@@ -82,6 +82,11 @@ namespace Aurora.DataManager.MySQL
 
         public void ExecuteNonQuery(string sql, Dictionary<string, object> parameters)
         {
+            ExecuteNonQuery(m_connectionString, sql, parameters);
+        }
+
+        public void ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters)
+        {
             try
             {
                 MySqlParameter[] param = new MySqlParameter[parameters.Count];
@@ -91,7 +96,7 @@ namespace Aurora.DataManager.MySQL
                     param[i] = new MySqlParameter(p.Key, p.Value);
                     i++;
                 }
-                MySqlHelper.ExecuteNonQuery(m_connectionString, sql, param);
+                MySqlHelper.ExecuteNonQuery(connStr, sql, param);
             }
             catch (Exception e)
             {
@@ -102,6 +107,12 @@ namespace Aurora.DataManager.MySQL
         public override void ConnectToDatabase(string connectionstring, string migratorName, bool validateTables)
         {
             m_connectionString = connectionstring;
+            MySqlConnection c = new MySqlConnection(connectionstring);
+            int subStrA = connectionstring.IndexOf("Database=");
+            int subStrB = connectionstring.IndexOf(";", subStrA);
+            string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB+1);
+
+            ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>());
 
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
