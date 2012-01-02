@@ -596,7 +596,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     // this queue
                 else if (m_outbox.Dequeue(out packet))
                 {
-                    MainConsole.Instance.Output(AgentID + " - " + packet.Packet.Type, "ALL");
+                    MainConsole.Instance.Output(AgentID + " - " + packet.Packet.Type, "Verbose");
                     // A packet was pulled off the queue. See if we have
                     // enough tokens in the bucket to send it out
                     if (packet.Category == ThrottleOutPacketType.OutBand ||

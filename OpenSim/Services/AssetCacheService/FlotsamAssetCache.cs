@@ -312,21 +312,11 @@ namespace OpenSim.Services
                 {
                     if (File.Exists(filename))
                     {
-                        FileStream stream = null;
                         try
                         {
-                            stream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-                            BinaryFormatter bformatter = new BinaryFormatter();
-
-                            asset = (AssetBase) bformatter.Deserialize(stream);
-
-                            if (asset.ID == UUID.Zero) //Bad request
-                            {
-                                if (stream != null)
-                                    stream.Close();
-                                File.Delete(filename);
-                                return null;
-                            }
+                            string file = File.ReadAllText(filename);
+                            asset = new AssetBase();
+                            asset.Unpack(OpenMetaverse.StructuredData.OSDParser.DeserializeJson(file));
                             UpdateMemoryCache(id, asset);
 
                             m_DiskHits++;
@@ -344,11 +334,6 @@ namespace OpenSim.Services
                         catch (Exception e)
                         {
                             LogException(e);
-                        }
-                        finally
-                        {
-                            if (stream != null)
-                                stream.Close();
                         }
                     }
                 }
@@ -590,10 +575,7 @@ namespace OpenSim.Services
                             Directory.CreateDirectory(directory);
                         }
 
-                        stream = File.Open(tempname, FileMode.Create);
-                        BinaryFormatter bformatter = new BinaryFormatter();
-                        bformatter.Serialize(stream, asset);
-                        stream.Close();
+                        File.WriteAllText(tempname, OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(asset.Pack()));
 
                         // Now that it's written, rename it so that it can be found.
                         if (File.Exists(filename))

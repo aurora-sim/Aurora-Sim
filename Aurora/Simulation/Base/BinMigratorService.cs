@@ -8,7 +8,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 1;
+        private const int _currentBinVersion = 2;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -40,6 +40,8 @@ namespace Aurora.Simulation.Base
                 {
                     if (currentVersion == 0)
                         RunMigration1();
+                    if (currentVersion == 1)
+                        RunMigration2();
                     currentVersion++;
                 }
             }
@@ -49,6 +51,14 @@ namespace Aurora.Simulation.Base
                 return false;
             }
             return true;
+        }
+
+        private void RunMigration2()
+        {
+            foreach (string path in Directory.GetDirectories("assetcache//"))
+            {
+                Directory.Delete(path, true);
+            }
         }
 
         private void RunMigration1()

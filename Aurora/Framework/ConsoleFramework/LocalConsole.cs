@@ -372,31 +372,34 @@ namespace Aurora.Framework
         public override void Output(string text, string lvl)
         {
             Level level = GetLevel(lvl);
-            lock (cmdline)
+            if (MaxLogLevel <= level)
             {
-                if (y == -1)
+                lock (cmdline)
                 {
+                    if (y == -1)
+                    {
+                        WriteLocalText(text, level);
+
+                        return;
+                    }
+
+                    y = SetCursorTop(y);
+                    SetCursorLeft(0);
+
+                    int count = cmdline.Length + prompt.Length;
+
+                    while (count-- > 0)
+                        Console.Write(" ");
+
+                    y = SetCursorTop(y);
+                    SetCursorLeft(0);
+
                     WriteLocalText(text, level);
 
-                    return;
+                    y = Console.CursorTop;
+
+                    Show();
                 }
-
-                y = SetCursorTop(y);
-                SetCursorLeft(0);
-
-                int count = cmdline.Length + prompt.Length;
-
-                while (count-- > 0)
-                    Console.Write(" ");
-
-                y = SetCursorTop(y);
-                SetCursorLeft(0);
-
-                WriteLocalText(text, level);
-
-                y = Console.CursorTop;
-
-                Show();
             }
         }
 

@@ -102,6 +102,7 @@ namespace OpenSim.Services
                 return;
             }
 
+            MainConsole.Instance.MaxLogLevel = m_consoleAppender.Threshold;
             if (m_consoleAppender != null)
                 MainConsole.Instance.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
 

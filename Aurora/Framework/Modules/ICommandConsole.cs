@@ -50,6 +50,11 @@ namespace Aurora.Framework
         Commands Commands { get; set; }
 
         /// <summary>
+        /// The log level required to write onto the console
+        /// </summary>
+        Level MaxLogLevel { get; set; }
+
+        /// <summary>
         ///   The text behind the blinking cursor on the console
         /// </summary>
         string DefaultPrompt { get; set; }

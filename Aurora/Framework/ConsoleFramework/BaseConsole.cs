@@ -12,6 +12,8 @@ namespace Aurora.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public Level MaxLogLevel { get; set; }
+
         #region ILog Members
 
         public bool IsDebugEnabled
