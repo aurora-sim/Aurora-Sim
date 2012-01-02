@@ -291,7 +291,6 @@ namespace Aurora.Modules.Scripting
         {
             m_scene = scene;
 
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
         }
 
@@ -301,6 +300,7 @@ namespace Aurora.Modules.Scripting
 
         public void RegionLoaded(IScene scene)
         {
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
         }
 
         public Type ReplaceableInterface

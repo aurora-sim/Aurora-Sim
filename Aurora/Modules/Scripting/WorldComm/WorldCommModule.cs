@@ -136,7 +136,6 @@ namespace Aurora.Modules.Scripting
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IWorldComm>(this);
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             m_scene.EventManager.OnChatFromClient += DeliverClientMessage;
             m_scene.EventManager.OnChatBroadcast += DeliverClientMessage;
         }
@@ -147,6 +146,7 @@ namespace Aurora.Modules.Scripting
 
         public void RegionLoaded(IScene scene)
         {
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
         }
 
         public Type ReplaceableInterface
