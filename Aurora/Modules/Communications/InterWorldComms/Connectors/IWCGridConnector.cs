@@ -31,7 +31,6 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.GridService;
 using OpenSim.Services.Interfaces;

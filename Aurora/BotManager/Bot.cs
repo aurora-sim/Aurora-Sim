@@ -36,7 +36,6 @@ using Games.Pathfinding.AStar2DTest;
 using Mischel.Collections;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
 
 namespace Aurora.BotManager
 {

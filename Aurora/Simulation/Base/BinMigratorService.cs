@@ -55,6 +55,7 @@ namespace Aurora.Simulation.Base
 
         private void RunMigration2()
         {
+			if (!Directory.Exists("assetcache//")) return;
             foreach (string path in Directory.GetDirectories("assetcache//"))
             {
                 Directory.Delete(path, true);

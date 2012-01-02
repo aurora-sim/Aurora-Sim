@@ -35,7 +35,6 @@ using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
 using Aurora.DataManager;
-using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenMetaverse.StructuredData;
 

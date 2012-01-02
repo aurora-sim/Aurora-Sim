@@ -10,7 +10,6 @@ using log4net.Config;
 using log4net.Core;
 using log4net.Repository;
 using Nini.Config;
-using Aurora.Framework;
 using log4net;
 
 namespace OpenSim.Services

@@ -41,7 +41,6 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework;
 using Aurora.Framework.Physics;
 using PrimMesher;
-using Aurora.Framework.Physics;
 using zlib;
 using Path = System.IO.Path;
 

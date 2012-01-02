@@ -37,7 +37,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 
 namespace OpenSim.Region.ClientStack.LindenUDP

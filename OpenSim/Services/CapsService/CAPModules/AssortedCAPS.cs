@@ -37,7 +37,6 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 using OpenMetaverse;
 using Aurora.DataManager;
-using Aurora.Framework;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService

@@ -36,7 +36,6 @@ using Aurora.Framework;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 
 namespace Aurora.Modules.RegionLoader

@@ -31,7 +31,6 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes.Components;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
