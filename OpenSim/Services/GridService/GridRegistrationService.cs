@@ -38,7 +38,6 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.GridService

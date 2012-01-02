@@ -32,7 +32,6 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 using log4net.Core;
 

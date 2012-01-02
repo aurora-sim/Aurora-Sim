@@ -34,7 +34,6 @@ using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Servers.HttpServer;

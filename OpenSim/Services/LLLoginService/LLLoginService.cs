@@ -42,7 +42,6 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using Aurora.DataManager;
-using Aurora.Framework;
 using AvatarArchives;
 
 namespace OpenSim.Services.LLLoginService

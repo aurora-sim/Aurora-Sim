@@ -37,7 +37,6 @@ using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine
 {
