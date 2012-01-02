@@ -773,6 +773,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             for (int i = 0; i < count; i++)
             {
+
+                if (!GetCurContactGeom(i, ref curContact))
+                    break;
+
                 if (curContact.depth > maxDepthContact.PenetrationDepth)
                 {
                     maxDepthContact.PenetrationDepth = curContact.depth;
@@ -810,9 +814,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (p2 is PhysicsObject && ((PhysicsObject) p2).VolumeDetect)
                     skipThisContact = true; // No collision on volume detect prims
-
-                if (!GetCurContactGeom(i, ref curContact))
-                    break;
 
                 if (curContact.depth < 0f)
                     skipThisContact = true;
