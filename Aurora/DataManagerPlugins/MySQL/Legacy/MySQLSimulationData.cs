@@ -82,60 +82,62 @@ namespace OpenSim.Data.MySQL
 
         public List<ISceneEntity> LoadObjects(UUID regionID, IScene scene)
         {
-            const int ROWS_PER_QUERY = 5000;
-
-            Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>(ROWS_PER_QUERY);
-            Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity>();
-            int count = 0;
-
-            #region Prim Loading
-
-            lock (m_dbLock)
+            try
             {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                const int ROWS_PER_QUERY = 5000;
+
+                Dictionary<UUID, SceneObjectPart> prims = new Dictionary<UUID, SceneObjectPart>(ROWS_PER_QUERY);
+                Dictionary<UUID, ISceneEntity> objects = new Dictionary<UUID, ISceneEntity>();
+                int count = 0;
+
+                #region Prim Loading
+
+                lock (m_dbLock)
                 {
-                    dbcon.Open();
-
-                    using (MySqlCommand cmd = dbcon.CreateCommand())
+                    using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                     {
-                        cmd.CommandText =
-                            "SELECT * FROM prims LEFT JOIN primshapes ON prims.UUID = primshapes.UUID WHERE RegionUUID = ?RegionUUID";
-                        cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+                        dbcon.Open();
 
-                        using (IDataReader reader = ExecuteReader(cmd))
+                        using (MySqlCommand cmd = dbcon.CreateCommand())
                         {
-                            while (reader.Read())
+                            cmd.CommandText =
+                                "SELECT * FROM prims LEFT JOIN primshapes ON prims.UUID = primshapes.UUID WHERE RegionUUID = ?RegionUUID";
+                            cmd.Parameters.AddWithValue("RegionUUID", regionID.ToString());
+
+                            using (IDataReader reader = ExecuteReader(cmd))
                             {
-                                SceneObjectPart prim = BuildPrim(reader, scene);
+                                while (reader.Read())
+                                {
+                                    SceneObjectPart prim = BuildPrim(reader, scene);
 
-                                UUID parentID = DBGuid.FromDB(reader["SceneGroupID"].ToString());
-                                if (parentID != prim.UUID)
-                                    prim.ParentUUID = parentID;
+                                    UUID parentID = DBGuid.FromDB(reader["SceneGroupID"].ToString());
+                                    if (parentID != prim.UUID)
+                                        prim.ParentUUID = parentID;
 
-                                prims[prim.UUID] = prim;
+                                    prims[prim.UUID] = prim;
 
-                                ++count;
-                                if (count%ROWS_PER_QUERY == 0)
-                                    MainConsole.Instance.Info("[REGION DB]: Loaded " + count + " prims...");
+                                    ++count;
+                                    if (count % ROWS_PER_QUERY == 0)
+                                        MainConsole.Instance.Info("[REGION DB]: Loaded " + count + " prims...");
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            #endregion Prim Loading
+                #endregion Prim Loading
 
-            #region SceneObjectGroup Creation
+                #region SceneObjectGroup Creation
 
-            // Create all of the SOGs from the root prims first
+                // Create all of the SOGs from the root prims first
 #if (!ISWIN)
-            foreach (SceneObjectPart prim in prims.Values)
-            {
-                if (prim.ParentUUID == UUID.Zero)
+                foreach (SceneObjectPart prim in prims.Values)
                 {
-                    objects[prim.UUID] = new SceneObjectGroup(prim, scene);
+                    if (prim.ParentUUID == UUID.Zero)
+                    {
+                        objects[prim.UUID] = new SceneObjectGroup(prim, scene);
+                    }
                 }
-            }
 #else
             foreach (SceneObjectPart prim in prims.Values.Where(prim => prim.ParentUUID == UUID.Zero))
             {
@@ -144,76 +146,78 @@ namespace OpenSim.Data.MySQL
 #endif
 
 
-            List<uint> foundLocalIDs = new List<uint>();
-            // Add all of the children objects to the SOGs
-            foreach (SceneObjectPart prim in prims.Values)
-            {
-                if (!foundLocalIDs.Contains(prim.LocalId))
-                    foundLocalIDs.Add(prim.LocalId);
-                else
-                    prim.LocalId = 0; //Reset it! Only use it once!
-                ISceneEntity sog;
-                if (prim.UUID != prim.ParentUUID)
+                List<uint> foundLocalIDs = new List<uint>();
+                // Add all of the children objects to the SOGs
+                foreach (SceneObjectPart prim in prims.Values)
                 {
-                    if (objects.TryGetValue(prim.ParentUUID, out sog))
-                    {
-                        sog.AddChild(prim, prim.LinkNum);
-                    }
+                    if (!foundLocalIDs.Contains(prim.LocalId))
+                        foundLocalIDs.Add(prim.LocalId);
                     else
+                        prim.LocalId = 0; //Reset it! Only use it once!
+                    ISceneEntity sog;
+                    if (prim.UUID != prim.ParentUUID)
                     {
-                        MainConsole.Instance.WarnFormat(
-                            "[REGION DB]: Database contains an orphan child prim {0} {1} in region {2} pointing to missing parent {3}.  This prim will not be loaded.",
-                            prim.Name, prim.UUID, regionID, prim.ParentUUID);
+                        if (objects.TryGetValue(prim.ParentUUID, out sog))
+                        {
+                            sog.AddChild(prim, prim.LinkNum);
+                        }
+                        else
+                        {
+                            MainConsole.Instance.WarnFormat(
+                                "[REGION DB]: Database contains an orphan child prim {0} {1} in region {2} pointing to missing parent {3}.  This prim will not be loaded.",
+                                prim.Name, prim.UUID, regionID, prim.ParentUUID);
+                        }
                     }
                 }
-            }
 
-            #endregion SceneObjectGroup Creation
+                #endregion SceneObjectGroup Creation
 
-            MainConsole.Instance.DebugFormat("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
+                MainConsole.Instance.DebugFormat("[REGION DB]: Loaded {0} objects using {1} prims", objects.Count, prims.Count);
 
-            #region Prim Inventory Loading
+                #region Prim Inventory Loading
 
-            // Instead of attempting to LoadItems on every prim,
-            // most of which probably have no items... get a 
-            // list from DB of all prims which have items and
-            // LoadItems only on those
-            List<SceneObjectPart> primsWithInventory = new List<SceneObjectPart>();
-            lock (m_dbLock)
-            {
-                using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
+                // Instead of attempting to LoadItems on every prim,
+                // most of which probably have no items... get a 
+                // list from DB of all prims which have items and
+                // LoadItems only on those
+                List<SceneObjectPart> primsWithInventory = new List<SceneObjectPart>();
+                lock (m_dbLock)
                 {
-                    dbcon.Open();
-
-                    using (MySqlCommand itemCmd = dbcon.CreateCommand())
+                    using (MySqlConnection dbcon = new MySqlConnection(m_connectionString))
                     {
-                        itemCmd.CommandText = "SELECT DISTINCT primID FROM primitems";
-                        using (IDataReader itemReader = ExecuteReader(itemCmd))
+                        dbcon.Open();
+
+                        using (MySqlCommand itemCmd = dbcon.CreateCommand())
                         {
-                            while (itemReader.Read())
+                            itemCmd.CommandText = "SELECT DISTINCT primID FROM primitems";
+                            using (IDataReader itemReader = ExecuteReader(itemCmd))
                             {
-                                if (!(itemReader["primID"] is DBNull))
+                                while (itemReader.Read())
                                 {
-                                    UUID primID = DBGuid.FromDB(itemReader["primID"].ToString());
-                                    if (prims.ContainsKey(primID))
-                                        primsWithInventory.Add(prims[primID]);
+                                    if (!(itemReader["primID"] is DBNull))
+                                    {
+                                        UUID primID = DBGuid.FromDB(itemReader["primID"].ToString());
+                                        if (prims.ContainsKey(primID))
+                                            primsWithInventory.Add(prims[primID]);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                foreach (SceneObjectPart prim in primsWithInventory)
+                {
+                    LoadItems(prim);
+                }
+
+                #endregion Prim Inventory Loading
+
+                MainConsole.Instance.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
+
+                return new List<ISceneEntity>(objects.Values);
             }
-
-            foreach (SceneObjectPart prim in primsWithInventory)
-            {
-                LoadItems(prim);
-            }
-
-            #endregion Prim Inventory Loading
-
-            MainConsole.Instance.DebugFormat("[REGION DB]: Loaded inventory from {0} objects", primsWithInventory.Count);
-
-            return new List<ISceneEntity>(objects.Values);
+            catch { return new List<ISceneEntity>(); }
         }
 
         /// <summary>
