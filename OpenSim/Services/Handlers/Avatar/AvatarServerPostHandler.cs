@@ -126,7 +126,7 @@ namespace OpenSim.Services
                 if (avatar == null)
                     result["result"] = "null";
                 else
-                    result["result"] = avatar.ToKeyValuePairs();
+                    result["result"] = avatar.ToKVP();
 
                 string xmlString = WebUtils.BuildXmlResponse(result);
 

@@ -122,7 +122,6 @@ namespace Aurora.Modules.Scripting
             m_scenes.Add(scene);
 
             scene.RegisterModuleInterface<IXMLRPC>(this);
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
         }
 
         public void RemoveRegion(IScene scene)
@@ -146,6 +145,7 @@ namespace Aurora.Modules.Scripting
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
             }
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
         }
 
         public Type ReplaceableInterface

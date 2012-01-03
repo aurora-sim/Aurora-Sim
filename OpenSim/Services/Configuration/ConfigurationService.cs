@@ -204,6 +204,8 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual List<string> FindValueOf(string userID, string key, bool returnAll)
         {
+            if (userID == "" || userID == OpenMetaverse.UUID.Zero.ToString())
+                return FindValueOf(key);
             if (!returnAll)
                 return FindValueOf(userID, key);
 

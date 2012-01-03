@@ -142,7 +142,7 @@ namespace OpenSim.Services
                 result["result"] = "null";
             else
             {
-                result["result"] = account.ToKeyValuePairs();
+                result["result"] = account.ToKVP();
             }
 
             return ResultToBytes(result);
@@ -170,7 +170,7 @@ namespace OpenSim.Services
 #if(!ISWIN)
                 foreach(UserAccount acc in accounts)
                 {
-                    result["account" + i] = acc.ToKeyValuePairs();
+                    result["account" + i] = acc.ToKVP();
                     i++;
                 }
 #else

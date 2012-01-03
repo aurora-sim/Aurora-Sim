@@ -669,7 +669,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         private void WriteAsset(string id, AssetBase asset, TarArchiveWriter writer)
         {
             if (asset != null)
-                writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.Pack()));
+                writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.ToOSD()));
             else
                 MainConsole.Instance.WarnFormat("Could not find asset {0}", id);
         }

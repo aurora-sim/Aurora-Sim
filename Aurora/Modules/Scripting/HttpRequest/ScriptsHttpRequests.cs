@@ -291,7 +291,6 @@ namespace Aurora.Modules.Scripting
         {
             m_scene = scene;
 
-            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
         }
 
@@ -301,6 +300,7 @@ namespace Aurora.Modules.Scripting
 
         public void RegionLoaded(IScene scene)
         {
+            m_scriptModule = scene.RequestModuleInterface<IScriptModule>();
         }
 
         public Type ReplaceableInterface
@@ -358,7 +358,7 @@ namespace Aurora.Modules.Scripting
         #endregion
     }
 
-    public class HttpRequestClass : IServiceRequest
+    public class HttpRequestClass : IHttpRequestClass
     {
         // Constants for parameters
         // public const int HTTP_BODY_MAXLENGTH = 2;
@@ -370,16 +370,21 @@ namespace Aurora.Modules.Scripting
         public int HttpTimeout;
         public bool HttpVerifyCert = true;
         public int MaxLength;
-        public object[] Metadata = new object[0];
+        public object[] _Metadata = new object[0];
+        public object[] Metadata
+        {
+            get { return _Metadata; }
+            set { _Metadata = value; }
+        }
 
         public DateTime Next;
         public string OutboundBody;
 
         public HttpWebRequest Request;
-        public string ResponseBody;
+        public string ResponseBody { get; set; }
         public Dictionary<string, string> ResponseHeaders;
         public List<string> ResponseMetadata;
-        public int Status;
+        public int Status { get; set; }
         public string Url;
         private bool _finished;
         private Thread httpThread;

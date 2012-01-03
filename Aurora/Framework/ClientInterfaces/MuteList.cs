@@ -61,7 +61,7 @@ namespace Aurora.Framework
             return map;
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -69,13 +69,6 @@ namespace Aurora.Framework
         public override void FromKVP(Dictionary<string, object> KVP)
         {
             FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            MuteList m = new MuteList();
-            m.FromOSD(ToOSD());
-            return m;
         }
     }
 }

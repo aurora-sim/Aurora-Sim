@@ -54,7 +54,7 @@ namespace Aurora.Services.DataService
            if (source.Configs["AuroraConnectors"].GetString("EmailConnector", "LocalConnector") ==
                 "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -71,8 +71,7 @@ namespace Aurora.Services.DataService
         public List<Email> GetEmails(UUID objectID)
         {
             //Get all the messages
-            List<Email> emails = GenericUtils.GetGenerics(objectID, "Emails", GD,
-                                                                         new Email());
+            List<Email> emails = GenericUtils.GetGenerics<Email>(objectID, "Emails", GD);
             GenericUtils.RemoveGeneric(objectID, "Emails", GD);
             return emails;
         }

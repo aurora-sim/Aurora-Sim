@@ -74,6 +74,8 @@ namespace OpenSim.Region.Physics.Meshing
 #endif
 
         private readonly bool cacheSculptMaps = true;
+        private bool cacheSculptAlphaMaps = true;
+
         private readonly string decodedSculptMapPath;
         private readonly bool useMeshiesPhysicsMesh;
 
@@ -89,6 +91,13 @@ namespace OpenSim.Region.Physics.Meshing
             decodedSculptMapPath = start_config.GetString("DecodedSculptMapPath", "j2kDecodeCache");
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
             useMeshiesPhysicsMesh = start_config.GetBoolean("UseMeshiesPhysicsMesh", useMeshiesPhysicsMesh);
+
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                cacheSculptAlphaMaps = false;
+            }
+            else
+                cacheSculptAlphaMaps = cacheSculptMaps; 
 
             try
             {
@@ -445,7 +454,7 @@ namespace OpenSim.Region.Physics.Meshing
                             OpenJPEG.DecodeToImage(primShape.SculptData, out unusedData, out idata);
                             unusedData = null;
 
-                            if (cacheSculptMaps && idata != null)
+                            if (cacheSculptMaps && (cacheSculptAlphaMaps || (((ImageFlags)(idata.Flags) & ImageFlags.HasAlpha) == 0)))
                             {
                                 try
                                 {

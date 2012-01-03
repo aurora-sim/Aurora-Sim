@@ -49,7 +49,7 @@ namespace Aurora.Services.DataService
 
                 //If blank, no connector
                 if (m_ServerURIs.Count != 0)
-                    DataManager.DataManager.RegisterPlugin(Name, this);
+                    DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

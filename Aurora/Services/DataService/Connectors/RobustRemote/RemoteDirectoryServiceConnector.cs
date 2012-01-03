@@ -52,7 +52,7 @@ namespace Aurora.Services.DataService
                 "RemoteConnector")
             {
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

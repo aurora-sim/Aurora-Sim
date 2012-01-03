@@ -75,7 +75,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                                           source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             m_Gd = GenericData;
-            DataManager.DataManager.RegisterPlugin(Name, this);
+            DataManager.DataManager.RegisterPlugin(this);
         }
 
         #endregion

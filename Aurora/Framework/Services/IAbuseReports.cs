@@ -27,12 +27,13 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class AbuseReport
+    public class AbuseReport : IDataTransferable
     {
         public string AbuseDetails;
         public string AbuseLocation;
@@ -55,7 +56,7 @@ namespace OpenSim.Services.Interfaces
         {
         }
 
-        public AbuseReport(Dictionary<string, object> DicCol)
+        public override void FromKVP(Dictionary<string, object> DicCol)
         {
             AbuseDetails = DicCol["AbuseDetails"].ToString();
             AbuseLocation = DicCol["AbuseLocation"].ToString();
@@ -75,7 +76,7 @@ namespace OpenSim.Services.Interfaces
             ScreenshotID = new UUID(DicCol["ScreenshotID"].ToString());
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> NewDicCol = new Dictionary<string, object>();
             NewDicCol["AbuseDetails"] = AbuseDetails;
@@ -97,7 +98,7 @@ namespace OpenSim.Services.Interfaces
             return NewDicCol;
         }
 
-        public void FromOSD(OSDMap DicCol)
+        public override void FromOSD(OSDMap DicCol)
         {
             AbuseDetails = DicCol["AbuseDetails"].AsString();
             AbuseLocation = DicCol["AbuseLocation"].AsString();
@@ -117,7 +118,7 @@ namespace OpenSim.Services.Interfaces
             ScreenshotID = new UUID(DicCol["ScreenshotID"].AsString());
         }
 
-        public OSDMap ToOSD()
+        public override OSDMap ToOSD()
         {
             OSDMap NewDicCol = new OSDMap();
             NewDicCol["AbuseDetails"] = AbuseDetails;

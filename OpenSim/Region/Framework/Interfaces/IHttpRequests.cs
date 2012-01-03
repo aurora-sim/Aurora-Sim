@@ -54,10 +54,8 @@ namespace OpenSim.Region.Framework.Interfaces
 
     public interface IHttpRequestClass : IServiceRequest
     {
-        string Metadata { get; set; }
+        object[] Metadata { get; set; }
         int Status { get; set; }
-        UUID PrimID { get; set; }
         string ResponseBody { get; set; }
-        string ReqID { get; set; }
     }
 }

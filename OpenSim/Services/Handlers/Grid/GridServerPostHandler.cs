@@ -358,7 +358,7 @@ namespace OpenSim.Services
             if (rinfo == null)
                 result["result"] = "null";
             else
-                result["result"] = rinfo.ToKeyValuePairs();
+                result["result"] = rinfo.ToKVP();
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -392,7 +392,7 @@ namespace OpenSim.Services
             if (rinfo == null)
                 result["result"] = "null";
             else
-                result["result"] = rinfo.ToKeyValuePairs();
+                result["result"] = rinfo.ToKVP();
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -422,7 +422,7 @@ namespace OpenSim.Services
             if (rinfo == null)
                 result["result"] = "null";
             else
-                result["result"] = rinfo.ToKeyValuePairs();
+                result["result"] = rinfo.ToKVP();
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[GRID HANDLER]: resp string: {0}", xmlString);
@@ -463,7 +463,7 @@ namespace OpenSim.Services
 #if (!ISWIN)
                 foreach (GridRegion rinfo in rinfos)
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    Dictionary<string, object> rinfoDict = rinfo.ToKVP();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -522,7 +522,7 @@ namespace OpenSim.Services
 #if (!ISWIN)
                 foreach (GridRegion rinfo in rinfos)
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    Dictionary<string, object> rinfoDict = rinfo.ToKVP();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -561,7 +561,7 @@ namespace OpenSim.Services
 #if (!ISWIN)
                 foreach (GridRegion rinfo in rinfos)
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    Dictionary<string, object> rinfoDict = rinfo.ToKVP();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -611,7 +611,7 @@ namespace OpenSim.Services
 #if (!ISWIN)
                 foreach (GridRegion rinfo in rinfos)
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    Dictionary<string, object> rinfoDict = rinfo.ToKVP();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -661,7 +661,7 @@ namespace OpenSim.Services
 #if (!ISWIN)
                 foreach (GridRegion rinfo in rinfos)
                 {
-                    Dictionary<string, object> rinfoDict = rinfo.ToKeyValuePairs();
+                    Dictionary<string, object> rinfoDict = rinfo.ToKVP();
                     result["region" + i] = rinfoDict;
                     i++;
                 }
@@ -770,7 +770,7 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
             Telehub telehub = TelehubConnector.FindTelehub(regionID, 0);
             if (telehub != null)
-                result = telehub.ToKeyValuePairs();
+                result = telehub.ToKVP();
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();

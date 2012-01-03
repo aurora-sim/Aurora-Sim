@@ -76,7 +76,7 @@ namespace Aurora.Modules.Startup
             GridSessionID s = null;
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
             if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", new GridSessionID());
+                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID");
 
             if (s == null)
             {
@@ -271,7 +271,7 @@ namespace Aurora.Modules.Startup
                 return map;
             }
 
-            public override Dictionary<string, object> ToKeyValuePairs()
+            public override Dictionary<string, object> ToKVP()
             {
                 return Util.OSDToDictionary(ToOSD());
             }
@@ -279,13 +279,6 @@ namespace Aurora.Modules.Startup
             public override void FromKVP(Dictionary<string, object> KVP)
             {
                 FromOSD(Util.DictionaryToOSD(KVP));
-            }
-
-            public override IDataTransferable Duplicate()
-            {
-                GridSessionID m = new GridSessionID();
-                m.FromOSD(ToOSD());
-                return m;
             }
         }
 

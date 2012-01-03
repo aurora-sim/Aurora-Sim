@@ -59,7 +59,7 @@ namespace Aurora.Services.DataService
 
             if (source.Configs["AuroraConnectors"].GetString("EstateConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -74,7 +74,11 @@ namespace Aurora.Services.DataService
             List<string> estateID = GD.Query(new[] {"ID", "`Key`"}, new object[] {regionID, "EstateID"}, "estates",
                                              "`Value`");
             if (estateID.Count != 0)
+            {
                 settings = LoadEstateSettings(Convert.ToInt32(estateID[0]));
+                if(settings != null)
+                    settings.EstatePass = "";//No sending it out, ever!
+            }
             return true;
         }
 
@@ -110,7 +114,7 @@ namespace Aurora.Services.DataService
             es.EstateID = (uint) EstateID;
 
             List<object> Values = new List<object> {es.EstateID, "EstateSettings"};
-            OSD map = es.ToOSD(true);
+            OSD map = es.ToOSD();
             Values.Add(OSDParser.SerializeLLSDXmlString(map));
             GD.Insert("estates", Values.ToArray());
 
@@ -122,6 +126,7 @@ namespace Aurora.Services.DataService
                                      });
 
             es.OnSave += SaveEstateSettings;
+            es.EstatePass = "";//No sending it out, ever!
             return es;
         }
 
@@ -149,7 +154,7 @@ namespace Aurora.Services.DataService
             }
 
             List<string> Keys = new List<string> {"Value"};
-            List<object> Values = new List<object> {OSDParser.SerializeLLSDXmlString(es.ToOSD(true))};
+            List<object> Values = new List<object> {OSDParser.SerializeLLSDXmlString(es.ToOSD())};
 
             GD.Update("estates", Values.ToArray(), Keys.ToArray(), new[] {"ID", "`Key`"},
                       new object[] {es.EstateID, "EstateSettings"});
@@ -212,6 +217,7 @@ namespace Aurora.Services.DataService
                     {
                         OSDMap estateInfo = (OSDMap)oval;
                         EstateSettings es = LoadEstateSettings(estateInfo["EstateID"].AsInteger());
+                        es.EstatePass = "";//No sending it out, ever!
                         if (es != null)
                             result.Add(es);
                     }

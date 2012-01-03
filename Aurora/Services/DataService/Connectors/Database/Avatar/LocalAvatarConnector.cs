@@ -56,7 +56,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(connectionString, "Avatars",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

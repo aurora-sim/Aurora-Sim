@@ -575,7 +575,7 @@ namespace OpenSim.Services
                             Directory.CreateDirectory(directory);
                         }
 
-                        File.WriteAllText(tempname, OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(asset.Pack()));
+                        File.WriteAllText(tempname, OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(asset.ToOSD()));
 
                         // Now that it's written, rename it so that it can be found.
                         if (File.Exists(filename))

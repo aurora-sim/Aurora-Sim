@@ -38,8 +38,10 @@ namespace Aurora.Framework
     ///   Circuit data for an agent.  Connection information shared between
     ///   regions that accept UDP connections from a client
     /// </summary>
-    public class AgentCircuitData
+    public class AgentCircuitData : IDataTransferable
     {
+        #region Variables
+
         /// <summary>
         ///   Avatar Unique Agent Identifier
         /// </summary>
@@ -136,6 +138,30 @@ namespace Aurora.Framework
         /// </summary>
         public uint teleportFlags;
 
+        #endregion
+
+        #region IDataTransferable
+
+        /// <summary>
+        ///   Serialize the module to OSD
+        /// </summary>
+        /// <returns></returns>
+        public override OSDMap ToOSD()
+        {
+            return PackAgentCircuitData();
+        }
+
+        /// <summary>
+        ///   Deserialize the module from OSD
+        /// </summary>
+        /// <param name = "map"></param>
+        public override void FromOSD(OSDMap map)
+        {
+            UnpackAgentCircuitData(map);
+        }
+
+        #region oldFunctions
+
         /// <summary>
         ///   Pack AgentCircuitData into an OSDMap for transmission over LLSD XML or LLSD json
         /// </summary>
@@ -188,24 +214,24 @@ namespace Aurora.Framework
         public virtual AgentCircuitData Copy()
         {
             AgentCircuitData Copy = new AgentCircuitData
-                                        {
-                                            AgentID = AgentID,
-                                            Appearance = Appearance,
-                                            CapsPath = CapsPath,
-                                            child = child,
-                                            reallyischild = reallyischild,
-                                            circuitcode = circuitcode,
-                                            IPAddress = IPAddress,
-                                            SecureSessionID = SecureSessionID,
-                                            SessionID = SessionID,
-                                            startpos = startpos,
-                                            teleportFlags = teleportFlags,
-                                            OtherInformation = OtherInformation,
-                                            ServiceURLs = ServiceURLs,
-                                            firstname = firstname,
-                                            lastname = lastname,
-                                            DrawDistance = DrawDistance
-                                        };
+            {
+                AgentID = AgentID,
+                Appearance = Appearance,
+                CapsPath = CapsPath,
+                child = child,
+                reallyischild = reallyischild,
+                circuitcode = circuitcode,
+                IPAddress = IPAddress,
+                SecureSessionID = SecureSessionID,
+                SessionID = SessionID,
+                startpos = startpos,
+                teleportFlags = teleportFlags,
+                OtherInformation = OtherInformation,
+                ServiceURLs = ServiceURLs,
+                firstname = firstname,
+                lastname = lastname,
+                DrawDistance = DrawDistance
+            };
 
 
             return Copy;
@@ -264,12 +290,12 @@ namespace Aurora.Framework
 
                 if (args.ContainsKey("packed_appearance") && (args["packed_appearance"].Type == OSDType.Map))
                 {
-                    Appearance.Unpack((OSDMap) args["packed_appearance"]);
+                    Appearance.Unpack((OSDMap)args["packed_appearance"]);
                     // DEBUG ON
                     //MainConsole.Instance.WarnFormat("[AGENTCIRCUITDATA] unpacked appearance");
                     // DEBUG OFF
                 }
-                    // DEBUG ON
+                // DEBUG ON
                 else
                     MainConsole.Instance.Warn("[AGENTCIRCUITDATA] failed to find a valid packed_appearance, dne ? " +
                                !args.ContainsKey("packed_appearance"));
@@ -281,14 +307,14 @@ namespace Aurora.Framework
             }
 
             if (args.ContainsKey("otherInfo"))
-                OtherInformation = (OSDMap) OSDParser.DeserializeLLSDXml(args["otherInfo"].AsString());
+                OtherInformation = (OSDMap)OSDParser.DeserializeLLSDXml(args["otherInfo"].AsString());
 
             ServiceURLs = new Dictionary<string, object>();
             // Try parse the new way, OSDMap
             if (args.ContainsKey("serviceurls") && args["serviceurls"] != null &&
                 (args["serviceurls"]).Type == OSDType.Map)
             {
-                OSDMap urls = (OSDMap) (args["serviceurls"]);
+                OSDMap urls = (OSDMap)(args["serviceurls"]);
                 foreach (KeyValuePair<String, OSD> kvp in urls)
                 {
                     ServiceURLs[kvp.Key] = kvp.Value.AsString();
@@ -296,5 +322,10 @@ namespace Aurora.Framework
                 }
             }
         }
+
+        #endregion
+
+        #endregion
+
     }
 }

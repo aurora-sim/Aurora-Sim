@@ -31,6 +31,7 @@ using System.Net;
 using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
@@ -580,7 +581,7 @@ namespace Aurora.Framework
         public DateTime TimeLastRezzed;
     }
 
-    public class DirPlacesReplyData
+    public class DirPlacesReplyData : IDataTransferable
     {
         public uint Status;
         public bool auction;
@@ -595,15 +596,10 @@ namespace Aurora.Framework
 
         public DirPlacesReplyData(Dictionary<string, object> KVP)
         {
-            Status = uint.Parse(KVP["Status"].ToString());
-            dwell = float.Parse(KVP["dwell"].ToString());
-            auction = bool.Parse(KVP["auction"].ToString());
-            forSale = bool.Parse(KVP["forSale"].ToString());
-            name = KVP["name"].ToString();
-            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+            FromKVP(KVP);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["parcelID"] = parcelID;
@@ -613,6 +609,40 @@ namespace Aurora.Framework
             KVP["dwell"] = dwell;
             KVP["Status"] = Status;
             return KVP;
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            Status = uint.Parse(KVP["Status"].ToString());
+            dwell = float.Parse(KVP["dwell"].ToString());
+            auction = bool.Parse(KVP["auction"].ToString());
+            forSale = bool.Parse(KVP["forSale"].ToString());
+            name = KVP["name"].ToString();
+            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["parcelID"] = parcelID;
+            map["name"] = name;
+            map["forSale"] = forSale;
+            map["auction"] = auction;
+            map["dwell"] = dwell;
+            map["Status"] = Status;
+
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Status = map["Status"];
+            dwell = map["dwell"];
+            auction = map["auction"];
+            forSale = map["forSale"];
+            name = map["name"];
+            parcelID = map["parcelID"];
         }
     }
 
@@ -626,7 +656,7 @@ namespace Aurora.Framework
         public int reputation;
     }
 
-    public class DirEventsReplyData
+    public class DirEventsReplyData : IDataTransferable
     {
         public uint Status;
         public string date;
@@ -642,6 +672,11 @@ namespace Aurora.Framework
 
         public DirEventsReplyData(Dictionary<string, object> KVP)
         {
+            FromKVP(KVP);
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
             Status = uint.Parse(KVP["Status"].ToString());
             eventFlags = uint.Parse(KVP["eventFlags"].ToString());
             unixTime = uint.Parse(KVP["unixTime"].ToString());
@@ -651,7 +686,7 @@ namespace Aurora.Framework
             ownerID = UUID.Parse(KVP["ownerID"].ToString());
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["ownerID"] = ownerID;
@@ -663,9 +698,33 @@ namespace Aurora.Framework
             KVP["Status"] = Status;
             return KVP;
         }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["ownerID"] = ownerID;
+            map["name"] = name;
+            map["eventID"] = eventID;
+            map["date"] = date;
+            map["unixTime"] = unixTime;
+            map["eventFlags"] = eventFlags;
+            map["Status"] = Status;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            ownerID = map["ownerID"];
+            name = map["name"];
+            eventID = map["eventID"];
+            date = map["date"];
+            unixTime = map["unixTime"];
+            eventFlags = map["eventFlags"];
+            Status = map["Status"];
+        }
     }
 
-    public class DirGroupsReplyData
+    public class DirGroupsReplyData : IDataTransferable
     {
         public UUID groupID;
         public string groupName;
@@ -678,13 +737,10 @@ namespace Aurora.Framework
 
         public DirGroupsReplyData(Dictionary<string, object> KVP)
         {
-            groupID = UUID.Parse(KVP["groupID"].ToString());
-            groupName = KVP["groupName"].ToString();
-            members = int.Parse(KVP["members"].ToString());
-            searchOrder = float.Parse(KVP["searchOrder"].ToString());
+            FromKVP(KVP);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["groupID"] = groupID;
@@ -693,9 +749,35 @@ namespace Aurora.Framework
             KVP["searchOrder"] = searchOrder;
             return KVP;
         }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            groupID = UUID.Parse(KVP["groupID"].ToString());
+            groupName = KVP["groupName"].ToString();
+            members = int.Parse(KVP["members"].ToString());
+            searchOrder = float.Parse(KVP["searchOrder"].ToString());
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["groupID"] = groupID;
+            map["groupName"] = groupName;
+            map["members"] = members;
+            map["searchOrder"] = searchOrder;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            groupID = map["groupID"];
+            groupName = map["groupName"];
+            members = map["members"];
+            searchOrder = map["searchOrder"];
+        }
     }
 
-    public class DirClassifiedReplyData
+    public class DirClassifiedReplyData : IDataTransferable
     {
         public uint Status;
         public byte classifiedFlags;
@@ -711,16 +793,10 @@ namespace Aurora.Framework
 
         public DirClassifiedReplyData(Dictionary<string, object> KVP)
         {
-            Status = uint.Parse(KVP["Status"].ToString());
-            price = int.Parse(KVP["price"].ToString());
-            expirationDate = uint.Parse(KVP["expirationDate"].ToString());
-            creationDate = uint.Parse(KVP["creationDate"].ToString());
-            classifiedFlags = byte.Parse(KVP["classifiedFlags"].ToString());
-            name = KVP["name"].ToString();
-            classifiedID = UUID.Parse(KVP["classifiedID"].ToString());
+            FromKVP(KVP);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["classifiedID"] = classifiedID;
@@ -732,9 +808,44 @@ namespace Aurora.Framework
             KVP["Status"] = Status;
             return KVP;
         }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            Status = uint.Parse(KVP["Status"].ToString());
+            price = int.Parse(KVP["price"].ToString());
+            expirationDate = uint.Parse(KVP["expirationDate"].ToString());
+            creationDate = uint.Parse(KVP["creationDate"].ToString());
+            classifiedFlags = byte.Parse(KVP["classifiedFlags"].ToString());
+            name = KVP["name"].ToString();
+            classifiedID = UUID.Parse(KVP["classifiedID"].ToString());
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["classifiedID"] = classifiedID;
+            map["name"] = name;
+            map["classifiedFlags"] = (int)classifiedFlags;
+            map["creationDate"] = creationDate;
+            map["expirationDate"] = expirationDate;
+            map["price"] = price;
+            map["Status"] = Status;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            classifiedID = map["classifiedID"];
+            name = map["name"];
+            classifiedFlags = (byte)(int)map["classifiedFlags"];
+            creationDate = map["creationDate"];
+            expirationDate = map["expirationDate"];
+            price = map["price"];
+            Status = map["Status"];
+        }
     }
 
-    public class DirLandReplyData
+    public class DirLandReplyData : IDataTransferable
     {
         public int actualArea;
         public bool auction;
@@ -749,15 +860,10 @@ namespace Aurora.Framework
 
         public DirLandReplyData(Dictionary<string, object> KVP)
         {
-            actualArea = int.Parse(KVP["actualArea"].ToString());
-            salePrice = int.Parse(KVP["salePrice"].ToString());
-            auction = bool.Parse(KVP["auction"].ToString());
-            forSale = bool.Parse(KVP["forSale"].ToString());
-            name = KVP["name"].ToString();
-            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+            FromKVP(KVP);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["parcelID"] = parcelID;
@@ -767,6 +873,38 @@ namespace Aurora.Framework
             KVP["salePrice"] = salePrice;
             KVP["actualArea"] = actualArea;
             return KVP;
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
+            actualArea = int.Parse(KVP["actualArea"].ToString());
+            salePrice = int.Parse(KVP["salePrice"].ToString());
+            auction = bool.Parse(KVP["auction"].ToString());
+            forSale = bool.Parse(KVP["forSale"].ToString());
+            name = KVP["name"].ToString();
+            parcelID = UUID.Parse(KVP["parcelID"].ToString());
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["parcelID"] = parcelID;
+            map["name"] = name;
+            map["forSale"] = forSale;
+            map["auction"] = auction;
+            map["salePrice"] = salePrice;
+            map["actualArea"] = actualArea;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            parcelID = map["parcelID"];
+            name = map["name"];
+            forSale = map["forSale"];
+            auction = map["auction"];
+            salePrice = map["salePrice"];
+            actualArea = map["actualArea"];
         }
     }
 

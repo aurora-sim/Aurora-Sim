@@ -90,7 +90,7 @@ namespace OpenSim.Services.Interfaces
     ///   Each region/client that uses avatars will have a data structure
     ///   of this type representing the avatars.
     /// </summary>
-    public class AvatarData
+    public class AvatarData : IDataTransferable
     {
         // This pretty much determines which name/value pairs will be
         // present below. The name/value pair describe a part of
@@ -114,25 +114,7 @@ namespace OpenSim.Services.Interfaces
 
         public AvatarData(Dictionary<string, object> kvp)
         {
-            Data = new Dictionary<string, string>();
-
-            if (kvp.ContainsKey("AvatarType"))
-                Int32.TryParse(kvp["AvatarType"].ToString(), out AvatarType);
-
-            foreach (KeyValuePair<string, object> _kvp in kvp)
-            {
-                if (_kvp.Value != null)
-                {
-                    string key = _kvp.Key;
-                    if (_kvp.Key.StartsWith("Wearable"))
-                    {
-                        key = _kvp.Key.Replace("Wearable", "");
-                        key = key.Insert(key.Length == 2 ? 1 : 2, ":");
-                        key = "Wearable " + key; //Add the space back
-                    }
-                    Data[key] = _kvp.Value.ToString();
-                }
-            }
+            FromKVP(kvp);
         }
 
         public AvatarData(AvatarAppearance appearance)
@@ -179,7 +161,7 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// </summary>
         /// <returns></returns>
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
 
@@ -201,6 +183,69 @@ namespace OpenSim.Services.Interfaces
             }
 #endif
             return result;
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap result = new OSDMap();
+
+            result["AvatarType"] = AvatarType;
+
+            foreach (KeyValuePair<string, string> _kvp in Data)
+            {
+                if (_kvp.Value != null)
+                {
+                    //Remove spaces
+                    result[_kvp.Key.Replace(" ", "").Replace(":", "")] = _kvp.Value;
+                }
+            }
+            return result;
+        }
+
+        public override void FromKVP(Dictionary<string, object> kvp)
+        {
+            Data = new Dictionary<string, string>();
+
+            if (kvp.ContainsKey("AvatarType"))
+                Int32.TryParse(kvp["AvatarType"].ToString(), out AvatarType);
+
+            foreach (KeyValuePair<string, object> _kvp in kvp)
+            {
+                if (_kvp.Value != null)
+                {
+                    string key = _kvp.Key;
+                    if (_kvp.Key.StartsWith("Wearable"))
+                    {
+                        key = _kvp.Key.Replace("Wearable", "");
+                        key = key.Insert(key.Length == 2 ? 1 : 2, ":");
+                        key = "Wearable " + key; //Add the space back
+                    }
+                    Data[key] = _kvp.Value.ToString();
+                }
+            }
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Data = new Dictionary<string, string>();
+
+            if (map.ContainsKey("AvatarType"))
+                AvatarType = map["AvatarType"];
+
+            foreach (KeyValuePair<string, OSD> _kvp in map)
+            {
+                if (_kvp.Value != null)
+                {
+                    string key = _kvp.Key;
+                    if (_kvp.Key.StartsWith("Wearable"))
+                    {
+                        key = _kvp.Key.Replace("Wearable", "");
+                        key = key.Insert(key.Length == 2 ? 1 : 2, ":");
+                        key = "Wearable " + key; //Add the space back
+                    }
+                    Data[key] = _kvp.Value.ToString();
+                }
+            }
         }
 
         public AvatarAppearance ToAvatarAppearance(UUID owner)

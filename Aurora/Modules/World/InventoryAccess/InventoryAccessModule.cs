@@ -83,7 +83,6 @@ namespace Aurora.Modules.InventoryAccess
                 return;
 
             m_scene = scene;
-            m_LLCLientInventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
 
             scene.RegisterModuleInterface<IInventoryAccessModule>(this);
             scene.EventManager.OnNewClient += OnNewClient;
@@ -113,6 +112,7 @@ namespace Aurora.Modules.InventoryAccess
 
         public virtual void RegionLoaded (IScene scene)
         {
+            m_LLCLientInventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
         }
 
         #endregion

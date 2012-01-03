@@ -91,7 +91,7 @@ namespace Aurora.Framework
         /// </summary>
         public UUID PrincipalID = UUID.Zero;
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -132,13 +132,6 @@ namespace Aurora.Framework
         public override void FromKVP(Dictionary<string, object> RetVal)
         {
             FromOSD(Util.DictionaryToOSD(RetVal));
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            IAgentInfo m = new IAgentInfo();
-            m.FromOSD(ToOSD());
-            return m;
         }
     }
 
@@ -253,7 +246,7 @@ namespace Aurora.Framework
         /// </summary>
         public string WebURL = String.Empty;
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -351,13 +344,6 @@ namespace Aurora.Framework
         {
             FromOSD(Util.DictionaryToOSD(RetVal));
         }
-
-        public override IDataTransferable Duplicate()
-        {
-            IUserProfileInfo m = new IUserProfileInfo();
-            m.FromOSD(ToOSD());
-            return m;
-        }
     }
 
     public class ProfileInterests
@@ -434,7 +420,7 @@ namespace Aurora.Framework
             FromOSD(Util.DictionaryToOSD(KVP));
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -499,7 +485,7 @@ namespace Aurora.Framework
             FromOSD(Util.DictionaryToOSD(KVP));
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }

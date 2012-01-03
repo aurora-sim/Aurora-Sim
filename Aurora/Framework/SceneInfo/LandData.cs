@@ -628,7 +628,7 @@ namespace Aurora.Framework
 
         #region IDataTransferable
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -733,13 +733,6 @@ namespace Aurora.Framework
         public override void FromKVP(Dictionary<string, object> KVP)
         {
             FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            LandData m = new LandData();
-            m.FromOSD(ToOSD());
-            return m;
         }
 
         #endregion

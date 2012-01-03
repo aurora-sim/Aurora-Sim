@@ -222,8 +222,8 @@ namespace OpenSim.Services.GridService
             if (!m_useRegistrationService)
                 return;
 
-            List<GridRegistrationURLs> urls = m_genericsConnector.GetGenerics(
-                UUID.Zero, "GridRegistrationUrls", new GridRegistrationURLs());
+            List<GridRegistrationURLs> urls = m_genericsConnector.GetGenerics<GridRegistrationURLs>(
+                UUID.Zero, "GridRegistrationUrls");
 
             foreach (GridRegistrationURLs url in urls)
             {
@@ -259,8 +259,8 @@ namespace OpenSim.Services.GridService
 
         public OSDMap GetUrlForRegisteringClient(string SessionID)
         {
-            GridRegistrationURLs urls = m_genericsConnector.GetGeneric(UUID.Zero,
-                "GridRegistrationUrls", SessionID, new GridRegistrationURLs ());
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", SessionID);
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
@@ -362,8 +362,8 @@ namespace OpenSim.Services.GridService
             if (!m_useRegistrationService)
                 return;
 
-            GridRegistrationURLs urls = m_genericsConnector.GetGeneric(UUID.Zero,
-                "GridRegistrationUrls", SessionID, new GridRegistrationURLs ());
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", SessionID);
             if (urls != null)
             {
                 MainConsole.Instance.WarnFormat ("[GridRegService]: Removing URLs for {0}", SessionID);
@@ -390,8 +390,8 @@ namespace OpenSim.Services.GridService
             if (!m_useRegistrationService)
                 return;
 
-            GridRegistrationURLs urls = m_genericsConnector.GetGeneric(UUID.Zero,
-                "GridRegistrationUrls", SessionID, new GridRegistrationURLs ());
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", SessionID);
             InnerUpdateUrlsForClient(urls);
         }
 
@@ -420,8 +420,8 @@ namespace OpenSim.Services.GridService
             if (!m_useRegistrationService)
                 return true;
 
-            GridRegistrationURLs urls = m_genericsConnector.GetGeneric(UUID.Zero,
-                "GridRegistrationUrls", SessionID, new GridRegistrationURLs ());
+            GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
+                "GridRegistrationUrls", SessionID);
             if (urls != null)
             {
                 //Past time for it to expire
@@ -483,13 +483,6 @@ namespace OpenSim.Services.GridService
                     VersionNumber = 0;
                 else
                     VersionNumber = retVal["VersionNumber"].AsInteger();
-            }
-
-            public override IDataTransferable Duplicate()
-            {
-                GridRegistrationURLs url = new GridRegistrationURLs();
-                url.FromOSD(ToOSD());
-                return url;
             }
         }
 

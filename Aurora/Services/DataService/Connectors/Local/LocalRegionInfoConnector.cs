@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase (defaultConnectionString, "Generics", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
                 GD.ConnectToDatabase (defaultConnectionString, "RegionInfo", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
                 
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -143,7 +143,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<float, RegionLightShareData> RetVal = new Dictionary<float, RegionLightShareData>();
             RegionLightShareData RWLD = new RegionLightShareData();
-            List<RegionLightShareData> RWLDs = GenericUtils.GetGenerics(regionUUID, "RegionWindLightData", GD, RWLD);
+            List<RegionLightShareData> RWLDs = GenericUtils.GetGenerics<RegionLightShareData>(regionUUID, "RegionWindLightData", GD);
             foreach (RegionLightShareData lsd in RWLDs)
             {
                 if(!RetVal.ContainsKey(lsd.minEffectiveAltitude))

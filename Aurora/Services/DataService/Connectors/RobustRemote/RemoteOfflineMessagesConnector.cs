@@ -51,7 +51,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
                 "RemoteConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

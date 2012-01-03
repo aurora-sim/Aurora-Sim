@@ -1646,27 +1646,71 @@ namespace Aurora.Framework
             Dictionary<string, object> retVal = new Dictionary<string, object>();
             foreach (string key in map.Keys)
             {
-                if (map[key].Type == OSDType.Binary)
-                    retVal.Add(key, map[key].AsBinary());
-                else if (map[key].Type == OSDType.Boolean)
-                    retVal.Add(key, map[key].AsBoolean());
-                else if (map[key].Type == OSDType.Date)
-                    retVal.Add(key, map[key].AsDate());
-                else if (map[key].Type == OSDType.Integer)
-                    retVal.Add(key, map[key].AsInteger());
-                else if (map[key].Type == OSDType.Real)
-                    retVal.Add(key, map[key].AsReal());
-                else if (map[key].Type == OSDType.String)
-                    retVal.Add(key, map[key].AsString());
-                else if (map[key].Type == OSDType.URI)
-                    retVal.Add(key, map[key].AsUri());
-                else if (map[key].Type == OSDType.UUID)
-                    retVal.Add(key, map[key].AsUUID());
-                else
-                    retVal.Add(key, map[key].AsString());
+                retVal.Add(key, OSDToObject(map[key]));
             }
             return retVal;
         }
+
+        public static object OSDToObject(OSD o)
+        {
+            return OSDToObject(o, null);
+        }
+
+        public static object OSDToObject(OSD o, Type PossibleArrayType)
+        {
+            if (o.Type == OSDType.Array)
+            {
+                OSDArray array = (OSDArray)o;
+                var possArrayType = Activator.CreateInstance(PossibleArrayType);
+                var list = MakeList(possArrayType);
+                foreach (OSD oo in array)
+                {
+                    list.Add(oo);
+                }
+                return list;
+            }
+            else if (o.Type == OSDType.Map)
+            {
+                OSDMap array = (OSDMap)o;
+                var possArrayTypeB = Activator.CreateInstance(PossibleArrayType);
+                var list = MakeDictionary("", possArrayTypeB);
+                foreach (KeyValuePair<string, OSD> oo in array)
+                {
+                    list.Add(oo.Key, oo.Value);
+                }
+                return list;
+            }
+            else if (o.Type == OSDType.Binary)
+                return o.AsBinary();
+            else if (o.Type == OSDType.Boolean)
+                return o.AsBoolean();
+            else if (o.Type == OSDType.Date)
+                return o.AsDate();
+            else if (o.Type == OSDType.Integer)
+                return o.AsInteger();
+            else if (o.Type == OSDType.Real)
+                return o.AsReal();
+            else if (o.Type == OSDType.String)
+                return o.AsString();
+            else if (o.Type == OSDType.URI)
+                return o.AsUri();
+            else if (o.Type == OSDType.UUID)
+                return o.AsUUID();
+            else
+                return o.AsString();
+        }
+
+        public static List<T> MakeList<T>(T itemOftype)
+        {
+            List<T> newList = new List<T>();
+            return newList;
+        }
+
+        public static Dictionary<A, B> MakeDictionary<A, B>(A itemOftypeA, B itemOfTypeB)
+        {
+            Dictionary<A, B> newList = new Dictionary<A, B>();
+            return newList;
+        }   
 
         public static void UlongToInts(ulong regionHandle, out int x, out int y)
         {
@@ -1763,6 +1807,26 @@ namespace Aurora.Framework
             if (p == (sbyte)AssetType.Mesh)
                 return (sbyte)AssetType.Texture;
             return p;
+        }
+
+        public static bool IsInstanceOfGenericType(Type genericType, object instance)
+        {
+            Type type = instance.GetType();
+            return IsInstanceOfGenericType(genericType, type);
+        }
+
+        public static bool IsInstanceOfGenericType(Type genericType, Type type)
+        {
+            while (type != null)
+            {
+                if (type.IsGenericType &&
+                    type.GetGenericTypeDefinition() == genericType)
+                {
+                    return true;
+                }
+                type = type.BaseType;
+            }
+            return false;
         }
 
         // http://social.msdn.microsoft.com/forums/en-US/csharpgeneral/thread/68f7ca38-5cd1-411f-b8d4-e4f7a688bc03
@@ -2371,5 +2435,13 @@ namespace Aurora.Framework
         }
 
         #endregion
+    }
+
+    public static class Extensions
+    {
+        public static List<T> ConvertAll<T>(this OSDArray array, Converter<OSD, T> converter)
+        {
+            return array.ToList().ConvertAll<T>(converter);
+        }
     }
 }

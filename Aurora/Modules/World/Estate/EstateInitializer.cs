@@ -127,6 +127,7 @@ namespace Aurora.Modules.Estate
                         continue;
                     }
                     //We set this back if there wasn't an error because the EstateService will NOT send it back
+                    ES.EstatePass = Password;
                     IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                     EstatePassword s = new EstatePassword { Password = Password };
                     if (g != null) //Save the pass to the database
@@ -250,7 +251,7 @@ namespace Aurora.Modules.Estate
                 IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 EstatePassword s = null;
                 if (g != null)
-                    s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
+                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString());
                 if (s != null)
                     ES.EstatePass = s.Password;
 
@@ -296,7 +297,7 @@ namespace Aurora.Modules.Estate
                     IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                     EstatePassword s = null;
                     if (g != null)
-                        s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString(), new EstatePassword());
+                        s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString());
                     if (s != null)
                         scene.RegionInfo.EstateSettings.EstatePass = s.Password;
                 }
@@ -322,7 +323,7 @@ namespace Aurora.Modules.Estate
                 return map;
             }
 
-            public override Dictionary<string, object> ToKeyValuePairs()
+            public override Dictionary<string, object> ToKVP()
             {
                 return Util.OSDToDictionary(ToOSD());
             }
@@ -330,13 +331,6 @@ namespace Aurora.Modules.Estate
             public override void FromKVP(Dictionary<string, object> KVP)
             {
                 FromOSD(Util.DictionaryToOSD(KVP));
-            }
-
-            public override IDataTransferable Duplicate()
-            {
-                EstatePassword m = new EstatePassword();
-                m.FromOSD(ToOSD());
-                return m;
             }
         }
 
@@ -353,7 +347,7 @@ namespace Aurora.Modules.Estate
             if (settings == null)
                 return;
             writer.WriteDir("estate");
-            string xmlData = WebUtils.BuildXmlResponse(settings.ToKeyValuePairs(true));
+            string xmlData = WebUtils.BuildXmlResponse(settings.ToKVP());
             writer.WriteFile("estate/" + scene.RegionInfo.RegionName, xmlData);
 
             MainConsole.Instance.Debug("[Archive]: Finished writing estates to archive");

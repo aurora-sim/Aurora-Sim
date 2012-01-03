@@ -52,7 +52,7 @@ namespace Aurora.Framework
     ///   Asset class.   All Assets are reference by this class or a class derived from this class
     /// </summary>
     [Serializable]
-    public class AssetBase : IDisposable
+    public class AssetBase : IDataTransferable, IDisposable
     {
         private static readonly SHA256Managed SHA256Managed = new SHA256Managed();
         private string idString = "";
@@ -288,6 +288,15 @@ namespace Aurora.Framework
         /// <returns></returns>
         public OSDMap Pack()
         {
+            return ToOSD();
+        }
+
+        /// <summary>
+        ///   Pack this asset into an OSDMap
+        /// </summary>
+        /// <returns></returns>
+        public override OSDMap ToOSD()
+        {
             OSDMap assetMap = new OSDMap
                                   {
                                       {"AssetFlags", OSD.FromInteger((int) Flags)},
@@ -304,6 +313,11 @@ namespace Aurora.Framework
                                       {"DatabaseTable", OSD.FromString(DatabaseTable)}
                                   };
             return assetMap;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack(map);
         }
 
         /// <summary>
@@ -361,7 +375,7 @@ namespace Aurora.Framework
         /// <returns>A compressed (gzip) string of the data needed for the database</returns>
         public string CompressedPack()
         {
-            OSDMap assetMap = Pack();
+            OSDMap assetMap = ToOSD();
 
             //Serialize it with json
             string jsonString = OSDParser.SerializeJsonString(assetMap);

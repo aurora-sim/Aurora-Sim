@@ -60,7 +60,7 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         /// <param name = "data">a default T to copy all data into</param>
         /// <returns></returns>
-        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD, T data)
+        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD)
             where T : IDataTransferable
         {
             List<string> retVal = GD.Query(new[] {"OwnerID", "Type", "`Key`"}, new object[] {OwnerID, Type, Key},
@@ -69,7 +69,8 @@ namespace Aurora.Services.DataService
             if (retVal.Count == 0)
                 return null;
 
-            OSDMap map = (OSDMap) OSDParser.DeserializeJson(retVal[0]);
+            OSDMap map = (OSDMap)OSDParser.DeserializeJson(retVal[0]);
+            T data = (T)System.Activator.CreateInstance(typeof(T));
             data.FromOSD(map);
             return data;
         }
@@ -138,7 +139,7 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         /// <param name = "data">a default T</param>
         /// <returns></returns>
-        public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD, T data)
+        public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD)
             where T : IDataTransferable
         {
             List<T> Values = new List<T>();
@@ -148,9 +149,9 @@ namespace Aurora.Services.DataService
             foreach (string ret in retVal)
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
+                T data = (T)System.Activator.CreateInstance(typeof(T));
                 data.FromOSD(map);
-                T dataCopy = (T) data.Duplicate();
-                Values.Add(dataCopy);
+                Values.Add(data);
             }
 #else
             foreach (OSDMap map in retVal.Select(ret => (OSDMap)OSDParser.DeserializeJson(ret)))

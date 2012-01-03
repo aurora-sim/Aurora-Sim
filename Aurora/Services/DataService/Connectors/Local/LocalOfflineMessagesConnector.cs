@@ -62,7 +62,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("OfflineMessagesConnector", "LocalConnector") ==
                 "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -79,9 +79,8 @@ namespace Aurora.Services.DataService
         public GridInstantMessage[] GetOfflineMessages(UUID agentID)
         {
             //Get all the messages
-            List<GridInstantMessage> Messages = GenericUtils.GetGenerics(agentID, "OfflineMessages", GD,
-                                                                         new GridInstantMessage());
-            Messages.AddRange(GenericUtils.GetGenerics(agentID, "GroupOfflineMessages", GD, new GridInstantMessage()));
+            List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD);
+            Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD));
             //Clear them out now that we have them
             GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
             GenericUtils.RemoveGeneric(agentID, "GroupOfflineMessages", GD);

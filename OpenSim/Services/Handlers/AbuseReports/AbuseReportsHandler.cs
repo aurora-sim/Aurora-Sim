@@ -112,7 +112,8 @@ namespace OpenSim.Services.Handlers.AbuseReports
 
         private byte[] AddAbuseReport(Dictionary<string, object> request)
         {
-            AbuseReport ar = new AbuseReport(request);
+            AbuseReport ar = new AbuseReport();
+            ar.FromKVP(request);
             m_AbuseReportsService.AddAbuseReport(ar);
             //MainConsole.Instance.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
@@ -121,7 +122,8 @@ namespace OpenSim.Services.Handlers.AbuseReports
 
         private byte[] UpdateAbuseReport(Dictionary<string, object> request)
         {
-            AbuseReport ar = new AbuseReport(request);
+            AbuseReport ar = new AbuseReport();
+            ar.FromKVP(request);
             m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
             //MainConsole.Instance.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
@@ -132,7 +134,7 @@ namespace OpenSim.Services.Handlers.AbuseReports
         {
             string xmlString = WebUtils.BuildXmlResponse(
                 m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()),
-                                                     request["Password"].ToString()).ToKeyValuePairs());
+                                                     request["Password"].ToString()).ToKVP());
             //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);

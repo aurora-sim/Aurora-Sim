@@ -52,7 +52,7 @@ namespace Aurora.Modules.Ban
                     DatabaseToAuthTable = source.Configs[Name].GetString("DatabasePathToAuthTable", DatabaseToAuthTable);
                 }
                 GD.ConnectToDatabase(DefaultConnectionString, "PresenceInfo", true);
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

@@ -52,7 +52,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "RemoteConnector")
             {
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

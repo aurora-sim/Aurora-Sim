@@ -50,7 +50,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("RegionConnector", "LocalConnector") == "RemoteConnector")
             {
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
 
         public void AddTelehub(Telehub telehub, ulong RegionHandle)
         {
-            Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
+            Dictionary<string, object> sendData = telehub.ToKVP();
             sendData["METHOD"] = "addtelehub";
 
             string reqString = WebUtils.BuildQueryString(sendData);

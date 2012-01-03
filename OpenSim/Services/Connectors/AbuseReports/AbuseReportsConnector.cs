@@ -51,7 +51,7 @@ namespace OpenSim.Services.Connectors
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
                 foreach (string m_ServerURI in m_ServerURIs)
                 {
-                    Dictionary<string, object> ar = abuse_report.ToKeyValuePairs();
+                    Dictionary<string, object> ar = abuse_report.ToKVP();
                     ar.Add("METHOD", "AddAbuseReport");
 
                     SynchronousRestFormsRequester.MakeRequest("POST",
@@ -73,12 +73,14 @@ namespace OpenSim.Services.Connectors
                                                       {{"Password", Password}, {"METHOD", "GetAbuseReport"}};
                 List<string> m_ServerURIs =
                     m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AbuseReportsServerURI");
-                return new AbuseReport(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
+                AbuseReport ar = new AbuseReport();
+                ar.FromKVP(WebUtils.ParseXmlResponse(SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                            m_ServerURIs[
                                                                                                                0],
                                                                                                            WebUtils.
                                                                                                                BuildQueryString
                                                                                                                (send))));
+                return ar;
             }
             catch (Exception e)
             {
@@ -117,7 +119,7 @@ namespace OpenSim.Services.Connectors
         {
             try
             {
-                Dictionary<string, object> send = report.ToKeyValuePairs();
+                Dictionary<string, object> send = report.ToKVP();
                 send.Add("Password", Password);
                 send.Add("METHOD", "AddAbuseReport");
                 List<string> m_ServerURIs =

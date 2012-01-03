@@ -34,7 +34,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAgentConnector : IAgentConnector
+    public class LocalAgentConnector : ConnectorBase, IAgentConnector
     {
         private IGenericData GD;
 
@@ -54,7 +54,7 @@ namespace Aurora.Services.DataService
 
             if (source.Configs["AuroraConnectors"].GetString("AgentConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
@@ -70,6 +70,9 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public IAgentInfo GetAgent(UUID agentID)
         {
+            /*object remoteValue = DoRemoteForUser(agentID, agentID);
+            if (remoteValue != null)
+                return (IAgentInfo)remoteValue;*/
             IAgentInfo agent = new IAgentInfo();
             List<string> query = null;
             try
@@ -96,6 +99,10 @@ namespace Aurora.Services.DataService
         /// <param name = "agent"></param>
         public void UpdateAgent(IAgentInfo agent)
         {
+            /*object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
+            if (remoteValue != null)
+                return;*/
+
             List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};
             List<string> SetRows = new List<string> {"Value"};
 

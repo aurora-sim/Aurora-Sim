@@ -57,7 +57,7 @@ namespace Aurora.Framework
         /// <param name = "Key"></param>
         /// <param name = "data">a default T to copy all data into</param>
         /// <returns></returns>
-        T GetGeneric<T>(UUID OwnerID, string Type, string Key, T data) where T : IDataTransferable;
+        T GetGeneric<T>(UUID OwnerID, string Type, string Key) where T : IDataTransferable;
 
         /// <summary>
         ///   Gets a list of generic T's from the database
@@ -67,7 +67,7 @@ namespace Aurora.Framework
         /// <param name = "Type"></param>
         /// <param name = "data">a default T</param>
         /// <returns></returns>
-        List<T> GetGenerics<T>(UUID OwnerID, string Type, T data) where T : IDataTransferable;
+        List<T> GetGenerics<T>(UUID OwnerID, string Type) where T : IDataTransferable;
 
         /// <summary>
         ///   Adds a generic IDataTransferable into the database

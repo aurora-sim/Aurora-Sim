@@ -801,7 +801,7 @@ namespace OpenSim.Services.Connectors
 
         public virtual string OldRegisterRegion(GridRegion region)
         {
-            Dictionary<string, object> rinfo = region.ToKeyValuePairs();
+            Dictionary<string, object> rinfo = region.ToKVP();
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             foreach (KeyValuePair<string, object> kvp in rinfo)
                 sendData[kvp.Key] = kvp.Value;

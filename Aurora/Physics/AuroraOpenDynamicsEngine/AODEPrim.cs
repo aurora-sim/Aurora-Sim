@@ -905,24 +905,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Also fixed, needs release after usage
 
             if (vertexCount == 0 || indexCount == 0)
+            {
+                MainConsole.Instance.WarnFormat("[PHYSICS]: Got invalid mesh on prim at <{1},{2},{3}>. It can be a sculp with alpha channel in map. Replacing it by a small box.", _position.X, _position.Y, _position.Z);
+                _size.X = 0.01f;
+                _size.Y = 0.01f;
+                _size.Z = 0.01f;
                 return false;
+            }
 
             primOOBoffset = mesh.GetCentroid();
             hasOOBoffsetFromMesh = true;
 
             mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
-            if (m_MeshToTriMeshMap.ContainsKey(mesh))
-            {
-                _triMeshData = m_MeshToTriMeshMap[mesh];
-            }
-            else
+//            if (m_MeshToTriMeshMap.ContainsKey(mesh))
+//            {
+//                _triMeshData = m_MeshToTriMeshMap[mesh];
+//            }
+//            else
             {
                 _triMeshData = d.GeomTriMeshDataCreate();
 
                 d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
                                              triStride);
                 d.GeomTriMeshDataPreprocess(_triMeshData);
-                m_MeshToTriMeshMap[mesh] = _triMeshData;
+//                m_MeshToTriMeshMap[mesh] = _triMeshData;
             }
 
             _parent_scene.waitForSpaceUnlock(m_targetSpace);
