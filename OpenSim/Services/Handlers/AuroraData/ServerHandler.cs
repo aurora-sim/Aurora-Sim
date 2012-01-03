@@ -115,7 +115,7 @@ namespace OpenSim.Services
     {
     }
 
-    public class ServerHandler : BaseStreamHandler
+    public unsafe class ServerHandler : BaseStreamHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;

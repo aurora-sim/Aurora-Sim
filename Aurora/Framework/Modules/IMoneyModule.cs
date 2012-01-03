@@ -67,4 +67,14 @@ namespace Aurora.Framework
         bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
                       TransactionType type);
     }
+
+    public delegate void UserDidNotPay(UUID agentID, string paymentTextThatFailed);
+    public delegate bool CheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed);
+
+    public interface IScheduledMoneyModule
+    {
+        event UserDidNotPay OnUserDidNotPay;
+        event CheckWhetherUserShouldPay OnCheckWhetherUserShouldPay;
+        bool Charge(UUID agentID, int amount, string text, int daysUntilNextCharge);
+    }
 }

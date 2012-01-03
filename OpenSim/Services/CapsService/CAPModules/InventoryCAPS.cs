@@ -325,26 +325,15 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            if (asset_type == "texture" ||
-                asset_type == "animation" ||
-                asset_type == "sound")
+            if (!ChargeUser(asset_type, map))
             {
-                IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule>();
-
-                /*if (mm != null)
-                {
-                    if (!mm.Charge (client.AgentID, mm.UploadCharge))
-                    {
-                        map = new OSDMap ();
-                        map["uploader"] = "";
-                        map["state"] = "error";
-                        return OSDParser.SerializeLLSDXmlString (map);
-                    }
-                }*/
+                map = new OSDMap();
+                map["uploader"] = "";
+                map["state"] = "error";
+                return OSDParser.SerializeLLSDXmlString(map);
             }
-            return
-                OSDParser.SerializeLLSDXmlString(InternalNewAgentInventoryRequest(map, path, param, httpRequest,
-                                                                                  httpResponse));
+            return OSDParser.SerializeLLSDXmlString(InternalNewAgentInventoryRequest(map,
+                path, param, httpRequest, httpResponse));
         }
 
         public string NewAgentInventoryRequestVariablePrice(string request, string path, string param,
@@ -352,29 +341,58 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            if (asset_type == "texture" ||
-                asset_type == "animation" ||
-                asset_type == "sound")
+            int charge = 0;
+            int resourceCost = 0;
+            if (!ChargeUser(asset_type, map, out charge, out resourceCost))
             {
-                IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule>();
-
-                /*if (mm != null)
-                {
-                    if (!mm.Charge (client.AgentID, mm.UploadCharge))
-                    {
-                        map = new OSDMap ();
-                        map["uploader"] = "";
-                        map["state"] = "error";
-                        return OSDParser.SerializeLLSDXmlString (map);
-                    }
-                }*/
+                map = new OSDMap();
+                map["uploader"] = "";
+                map["state"] = "error";
+                return OSDParser.SerializeLLSDXmlString(map);
             }
             OSDMap resp = InternalNewAgentInventoryRequest(map, path, param, httpRequest, httpResponse);
 
-            resp["resource_cost"] = 0;
-            resp["upload_price"] = 0; //Set me if you want to use variable cost stuff
+            resp["resource_cost"] = resourceCost;
+            resp["upload_price"] = charge; //Set me if you want to use variable cost stuff
 
             return OSDParser.SerializeLLSDXmlString(map);
+        }
+
+        private bool ChargeUser(string asset_type, OSDMap map)
+        {
+            int charge, cost;
+            return ChargeUser(asset_type, map, out charge, out cost);
+        }
+
+        private bool ChargeUser(string asset_type, OSDMap map, out int charge, out int resourceCost)
+        {
+            IMoneyModule mm = m_service.Registry.RequestModuleInterface<IMoneyModule>();
+            charge = 0;
+            resourceCost = 0;
+
+            if (mm != null)
+            {
+                if (asset_type == "texture" ||
+                    asset_type == "animation" ||
+                    asset_type == "snapshot" ||
+                    asset_type == "sound")
+                    charge = mm.UploadCharge;
+                else if (asset_type == "mesh" ||
+                    asset_type == "object")
+                {
+                    OSDMap meshMap = (OSDMap)map["asset_resources"];
+                    OSDArray instance_list = (OSDArray)meshMap["instance_list"];
+                    OSDArray mesh_list = (OSDArray)meshMap["mesh_list"];
+                    OSDArray texture_list = (OSDArray)meshMap["texture_list"];
+                    charge = texture_list.Count * mm.UploadCharge +
+                        meshMap.Count * mm.UploadCharge;
+                    resourceCost = meshMap.Count * mm.UploadCharge;
+                }
+                if (charge > 0 &&
+                    !mm.Charge(m_service.AgentID, mm.UploadCharge, "Upload Charge"))
+                    return false;
+            }
+            return true;
         }
 
         private OSDMap InternalNewAgentInventoryRequest(OSDMap map, string path, string param,
@@ -415,32 +433,12 @@ namespace OpenSim.Services.CapsService
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
-            //MainConsole.Instance.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
-            //MainConsole.Instance.Debug("asset upload request via CAPS" + llsdRequest.inventory_type + " , " + llsdRequest.asset_type);
-
-            if (asset_type == "texture" ||
-                asset_type == "animation" ||
-                asset_type == "sound")
+            if (!ChargeUser(asset_type, map))
             {
-                /* Disabled until we have a money module that can hook up to this
-                 * IMoneyModule mm = .RequestModuleInterface<IMoneyModule>();
-
-                    if (mm != null)
-                    {
-                        if (!mm.UploadCovered(client, mm.UploadCharge))
-                        {
-                            if (client != null)
-                                client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
-
-                            map = new OSDMap();
-                            map["uploader"] = "";
-                            map["state"] = "error";
-                            return OSDParser.SerializeLLSDXmlString(map);
-                        }
-                        else
-                            mm.ApplyUploadCharge(client.AgentId, mm.UploadCharge, "Upload asset.");
-                    }
-                 */
+                map = new OSDMap();
+                map["uploader"] = "";
+                map["state"] = "error";
+                return OSDParser.SerializeLLSDXmlString(map);
             }
 
 

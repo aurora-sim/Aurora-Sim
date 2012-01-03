@@ -34,6 +34,8 @@ namespace OpenSim.Services.Interfaces
     {
         string SchedulerSave(SchedulerItem I);
 
+        void SchedulerRemove(string id);
+
         bool SchedulerExist(string id);
 
         List<SchedulerItem> ToRun();
@@ -44,7 +46,7 @@ namespace OpenSim.Services.Interfaces
 
         void SaveHistoryCompleteReciept(string historyID, string reciept);
 
-        void HisotryDeleteOld(SchedulerItem I);
+        void HistoryDeleteOld(SchedulerItem I);
 
     }
 
@@ -55,5 +57,7 @@ namespace OpenSim.Services.Interfaces
         bool Register(string fName, OnGenericEventHandler handler);
 
         string Save(SchedulerItem I);
+
+        void Remove(string scdID);
     }
 }
