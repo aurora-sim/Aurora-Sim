@@ -28,6 +28,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -44,7 +45,7 @@ namespace Aurora.Framework
     /// <summary>
     ///   Replacement for ChildAgentDataUpdate. Used over RESTComms and LocalComms.
     /// </summary>
-    public class AgentPosition : IAgentData
+    public class AgentPosition : IDataTransferable, IAgentData
     {
         public Vector3 AtAxis;
         public Vector3 Center;
@@ -60,6 +61,11 @@ namespace Aurora.Framework
         #region IAgentData Members
 
         public UUID AgentID { get; set; }
+
+        public override OSDMap ToOSD()
+        {
+            return Pack();
+        }
 
         public OSDMap Pack()
         {
@@ -81,6 +87,11 @@ namespace Aurora.Framework
             args["far"] = OSD.FromReal(Far);
 
             return args;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack(map);
         }
 
         public void Unpack(OSDMap args)
@@ -218,7 +229,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class AgentData : IAgentData
+    public class AgentData : IDataTransferable, IAgentData
     {
         public UUID ActiveGroupID;
         public Byte AgentAccess;
@@ -265,6 +276,11 @@ namespace Aurora.Framework
         public UUID AgentID { get; set; }
 
         // Scripted
+
+        public override OSDMap ToOSD()
+        {
+            return Pack();
+        }
 
         public virtual OSDMap Pack()
         {
@@ -333,6 +349,11 @@ namespace Aurora.Framework
             }
 
             return args;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack(map);
         }
 
         /// <summary>

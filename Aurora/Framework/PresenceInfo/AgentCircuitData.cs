@@ -160,33 +160,6 @@ namespace Aurora.Framework
             UnpackAgentCircuitData(map);
         }
 
-        /// <summary>
-        ///   Serialize the module to a Dictionary
-        /// </summary>
-        /// <param name = "KVP"></param>
-        public override void FromKVP(Dictionary<string, object> KVP)
-        {
-
-        }
-
-        /// <summary>
-        ///   Deserialize this module from a Dictionary
-        /// </summary>
-        /// <returns></returns>
-        public override Dictionary<string, object> ToKeyValuePairs()
-        {
-            return null;
-        }
-
-        /// <summary>
-        ///   Duplicate this module
-        /// </summary>
-        /// <returns></returns>
-        public override IDataTransferable Duplicate()
-        {
-            return Copy();
-        }
-
         #region oldFunctions
 
         /// <summary>
@@ -351,6 +324,7 @@ namespace Aurora.Framework
         }
 
         #endregion
+
         #endregion
 
     }
