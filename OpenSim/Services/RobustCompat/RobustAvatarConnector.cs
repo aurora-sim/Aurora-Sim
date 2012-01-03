@@ -38,7 +38,7 @@ namespace OpenSim.Services.RobustCompat
 
             sendData["UserID"] = userID.ToString();
 
-            Dictionary<string, object> structData = avatar.ToKeyValuePairs();
+            Dictionary<string, object> structData = avatar.ToKVP();
 
 #if (!ISWIN)
             foreach (KeyValuePair<string, object> kvp in structData)

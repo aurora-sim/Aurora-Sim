@@ -61,11 +61,6 @@ namespace Aurora.Framework
             time = map["time"];
             toPrimID = map["toPrimID"];
         }
-
-        public override IDataTransferable Duplicate()
-        {
-            return new Email();
-        }
     }
 
     public interface IEmailConnector : IAuroraDataPlugin

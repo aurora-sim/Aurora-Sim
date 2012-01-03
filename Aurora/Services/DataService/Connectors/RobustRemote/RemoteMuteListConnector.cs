@@ -106,7 +106,7 @@ namespace Aurora.Services.DataService
 
         public void UpdateMute(MuteList mute, UUID PrincipalID)
         {
-            Dictionary<string, object> sendData = mute.ToKeyValuePairs();
+            Dictionary<string, object> sendData = mute.ToKVP();
 
             sendData["PRINCIPALID"] = PrincipalID.ToString();
             sendData["METHOD"] = "updatemute";

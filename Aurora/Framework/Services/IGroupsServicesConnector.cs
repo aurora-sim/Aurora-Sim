@@ -134,7 +134,7 @@ namespace Aurora.Framework
         //     True if they have been requested to join the session
     }
 
-    public class GroupInviteInfo
+    public class GroupInviteInfo : IDataTransferable
     {
         public UUID AgentID = UUID.Zero;
         public string FromAgentName = "";
@@ -148,14 +148,10 @@ namespace Aurora.Framework
 
         public GroupInviteInfo(Dictionary<string, object> values)
         {
-            GroupID = UUID.Parse(values["GroupID"].ToString());
-            RoleID = UUID.Parse(values["RoleID"].ToString());
-            AgentID = UUID.Parse(values["AgentID"].ToString());
-            InviteID = UUID.Parse(values["InviteID"].ToString());
-            FromAgentName = values["FromAgentName"].ToString();
+            FromKVP(values);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["GroupID"] = GroupID;
@@ -165,9 +161,38 @@ namespace Aurora.Framework
             values["FromAgentName"] = FromAgentName;
             return values;
         }
+
+        public override void FromKVP(Dictionary<string, object> values)
+        {
+            GroupID = UUID.Parse(values["GroupID"].ToString());
+            RoleID = UUID.Parse(values["RoleID"].ToString());
+            AgentID = UUID.Parse(values["AgentID"].ToString());
+            InviteID = UUID.Parse(values["InviteID"].ToString());
+            FromAgentName = values["FromAgentName"].ToString();
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap values = new OSDMap();
+            values["GroupID"] = GroupID;
+            values["RoleID"] = RoleID;
+            values["AgentID"] = AgentID;
+            values["InviteID"] = InviteID;
+            values["FromAgentName"] = FromAgentName;
+            return values;
+        }
+
+        public override void FromOSD(OSDMap values)
+        {
+            GroupID = values["GroupID"];
+            RoleID = values["RoleID"];
+            AgentID = values["AgentID"];
+            InviteID = values["InviteID"];
+            FromAgentName = values["FromAgentName"];
+        }
     }
 
-    public class GroupNoticeInfo
+    public class GroupNoticeInfo : IDataTransferable
     {
         public byte[] BinaryBucket = new byte[0];
         public UUID GroupID = UUID.Zero;
@@ -180,20 +205,44 @@ namespace Aurora.Framework
 
         public GroupNoticeInfo(Dictionary<string, object> values)
         {
+            FromKVP(values);
+        }
+
+        public override void FromKVP(Dictionary<string, object> values)
+        {
             noticeData = new GroupNoticeData(values["noticeData"] as Dictionary<string, object>);
             GroupID = UUID.Parse(values["GroupID"].ToString());
             Message = values["Message"].ToString();
             BinaryBucket = Utils.HexStringToBytes(values["BinaryBucket"].ToString(), true);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
-            values["noticeData"] = noticeData.ToKeyValuePairs();
+            values["noticeData"] = noticeData.ToKVP();
             values["GroupID"] = GroupID;
             values["Message"] = Message;
             values["BinaryBucket"] = Utils.BytesToHexString(BinaryBucket, "BinaryBucket");
             return values;
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap values = new OSDMap();
+            values["noticeData"] = noticeData.ToOSD();
+            values["GroupID"] = GroupID;
+            values["Message"] = Message;
+            values["BinaryBucket"] = BinaryBucket;
+            return values;
+        }
+
+        public override void FromOSD(OSDMap values)
+        {
+            noticeData = new GroupNoticeData();
+            noticeData.FromOSD((OSDMap)values["noticeData"]);
+            GroupID = values["GroupID"];
+            Message = values["Message"];
+            BinaryBucket = values["BinaryBucket"];
         }
     }
 
@@ -233,16 +282,9 @@ namespace Aurora.Framework
             FromOSD(Util.DictionaryToOSD(KVP));
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            GroupProposalInfo p = new GroupProposalInfo();
-            p.FromOSD(ToOSD());
-            return p;
         }
     }
 }

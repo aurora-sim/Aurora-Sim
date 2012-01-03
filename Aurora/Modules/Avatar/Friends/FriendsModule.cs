@@ -46,6 +46,7 @@ namespace Aurora.Modules.Friends
 
         protected List<IScene> m_Scenes = new List<IScene>();
         public bool m_enabled = true;
+        protected bool m_firstStart = true;
 
         protected Dictionary<UUID, List<UUID>> m_friendsToInformOfStatusChanges = new Dictionary<UUID, List<UUID>>();
 
@@ -179,13 +180,13 @@ namespace Aurora.Modules.Friends
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
-
-            if (m_Scenes.Count == 1)
-                AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
         }
 
         public void RegionLoaded(IScene scene)
         {
+            if (m_firstStart)
+                AsyncMessageRecievedService.OnMessageReceived += OnMessageReceived;
+            m_firstStart = false;
         }
 
         public void RemoveRegion(IScene scene)

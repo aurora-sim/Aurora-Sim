@@ -1647,12 +1647,12 @@ namespace AvatarArchives
                 IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
                 if (profile != null)
                 {
-                    result["result"] = profile.ToKeyValuePairs();
+                    result["result"] = profile.ToKVP();
                     UPIxmlString = WebUtils.BuildXmlResponse(result);
                 }
             }
 
-            result["result"] = account.ToKeyValuePairs();
+            result["result"] = account.ToKVP();
             string UDAxmlString = WebUtils.BuildXmlResponse(result);
 
             StreamWriter writer = new StreamWriter(cmdparams[5]);

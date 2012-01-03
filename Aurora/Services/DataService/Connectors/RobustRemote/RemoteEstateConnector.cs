@@ -112,7 +112,7 @@ namespace Aurora.Services.DataService
 
         public void SaveEstateSettings(EstateSettings es)
         {
-            Dictionary<string, object> sendData = es.ToKeyValuePairs(true);
+            Dictionary<string, object> sendData = es.ToKVP();
 
             sendData["METHOD"] = "saveestatesettings";
 
@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService
 
         public EstateSettings CreateEstate(EstateSettings es, UUID RegionID)
         {
-            Dictionary<string, object> sendData = es.ToKeyValuePairs(true);
+            Dictionary<string, object> sendData = es.ToKVP();
 
             sendData["REGIONID"] = RegionID.ToString();
             sendData["METHOD"] = "createestate";

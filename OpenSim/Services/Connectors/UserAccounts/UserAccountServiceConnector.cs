@@ -187,7 +187,8 @@ namespace OpenSim.Services.Connectors
                         {
                             if (acc is Dictionary<string, object>)
                             {
-                                UserAccount pinfo = new UserAccount((Dictionary<string, object>) acc);
+                                UserAccount pinfo = new UserAccount();
+                                pinfo.FromKVP((Dictionary<string, object>)acc);
                                 m_cache.Cache(pinfo.PrincipalID, pinfo);
                                 pinfo.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                                 accounts.Add(pinfo);
@@ -226,7 +227,7 @@ namespace OpenSim.Services.Connectors
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "setaccount";
 
-            Dictionary<string, object> structData = data.ToKeyValuePairs();
+            Dictionary<string, object> structData = data.ToKVP();
 
             foreach (KeyValuePair<string, object> kvp in structData)
             {
@@ -268,7 +269,8 @@ namespace OpenSim.Services.Connectors
                     {
                         if (replyData["result"] is Dictionary<string, object>)
                         {
-                            account = new UserAccount((Dictionary<string, object>) replyData["result"]);
+                            account = new UserAccount();
+                            account.FromKVP((Dictionary<string, object>)replyData["result"]);
                             account.GenericData["GridURL"] = m_ServerURI.Remove(m_ServerURI.LastIndexOf('/'));
                             return account;
                         }

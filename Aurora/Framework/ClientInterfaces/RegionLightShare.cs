@@ -265,16 +265,9 @@ namespace Aurora.Framework
             FromOSD(Util.DictionaryToOSD(KVP));
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            RegionLightShareData m = new RegionLightShareData();
-            m.FromOSD(ToOSD());
-            return m;
         }
     }
 }

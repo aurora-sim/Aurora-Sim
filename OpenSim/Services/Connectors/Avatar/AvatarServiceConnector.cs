@@ -124,7 +124,7 @@ namespace OpenSim.Services.Connectors
 
             sendData["UserID"] = userID.ToString();
 
-            Dictionary<string, object> structData = avatar.ToKeyValuePairs();
+            Dictionary<string, object> structData = avatar.ToKVP();
 
             foreach (KeyValuePair<string, object> kvp in structData)
                 sendData[kvp.Key] = kvp.Value.ToString();

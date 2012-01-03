@@ -61,16 +61,7 @@ namespace Aurora.Framework
         ///   Deserialize this module from a Dictionary
         /// </summary>
         /// <returns></returns>
-        public virtual Dictionary<string, object> ToKeyValuePairs()
-        {
-            return null;
-        }
-
-        /// <summary>
-        ///   Duplicate this module
-        /// </summary>
-        /// <returns></returns>
-        public virtual IDataTransferable Duplicate()
+        public virtual Dictionary<string, object> ToKVP()
         {
             return null;
         }

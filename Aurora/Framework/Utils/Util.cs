@@ -2372,4 +2372,12 @@ namespace Aurora.Framework
 
         #endregion
     }
+
+    public static class Extensions
+    {
+        public static List<T> ConvertAll<T>(this OSDArray array, Converter<OSD, T> converter)
+        {
+            return array.ToList().ConvertAll<T>(converter);
+        }
+    }
 }

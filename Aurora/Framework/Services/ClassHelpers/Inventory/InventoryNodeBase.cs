@@ -32,7 +32,7 @@ namespace Aurora.Framework
     /// <summary>
     ///   Common base class for inventory nodes of different types (files, folders, etc.)
     /// </summary>
-    public class InventoryNodeBase
+    public class InventoryNodeBase : IDataTransferable
     {
         private string m_name = string.Empty;
 

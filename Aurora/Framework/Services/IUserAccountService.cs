@@ -34,7 +34,7 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class UserAccount
+    public class UserAccount : IDataTransferable
     {
         public int Created;
         public string Email;
@@ -76,7 +76,48 @@ namespace OpenSim.Services.Interfaces
             Created = Util.UnixTimeSinceEpoch();
         }
 
-        public UserAccount(Dictionary<string, object> kvp)
+        public string FirstName
+        {
+            get { return Name.Split(' ')[0]; }
+        }
+
+        public string LastName
+        {
+            get
+            {
+                string[] split = Name.Split(' ');
+                if (split.Length > 1)
+                    return Name.Split(' ')[1];
+                else return "";
+            }
+        }
+
+        public override Dictionary<string, object> ToKVP()
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result["FirstName"] = FirstName;
+            result["LastName"] = LastName;
+            result["Email"] = Email;
+            result["PrincipalID"] = PrincipalID.ToString();
+            result["ScopeID"] = ScopeID.ToString();
+            result["Created"] = Created.ToString();
+            result["UserLevel"] = UserLevel.ToString();
+            result["UserFlags"] = UserFlags.ToString();
+            result["UserTitle"] = UserTitle;
+
+#if (!ISWIN)
+            string str = string.Empty;
+            foreach (KeyValuePair<string, object> l in ServiceURLs)
+                str = str + (l.Key + "*" + (l.Value ?? "") + ";");
+#else
+            string str = ServiceURLs.Aggregate(string.Empty, (current, kvp) => current + (kvp.Key + "*" + (kvp.Value ?? "") + ";"));
+#endif
+            result["ServiceURLs"] = str;
+
+            return result;
+        }
+
+        public override void FromKVP(Dictionary<string, object> kvp)
         {
             if (kvp.ContainsKey("FirstName") && kvp.ContainsKey("LastName"))
                 Name = kvp["FirstName"] + " " + kvp["LastName"];
@@ -103,11 +144,11 @@ namespace OpenSim.Services.Interfaces
                 string str = kvp["ServiceURLs"].ToString();
                 if (str != string.Empty)
                 {
-                    string[] parts = str.Split(new[] {';'});
+                    string[] parts = str.Split(new[] { ';' });
 #if (!ISWIN)
                     foreach (string s in parts)
                     {
-                        string[] parts2 = s.Split(new[] {'*'});
+                        string[] parts2 = s.Split(new[] { '*' });
                         if (parts2.Length == 2)
                         {
                             ServiceURLs[parts2[0]] = parts2[1];
@@ -123,33 +164,17 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
-        public string FirstName
+        public override OSDMap ToOSD()
         {
-            get { return Name.Split(' ')[0]; }
-        }
-
-        public string LastName
-        {
-            get
-            {
-                string[] split = Name.Split(' ');
-                if (split.Length > 1)
-                    return Name.Split(' ')[1];
-                else return "";
-            }
-        }
-
-        public Dictionary<string, object> ToKeyValuePairs()
-        {
-            Dictionary<string, object> result = new Dictionary<string, object>();
+            OSDMap result = new OSDMap();
             result["FirstName"] = FirstName;
             result["LastName"] = LastName;
             result["Email"] = Email;
-            result["PrincipalID"] = PrincipalID.ToString();
-            result["ScopeID"] = ScopeID.ToString();
-            result["Created"] = Created.ToString();
-            result["UserLevel"] = UserLevel.ToString();
-            result["UserFlags"] = UserFlags.ToString();
+            result["PrincipalID"] = PrincipalID;
+            result["ScopeID"] = ScopeID;
+            result["Created"] = Created;
+            result["UserLevel"] = UserLevel;
+            result["UserFlags"] = UserFlags;
             result["UserTitle"] = UserTitle;
 
 #if (!ISWIN)
@@ -163,7 +188,54 @@ namespace OpenSim.Services.Interfaces
 
             return result;
         }
-    };
+
+        public override void FromOSD(OSDMap map)
+        {
+            if (map.ContainsKey("FirstName") && map.ContainsKey("LastName"))
+                Name = map["FirstName"] + " " + map["LastName"];
+            if (map.ContainsKey("Name"))
+                Name = map["Name"].ToString();
+            if (map.ContainsKey("Email"))
+                Email = map["Email"].ToString();
+            if (map.ContainsKey("PrincipalID"))
+                PrincipalID = map["PrincipalID"];
+            if (map.ContainsKey("ScopeID"))
+                ScopeID = map["ScopeID"];
+            if (map.ContainsKey("UserLevel"))
+                UserLevel = map["UserLevel"];
+            if (map.ContainsKey("UserFlags"))
+                UserFlags = map["UserFlags"];
+            if (map.ContainsKey("UserTitle"))
+                UserTitle = map["UserTitle"];
+
+            if (map.ContainsKey("Created"))
+                Created = map["Created"];
+            if (map.ContainsKey("ServiceURLs") && map["ServiceURLs"] != null)
+            {
+                ServiceURLs = new Dictionary<string, object>();
+                string str = map["ServiceURLs"].ToString();
+                if (str != string.Empty)
+                {
+                    string[] parts = str.Split(new[] { ';' });
+#if (!ISWIN)
+                    foreach (string s in parts)
+                    {
+                        string[] parts2 = s.Split(new[] { '*' });
+                        if (parts2.Length == 2)
+                        {
+                            ServiceURLs[parts2[0]] = parts2[1];
+                        }
+                    }
+#else
+                    foreach (string[] parts2 in parts.Select(s => s.Split(new[] {'*'})).Where(parts2 => parts2.Length == 2))
+                    {
+                        ServiceURLs[parts2[0]] = parts2[1];
+                    }
+#endif
+                }
+            }
+        }
+    }
 
     public interface IUserAccountService
     {

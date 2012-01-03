@@ -43,6 +43,11 @@ namespace OpenSim.Services.Connectors
     {
         private IRegistryCore m_registry;
 
+        public virtual IFriendsService InnerService
+        {
+            get { return this; }
+        }
+
         #region IFriendsService
 
         public FriendInfo[] GetFriends(UUID PrincipalID)
@@ -200,12 +205,7 @@ namespace OpenSim.Services.Connectors
             get { return GetType().Name; }
         }
 
-        #region IFriendsService Members
-
-        public virtual IFriendsService InnerService
-        {
-            get { return this; }
-        }
+        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {

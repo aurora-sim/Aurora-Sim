@@ -474,7 +474,7 @@ namespace OpenSim.Services
             if (Agent == null)
                 result["result"] = "null";
             else
-                result["result"] = Agent.ToKeyValuePairs();
+                result["result"] = Agent.ToKVP();
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             UTF8Encoding encoding = new UTF8Encoding();
@@ -786,7 +786,7 @@ namespace OpenSim.Services
 
             GroupRecord r = GroupsServiceConnector.GetGroupRecord(requestingAgentID, GroupID, GroupName);
             if (r != null)
-                result.Add("A", r.ToKeyValuePairs());
+                result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -804,7 +804,7 @@ namespace OpenSim.Services
 
             GroupMembershipData r = GroupsServiceConnector.GetGroupMembershipData(requestingAgentID, GroupID, AgentID);
             if (r != null)
-                result.Add("A", r.ToKeyValuePairs());
+                result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -821,7 +821,7 @@ namespace OpenSim.Services
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
 
             GroupProfileData r = GroupsServiceConnector.GetMemberGroupProfile(requestingAgentID, GroupID, AgentID);
-            result.Add("A", r.ToKeyValuePairs());
+            result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -871,7 +871,7 @@ namespace OpenSim.Services
 
             GroupInviteInfo r = GroupsServiceConnector.GetAgentToGroupInvite(requestingAgentID, inviteID);
             if (r != null)
-                result.Add("A", r.ToKeyValuePairs());
+                result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -888,7 +888,7 @@ namespace OpenSim.Services
             UUID AgentID = UUID.Parse(request["AgentID"].ToString());
 
             GroupMembersData r = GroupsServiceConnector.GetAgentGroupMemberData(requestingAgentID, GroupID, AgentID);
-            result.Add("A", r.ToKeyValuePairs());
+            result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -904,7 +904,7 @@ namespace OpenSim.Services
             UUID noticeID = UUID.Parse(request["noticeID"].ToString());
 
             GroupNoticeInfo r = GroupsServiceConnector.GetGroupNotice(requestingAgentID, noticeID);
-            result.Add("A", r.ToKeyValuePairs());
+            result.Add("A", r.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -924,7 +924,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupMembershipData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -959,7 +959,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRecord r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -984,7 +984,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirGroupsReplyData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1007,7 +1007,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRolesData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1029,7 +1029,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRolesData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1054,7 +1054,7 @@ namespace OpenSim.Services
             {
                 if (r != null)
                 {
-                    result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                    result.Add(Util.ConvertDecString(i), r.ToKVP());
                     i++;
                 }
             }
@@ -1084,7 +1084,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupRoleMembersData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1108,7 +1108,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupNoticeData r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1129,7 +1129,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (GroupInviteInfo r in rs)
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 
@@ -1196,7 +1196,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirPlacesReplyData land in lands)
             {
-                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKVP());
                 i++;
             }
 
@@ -1221,7 +1221,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirLandReplyData land in lands)
             {
-                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKVP());
                 i++;
             }
 
@@ -1243,7 +1243,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirEventsReplyData land in lands)
             {
-                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKVP());
                 i++;
             }
 
@@ -1264,7 +1264,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirEventsReplyData land in lands)
             {
-                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKVP());
                 i++;
             }
 
@@ -1288,7 +1288,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (DirClassifiedReplyData land in lands)
             {
-                result.Add(Util.ConvertDecString(i), land.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), land.ToKVP());
                 i++;
             }
 
@@ -1305,7 +1305,7 @@ namespace OpenSim.Services
             string EVENTID = request["EVENTID"].ToString();
             EventData eventdata = DirectoryServiceConnector.GetEventInfo(EVENTID);
 
-            result.Add("event", eventdata.ToKeyValuePairs());
+            result.Add("event", eventdata.ToKVP());
 
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
@@ -1323,7 +1323,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (Classified classified in classifieds)
             {
-                result.Add(Util.ConvertDecString(i), classified.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), classified.ToKVP());
                 i++;
             }
 
@@ -1411,7 +1411,7 @@ namespace OpenSim.Services
             {
                 foreach (EstateSettings estateID in EstateIDs)
                 {
-                    estateresult.Add(Util.ConvertDecString(i), estateID.ToKeyValuePairs(false));
+                    estateresult.Add(Util.ConvertDecString(i), estateID.ToKVP());
                     i++;
                 }
             }
@@ -1460,7 +1460,7 @@ namespace OpenSim.Services
             ES = EstateConnector.CreateEstate(ES, RegionID);
 
             //This is not a local transfer, MUST be false!
-            Dictionary<string, object> result = ES.ToKeyValuePairs(false);
+            Dictionary<string, object> result = ES.ToKVP();
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
@@ -1492,7 +1492,7 @@ namespace OpenSim.Services
                 return FailureResult();
 
             //This NEEDS to be false here, otherwise passwords will be sent unsecurely!
-            Dictionary<string, object> result = ES.ToKeyValuePairs(false);
+            Dictionary<string, object> result = ES.ToKVP();
             string xmlString = WebUtils.BuildXmlResponse(result);
             //MainConsole.Instance.DebugFormat("[AuroraDataServerPostHandler]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
@@ -1583,7 +1583,7 @@ namespace OpenSim.Services
             int i = 0;
             foreach (MuteList Mute in Mutes)
             {
-                result.Add(Util.ConvertDecString(i), Mute.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), Mute.ToKVP());
                 i++;
             }
 
@@ -1709,7 +1709,8 @@ namespace OpenSim.Services
             IAbuseReportsConnector m_AbuseReportsService =
                 DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
 
-            AbuseReport ar = new AbuseReport(request);
+            AbuseReport ar = new AbuseReport();
+            ar.FromKVP(request);
             m_AbuseReportsService.AddAbuseReport(ar);
             //MainConsole.Instance.DebugFormat("[ABUSEREPORTS HANDLER]: neighbours for region {0}: {1}", regionID, rinfos.Count);
 
@@ -1718,7 +1719,8 @@ namespace OpenSim.Services
 
         public byte[] UpdateAbuseReport(Dictionary<string, object> request)
         {
-            AbuseReport ar = new AbuseReport(request);
+            AbuseReport ar = new AbuseReport();
+            ar.FromKVP(request);
             IAbuseReportsConnector m_AbuseReportsService =
                 DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
             m_AbuseReportsService.UpdateAbuseReport(ar, request["Password"].ToString());
@@ -1733,7 +1735,7 @@ namespace OpenSim.Services
                 DataManager.RequestPlugin<IAbuseReportsConnector>("IAbuseReportsConnectorLocal");
             string xmlString = WebUtils.BuildXmlResponse(
                 m_AbuseReportsService.GetAbuseReport(int.Parse(request["Number"].ToString()),
-                                                     request["Password"].ToString()).ToKeyValuePairs());
+                                                     request["Password"].ToString()).ToKVP());
             //MainConsole.Instance.DebugFormat("[FRIENDS HANDLER]: resp string: {0}", xmlString);
             UTF8Encoding encoding = new UTF8Encoding();
             return encoding.GetBytes(xmlString);

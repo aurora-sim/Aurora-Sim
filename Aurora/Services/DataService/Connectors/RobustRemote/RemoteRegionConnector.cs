@@ -61,7 +61,7 @@ namespace Aurora.Services.DataService
 
         public void AddTelehub(Telehub telehub, ulong RegionHandle)
         {
-            Dictionary<string, object> sendData = telehub.ToKeyValuePairs();
+            Dictionary<string, object> sendData = telehub.ToKVP();
             sendData["METHOD"] = "addtelehub";
 
             string reqString = WebUtils.BuildQueryString(sendData);

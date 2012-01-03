@@ -27,6 +27,7 @@
 
 using System;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
@@ -320,6 +321,64 @@ namespace Aurora.Framework
         public object Clone()
         {
             return MemberwiseClone();
+        }
+
+        #endregion
+
+        #region IDataTransferable Members
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["AssetID"] = AssetID;
+            map["AssetType"] = AssetType;
+            map["BasePermissions"] = BasePermissions;
+            map["CreationDate"] = CreationDate;
+            map["CreatorData"] = CreatorData;
+            map["CreatorId"] = CreatorId;
+            map["CreatorIdentification"] = CreatorIdentification;
+            map["CurrentPermissions"] = CurrentPermissions;
+            map["Description"] = Description;
+            map["EveryOnePermissions"] = EveryOnePermissions;
+            map["Flags"] = Flags;
+            map["Folder"] = Folder;
+            map["GroupID"] = GroupID;
+            map["GroupOwned"] = GroupOwned;
+            map["GroupPermissions"] = GroupPermissions;
+            map["ID"] = ID;
+            map["InvType"] = InvType;
+            map["Name"] = Name;
+            map["NextPermissions"] = NextPermissions;
+            map["Owner"] = Owner;
+            map["SalePrice"] = SalePrice;
+            map["SaleType"] = (int)SaleType;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            this.AssetID = map["AssetID"];
+            this.AssetType = map["AssetType"];
+            this.BasePermissions = map["BasePermissions"];
+            this.CreationDate = map["CreationDate"];
+            this.CreatorData = map["CreatorData"];
+            this.CreatorId = map["CreatorId"];
+            this.CreatorIdentification = map["CreatorIdentification"];
+            this.CurrentPermissions = map["CurrentPermissions"];
+            this.Description = map["Description"];
+            this.EveryOnePermissions = map["EveryOnePermissions"];
+            this.Flags = map["Flags"];
+            this.Folder = map["Folder"];
+            this.GroupID = map["GroupID"];
+            this.GroupOwned = map["GroupOwned"];
+            this.GroupPermissions = map["GroupPermissions"];
+            this.ID = map["ID"];
+            this.InvType = map["InvType"];
+            this.Name = map["Name"];
+            this.NextPermissions = map["NextPermissions"];
+            this.Owner = map["Owner"];
+            this.SalePrice = map["SalePrice"];
+            this.SaleType = (byte)(int)map["SaleType"];
         }
 
         #endregion

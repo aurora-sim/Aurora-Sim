@@ -26,6 +26,7 @@
  */
 
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
@@ -72,5 +73,29 @@ namespace Aurora.Framework
         public short Type { get; set; }
 
         public ushort Version { get; set; }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["ID"] = ID;
+            map["Name"] = Name;
+            map["Owner"] = Owner;
+            map["Type"] = (int)Type;
+            map["ParentID"] = ParentID;
+            map["Version"] = (int)Version;
+
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            ID = map["ID"];
+            Name = map["Name"];
+            Owner = map["Owner"];
+            Type = (short)map["Type"];
+            ParentID = map["ParentID"];
+            Version = (ushort)(int)map["Version"];
+        }
     }
 }

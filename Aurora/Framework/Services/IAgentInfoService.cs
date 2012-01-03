@@ -112,7 +112,7 @@ namespace OpenSim.Services.Interfaces
                 Info = (OSDMap) retVal["Info"];
         }
 
-        public override Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             return Util.OSDToDictionary(ToOSD());
         }
@@ -120,13 +120,6 @@ namespace OpenSim.Services.Interfaces
         public override void FromKVP(Dictionary<string, object> KVP)
         {
             FromOSD(Util.DictionaryToOSD(KVP));
-        }
-
-        public override IDataTransferable Duplicate()
-        {
-            UserInfo m = new UserInfo();
-            m.FromOSD(ToOSD());
-            return m;
         }
     }
 

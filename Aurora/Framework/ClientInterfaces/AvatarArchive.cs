@@ -25,9 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse.StructuredData;
+
 namespace Aurora.Framework
 {
-    public class AvatarArchive
+    public class AvatarArchive : IDataTransferable
     {
         /// <summary>
         ///   XML of the archive
@@ -48,5 +50,25 @@ namespace Aurora.Framework
         ///   uuid of a text that shows off this archive
         /// </summary>
         public string Snapshot;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["ArchiveXML"] = ArchiveXML;
+            map["IsPublic"] = IsPublic;
+            map["Name"] = Name;
+            map["Snapshot"] = Snapshot;
+
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            ArchiveXML = map["ArchiveXML"];
+            IsPublic = map["IsPublic"];
+            Name = map["Name"];
+            Snapshot = map["Snapshot"];
+        }
     }
 }

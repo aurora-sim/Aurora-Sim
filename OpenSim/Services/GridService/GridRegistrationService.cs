@@ -484,13 +484,6 @@ namespace OpenSim.Services.GridService
                 else
                     VersionNumber = retVal["VersionNumber"].AsInteger();
             }
-
-            public override IDataTransferable Duplicate()
-            {
-                GridRegistrationURLs url = new GridRegistrationURLs();
-                url.FromOSD(ToOSD());
-                return url;
-            }
         }
 
         public class LoadBalancerUrls

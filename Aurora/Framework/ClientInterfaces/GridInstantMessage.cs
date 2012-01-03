@@ -126,12 +126,5 @@ namespace Aurora.Framework
             imSessionID = map["imSessionID"].AsUUID();
             timestamp = map["timestamp"].AsUInteger();
         }
-
-        public override IDataTransferable Duplicate()
-        {
-            GridInstantMessage m = new GridInstantMessage();
-            m.FromOSD(ToOSD());
-            return m;
-        }
     }
 }

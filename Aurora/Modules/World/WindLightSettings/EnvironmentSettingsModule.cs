@@ -139,11 +139,6 @@ namespace Aurora.Modules.WindlightSettings
         {
             public OSD Info;
 
-            public override IDataTransferable Duplicate()
-            {
-                return new DatabaseWrapper();
-            }
-
             public override void FromOSD(OSDMap map)
             {
                 Info = map["Info"];
