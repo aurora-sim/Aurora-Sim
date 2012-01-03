@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Nini.Ini;
+using Nini.Config;
 
 namespace Aurora.Simulation.Base
 {
@@ -80,6 +82,32 @@ namespace Aurora.Simulation.Base
             {
                 Directory.Delete(path, true);
             }
+        }
+    }
+
+    public enum MigratorAction
+    {
+        Add,
+        Remove
+    }
+
+    public class IniMigrator
+    {
+        public void UpdateIniFile(string fileName, string handler, string[] names, string[] values, MigratorAction[] actions)
+        {
+            IniConfigSource doc = new IniConfigSource(fileName, IniFileType.AuroraStyle);
+            IConfig section = doc.Configs[handler];
+            for(int i = 0; i < names.Length; i++)
+            {
+                string name = names[i];
+                string value = values[i];
+                MigratorAction action = actions[i];
+                if (action == MigratorAction.Add)
+                    section.Set(name, value);
+                else
+                    section.Remove(name);
+            }
+            doc.Save();
         }
     }
 }
