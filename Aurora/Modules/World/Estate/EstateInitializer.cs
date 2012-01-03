@@ -251,7 +251,7 @@ namespace Aurora.Modules.Estate
                 IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 EstatePassword s = null;
                 if (g != null)
-                    s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), new EstatePassword());
+                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString());
                 if (s != null)
                     ES.EstatePass = s.Password;
 
@@ -297,7 +297,7 @@ namespace Aurora.Modules.Estate
                     IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                     EstatePassword s = null;
                     if (g != null)
-                        s = g.GetGeneric(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString(), new EstatePassword());
+                        s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString());
                     if (s != null)
                         scene.RegionInfo.EstateSettings.EstatePass = s.Password;
                 }

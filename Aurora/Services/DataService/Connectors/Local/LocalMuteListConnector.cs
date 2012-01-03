@@ -68,7 +68,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public MuteList[] GetMuteList(UUID AgentID)
         {
-            return GenericUtils.GetGenerics(AgentID, "MuteList", GD, new MuteList()).ToArray();
+            return GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD).ToArray();
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
-            return GenericUtils.GetGeneric(AgentID, "MuteList", PossibleMuteID.ToString(), GD, new MuteList()) != null;
+            return GenericUtils.GetGeneric<MuteList>(AgentID, "MuteList", PossibleMuteID.ToString(), GD) != null;
         }
 
         #endregion

@@ -76,7 +76,7 @@ namespace Aurora.Modules.Startup
             GridSessionID s = null;
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
             if (g != null) //Get the sessionID from the database if possible
-                s = g.GetGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", new GridSessionID());
+                s = g.GetGeneric<GridSessionID>(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID");
 
             if (s == null)
             {

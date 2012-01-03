@@ -122,8 +122,7 @@ namespace Aurora.Modules.WindlightSettings
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                 {
-                    DatabaseWrapper d = gc.GetGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                                      new DatabaseWrapper());
+                    DatabaseWrapper d = gc.GetGeneric<DatabaseWrapper>(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "");
                     if (d != null)
                         m_info = d.Info;
                 }

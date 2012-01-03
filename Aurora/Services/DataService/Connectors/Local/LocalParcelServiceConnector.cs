@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public LandData GetLandData(UUID RegionID, UUID ParcelID)
         {
-            LandData data = GenericUtils.GetGeneric(RegionID, "LandData", ParcelID.ToString(), GD, new LandData());
+            LandData data = GenericUtils.GetGeneric<LandData>(RegionID, "LandData", ParcelID.ToString(), GD);
             //Stored seperately, so rebuild it
             BuildParcelAccessList(data);
             return data;
@@ -98,7 +98,7 @@ namespace Aurora.Services.DataService
             List<LandData> AllLandObjects = new List<LandData>();
             try
             {
-                AllLandObjects = GenericUtils.GetGenerics(regionID, "LandData", GD, new LandData());
+                AllLandObjects = GenericUtils.GetGenerics<LandData>(regionID, "LandData", GD);
             }
             catch (Exception ex)
             {

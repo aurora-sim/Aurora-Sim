@@ -38,7 +38,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             if (connector != null)
             {
-                settings = connector.GetGeneric(regionID, "OpenRegionSettings", "OpenRegionSettings", new OpenRegionSettings()) ??
+                settings = connector.GetGeneric<OpenRegionSettings>(regionID, "OpenRegionSettings", "OpenRegionSettings") ??
                            new OpenRegionSettings();
             }
             return settings;

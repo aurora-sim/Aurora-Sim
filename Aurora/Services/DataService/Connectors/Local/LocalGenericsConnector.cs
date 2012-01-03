@@ -85,9 +85,9 @@ namespace Aurora.Services.DataService
         /// <param name = "Key"></param>
         /// <param name = "data">a default T to copy all data into</param>
         /// <returns></returns>
-        public T GetGeneric<T>(UUID OwnerID, string Type, string Key, T data) where T : IDataTransferable
+        public T GetGeneric<T>(UUID OwnerID, string Type, string Key) where T : IDataTransferable
         {
-            return GenericUtils.GetGeneric(OwnerID, Type, Key, GD, data);
+            return GenericUtils.GetGeneric<T>(OwnerID, Type, Key, GD);
         }
 
         /// <summary>
@@ -98,9 +98,9 @@ namespace Aurora.Services.DataService
         /// <param name = "Type"></param>
         /// <param name = "data">a default T</param>
         /// <returns></returns>
-        public List<T> GetGenerics<T>(UUID OwnerID, string Type, T data) where T : IDataTransferable
+        public List<T> GetGenerics<T>(UUID OwnerID, string Type) where T : IDataTransferable
         {
-            return GenericUtils.GetGenerics(OwnerID, Type, GD, data);
+            return GenericUtils.GetGenerics<T>(OwnerID, Type, GD);
         }
 
         /// <summary>

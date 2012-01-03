@@ -143,7 +143,7 @@ namespace Aurora.Services.DataService
         {
             Dictionary<float, RegionLightShareData> RetVal = new Dictionary<float, RegionLightShareData>();
             RegionLightShareData RWLD = new RegionLightShareData();
-            List<RegionLightShareData> RWLDs = GenericUtils.GetGenerics(regionUUID, "RegionWindLightData", GD, RWLD);
+            List<RegionLightShareData> RWLDs = GenericUtils.GetGenerics<RegionLightShareData>(regionUUID, "RegionWindLightData", GD);
             foreach (RegionLightShareData lsd in RWLDs)
             {
                 if(!RetVal.ContainsKey(lsd.minEffectiveAltitude))
