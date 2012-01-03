@@ -111,6 +111,10 @@ namespace OpenSim.Services
         public IAuroraDataPlugin Reference;
     }
 
+    public class CanBeReflected : Attribute
+    {
+    }
+
     public class ServerHandler : BaseStreamHandler
     {
         protected string m_SessionID;
@@ -127,7 +131,8 @@ namespace OpenSim.Services
                 foreach (MethodInfo method in plugin.GetType().GetMethods())
                 {
                     if (!m_methods.ContainsKey(method.Name))
-                        m_methods.Add(method.Name, new MethodImplementation() { Method = method, Reference = plugin });
+                        if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                            m_methods.Add(method.Name, new MethodImplementation() { Method = method, Reference = plugin });
                 }
             }
         }
