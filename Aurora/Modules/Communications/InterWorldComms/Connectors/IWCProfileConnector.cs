@@ -52,7 +52,7 @@ namespace Aurora.Modules
                 m_remoteService = new RemoteProfileConnector();
                 m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

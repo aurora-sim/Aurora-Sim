@@ -65,7 +65,7 @@ namespace Aurora.Services.DataService
                 //    string newPass = MainConsole.Instance.PasswdPrompt("Password to access Abuse Reports");
                 //    GD.Insert("passwords", new object[] { "abusereports", Util.Md5Hash(Util.Md5Hash(newPass)) });
                 //}
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

@@ -20,7 +20,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         public void Initialize(IGenericData GenericData, Nini.Config.IConfigSource source, IRegistryCore simBase, string DefaultConnectionString)
         {
-            DataManager.DataManager.RegisterPlugin(Name, this);
+            DataManager.DataManager.RegisterPlugin(this);
 
             string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
             if(System.IO.File.Exists(path))

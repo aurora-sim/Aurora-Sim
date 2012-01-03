@@ -38,6 +38,11 @@ namespace Aurora.DataManager
         private static readonly Dictionary<string, IAuroraDataPlugin> Plugins =
             new Dictionary<string, IAuroraDataPlugin>();
 
+        public static List<IAuroraDataPlugin> GetPlugins()
+        {
+            return new List<IAuroraDataPlugin>(Plugins.Values);
+        }
+
         /// <summary>
         ///   Request a data plugin from the registry
         /// </summary>
@@ -77,10 +82,20 @@ namespace Aurora.DataManager
         /// </summary>
         /// <param name = "Name"></param>
         /// <param name = "Plugin"></param>
+        public static void RegisterPlugin(IAuroraDataPlugin Plugin)
+        {
+            RegisterPlugin(Plugin.Name, Plugin);
+        }
+        
+        /// <summary>
+        ///   Register a new plugin to the registry
+        /// </summary>
+        /// <param name = "Name"></param>
+        /// <param name = "Plugin"></param>
         public static void RegisterPlugin(string Name, IAuroraDataPlugin Plugin)
         {
-            if (!Plugins.ContainsKey(Name))
-                Plugins.Add(Name, Plugin);
+            if (!Plugins.ContainsKey(Plugin.Name))
+                Plugins.Add(Plugin.Name, Plugin);
         }
     }
 }

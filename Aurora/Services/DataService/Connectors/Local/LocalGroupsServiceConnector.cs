@@ -63,7 +63,7 @@ namespace Aurora.Services.DataService
 
             if (source.Configs["AuroraConnectors"].GetString("GroupsConnector", "LocalConnector") == "LocalConnector")
             {
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

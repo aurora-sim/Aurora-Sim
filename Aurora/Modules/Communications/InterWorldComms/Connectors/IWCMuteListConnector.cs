@@ -53,7 +53,7 @@ namespace Aurora.Modules
                 m_remoteService = new RemoteMuteListConnector();
                 m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

@@ -132,7 +132,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if (m_Enabled)
             {
                 MainConsole.Instance.Error("[BlackholeAssets]: Blackhole assets enabled");
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
                 try
                 {
                     needsConversion = (m_Gd.Query(" 1 = 1 LIMIT 1 ", "assets", "id").Count >= 1);

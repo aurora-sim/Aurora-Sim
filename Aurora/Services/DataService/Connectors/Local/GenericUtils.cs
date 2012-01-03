@@ -149,7 +149,7 @@ namespace Aurora.Services.DataService
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
                 data.FromOSD(map);
-                T dataCopy = (T) data.Duplicate();
+                T dataCopy = (T) System.Activator.CreateInstance(typeof(T));
                 Values.Add(dataCopy);
             }
 #else

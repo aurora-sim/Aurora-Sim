@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase (defaultConnectionString, "Generics", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
                 GD.ConnectToDatabase (defaultConnectionString, "RegionInfo", source.Configs["AuroraConnectors"].GetBoolean ("ValidateTables", true));
                 
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 

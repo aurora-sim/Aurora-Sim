@@ -62,7 +62,7 @@ namespace Aurora.Framework.Serialization.External
             item.InvType = Convert.ToInt32(xtr.ReadElementString("InvType"));
             item.CreatorId = xtr.ReadElementString("CreatorUUID");
             try
-            {
+            {   
                 item.CreatorData = xtr.ReadElementString("CreatorData");
             }
             catch

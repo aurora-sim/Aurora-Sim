@@ -53,7 +53,7 @@ namespace Aurora.Services.DataService
                 GD.ConnectToDatabase(defaultConnectionString, "Parcel",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(Name, this);
+                DataManager.DataManager.RegisterPlugin(this);
             }
         }
 
