@@ -1061,7 +1061,7 @@ namespace OpenSim.Services
 #else
             foreach (GroupMembersData r in rs.Where(r => r != null))
             {
-                result.Add(Util.ConvertDecString(i), r.ToKeyValuePairs());
+                result.Add(Util.ConvertDecString(i), r.ToKVP());
                 i++;
             }
 #endif

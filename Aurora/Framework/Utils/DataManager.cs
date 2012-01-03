@@ -94,8 +94,8 @@ namespace Aurora.DataManager
         /// <param name = "Plugin"></param>
         public static void RegisterPlugin(string Name, IAuroraDataPlugin Plugin)
         {
-            if (!Plugins.ContainsKey(Plugin.Name))
-                Plugins.Add(Plugin.Name, Plugin);
+            if (!Plugins.ContainsKey(Name))
+                Plugins.Add(Name, Plugin);
         }
     }
 }
