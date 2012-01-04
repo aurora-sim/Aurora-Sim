@@ -468,7 +468,7 @@ namespace OpenSim.Services
                     i++;
                 }
 #else
-                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKVP()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
@@ -527,7 +527,7 @@ namespace OpenSim.Services
                     i++;
                 }
 #else
-                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKVP()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
@@ -566,7 +566,7 @@ namespace OpenSim.Services
                     i++;
                 }
 #else
-                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKVP()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
@@ -616,7 +616,7 @@ namespace OpenSim.Services
                     i++;
                 }
 #else
-                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKVP()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;
@@ -666,7 +666,7 @@ namespace OpenSim.Services
                     i++;
                 }
 #else
-                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKeyValuePairs()))
+                foreach (Dictionary<string, object> rinfoDict in rinfos.Select(rinfo => rinfo.ToKVP()))
                 {
                     result["region" + i] = rinfoDict;
                     i++;

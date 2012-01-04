@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using Nini.Ini;
+using Nini.Config;
 
 namespace Aurora.Simulation.Base
 {
@@ -38,11 +41,9 @@ namespace Aurora.Simulation.Base
             {
                 while (currentVersion != _currentBinVersion)
                 {
-                    if (currentVersion == 0)
-                        RunMigration1();
-                    if (currentVersion == 1)
-                        RunMigration2();
-                    currentVersion++;
+                    MethodInfo info = GetType().GetMethod("RunMigration" + ++currentVersion);
+                    if (info != null)
+                        info.Invoke(this, null);
                 }
             }
             catch (Exception ex)
@@ -53,16 +54,7 @@ namespace Aurora.Simulation.Base
             return true;
         }
 
-        private void RunMigration2()
-        {
-			if (!Directory.Exists("assetcache//")) return;
-            foreach (string path in Directory.GetDirectories("assetcache//"))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-
-        private void RunMigration1()
+        public void RunMigration1()
         {
             if (File.Exists("Physics//OpenSim.Region.Physics.BasicPhysicsPlugin.dll"))
                 File.Delete("Physics//OpenSim.Region.Physics.BasicPhysicsPlugin.dll");
@@ -79,6 +71,55 @@ namespace Aurora.Simulation.Base
             foreach(string path in Directory.GetDirectories("ScriptEngines//"))
             {
                 Directory.Delete(path, true);
+            }
+        }
+
+        public void RunMigration2()
+        {
+            ///Asset format changed, broke existing cached assets
+            if (!Directory.Exists("assetcache//")) return;
+            foreach (string path in Directory.GetDirectories("assetcache//"))
+            {
+                Directory.Delete(path, true);
+            }
+        }
+
+        public void RunMigration3()
+        {
+            IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini.example", "AuroraConnectors",
+                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+            IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini", "AuroraConnectors",
+                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+        }
+    }
+
+    public enum MigratorAction
+    {
+        Add,
+        Remove
+    }
+
+    public class IniMigrator
+    {
+        public static void UpdateIniFile(string fileName, string handler, string[] names, string[] values, MigratorAction[] actions)
+        {
+            if (File.Exists(fileName))
+            {
+                IniConfigSource doc = new IniConfigSource(fileName, IniFileType.AuroraStyle);
+                IConfig section = doc.Configs[handler];
+                for (int i = 0; i < names.Length; i++)
+                {
+                    string name = names[i];
+                    string value = values[i];
+                    MigratorAction action = actions[i];
+                    if (action == MigratorAction.Add)
+                        section.Set(name, value);
+                    else
+                        section.Remove(name);
+                }
+                doc.Save();
             }
         }
     }

@@ -105,6 +105,11 @@ namespace OpenSim.Services
             return m_database.SchedulerSave(I);
         }
 
+        public void Remove(string id)
+        {
+            m_database.SchedulerRemove(id);
+        }
+
         #endregion
 
         #region Timer
@@ -153,7 +158,7 @@ namespace OpenSim.Services
                 if (I.Enabled) I.TimeToRun = I.TimeToRun.AddSeconds(I.RunEvery);
 
                 if (!I.HisotryKeep)
-                    m_database.HisotryDeleteOld(I);
+                    m_database.HistoryDeleteOld(I);
 
                 m_database.SchedulerSave(I);
             }

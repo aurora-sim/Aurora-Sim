@@ -90,10 +90,10 @@ namespace OpenSim.Services.Connectors
                 if (exists)
                     return exists;
             }
+            return false;
 #else
             return serverURIs.Select(m_ServerURI => m_ServerURI + "/" + id + "/exists").Select(uri => SynchronousRestObjectRequester.MakeRequest<int, bool>("GET", uri, 0)).FirstOrDefault(exists => exists);
 #endif
-            return false;
         }
 
         public virtual AssetBase Get(string id)

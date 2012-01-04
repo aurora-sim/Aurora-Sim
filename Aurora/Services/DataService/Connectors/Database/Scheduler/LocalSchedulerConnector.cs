@@ -95,6 +95,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             return I.id;
         }
 
+        public void SchedulerRemove(string id)
+        {
+            m_Gd.Delete("scheduler", new[] { "id" }, new object[] { id });
+        }
+
         private object[] GetDBValues(SchedulerItem I)
         {
             return new object[]
@@ -163,7 +168,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                         new object[] { historyID });
         }
 
-        public void HisotryDeleteOld(SchedulerItem I)
+        public void HistoryDeleteOld(SchedulerItem I)
         {
             if ((I.id != "") && (I.HistoryLastID != ""))
                 m_Gd.Delete("scheduler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");

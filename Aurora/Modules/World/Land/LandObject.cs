@@ -330,12 +330,15 @@ namespace Aurora.Modules.Land
                     {
                         //If the flags have changed, we need to charge them.. maybe
                         // We really need to check per month or whatever
-                        //IMoneyModule moneyModule = m_scene.RequestModuleInterface<IMoneyModule> ();
-                        //if (moneyModule != null)
-                        //{
-                        //    if(!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee"))
-                        //        args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
-                        //}
+                        IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
+                        if (moneyModule != null)
+                        {
+                            if (!moneyModule.Charge(remote_client.AgentId, 30, "Parcel Show in Search Fee - " + LandData.GlobalID, 7))
+                            {
+                                remote_client.SendAlertMessage("You don't have enough money to set this parcel in search.");
+                                args.ParcelFlags &= (uint)ParcelFlags.ShowDirectory;
+                            }
+                        }
                     }
                     LandData.Flags = args.ParcelFlags;
 

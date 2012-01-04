@@ -167,19 +167,11 @@ namespace OpenSim.Services
             else
             {
                 int i = 0;
-#if(!ISWIN)
                 foreach(UserAccount acc in accounts)
                 {
                     result["account" + i] = acc.ToKVP();
                     i++;
                 }
-#else
-                foreach (Dictionary<string, object> rinfoDict in accounts.Select(acc => acc.ToKeyValuePairs()))
-                {
-                    result["account" + i] = rinfoDict;
-                    i++;
-                }
-#endif
             }
 
             string xmlString = WebUtils.BuildXmlResponse(result);

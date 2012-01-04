@@ -145,7 +145,6 @@ namespace Aurora.Services.DataService
             List<T> Values = new List<T>();
             List<string> retVal = GD.Query(new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type}, "generics",
                                            "`value`");
-#if (!ISWIN)
             foreach (string ret in retVal)
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
@@ -153,14 +152,7 @@ namespace Aurora.Services.DataService
                 data.FromOSD(map);
                 Values.Add(data);
             }
-#else
-            foreach (OSDMap map in retVal.Select(ret => (OSDMap)OSDParser.DeserializeJson(ret)))
-            {
-                data.FromOSD(map);
-                T dataCopy = (T)data.Duplicate();
-                Values.Add(dataCopy);
-            }
-#endif
+
             return Values;
         }
 

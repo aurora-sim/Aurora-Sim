@@ -291,7 +291,7 @@ namespace Aurora.Modules.Groups
                     if (!money.Charge(GetRequestingAgentID(remoteClient), money.GroupCreationCharge, "Group Creation"))
                     {
                         remoteClient.SendCreateGroupReply(UUID.Zero, false,
-                                                          "You have got issuficient funds to create a group.");
+                                                          "You have got insuficient funds to create a group.");
                         return UUID.Zero;
                     }
                 }

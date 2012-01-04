@@ -183,6 +183,12 @@ namespace Aurora.Modules.Land
 
         public void RegionLoaded(IScene scene)
         {
+            IScheduledMoneyModule moneyModule = m_scene.RequestModuleInterface<IScheduledMoneyModule>();
+            if (moneyModule != null)
+            {
+                moneyModule.OnUserDidNotPay += moneyModule_OnUserDidNotPay;
+                moneyModule.OnCheckWhetherUserShouldPay += moneyModule_OnCheckWhetherUserShouldPay;
+            }
         }
 
         public void RemoveRegion(IScene scene)
@@ -218,6 +224,29 @@ namespace Aurora.Modules.Land
         public string Name
         {
             get { return "LandManagementModule"; }
+        }
+
+        #endregion
+
+        #region MoneyModule pieces (for parcel directory payment)
+
+        bool moneyModule_OnCheckWhetherUserShouldPay(UUID agentID, string paymentTextThatFailed)
+        {
+            if (paymentTextThatFailed.StartsWith("Parcel Show in Search Fee - "))
+            {
+                UUID parcelGlobalID = UUID.Parse(paymentTextThatFailed.Substring("Parcel Show in Search Fee - ".Length));
+                //Only charge if the parcel still exists
+                return GetLandObject(parcelGlobalID) != null;
+            }
+            return true;
+        }
+
+        void moneyModule_OnUserDidNotPay(UUID agentID, string paymentTextThatFailed)
+        {
+            UUID parcelGlobalID = UUID.Parse(paymentTextThatFailed.Substring("Parcel Show in Search Fee - ".Length));
+            ILandObject parcel;
+            if ((parcel = GetLandObject(parcelGlobalID)) != null)
+                parcel.LandData.Flags &= (uint)ParcelFlags.ShowDirectory;
         }
 
         #endregion
