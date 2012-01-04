@@ -57,7 +57,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
                 "LocalConnector")
             {
-                WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WireduxHandlerPassword", String.Empty));
+                WebPassword = Util.Md5Hash(source.Configs["Handlers"].GetString("WebUIHandlerPassword", String.Empty));
 
                 //List<string> Results = GD.Query("Method", "abusereports", "passwords", "Password");
                 //if (Results.Count == 0)
