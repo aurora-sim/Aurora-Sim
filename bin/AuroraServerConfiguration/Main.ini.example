@@ -1,16 +1,16 @@
 [Handlers]
     ;; Add any handlers here that you want to use
-	
-	WireduxHandler = WireduxHandler
-	WireduxHandlerPassword = Password
-	WireduxHandlerPort = 8007
-	WireduxTextureServerPort = 8002
+
+    WireduxHandler = WireduxHandler
+    WireduxHandlerPassword = Password
+    WireduxHandlerPort = 8007
+    WireduxTextureServerPort = 8002
 
     AbuseReportsInHandler = AbuseReportsConnector
-	AbuseReportsInHandlerPort = "8003"
-	
+    AbuseReportsInHandlerPort = "8003"
+
     AgentInfoInHandler = AgentInfoServiceConnector
-    AssetInHandler = AssetServiceConnector;
+    AssetInHandler = AssetServiceConnector
     AuroraDataHandler = AuroraDataServiceConnector
     AvatarInHandler = AvatarServiceConnector
     FreeswitchInHandler = FreeswitchServerConnector
@@ -22,7 +22,7 @@
     MessagingServiceInHandler = MessagingServiceInHandler
     LLLoginHandler = LLLoginServiceInConnector
     EventQueueInHandler = EventQueueHandler
-    
+
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
     AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
@@ -34,14 +34,14 @@
     FreeSwitchHandler = FreeswitchService
     FriendsHandler = FriendsService
     GridHandler = GridService
-	GridWideMessage = GridWideMessageModule
+    GridWideMessage = GridWideMessageModule
     InventoryHandler = InventoryService
     SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
-    
+
     RegistrationHandlerPort = 8003
     LLLoginHandlerPort = 8002
-    
+
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
     AssetConnector = LocalConnector
@@ -57,33 +57,35 @@
     DirectoryServiceConnector = LocalConnector
     MuteListConnector = LocalConnector
     ParcelConnector = LocalConnector
-	EmailConnector = LocalConnector
-	
-	;; Max non-group chat messages that the server will store per user
-	MaxOfflineMessages = 20
-	
-	;; Whether we should save any group chat messages for users
-	SaveOfflineGroupChatMessages = true
-	
-	;; The maximum number of group chat messages that the server will store per user
-	MaxGroupOfflineMessages = 50
+    EmailConnector = LocalConnector
 
+    ;; Max non-group chat messages that the server will store per user
+    MaxOfflineMessages = 20
+
+    ;; Whether we should save any group chat messages for users
+    SaveOfflineGroupChatMessages = true
+
+    ;; The maximum number of group chat messages that the server will store per user
+    MaxGroupOfflineMessages = 50
+
+    DoRemoteCalls = False
+    AllowRemoteCalls = True
 [ApplicationPlugins]
     ServicesLoader = ServicesLoader
     StatsHandler = StatsHandler
-	
+
 [MapService]
     ;; This controls options about the v2 MapService, which allows v2 viewers to see the map
-	;; Should we allow the use of this service?
-	Enabled = true
-	;; The port to run the MapService on
-	;; Default is 8005
-	Port = 8005
-	;; Should we build up an expiring cache of the map tiles?
-	;; Highly recommended, otherwise, many tiles will be generated more than once, which wastes CPU
-	CacheEnabled = true
-	;; The time for cached images to expire (in hours)
-	CacheExpires = 24
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the MapService on
+    ;; Default is 8005
+    Port = 8005
+    ;; Should we build up an expiring cache of the map tiles?
+    ;; Highly recommended, otherwise, many tiles will be generated more than once, which wastes CPU
+    CacheEnabled = true
+    ;; The time for cached images to expire (in hours)
+    CacheExpires = 24
 
 [RegionPermissions]
     ;; The time before handlers will need to reregister so that they do not get killed (in hours)
@@ -91,14 +93,14 @@
     DefaultRegionThreatLevel = Full
 
     ;; Definitions for threat levels
-    Threat_Level_None = "register,deregister,GetUserInfo,EQM_Post,getaccount,getaccounts,getprofile,RegisterHandlers";
-    Threat_Level_Low = "get_region_by_uuid,get_region_by_position,get_region_by_name,get_regions_by_name,get_region_range,get_region_flags,getmapitems,GetUserInfos,GetAgentsLocations,Asset_Get,getavatar,getfriends,updatelsldata,findlsldata,loadestatesettings,saveestatesettings,linkregionestate,delinkregionestate,createestate,deleteestate,getestates,getestatesowner,getmutelist,ismuted,addofflinemessage,addlandobject,getparcelinfo,getparcelbyowner,findland,findlandforsale,findevents,findeventsinregion,findclassifieds,geteventinfo,findclassifiedsinregion,SetAgentActiveGroup,SetAgentGroupSelectedRole,GetGroupRecord,GetMemberGroupProfile,GetGroupMembershipData,GetAgentActiveGroup,GetAgentToGroupInvite,GetAgentGroupMemberData,GetGroupNotice,GetAgentGroupMemberships,FindGroups,GetAgentGroupRoles,GetGroupRoles,GetGroupMembers,GetGroupRoleMembers,GetGroupNotices,GetGroupInvites";
-    Threat_Level_Medium = "get_default_regions,get_fallback_regions,get_safe_regions,removetelehub,addtelehub,findtelehub,setitems,removeitems,cachewearabledata,GETINVENTORYSKELETON,GETFOLDERFORTYPE,GETFOLDERCONTENT,GETFOLDERITEMS,ADDFOLDER,MOVEFOLDER,ADDITEM,MOVEITEMS,GETITEM,GETFOLDER,GETACTIVEGESTURES,GETASSETPERMISSIONS,getagent,updatemute,deletemute,getofflinemessages,CreateGroup,AddGroupNotice,AddAgentToGroup,AddRoleToGroup,UpdateGroup,RemoveRoleFromGroup,UpdateRole,SetAgentGroupInfo,AddAgentGroupInvite,RemoveAgentInvite,AddAgentToRole,RemoveAgentFromRole,RemoveAgentFromGroup";
-    Threat_Level_High = "setavatar,resetavatar,storefriend,deletefriend,UPDATEFOLDER,DELETEFOLDERS,PURGEFOLDER,UPDATEITEM,DELETEITEMS,updateprofile";
-    Threat_Level_Full = "Asset_Delete,Asset_Update,CREATEUSERINVENTORY,GETROOTFOLDER,setaccount";
-	
+    Threat_Level_None = "register,deregister,GetUserInfo,EQM_Post,getaccount,getaccounts,getprofile,RegisterHandlers"
+    Threat_Level_Low = "get_region_by_uuid,get_region_by_position,get_region_by_name,get_regions_by_name,get_region_range,get_region_flags,getmapitems,GetUserInfos,GetAgentsLocations,Asset_Get,getavatar,getfriends,updatelsldata,findlsldata,loadestatesettings,saveestatesettings,linkregionestate,delinkregionestate,createestate,deleteestate,getestates,getestatesowner,getmutelist,ismuted,addofflinemessage,addlandobject,getparcelinfo,getparcelbyowner,findland,findlandforsale,findevents,findeventsinregion,findclassifieds,geteventinfo,findclassifiedsinregion,SetAgentActiveGroup,SetAgentGroupSelectedRole,GetGroupRecord,GetMemberGroupProfile,GetGroupMembershipData,GetAgentActiveGroup,GetAgentToGroupInvite,GetAgentGroupMemberData,GetGroupNotice,GetAgentGroupMemberships,FindGroups,GetAgentGroupRoles,GetGroupRoles,GetGroupMembers,GetGroupRoleMembers,GetGroupNotices,GetGroupInvites"
+    Threat_Level_Medium = "get_default_regions,get_fallback_regions,get_safe_regions,removetelehub,addtelehub,findtelehub,setitems,removeitems,cachewearabledata,GETINVENTORYSKELETON,GETFOLDERFORTYPE,GETFOLDERCONTENT,GETFOLDERITEMS,ADDFOLDER,MOVEFOLDER,ADDITEM,MOVEITEMS,GETITEM,GETFOLDER,GETACTIVEGESTURES,GETASSETPERMISSIONS,getagent,updatemute,deletemute,getofflinemessages,CreateGroup,AddGroupNotice,AddAgentToGroup,AddRoleToGroup,UpdateGroup,RemoveRoleFromGroup,UpdateRole,SetAgentGroupInfo,AddAgentGroupInvite,RemoveAgentInvite,AddAgentToRole,RemoveAgentFromRole,RemoveAgentFromGroup"
+    Threat_Level_High = "setavatar,resetavatar,storefriend,deletefriend,UPDATEFOLDER,DELETEFOLDERS,PURGEFOLDER,UPDATEITEM,DELETEITEMS,updateprofile"
+    Threat_Level_Full = "Asset_Delete,Asset_Update,CREATEUSERINVENTORY,GETROOTFOLDER,setaccount"
+
 [BlackHole]
-	CacheDirector = "C:\aurora\admin\BHAssets\"
-	BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
-	AssetsAreOldAfterHowManyDays = 30
-	PointInventoryToParentAssets = true
+    CacheDirector = "C:\aurora\admin\BHAssets\"
+    BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
+    AssetsAreOldAfterHowManyDays = 30
+    PointInventoryToParentAssets = true

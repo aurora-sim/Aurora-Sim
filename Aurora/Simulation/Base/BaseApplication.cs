@@ -157,6 +157,9 @@ namespace Aurora.Simulation.Base
 #endif
             }
 
+            BinMigratorService service = new BinMigratorService();
+            service.MigrateBin();
+
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
             configSource.Alias.AddAlias("On", true);
@@ -196,9 +199,6 @@ namespace Aurora.Simulation.Base
                 m_urlToPostErrors = m_configSource.Configs["ErrorReporting"].GetString("ErrorReportingURL",
                                                                                        m_urlToPostErrors);
             }
-
-            BinMigratorService service = new BinMigratorService();
-            service.MigrateBin();
 
             bool Running = true;
             //If auto restart is set, then we always run.

@@ -89,8 +89,8 @@ namespace OpenSim.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("ServerHandler", Name) != Name)
+            IConfig handlerConfig = config.Configs["AuroraConnectors"];
+            if (!handlerConfig.GetBoolean("AllowRemoteCalls", false))
                 return;
 
             m_registry = registry;
@@ -109,10 +109,6 @@ namespace OpenSim.Services
     {
         public MethodInfo Method;
         public IAuroraDataPlugin Reference;
-    }
-
-    public class CanBeReflected : Attribute
-    {
     }
 
     public unsafe class ServerHandler : BaseStreamHandler

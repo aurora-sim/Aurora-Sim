@@ -43,6 +43,7 @@ namespace Aurora.Services.DataService
     {
         protected IRegistryCore m_registry;
         protected IConfigurationService m_configService;
+        protected bool m_doRemoteCalls = false;
         protected string m_name;
 
         public void Init(IRegistryCore registry, string name)
@@ -50,6 +51,13 @@ namespace Aurora.Services.DataService
             m_registry = registry;
             m_configService = m_registry.RequestModuleInterface<IConfigurationService>();
             m_name = name;
+            IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
+            IConfig config;
+            if ((config = source.Configs["AuroraConnectors"]) != null)
+                m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+
+            //IF YOU WANT TO ENABLE THE CONNECTORS, COMMENT/REMOVE THIS LINE
+            m_doRemoteCalls = false;
         }
 
         public object DoRemote(params OSD[] o)
@@ -59,6 +67,8 @@ namespace Aurora.Services.DataService
 
         public object DoRemoteForUser(UUID userID, params OSD[] o)
         {
+            if (!m_doRemoteCalls)
+                return null;
             StackTrace stackTrace = new StackTrace();
             MethodInfo method = (MethodInfo)stackTrace.GetFrame(1).GetMethod();
             string methodName = method.Name;
