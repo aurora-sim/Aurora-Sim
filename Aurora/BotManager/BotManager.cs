@@ -131,10 +131,7 @@ namespace Aurora.BotManager
 
             scene.AuthenticateHandler.AgentCircuits.Add(m_character.CircuitCode, m_aCircuitData);
             //This adds them to the scene and sets them inworld
-            bool done = false;
-            scene.AddNewClient(m_character, delegate { done = true; });
-            while (!done)
-                Thread.Sleep(3);
+            AddAndWaitUntilAgentIsAdded(scene, m_character);
 
             IScenePresence SP = scene.GetScenePresence(m_character.AgentId);
             if (SP == null)
@@ -143,6 +140,13 @@ namespace Aurora.BotManager
             SP.MakeRootAgent(m_character.StartPos, false, true);
             //Move them
             SP.Teleport(startPos);
+
+            IAttachmentsModule attModule = SP.Scene.RequestModuleInterface<IAttachmentsModule>();
+            ISceneEntity[] atts = attModule.GetAttachmentsForAvatar(SP.UUID);
+            if (attModule != null)
+                foreach (AvatarAttachment att in attachments)
+                    attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, 0);
+            atts = attModule.GetAttachmentsForAvatar(SP.UUID);
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
             appearance.InitialHasWearablesBeenSent = true;
@@ -154,6 +158,14 @@ namespace Aurora.BotManager
             MainConsole.Instance.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
+        }
+
+        private static void AddAndWaitUntilAgentIsAdded(IScene scene, Bot m_character)
+        {
+            bool done = false;
+            scene.AddNewClient(m_character, delegate { done = true; });
+            while (!done)
+                Thread.Sleep(3);
         }
 
         public void RemoveAvatar(UUID avatarID, IScene scene, UUID userAttempting)
