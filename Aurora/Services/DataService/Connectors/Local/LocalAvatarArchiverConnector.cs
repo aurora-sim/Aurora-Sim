@@ -74,7 +74,7 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
-        ///   Returns a list object of AvatarArchives. This is being used for wiredux
+        ///   Returns a list object of AvatarArchives. This is being used for WebUI
         /// </summary>
         /// <param name = "Public"></param>
         /// <returns></returns>

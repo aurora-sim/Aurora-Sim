@@ -178,27 +178,24 @@ namespace Aurora.DataManager.Migration
                     MainConsole.Instance.Fatal(string.Format("Failed to validate migration {0}-{1}, retrying...",
                                               currentMigrator.MigrationName, currentMigrator.Version));
 
-                    if (currentMigrator == null)
+                    currentMigrator.Migrate(genericData);
+                    validated = currentMigrator.Validate(genericData);
+                    if (!validated)
                     {
+                        Rec<string, ColumnDefinition[]> rec;
+                        currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
+                        MainConsole.Instance.Fatal(
+                            string.Format(
+                                "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
+                                currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                        genericData.RenameTable(rec.X1, rec.X1 + "_broken");
                         currentMigrator.Migrate(genericData);
                         validated = currentMigrator.Validate(genericData);
                         if (!validated)
-                        {
-                            Rec<string, ColumnDefinition[]> rec;
-                            currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
-                            MainConsole.Instance.Fatal(
+                            throw new MigrationOperationException(
                                 string.Format(
-                                    "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
-                                    currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
-                            genericData.RenameTable(rec.X1, rec.X1 + "_broken");
-                            currentMigrator.Migrate(genericData);
-                            validated = currentMigrator.Validate(genericData);
-                            if (!validated)
-                                throw new MigrationOperationException(
-                                    string.Format(
-                                        "Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.",
-                                        currentMigrator.MigrationName, currentMigrator.Version));
-                        }
+                                    "Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.",
+                                    currentMigrator.MigrationName, currentMigrator.Version));
                     }
                 }
                 //else
@@ -229,8 +226,9 @@ namespace Aurora.DataManager.Migration
                     }
                     catch (Exception ex)
                     {
-                        throw new MigrationOperationException(string.Format("Migrating to version {0} failed, {1}.",
-                                                                            currentMigrator.Version, ex));
+                        if (currentMigrator != null)
+                            throw new MigrationOperationException(string.Format("Migrating to version {0} failed, {1}.",
+                                                                                currentMigrator.Version, ex));
                     }
                     executed = true;
                     validated = executingMigrator.Validate(genericData);
@@ -239,9 +237,10 @@ namespace Aurora.DataManager.Migration
                     if (!validated && validateTables)
                     {
                         RollBackOperation();
-                        throw new MigrationOperationException(
-                            string.Format("Migrating to version {0} did not validate. Restoring to restore point.",
-                                          currentMigrator.Version));
+                        if (currentMigrator != null)
+                            throw new MigrationOperationException(
+                                string.Format("Migrating to version {0} did not validate. Restoring to restore point.",
+                                              currentMigrator.Version));
                     }
 
                     if (executingMigrator.Version == operationDescription.EndVersion)
@@ -254,7 +253,8 @@ namespace Aurora.DataManager.Migration
                 {
                     currentMigrator.ClearRestorePoint(genericData);
                 }
-                currentMigrator.FinishedMigration(genericData);
+                if (currentMigrator != null)
+                    currentMigrator.FinishedMigration(genericData);
             }
         }
 
