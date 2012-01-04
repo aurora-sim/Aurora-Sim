@@ -2205,10 +2205,11 @@ namespace Aurora.Modules.Inventory
 
                     IClientAPI client;
                     m_scene.ClientManager.TryGetValue(AgentID, out client);
-                    ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data);
+                    UUID newAssetID = UUID.Zero;
+                    ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data, out newAssetID);
 
                     OSDMap map = new OSDMap();
-                    map["new_asset"] = inventoryItemID;
+                    map["new_asset"] = newAssetID;
                     map["compiled"] = !(errors.Count > 0);
                     map["state"] = "complete";
                     OSDArray array = new OSDArray();
@@ -2243,12 +2244,14 @@ namespace Aurora.Modules.Inventory
             /// <param name="isScriptRunning2">Indicates whether the script to update is currently running</param>
             /// <param name="data"></param>
             public ArrayList CapsUpdateTaskInventoryScriptAsset(IClientAPI remoteClient, UUID itemId,
-                                                           UUID primId, bool isScriptRunning2, byte[] data)
+                                                           UUID primId, bool isScriptRunning2, byte[] data, out UUID newID)
             {
+                ArrayList errors = new ArrayList();
                 if (!m_scene.Permissions.CanEditScript(itemId, primId, remoteClient.AgentId))
                 {
-                    remoteClient.SendAgentAlertMessage("Insufficient permissions to edit script", false);
-                    return new ArrayList();
+                    newID = UUID.Zero;
+                    errors.Add("Insufficient permissions to edit script");
+                    return errors;
                 }
 
                 // Retrieve group
@@ -2260,7 +2263,9 @@ namespace Aurora.Modules.Inventory
                         "Prim inventory update requested for item ID {0} in prim ID {1} but this prim does not exist",
                         itemId, primId);
 
-                    return new ArrayList();
+                    newID = UUID.Zero;
+                    errors.Add("Unable to find requested prim to update.");
+                    return errors;
                 }
 
                 // Retrieve item
@@ -2273,31 +2278,36 @@ namespace Aurora.Modules.Inventory
                             + " but the item does not exist in this inventory",
                         itemId, part.Name, part.UUID);
 
-                    return new ArrayList();
+                    newID = UUID.Zero;
+                    errors.Add("Unable to find requested inventory item in prim to update.");
+                    return errors;
                 }
-
-                UUID newID;
-                // Update item with new asset
-                if (m_scene.AssetService.UpdateContent(item.AssetID, data, out newID) && newID == UUID.Zero)
-                    remoteClient.SendAgentAlertMessage("Failed to save your item", false);
-                else
-                    item.AssetID = newID;
 
                 // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
-                ArrayList errors = new ArrayList();
 
-                if (isScriptRunning2)
+                // Update item with new asset
+                if (!m_scene.AssetService.UpdateContent(item.AssetID, data, out newID) || newID == UUID.Zero)
                 {
-                    // Needs to determine which engine was running it and use that
-                    //
-                    part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, StateSource.NewRez);
-                    errors = part.Inventory.GetScriptErrors(item.ItemID);
+                    errors.Add("Failed to save script to asset storage. Please try again later.");
                 }
                 else
                 {
-                    remoteClient.SendAgentAlertMessage("Script saved", false);
+                    item.AssetID = newID;
+
+                    part.Inventory.UpdateInventoryItem(item);
+                    
+                    if (isScriptRunning2)
+                    {
+                        // Needs to determine which engine was running it and use that
+                        //
+                        part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, StateSource.NewRez);
+                        errors = part.Inventory.GetScriptErrors(item.ItemID);
+                    }
+                    else
+                        errors.Add("Script saved successfully.");
+
+                    part.GetProperties(remoteClient);
                 }
-                part.GetProperties(remoteClient);
                 return errors;
             }
         }
