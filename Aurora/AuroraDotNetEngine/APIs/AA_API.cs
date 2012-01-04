@@ -801,5 +801,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 cp.SetStat(StatName, statValue);
             }
         }
+
+        public LSL_Integer aaGetIsInfiniteRegion()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetIsInfiniteRegion", m_host, "AA", m_itemID))
+                return 0;
+            return new LSL_Integer(World.RegionInfo.InfiniteRegion ? 1 : 0);
+        }
     }
 }

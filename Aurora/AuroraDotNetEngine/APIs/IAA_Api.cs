@@ -95,5 +95,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         rotation aaGetTextColor();
 
         void aaSetEnv(LSL_String name, LSL_List value);
+
+        LSL_Integer aaGetIsInfiniteRegion();
     }
 }
