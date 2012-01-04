@@ -184,6 +184,7 @@ namespace Aurora.Modules.RegionLoader
             m_changingRegion = true;
             if (region == null)
             {
+                button20.Enabled = false;
                 CurrentRegionID = UUID.Zero;
                 m_changingRegion = false;
                 textBox11.Text = "";
@@ -200,6 +201,7 @@ namespace Aurora.Modules.RegionLoader
                 einfiniteRegion.Checked = false;
                 return;
             }
+            button20.Enabled = true;
             CurrentRegionID = region.RegionID;
             textBox11.Text = region.RegionType;
             textBox6.Text = region.ObjectCapacity.ToString ();

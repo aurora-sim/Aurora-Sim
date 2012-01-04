@@ -751,6 +751,7 @@ namespace Aurora.Modules.RegionLoader
             // 
             // button20
             // 
+            this.button20.Enabled = false;
             this.button20.Location = new System.Drawing.Point(460, 264);
             this.button20.Name = "button20";
             this.button20.Size = new System.Drawing.Size(145, 23);
