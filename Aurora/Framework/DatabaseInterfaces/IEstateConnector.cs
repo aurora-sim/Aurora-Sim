@@ -76,7 +76,15 @@ namespace Aurora.Framework
         List<EstateSettings> GetEstates(UUID OwnerID);
 
         /// <summary>
-        ///   Add a new region to the estate
+        /// Gets the estates that have the specified owner, with optional filters.
+        /// </summary>
+        /// <param name="OwnerID"></param>
+        /// <param name="boolFields"></param>
+        /// <returns></returns>
+        List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields);
+
+        /// <summary>
+        ///   Add a new region to the estate, authenticates with the password
         /// </summary>
         /// <param name = "regionID"></param>
         /// <param name = "estateID"></param>

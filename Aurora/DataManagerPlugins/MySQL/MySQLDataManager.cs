@@ -755,7 +755,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Delete(string table, string whereclause)
         {
-            string query = "delete from " + table + " WHERE " + whereclause;
+            string query = "DELETE FROM " + table + " WHERE " + whereclause;
             try
             {
                 ExecuteNonQuery(query, new Dictionary<string, object>());
@@ -770,7 +770,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DeleteByTime(string table, string key)
         {
-            string query = "delete from " + table + " WHERE '" + key + "' < now()";
+            string query = "DELETE FROM " + table + " WHERE (UNIX_TIMESTAMP('" + key + "') - UNIX_TIMESTAMP()) <= 0";
             try
             {
                 ExecuteNonQuery(query, new Dictionary<string, object>());

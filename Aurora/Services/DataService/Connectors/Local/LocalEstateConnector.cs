@@ -191,13 +191,36 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
+            return GetEstates(OwnerID, new Dictionary<string,bool>(0));
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields){
             object remoteValue = DoRemote(OwnerID);
             if (remoteValue != null)
                 return (List<EstateSettings>)remoteValue;
             List<EstateSettings> settings = new List<EstateSettings>();
             List<string> retVal = GD.Query("EstateOwner", OwnerID, m_estateTable, "EstateID");
             foreach (string s in retVal)
-                settings.Add(GetEstate(int.Parse(s)));
+            {
+                bool Add = true;
+                EstateSettings es = GetEstate(int.Parse(s));
+
+                if(boolFields.Count > 0){
+                    OSDMap esmap = es.ToOSD();
+                    foreach(KeyValuePair<string, bool> field in boolFields){
+                        if(esmap.ContainsKey(field.Key) && esmap[field.Key].AsBoolean() != field.Value){
+                            Add = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (Add)
+                {
+                    settings.Add(es);
+                }
+            }
             return settings;
         }
 
