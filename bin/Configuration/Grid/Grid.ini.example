@@ -20,7 +20,7 @@
     AgentConnector = RemoteConnector
     RegionConnector = RemoteConnector
     ProfileConnector = RemoteConnector
-    EstateConnector = RemoteConnector
+    EstateConnector = LocalConnector
     OfflineMessagesConnector = RemoteConnector
     DirectoryServiceConnector = RemoteConnector
     MuteListConnector = RemoteConnector
