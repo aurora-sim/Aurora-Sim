@@ -64,7 +64,7 @@ namespace OpenSim.Services
             IGridRegistrationService urlModule =
                 m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (m_SessionID != "" && urlModule != null)
-                if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Delete", ThreatLevel.Full))
+                if (!urlModule.CheckThreatLevel(m_SessionID, "Asset_Delete", ThreatLevel.High))
                     return new byte[0];
             if (p.Length > 0 && m_allowDelete)
             {
