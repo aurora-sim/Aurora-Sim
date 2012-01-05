@@ -11,7 +11,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 3;
+        private const int _currentBinVersion = 4;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -100,6 +100,17 @@ namespace Aurora.Simulation.Base
 
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "AuroraConnectors",
                 new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "True" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+        }
+
+
+        public void RunMigration4()
+        {
+            IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
+                new[] { "EstateConnector" }, new[] { "LocalConnector" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
+                new[] { "DefaultRegionThreatLevel" }, new[] { "High" },
                 new[] { MigratorAction.Add, MigratorAction.Add });
         }
     }

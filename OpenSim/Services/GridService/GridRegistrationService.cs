@@ -68,7 +68,7 @@ namespace OpenSim.Services.GridService
             }
         }
 
-        protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.Full;
+        protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.High;
         
         protected class PermissionSet
         {

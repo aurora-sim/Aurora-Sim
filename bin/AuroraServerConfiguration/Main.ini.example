@@ -90,7 +90,8 @@
 [RegionPermissions]
     ;; The time before handlers will need to reregister so that they do not get killed (in hours)
     DefaultTimeout = 24
-    DefaultRegionThreatLevel = Full
+	;; The default threat level for regions, can be None, Low, Medium, High (the default), or Full (not recommended, unless you are in a secure environment)
+    DefaultRegionThreatLevel = High
 
     ;; Definitions for threat levels
     Threat_Level_None = "register,deregister,GetUserInfo,EQM_Post,getaccount,getaccounts,getprofile,RegisterHandlers"
