@@ -102,6 +102,7 @@ namespace Aurora.Services.DataService
             }
             es.EstateID = GetNewEstateID();
             SaveEstateSettings(es, true);
+            LinkRegion(RegionID, (int)es.EstateID);
             return (int)es.EstateID;
         }
 
@@ -122,10 +123,11 @@ namespace Aurora.Services.DataService
             if (remoteValue != null)
                 return (bool)remoteValue;
 
-            GD.Replace("estateregions", new[] { "RegionID" },
+            GD.Replace("estateregions", new[] { "RegionID", "EstateID" },
                        new object[]
                            {
-                               regionID
+                               regionID,
+                               estateID
                            });
 
             return true;
@@ -188,6 +190,7 @@ namespace Aurora.Services.DataService
             return regions;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
             return GetEstates(OwnerID, new Dictionary<string,bool>(0));
@@ -196,7 +199,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
         {
-            object remoteValue = DoRemote(OwnerID);
+            object remoteValue = DoRemote(OwnerID, boolFields);
             if (remoteValue != null)
                 return (List<EstateSettings>)remoteValue;
 

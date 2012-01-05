@@ -169,19 +169,14 @@ namespace OpenSim.Services
                     object[] parameters = new object[paramInfo.Length];
                     int paramNum = 0;
                     foreach (ParameterInfo param in paramInfo)
-                        if (Util.IsInstanceOfGenericType(typeof(List<>), param.ParameterType))
-                            parameters[paramNum++] = MakeListFromArray((OSDArray)args[param.Name], param);
-                        else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), param.ParameterType))
-                            parameters[paramNum++] = MakeDictionaryFromArray((OSDMap)args[param.Name], param);
-                        else
-                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
                     
                     object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
                         response["Value"] = true;
                     else
-                        response["Value"] = MakeOSD(o, methodInfo.Method.ReturnType);
+                        response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
                     response["Success"] = true;
                     return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response));
                 }
@@ -211,81 +206,6 @@ namespace OpenSim.Services
             }
             methodInfo = null;
             return false;
-        }
-
-        private OSD MakeOSD(object o, Type t)
-        {
-            if (o is OSD)
-                return (OSD)o;
-            OSD oo;
-            if ((oo =OSD.FromObject(o)).Type != OSDType.Unknown)
-                return (OSD)oo;
-            if (o is IDataTransferable)
-                return ((IDataTransferable)o).ToOSD();
-            Type[] genericArgs = t.GetGenericArguments();
-            if (Util.IsInstanceOfGenericType(typeof(List<>), t))
-            {
-                OSDArray array = new OSDArray();
-                var list = Util.MakeList(Activator.CreateInstance(genericArgs[0]));
-                System.Collections.IList collection = (System.Collections.IList)o;
-                foreach (object item in collection)
-                {
-                    array.Add(MakeOSD(item, genericArgs[0]));
-                }
-                return array;
-            }
-            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
-            {
-                OSDMap array = new OSDMap();
-                var list = Util.MakeDictionary(Activator.CreateInstance(genericArgs[0]),
-                    Activator.CreateInstance(genericArgs[1]));
-                System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
-                foreach (System.Collections.DictionaryEntry item in collection)
-                {
-                    array.Add(MakeOSD(item.Key, genericArgs[0]), MakeOSD(item.Value, genericArgs[1]));
-                }
-                return array;
-            }
-            return null;
-        }
-
-        private object MakeListFromArray(OSDArray array, ParameterInfo param)
-        {
-            Type t = param.ParameterType.GetGenericArguments()[0];
-            System.Collections.IList list = (System.Collections.IList)Util.OSDToObject(array, t);
-            if (t.BaseType == typeof(IDataTransferable))
-            {
-                IDataTransferable defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                var newList = Util.MakeList(defaultInstance);
-                foreach (object o in list)
-                {
-                    defaultInstance.FromOSD((OSDMap)o);
-                    newList.Add(defaultInstance);
-                    defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                }
-                return newList;
-            }
-
-            return list;
-        }
-
-        private object MakeDictionaryFromArray(OSDMap array, ParameterInfo param)
-        {
-            var list = (System.Collections.IDictionary)Util.OSDToObject(array, param.ParameterType.GetGenericArguments()[1]);
-            Type t = param.ParameterType.GetGenericArguments()[0];
-            if (t.BaseType == typeof(IDataTransferable))
-            {
-                IDataTransferable defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                var newList = Util.MakeDictionary("", defaultInstance);
-                foreach (KeyValuePair<object, object> o in list)
-                {
-                    defaultInstance.FromOSD((OSDMap)o.Value);
-                    newList.Add(o.Key.ToString(), defaultInstance);
-                    defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                }
-                return newList;
-            }
-            return list;
         }
     }
 }
