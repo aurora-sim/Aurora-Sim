@@ -36,7 +36,7 @@ namespace Aurora.DataManager.Migration.Migrators
     {
         public EstateMigrator_1()
         {
-            Version = new Version(0, 0, 0);
+            Version = new Version(0, 0, 1);
             MigrationName = "Estate";
 
             schema = new List<Rec<string, ColumnDefinition[]>>();

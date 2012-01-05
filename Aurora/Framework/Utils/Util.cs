@@ -1658,46 +1658,76 @@ namespace Aurora.Framework
 
         public static object OSDToObject(OSD o, Type PossibleArrayType)
         {
+            if (PossibleArrayType == typeof(UUID))
+                return o.AsUUID();
+            if (PossibleArrayType == typeof(string))
+                return o.AsString();
+            if (PossibleArrayType == typeof(int))
+                return o.AsInteger();
+            if (PossibleArrayType == typeof(byte[]))
+                return o.AsBinary();
+            if (PossibleArrayType == typeof(bool))
+                return o.AsBoolean();
+            if (PossibleArrayType == typeof(Color4))
+                return o.AsColor4();
+            if (PossibleArrayType == typeof(DateTime))
+                return o.AsDate();
+            if (PossibleArrayType == typeof(long))
+                return o.AsLong();
+            if (PossibleArrayType == typeof(Quaternion))
+                return o.AsQuaternion();
+            if (PossibleArrayType == typeof(float))
+                return (float)o.AsReal();
+            if (PossibleArrayType == typeof(double))
+                return o.AsReal();
+            if (PossibleArrayType == typeof(uint))
+                return o.AsUInteger();
+            if (PossibleArrayType == typeof(ulong))
+                return o.AsULong();
+            if (PossibleArrayType == typeof(Uri))
+                return o.AsUri();
+            if (PossibleArrayType == typeof(Vector2))
+                return o.AsVector2();
+            if (PossibleArrayType == typeof(Vector3))
+                return o.AsVector3();
+            if (PossibleArrayType == typeof(Vector3d))
+                return o.AsVector3d();
+            if (PossibleArrayType == typeof(Vector4))
+                return o.AsVector4();
             if (o.Type == OSDType.Array)
             {
                 OSDArray array = (OSDArray)o;
                 var possArrayType = Activator.CreateInstance(PossibleArrayType);
-                var list = MakeList(possArrayType);
+                IList list = (IList)possArrayType;
+                Type t = PossibleArrayType.GetGenericArguments()[0];
                 foreach (OSD oo in array)
                 {
-                    list.Add(oo);
+                    list.Add(OSDToObject(oo, t));
                 }
                 return list;
+            }
+            
+            var possType = Activator.CreateInstance(PossibleArrayType);
+            if (possType is IDataTransferable)
+            {
+                IDataTransferable data = (IDataTransferable)possType;
+                data.FromOSD((OSDMap)o);
+                return data;
             }
             else if (o.Type == OSDType.Map)
             {
                 OSDMap array = (OSDMap)o;
                 var possArrayTypeB = Activator.CreateInstance(PossibleArrayType);
-                var list = MakeDictionary("", possArrayTypeB);
+                var list = (IDictionary)possArrayTypeB;
+                Type t = PossibleArrayType.GetGenericArguments()[1];
+                Type tt = PossibleArrayType.GetGenericArguments()[0];
                 foreach (KeyValuePair<string, OSD> oo in array)
                 {
-                    list.Add(oo.Key, oo.Value);
+                    list.Add(OSDToObject(oo.Key, tt), OSDToObject(oo.Value, t));
                 }
                 return list;
             }
-            else if (o.Type == OSDType.Binary)
-                return o.AsBinary();
-            else if (o.Type == OSDType.Boolean)
-                return o.AsBoolean();
-            else if (o.Type == OSDType.Date)
-                return o.AsDate();
-            else if (o.Type == OSDType.Integer)
-                return o.AsInteger();
-            else if (o.Type == OSDType.Real)
-                return o.AsReal();
-            else if (o.Type == OSDType.String)
-                return o.AsString();
-            else if (o.Type == OSDType.URI)
-                return o.AsUri();
-            else if (o.Type == OSDType.UUID)
-                return o.AsUUID();
-            else
-                return o.AsString();
+            return null;
         }
 
         public static List<T> MakeList<T>(T itemOftype)

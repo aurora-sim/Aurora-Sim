@@ -169,7 +169,7 @@ namespace Aurora.Services.DataService
                 return (int)remoteValue;
 
             List<string> retVal = GD.Query(new string[] { "EstateOwner", "EstateName" },
-                new object[] { ownerID, name }, "estate", "EstateID");
+                new object[] { ownerID, name }, "estatesettings", "EstateID");
             if (retVal.Count > 0)
                 return int.Parse(retVal[0]);
             return 0;
