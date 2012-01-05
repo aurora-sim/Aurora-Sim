@@ -115,20 +115,31 @@ namespace OpenSim.Services
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
-        protected static Dictionary<string, MethodImplementation> m_methods = new Dictionary<string, MethodImplementation>();
+        protected static Dictionary<string, List<MethodImplementation>> m_methods = new Dictionary<string, List<MethodImplementation>>();
 
         public ServerHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_SessionID = SessionID;
             m_registry = registry;
+            m_methods = new Dictionary<string, List<MethodImplementation>>();
+            List<string> alreadyRunPlugins = new List<string>();
             foreach(IAuroraDataPlugin plugin in Aurora.DataManager.DataManager.GetPlugins())
             {
+                if (alreadyRunPlugins.Contains(plugin.Name))
+                    continue;
+                alreadyRunPlugins.Add(plugin.Name);
                 foreach (MethodInfo method in plugin.GetType().GetMethods())
                 {
-                    if (!m_methods.ContainsKey(method.Name))
-                        if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
-                            m_methods.Add(method.Name, new MethodImplementation() { Method = method, Reference = plugin });
+                    if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                    {
+                        List<MethodImplementation> methods = new List<MethodImplementation>();
+                        MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
+                        if (!m_methods.TryGetValue(method.Name, out methods))
+                            m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
+
+                        methods.Add(imp);
+                    }
                 }
             }
         }
@@ -149,7 +160,7 @@ namespace OpenSim.Services
                 string method = args["Method"].AsString();
 
                 MethodImplementation methodInfo;
-                if (m_methods.TryGetValue(method, out methodInfo))
+                if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                 {
                     if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
                         return new byte[0];
@@ -177,6 +188,29 @@ namespace OpenSim.Services
             }
 
             return new byte[0];
+        }
+
+        private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)
+        {
+            List<MethodImplementation> methods = new List<MethodImplementation>();
+            if (m_methods.TryGetValue(method, out methods))
+            {
+                if (methods.Count == 1)
+                {
+                    methodInfo = methods[0];
+                    return true;
+                }
+                foreach (MethodImplementation m in methods)
+                {
+                    if (m.Method.GetParameters().Length == parameters)
+                    {
+                        methodInfo = m;
+                        return true;
+                    }
+                }
+            }
+            methodInfo = null;
+            return false;
         }
 
         private OSD MakeOSD(object o, Type t)

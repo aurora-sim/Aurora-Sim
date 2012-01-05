@@ -188,13 +188,12 @@ namespace Aurora.Services.DataService
             return regions;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
             return GetEstates(OwnerID, new Dictionary<string,bool>(0));
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(OwnerID);
@@ -219,9 +218,7 @@ namespace Aurora.Services.DataService
                 }
 
                 if (Add)
-                {
                     settings.Add(es);
-                }
             }
             return settings;
         }
