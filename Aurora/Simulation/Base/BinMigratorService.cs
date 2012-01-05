@@ -11,7 +11,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 2;
+        private const int _currentBinVersion = 3;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -86,11 +86,20 @@ namespace Aurora.Simulation.Base
 
         public void RunMigration3()
         {
-            IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini.example", "AuroraConnectors",
-                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
-                new[] { MigratorAction.Add, MigratorAction.Add });
             IniMigrator.UpdateIniFile("Configuration/Standalone/Standalone.ini", "AuroraConnectors",
                 new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+
+            IniMigrator.UpdateIniFile("Configuration/Standalone/StandaloneIWC.ini", "AuroraConnectors",
+                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "False" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+
+            IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
+                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "True", "False" },
+                new[] { MigratorAction.Add, MigratorAction.Add });
+
+            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "AuroraConnectors",
+                new[] { "DoRemoteCalls", "AllowRemoteCalls" }, new[] { "False", "True" },
                 new[] { MigratorAction.Add, MigratorAction.Add });
         }
     }
@@ -105,6 +114,8 @@ namespace Aurora.Simulation.Base
     {
         public static void UpdateIniFile(string fileName, string handler, string[] names, string[] values, MigratorAction[] actions)
         {
+            if (File.Exists(fileName + ".example"))//Update the .example files too if people haven't
+                UpdateIniFile(fileName + ".example", handler, names, values, actions);
             if (File.Exists(fileName))
             {
                 IniConfigSource doc = new IniConfigSource(fileName, IniFileType.AuroraStyle);

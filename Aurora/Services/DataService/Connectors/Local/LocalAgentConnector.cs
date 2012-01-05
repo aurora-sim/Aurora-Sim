@@ -70,6 +70,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
             /*object remoteValue = DoRemoteForUser(agentID, agentID);
@@ -99,6 +100,7 @@ namespace Aurora.Services.DataService
         ///   Note: we only allow for this on the grid side
         /// </summary>
         /// <param name = "agent"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
             /*object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());

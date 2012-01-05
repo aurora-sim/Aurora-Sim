@@ -89,8 +89,8 @@ namespace OpenSim.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("ServerHandler", Name) != Name)
+            IConfig handlerConfig = config.Configs["AuroraConnectors"];
+            if (!handlerConfig.GetBoolean("AllowRemoteCalls", false))
                 return;
 
             m_registry = registry;
@@ -109,10 +109,6 @@ namespace OpenSim.Services
     {
         public MethodInfo Method;
         public IAuroraDataPlugin Reference;
-    }
-
-    public class CanBeReflected : Attribute
-    {
     }
 
     public unsafe class ServerHandler : BaseStreamHandler
@@ -155,6 +151,9 @@ namespace OpenSim.Services
                 MethodImplementation methodInfo;
                 if (m_methods.TryGetValue(method, out methodInfo))
                 {
+                    if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
+                        return new byte[0];
+
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                     object[] parameters = new object[paramInfo.Length];
                     int paramNum = 0;
@@ -163,8 +162,9 @@ namespace OpenSim.Services
                             parameters[paramNum++] = MakeListFromArray((OSDArray)args[param.Name], param);
                         else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), param.ParameterType))
                             parameters[paramNum++] = MakeDictionaryFromArray((OSDMap)args[param.Name], param);
-                        else 
-                            parameters[paramNum++] = args[param.Name];
+                        else
+                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                    
                     object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
@@ -179,10 +179,55 @@ namespace OpenSim.Services
             return new byte[0];
         }
 
+        private object ToOSD(OSD o, Type type)
+        {
+            if (type == typeof(UUID))
+                return o.AsUUID();
+            if (type == typeof(string))
+                return o.AsString();
+            if (type == typeof(int))
+                return o.AsInteger();
+            if (type == typeof(byte[]))
+                return o.AsBinary();
+            if (type == typeof(bool))
+                return o.AsBoolean();
+            if (type == typeof(Color4))
+                return o.AsColor4();
+            if (type == typeof(DateTime))
+                return o.AsDate();
+            if (type == typeof(long))
+                return o.AsLong();
+            if (type == typeof(Quaternion))
+                return o.AsQuaternion();
+            if (type == typeof(float))
+                return (float)o.AsReal();
+            if (type == typeof(double))
+                return o.AsReal();
+            if (type == typeof(uint))
+                return o.AsUInteger();
+            if (type == typeof(ulong))
+                return o.AsULong();
+            if (type == typeof(Uri))
+                return o.AsUri();
+            if (type == typeof(Vector2))
+                return o.AsVector2();
+            if (type == typeof(Vector3))
+                return o.AsVector3();
+            if (type == typeof(Vector3d))
+                return o.AsVector3d();
+            if (type == typeof(Vector4))
+                return o.AsVector4();
+            MainConsole.Instance.Error("COULD NOT FIND OSD TYPE FOR " + type.ToString());
+            return null;
+        }
+
         private OSD MakeOSD(object o, MethodImplementation methodInfo)
         {
             if (o is OSD)
                 return (OSD)o;
+            OSD oo;
+            if ((oo =OSD.FromObject(o)).Type != OSDType.Unknown)
+                return (OSD)oo;
             if (o is IDataTransferable)
                 return ((IDataTransferable)o).ToOSD();
             if (Util.IsInstanceOfGenericType(typeof(List<>), methodInfo.Method.ReturnParameter.ParameterType))

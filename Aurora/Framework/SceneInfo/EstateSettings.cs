@@ -57,7 +57,6 @@ namespace Aurora.Framework
         private string m_EstateName = "My Estate";
         private UUID m_EstateOwner = UUID.Zero;
 
-        private string m_EstatePass = "";
         private uint m_ParentEstateID = 1;
         private int m_PricePerMeter = 1;
         private bool m_PublicAccess = true;
@@ -78,12 +77,6 @@ namespace Aurora.Framework
         {
             get { return m_EstateName; }
             set { m_EstateName = value; }
-        }
-
-        public string EstatePass
-        {
-            get { return m_EstatePass; }
-            set { m_EstatePass = value; }
         }
 
         public bool AllowLandmark
@@ -218,33 +211,31 @@ namespace Aurora.Framework
             OSDMap values = (OSDMap) v;
             EstateID = (uint) values["EstateID"].AsInteger();
             EstateName = values["EstateName"].AsString();
-            AbuseEmailToEstateOwner = values["AbuseEmailToEstateOwner"].AsInteger() == 1;
-            DenyAnonymous = values["DenyAnonymous"].AsInteger() == 1;
-            ResetHomeOnTeleport = values["ResetHomeOnTeleport"].AsInteger() == 1;
-            FixedSun = values["FixedSun"].AsInteger() == 1;
-            DenyTransacted = values["DenyTransacted"].AsInteger() == 1;
-            BlockDwell = values["BlockDwell"].AsInteger() == 1;
-            DenyIdentified = values["DenyIdentified"].AsInteger() == 1;
-            AllowVoice = values["AllowVoice"].AsInteger() == 1;
-            UseGlobalTime = values["UseGlobalTime"].AsInteger() == 1;
+            AbuseEmailToEstateOwner = values["AbuseEmailToEstateOwner"].AsBoolean();
+            DenyAnonymous = values["DenyAnonymous"].AsBoolean();
+            ResetHomeOnTeleport = values["ResetHomeOnTeleport"].AsBoolean();
+            FixedSun = values["FixedSun"].AsBoolean();
+            DenyTransacted = values["DenyTransacted".AsBoolean()];
+            BlockDwell = values["BlockDwell"].AsBoolean();
+            DenyIdentified = values["DenyIdentified"].AsBoolean();
+            AllowVoice = values["AllowVoice"].AsBoolean();
+            UseGlobalTime = values["UseGlobalTime"].AsBoolean();
             PricePerMeter = values["PricePerMeter"].AsInteger();
-            TaxFree = values["TaxFree"].AsInteger() == 1;
-            AllowDirectTeleport = values["AllowDirectTeleport"].AsInteger() == 1;
+            TaxFree = values["TaxFree"].AsBoolean();
+            AllowDirectTeleport = values["AllowDirectTeleport"].AsBoolean();
             RedirectGridX = values["RedirectGridX"].AsInteger();
             RedirectGridY = values["RedirectGridY"].AsInteger();
             ParentEstateID = (uint) values["ParentEstateID"].AsInteger();
             SunPosition = values["SunPosition"].AsReal();
-            EstateSkipScripts = values["EstateSkipScripts"].AsInteger() == 1;
+            EstateSkipScripts = values["EstateSkipScripts"].AsBoolean();
             BillableFactor = (float) values["BillableFactor"].AsReal();
-            PublicAccess = values["PublicAccess"].AsInteger() == 1;
+            PublicAccess = values["PublicAccess"].AsBoolean();
             AbuseEmail = values["AbuseEmail"].AsString();
             EstateOwner = values["EstateOwner"].AsUUID();
-            AllowLandmark = values["AllowLandmark"].AsInteger() == 1;
-            AllowParcelChanges = values["AllowParcelChanges"].AsInteger() == 1;
-            AllowSetHome = values["AllowSetHome"].AsInteger() == 1;
-            DenyMinors = values["DenyMinors"].AsInteger() == 1;
-            //We always try to pull this in if it exists
-            EstatePass = values["EstatePass"].AsString();
+            AllowLandmark = values["AllowLandmark"].AsBoolean();
+            AllowParcelChanges = values["AllowParcelChanges"].AsBoolean();
+            AllowSetHome = values["AllowSetHome"].AsBoolean();
+            DenyMinors = values["DenyMinors"].AsBoolean();
 
             OSDMap Managers = values["EstateManagers"] as OSDMap;
 #if (!ISWIN)
@@ -317,7 +308,6 @@ namespace Aurora.Framework
             values["AllowLandmark"] = AllowLandmark;
             values["AllowParcelChanges"] = AllowParcelChanges;
             values["AllowSetHome"] = AllowSetHome;
-            values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
 
             OSDMap Ban = new OSDMap();
             int i = 0;
@@ -387,9 +377,6 @@ namespace Aurora.Framework
             AllowParcelChanges = int.Parse(values["AllowParcelChanges"].ToString()) == 1;
             AllowSetHome = int.Parse(values["AllowSetHome"].ToString()) == 1;
             DenyMinors = int.Parse(values["DenyMinors"].ToString()) == 1;
-            //We always try to pull this in if it exists
-            if (values.ContainsKey("EstatePass"))
-                EstatePass = values["EstatePass"].ToString();
 
             Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
 #if (!ISWIN)
@@ -462,7 +449,6 @@ namespace Aurora.Framework
             values["AllowLandmark"] = AllowLandmark ? 1 : 0;
             values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
             values["AllowSetHome"] = AllowSetHome ? 1 : 0;
-            values["EstatePass"] = EstatePass; //For security, this is not sent unless it is for local
 
             Dictionary<string, object> Ban = new Dictionary<string, object>();
             int i = 0;

@@ -42,14 +42,21 @@ namespace Aurora.Services.DataService
     public class ConnectorBase
     {
         protected IRegistryCore m_registry;
-        protected IConfigurationService m_configService;
+        protected IConfigurationService m_configService
+        {
+            get { return m_registry.RequestModuleInterface<IConfigurationService>(); }
+        }
+        protected bool m_doRemoteCalls = false;
         protected string m_name;
 
         public void Init(IRegistryCore registry, string name)
         {
             m_registry = registry;
-            m_configService = m_registry.RequestModuleInterface<IConfigurationService>();
             m_name = name;
+            IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
+            IConfig config;
+            if ((config = source.Configs["AuroraConnectors"]) != null)
+                m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
         }
 
         public object DoRemote(params OSD[] o)
@@ -59,8 +66,13 @@ namespace Aurora.Services.DataService
 
         public object DoRemoteForUser(UUID userID, params OSD[] o)
         {
+            if (!m_doRemoteCalls)
+                return null;
             StackTrace stackTrace = new StackTrace();
-            MethodInfo method = (MethodInfo)stackTrace.GetFrame(1).GetMethod();
+            int upStack = 1;
+            if (userID == UUID.Zero)
+                upStack = 2;
+            MethodInfo method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
             string methodName = method.Name;
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
@@ -78,17 +90,17 @@ namespace Aurora.Services.DataService
                 if (GetOSDMap(uri, map, out response))
                     break;
             }
-            if (!response)
+            if (response == null || !response)
                 return null;
             object inst =  Activator.CreateInstance(method.ReturnType);
             if (inst is IDataTransferable)
             {
                 IDataTransferable instance = (IDataTransferable)inst;
-                instance.FromOSD(response);
+                instance.FromOSD((OSDMap)response["Value"]);
                 return instance;
             }
             else
-                return response["Value"];
+                return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)

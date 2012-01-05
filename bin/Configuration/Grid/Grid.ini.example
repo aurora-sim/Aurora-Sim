@@ -7,7 +7,7 @@
 [Modules]
     EntityTransferModule = BasicEntityTransferModule
     InventoryAccessModule = BasicInventoryAccessModule
-    
+
 [AuroraConnectors]
     AbuseReportsConnector = LocalConnector
     AvatarArchiverConnector = LocalConnector
@@ -24,11 +24,13 @@
     OfflineMessagesConnector = RemoteConnector
     DirectoryServiceConnector = RemoteConnector
     MuteListConnector = RemoteConnector
-	EmailConnector = RemoteConnector
-    
+    EmailConnector = RemoteConnector
+
+    DoRemoteCalls = True
+    AllowRemoteCalls = False
 [Configuration]
     UseRegistrationService = false
-    
+
 [Handlers]
 
     AbuseReportHandler = AbuseReportsConnector
@@ -44,7 +46,7 @@
     FriendsHandler = FriendsServicesConnector
     GridHandler = GridServicesConnector
     InventoryHandler = XInventoryServicesConnector
-	MessagingServiceInHandler = MessagingServiceInHandler
+    MessagingServiceInHandler = MessagingServiceInHandler
     SyncMessagePosterServiceHandler = RemoteSyncMessagePosterService
     UserAccountHandler = UserAccountServicesConnector
 

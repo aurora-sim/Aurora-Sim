@@ -650,33 +650,32 @@ namespace OpenSim.CoreApplicationPlugins
                     Aurora.Framework.IEstateConnector estateService = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEstateConnector>();
                     if (estateService == null)
                         throw new Exception("No estate service available.");
-                    List<int> estateIDs = estateService.GetEstates((string)requestData["estate_name"]);
-                    if (estateIDs.Count < 1)
+                    UUID userID = UUID.Zero;
+                    if (requestData.ContainsKey("estate_owner_uuid"))
                     {
-                        UUID userID = UUID.Zero;
-                        if (requestData.ContainsKey("estate_owner_uuid"))
-                        {
-                            // ok, client wants us to use an explicit UUID
-                            // regardless of what the avatar name provided
-                            userID = new UUID((string)requestData["estate_owner_uuid"]);
-                        }
-                        else if (requestData.ContainsKey("estate_owner_first") & requestData.ContainsKey("estate_owner_last"))
-                        {
-                            // We need to look up the UUID for the avatar with the provided name.
-                            string ownerFirst = (string)requestData["estate_owner_first"];
-                            string ownerLast = (string)requestData["estate_owner_last"];
+                        // ok, client wants us to use an explicit UUID
+                        // regardless of what the avatar name provided
+                        userID = new UUID((string)requestData["estate_owner_uuid"]);
+                    }
+                    else if (requestData.ContainsKey("estate_owner_first") & requestData.ContainsKey("estate_owner_last"))
+                    {
+                        // We need to look up the UUID for the avatar with the provided name.
+                        string ownerFirst = (string)requestData["estate_owner_first"];
+                        string ownerLast = (string)requestData["estate_owner_last"];
 
-                            IScene currentOrFirst = manager.CurrentOrFirstScene;
-                            IUserAccountService accountService = currentOrFirst.UserAccountService;
-                            UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
-                                                                               ownerFirst, ownerLast);
-                            userID = user.PrincipalID;
-                        }
-                        else
-                        {
-                            throw new Exception("Estate owner details not provided.");
-                        }
-
+                        IScene currentOrFirst = manager.CurrentOrFirstScene;
+                        IUserAccountService accountService = currentOrFirst.UserAccountService;
+                        UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
+                                                                           ownerFirst, ownerLast);
+                        userID = user.PrincipalID;
+                    }
+                    else
+                    {
+                        throw new Exception("Estate owner details not provided.");
+                    }
+                    int estateID = estateService.GetEstate(userID, (string)requestData["estate_name"]);
+                    if (estateID != 0)
+                    {
                         // Create a new estate with the name provided
                         //region.EstateSettings = estateService.LoadEstateSettings(region.RegionID);
 

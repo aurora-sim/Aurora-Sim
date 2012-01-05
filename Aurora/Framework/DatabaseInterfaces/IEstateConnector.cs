@@ -38,7 +38,15 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "regionID"></param>
         /// <returns></returns>
-        bool LoadEstateSettings(UUID regionID, out EstateSettings settings);
+        EstateSettings GetEstateSettings(UUID regionID);
+
+        /// <summary>
+        ///   Creates a new estate from the given info, returns the updated info
+        /// </summary>
+        /// <param name = "ES"></param>
+        /// <param name = "RegionID"></param>
+        /// <returns></returns>
+        int CreateNewEstate(EstateSettings ES, UUID RegionID);
 
         /// <summary>
         ///   Updates the given Estate data in the database
@@ -47,18 +55,18 @@ namespace Aurora.Framework
         void SaveEstateSettings(EstateSettings es);
 
         /// <summary>
-        ///   Gets the estates that have the given name
+        ///   Gets the estates that have the given name and owner
         /// </summary>
         /// <param name = "search"></param>
         /// <returns></returns>
-        List<int> GetEstates(string name);
+        int GetEstate(UUID ownerID, string name);
 
         /// <summary>
         ///   Get all regions in the current estate
         /// </summary>
         /// <param name = "estateID"></param>
         /// <returns></returns>
-        List<UUID> GetRegions(uint estateID);
+        List<UUID> GetRegions(int estateID);
 
         /// <summary>
         ///   Gets the estates that have the given owner
@@ -80,33 +88,23 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "regionID"></param>
         /// <param name = "estateID"></param>
-        /// <param name = "password"></param>
         /// <returns></returns>
-        bool LinkRegion(UUID regionID, int estateID, string password);
+        bool LinkRegion(UUID regionID, int estateID);
 
         /// <summary>
-        ///   Remove an existing region from the estate, authenticates with the password
+        ///   Remove an existing region from the estate
         /// </summary>
         /// <param name = "regionID"></param>
         /// <param name = "estateID"></param>
-        /// <param name = "password"></param>
         /// <returns></returns>
-        bool DelinkRegion(UUID regionID, string password);
+        bool DelinkRegion(UUID regionID);
 
         /// <summary>
-        ///   Deletes the given estate by its estate ID, must be authenticated with the password
+        ///   Deletes the given estate by its estate ID
         /// </summary>
         /// <param name = "estateID"></param>
         /// <param name = "password"></param>
         /// <returns></returns>
-        bool DeleteEstate(int estateID, string password);
-
-        /// <summary>
-        ///   Creates a new estate from the given info, returns the updated info
-        /// </summary>
-        /// <param name = "ES"></param>
-        /// <param name = "RegionID"></param>
-        /// <returns></returns>
-        EstateSettings CreateEstate(EstateSettings ES, UUID RegionID);
+        bool DeleteEstate(int estateID);
     }
 }

@@ -114,8 +114,6 @@ namespace Aurora.Modules.Gods
 
         #region Client
 
-        private readonly Dictionary<UUID, EstateChange> ChannelDirectory = new Dictionary<UUID, EstateChange>();
-
         private void OnNewClient(IClientAPI client)
         {
             client.OnGodUpdateRegionInfoUpdate += GodUpdateRegionInfoUpdate;
@@ -204,42 +202,14 @@ namespace Aurora.Modules.Gods
             //Update the estate ID
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
             {
-                //If they are changing estates, we have to ask them for the password to the estate, so send them an llTextBox
-                const string Password = "";
-                IWorldComm comm = client.Scene.RequestModuleInterface<IWorldComm>();
-                IDialogModule dialog = client.Scene.RequestModuleInterface<IDialogModule>();
-                //If the comms module is not null, we send the user a text box on a random channel so that they cannot be tapped into
-                if (comm != null && dialog != null)
-                {
-                    int Channel = new Random().Next(1000, 100000);
-                    //Block the channel so NOONE can access it until the question is answered
-                    comm.AddBlockedChannel(Channel);
-                    ChannelDirectory.Add(client.AgentId,
-                                         new EstateChange
-                                             {
-                                                 Channel = Channel,
-                                                 EstateID = (uint) EstateID,
-                                                 OldEstateID = client.Scene.RegionInfo.EstateSettings.EstateID
-                                             });
-                    //Set the ID temperarily, if it doesn't work, we will revert it later
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
-                    client.OnChatFromClient += OnChatFromClient;
-                    dialog.SendTextBoxToUser(client.AgentId,
-                                             "Please type the password for the estate you wish to join. (Note: this channel is secured and will not be able to be listened in on)",
-                                             Channel, "Server", UUID.Zero, UUID.Zero);
-                }
+                bool changed = DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
+                            client.Scene.RegionInfo.RegionID, (int)EstateID);
+                if (!changed)
+                    client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                 else
                 {
-                    bool changed =
-                        DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
-                            client.Scene.RegionInfo.RegionID, (int) EstateID, Util.Md5Hash(Password));
-                    if (!changed)
-                        client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
-                    else
-                    {
-                        client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
-                        client.Scene.RegionInfo.EstateSettings.Save();
-                    }
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    client.Scene.RegionInfo.EstateSettings.Save();
                 }
             }
 
@@ -298,59 +268,6 @@ namespace Aurora.Modules.Gods
             IGridRegisterModule gridRegisterModule = client.Scene.RequestModuleInterface<IGridRegisterModule>();
             if (gridRegisterModule != null)
                 gridRegisterModule.UpdateGridRegion(client.Scene);
-        }
-
-        /// <summary>
-        ///   This sets the estateID for the region if the estate password is set right
-        /// </summary>
-        /// <param name = "sender"></param>
-        /// <param name = "e"></param>
-        protected void OnChatFromClient(object sender, OSChatMessage e)
-        {
-            //For Estate Password
-            EstateChange Change = null;
-            if (ChannelDirectory.TryGetValue(e.Sender.AgentId, out Change))
-            {
-                //Check whether the channel is right
-                if (Change.Channel == e.Channel)
-                {
-                    ((IClientAPI) sender).OnChatFromClient -= OnChatFromClient;
-                    ChannelDirectory.Remove(e.Sender.AgentId);
-                    IWorldComm comm = ((IClientAPI) sender).Scene.RequestModuleInterface<IWorldComm>();
-                    //Unblock the channel now that we have the password
-                    comm.RemoveBlockedChannel(Change.Channel);
-
-                    string Password = Util.Md5Hash(e.Message);
-                    //Try to switch estates
-                    bool changed =
-                        DataManager.DataManager.RequestPlugin<IEstateConnector>().LinkRegion(
-                            ((IClientAPI) sender).Scene.RegionInfo.RegionID, (int) Change.EstateID, Password);
-                    if (!changed)
-                    {
-                        //Revert it, it didn't work
-                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.EstateID = Change.OldEstateID;
-                        ((IClientAPI) sender).SendAgentAlertMessage("Unable to connect to the given estate.", false);
-                    }
-                    else
-                    {
-                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.EstateID = Change.EstateID;
-                        ((IClientAPI) sender).Scene.RegionInfo.EstateSettings.Save();
-                        ((IClientAPI) sender).SendAgentAlertMessage("Estate Updated.", false);
-                    }
-                    //Tell the clients to update all references to the new settings
-                    foreach (IScenePresence sp in ((IClientAPI) sender).Scene.GetScenePresences())
-                    {
-                        HandleRegionInfoRequest(sp.ControllingClient, ((IClientAPI) sender).Scene);
-                    }
-                }
-            }
-        }
-
-        private class EstateChange
-        {
-            public int Channel;
-            public uint EstateID;
-            public uint OldEstateID;
         }
 
         #endregion
