@@ -279,8 +279,8 @@ namespace Aurora.DataManager.SQLite
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             string query = "";
-            query = String.Format("select {0} from {1} where {2}",
-                                  wantedValue, table, whereClause);
+            query = String.Format("select {0} from {1}{3} {2}",
+                wantedValue, table, whereClause, whereClause.StartsWith("ORDER") ? "" : " where");
             var cmd = PrepReader(query);
             using (IDataReader reader = cmd.ExecuteReader())
             {

@@ -179,8 +179,8 @@ namespace Aurora.DataManager.MySQL
         {
             IDataReader reader = null;
             List<string> retVal = new List<string>();
-            string query = String.Format("select {0} from {1} where {2}",
-                                         wantedValue, table, whereClause);
+            string query = String.Format("select {0} from {1}{3} {2}",
+                wantedValue, table, whereClause, whereClause.StartsWith("ORDER") ? "" : " where");
             try
             {
                 using (reader = Query(query, new Dictionary<string, object>()))
