@@ -29,14 +29,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Aurora.Framework;
-using Aurora.Framework.Serialization;
+
+using Nini.Config;
+
+using OpenMetaverse.StructuredData;
+
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
-using Nini.Config;
-using Aurora.DataManager;
+
+using Aurora.Framework;
+using Aurora.Framework.Serialization;
 using Aurora.Simulation.Base;
-using OpenMetaverse.StructuredData;
+using Aurora.DataManager;
 
 namespace Aurora.Modules.Estate
 {
