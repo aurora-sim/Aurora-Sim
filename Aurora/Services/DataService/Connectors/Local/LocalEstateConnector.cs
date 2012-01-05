@@ -204,6 +204,11 @@ namespace Aurora.Services.DataService
 
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
+            return GetEstates(OwnerID, new Dictionary<string, bool>(0));
+        }
+
+        public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
+        {
             List<EstateSettings> result = new List<EstateSettings>();
             List<string> RetVal = GD.Query("", "", "estates", "`Value`", " where `Key` = 'EstateSettings' and `Value` LIKE '%<key>EstateOwner</key><uuid>" + OwnerID + "</uuid>%'");
             if (RetVal.Count == 0)
@@ -219,7 +224,26 @@ namespace Aurora.Services.DataService
                         EstateSettings es = LoadEstateSettings(estateInfo["EstateID"].AsInteger());
                         es.EstatePass = "";//No sending it out, ever!
                         if (es != null)
-                            result.Add(es);
+                        {
+                            bool Add = true;
+                            if (boolFields.Count > 0)
+                            {
+                                OSDMap eskvp = es.ToOSD();
+                                foreach (KeyValuePair<string, bool> field in boolFields)
+                                {
+                                    if (eskvp.ContainsKey(field.Key) && eskvp[field.Key] != field.Value)
+                                    {
+                                        Add = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if(Add)
+                            {
+                                result.Add(es);
+                            }
+                        }
                     }
                 }
                 catch { }

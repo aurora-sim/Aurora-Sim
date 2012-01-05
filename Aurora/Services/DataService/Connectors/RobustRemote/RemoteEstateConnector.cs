@@ -33,6 +33,7 @@ using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
@@ -230,7 +231,11 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public List<EstateSettings> GetEstates(UUID owner)
+        public List<EstateSettings> GetEstates(UUID owner){
+            return GetEstates(owner, new Dictionary<string, bool>(0));
+        }
+
+        public List<EstateSettings> GetEstates(UUID owner, Dictionary<string, bool> boolFields)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -262,8 +267,26 @@ namespace Aurora.Services.DataService
                                     Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
                                     foreach (object objobj in dictionary.Values)
                                     {
+
+                                        bool Add = true;
                                         EstateSettings es = new EstateSettings(objobj as Dictionary<string, object>);
-                                        Estates.Add(es);
+
+                                        if (boolFields.Count > 0)
+                                        {
+                                            OSDMap eskvp = es.ToOSD();
+                                            foreach (KeyValuePair<string, bool> field in boolFields)
+                                            {
+                                                if (eskvp.ContainsKey(field.Key) && eskvp[field.Key] != field.Value)
+                                                {
+                                                    Add = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (Add)
+                                        {
+                                            Estates.Add(es);
+                                        }
                                     }
                                 }
                             }
