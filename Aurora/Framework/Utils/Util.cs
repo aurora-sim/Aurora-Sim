@@ -1653,24 +1653,24 @@ namespace Aurora.Framework
 
         public static object OSDToObject(OSD o)
         {
-            return OSDToObject(o, null);
+            return OSDToObject(o, o.GetType());
         }
 
         public static object OSDToObject(OSD o, Type PossibleArrayType)
         {
-            if (PossibleArrayType == typeof(UUID))
+            if (o.Type == OSDType.UUID || PossibleArrayType == typeof(UUID))
                 return o.AsUUID();
-            if (PossibleArrayType == typeof(string))
+            if (PossibleArrayType == typeof(string) || PossibleArrayType == typeof(OSDString))
                 return o.AsString();
-            if (PossibleArrayType == typeof(int))
+            if (o.Type == OSDType.Integer || PossibleArrayType == typeof(int))
                 return o.AsInteger();
-            if (PossibleArrayType == typeof(byte[]))
+            if (o.Type == OSDType.Binary || PossibleArrayType == typeof(byte[]))
                 return o.AsBinary();
-            if (PossibleArrayType == typeof(bool))
+            if (o.Type == OSDType.Boolean || PossibleArrayType == typeof(bool))
                 return o.AsBoolean();
             if (PossibleArrayType == typeof(Color4))
                 return o.AsColor4();
-            if (PossibleArrayType == typeof(DateTime))
+            if (o.Type == OSDType.Date || PossibleArrayType == typeof(DateTime))
                 return o.AsDate();
             if (PossibleArrayType == typeof(long))
                 return o.AsLong();
@@ -1678,13 +1678,13 @@ namespace Aurora.Framework
                 return o.AsQuaternion();
             if (PossibleArrayType == typeof(float))
                 return (float)o.AsReal();
-            if (PossibleArrayType == typeof(double))
+            if (o.Type == OSDType.Real || PossibleArrayType == typeof(double))
                 return o.AsReal();
             if (PossibleArrayType == typeof(uint))
                 return o.AsUInteger();
             if (PossibleArrayType == typeof(ulong))
                 return o.AsULong();
-            if (PossibleArrayType == typeof(Uri))
+            if (o.Type == OSDType.URI || PossibleArrayType == typeof(Uri))
                 return o.AsUri();
             if (PossibleArrayType == typeof(Vector2))
                 return o.AsVector2();
@@ -1694,6 +1694,10 @@ namespace Aurora.Framework
                 return o.AsVector3d();
             if (PossibleArrayType == typeof(Vector4))
                 return o.AsVector4();
+            if (PossibleArrayType == typeof(OSDMap))
+                return (OSDMap)o;
+            if (PossibleArrayType == typeof(OSDArray))
+                return (OSDArray)o;
             if (o.Type == OSDType.Array)
             {
                 OSDArray array = (OSDArray)o;

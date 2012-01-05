@@ -170,7 +170,7 @@ namespace OpenSim.Services
                     if (o == null)//void method
                         response["Value"] = true;
                     else
-                        response["Value"] = MakeOSD(o, methodInfo);
+                        response["Value"] = MakeOSD(o, methodInfo.Method.ReturnType);
                     response["Success"] = true;
                     return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response));
                 }
@@ -179,49 +179,7 @@ namespace OpenSim.Services
             return new byte[0];
         }
 
-        private object ToOSD(OSD o, Type type)
-        {
-            if (type == typeof(UUID))
-                return o.AsUUID();
-            if (type == typeof(string))
-                return o.AsString();
-            if (type == typeof(int))
-                return o.AsInteger();
-            if (type == typeof(byte[]))
-                return o.AsBinary();
-            if (type == typeof(bool))
-                return o.AsBoolean();
-            if (type == typeof(Color4))
-                return o.AsColor4();
-            if (type == typeof(DateTime))
-                return o.AsDate();
-            if (type == typeof(long))
-                return o.AsLong();
-            if (type == typeof(Quaternion))
-                return o.AsQuaternion();
-            if (type == typeof(float))
-                return (float)o.AsReal();
-            if (type == typeof(double))
-                return o.AsReal();
-            if (type == typeof(uint))
-                return o.AsUInteger();
-            if (type == typeof(ulong))
-                return o.AsULong();
-            if (type == typeof(Uri))
-                return o.AsUri();
-            if (type == typeof(Vector2))
-                return o.AsVector2();
-            if (type == typeof(Vector3))
-                return o.AsVector3();
-            if (type == typeof(Vector3d))
-                return o.AsVector3d();
-            if (type == typeof(Vector4))
-                return o.AsVector4();
-            MainConsole.Instance.Error("COULD NOT FIND OSD TYPE FOR " + type.ToString());
-            return null;
-        }
-
-        private OSD MakeOSD(object o, MethodImplementation methodInfo)
+        private OSD MakeOSD(object o, Type t)
         {
             if (o is OSD)
                 return (OSD)o;
@@ -230,26 +188,27 @@ namespace OpenSim.Services
                 return (OSD)oo;
             if (o is IDataTransferable)
                 return ((IDataTransferable)o).ToOSD();
-            if (Util.IsInstanceOfGenericType(typeof(List<>), methodInfo.Method.ReturnParameter.ParameterType))
+            Type[] genericArgs = t.GetGenericArguments();
+            if (Util.IsInstanceOfGenericType(typeof(List<>), t))
             {
                 OSDArray array = new OSDArray();
-                var list = Util.MakeList(Activator.CreateInstance(methodInfo.Method.ReturnParameter.ParameterType.GetGenericArguments()[0]));
+                var list = Util.MakeList(Activator.CreateInstance(genericArgs[0]));
                 System.Collections.IList collection = (System.Collections.IList)o;
                 foreach (object item in collection)
                 {
-                    array.Add(MakeOSD(item, methodInfo));
+                    array.Add(MakeOSD(item, genericArgs[0]));
                 }
                 return array;
             }
-            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), methodInfo.Method.ReturnParameter.ParameterType))
+            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
             {
                 OSDMap array = new OSDMap();
-                var list = Util.MakeDictionary(Activator.CreateInstance(methodInfo.Method.ReturnParameter.ParameterType.GetGenericArguments()[0]),
-                    Activator.CreateInstance(methodInfo.Method.ReturnParameter.ParameterType.GetGenericArguments()[1]));
+                var list = Util.MakeDictionary(Activator.CreateInstance(genericArgs[0]),
+                    Activator.CreateInstance(genericArgs[1]));
                 System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
-                foreach (KeyValuePair<object, object> item in collection)
+                foreach (System.Collections.DictionaryEntry item in collection)
                 {
-                    array.Add(item.Key.ToString(), MakeOSD(item, methodInfo));
+                    array.Add(MakeOSD(item.Key, genericArgs[0]), MakeOSD(item.Value, genericArgs[1]));
                 }
                 return array;
             }
