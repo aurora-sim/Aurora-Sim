@@ -55,9 +55,6 @@ namespace Aurora.Services.DataService
             IConfig config;
             if ((config = source.Configs["AuroraConnectors"]) != null)
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
-
-            //IF YOU WANT TO ENABLE THE CONNECTORS, COMMENT/REMOVE THIS LINE
-            m_doRemoteCalls = false;
         }
 
         public object DoRemote(params OSD[] o)

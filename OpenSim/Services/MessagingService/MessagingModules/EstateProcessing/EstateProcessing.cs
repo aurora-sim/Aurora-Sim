@@ -82,7 +82,7 @@ namespace OpenSim.Services.MessagingService
                 IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
                 if (estateConnector != null)
                 {
-                    List<UUID> regions = estateConnector.GetRegions(es.EstateID);
+                    List<UUID> regions = estateConnector.GetRegions((int)es.EstateID);
                     if (regions != null)
                     {
                         foreach (UUID region in regions)
@@ -131,7 +131,7 @@ namespace OpenSim.Services.MessagingService
                             if (estateConnector != null)
                             {
                                 EstateSettings es = null;
-                                if (estateConnector.LoadEstateSettings(regionID, out es))
+                                if ((es = estateConnector.GetEstateSettings(regionID)) != null)
                                 {
                                     s.RegionInfo.EstateSettings = es;
                                     MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");

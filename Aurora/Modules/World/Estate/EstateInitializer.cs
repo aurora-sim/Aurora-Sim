@@ -110,29 +110,13 @@ namespace Aurora.Modules.Estate
                         continue;
                     //Set to auto connect to this region next
                     LastEstateName = ES.EstateName;
-
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.Prompt("New estate password (to keep others from joining your estate, blank to have no pass)", ES.EstatePass)));
-                    ES.EstatePass = Password;
                     ES.EstateOwner = account.PrincipalID;
 
-                    ES = EstateConnector.CreateEstate(ES, scene.RegionInfo.RegionID);
-                    if (ES == null)
-                    {
-                        MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
-                        continue;
-                    }
+                    ES.EstateID = (uint)EstateConnector.CreateNewEstate(ES, scene.RegionInfo.RegionID);
                     if (ES.EstateID == 0)
                     {
                         MainConsole.Instance.Warn("There was an error in creating this estate: " + ES.EstateName); //EstateName holds the error. See LocalEstateConnector for more info.
                         continue;
-                    }
-                    //We set this back if there wasn't an error because the EstateService will NOT send it back
-                    ES.EstatePass = Password;
-                    IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                    EstatePassword s = new EstatePassword { Password = Password };
-                    if (g != null) //Save the pass to the database
-                    {
-                        g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
                     }
                     break;
                 }
@@ -159,40 +143,17 @@ namespace Aurora.Modules.Estate
                     }
                     else if (ownerEstates != null) LastEstateName = ownerEstates[0].EstateName;
 
-                    List<int> estateIDs = EstateConnector.GetEstates(LastEstateName);
-                    if (estateIDs == null)
-                    {
-                        MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
-                        continue;
-                    }
-                    if (estateIDs.Count < 1)
+                    int estateID = EstateConnector.GetEstate(account.PrincipalID, LastEstateName);
+                    if (estateID == 0)
                     {
                         MainConsole.Instance.Warn("The name you have entered matches no known estate. Please try again");
                         continue;
                     }
 
-                    int estateID = estateIDs[0];
-
-                    string Password = Util.Md5Hash(Util.Md5Hash(MainConsole.Instance.Prompt("Password for the estate", "")));
                     //We save the Password because we have to reset it after we tell the EstateService about it, as it clears it for security reasons
-                    if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID, Password))
+                    if (EstateConnector.LinkRegion(scene.RegionInfo.RegionID, estateID))
                     {
-                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES)) //We could do by EstateID now, but we need to completely make sure that it fully is set up
-                        {
-                            if (ES == null)
-                            {
-                                MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
-                                continue;
-                            }
-                            //Reset the pass and save it to the database
-                            IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                            EstatePassword s = new EstatePassword { Password = Password };
-                            if (g != null) //Save the pass to the database
-                            {
-                                g.AddGeneric(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString(), s.ToOSD());
-                            }
-                        }
-                        else
+                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null || ES.EstateID == 0) //We could do by EstateID now, but we need to completely make sure that it fully is set up
                         {
                             MainConsole.Instance.Warn("The connection to the server was broken, please try again soon.");
                             continue;
@@ -220,25 +181,15 @@ namespace Aurora.Modules.Estate
             IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
-                EstateSettings ES;
-                if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
-                {
-                    //It found the estate service, but found no estates for this region, make a new one
-                    MainConsole.Instance.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
-                    ES = CreateEstateInfo(scene);
-                }
-                else if (ES != null)
-                {
-                    //It found the estate service and it found an estate for this region
-                }
-                else
+                EstateSettings ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID);
+                if(ES == null)
                 {
                     //It could not find the estate service, wait until it can find it
                     MainConsole.Instance.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
                     while (true)
                     {
                         MainConsole.Instance.Prompt("Press enter to try again.");
-                        if (EstateConnector.LoadEstateSettings(scene.RegionInfo.RegionID, out ES) && ES == null)
+                        if ((ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID)) == null || ES.EstateID == 0)
                         {
                             ES = CreateEstateInfo(scene);
                             break;
@@ -246,15 +197,13 @@ namespace Aurora.Modules.Estate
                         if (ES != null)
                             break;
                     }
+                } 
+                else if (ES.EstateID == 0)
+                {
+                    //It found the estate service, but found no estates for this region, make a new one
+                    MainConsole.Instance.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
+                    ES = CreateEstateInfo(scene);
                 }
-                //Get the password from the database now that we have either created a new estate and saved it, joined a new estate, or just reloaded
-                IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                EstatePassword s = null;
-                if (g != null)
-                    s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", ES.EstateID.ToString());
-                if (s != null)
-                    ES.EstatePass = s.Password;
-
                 scene.RegionInfo.EstateSettings = ES;
             }
         }
@@ -288,49 +237,15 @@ namespace Aurora.Modules.Estate
                 string removeFromEstate = MainConsole.Instance.Prompt("Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?", "yes");
                 if (removeFromEstate == "yes")
                 {
-                    if (!EstateConnector.DelinkRegion(scene.RegionInfo.RegionID, scene.RegionInfo.EstateSettings.EstatePass))
+                    if (!EstateConnector.DelinkRegion(scene.RegionInfo.RegionID))
                     {
                         MainConsole.Instance.Warn("Unable to remove this region from the estate.");
                         return;
                     }
                     scene.RegionInfo.EstateSettings = CreateEstateInfo(scene);
-                    IGenericsConnector g = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                    EstatePassword s = null;
-                    if (g != null)
-                        s = g.GetGeneric<EstatePassword>(scene.RegionInfo.RegionID, "EstatePassword", scene.RegionInfo.EstateSettings.EstateID.ToString());
-                    if (s != null)
-                        scene.RegionInfo.EstateSettings.EstatePass = s.Password;
                 }
                 else
                     MainConsole.Instance.Warn("No action has been taken.");
-            }
-        }
-
-        /// <summary>
-        /// This class is used to save the EstatePassword for the given region/estate service
-        /// </summary>
-        public class EstatePassword : IDataTransferable
-        {
-            public string Password;
-            public override void FromOSD(OSDMap map)
-            {
-                Password = map["Password"].AsString();
-            }
-
-            public override OSDMap ToOSD()
-            {
-                OSDMap map = new OSDMap {{"Password", Password}};
-                return map;
-            }
-
-            public override Dictionary<string, object> ToKVP()
-            {
-                return Util.OSDToDictionary(ToOSD());
-            }
-
-            public override void FromKVP(Dictionary<string, object> KVP)
-            {
-                FromOSD(Util.DictionaryToOSD(KVP));
             }
         }
 

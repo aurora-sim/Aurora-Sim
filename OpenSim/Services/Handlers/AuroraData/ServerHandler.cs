@@ -151,6 +151,9 @@ namespace OpenSim.Services
                 MethodImplementation methodInfo;
                 if (m_methods.TryGetValue(method, out methodInfo))
                 {
+                    if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
+                        return new byte[0];
+
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                     object[] parameters = new object[paramInfo.Length];
                     int paramNum = 0;
