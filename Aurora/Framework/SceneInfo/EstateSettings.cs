@@ -215,7 +215,7 @@ namespace Aurora.Framework
             DenyAnonymous = values["DenyAnonymous"].AsBoolean();
             ResetHomeOnTeleport = values["ResetHomeOnTeleport"].AsBoolean();
             FixedSun = values["FixedSun"].AsBoolean();
-            DenyTransacted = values["DenyTransacted".AsBoolean()];
+            DenyTransacted = values["DenyTransacted"].AsBoolean();
             BlockDwell = values["BlockDwell"].AsBoolean();
             DenyIdentified = values["DenyIdentified"].AsBoolean();
             AllowVoice = values["AllowVoice"].AsBoolean();
