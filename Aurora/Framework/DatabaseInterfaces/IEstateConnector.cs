@@ -41,6 +41,20 @@ namespace Aurora.Framework
         EstateSettings GetEstateSettings(UUID regionID);
 
         /// <summary>
+        /// Loads the estate data for the specified estateID
+        /// </summary>
+        /// <param name="estateID"></param>
+        /// <returns></returns>
+        EstateSettings GetEstateSettings(int estateID);
+
+        /// <summary>
+        /// Loads the estate data for the specified estate name
+        /// </summary>
+        /// <param name="estateID"></param>
+        /// <returns></returns>
+        EstateSettings GetEstateSettings(string name);
+
+        /// <summary>
         ///   Creates a new estate from the given info, returns the updated info
         /// </summary>
         /// <param name = "ES"></param>
@@ -82,6 +96,13 @@ namespace Aurora.Framework
         /// <param name="boolFields"></param>
         /// <returns></returns>
         List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields);
+
+        /// <summary>
+        /// Gets the EstateID for the specified RegionID
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        int GetEstateID(UUID regionID);
 
         /// <summary>
         ///   Add a new region to the estate, authenticates with the password
