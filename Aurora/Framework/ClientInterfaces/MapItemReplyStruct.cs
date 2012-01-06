@@ -27,10 +27,11 @@
 
 using System.Collections.Generic;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public class multipleMapItemReply
+    public class multipleMapItemReply : IDataTransferable
     {
         public Dictionary<ulong, List<mapItemReply>> items = new Dictionary<ulong, List<mapItemReply>>();
 
@@ -39,6 +40,11 @@ namespace Aurora.Framework
         }
 
         public multipleMapItemReply(Dictionary<string, object> KVP)
+        {
+            FromKVP(KVP);
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
         {
             foreach (KeyValuePair<string, object> kvp in KVP)
             {
@@ -52,7 +58,7 @@ namespace Aurora.Framework
             }
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in items)
@@ -60,15 +66,47 @@ namespace Aurora.Framework
                 int i = 0;
                 foreach (mapItemReply item in kvp.Value)
                 {
-                    result["A" + kvp.Key + "A" + i.ToString()] = item.ToKeyValuePairs();
+                    result["A" + kvp.Key + "A" + i.ToString()] = item.ToKVP();
                     i++;
                 }
             }
             return result;
         }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap result = new OSDMap();
+            foreach (KeyValuePair<ulong, List<mapItemReply>> kvp in items)
+            {
+                OSDArray array = new OSDArray();
+                foreach (mapItemReply item in kvp.Value)
+                {
+                    array.Add(item.ToOSD());
+                }
+                result[kvp.Key.ToString()] = array;
+            }
+            return result;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            foreach (KeyValuePair<string, OSD> kvp in map)
+            {
+                ulong regionHandle = ulong.Parse(kvp.Key);
+                OSDArray array = (OSDArray)kvp.Value;
+                List<mapItemReply> replies = new List<mapItemReply>();
+                foreach(OSD o in array)
+                {
+                    mapItemReply r = new mapItemReply();
+                    r.FromOSD((OSDMap)o);
+                    replies.Add(r);
+                }
+                items[regionHandle] = replies;
+            }
+        }
     }
 
-    public class mapItemReply
+    public class mapItemReply : IDataTransferable
     {
         public int Extra;
         public int Extra2;
@@ -83,6 +121,11 @@ namespace Aurora.Framework
 
         public mapItemReply(Dictionary<string, object> KVP)
         {
+            FromKVP(KVP);
+        }
+
+        public override void FromKVP(Dictionary<string, object> KVP)
+        {
             x = uint.Parse(KVP["X"].ToString());
             y = uint.Parse(KVP["Y"].ToString());
             id = UUID.Parse(KVP["ID"].ToString());
@@ -91,7 +134,7 @@ namespace Aurora.Framework
             name = KVP["Name"].ToString();
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> KVP = new Dictionary<string, object>();
             KVP["X"] = x;
@@ -101,6 +144,28 @@ namespace Aurora.Framework
             KVP["Extra2"] = Extra2;
             KVP["Name"] = name;
             return KVP;
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["X"] = (int)x;
+            map["Y"] = (int)y;
+            map["ID"] = id;
+            map["Extra"] = Extra;
+            map["Extra2"] = Extra2;
+            map["Name"] = name;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            x = (uint)(int)map["X"];
+            y = (uint)(int)map["Y"];
+            id = map["ID"];
+            Extra = map["Extra"];
+            Extra2 = map["Extra2"];
+            name = map["Name"];
         }
     }
 }
