@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace Aurora.Framework
@@ -36,7 +37,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <returns></returns>
-        MuteList[] GetMuteList(UUID AgentID);
+        List<MuteList> GetMuteList(UUID AgentID);
 
         /// <summary>
         ///   Updates or adds a mute for the given agent

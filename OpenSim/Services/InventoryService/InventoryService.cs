@@ -52,6 +52,45 @@ namespace OpenSim.Services.InventoryService
 
         #endregion
 
+        #region IService Members
+
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
+                return;
+
+            IConfig invConfig = config.Configs["InventoryService"];
+            if (invConfig != null)
+                m_AllowDelete = invConfig.GetBoolean("AllowDelete", true);
+
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("fix inventory", "fix inventory",
+                                                         "If the user's inventory has been corrupted, this function will attempt to fix it",
+                                                         FixInventory);
+            registry.RegisterModuleInterface<IInventoryService>(this);
+            Init(registry, Name);
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_Database = DataManager.RequestPlugin<IInventoryData>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+        }
+
+        public virtual void FinishedStartup()
+        {
+        }
+
+        #endregion
+
         #region IInventoryService Members
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -863,45 +902,6 @@ namespace OpenSim.Services.InventoryService
                 return (List<InventoryItemBase>)remoteValue;
 
             return new List<InventoryItemBase>(m_Database.GetActiveGestures(principalID));
-        }
-
-        #endregion
-
-        #region IService Members
-
-        public virtual string Name
-        {
-            get { return GetType().Name; }
-        }
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", "") != Name)
-                return;
-
-            IConfig invConfig = config.Configs["InventoryService"];
-            if (invConfig != null)
-                m_AllowDelete = invConfig.GetBoolean("AllowDelete", true);
-
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("fix inventory", "fix inventory",
-                                                         "If the user's inventory has been corrupted, this function will attempt to fix it",
-                                                         FixInventory);
-            registry.RegisterModuleInterface<IInventoryService>(this);
-            Init(registry, Name);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_Database = DataManager.RequestPlugin<IInventoryData>();
-            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
-            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
-        }
-
-        public virtual void FinishedStartup()
-        {
         }
 
         #endregion

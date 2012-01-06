@@ -32,7 +32,7 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAssetConnector : IAssetConnector
+    public class LocalAssetConnector : ConnectorBase, IAssetConnector
     {
         private IGenericData GD;
 
@@ -62,8 +62,13 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateLSLData(string token, string key, string value)
         {
+            object remoteValue = DoRemote(token, key, value);
+            if (remoteValue != null)
+                return;
+
             List<string> Test = GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},
                                          "lslgenericdata", "*");
             if (Test.Count == 0)
@@ -77,8 +82,13 @@ namespace Aurora.Services.DataService
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<string> FindLSLData(string token, string key)
         {
+            object remoteValue = DoRemote(token, key);
+            if (remoteValue != null)
+                return (List<string>)remoteValue;
+
             return GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},
                             "lslgenericdata", "*");
         }

@@ -91,7 +91,9 @@ namespace Aurora.Framework
             int i = 0;
             foreach(ParameterInfo info in method.GetParameters())
             {
-                map.Add(info.Name, Util.MakeOSD(o[i], o[i].GetType()));
+                OSD osd = Util.MakeOSD(o[i], o[i].GetType());
+                if(osd != null)
+                    map.Add(info.Name, osd);
                 i++;
             }
             List<string> m_ServerURIs =

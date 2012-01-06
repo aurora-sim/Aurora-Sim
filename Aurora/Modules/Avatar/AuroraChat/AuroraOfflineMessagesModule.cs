@@ -170,7 +170,7 @@ namespace Aurora.Modules.Chat
                 return;
             MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
+            List<GridInstantMessage> msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 
             foreach (GridInstantMessage IM in msglist)
             {

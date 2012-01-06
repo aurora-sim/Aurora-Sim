@@ -33,7 +33,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalProfileConnector : IProfileConnector
+    public class LocalProfileConnector : ConnectorBase, IProfileConnector
     {
         //We can use a cache because we are the only place that profiles will be served from
         private readonly Dictionary<UUID, IUserProfileInfo> UserProfilesCache = new Dictionary<UUID, IUserProfileInfo>();
@@ -58,6 +58,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -70,8 +71,13 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
+            object remoteValue = DoRemote(agentID);
+            if (remoteValue != null)
+                return (IUserProfileInfo)remoteValue;
+
             IUserProfileInfo UserProfile = new IUserProfileInfo();
             //Try from the user profile first before getting from the DB
             if (UserProfilesCache.TryGetValue(agentID, out UserProfile))
@@ -101,8 +107,13 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "Profile"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
+            object remoteValue = DoRemote(Profile);
+            if (remoteValue != null)
+                return (bool)remoteValue;
+
             IUserProfileInfo previousProfile = GetUserProfile(Profile.PrincipalID);
             //Make sure the previous one exists
             if (previousProfile == null)
@@ -133,8 +144,13 @@ namespace Aurora.Services.DataService
         ///   Create a new profile for a user
         /// </summary>
         /// <param name = "AgentID"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateNewProfile(UUID AgentID)
         {
+            object remoteValue = DoRemote(AgentID);
+            if (remoteValue != null)
+                return;
+
             List<object> values = new List<object> {AgentID.ToString(), "LLProfile"};
 
             //Create a new basic profile for them
@@ -145,8 +161,13 @@ namespace Aurora.Services.DataService
             GD.Insert("userdata", values.ToArray());
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddClassified(Classified classified)
         {
+            object remoteValue = DoRemote(classified);
+            if (remoteValue != null)
+                return (bool)remoteValue;
+
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
             //It might be updating, delete the old
@@ -163,8 +184,13 @@ namespace Aurora.Services.DataService
             return GD.Insert("userclassifieds", values.ToArray());
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<Classified> GetClassifieds(UUID ownerID)
         {
+            object remoteValue = DoRemote(ownerID);
+            if (remoteValue != null)
+                return (List<Classified>)remoteValue;
+
             List<Classified> classifieds = new List<Classified>();
             List<string> query = GD.Query(new string[1] {"OwnerUUID"}, new object[1] {ownerID}, "userclassifieds", "*");
             for (int i = 0; i < query.Count; i += 6)
@@ -176,8 +202,13 @@ namespace Aurora.Services.DataService
             return classifieds;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public Classified GetClassified(UUID queryClassifiedID)
         {
+            object remoteValue = DoRemote(queryClassifiedID);
+            if (remoteValue != null)
+                return (Classified)remoteValue;
+
             List<string> query = GD.Query(new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID},
                                           "userclassifieds", "*");
             if (query.Count < 6)
@@ -187,13 +218,23 @@ namespace Aurora.Services.DataService
             return classified;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveClassified(UUID queryClassifiedID)
         {
+            object remoteValue = DoRemote(queryClassifiedID);
+            if (remoteValue != null)
+                return;
+
             GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID});
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddPick(ProfilePickInfo pick)
         {
+            object remoteValue = DoRemote(pick);
+            if (remoteValue != null)
+                return (bool)remoteValue;
+
             if (GetUserProfile(pick.CreatorUUID) == null)
                 return false;
 
@@ -210,8 +251,13 @@ namespace Aurora.Services.DataService
             return GD.Insert("userpicks", values.ToArray());
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public ProfilePickInfo GetPick(UUID queryPickID)
         {
+            object remoteValue = DoRemote(queryPickID);
+            if (remoteValue != null)
+                return (ProfilePickInfo)remoteValue;
+
             List<string> query = GD.Query(new string[1] {"PickUUID"}, new object[1] {queryPickID}, "userpicks", "*");
             if (query.Count < 5)
                 return null;
@@ -220,8 +266,13 @@ namespace Aurora.Services.DataService
             return pick;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<ProfilePickInfo> GetPicks(UUID ownerID)
         {
+            object remoteValue = DoRemote(ownerID);
+            if (remoteValue != null)
+                return (List<ProfilePickInfo>)remoteValue;
+
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
             List<string> query = GD.Query(new string[1] {"OwnerUUID"}, new object[1] {ownerID}, "userpicks", "*");
             for (int i = 0; i < query.Count; i += 5)
@@ -233,8 +284,13 @@ namespace Aurora.Services.DataService
             return picks;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemovePick(UUID queryPickID)
         {
+            object remoteValue = DoRemote(queryPickID);
+            if (remoteValue != null)
+                return;
+
             GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {queryPickID});
         }
 
