@@ -36,21 +36,28 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.AssetService
 {
-    public class AssetService : IAssetService, IService
+    public class AssetService : ConnectorBase, IAssetService, IService
     {
+        #region Declares
+
         protected IAssetDataPlugin m_database;
-        protected IRegistryCore m_registry;
+
+        #endregion
+
+        #region IService Members
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
-        #region IAssetService Members
-
-        public IAssetService InnerService
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            get { return this; }
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AssetHandler", "") != Name)
+                return;
+            Configure(config, registry);
+            Init(registry, Name);
         }
 
         public virtual void Configure(IConfigSource config, IRegistryCore registry)
@@ -85,8 +92,23 @@ namespace OpenSim.Services.AssetService
         {
         }
 
+
+        #endregion
+
+        #region IAssetService Members
+
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null)
+                return (AssetBase)remoteValue;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
@@ -100,16 +122,26 @@ namespace OpenSim.Services.AssetService
             return asset;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual AssetBase GetCached(string id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null)
+                return (AssetBase)remoteValue;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
                 return cache.Get(id);
             return null;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual byte[] GetData(string id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null)
+                return (byte[])remoteValue;
+
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
@@ -124,29 +156,49 @@ namespace OpenSim.Services.AssetService
             return new byte[] {};
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool GetExists(string id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null)
+                return (bool)remoteValue;
+
             return m_database.ExistsAsset(UUID.Parse(id));
         }
 
-        public virtual bool Get(String id, Object sender, AssetRetrieved handler)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual void Get(String id, Object sender, AssetRetrieved handler)
         {
-            //MainConsole.Instance.DebugFormat("[AssetService]: Get asset async {0}", id);
+            Util.FireAndForget((o) =>
+                {
+                    AssetBase asset = null;
+                    if (m_doRemoteCalls)
+                    {
+                        asset = Get(id);
+                        if (asset != null)
+                        {
+                            handler(id, sender, asset);
+                            return;
+                        }
+                    }
+                    asset = m_database.GetAsset(UUID.Parse(id));
+                    IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
+                    if (cache != null && asset != null && asset.Data.Length != 0)
+                        cache.Cache(asset);
 
-            AssetBase asset = m_database.GetAsset(UUID.Parse(id));
-            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null && asset != null && asset.Data.Length != 0)
-                cache.Cache(asset);
+                    //MainConsole.Instance.DebugFormat("[AssetService]: Got asset {0}", asset);
 
-            //MainConsole.Instance.DebugFormat("[AssetService]: Got asset {0}", asset);
-
-            handler(id, sender, asset);
-
-            return true;
+                    handler(id, sender, asset);
+                });
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual UUID Store(AssetBase asset)
         {
+            object remoteValue = DoRemote(asset);
+            if (remoteValue != null)
+                return (UUID)remoteValue;
+
             //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
             asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -159,31 +211,32 @@ namespace OpenSim.Services.AssetService
             return asset != null ? asset.ID : UUID.Zero;
         }
 
-        public virtual bool UpdateContent(UUID id, byte[] data, out UUID newID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual UUID UpdateContent(UUID id, byte[] data)
         {
+            object remoteValue = DoRemote(id, data);
+            if (remoteValue != null)
+                return (UUID)remoteValue;
+
+            UUID newID;
             m_database.UpdateContent(id, data, out newID);
-            return true;
+            return newID;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Delete(UUID id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null)
+                return (bool)remoteValue;
+
             MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             return m_database.Delete(id);
         }
 
         #endregion
 
-        #region IService Members
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AssetHandler", "") != Name)
-                return;
-            Configure(config, registry);
-        }
-
-        #endregion
+        #region Console Commands
 
         private void HandleShowDigest(string[] args)
         {
@@ -246,5 +299,7 @@ namespace OpenSim.Services.AssetService
 
             MainConsole.Instance.Info("Asset deleted");
         }
+
+        #endregion
     }
 }

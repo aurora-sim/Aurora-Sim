@@ -49,8 +49,15 @@ namespace Aurora.Framework
         protected bool m_doRemoteCalls = false;
         protected string m_name;
 
+        public bool Enabled
+        {
+            get;
+            set;
+        }
+
         public void Init(IRegistryCore registry, string name)
         {
+            Enabled = true;
             m_registry = registry;
             m_name = name;
             IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;

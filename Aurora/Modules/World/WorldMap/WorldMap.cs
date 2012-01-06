@@ -931,20 +931,14 @@ namespace Aurora.Modules.WorldMap
             if (terrain == null)
                 return;
 
-            bool changed = false;
             byte[] terraindata, mapdata;
             terrain.CreateMapTile(out terraindata, out mapdata);
             if (terraindata != null)
             {
-                UUID newID = UUID.Zero;
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != UUID.Zero)
-                {
-                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata, out newID);
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = newID;
-                    changed = true;
-                }
-
-                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = 
+                        m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata);
+                else
                 {
                     AssetBase Terrainasset = new AssetBase(
                         UUID.Random(),
@@ -956,27 +950,16 @@ namespace Aurora.Modules.WorldMap
                         Description = m_scene.RegionInfo.RegionName,
                         Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
                     };
-                    newID = m_scene.AssetService.Store(Terrainasset);
-                }
-
-                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != newID)
-                {
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = newID;
-                    changed = true;
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = m_scene.AssetService.Store(Terrainasset);
                 }
             }
 
             if (mapdata != null)
             {
-                UUID newID = UUID.Zero;
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID != UUID.Zero)
-                {
-                    m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata, out newID);
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = newID;
-                    changed = true;
-                }
-
-                if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = 
+                        m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata);
+                else 
                 {
                     AssetBase Mapasset = new AssetBase(
                         UUID.Random(),
@@ -988,18 +971,11 @@ namespace Aurora.Modules.WorldMap
                         Description = m_scene.RegionInfo.RegionName,
                         Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
                     };
-                    newID = m_scene.AssetService.Store(Mapasset);
-                }
-
-                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != newID)
-                {
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = newID;
-                    changed = true;
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID = m_scene.AssetService.Store(Mapasset);
                 }
             }
 
-            if (changed)//Make sure to update the db with the new settings
-                m_scene.RegionInfo.RegionSettings.Save();
+            m_scene.RegionInfo.RegionSettings.Save();
 
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
