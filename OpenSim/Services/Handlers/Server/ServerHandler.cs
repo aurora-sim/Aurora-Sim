@@ -96,6 +96,8 @@ namespace OpenSim.Services
             m_registry = registry;
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+
+            AddExistingUrlForClient("", "", 8002);
         }
 
         public void FinishedStartup()
@@ -108,37 +110,40 @@ namespace OpenSim.Services
     public class MethodImplementation
     {
         public MethodInfo Method;
-        public IAuroraDataPlugin Reference;
+        public ConnectorBase Reference;
     }
 
     public unsafe class ServerHandler : BaseStreamHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
-        protected static Dictionary<string, List<MethodImplementation>> m_methods = new Dictionary<string, List<MethodImplementation>>();
+        protected static Dictionary<string, List<MethodImplementation>> m_methods = null;
 
         public ServerHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_SessionID = SessionID;
             m_registry = registry;
-            m_methods = new Dictionary<string, List<MethodImplementation>>();
-            List<string> alreadyRunPlugins = new List<string>();
-            foreach(IAuroraDataPlugin plugin in Aurora.DataManager.DataManager.GetPlugins())
+            if (m_methods == null)
             {
-                if (alreadyRunPlugins.Contains(plugin.Name))
-                    continue;
-                alreadyRunPlugins.Add(plugin.Name);
-                foreach (MethodInfo method in plugin.GetType().GetMethods())
+                m_methods = new Dictionary<string, List<MethodImplementation>>();
+                List<string> alreadyRunPlugins = new List<string>();
+                foreach (ConnectorBase plugin in ConnectorRegistry.Connectors)
                 {
-                    if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                    if (alreadyRunPlugins.Contains(plugin.PluginName))
+                        continue;
+                    alreadyRunPlugins.Add(plugin.PluginName);
+                    foreach (MethodInfo method in plugin.GetType().GetMethods())
                     {
-                        List<MethodImplementation> methods = new List<MethodImplementation>();
-                        MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
-                        if (!m_methods.TryGetValue(method.Name, out methods))
-                            m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
+                        if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                        {
+                            List<MethodImplementation> methods = new List<MethodImplementation>();
+                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
+                            if (!m_methods.TryGetValue(method.Name, out methods))
+                                m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
 
-                        methods.Add(imp);
+                            methods.Add(imp);
+                        }
                     }
                 }
             }
@@ -162,7 +167,12 @@ namespace OpenSim.Services
                 MethodImplementation methodInfo;
                 if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                 {
-                    if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
+                    if (m_SessionID == "")
+                    {
+                        if (((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel != ThreatLevel.None)
+                            return new byte[0];
+                    }
+                    else if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
                         return new byte[0];
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();

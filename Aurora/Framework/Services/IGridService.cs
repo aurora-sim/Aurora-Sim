@@ -205,6 +205,7 @@ namespace OpenSim.Services.Interfaces
         public string Error;
         public List<GridRegion> Neighbors = new List<GridRegion>();
         public UUID SessionID;
+        public OSDMap Urls = new OSDMap();
 
         public override OSDMap ToOSD()
         {
@@ -212,6 +213,7 @@ namespace OpenSim.Services.Interfaces
             map["Error"] = Error;
             map["Neighbors"] = new OSDArray(Neighbors.ConvertAll<OSD>((region) => region.ToOSD()));
             map["SessionID"] = SessionID;
+            map["Urls"] = Urls;
             return map;
         }
 
@@ -221,6 +223,7 @@ namespace OpenSim.Services.Interfaces
             OSDArray n = (OSDArray)map["Neighbors"];
             Neighbors = n.ConvertAll<GridRegion>((osd) => { GridRegion r = new GridRegion(); r.FromOSD((OSDMap)osd); return r; });
             SessionID = map["SessionID"];
+            Urls = (OSDMap)map["Urls"];
         }
     }
 

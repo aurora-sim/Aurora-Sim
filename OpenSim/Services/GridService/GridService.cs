@@ -312,11 +312,15 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None)]
         public virtual RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
         {
+            RegisterRegion rr = new RegisterRegion();
             object remoteValue = DoRemote(regionInfos, oldSessionID);
             if (remoteValue != null)
-                return (RegisterRegion)remoteValue;
+            {
+                rr = (RegisterRegion)remoteValue;
+                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfos.RegionHandle.ToString(), rr.Urls);
+                return rr;
+            }
 
-            RegisterRegion rr = new RegisterRegion();
 
             if (m_DisableRegistrations)
                 return new RegisterRegion() { Error = "Registrations are disabled." };
@@ -510,7 +514,8 @@ namespace OpenSim.Services.GridService
 
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                       regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
-                    return new RegisterRegion() { Error = "", Neighbors = neighbors, SessionID = SessionID };
+                    return new RegisterRegion() { Error = "", Neighbors = neighbors, SessionID = SessionID, Urls = 
+                    m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SessionID.ToString())};
                 }
             }
             catch (Exception e)

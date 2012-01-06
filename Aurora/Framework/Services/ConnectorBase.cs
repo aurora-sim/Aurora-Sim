@@ -39,6 +39,15 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
+    public class ConnectorRegistry
+    {
+        public static List<ConnectorBase> Connectors = new List<ConnectorBase>();
+        public static void RegisterConnector(ConnectorBase con)
+        {
+            Connectors.Add(con);
+        }
+    }
+
     public class ConnectorBase
     {
         protected IRegistryCore m_registry;
@@ -48,6 +57,11 @@ namespace Aurora.Framework
         }
         protected bool m_doRemoteCalls = false;
         protected string m_name;
+
+        public string PluginName
+        {
+            get { return m_name; }
+        }
 
         public bool Enabled
         {
@@ -64,6 +78,7 @@ namespace Aurora.Framework
             IConfig config;
             if ((config = source.Configs["AuroraConnectors"]) != null)
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+            ConnectorRegistry.RegisterConnector(this);
         }
 
         public object DoRemote(params object[] o)
@@ -98,6 +113,7 @@ namespace Aurora.Framework
             }
             List<string> m_ServerURIs =
                     m_configService.FindValueOf(userID.ToString(), "ServerURI", false);
+            m_ServerURIs.Add("http://127.0.0.1:8002/");
             OSDMap response = null;
             foreach (string uri in m_ServerURIs)
             {

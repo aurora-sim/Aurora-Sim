@@ -42,7 +42,6 @@ namespace OpenSim.Services.Friends
         #region Declares
 
         protected IFriendsData m_Database;
-        protected IRegistryCore m_registry;
 
         #endregion
 

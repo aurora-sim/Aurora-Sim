@@ -1656,7 +1656,7 @@ namespace Aurora.Framework
             if (o is OSD)
                 return (OSD)o;
             OSD oo;
-            if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown)
+            if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown && !t.IsArray)
                 return (OSD)oo;
             if (o is IDataTransferable)
                 return ((IDataTransferable)o).ToOSD();
@@ -1664,7 +1664,6 @@ namespace Aurora.Framework
             if (Util.IsInstanceOfGenericType(typeof(List<>), t))
             {
                 OSDArray array = new OSDArray();
-                var list = Util.MakeList(Activator.CreateInstance(genericArgs[0]));
                 System.Collections.IList collection = (System.Collections.IList)o;
                 foreach (object item in collection)
                 {
@@ -1675,8 +1674,6 @@ namespace Aurora.Framework
             else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
             {
                 OSDMap array = new OSDMap();
-                var list = Util.MakeDictionary(CreateInstance(genericArgs[0]),
-                    CreateInstance(genericArgs[1]));
                 System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
                 foreach (System.Collections.DictionaryEntry item in collection)
                 {
@@ -2519,7 +2516,12 @@ namespace Aurora.Framework
     {
         public static List<T> ConvertAll<T>(this OSDArray array, Converter<OSD, T> converter)
         {
-            return array.ToList().ConvertAll<T>(converter);
+            List<OSD> list = new List<OSD>();
+            foreach (OSD o in array)
+            {
+                list.Add(o);
+            }
+            return list.ConvertAll<T>(converter);
         }
     }
 }
