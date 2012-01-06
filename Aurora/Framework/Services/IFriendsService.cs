@@ -99,7 +99,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "PrincipalID"></param>
         /// <returns></returns>
-        FriendInfo[] GetFriends(UUID PrincipalID);
+        List<FriendInfo> GetFriends(UUID PrincipalID);
 
         /// <summary>
         ///   Store the changes of the friend of PrincipalID

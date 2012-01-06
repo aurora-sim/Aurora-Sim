@@ -85,7 +85,7 @@ namespace OpenSim.Services.MessagingService
                     UUID us = UUID.Parse(info[0].ToString());
                     bool isOnline = bool.Parse(info[1].ToString());
 
-                    FriendInfo[] friends = friendsService.GetFriends(us);
+                    List<FriendInfo> friends = friendsService.GetFriends(us);
                     List<UUID> OnlineFriends = new List<UUID>();
                     List<string> previouslyContactedURLs = new List<string>();
                     foreach (FriendInfo friend in friends)

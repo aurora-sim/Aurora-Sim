@@ -35,11 +35,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class IWCAvatarConnector : IAvatarService, IService
+    public class IWCAvatarConnector : ConnectorBase, IAvatarService, IService
     {
         protected AvatarService m_localService;
-        protected IRegistryCore m_registry;
-        protected AvatarServicesConnector m_remoteService;
 
         public string Name
         {
@@ -65,7 +63,7 @@ namespace Aurora.Modules
         {
             AvatarAppearance app = m_localService.GetAppearance(userID);
             if (app == null)
-                app = m_remoteService.GetAppearance(userID);
+                app = (AvatarAppearance)DoRemoteForced(userID);
             return app;
         }
 
@@ -73,7 +71,7 @@ namespace Aurora.Modules
         {
             bool success = m_localService.SetAppearance(userID, appearance);
             if (!success)
-                success = m_remoteService.SetAppearance(userID, appearance);
+                success = (bool)DoRemoteForced(userID, appearance);
             return success;
         }
 
@@ -81,7 +79,7 @@ namespace Aurora.Modules
         {
             AvatarData app = m_localService.GetAvatar(userID);
             if (app == null)
-                app = m_remoteService.GetAvatar(userID);
+                app = (AvatarData)DoRemoteForced(userID);
             return app;
         }
 
@@ -89,7 +87,7 @@ namespace Aurora.Modules
         {
             bool success = m_localService.SetAvatar(userID, avatar);
             if (!success)
-                success = m_remoteService.SetAvatar(userID, avatar);
+                success = (bool)DoRemoteForced(userID, avatar);
             return success;
         }
 
@@ -97,7 +95,7 @@ namespace Aurora.Modules
         {
             bool success = m_localService.ResetAvatar(userID);
             if (!success)
-                success = m_remoteService.ResetAvatar(userID);
+                success = (bool)DoRemoteForced(userID);
             return success;
         }
 
@@ -118,8 +116,7 @@ namespace Aurora.Modules
 
             m_localService = new AvatarService();
             m_localService.Initialize(config, registry);
-            m_remoteService = new AvatarServicesConnector();
-            m_remoteService.Initialize(config, registry);
+            Init(registry, Name);
             registry.RegisterModuleInterface<IAvatarService>(this);
             m_registry = registry;
         }

@@ -44,7 +44,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class AvatarWearable
+    public class AvatarWearable : IDataTransferable
     {
         // these are guessed at by the list here -
         // http://wiki.secondlife.com/wiki/Avatar_Appearance.  We'll
@@ -179,6 +179,13 @@ namespace Aurora.Framework
 #endif
         }
 
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Value"] = Pack();
+            return map;
+        }
+
         public OSD Pack()
         {
             OSDArray wearlist = new OSDArray();
@@ -192,6 +199,11 @@ namespace Aurora.Framework
             }
 
             return wearlist;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack((OSDArray)map["Value"]);
         }
 
         public void Unpack(OSDArray args)

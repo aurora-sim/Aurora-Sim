@@ -27,57 +27,17 @@
 
 using Aurora.Simulation.Base;
 using Nini.Config;
-using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
-using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class AvatarServiceConnector : IService, IGridRegistrationUrlModule
+    public class GridInfoServerInConnector : IService
     {
-        private IRegistryCore m_registry;
-
         public string Name
         {
             get { return GetType().Name; }
         }
-
-        #region IGridRegistrationUrlModule Members
-
-        public void RemoveUrlForClient(string sessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            server.RemoveHTTPHandler("POST", url);
-        }
-
-        public string UrlName
-        {
-            get { return "AvatarServerURI"; }
-        }
-
-        public void AddExistingUrlForClient(string SessionID, string url, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-
-            server.AddStreamHandler(new AvatarServerPostHandler(url,
-                                                                m_registry.RequestModuleInterface<IAvatarService>().
-                                                                    InnerService, SessionID, m_registry));
-        }
-
-        public string GetUrlForRegisteringClient(string SessionID, uint port)
-        {
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(port);
-            string url = "/avatar" + UUID.Random();
-
-            server.AddStreamHandler(new AvatarServerPostHandler(url,
-                                                                m_registry.RequestModuleInterface<IAvatarService>().
-                                                                    InnerService, SessionID, m_registry));
-
-            return url;
-        }
-
-        #endregion
 
         #region IService Members
 
@@ -88,12 +48,18 @@ namespace OpenSim.Services
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarInHandler", "") != Name)
+            if (handlerConfig.GetString("GridInfoInHandler", "") != Name)
                 return;
 
-            m_registry = registry;
+            handlerConfig = config.Configs["GridInfoService"];
+            IHttpServer server =
+                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
+                    (uint) handlerConfig.GetInt("GridInfoInHandlerPort", 0));
+            GridInfoHandlers handlers = new GridInfoHandlers(config);
 
-            m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
+            server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",
+                                                          handlers.RestGetGridInfoMethod));
+            server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }
 
         public void FinishedStartup()
@@ -101,9 +67,5 @@ namespace OpenSim.Services
         }
 
         #endregion
-
-        public void Initialize(IConfigSource config, ISimulationBase simBase, string configName, IRegistryCore sim)
-        {
-        }
     }
 }

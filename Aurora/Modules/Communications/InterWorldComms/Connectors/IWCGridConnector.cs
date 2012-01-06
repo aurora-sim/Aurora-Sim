@@ -42,7 +42,6 @@ namespace Aurora.Modules
     public class IWCGridConnector : ConnectorBase, IGridService, IService
     {
         protected IGridService m_localService;
-        protected IRegistryCore m_registry;
 
         public string Name
         {

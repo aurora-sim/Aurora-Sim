@@ -562,7 +562,7 @@ namespace Aurora.Modules.Friends
                                              {
                                                  PrincipalID = agentID,
                                                  Refcount = 0,
-                                                 Friends = FriendsService.GetFriends(agentID)
+                                                 Friends = FriendsService.GetFriends(agentID).ToArray()
                                              };
             lock (m_Friends)
             {
