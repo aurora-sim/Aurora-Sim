@@ -66,7 +66,7 @@ namespace Aurora.Services.DataService
         public void UpdateLSLData(string token, string key, string value)
         {
             object remoteValue = DoRemote(token, key, value);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             List<string> Test = GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},
@@ -86,7 +86,7 @@ namespace Aurora.Services.DataService
         public List<string> FindLSLData(string token, string key)
         {
             object remoteValue = DoRemote(token, key);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<string>)remoteValue;
 
             return GD.Query(new[] {"Token", "KeySetting"}, new[] {token.MySqlEscape(50), key.MySqlEscape(50)},

@@ -111,7 +111,7 @@ namespace OpenSim.Services.AvatarService
         public AvatarData GetAvatar(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (AvatarData)remoteValue;
 
             return m_Database.Get("PrincipalID", principalID.ToString());
@@ -121,7 +121,7 @@ namespace OpenSim.Services.AvatarService
         public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
             object remoteValue = DoRemote(principalID, avatar);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
@@ -137,7 +137,7 @@ namespace OpenSim.Services.AvatarService
         public bool ResetAvatar(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             return m_Database.Delete("PrincipalID", principalID.ToString());
@@ -147,7 +147,7 @@ namespace OpenSim.Services.AvatarService
         public void CacheWearableData(UUID principalID, AvatarWearable wearable)
         {
             object remoteValue = DoRemote(principalID, wearable);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!m_enableCacheBakedTextures)

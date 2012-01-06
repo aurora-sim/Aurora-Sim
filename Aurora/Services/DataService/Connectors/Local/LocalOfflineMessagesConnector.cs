@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
         public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridInstantMessage>)remoteValue;
 
             //Get all the messages
@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
         public bool AddOfflineMessage(GridInstantMessage message)
         {
             object remoteValue = DoRemote(message);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (message.fromGroup)

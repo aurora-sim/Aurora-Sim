@@ -719,6 +719,8 @@ namespace Aurora.Framework
                     return Level.Info;
                 case "notice":
                     return Level.Notice;
+                case "none":
+                    return new Level(0, "None");
                 case "off":
                     return Level.Off;
                 case "severe":

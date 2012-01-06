@@ -97,7 +97,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool CreateUserRootFolder(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             bool result = false;
@@ -133,7 +133,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems)
         {
             object remoteValue = DoRemote(principalID, createDefaultItems);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             // This is braindeaad. We can't ever communicate that we fixed
@@ -411,7 +411,7 @@ namespace OpenSim.Services.InventoryService
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryFolderBase>)remoteValue;
 
             List<InventoryFolderBase> allFolders = m_Database.GetFolders(
@@ -428,7 +428,7 @@ namespace OpenSim.Services.InventoryService
         public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryFolderBase>)remoteValue;
 
             return m_Database.GetFolders(
@@ -440,7 +440,7 @@ namespace OpenSim.Services.InventoryService
         public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryFolderBase)remoteValue;
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
@@ -470,7 +470,7 @@ namespace OpenSim.Services.InventoryService
         public virtual InventoryFolderBase GetFolderForType(UUID principalID, InventoryType invType, AssetType type)
         {
             object remoteValue = DoRemote(principalID, invType, type);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryFolderBase)remoteValue;
 
             if (invType == InventoryType.Snapshot)
@@ -498,7 +498,7 @@ namespace OpenSim.Services.InventoryService
         public virtual InventoryCollection GetFolderContent(UUID principalID, UUID folderID)
         {
             object remoteValue = DoRemote(principalID, folderID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryCollection)remoteValue;
 
             // This method doesn't receive a valud principal id from the
@@ -526,7 +526,7 @@ namespace OpenSim.Services.InventoryService
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
             object remoteValue = DoRemote(principalID, folderID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryItemBase>)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
@@ -540,7 +540,7 @@ namespace OpenSim.Services.InventoryService
         public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
         {
             object remoteValue = DoRemote(principalID, folderID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (OSDArray)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
@@ -554,7 +554,7 @@ namespace OpenSim.Services.InventoryService
         public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
         {
             object remoteValue = DoRemote(principalID, folderID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryFolderBase>)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
@@ -570,7 +570,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool AddFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             InventoryFolderBase check = GetFolder(folder);
@@ -584,7 +584,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool UpdateFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (!m_AllowDelete) //Initial item MUST be created as a link folder
@@ -617,7 +617,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool MoveFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             List<InventoryFolderBase> x = m_Database.GetFolders(
@@ -638,7 +638,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
             object remoteValue = DoRemote(principalID, folderIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (!m_AllowDelete)
@@ -672,7 +672,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
@@ -700,7 +700,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool ForcePurgeFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             List<InventoryFolderBase> subFolders = m_Database.GetFolders(
@@ -723,7 +723,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool AddItem(InventoryItemBase item)
         {
             object remoteValue = DoRemote(item);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             return AddItem(item, true);
@@ -733,7 +733,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
         {
             object remoteValue = DoRemote(item);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (doParentFolderCheck)
@@ -751,7 +751,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool UpdateItem(InventoryItemBase item)
         {
             object remoteValue = DoRemote(item);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (!m_AllowDelete) //Initial item MUST be created as a link or link folder
@@ -765,7 +765,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool MoveItems(UUID principalID, List<InventoryItemBase> items)
         {
             object remoteValue = DoRemote(principalID, items);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             foreach (InventoryItemBase i in items)
@@ -783,7 +783,7 @@ namespace OpenSim.Services.InventoryService
         public virtual bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
             object remoteValue = DoRemote(principalID, itemIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (!m_AllowDelete)
@@ -815,7 +815,7 @@ namespace OpenSim.Services.InventoryService
         public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
             object remoteValue = DoRemote(item);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;
 
             List<InventoryItemBase> items = m_Database.GetItems(
@@ -869,7 +869,7 @@ namespace OpenSim.Services.InventoryService
         public virtual OSDArray GetItem(UUID itemID)
         {
             object remoteValue = DoRemote(itemID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (OSDArray)remoteValue;
 
             return m_Database.GetLLSDItems(
@@ -881,7 +881,7 @@ namespace OpenSim.Services.InventoryService
         public virtual InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
             object remoteValue = DoRemote(folder);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryFolderBase)remoteValue;
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
@@ -898,7 +898,7 @@ namespace OpenSim.Services.InventoryService
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
             object remoteValue = DoRemote(principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryItemBase>)remoteValue;
 
             return new List<InventoryItemBase>(m_Database.GetActiveGestures(principalID));

@@ -129,7 +129,7 @@ namespace OpenSim.Services.UserAccountService
                 return account;
 
             object remoteValue = DoRemote(scopeID, firstName, lastName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UserAccount)remoteValue;
 
             UserAccount[] d;
@@ -168,7 +168,7 @@ namespace OpenSim.Services.UserAccountService
                 return account;
 
             object remoteValue = DoRemote(scopeID, name);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UserAccount)remoteValue;
 
             UserAccount[] d;
@@ -207,7 +207,7 @@ namespace OpenSim.Services.UserAccountService
                 return account;
 
             object remoteValue = DoRemote(scopeID, principalID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UserAccount)remoteValue;
 
             UserAccount[] d;
@@ -245,7 +245,7 @@ namespace OpenSim.Services.UserAccountService
         public bool StoreUserAccount(UserAccount data)
         {
             object remoteValue = DoRemote(data);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (data.UserTitle == null)
@@ -258,7 +258,7 @@ namespace OpenSim.Services.UserAccountService
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
             object remoteValue = DoRemote(scopeID, query);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
             UserAccount[] d = m_Database.GetUsers(scopeID, query);
@@ -287,7 +287,7 @@ namespace OpenSim.Services.UserAccountService
         public void CreateUser(UUID userID, string name, string password, string email)
         {
             object remoteValue = DoRemote(userID, name, password, email);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             UserAccount account = GetUserAccount(UUID.Zero, userID);

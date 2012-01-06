@@ -168,7 +168,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
             object remoteValue = DoRemote(scopeID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeID);
@@ -198,7 +198,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
             object remoteValue = DoRemote(scopeID, x, y);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             return m_Database.GetSafeRegions(scopeID, x, y);
@@ -214,7 +214,7 @@ namespace OpenSim.Services.GridService
         public virtual void SetRegionUnsafe(UUID ID)
         {
             object remoteValue = DoRemote(ID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GridRegion data = m_Database.Get(ID, UUID.Zero);
@@ -237,7 +237,7 @@ namespace OpenSim.Services.GridService
         public virtual void SetRegionSafe(UUID ID)
         {
             object remoteValue = DoRemote(ID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GridRegion data = m_Database.Get(ID, UUID.Zero);
@@ -254,7 +254,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
         {
             object remoteValue = DoRemote(scopeID, x, y);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeID, x, y);
@@ -277,7 +277,7 @@ namespace OpenSim.Services.GridService
         public virtual int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             object remoteValue = DoRemote(scopeID, regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (int)remoteValue;
 
             GridRegion region = m_Database.Get(regionID, scopeID);
@@ -295,7 +295,7 @@ namespace OpenSim.Services.GridService
         public virtual multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
             object remoteValue = DoRemote(regionHandle, gridItemType);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (multipleMapItemReply)remoteValue;
 
             multipleMapItemReply allItems = new multipleMapItemReply();
@@ -314,10 +314,13 @@ namespace OpenSim.Services.GridService
         {
             RegisterRegion rr = new RegisterRegion();
             object remoteValue = DoRemoteByURL("RegistrationURI", regionInfos, oldSessionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
             {
                 rr = (RegisterRegion)remoteValue;
-                m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfos.RegionHandle.ToString(), rr.Urls);
+                if (rr != null)
+                    m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfos.RegionHandle.ToString(), rr.Urls);
+                else
+                    rr = new RegisterRegion() { Error = "Could not reach grid service." };
                 return rr;
             }
 
@@ -483,7 +486,7 @@ namespace OpenSim.Services.GridService
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("DefaultRegionFlags", String.Empty));
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("Region_" + regionName, String.Empty));
                     newFlags = ParseFlags(newFlags,
-                                          gridConfig.GetString("Region_" + regionInfos.RegionID.ToString(), String.Empty));
+                                          gridConfig.GetString("Region_" + regionInfos.RegionHandle.ToString(), String.Empty));
                     regionInfos.Flags = newFlags;
                 }
             }
@@ -515,7 +518,7 @@ namespace OpenSim.Services.GridService
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                       regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
                     return new RegisterRegion() { Error = "", Neighbors = neighbors, SessionID = SessionID, Urls = 
-                    m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(SessionID.ToString())};
+                    m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString())};
                 }
             }
             catch (Exception e)
@@ -530,7 +533,7 @@ namespace OpenSim.Services.GridService
         public virtual string UpdateMap(GridRegion gregion, UUID sessionID)
         {
             object remoteValue = DoRemote(gregion, sessionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, gregion.ScopeID);
@@ -579,7 +582,7 @@ namespace OpenSim.Services.GridService
         public virtual bool DeregisterRegion(GridRegion gregion)
         {
             object remoteValue = DoRemote(gregion);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, UUID.Zero);
@@ -621,7 +624,7 @@ namespace OpenSim.Services.GridService
         public virtual GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
             object remoteValue = DoRemote(scopeID, regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
             return m_Database.Get(regionID, scopeID);
@@ -631,7 +634,7 @@ namespace OpenSim.Services.GridService
         public virtual GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
             object remoteValue = DoRemote(scopeID, x, y);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
             return m_Database.Get(x, y, scopeID);
@@ -641,7 +644,7 @@ namespace OpenSim.Services.GridService
         public virtual GridRegion GetRegionByName(UUID scopeID, string regionName)
         {
             object remoteValue = DoRemote(scopeID, regionName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
             List<GridRegion> rdatas = m_Database.Get(regionName + "%", scopeID);
@@ -661,7 +664,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
             object remoteValue = DoRemote(scopeID, name, maxNumber);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             int count = 0;
@@ -694,7 +697,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
             object remoteValue = DoRemote(scopeID, xmin,xmax, ymin, ymax);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             return m_Database.Get(xmin, ymin, xmax, ymax, scopeID);
@@ -709,7 +712,7 @@ namespace OpenSim.Services.GridService
         public virtual List<GridRegion> GetNeighbors(GridRegion region)
         {
             object remoteValue = DoRemote(region);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
             List<GridRegion> neighbors = new List<GridRegion>();

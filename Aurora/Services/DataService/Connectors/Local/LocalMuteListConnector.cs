@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService
         public List<MuteList> GetMuteList(UUID AgentID)
         {
             object remoteValue = DoRemote(AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<MuteList>)remoteValue;
 
             return new List<MuteList>(GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD).ToArray());
@@ -88,7 +88,7 @@ namespace Aurora.Services.DataService
         public void UpdateMute(MuteList mute, UUID AgentID)
         {
             object remoteValue = DoRemote(mute, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GenericUtils.AddGeneric(AgentID, "MuteList", mute.MuteID.ToString(), mute.ToOSD(), GD);
@@ -103,7 +103,7 @@ namespace Aurora.Services.DataService
         public void DeleteMute(UUID muteID, UUID AgentID)
         {
             object remoteValue = DoRemote(muteID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GenericUtils.RemoveGeneric(AgentID, "MuteList", muteID.ToString(), GD);
@@ -119,7 +119,7 @@ namespace Aurora.Services.DataService
         public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
             object remoteValue = DoRemote(AgentID, PossibleMuteID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             return GenericUtils.GetGeneric<MuteList>(AgentID, "MuteList", PossibleMuteID.ToString(), GD) != null;

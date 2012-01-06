@@ -75,7 +75,7 @@ namespace Aurora.Services.DataService
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
             object remoteValue = DoRemote(agentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (IUserProfileInfo)remoteValue;
 
             IUserProfileInfo UserProfile = new IUserProfileInfo();
@@ -111,7 +111,7 @@ namespace Aurora.Services.DataService
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
             object remoteValue = DoRemote(Profile);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             IUserProfileInfo previousProfile = GetUserProfile(Profile.PrincipalID);
@@ -148,7 +148,7 @@ namespace Aurora.Services.DataService
         public void CreateNewProfile(UUID AgentID)
         {
             object remoteValue = DoRemote(AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             List<object> values = new List<object> {AgentID.ToString(), "LLProfile"};
@@ -165,7 +165,7 @@ namespace Aurora.Services.DataService
         public bool AddClassified(Classified classified)
         {
             object remoteValue = DoRemote(classified);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (GetUserProfile(classified.CreatorUUID) == null)
@@ -188,7 +188,7 @@ namespace Aurora.Services.DataService
         public List<Classified> GetClassifieds(UUID ownerID)
         {
             object remoteValue = DoRemote(ownerID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<Classified>)remoteValue;
 
             List<Classified> classifieds = new List<Classified>();
@@ -206,7 +206,7 @@ namespace Aurora.Services.DataService
         public Classified GetClassified(UUID queryClassifiedID)
         {
             object remoteValue = DoRemote(queryClassifiedID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (Classified)remoteValue;
 
             List<string> query = GD.Query(new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID},
@@ -222,7 +222,7 @@ namespace Aurora.Services.DataService
         public void RemoveClassified(UUID queryClassifiedID)
         {
             object remoteValue = DoRemote(queryClassifiedID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID});
@@ -232,7 +232,7 @@ namespace Aurora.Services.DataService
         public bool AddPick(ProfilePickInfo pick)
         {
             object remoteValue = DoRemote(pick);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if (GetUserProfile(pick.CreatorUUID) == null)
@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
         public ProfilePickInfo GetPick(UUID queryPickID)
         {
             object remoteValue = DoRemote(queryPickID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (ProfilePickInfo)remoteValue;
 
             List<string> query = GD.Query(new string[1] {"PickUUID"}, new object[1] {queryPickID}, "userpicks", "*");
@@ -270,7 +270,7 @@ namespace Aurora.Services.DataService
         public List<ProfilePickInfo> GetPicks(UUID ownerID)
         {
             object remoteValue = DoRemote(ownerID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<ProfilePickInfo>)remoteValue;
 
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
@@ -288,7 +288,7 @@ namespace Aurora.Services.DataService
         public void RemovePick(UUID queryPickID)
         {
             object remoteValue = DoRemote(queryPickID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {queryPickID});

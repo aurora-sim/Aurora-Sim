@@ -86,7 +86,7 @@ namespace OpenSim.Services
         public virtual UserInfo GetUserInfo(string userID)
         {
             object remoteValue = DoRemote(userID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UserInfo)remoteValue;
 
             return GetUserInfo(userID, true);
@@ -96,7 +96,7 @@ namespace OpenSim.Services
         public virtual List<UserInfo> GetUserInfos(List<string> userIDs)
         {
             object remoteValue = DoRemote(userIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserInfo>)remoteValue;
 
             List<UserInfo> infos = new List<UserInfo>();
@@ -136,7 +136,7 @@ namespace OpenSim.Services
         public virtual bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             object remoteValue = DoRemote(userID, homeID, homePosition, homeLookAt);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
@@ -147,7 +147,7 @@ namespace OpenSim.Services
         public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             object remoteValue = DoRemote(userID, regionID, lastPosition, lastLookAt);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
@@ -157,7 +157,7 @@ namespace OpenSim.Services
         public virtual void LockLoggedInStatus(string userID, bool locked)
         {
             object remoteValue = DoRemote(userID, locked);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (locked && !m_lockedUsers.Contains(userID))
@@ -170,7 +170,7 @@ namespace OpenSim.Services
         public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
             object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look

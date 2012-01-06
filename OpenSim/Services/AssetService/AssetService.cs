@@ -106,7 +106,7 @@ namespace OpenSim.Services.AssetService
         public virtual AssetBase Get(string id)
         {
             object remoteValue = DoRemote(id);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (AssetBase)remoteValue;
 
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -126,7 +126,7 @@ namespace OpenSim.Services.AssetService
         public virtual AssetBase GetCached(string id)
         {
             object remoteValue = DoRemote(id);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (AssetBase)remoteValue;
 
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -139,7 +139,7 @@ namespace OpenSim.Services.AssetService
         public virtual byte[] GetData(string id)
         {
             object remoteValue = DoRemote(id);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (byte[])remoteValue;
 
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
@@ -160,7 +160,7 @@ namespace OpenSim.Services.AssetService
         public virtual bool GetExists(string id)
         {
             object remoteValue = DoRemote(id);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             return m_database.ExistsAsset(UUID.Parse(id));
@@ -196,7 +196,7 @@ namespace OpenSim.Services.AssetService
         public virtual UUID Store(AssetBase asset)
         {
             object remoteValue = DoRemote(asset);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UUID)remoteValue;
 
             //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
@@ -215,7 +215,7 @@ namespace OpenSim.Services.AssetService
         public virtual UUID UpdateContent(UUID id, byte[] data)
         {
             object remoteValue = DoRemote(id, data);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UUID)remoteValue;
 
             UUID newID;
@@ -227,7 +227,7 @@ namespace OpenSim.Services.AssetService
         public virtual bool Delete(UUID id)
         {
             object remoteValue = DoRemote(id);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);

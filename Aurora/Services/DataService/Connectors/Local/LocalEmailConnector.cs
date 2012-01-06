@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService
         public List<Email> GetEmails(UUID objectID)
         {
             object remoteValue = DoRemote(objectID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<Email>)remoteValue;
 
             //Get all the messages
@@ -90,7 +90,7 @@ namespace Aurora.Services.DataService
         public void InsertEmail(Email email)
         {
             object remoteValue = DoRemote(email);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GenericUtils.AddGeneric(email.toPrimID, "Emails", UUID.Random().ToString(),

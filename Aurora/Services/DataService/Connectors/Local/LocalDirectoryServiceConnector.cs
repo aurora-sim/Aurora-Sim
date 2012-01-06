@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
         public void AddRegion(List<LandData> parcels)
         {
             object remoteValue = DoRemote(parcels);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (parcels.Count == 0)
@@ -174,7 +174,7 @@ namespace Aurora.Services.DataService
         public void ClearRegion(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
@@ -228,7 +228,7 @@ namespace Aurora.Services.DataService
         public LandData GetParcelInfo(UUID InfoUUID)
         {
             object remoteValue = DoRemote(InfoUUID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (LandData)remoteValue;
 
             //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
@@ -290,7 +290,7 @@ namespace Aurora.Services.DataService
         public LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName)
         {
             object remoteValue = DoRemote(RegionID, ScopeID, ParcelName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (LandData)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
@@ -319,7 +319,7 @@ namespace Aurora.Services.DataService
         public List<LandData> GetParcelByOwner(UUID OwnerID)
         {
             object remoteValue = DoRemote(OwnerID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<LandData>)remoteValue;
 
             List<LandData> Lands = new List<LandData>();
@@ -357,7 +357,7 @@ namespace Aurora.Services.DataService
         public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
             object remoteValue = DoRemote(start, count, RegionID, scopeID, owner, flags, category);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<LandData>)remoteValue;
 
             List<LandData> resp = new List<LandData>(0);
@@ -385,7 +385,7 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
             object remoteValue = DoRemote(RegionID, scopeID, owner, flags, category);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
@@ -404,7 +404,7 @@ namespace Aurora.Services.DataService
         public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name)
         {
             object remoteValue = DoRemote(start, count, RegionID, ScopeID, name);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<LandData>)remoteValue;
 
             List<LandData> resp = new List<LandData>(0);
@@ -435,7 +435,7 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name)
         {
             object remoteValue = DoRemote(RegionID, ScopeID, name);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
@@ -461,7 +461,7 @@ namespace Aurora.Services.DataService
         public List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags)
         {
             object remoteValue = DoRemote(queryText, category, StartQuery, Flags);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirPlacesReplyData>)remoteValue;
 
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
@@ -519,7 +519,7 @@ namespace Aurora.Services.DataService
                                                   uint Flags)
         {
             object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirLandReplyData>)remoteValue;
 
             //searchType
@@ -607,7 +607,7 @@ namespace Aurora.Services.DataService
         public List<DirEventsReplyData> FindEvents(string queryText, string flags, int StartQuery)
         {
             object remoteValue = DoRemote(queryText, flags, StartQuery);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirEventsReplyData>)remoteValue;
 
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
@@ -684,7 +684,7 @@ namespace Aurora.Services.DataService
         public List<DirEventsReplyData> FindAllEventsInRegion(string regionName, int maturity)
         {
             object remoteValue = DoRemote(regionName, maturity);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirEventsReplyData>)remoteValue;
 
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
@@ -731,7 +731,7 @@ namespace Aurora.Services.DataService
                                                         int StartQuery)
         {
             object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirClassifiedReplyData>)remoteValue;
 
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
@@ -788,7 +788,7 @@ namespace Aurora.Services.DataService
         public EventData GetEventInfo(string EventID)
         {
             object remoteValue = DoRemote(EventID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (EventData)remoteValue;
 
             EventData data = new EventData();
@@ -828,7 +828,7 @@ namespace Aurora.Services.DataService
         public List<Classified> GetClassifiedsInRegion(string regionName)
         {
             object remoteValue = DoRemote(regionName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<Classified>)remoteValue;
 
             List<Classified> Classifieds = new List<Classified>();

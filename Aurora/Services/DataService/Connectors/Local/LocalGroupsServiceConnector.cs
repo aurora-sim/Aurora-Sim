@@ -84,7 +84,7 @@ namespace Aurora.Services.DataService
         public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
         {
             object remoteValue = DoRemote(groupID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, EveryonePowers, OwnerRoleID, OwnerPowers);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             List<string> Keys = new List<string>
@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService
         public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (
@@ -177,7 +177,7 @@ namespace Aurora.Services.DataService
         public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
             object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, fromName, subject, message, ItemID, AssetType, ItemName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
@@ -217,7 +217,7 @@ namespace Aurora.Services.DataService
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(AgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
             if (data.Query("AgentID", AgentID, "osagent", "*").Count != 0)
@@ -241,7 +241,7 @@ namespace Aurora.Services.DataService
         public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
         {
             object remoteValue = DoRemote(RequestingAgentID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (UUID)remoteValue;
 
             List<string> groups = data.Query("AgentID", AgentID, "osagent", "ActiveGroupID");
@@ -255,7 +255,7 @@ namespace Aurora.Services.DataService
         public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(AgentID, GroupID, RoleID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
             data.Update("osgroupmembership", new object[] {RoleID}, new[] {"SelectedRoleID"}, new[]
@@ -275,7 +275,7 @@ namespace Aurora.Services.DataService
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (data.Query(new[]
@@ -320,7 +320,7 @@ namespace Aurora.Services.DataService
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
@@ -365,7 +365,7 @@ namespace Aurora.Services.DataService
         public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Description, Title, Powers);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.CreateRole))
@@ -380,7 +380,7 @@ namespace Aurora.Services.DataService
         public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Desc, Title, Powers);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RoleProperties))
@@ -420,7 +420,7 @@ namespace Aurora.Services.DataService
         public void RemoveRoleFromGroup(UUID requestingAgentID, UUID RoleID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, RoleID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.DeleteRole))
@@ -458,7 +458,7 @@ namespace Aurora.Services.DataService
         public void AddAgentToRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
@@ -504,7 +504,7 @@ namespace Aurora.Services.DataService
         public void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
@@ -537,7 +537,7 @@ namespace Aurora.Services.DataService
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices, int ListInProfile)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, AcceptNotices, ListInProfile);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ChangeIdentity))
@@ -568,7 +568,7 @@ namespace Aurora.Services.DataService
         public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID, GroupID, roleID, AgentID, FromAgentName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.Invite))
@@ -605,7 +605,7 @@ namespace Aurora.Services.DataService
         public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
@@ -615,7 +615,7 @@ namespace Aurora.Services.DataService
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
         {
             object remoteValue = DoRemote(agentID, info);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
@@ -625,7 +625,7 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             List<UUID> GroupIDs = new List<UUID>();
@@ -637,7 +637,7 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             List<UUID> groupIDs = new List<UUID>();
@@ -664,7 +664,7 @@ namespace Aurora.Services.DataService
         public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(requestingAgentID, boolFields);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             string whereClause = "1=1";
@@ -707,7 +707,7 @@ namespace Aurora.Services.DataService
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, GroupName);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupRecord)remoteValue;
 
             GroupRecord record = new GroupRecord();
@@ -732,7 +732,7 @@ namespace Aurora.Services.DataService
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(requestingAgentID, start, count, boolFields);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupRecord>)remoteValue;
 
             string whereClause = "1=1";
@@ -796,7 +796,7 @@ namespace Aurora.Services.DataService
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupRecord>)remoteValue;
 
             List<GroupRecord> Reply = new List<GroupRecord>(0);
@@ -823,7 +823,7 @@ namespace Aurora.Services.DataService
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupProfileData)remoteValue;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.MemberVisible))
@@ -872,7 +872,7 @@ namespace Aurora.Services.DataService
         public GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupMembershipData)remoteValue;
 
             GroupMembershipData GMD = new GroupMembershipData();
@@ -922,7 +922,7 @@ namespace Aurora.Services.DataService
         public List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupMembershipData>)remoteValue;
 
             List<string> Groups = data.Query(new[]
@@ -949,7 +949,7 @@ namespace Aurora.Services.DataService
         public GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
             object remoteValue = DoRemote(requestingAgentID, inviteID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupInviteInfo)remoteValue;
 
             GroupInviteInfo invite = new GroupInviteInfo();
@@ -978,7 +978,7 @@ namespace Aurora.Services.DataService
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
             object remoteValue = DoRemote(requestingAgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupInviteInfo>)remoteValue;
 
             List<string> groupInvite = data.Query(new[]
@@ -1010,7 +1010,7 @@ namespace Aurora.Services.DataService
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupMembersData)remoteValue;
 
             //Permissions
@@ -1076,7 +1076,7 @@ namespace Aurora.Services.DataService
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupMembersData>)remoteValue;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
@@ -1097,7 +1097,7 @@ namespace Aurora.Services.DataService
         public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
         {
             object remoteValue = DoRemote(requestingAgentID, search, StartQuery, queryflags);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirGroupsReplyData>)remoteValue;
 
             string whereClause = " Name LIKE '%" + search.MySqlEscape(50) + "%' LIMIT " + StartQuery + ",50 ";
@@ -1131,7 +1131,7 @@ namespace Aurora.Services.DataService
         public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupRolesData>)remoteValue;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
@@ -1158,7 +1158,7 @@ namespace Aurora.Services.DataService
         public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupRolesData>)remoteValue;
 
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
@@ -1194,7 +1194,7 @@ namespace Aurora.Services.DataService
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupRoleMembersData>)remoteValue;
 
             List<GroupRoleMembersData> RoleMembers = new List<GroupRoleMembersData>();
@@ -1223,7 +1223,7 @@ namespace Aurora.Services.DataService
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
             object remoteValue = DoRemote(requestingAgentID, noticeID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (GroupNoticeInfo)remoteValue;
 
             List<string> notice = data.Query("NoticeID", noticeID, "osgroupnotice",
@@ -1282,7 +1282,7 @@ namespace Aurora.Services.DataService
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
         {
             object remoteValue = DoRemote(requestingAgentID, start, count, GroupID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupNoticeData>)remoteValue;
 
             List<UUID> GroupIDs = new List<UUID>();
@@ -1294,7 +1294,7 @@ namespace Aurora.Services.DataService
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs)
         {
             object remoteValue = DoRemote(requestingAgentID, start, count, GroupIDs);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupNoticeData>)remoteValue;
 
             List<UUID> groupIDs = new List<UUID>();

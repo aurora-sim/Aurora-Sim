@@ -233,7 +233,9 @@ namespace OpenSim.Services.GridService
                     //Don't load links (yet)
                     continue;
                 }
-                if(url.HostNames == null || url.Ports == null || url.URLS == null)
+                if (url.HostNames == null || url.Ports == null ||
+                    url.URLS == null ||
+                    !CheckModuleNames(url) || url.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
                 {
                     RemoveUrlsForClient(url.SessionID);
                 }
@@ -380,9 +382,9 @@ namespace OpenSim.Services.GridService
                     {
                     }
                 }
-                //Remove from the database so that they don't pop up later
-                m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", SessionID);
             }
+            //Remove from the database so that they don't pop up later
+            m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", SessionID);
         }
 
         public void UpdateUrlsForClient(string SessionID)

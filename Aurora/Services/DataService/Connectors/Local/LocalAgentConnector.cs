@@ -74,7 +74,7 @@ namespace Aurora.Services.DataService
         public IAgentInfo GetAgent(UUID agentID)
         {
             object remoteValue = DoRemoteForUser(agentID, agentID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (IAgentInfo)remoteValue;
 
             IAgentInfo agent = new IAgentInfo();
@@ -105,7 +105,7 @@ namespace Aurora.Services.DataService
         public void UpdateAgent(IAgentInfo agent)
         {
             object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};

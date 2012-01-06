@@ -71,7 +71,7 @@ namespace Aurora.Services.DataService
         public void AddTelehub(Telehub telehub, ulong regionhandle)
         {
             object remoteValue = DoRemote(telehub, regionhandle);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             //Look for a telehub first.
@@ -132,7 +132,7 @@ namespace Aurora.Services.DataService
         public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             object remoteValue = DoRemote(regionID, regionHandle);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             //Look for a telehub first.
@@ -152,7 +152,7 @@ namespace Aurora.Services.DataService
         public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
             object remoteValue = DoRemote(regionID, regionHandle);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (Telehub)remoteValue;
 
             Telehub telehub = new Telehub();

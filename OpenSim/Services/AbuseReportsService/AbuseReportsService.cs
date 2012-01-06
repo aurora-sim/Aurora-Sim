@@ -48,7 +48,7 @@ namespace OpenSim.Services.AbuseReports
         public void AddAbuseReport(AbuseReport abuse_report)
         {
             object remoteValue = DoRemote(abuse_report);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
@@ -60,7 +60,7 @@ namespace OpenSim.Services.AbuseReports
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
             object remoteValue = DoRemote(Number, Password);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (AbuseReport)remoteValue;
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
@@ -74,7 +74,7 @@ namespace OpenSim.Services.AbuseReports
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
             object remoteValue = DoRemote(report, Password);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
@@ -86,7 +86,7 @@ namespace OpenSim.Services.AbuseReports
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
         {
             object remoteValue = DoRemote(start, count, filter);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<AbuseReport>)remoteValue;
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();

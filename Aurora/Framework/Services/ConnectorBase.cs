@@ -57,6 +57,7 @@ namespace Aurora.Framework
         }
         protected bool m_doRemoteCalls = false;
         protected string m_name;
+        protected bool m_doRemoteOnly = false;
 
         public string PluginName
         {
@@ -78,6 +79,8 @@ namespace Aurora.Framework
             IConfig config;
             if ((config = source.Configs["AuroraConnectors"]) != null)
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+            if (m_doRemoteCalls)
+                m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
         }
 
@@ -117,7 +120,7 @@ namespace Aurora.Framework
             int i = 0;
             foreach(ParameterInfo info in method.GetParameters())
             {
-                OSD osd = Util.MakeOSD(o[i], o[i].GetType());
+                OSD osd = o[i] == null ? null : Util.MakeOSD(o[i], o[i].GetType());
                 if(osd != null)
                     map.Add(info.Name, osd);
                 i++;
@@ -135,6 +138,10 @@ namespace Aurora.Framework
             object inst = null;
             try
             {
+                if (method.ReturnType == typeof(string))
+                    inst = string.Empty;
+                else if (method.ReturnType == typeof(void))
+                    return null;
                 inst = Activator.CreateInstance(method.ReturnType);
             }
             catch
@@ -142,6 +149,8 @@ namespace Aurora.Framework
                 if (method.ReturnType == typeof(string))
                     inst = string.Empty;
             }
+            if (response["Value"] == "null")
+                return null;
             if (inst is IDataTransferable)
             {
                 IDataTransferable instance = (IDataTransferable)inst;

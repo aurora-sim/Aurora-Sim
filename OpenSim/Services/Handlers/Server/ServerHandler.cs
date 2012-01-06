@@ -96,12 +96,12 @@ namespace OpenSim.Services
             m_registry = registry;
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
-
-            AddExistingUrlForClient("", "/", 8003);
         }
 
         public void FinishedStartup()
         {
+            if(m_registry != null)
+                AddExistingUrlForClient("", "/", 8003);
         }
 
         #endregion
@@ -138,10 +138,11 @@ namespace OpenSim.Services
                         CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
                         if (reflection != null)
                         {
+                            string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
                             List<MethodImplementation> methods = new List<MethodImplementation>();
                             MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
-                            if (!m_methods.TryGetValue(method.Name, out methods))
-                                m_methods.Add(reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod, (methods = new List<MethodImplementation>()));
+                            if (!m_methods.TryGetValue(methodName, out methods))
+                                m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
 
                             methods.Add(imp);
                         }
@@ -185,7 +186,7 @@ namespace OpenSim.Services
                     object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
-                        response["Value"] = true;
+                        response["Value"] = "null";
                     else
                         response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
                     response["Success"] = true;
