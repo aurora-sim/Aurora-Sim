@@ -1651,6 +1651,50 @@ namespace Aurora.Framework
             return retVal;
         }
 
+        public static OSD MakeOSD(object o, Type t)
+        {
+            if (o is OSD)
+                return (OSD)o;
+            OSD oo;
+            if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown)
+                return (OSD)oo;
+            if (o is IDataTransferable)
+                return ((IDataTransferable)o).ToOSD();
+            Type[] genericArgs = t.GetGenericArguments();
+            if (Util.IsInstanceOfGenericType(typeof(List<>), t))
+            {
+                OSDArray array = new OSDArray();
+                var list = Util.MakeList(Activator.CreateInstance(genericArgs[0]));
+                System.Collections.IList collection = (System.Collections.IList)o;
+                foreach (object item in collection)
+                {
+                    array.Add(MakeOSD(item, genericArgs[0]));
+                }
+                return array;
+            }
+            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
+            {
+                OSDMap array = new OSDMap();
+                var list = Util.MakeDictionary(CreateInstance(genericArgs[0]),
+                    CreateInstance(genericArgs[1]));
+                System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
+                foreach (System.Collections.DictionaryEntry item in collection)
+                {
+                    array.Add(MakeOSD(item.Key, genericArgs[0]), MakeOSD(item.Value, genericArgs[1]));
+                }
+                return array;
+            }
+            return null;
+        }
+
+        private static object CreateInstance(Type type)
+        {
+            if (type == typeof(string))
+                return string.Empty;
+            else
+                return Activator.CreateInstance(type);
+        }
+
         public static object OSDToObject(OSD o)
         {
             return OSDToObject(o, o.GetType());

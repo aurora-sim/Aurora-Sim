@@ -68,7 +68,7 @@ namespace OpenSim.Services.GridService
             }
         }
 
-        protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.Full;
+        protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.High;
         
         protected class PermissionSet
         {
@@ -438,7 +438,7 @@ namespace OpenSim.Services.GridService
                 ThreatLevel regionThreatLevel = FindRegionThreatLevel (SessionID);
                 //Return whether the region threat level is higher than the function threat level
                 if(!(functionThreatLevel <= regionThreatLevel))
-                    MainConsole.Instance.Warn ("[GridRegService]: checkThreatLevel failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
+                    MainConsole.Instance.Warn ("[GridRegService]: checkThreatLevel (" + function + ") failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
                 return functionThreatLevel <= regionThreatLevel;
             }
             MainConsole.Instance.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");

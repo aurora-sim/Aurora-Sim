@@ -59,12 +59,12 @@ namespace Aurora.Services.DataService
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
         }
 
-        public object DoRemote(params OSD[] o)
+        public object DoRemote(params object[] o)
         {
             return DoRemoteForUser(UUID.Zero, o);
         }
 
-        public object DoRemoteForUser(UUID userID, params OSD[] o)
+        public object DoRemoteForUser(UUID userID, params object[] o)
         {
             if (!m_doRemoteCalls)
                 return null;
@@ -79,7 +79,7 @@ namespace Aurora.Services.DataService
             int i = 0;
             foreach(ParameterInfo info in method.GetParameters())
             {
-                map.Add(info.Name, o[i]);
+                map.Add(info.Name, Util.MakeOSD(o[i], o[i].GetType()));
                 i++;
             }
             List<string> m_ServerURIs =

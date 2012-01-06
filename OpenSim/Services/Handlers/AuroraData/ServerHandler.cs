@@ -115,20 +115,31 @@ namespace OpenSim.Services
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
-        protected static Dictionary<string, MethodImplementation> m_methods = new Dictionary<string, MethodImplementation>();
+        protected static Dictionary<string, List<MethodImplementation>> m_methods = new Dictionary<string, List<MethodImplementation>>();
 
         public ServerHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_SessionID = SessionID;
             m_registry = registry;
+            m_methods = new Dictionary<string, List<MethodImplementation>>();
+            List<string> alreadyRunPlugins = new List<string>();
             foreach(IAuroraDataPlugin plugin in Aurora.DataManager.DataManager.GetPlugins())
             {
+                if (alreadyRunPlugins.Contains(plugin.Name))
+                    continue;
+                alreadyRunPlugins.Add(plugin.Name);
                 foreach (MethodInfo method in plugin.GetType().GetMethods())
                 {
-                    if (!m_methods.ContainsKey(method.Name))
-                        if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
-                            m_methods.Add(method.Name, new MethodImplementation() { Method = method, Reference = plugin });
+                    if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                    {
+                        List<MethodImplementation> methods = new List<MethodImplementation>();
+                        MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
+                        if (!m_methods.TryGetValue(method.Name, out methods))
+                            m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
+
+                        methods.Add(imp);
+                    }
                 }
             }
         }
@@ -149,7 +160,7 @@ namespace OpenSim.Services
                 string method = args["Method"].AsString();
 
                 MethodImplementation methodInfo;
-                if (m_methods.TryGetValue(method, out methodInfo))
+                if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                 {
                     if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
                         return new byte[0];
@@ -158,19 +169,14 @@ namespace OpenSim.Services
                     object[] parameters = new object[paramInfo.Length];
                     int paramNum = 0;
                     foreach (ParameterInfo param in paramInfo)
-                        if (Util.IsInstanceOfGenericType(typeof(List<>), param.ParameterType))
-                            parameters[paramNum++] = MakeListFromArray((OSDArray)args[param.Name], param);
-                        else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), param.ParameterType))
-                            parameters[paramNum++] = MakeDictionaryFromArray((OSDMap)args[param.Name], param);
-                        else
-                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
                     
                     object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
                         response["Value"] = true;
                     else
-                        response["Value"] = MakeOSD(o, methodInfo.Method.ReturnType);
+                        response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
                     response["Success"] = true;
                     return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response));
                 }
@@ -179,79 +185,27 @@ namespace OpenSim.Services
             return new byte[0];
         }
 
-        private OSD MakeOSD(object o, Type t)
+        private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)
         {
-            if (o is OSD)
-                return (OSD)o;
-            OSD oo;
-            if ((oo =OSD.FromObject(o)).Type != OSDType.Unknown)
-                return (OSD)oo;
-            if (o is IDataTransferable)
-                return ((IDataTransferable)o).ToOSD();
-            Type[] genericArgs = t.GetGenericArguments();
-            if (Util.IsInstanceOfGenericType(typeof(List<>), t))
+            List<MethodImplementation> methods = new List<MethodImplementation>();
+            if (m_methods.TryGetValue(method, out methods))
             {
-                OSDArray array = new OSDArray();
-                var list = Util.MakeList(Activator.CreateInstance(genericArgs[0]));
-                System.Collections.IList collection = (System.Collections.IList)o;
-                foreach (object item in collection)
+                if (methods.Count == 1)
                 {
-                    array.Add(MakeOSD(item, genericArgs[0]));
+                    methodInfo = methods[0];
+                    return true;
                 }
-                return array;
-            }
-            else if (Util.IsInstanceOfGenericType(typeof(Dictionary<,>), t))
-            {
-                OSDMap array = new OSDMap();
-                var list = Util.MakeDictionary(Activator.CreateInstance(genericArgs[0]),
-                    Activator.CreateInstance(genericArgs[1]));
-                System.Collections.IDictionary collection = (System.Collections.IDictionary)o;
-                foreach (System.Collections.DictionaryEntry item in collection)
+                foreach (MethodImplementation m in methods)
                 {
-                    array.Add(MakeOSD(item.Key, genericArgs[0]), MakeOSD(item.Value, genericArgs[1]));
+                    if (m.Method.GetParameters().Length == parameters)
+                    {
+                        methodInfo = m;
+                        return true;
+                    }
                 }
-                return array;
             }
-            return null;
-        }
-
-        private object MakeListFromArray(OSDArray array, ParameterInfo param)
-        {
-            Type t = param.ParameterType.GetGenericArguments()[0];
-            System.Collections.IList list = (System.Collections.IList)Util.OSDToObject(array, t);
-            if (t.BaseType == typeof(IDataTransferable))
-            {
-                IDataTransferable defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                var newList = Util.MakeList(defaultInstance);
-                foreach (object o in list)
-                {
-                    defaultInstance.FromOSD((OSDMap)o);
-                    newList.Add(defaultInstance);
-                    defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                }
-                return newList;
-            }
-
-            return list;
-        }
-
-        private object MakeDictionaryFromArray(OSDMap array, ParameterInfo param)
-        {
-            var list = (System.Collections.IDictionary)Util.OSDToObject(array, param.ParameterType.GetGenericArguments()[1]);
-            Type t = param.ParameterType.GetGenericArguments()[0];
-            if (t.BaseType == typeof(IDataTransferable))
-            {
-                IDataTransferable defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                var newList = Util.MakeDictionary("", defaultInstance);
-                foreach (KeyValuePair<object, object> o in list)
-                {
-                    defaultInstance.FromOSD((OSDMap)o.Value);
-                    newList.Add(o.Key.ToString(), defaultInstance);
-                    defaultInstance = (IDataTransferable)Activator.CreateInstance(t);
-                }
-                return newList;
-            }
-            return list;
+            methodInfo = null;
+            return false;
         }
     }
 }

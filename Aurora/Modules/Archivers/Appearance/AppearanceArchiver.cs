@@ -36,25 +36,26 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Serialization.External;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using Aurora.Simulation.Base;
 
 namespace Aurora.Modules.Archivers
 {
     /// <summary>
     ///   This module loads/saves the avatar's appearance from/down into an "Avatar Archive", also known as an AA.
     /// </summary>
-    public class AuroraAvatarAppearanceArchiver : ISharedRegionModule, IAvatarAppearanceArchiver
+    public class AuroraAvatarAppearanceArchiver : IService, IAvatarAppearanceArchiver
     {
+        #region Declares
+
         private IAssetService AssetService;
         private IAvatarService AvatarService;
         private IInventoryService InventoryService;
         private IUserAccountService UserAccountService;
-        private IScene m_scene;
+        private IRegistryCore m_registry;
 
-        public bool IsSharedModule
-        {
-            get { return true; }
-        }
+        #endregion
 
         #region IAvatarAppearanceArchiver Members
 
@@ -73,12 +74,19 @@ namespace Aurora.Modules.Archivers
             reader.Close();
             reader.Dispose();
 
-            IScenePresence SP;
-            m_scene.TryGetScenePresence(account.PrincipalID, out SP);
-            if (SP == null)
-                return; //Bad people!
+            IScenePresence SP = null;
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (IScene scene in manager.Scenes)
+                    if (scene.TryGetScenePresence(account.PrincipalID, out SP))
+                        break;
+                if (SP == null)
+                    return; //Bad people!
+            }
 
-            SP.ControllingClient.SendAlertMessage("Appearance loading in progress...");
+            if(SP != null)
+                SP.ControllingClient.SendAlertMessage("Appearance loading in progress...");
 
             string FolderNameToLoadInto = "";
 
@@ -118,17 +126,20 @@ namespace Aurora.Modules.Archivers
             }
 
             //Now update the client about the new items
-            SP.ControllingClient.SendBulkUpdateInventory(folderForAppearance);
-            foreach (InventoryItemBase itemCopy in items)
+            if (SP != null)
             {
-                if (itemCopy == null)
+                SP.ControllingClient.SendBulkUpdateInventory(folderForAppearance);
+                foreach (InventoryItemBase itemCopy in items)
                 {
-                    SP.ControllingClient.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
-                    continue;
-                }
-                if (!SP.IsChildAgent)
-                {
-                    SP.ControllingClient.SendBulkUpdateInventory(itemCopy);
+                    if (itemCopy == null)
+                    {
+                        SP.ControllingClient.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
+                        continue;
+                    }
+                    if (!SP.IsChildAgent)
+                    {
+                        SP.ControllingClient.SendBulkUpdateInventory(itemCopy);
+                    }
                 }
             }
             MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
@@ -136,61 +147,7 @@ namespace Aurora.Modules.Archivers
 
         #endregion
 
-        #region ISharedRegionModule Members
-
-        public void Initialise(IConfigSource source)
-        {
-        }
-
-        public void AddRegion(IScene scene)
-        {
-            if (m_scene == null)
-                m_scene = scene;
-
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand("save avatar archive",
-                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>",
-                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
-                                                         HandleSaveAvatarArchive);
-                MainConsole.Instance.Commands.AddCommand("load avatar archive",
-                                                         "load avatar archive <First> <Last> <Filename>",
-                                                         "Loads appearance from an avatar archive",
-                                                         HandleLoadAvatarArchive);
-            }
-        }
-
-        public void RemoveRegion(IScene scene)
-        {
-        }
-
-        public void RegionLoaded(IScene scene)
-        {
-            InventoryService = m_scene.InventoryService;
-            AssetService = m_scene.AssetService;
-            UserAccountService = m_scene.UserAccountService;
-            AvatarService = m_scene.AvatarService;
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public string Name
-        {
-            get { return "AuroraAvatarArchiver"; }
-        }
-
-        #endregion
+        #region Console Commands
 
         protected void HandleLoadAvatarArchive(string[] cmdparams)
         {
@@ -276,11 +233,19 @@ namespace Aurora.Modules.Archivers
                 return;
             }
 
-            IScenePresence SP;
-            m_scene.TryGetScenePresence(account.PrincipalID, out SP);
-            if (SP == null)
-                return; //Bad people!
-            SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
+            IScenePresence SP = null;
+            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            if (manager != null)
+            {
+                foreach (IScene scene in manager.Scenes)
+                    if (scene.TryGetScenePresence(account.PrincipalID, out SP))
+                        break;
+                if (SP == null)
+                    return; //Bad people!
+            }
+
+            if(SP != null)
+                SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
 
             AvatarAppearance appearance = AvatarService.GetAppearance(SP.UUID);
             if (appearance == null)
@@ -429,5 +394,40 @@ namespace Aurora.Modules.Archivers
                 litems.Add(item);
             }
         }
+
+        #endregion
+
+        #region IService Members
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand("save avatar archive",
+                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>",
+                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
+                                                         HandleSaveAvatarArchive);
+                MainConsole.Instance.Commands.AddCommand("load avatar archive",
+                                                         "load avatar archive <First> <Last> <Filename>",
+                                                         "Loads appearance from an avatar archive",
+                                                         HandleLoadAvatarArchive);
+            }
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            AvatarService = registry.RequestModuleInterface<IAvatarService>();
+            AssetService = registry.RequestModuleInterface<IAssetService>();
+            InventoryService = registry.RequestModuleInterface<IInventoryService>();
+            m_registry.RegisterModuleInterface<IAvatarAppearanceArchiver>(this);
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
     }
 }

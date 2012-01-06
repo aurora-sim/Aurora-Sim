@@ -3511,7 +3511,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     group.UpdateGroupRotationR(rot);
 
                     //group.ApplyPhysics(m_physicalPrim);
-                    World.SceneGraph.AddPrimToScene(group);
                     if((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     {
                         group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate
@@ -3528,6 +3527,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             group.RootPart.PhysActor.Velocity = vel * groupmass;
                         };
                     }
+                    World.SceneGraph.AddPrimToScene(group);
 
                     group.CreateScriptInstances(param, true, StateSource.ScriptedRez, RezzedFrom);
 

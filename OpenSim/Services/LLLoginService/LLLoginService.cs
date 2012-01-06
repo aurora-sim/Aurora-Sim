@@ -42,7 +42,6 @@ using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using Aurora.DataManager;
-using AvatarArchives;
 
 namespace OpenSim.Services.LLLoginService
 {
@@ -65,6 +64,7 @@ namespace OpenSim.Services.LLLoginService
         protected IAvatarService m_AvatarService;
         protected IAssetService m_AssetService;
         protected ICapsService m_CapsService;
+        protected IAvatarAppearanceArchiver m_ArchiveService;
         protected IRegistryCore m_registry;
 
         protected string m_DefaultRegionName;
@@ -84,7 +84,6 @@ namespace OpenSim.Services.LLLoginService
         protected string m_DefaultHomeRegion = "";
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
-        protected GridAvatarArchiver archiver;
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
 
         public int MinLoginLevel
@@ -157,15 +156,13 @@ namespace OpenSim.Services.LLLoginService
             m_AssetService = registry.RequestModuleInterface<IAssetService> ().InnerService;
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_CapsService = registry.RequestModuleInterface<ICapsService>();
+            m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
 
             if (!Initialized)
             {
                 Initialized = true;
                 RegisterCommands();
             }
-            //Start the grid profile archiver.
-            new GridAvatarProfileArchiver(m_UserAccountService);
-            archiver = new GridAvatarArchiver(m_UserAccountService, m_AvatarService, m_InventoryService, m_AssetService);
 
             LoginModules = AuroraModuleLoader.PickupModules<ILoginModule>();
             foreach (ILoginModule module in LoginModules)
@@ -499,7 +496,7 @@ namespace OpenSim.Services.LLLoginService
                     string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
-                        archiver.LoadAvatarArchive(archiveName, account.Name);
+                        m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
                     }
                     if (UPI.IsNewUser)
@@ -614,7 +611,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
-                            archiver.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
+                            m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
                         }
                         else
                         {
@@ -1166,503 +1163,5 @@ namespace OpenSim.Services.LLLoginService
         }
 
         #endregion
-    }
-}
-
-namespace AvatarArchives
-{
-    using OpenMetaverse.StructuredData;
-    public class GridAvatarArchiver : IAvatarAppearanceArchiver
-    {
-        private readonly IUserAccountService UserAccountService;
-        private readonly IAvatarService AvatarService;
-        private readonly IInventoryService InventoryService;
-        private readonly IAssetService AssetService;
-
-        public GridAvatarArchiver (IUserAccountService ACS, IAvatarService AS, IInventoryService IS, IAssetService AService)
-        {
-            UserAccountService = ACS;
-            AvatarService = AS;
-            InventoryService = IS;
-            AssetService = AService;
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand ("save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> [<Snapshot UUID>] [<Public>]", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word. To save to the database ensure the name ends with .database. Snapshot is a uuid of the a snapshot of this archive. IsPublic should be a 0 or 1. IsPublic and Snapshot are only saved when saving to the database. )", HandleSaveAvatarArchive);
-                MainConsole.Instance.Commands.AddCommand ("load avatar archive", "load avatar archive <First> <Last> <Filename>", "Loads appearance from an avatar archive archive", HandleLoadAvatarArchive);
-            }
-        }
-
-        protected void HandleLoadAvatarArchive(string[] cmdparams)
-        {
-            if (cmdparams.Length < 5)
-            {
-                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
-                return;
-            }
-            LoadAvatarArchive(cmdparams[5], cmdparams[3] + " " + cmdparams[4]);
-        }
-
-        public void LoadAvatarArchive(string FileName, string Name)
-        {
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
-            MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
-            if (account == null)
-            {
-                MainConsole.Instance.Error("[AvatarArchive] User not found!");
-                return;
-            }
-            string file = "";
-            if (FileName.EndsWith(".database"))
-            {
-                MainConsole.Instance.Info("[AvatarArchive] Loading archive from the database " + FileName);
-
-                FileName = FileName.Substring(0, FileName.Length - 9);
-
-                IAvatarArchiverConnector avarchiver = DataManager.RequestPlugin<IAvatarArchiverConnector>();
-                AvatarArchive archive = avarchiver.GetAvatarArchive(FileName);
-
-                file = archive.ArchiveXML;
-            }
-            else
-            {
-                MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
-                StreamReader reader = new StreamReader(FileName);
-                file = reader.ReadToEnd();
-                reader.Close();
-                reader.Dispose();
-            }
-
-            string FolderNameToLoadInto = "";
-
-            OSD m = OSDParser.DeserializeLLSDXml(file);
-            if (m.Type != OSDType.Map)
-            {
-                MainConsole.Instance.Warn("[AvatarArchiver]: Failed to load AA from " + FileName + ", text: " + file);
-                return;
-            }
-            OSDMap map = ((OSDMap)m);
-
-            OSDMap assetsMap = ((OSDMap)map["Assets"]);
-            OSDMap itemsMap = ((OSDMap)map["Items"]);
-            OSDMap bodyMap = ((OSDMap)map["Body"]);
-
-            AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
-
-            appearance.Owner = account.PrincipalID;
-
-            List<InventoryItemBase> items = new List<InventoryItemBase>();
-
-            InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType (account.PrincipalID, InventoryType.Unknown, AssetType.Clothing);
-
-            InventoryFolderBase folderForAppearance
-                = new InventoryFolderBase(
-                    UUID.Random(), FolderNameToLoadInto, account.PrincipalID,
-                    -1, AppearanceFolder.ID, 1);
-
-            InventoryService.AddFolder(folderForAppearance);
-
-            folderForAppearance = InventoryService.GetFolder(folderForAppearance);
-
-            try
-            {
-                LoadAssets(assetsMap, appearance);
-                LoadItems(itemsMap, account.PrincipalID, folderForAppearance, appearance, out items);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
-            }
-
-            AvatarData adata = new AvatarData(appearance);
-            AvatarService.SetAvatar(account.PrincipalID, adata);
-
-            MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
-        }
-
-        private InventoryItemBase GiveInventoryItem(UUID senderId, UUID recipient, InventoryItemBase item, InventoryFolderBase parentFolder)
-        {
-            InventoryItemBase itemCopy = new InventoryItemBase();
-            itemCopy.Owner = recipient;
-            itemCopy.CreatorId = item.CreatorId;
-            itemCopy.CreatorData = item.CreatorData;
-            itemCopy.ID = UUID.Random();
-            itemCopy.AssetID = item.AssetID;
-            itemCopy.Description = item.Description;
-            itemCopy.Name = item.Name;
-            itemCopy.AssetType = item.AssetType;
-            itemCopy.InvType = item.InvType;
-            itemCopy.Folder = UUID.Zero;
-
-            //Give full permissions for them
-            itemCopy.NextPermissions = (uint)PermissionMask.All;
-            itemCopy.GroupPermissions = (uint)PermissionMask.All;
-            itemCopy.EveryOnePermissions = (uint)PermissionMask.All;
-            itemCopy.CurrentPermissions = (uint)PermissionMask.All;
-
-            if (parentFolder == null)
-            {
-                InventoryFolderBase folder = InventoryService.GetFolderForType (recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
-
-                if (folder != null)
-                    itemCopy.Folder = folder.ID;
-                else
-                {
-                    InventoryFolderBase root = InventoryService.GetRootFolder(recipient);
-
-                    if (root != null)
-                        itemCopy.Folder = root.ID;
-                    else
-                        return null; // No destination
-                }
-            }
-            else
-                itemCopy.Folder = parentFolder.ID; //We already have a folder to put it in
-
-            itemCopy.GroupID = UUID.Zero;
-            itemCopy.GroupOwned = false;
-            itemCopy.Flags = item.Flags;
-            itemCopy.SalePrice = item.SalePrice;
-            itemCopy.SaleType = item.SaleType;
-
-            InventoryService.AddItem(itemCopy);
-            return itemCopy;
-        }
-
-        private AvatarAppearance ConvertXMLToAvatarAppearance(OSDMap map, out string FolderNameToPlaceAppearanceIn)
-        {
-            AvatarAppearance appearance = new AvatarAppearance();
-
-            appearance.Unpack(map);
-            FolderNameToPlaceAppearanceIn = map["FolderName"].AsString();
-            return appearance;
-        }
-
-        protected void HandleSaveAvatarArchive(string[] cmdparams)
-        {
-            if (cmdparams.Length < 7)
-            {
-                MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
-                return;
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            if (account == null)
-            {
-                MainConsole.Instance.Error("[AvatarArchive] User not found!");
-                return;
-            }
-
-            AvatarAppearance appearance = AvatarService.GetAppearance(account.PrincipalID);
-            OSDMap map = new OSDMap();
-            OSDMap body = new OSDMap();
-            OSDMap assets = new OSDMap();
-            OSDMap items = new OSDMap();
-            body = appearance.Pack();
-            body.Add("FolderName", OSD.FromString(cmdparams[6]));
-
-            try
-            {
-                foreach (AvatarWearable wear in appearance.Wearables)
-                {
-                    for (int i = 0; i < wear.Count; i++)
-                    {
-                        WearableItem w = wear[i];
-                        if (w.AssetID != UUID.Zero)
-                        {
-                            SaveItem(w.ItemID, items, assets);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("Excpetion: " + ex);
-            }
-            try
-            {
-                List<AvatarAttachment> attachments = appearance.GetAttachments();
-                foreach (AvatarAttachment a in attachments)
-                {
-                    if (a.AssetID != UUID.Zero)
-                    {
-                        SaveItem(a.ItemID, items, assets); 
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                MainConsole.Instance.Warn("Excpetion: " + ex);
-            }
-
-            map.Add("Body", body);
-            map.Add("Assets", assets);
-            map.Add("Items", items);
-            //Write the map
-
-            if (cmdparams[5].EndsWith(".database"))
-            {
-                //Remove the .database
-                string ArchiveName = cmdparams[5].Substring(0, cmdparams[5].Length - 9);
-                string ArchiveXML = OSDParser.SerializeLLSDXmlString(map);
-
-                AvatarArchive archive = new AvatarArchive {ArchiveXML = ArchiveXML, Name = ArchiveName};
-
-                if ((cmdparams.Length >= 8) && (cmdparams[7].Length == 36)) archive.Snapshot = cmdparams[7];
-                if ((cmdparams.Length >= 9) && (cmdparams[8].Length == 1)) archive.IsPublic = int.Parse(cmdparams[8]);
-				
-                DataManager.RequestPlugin<IAvatarArchiverConnector>().SaveAvatarArchive(archive);
-
-                MainConsole.Instance.Info("[AvatarArchive] Saved archive to database " + cmdparams[5]);
-            }
-            else
-            {
-                MainConsole.Instance.Info("[AvatarArchive] Saving archive to " + cmdparams[5]);
-                StreamWriter writer = new StreamWriter(cmdparams[5], false);
-                writer.Write(OSDParser.SerializeLLSDXmlString(map));
-                writer.Close();
-                writer.Dispose();
-                MainConsole.Instance.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
-            }
-        }
-
-        private void SaveAsset(UUID AssetID, OSDMap assetMap)
-        {
-            AssetBase asset = AssetService.Get(AssetID.ToString());
-            if (asset != null && AssetID != UUID.Zero)
-            {
-                OSDMap assetData = new OSDMap();
-                MainConsole.Instance.Info("[AvatarArchive]: Saving asset " + asset.ID);
-                CreateMetaDataMap(asset, assetData);
-                assetData.Add("AssetData", OSD.FromBinary(asset.Data));
-                assetMap[asset.ID.ToString()] = assetData;
-            }
-            else
-            {
-                MainConsole.Instance.Warn("[AvatarArchive]: Could not find asset to save: " + AssetID.ToString());
-                return;
-            }
-        }
-
-        private void CreateMetaDataMap(AssetBase data, OSDMap map)
-        {
-            map["ContentType"] = OSD.FromString(data.TypeString);
-            map["CreationDate"] = OSD.FromDate(data.CreationDate);
-            map["CreatorID"] = OSD.FromUUID(data.CreatorID);
-            map["Description"] = OSD.FromString(data.Description);
-            map["ID"] = OSD.FromUUID(data.ID);
-            map["Name"] = OSD.FromString(data.Name);
-            map["Type"] = OSD.FromInteger(data.Type);
-        }
-
-        private AssetBase LoadAssetBase(OSDMap map)
-        {
-            AssetBase asset = new AssetBase
-                                  {
-                                      Data = map["AssetData"].AsBinary(),
-                                      TypeString = map["ContentType"].AsString(),
-                                      CreationDate = map["CreationDate"].AsDate(),
-                                      CreatorID = map["CreatorID"].AsUUID(),
-                                      Description = map["Description"].AsString(),
-                                      ID = map["ID"].AsUUID(),
-                                      Name = map["Name"].AsString(),
-                                      Type = map["Type"].AsInteger()
-                                  };
-            return asset;
-        }
-
-        private void SaveItem(UUID ItemID, OSDMap itemMap, OSDMap assets)
-        {
-            InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
-            if (saveItem == null)
-            {
-                MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
-                return;
-            }
-            MainConsole.Instance.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
-            string serialization = Aurora.Framework.Serialization.External.UserInventoryItemSerializer.Serialize(saveItem);
-            itemMap[ItemID.ToString()] = OSD.FromString(serialization);
-
-            SaveAsset(saveItem.AssetID, assets);
-        }
-
-        private void LoadAssets(OSDMap assets, AvatarAppearance appearance)
-        {
-            foreach (KeyValuePair<string, OSD> kvp in assets)
-            {
-                UUID AssetID = UUID.Parse(kvp.Key);
-                OSDMap assetMap = (OSDMap)kvp.Value;
-                AssetBase asset = AssetService.Get(AssetID.ToString());
-                MainConsole.Instance.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
-                if (asset == null) //Don't overwrite
-                {
-                    asset = LoadAssetBase(assetMap);
-                    UUID oldassetID = asset.ID;
-                    UUID newAssetID = AssetService.Store(asset);
-                    asset.ID = newAssetID;
-                    //Fix the IDs
-                    AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
-                    appearance.Wearables.CopyTo(wearables, 0);
-                    for (int a = 0; a < wearables.Length; a++)
-                    {
-                        for (int i = 0; i < wearables[a].Count; i++)
-                        {
-                            if (wearables[a][i].AssetID == oldassetID)
-                            {
-                                //Fix the ItemID
-                                AvatarWearable w = wearables[a];
-                                UUID itemID = w.GetItem(oldassetID);
-                                w.RemoveItem(oldassetID);
-                                w.Add(itemID, newAssetID);
-                                appearance.SetWearable(a, w);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void LoadItems(OSDMap items, UUID OwnerID, InventoryFolderBase folderForAppearance, AvatarAppearance appearance, out List<InventoryItemBase> litems)
-        {
-            litems = new List<InventoryItemBase>();
-            foreach (KeyValuePair<string, OSD> kvp in items)
-            {
-                string serialization = kvp.Value.AsString();
-                InventoryItemBase item = Aurora.Framework.Serialization.External.UserInventoryItemSerializer.Deserialize(serialization);
-                MainConsole.Instance.Info("[AvatarArchive]: Loading item " + item.ID.ToString());
-                UUID oldID = item.ID;
-                item = GiveInventoryItem(item.CreatorIdAsUuid, OwnerID, item, folderForAppearance);
-                litems.Add(item);
-                FixItemIDs(oldID, item, appearance);
-            }
-        }
-
-        private void FixItemIDs(UUID oldID, InventoryItemBase item, AvatarAppearance appearance)
-        {
-            //Fix the IDs
-            AvatarWearable[] wearables = new AvatarWearable[appearance.Wearables.Length];
-            appearance.Wearables.CopyTo(wearables, 0);
-            for (int a = 0; a < wearables.Length; a++)
-            {
-                for (int i = 0; i < wearables[a].Count; i++)
-                {
-                    if (wearables[a][i].ItemID == oldID)
-                    {
-                        //Fix the ItemID
-                        AvatarWearable w = new AvatarWearable();
-                        w.Unpack((OSDArray)wearables[a].Pack());
-                        UUID assetID = w.GetAsset(oldID);
-                        w.RemoveItem(oldID);
-                        w.Add(item.ID, assetID);
-                        appearance.SetWearable(a, w);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    public class GridAvatarProfileArchiver
-    {
-        private readonly IUserAccountService UserAccountService;
-        public GridAvatarProfileArchiver (IUserAccountService UAS)
-        {
-            UserAccountService = UAS;
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand ("save avatar profile",
-                                      "save avatar profile <First> <Last> <Filename>",
-                                      "Saves profile and avatar data to an archive", HandleSaveAvatarProfile);
-                MainConsole.Instance.Commands.AddCommand ("load avatar profile",
-                                              "load avatar profile <First> <Last> <Filename>",
-                                              "Loads profile and avatar data from an archive", HandleLoadAvatarProfile);
-            }
-        }
-
-        protected void HandleLoadAvatarProfile(string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
-                return;
-            }
-            StreamReader reader = new StreamReader(cmdparams[5]);
-            string document = reader.ReadToEnd();
-            reader.Close();
-            reader.Dispose();
-
-            string[] lines = document.Split('\n');
-            List<string> file = new List<string>(lines);
-            Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(file[1]);
-
-            Dictionary<string, object> results = replyData["result"] as Dictionary<string, object>;
-            if (results != null)
-            {
-                UserAccount UDA = new UserAccount
-                                      {
-                                          Name = cmdparams[3] + cmdparams[4],
-                                          PrincipalID = UUID.Random(),
-                                          ScopeID = UUID.Zero,
-                                          UserFlags = int.Parse(results["UserFlags"].ToString()),
-                                          UserLevel = 0,
-                                          UserTitle = results["UserTitle"].ToString(),
-                                          Email = results["Email"].ToString(),
-                                          Created = int.Parse(results["Created"].ToString())
-                                      };
-                //For security... Don't want everyone loading full god mode.
-                UserAccountService.StoreUserAccount(UDA);
-
-                replyData = WebUtils.ParseXmlResponse(file[2]);
-                IUserProfileInfo UPI = new IUserProfileInfo();
-                UPI.FromKVP(replyData["result"] as Dictionary<string, object>);
-                //Update the principle ID to the new user.
-                UPI.PrincipalID = UDA.PrincipalID;
-
-                IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
-                if (profileData.GetUserProfile(UPI.PrincipalID) == null)
-                    profileData.CreateNewProfile(UPI.PrincipalID);
-
-                profileData.UpdateUserProfile(UPI);
-            }
-
-            MainConsole.Instance.Info("[AvatarProfileArchiver] Loaded Avatar Profile from " + cmdparams[5]);
-        }
-        protected void HandleSaveAvatarProfile(string[] cmdparams)
-        {
-            if (cmdparams.Length != 6)
-            {
-                MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
-                return;
-            }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]);
-            if (account == null)
-            {
-                MainConsole.Instance.Info("Account could not be found, stopping now.");
-                return;
-            }
-            IProfileConnector data = DataManager.RequestPlugin<IProfileConnector>();
-            string UPIxmlString = "";
-            Dictionary<string, object> result = new Dictionary<string, object>();
-            if (data != null)
-            {
-                IUserProfileInfo profile = data.GetUserProfile(account.PrincipalID);
-                if (profile != null)
-                {
-                    result["result"] = profile.ToKVP();
-                    UPIxmlString = WebUtils.BuildXmlResponse(result);
-                }
-            }
-
-            result["result"] = account.ToKVP();
-            string UDAxmlString = WebUtils.BuildXmlResponse(result);
-
-            StreamWriter writer = new StreamWriter(cmdparams[5]);
-            writer.Write("<profile>\n");
-            writer.Write(UDAxmlString + "\n");
-            writer.Write(UPIxmlString + "\n");
-            writer.Write("</profile>\n");
-            writer.Close();
-            writer.Dispose();
-            MainConsole.Instance.Info("[AvatarProfileArchiver] Saved Avatar Profile to " + cmdparams[5]);
-        }
     }
 }
