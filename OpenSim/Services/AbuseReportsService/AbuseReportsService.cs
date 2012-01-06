@@ -35,7 +35,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.AbuseReports
 {
-    public class AbuseReports : IAbuseReports, IService
+    public class AbuseReportsService : ConnectorBase, IAbuseReports, IService
     {
         public string Name
         {
@@ -44,15 +44,25 @@ namespace OpenSim.Services.AbuseReports
 
         #region IAbuseReports Members
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddAbuseReport(AbuseReport abuse_report)
         {
+            object remoteValue = DoRemote(abuse_report);
+            if (remoteValue != null)
+                return;
+
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.AddAbuseReport(abuse_report);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
+            object remoteValue = DoRemote(Number, Password);
+            if (remoteValue != null)
+                return (AbuseReport)remoteValue;
+
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 return conn.GetAbuseReport(Number, Password);
@@ -60,20 +70,28 @@ namespace OpenSim.Services.AbuseReports
                 return null;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAbuseReport(AbuseReport report, string Password)
         {
+            object remoteValue = DoRemote(report, Password);
+            if (remoteValue != null)
+                return;
+
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
                 conn.UpdateAbuseReport(report, Password);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
         {
+            object remoteValue = DoRemote(start, count, filter);
+            if (remoteValue != null)
+                return (List<AbuseReport>)remoteValue;
+
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             if (conn != null)
-            {
                 return conn.GetAbuseReports(start, count, filter);
-            }
             else
                 return null;
         }
@@ -85,6 +103,7 @@ namespace OpenSim.Services.AbuseReports
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IAbuseReports>(this);
+            Init(registry, Name);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

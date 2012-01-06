@@ -37,7 +37,7 @@ using OpenMetaverse;
 using OpenSim.Services.Interfaces;
 using OpenMetaverse.StructuredData;
 
-namespace Aurora.Services.DataService
+namespace Aurora.Framework
 {
     public class ConnectorBase
     {
@@ -61,12 +61,17 @@ namespace Aurora.Services.DataService
 
         public object DoRemote(params object[] o)
         {
-            return DoRemoteForUser(UUID.Zero, o);
+            return DoRemoteForUser(false, UUID.Zero, o);
         }
 
-        public object DoRemoteForUser(UUID userID, params object[] o)
+        public object DoRemoteForced(params object[] o)
         {
-            if (!m_doRemoteCalls)
+            return DoRemoteForUser(true, UUID.Zero, o);
+        }
+
+        public object DoRemoteForUser(bool forced, UUID userID, params object[] o)
+        {
+            if (!m_doRemoteCalls && !forced)
                 return null;
             StackTrace stackTrace = new StackTrace();
             int upStack = 1;
