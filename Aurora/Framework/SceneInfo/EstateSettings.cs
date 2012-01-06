@@ -237,19 +237,21 @@ namespace Aurora.Framework
             AllowSetHome = values["AllowSetHome"].AsBoolean();
             DenyMinors = values["DenyMinors"].AsBoolean();
 
-            OSDMap Managers = values["EstateManagers"] as OSDMap;
+            OSDArray Managers = values["EstateManagers"] as OSDArray;
 #if (!ISWIN)
             List<UUID> list = new List<UUID>();
-            foreach (OSD id in Managers.Values)
+            foreach (OSD id in Managers)
+            {
                 list.Add(id.AsUUID());
+            }
             EstateManagers = list.ToArray();
 #else
             EstateManagers = Managers.Values.Select(ID => ID.AsUUID()).ToArray();
 #endif
 
-            OSDMap Ban = values["EstateBans"] as OSDMap;
+            OSDArray Ban = values["EstateBans"] as OSDArray;
             List<EstateBan> NewBan = new List<EstateBan>();
-            foreach (OSD BannedUser in Ban.Values)
+            foreach (OSD BannedUser in Ban)
             {
                 EstateBan ban = new EstateBan();
                 ban.FromOSD(BannedUser);
@@ -257,21 +259,25 @@ namespace Aurora.Framework
             }
             EstateBans = NewBan.ToArray();
 
-            OSDMap Access = values["EstateAccess"] as OSDMap;
+            OSDArray Access = values["EstateAccess"] as OSDArray;
 #if (!ISWIN)
             List<UUID> list1 = new List<UUID>();
-            foreach (OSD uuid in Access.Values)
+            foreach (OSD uuid in Access)
+            {
                 list1.Add(uuid.AsUUID());
+            }
             EstateAccess = list1.ToArray();
 #else
             EstateAccess = Access.Values.Select(UUID => UUID.AsUUID()).ToArray();
 #endif
 
-            OSDMap Groups = values["EstateGroups"] as OSDMap;
+            OSDArray Groups = values["EstateGroups"] as OSDArray;
 #if (!ISWIN)
             List<UUID> list2 = new List<UUID>();
-            foreach (OSD uuid in Groups.Values)
+            foreach (OSD uuid in Groups)
+            {
                 list2.Add(uuid.AsUUID());
+            }
             EstateGroups = list2.ToArray();
 #else
             EstateGroups = Groups.Values.Select(UUID => UUID.AsUUID()).ToArray();
@@ -309,184 +315,45 @@ namespace Aurora.Framework
             values["AllowParcelChanges"] = AllowParcelChanges;
             values["AllowSetHome"] = AllowSetHome;
 
-            OSDMap Ban = new OSDMap();
-            int i = 0;
+            OSDArray Ban = new OSDArray(EstateBans.Length);
             foreach (EstateBan ban in EstateBans)
             {
-                Ban[Util.ConvertDecString(i)] = ban.ToOSD();
-                i++;
+                Ban.Add(ban.ToOSD());
             }
             values["EstateBans"] = Ban;
-            i *= 0;
 
-            OSDMap Managers = new OSDMap();
-            foreach (UUID ID in EstateManagers)
+            OSDArray Managers = new OSDArray(EstateManagers.Length);
+            EstateManagers.ToList<UUID>().ForEach(delegate(UUID ID)
             {
-                Managers[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
+                Managers.Add(ID);
+            });
             values["EstateManagers"] = Managers;
-            i *= 0;
 
-            OSDMap Groups = new OSDMap();
-            foreach (UUID ID in EstateGroups)
+            OSDArray Groups = new OSDArray(EstateGroups.Length);
+            EstateGroups.ToList<UUID>().ForEach(delegate(UUID ID)
             {
-                Groups[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
+                Groups.Add(ID);
+            });
             values["EstateGroups"] = Groups;
-            i *= 0;
 
-            OSDMap Access = new OSDMap();
-            foreach (UUID ID in EstateAccess)
+            OSDArray Access = new OSDArray(EstateAccess.Length);
+            EstateAccess.ToList<UUID>().ForEach(delegate(UUID ID)
             {
-                Access[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
+                Access.Add(ID);
+            });
             values["EstateAccess"] = Access;
-            i *= 0;
+
             return values;
         }
 
         public override void FromKVP(Dictionary<string, object> values)
         {
-            EstateID = (uint)int.Parse(values["EstateID"].ToString());
-            EstateName = values["EstateName"].ToString();
-            AbuseEmailToEstateOwner = int.Parse(values["AbuseEmailToEstateOwner"].ToString()) == 1;
-            DenyAnonymous = int.Parse(values["DenyAnonymous"].ToString()) == 1;
-            ResetHomeOnTeleport = int.Parse(values["ResetHomeOnTeleport"].ToString()) == 1;
-            FixedSun = int.Parse(values["FixedSun"].ToString()) == 1;
-            DenyTransacted = int.Parse(values["DenyTransacted"].ToString()) == 1;
-            BlockDwell = int.Parse(values["BlockDwell"].ToString()) == 1;
-            DenyIdentified = int.Parse(values["DenyIdentified"].ToString()) == 1;
-            AllowVoice = int.Parse(values["AllowVoice"].ToString()) == 1;
-            UseGlobalTime = int.Parse(values["UseGlobalTime"].ToString()) == 1;
-            PricePerMeter = int.Parse(values["PricePerMeter"].ToString());
-            TaxFree = int.Parse(values["TaxFree"].ToString()) == 1;
-            AllowDirectTeleport = int.Parse(values["AllowDirectTeleport"].ToString()) == 1;
-            RedirectGridX = int.Parse(values["RedirectGridX"].ToString());
-            RedirectGridY = int.Parse(values["RedirectGridY"].ToString());
-            ParentEstateID = (uint)int.Parse(values["ParentEstateID"].ToString());
-            SunPosition = double.Parse(values["SunPosition"].ToString());
-            EstateSkipScripts = int.Parse(values["EstateSkipScripts"].ToString()) == 1;
-            BillableFactor = float.Parse(values["BillableFactor"].ToString());
-            PublicAccess = int.Parse(values["PublicAccess"].ToString()) == 1;
-            AbuseEmail = values["AbuseEmail"].ToString();
-            EstateOwner = new UUID(values["EstateOwner"].ToString());
-            AllowLandmark = int.Parse(values["AllowLandmark"].ToString()) == 1;
-            AllowParcelChanges = int.Parse(values["AllowParcelChanges"].ToString()) == 1;
-            AllowSetHome = int.Parse(values["AllowSetHome"].ToString()) == 1;
-            DenyMinors = int.Parse(values["DenyMinors"].ToString()) == 1;
-
-            Dictionary<string, object> Managers = values["EstateManagers"] as Dictionary<string, object>;
-#if (!ISWIN)
-            List<UUID> list = new List<UUID>();
-            foreach (object uuid in Managers.Values)
-                list.Add(new UUID(uuid.ToString()));
-            EstateManagers = list.ToArray();
-#else
-            EstateManagers = Managers.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
-#endif
-
-            Dictionary<string, object> Ban = values["EstateBans"] as Dictionary<string, object>;
-#if (!ISWIN)
-            List<EstateBan> list1 = new List<EstateBan>();
-            foreach (object bannedUser in Ban.Values)
-                list1.Add(new EstateBan((Dictionary<string, object>)bannedUser));
-            EstateBans = list1.ToArray();
-#else
-            EstateBans = Ban.Values.Select(BannedUser => new EstateBan((Dictionary<string, object>) BannedUser)).ToArray();
-#endif
-
-            Dictionary<string, object> Access = values["EstateAccess"] as Dictionary<string, object>;
-#if (!ISWIN)
-            List<UUID> list2 = new List<UUID>();
-            foreach (object uuid in Access.Values)
-                list2.Add(new UUID(uuid.ToString()));
-            EstateAccess = list2.ToArray();
-#else
-            EstateAccess = Access.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
-#endif
-
-            Dictionary<string, object> Groups = values["EstateGroups"] as Dictionary<string, object>;
-#if (!ISWIN)
-            List<UUID> list3 = new List<UUID>();
-            foreach (object uuid in Groups.Values)
-                list3.Add(new UUID(uuid.ToString()));
-            EstateGroups = list3.ToArray();
-#else
-            EstateGroups = Groups.Values.Select(UUID => new UUID(UUID.ToString())).ToArray();
-#endif
+            FromOSD(Util.DictionaryToOSD(values));
         }
 
         public override Dictionary<string, object> ToKVP()
         {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values["EstateID"] = (int) EstateID;
-            values["EstateName"] = EstateName;
-            values["AbuseEmailToEstateOwner"] = (AbuseEmailToEstateOwner ? 1 : 0);
-            values["DenyAnonymous"] = DenyAnonymous ? 1 : 0;
-            values["ResetHomeOnTeleport"] = ResetHomeOnTeleport ? 1 : 0;
-            values["FixedSun"] = FixedSun ? 1 : 0;
-            values["DenyTransacted"] = DenyTransacted ? 1 : 0;
-            values["BlockDwell"] = BlockDwell ? 1 : 0;
-            values["DenyIdentified"] = DenyIdentified ? 1 : 0;
-            values["AllowVoice"] = AllowVoice ? 1 : 0;
-            values["UseGlobalTime"] = UseGlobalTime ? 1 : 0;
-            values["PricePerMeter"] = PricePerMeter;
-            values["TaxFree"] = TaxFree ? 1 : 0;
-            values["AllowDirectTeleport"] = AllowDirectTeleport ? 1 : 0;
-            values["RedirectGridX"] = RedirectGridX;
-            values["RedirectGridY"] = RedirectGridY;
-            values["ParentEstateID"] = (int) ParentEstateID;
-            values["SunPosition"] = SunPosition;
-            values["EstateSkipScripts"] = EstateSkipScripts ? 1 : 0;
-            values["BillableFactor"] = BillableFactor;
-            values["PublicAccess"] = PublicAccess ? 1 : 0;
-            values["AbuseEmail"] = AbuseEmail;
-            values["EstateOwner"] = EstateOwner;
-            values["DenyMinors"] = DenyMinors ? 1 : 0;
-            values["AllowLandmark"] = AllowLandmark ? 1 : 0;
-            values["AllowParcelChanges"] = AllowParcelChanges ? 1 : 0;
-            values["AllowSetHome"] = AllowSetHome ? 1 : 0;
-
-            Dictionary<string, object> Ban = new Dictionary<string, object>();
-            int i = 0;
-            foreach (EstateBan ban in EstateBans)
-            {
-                Ban[Util.ConvertDecString(i)] = ban.ToKeyValuePairs();
-                i++;
-            }
-            values["EstateBans"] = Ban;
-            i *= 0;
-
-            Dictionary<string, object> Managers = new Dictionary<string, object>();
-            foreach (UUID ID in EstateManagers)
-            {
-                Managers[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
-            values["EstateManagers"] = Managers;
-            i *= 0;
-
-            Dictionary<string, object> Groups = new Dictionary<string, object>();
-            foreach (UUID ID in EstateGroups)
-            {
-                Groups[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
-            values["EstateGroups"] = Groups;
-            i *= 0;
-
-            Dictionary<string, object> Access = new Dictionary<string, object>();
-            foreach (UUID ID in EstateAccess)
-            {
-                Access[Util.ConvertDecString(i)] = ID;
-                i++;
-            }
-            values["EstateAccess"] = Access;
-            i *= 0;
-            return values;
+            return Util.OSDToDictionary(ToOSD());
         }
 
         public void Save()
