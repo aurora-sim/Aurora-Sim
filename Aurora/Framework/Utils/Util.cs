@@ -1656,7 +1656,7 @@ namespace Aurora.Framework
             if (o is OSD)
                 return (OSD)o;
             OSD oo;
-            if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown && !t.IsArray)
+            if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown)
                 return (OSD)oo;
             if (o is IDataTransferable)
                 return ((IDataTransferable)o).ToOSD();

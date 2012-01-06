@@ -313,7 +313,7 @@ namespace OpenSim.Services.GridService
         public virtual RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
         {
             RegisterRegion rr = new RegisterRegion();
-            object remoteValue = DoRemote(regionInfos, oldSessionID);
+            object remoteValue = DoRemoteByURL("RegistrationURI", regionInfos, oldSessionID);
             if (remoteValue != null)
             {
                 rr = (RegisterRegion)remoteValue;

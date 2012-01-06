@@ -83,15 +83,25 @@ namespace Aurora.Framework
 
         public object DoRemote(params object[] o)
         {
-            return DoRemoteForUser(false, UUID.Zero, o);
+            return DoRemoteCall(false, "ServerURI", UUID.Zero, o);
         }
 
         public object DoRemoteForced(params object[] o)
         {
-            return DoRemoteForUser(true, UUID.Zero, o);
+            return DoRemoteCall(true, "ServerURI", UUID.Zero, o);
         }
 
-        public object DoRemoteForUser(bool forced, UUID userID, params object[] o)
+        public object DoRemoteForUser(UUID userID, params object[] o)
+        {
+            return DoRemoteCall(false, "ServerURI", UUID.Zero, o);
+        }
+
+        public object DoRemoteByURL(string url, params object[] o)
+        {
+            return DoRemoteCall(false, url, UUID.Zero, o);
+        }
+
+        public object DoRemoteCall(bool forced, string url, UUID userID, params object[] o)
         {
             if (!m_doRemoteCalls && !forced)
                 return null;
@@ -100,7 +110,8 @@ namespace Aurora.Framework
             if (userID == UUID.Zero)
                 upStack = 2;
             MethodInfo method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
-            string methodName = method.Name;
+            CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+            string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
             int i = 0;
@@ -112,8 +123,7 @@ namespace Aurora.Framework
                 i++;
             }
             List<string> m_ServerURIs =
-                    m_configService.FindValueOf(userID.ToString(), "ServerURI", false);
-            m_ServerURIs.Add("http://127.0.0.1:8002/");
+                    m_configService.FindValueOf(userID.ToString(), url, false);
             OSDMap response = null;
             foreach (string uri in m_ServerURIs)
             {
@@ -122,7 +132,16 @@ namespace Aurora.Framework
             }
             if (response == null || !response)
                 return null;
-            object inst =  Activator.CreateInstance(method.ReturnType);
+            object inst = null;
+            try
+            {
+                inst = Activator.CreateInstance(method.ReturnType);
+            }
+            catch
+            {
+                if (method.ReturnType == typeof(string))
+                    inst = string.Empty;
+            }
             if (inst is IDataTransferable)
             {
                 IDataTransferable instance = (IDataTransferable)inst;
@@ -138,10 +157,18 @@ namespace Aurora.Framework
             response = null;
             string resp = SynchronousRestFormsRequester.MakeRequest("POST",
                                                           url,
-                                                          OSDParser.SerializeJsonString(map));
+                                                          OSDParser.SerializeJsonString(map, true));
             if (resp == "")
                 return false;
-            response = (OSDMap)OSDParser.DeserializeJson(resp);
+            try
+            {
+                response = (OSDMap)OSDParser.DeserializeJson(resp);
+            }
+            catch
+            {
+                response = null;
+                return false;
+            }
             return response["Success"];
         }
     }

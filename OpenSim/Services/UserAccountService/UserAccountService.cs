@@ -199,7 +199,7 @@ namespace OpenSim.Services.UserAccountService
             return d[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
         public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
             UserAccount account;

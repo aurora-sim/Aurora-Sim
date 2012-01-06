@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
-            object remoteValue = DoRemoteForUser(false, agentID, agentID);
+            object remoteValue = DoRemoteForUser(agentID, agentID);
             if (remoteValue != null)
                 return (IAgentInfo)remoteValue;
 
@@ -104,7 +104,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
-            object remoteValue = DoRemoteForUser(false, agent.PrincipalID, agent.ToOSD());
+            object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
             if (remoteValue != null)
                 return;
 

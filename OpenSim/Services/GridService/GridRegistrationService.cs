@@ -451,7 +451,7 @@ namespace OpenSim.Services.GridService
 
         public class GridRegistrationURLs : IDataTransferable
         {
-            public static readonly int CurrentVersionNumber = 1;
+            public static readonly int CurrentVersionNumber = 2;
             public OSDMap URLS;
             public string SessionID;
             public DateTime Expiration;

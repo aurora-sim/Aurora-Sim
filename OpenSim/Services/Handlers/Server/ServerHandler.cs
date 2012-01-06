@@ -97,7 +97,7 @@ namespace OpenSim.Services
 
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
 
-            AddExistingUrlForClient("", "", 8002);
+            AddExistingUrlForClient("", "/", 8003);
         }
 
         public void FinishedStartup()
@@ -135,12 +135,13 @@ namespace OpenSim.Services
                     alreadyRunPlugins.Add(plugin.PluginName);
                     foreach (MethodInfo method in plugin.GetType().GetMethods())
                     {
-                        if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                        CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+                        if (reflection != null)
                         {
                             List<MethodImplementation> methods = new List<MethodImplementation>();
                             MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
                             if (!m_methods.TryGetValue(method.Name, out methods))
-                                m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
+                                m_methods.Add(reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod, (methods = new List<MethodImplementation>()));
 
                             methods.Add(imp);
                         }
