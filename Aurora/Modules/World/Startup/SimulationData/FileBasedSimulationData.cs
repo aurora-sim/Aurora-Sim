@@ -67,6 +67,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         //For backwards compat
         protected List<LandData> m_parcels = new List<LandData>();
         protected bool m_requiresSave = true;
+        protected bool m_displayNotSavingNotice = true;
         protected byte[] m_revertTerrain;
         protected byte[] m_revertWater;
         protected string m_saveAppenedFileName = "";
@@ -348,6 +349,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
             if (m_requiresSave)
             {
+                m_displayNotSavingNotice = true;
                 m_requiresSave = false;
                 m_saveTimer.Stop();
                 try
@@ -361,8 +363,11 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 }
                 m_saveTimer.Start(); //Restart it as we just did a backup
             }
-            else
+            else if (m_displayNotSavingNotice)
+            {
+                m_displayNotSavingNotice = false;
                 MainConsole.Instance.Info("[FileBasedSimulationData]: Not saving backup, not required");
+            }
         }
 
         /// <summary>
