@@ -11,7 +11,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 4;
+        private const int _currentBinVersion = 5;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -103,7 +103,6 @@ namespace Aurora.Simulation.Base
                 new[] { MigratorAction.Add, MigratorAction.Add });
         }
 
-
         public void RunMigration4()
         {
             IniMigrator.UpdateIniFile("Configuration/Grid/Grid.ini", "AuroraConnectors",
@@ -112,6 +111,14 @@ namespace Aurora.Simulation.Base
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
                 new[] { "DefaultRegionThreatLevel" }, new[] { "High" },
                 new[] { MigratorAction.Add, MigratorAction.Add });
+        }
+
+        public void RunMigration5()
+        {
+            IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
+                new[] { "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium", "Threat_Level_High","Threat_Level_Full" },
+                new[] { "", "", "", "", ""},
+                new[] { MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add });
         }
     }
 
