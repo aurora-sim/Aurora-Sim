@@ -246,7 +246,7 @@ namespace Aurora.Framework
             }
             EstateManagers = list.ToArray();
 #else
-            EstateManagers = Managers.Values.Select(ID => ID.AsUUID()).ToArray();
+            EstateManagers = Managers.Select(id => id.AsUUID()).ToArray();
 #endif
 
             OSDArray Ban = values["EstateBans"] as OSDArray;
@@ -268,7 +268,7 @@ namespace Aurora.Framework
             }
             EstateAccess = list1.ToArray();
 #else
-            EstateAccess = Access.Values.Select(UUID => UUID.AsUUID()).ToArray();
+            EstateAccess = Access.Select(uuid => uuid.AsUUID()).ToArray();
 #endif
 
             OSDArray Groups = values["EstateGroups"] as OSDArray;
@@ -280,7 +280,7 @@ namespace Aurora.Framework
             }
             EstateGroups = list2.ToArray();
 #else
-            EstateGroups = Groups.Values.Select(UUID => UUID.AsUUID()).ToArray();
+            EstateGroups = Groups.Select(uuid => uuid.AsUUID()).ToArray();
 #endif
         }
 
