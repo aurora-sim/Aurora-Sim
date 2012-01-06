@@ -125,10 +125,6 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual AssetBase GetCached(string id)
         {
-            object remoteValue = DoRemote(id);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (AssetBase)remoteValue;
-
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
                 return cache.Get(id);

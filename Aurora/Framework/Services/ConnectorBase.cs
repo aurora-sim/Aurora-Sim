@@ -142,7 +142,8 @@ namespace Aurora.Framework
                     inst = string.Empty;
                 else if (method.ReturnType == typeof(void))
                     return null;
-                inst = Activator.CreateInstance(method.ReturnType);
+                else
+                    inst = Activator.CreateInstance(method.ReturnType);
             }
             catch
             {

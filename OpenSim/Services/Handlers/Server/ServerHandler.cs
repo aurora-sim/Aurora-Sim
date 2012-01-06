@@ -111,6 +111,7 @@ namespace OpenSim.Services
     {
         public MethodInfo Method;
         public ConnectorBase Reference;
+        public CanBeReflected Attribute;
     }
 
     public unsafe class ServerHandler : BaseStreamHandler
@@ -140,7 +141,7 @@ namespace OpenSim.Services
                         {
                             string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
                             List<MethodImplementation> methods = new List<MethodImplementation>();
-                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
+                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin, Attribute = reflection };
                             if (!m_methods.TryGetValue(methodName, out methods))
                                 m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
 
@@ -171,10 +172,10 @@ namespace OpenSim.Services
                 {
                     if (m_SessionID == "")
                     {
-                        if (((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel != ThreatLevel.None)
+                        if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
                             return new byte[0];
                     }
-                    else if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
+                    else if (!urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
                         return new byte[0];
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
@@ -183,7 +184,7 @@ namespace OpenSim.Services
                     foreach (ParameterInfo param in paramInfo)
                         parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
                     
-                    object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
+                    object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
                         response["Value"] = "null";
