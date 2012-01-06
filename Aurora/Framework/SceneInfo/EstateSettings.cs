@@ -238,50 +238,62 @@ namespace Aurora.Framework
             DenyMinors = values["DenyMinors"].AsBoolean();
 
             OSDArray Managers = values["EstateManagers"] as OSDArray;
-#if (!ISWIN)
-            List<UUID> list = new List<UUID>();
-            foreach (OSD id in Managers)
+            if (Managers != null)
             {
-                list.Add(id.AsUUID());
-            }
-            EstateManagers = list.ToArray();
+#if (!ISWIN)
+                List<UUID> list = new List<UUID>();
+                foreach (OSD id in Managers)
+                {
+                    list.Add(id.AsUUID());
+                }
+                EstateManagers = list.ToArray();
 #else
-            EstateManagers = Managers.Select(id => id.AsUUID()).ToArray();
+                EstateManagers = Managers.Select(id => id.AsUUID()).ToArray();
 #endif
+            }
 
             OSDArray Ban = values["EstateBans"] as OSDArray;
-            List<EstateBan> NewBan = new List<EstateBan>();
-            foreach (OSD BannedUser in Ban)
+            if (Ban != null)
             {
-                EstateBan ban = new EstateBan();
-                ban.FromOSD(BannedUser);
-                NewBan.Add(ban);
+                List<EstateBan> NewBan = new List<EstateBan>();
+                foreach (OSD BannedUser in Ban)
+                {
+                    EstateBan ban = new EstateBan();
+                    ban.FromOSD(BannedUser);
+                    NewBan.Add(ban);
+                }
+                EstateBans = NewBan.ToArray();
             }
-            EstateBans = NewBan.ToArray();
 
             OSDArray Access = values["EstateAccess"] as OSDArray;
-#if (!ISWIN)
-            List<UUID> list1 = new List<UUID>();
-            foreach (OSD uuid in Access)
+            if (Access != null)
             {
-                list1.Add(uuid.AsUUID());
-            }
-            EstateAccess = list1.ToArray();
+#if (!ISWIN)
+                List<UUID> list1 = new List<UUID>();
+                foreach (OSD uuid in Access)
+                {
+                    list1.Add(uuid.AsUUID());
+                }
+                EstateAccess = list1.ToArray();
 #else
-            EstateAccess = Access.Select(uuid => uuid.AsUUID()).ToArray();
+                EstateAccess = Access.Select(uuid => uuid.AsUUID()).ToArray();
 #endif
+            }
 
             OSDArray Groups = values["EstateGroups"] as OSDArray;
-#if (!ISWIN)
-            List<UUID> list2 = new List<UUID>();
-            foreach (OSD uuid in Groups)
+            if (Groups != null)
             {
-                list2.Add(uuid.AsUUID());
-            }
-            EstateGroups = list2.ToArray();
+#if (!ISWIN)
+                List<UUID> list2 = new List<UUID>();
+                foreach (OSD uuid in Groups)
+                {
+                    list2.Add(uuid.AsUUID());
+                }
+                EstateGroups = list2.ToArray();
 #else
-            EstateGroups = Groups.Select(uuid => uuid.AsUUID()).ToArray();
+                EstateGroups = Groups.Select(uuid => uuid.AsUUID()).ToArray();
 #endif
+            }
         }
 
         public override OSDMap ToOSD()
