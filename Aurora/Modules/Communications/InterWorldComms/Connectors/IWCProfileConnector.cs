@@ -48,8 +48,8 @@ namespace Aurora.Modules
                 m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(this);
+                Init(simBase, Name);
             }
-            Init(simBase, Name);
         }
 
         public string Name

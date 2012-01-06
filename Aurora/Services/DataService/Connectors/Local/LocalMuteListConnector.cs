@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<MuteList>)remoteValue;
 
-            return new List<MuteList>(GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD).ToArray());
+            return GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD);
         }
 
         /// <summary>

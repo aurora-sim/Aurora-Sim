@@ -2525,6 +2525,14 @@ namespace Aurora.Framework
             return list.ConvertAll<T>(converter);
         }
 
+        /// <summary>
+        /// Comes from http://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=14593
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="parameters"></param>
+        /// <param name="invokeClass"></param>
+        /// <param name="invokeParameters"></param>
+        /// <returns></returns>
         public static object FastInvoke(this MethodInfo method, ParameterInfo[] parameters, object invokeClass, object[] invokeParameters)
         {
             DynamicMethod dynamicMethod = new DynamicMethod(string.Empty,
