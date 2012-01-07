@@ -25,14 +25,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
+
 using OpenMetaverse;
+
 using Aurora.Framework;
 
 namespace Aurora.Framework
 {
     public interface IDirectoryServiceConnector : IAuroraDataPlugin
     {
+
+        #region Regions
+
         /// <summary>
         ///   Adds a region into search
         /// </summary>
@@ -45,6 +51,10 @@ namespace Aurora.Framework
         /// <param name = "regionID"></param>
         /// <param name = "args"></param>
         void ClearRegion(UUID regionID);
+
+        #endregion
+
+        #region Parcels
 
         /// <summary>
         ///   Gets a parcel from the search database by Info UUID (the true cross instance parcel ID)
@@ -134,6 +144,31 @@ namespace Aurora.Framework
         /// <returns></returns>
         DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags);
 
+        #endregion
+
+        #region Classifieds
+
+        /// <summary>
+        ///   Searches for classifieds
+        /// </summary>
+        /// <param name = "queryText"></param>
+        /// <param name = "category"></param>
+        /// <param name = "queryFlags"></param>
+        /// <param name = "StartQuery"></param>
+        /// <returns></returns>
+        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery);
+
+        /// <summary>
+        ///   Gets all classifieds in the given region
+        /// </summary>
+        /// <param name = "regionName"></param>
+        /// <returns></returns>
+        Classified[] GetClassifiedsInRegion(string regionName);
+
+        #endregion
+
+        #region Events
+
         /// <summary>
         ///   Searches for events with the given parameters
         /// </summary>
@@ -152,21 +187,28 @@ namespace Aurora.Framework
         DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity);
 
         /// <summary>
-        ///   Searches for classifieds
-        /// </summary>
-        /// <param name = "queryText"></param>
-        /// <param name = "category"></param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "StartQuery"></param>
-        /// <returns></returns>
-        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery);
-
-        /// <summary>
         ///   Gets more info about the event by the events unique event ID
         /// </summary>
         /// <param name = "EventID"></param>
         /// <returns></returns>
-        EventData GetEventInfo(string EventID);
+        EventData GetEventInfo(uint EventID);
+
+        /// <summary>
+        /// Creates an event
+        /// </summary>
+        /// <param name="creator"></param>
+        /// <param name="name"></param>
+        /// <param name="category"></param>
+        /// <param name="description"></param>
+        /// <param name="date"></param>
+        /// <param name="duration"></param>
+        /// <param name="cover"></param>
+        /// <param name="simName"></param>
+        /// <param name="globalPos"></param>
+        /// <param name="eventFlags"></param>
+        /// <param name="maturity"></param>
+        /// <returns></returns>
+        EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity);
 
         /// <summary>
         /// Gets a list of events with optional filters
@@ -186,10 +228,11 @@ namespace Aurora.Framework
         uint GetNumberOfEvents(Dictionary<string, object> filter);
 
         /// <summary>
-        ///   Gets all classifieds in the given region
+        /// Gets the highest event ID
         /// </summary>
-        /// <param name = "regionName"></param>
         /// <returns></returns>
-        Classified[] GetClassifiedsInRegion(string regionName);
+        uint GetMaxEventID();
+
+        #endregion
     }
 }

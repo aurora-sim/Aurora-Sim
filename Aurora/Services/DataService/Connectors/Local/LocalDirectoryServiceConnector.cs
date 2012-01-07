@@ -72,6 +72,12 @@ namespace Aurora.Services.DataService
             get { return "IDirectoryServiceConnector"; }
         }
 
+        public void Dispose()
+        {
+        }
+
+        #region Region
+
         /// <summary>
         ///   This also updates the parcel, not for just adding a new one
         /// </summary>
@@ -170,6 +176,10 @@ namespace Aurora.Services.DataService
         {
             GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
         }
+
+        #endregion
+
+        #region Parcels
 
         private static List<LandData> Query2LandData(List<string> Query)
         {
@@ -465,8 +475,7 @@ namespace Aurora.Services.DataService
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery,
-                                                  uint Flags)
+        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
         {
             //searchType
             // 2 - Auction only
@@ -541,6 +550,121 @@ namespace Aurora.Services.DataService
 
             return Data.ToArray();
         }
+
+        private void ConvertBytesToLandBitmap(ref bool[,] tempConvertMap, byte[] Bitmap, int sizeX)
+        {
+            try
+            {
+                byte tempByte = 0;
+                int x = 0, y = 0, i = 0, bitNum = 0;
+                int avg = (sizeX*sizeX/128);
+                for (i = 0; i < avg; i++)
+                {
+                    tempByte = Bitmap[i];
+                    for (bitNum = 0; bitNum < 8; bitNum++)
+                    {
+                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
+                        tempConvertMap[x, y] = bit;
+                        x++;
+                        if (x > (sizeX/4) - 1)
+                        {
+                            x = 0;
+                            y++;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        #endregion
+
+        #region Classifieds
+
+        /// <summary>
+        ///   Searches for classifieds
+        /// </summary>
+        /// <param name = "queryText"></param>
+        /// <param name = "category"></param>
+        /// <param name = "queryFlags"></param>
+        /// <param name = "StartQuery"></param>
+        /// <returns></returns>
+        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
+        {
+            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
+
+            string whereClause = "";
+            string classifiedClause = "";
+            uint cqf = uint.Parse(queryFlags);
+
+            if (int.Parse(category) != (int) DirectoryManager.ClassifiedCategories.Any) //Check the category
+                classifiedClause = " and Category = '" + category + "'";
+
+            whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() +
+                          ",50 ";
+            List<string> retVal = GD.Query(whereClause, "userclassifieds", "*");
+            if (retVal.Count == 0)
+                return Data.ToArray();
+
+            DirClassifiedReplyData replyData = null;
+            for (int i = 0; i < retVal.Count; i += 6)
+            {
+                //Pull the classified out of OSD
+                Classified classified = new Classified();
+                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
+
+                replyData = new DirClassifiedReplyData
+                                {
+                                    classifiedFlags = classified.ClassifiedFlags,
+                                    classifiedID = classified.ClassifiedUUID,
+                                    creationDate = classified.CreationDate,
+                                    expirationDate = classified.ExpirationDate,
+                                    price = classified.PriceForListing,
+                                    name = classified.Name
+                                };
+                //Check maturity levels
+                if ((replyData.classifiedFlags & (uint) DirectoryManager.ClassifiedFlags.Mature) ==
+                    (uint) DirectoryManager.ClassifiedFlags.Mature)
+                {
+                    if ((cqf & (uint) DirectoryManager.ClassifiedQueryFlags.Mature) ==
+                        (uint) DirectoryManager.ClassifiedQueryFlags.Mature)
+                        Data.Add(replyData);
+                }
+                else //Its PG, add all
+                    Data.Add(replyData);
+            }
+            return Data.ToArray();
+        }
+
+        /// <summary>
+        ///   Gets all classifieds in the given region
+        /// </summary>
+        /// <param name = "regionName"></param>
+        /// <returns></returns>
+        public Classified[] GetClassifiedsInRegion(string regionName)
+        {
+            List<Classified> Classifieds = new List<Classified>();
+            List<string> retVal = GD.Query("SimName", regionName, "userclassifieds", "*");
+
+            if (retVal.Count == 0)
+                return Classifieds.ToArray();
+
+            Classified classified = new Classified();
+            for (int i = 0; i < retVal.Count; i += 6)
+            {
+                //Pull the classified out of OSD
+                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
+                Classifieds.Add(classified);
+                classified = new Classified();
+            }
+            return Classifieds.ToArray();
+        }
+
+        #endregion
+
+        #region Events
 
         /// <summary>
         ///   Searches for events with the given parameters
@@ -653,73 +777,15 @@ namespace Aurora.Services.DataService
 
             return Data.ToArray();
         }
-
-        /// <summary>
-        ///   Searches for classifieds
-        /// </summary>
-        /// <param name = "queryText"></param>
-        /// <param name = "category"></param>
-        /// <param name = "queryFlags"></param>
-        /// <param name = "StartQuery"></param>
-        /// <returns></returns>
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags,
-                                                        int StartQuery)
-        {
-            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
-
-            string whereClause = "";
-            string classifiedClause = "";
-            uint cqf = uint.Parse(queryFlags);
-
-            if (int.Parse(category) != (int) DirectoryManager.ClassifiedCategories.Any) //Check the category
-                classifiedClause = " and Category = '" + category + "'";
-
-            whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() +
-                          ",50 ";
-            List<string> retVal = GD.Query(whereClause, "userclassifieds", "*");
-            if (retVal.Count == 0)
-                return Data.ToArray();
-
-            DirClassifiedReplyData replyData = null;
-            for (int i = 0; i < retVal.Count; i += 6)
-            {
-                //Pull the classified out of OSD
-                Classified classified = new Classified();
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
-
-                replyData = new DirClassifiedReplyData
-                                {
-                                    classifiedFlags = classified.ClassifiedFlags,
-                                    classifiedID = classified.ClassifiedUUID,
-                                    creationDate = classified.CreationDate,
-                                    expirationDate = classified.ExpirationDate,
-                                    price = classified.PriceForListing,
-                                    name = classified.Name
-                                };
-                //Check maturity levels
-                if ((replyData.classifiedFlags & (uint) DirectoryManager.ClassifiedFlags.Mature) ==
-                    (uint) DirectoryManager.ClassifiedFlags.Mature)
-                {
-                    if ((cqf & (uint) DirectoryManager.ClassifiedQueryFlags.Mature) ==
-                        (uint) DirectoryManager.ClassifiedQueryFlags.Mature)
-                        Data.Add(replyData);
-                }
-                else //Its PG, add all
-                    Data.Add(replyData);
-            }
-            return Data.ToArray();
-        }
-
-        #region EventData
-
+        
         private static List<EventData> Query2EventData(List<string> RetVal){
             List<EventData> Events = new List<EventData>();
-            if (RetVal.Count % 12 != 0)
+            if (RetVal.Count % 13 != 0)
             {
                 return Events;
             }
             
-            for (int i = 0; i < RetVal.Count; i += 12)
+            for (int i = 0; i < RetVal.Count; i += 13)
             {
                 EventData data = new EventData();
                 data.eventID = Convert.ToUInt32(RetVal[i]);
@@ -751,15 +817,69 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "EventID"></param>
         /// <returns></returns>
-        public EventData GetEventInfo(string EventID)
+        public EventData GetEventInfo(uint EventID)
         {
             EventData data = new EventData();
-            List<string> RetVal = GD.Query("EID", EventID, "events",
-                                           "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
+            List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
             if (RetVal.Count == 0)
                 return null;
 
+            MainConsole.Instance.Info(Query2EventData(RetVal).Count);
+
             return Query2EventData(RetVal)[0];
+        }
+
+        public EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity)
+        {
+            EventData eventData = new EventData();
+            eventData.eventID = GetMaxEventID() + 1;
+            eventData.creator = creator.ToString();
+            eventData.name = name;
+            eventData.description = description;
+            eventData.category = category;
+            eventData.date = date.ToString(new DateTimeFormatInfo());
+            eventData.dateUTC = (uint)Util.ToUnixTime(date);
+            eventData.duration = duration;
+            eventData.cover = cover;
+            eventData.amount = cover;
+            eventData.simName = simName;
+            eventData.globalPos = globalPos;
+            eventData.eventFlags = eventFlags;
+            eventData.maturity = (int)maturity;
+
+            GD.Insert("events", new string[]{
+                "EID",
+                "ECreatorID",
+                "EOwnerID",
+                "EName", 
+                "ECategory", 
+                "EDesc", 
+                "EDate", 
+                "EDuration", 
+                "ECoverCharge", 
+                "ECoverAmount", 
+                "ESimName", 
+                "EGlobalPos", 
+                "EFlags", 
+                "EMature"
+            }, new object[]{
+                eventData.eventID,
+                eventData.creator,
+                eventData.creator,
+                eventData.name,
+                eventData.category,
+                eventData.description,
+                eventData.dateUTC,
+                eventData.duration,
+                eventData.cover,
+                eventData.amount,
+                eventData.simName,
+                eventData.globalPos.ToString(),
+                eventData.eventFlags,
+                eventData.maturity
+            });
+
+            return eventData;
         }
 
         public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
@@ -772,64 +892,20 @@ namespace Aurora.Services.DataService
             return uint.Parse(GD.Query(filter, new Dictionary<string,uint>(0), new Dictionary<string,bool>(0), "events", "COUNT(EID)")[0]);
         }
 
-        #endregion
-
-        /// <summary>
-        ///   Gets all classifieds in the given region
-        /// </summary>
-        /// <param name = "regionName"></param>
-        /// <returns></returns>
-        public Classified[] GetClassifiedsInRegion(string regionName)
+        public uint GetMaxEventID()
         {
-            List<Classified> Classifieds = new List<Classified>();
-            List<string> retVal = GD.Query("SimName", regionName, "userclassifieds", "*");
-
-            if (retVal.Count == 0)
-                return Classifieds.ToArray();
-
-            Classified classified = new Classified();
-            for (int i = 0; i < retVal.Count; i += 6)
+            if (GetNumberOfEvents(new Dictionary<string, object>(0)) == 0)
             {
-                //Pull the classified out of OSD
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
-                Classifieds.Add(classified);
-                classified = new Classified();
+                return 0;
             }
-            return Classifieds.ToArray();
+            else
+            {
+                return uint.Parse(GD.Query("1=1", "events", "MAX(EID)")[0]);
+            }
         }
 
         #endregion
 
-        public void Dispose()
-        {
-        }
-
-        private void ConvertBytesToLandBitmap(ref bool[,] tempConvertMap, byte[] Bitmap, int sizeX)
-        {
-            try
-            {
-                byte tempByte = 0;
-                int x = 0, y = 0, i = 0, bitNum = 0;
-                int avg = (sizeX*sizeX/128);
-                for (i = 0; i < avg; i++)
-                {
-                    tempByte = Bitmap[i];
-                    for (bitNum = 0; bitNum < 8; bitNum++)
-                    {
-                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
-                        tempConvertMap[x, y] = bit;
-                        x++;
-                        if (x > (sizeX/4) - 1)
-                        {
-                            x = 0;
-                            y++;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
+        #endregion
     }
 }

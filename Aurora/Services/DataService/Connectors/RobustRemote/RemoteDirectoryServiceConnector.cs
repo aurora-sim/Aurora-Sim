@@ -56,10 +56,16 @@ namespace Aurora.Services.DataService
             }
         }
 
+        public void Dispose()
+        {
+        }
+
         public string Name
         {
             get { return "IDirectoryServiceConnector"; }
         }
+
+        #region Regions
 
         /// <summary>
         ///   This adds the entire region into the search database
@@ -93,6 +99,10 @@ namespace Aurora.Services.DataService
                 WebUtils.PostToService(m_ServerURI + "osd", mess, false, false);
             }
         }
+
+        #endregion
+
+        #region Parcels
 
         public LandData GetParcelInfo(UUID InfoUUID)
         {
@@ -330,8 +340,7 @@ namespace Aurora.Services.DataService
             return Land.ToArray();
         }
 
-        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery,
-                                                  uint Flags)
+        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -357,6 +366,10 @@ namespace Aurora.Services.DataService
             }
             return Land.ToArray();
         }
+
+        #endregion
+
+        #region Events
 
         public DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery)
         {
@@ -413,41 +426,7 @@ namespace Aurora.Services.DataService
             return Events.ToArray();
         }
 
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags,
-                                                        int StartQuery)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["QUERYTEXT"] = queryText;
-            sendData["CATEGORY"] = category;
-            sendData["QUERYFLAGS"] = queryFlags;
-            sendData["STARTQUERY"] = StartQuery;
-            sendData["METHOD"] = "findclassifieds";
-
-            string reqString = WebUtils.BuildQueryString(sendData);
-            List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
-            try
-            {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
-                Classifieds.AddRange(from m_ServerURI in m_ServerURIs
-                                     select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)
-                                     into reply where reply != string.Empty
-                                     from object f in WebUtils.ParseXmlResponse(reply)
-                                     select (KeyValuePair<string, object>) f
-                                     into value where value.Value is Dictionary<string, object>
-                                     select value.Value as Dictionary<string, object>
-                                     into valuevalue select new DirClassifiedReplyData(valuevalue));
-                return Classifieds.ToArray();
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
-            }
-            return Classifieds.ToArray();
-        }
-
-        public EventData GetEventInfo(string EventID)
+        public EventData GetEventInfo(uint EventID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -462,6 +441,49 @@ namespace Aurora.Services.DataService
                 foreach (EventData eventdata in from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST",
                                                                                                                                   m_ServerURI,
                                                                                                                                   reqString) into reply where reply != string.Empty select WebUtils.ParseXmlResponse(reply) into replyData from object f in replyData select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new EventData(valuevalue))
+                {
+                    return eventdata;
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+            }
+            return null;
+        }
+
+        public EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["METHOD"] = "CreateEvent";
+            sendData["Creator"] = creator;
+            sendData["Name"] = name;
+            sendData["Category"] = category;
+            sendData["Description"] = description;
+            sendData["Date"] = date;
+            sendData["Duration"] = duration;
+            sendData["Cover"] = cover;
+            sendData["SimName"] = simName;
+            sendData["GlobalPos"] = globalPos;
+            sendData["EventFlags"] = eventFlags;
+            sendData["Maturity"] = maturity;
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            try
+            {
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (EventData eventdata in from m_ServerURI in m_ServerURIs
+                                                select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                 m_ServerURI,
+                                                                                                 reqString) into reply
+                                                where reply != string.Empty
+                                                select WebUtils.ParseXmlResponse(reply) into replyData
+                                                from object f in replyData
+                                                select (KeyValuePair<string, object>)f into value
+                                                where value.Value is Dictionary<string, object>
+                                                select value.Value as Dictionary<string, object> into valuevalue
+                                                select new EventData(valuevalue))
                 {
                     return eventdata;
                 }
@@ -544,6 +566,76 @@ namespace Aurora.Services.DataService
             return 0;
         }
 
+        public uint GetMaxEventID()
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["METHOD"] = "GetMaxEventID";
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        uint maxEventID = 0;
+                        foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out maxEventID)))
+                        {
+                            break;
+                        }
+                        // Success
+                        return maxEventID;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        #endregion
+
+        #region Classifieds
+
+        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+
+            sendData["QUERYTEXT"] = queryText;
+            sendData["CATEGORY"] = category;
+            sendData["QUERYFLAGS"] = queryFlags;
+            sendData["STARTQUERY"] = StartQuery;
+            sendData["METHOD"] = "findclassifieds";
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            List<DirClassifiedReplyData> Classifieds = new List<DirClassifiedReplyData>();
+            try
+            {
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                Classifieds.AddRange(from m_ServerURI in m_ServerURIs
+                                     select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString)
+                                     into reply where reply != string.Empty
+                                     from object f in WebUtils.ParseXmlResponse(reply)
+                                     select (KeyValuePair<string, object>) f
+                                     into value where value.Value is Dictionary<string, object>
+                                     select value.Value as Dictionary<string, object>
+                                     into valuevalue select new DirClassifiedReplyData(valuevalue));
+                return Classifieds.ToArray();
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+            }
+            return Classifieds.ToArray();
+        }
+
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -590,8 +682,6 @@ namespace Aurora.Services.DataService
 
         #endregion
 
-        public void Dispose()
-        {
-        }
+        #endregion
     }
 }

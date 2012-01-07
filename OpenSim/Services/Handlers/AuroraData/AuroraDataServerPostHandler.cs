@@ -1256,7 +1256,7 @@ namespace OpenSim.Services
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
 
-            string EVENTID = request["EVENTID"].ToString();
+            uint EVENTID = uint.Parse(request["EVENTID"].ToString());
             EventData eventdata = DirectoryServiceConnector.GetEventInfo(EVENTID);
 
             result.Add("event", eventdata.ToKVP());

@@ -352,7 +352,7 @@ namespace Aurora.Modules.Search
         public void EventInfoRequest(IClientAPI remoteClient, uint queryEventID)
         {
             //Find the event
-            EventData data = directoryService.GetEventInfo(queryEventID.ToString());
+            EventData data = directoryService.GetEventInfo(queryEventID);
             if (data == null)
                 return;
             //Send the event
@@ -571,7 +571,7 @@ namespace Aurora.Modules.Search
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
                     //Get more info on the event
-                    EventData eventdata = directoryService.GetEventInfo(eventData.eventID.ToString());
+                    EventData eventdata = directoryService.GetEventInfo(eventData.eventID);
                     if (eventdata == null)
                         continue; //Can't do anything about it
                     Vector3 globalPos = eventdata.globalPos;
