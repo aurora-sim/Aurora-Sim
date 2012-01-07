@@ -473,6 +473,77 @@ namespace Aurora.Services.DataService
             return null;
         }
 
+        public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["METHOD"] = "GetEvents";
+            sendData["start"] = start;
+            sendData["count"] = count;
+            sendData["sort"] = sort;
+            sendData["filter"] = filter;
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+            List<EventData> Events = new List<EventData>();
+            try
+            {
+                List<string> m_ServerURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                foreach (EventData eventdata in from m_ServerURI in m_ServerURIs
+                                                select SynchronousRestFormsRequester.MakeRequest("POST",
+                                                                                                 m_ServerURI,
+                                                                                                 reqString) into reply
+                                                where reply != string.Empty
+                                                select WebUtils.ParseXmlResponse(reply) into replyData
+                                                from object f in replyData
+                                                select (KeyValuePair<string, object>)f into value
+                                                where value.Value is Dictionary<string, object>
+                                                select value.Value as Dictionary<string, object> into valuevalue
+                                                select new EventData(valuevalue))
+                {
+                    Events.Add(eventdata);
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.DebugFormat("[AuroraRemoteDirectoryServiceConnector]: Exception when contacting server: {0}", e);
+            }
+            return Events;
+        }
+
+        public uint GetNumberOfEvents(Dictionary<string, object> filter)
+        {
+            Dictionary<string, object> sendData = new Dictionary<string, object>();
+            sendData["METHOD"] = "GetEvents";
+            sendData["filter"] = filter;
+
+            string reqString = WebUtils.BuildQueryString(sendData);
+
+            List<string> m_ServerURIs =
+                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+
+            foreach (string m_ServerURI in m_ServerURIs)
+            {
+                string reply = SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString);
+                if (reply != string.Empty)
+                {
+                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
+
+                    if (replyData != null)
+                    {
+                        Dictionary<string, object>.ValueCollection replyvalues = replyData.Values;
+                        uint numEvents = 0;
+                        foreach (object f in replyvalues.Where(f => uint.TryParse(f.ToString(), out numEvents)))
+                        {
+                            break;
+                        }
+                        // Success
+                        return numEvents;
+                    }
+                }
+            }
+            return 0;
+        }
+
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

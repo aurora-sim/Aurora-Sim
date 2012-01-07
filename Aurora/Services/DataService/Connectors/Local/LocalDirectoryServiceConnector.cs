@@ -710,20 +710,18 @@ namespace Aurora.Services.DataService
             return Data.ToArray();
         }
 
-        /// <summary>
-        ///   Gets more info about the event by the events unique event ID
-        /// </summary>
-        /// <param name = "EventID"></param>
-        /// <returns></returns>
-        public EventData GetEventInfo(string EventID)
-        {
-            EventData data = new EventData();
-            List<string> RetVal = GD.Query("EID", EventID, "events",
-                                           "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
-            if (RetVal.Count == 0)
-                return null;
+        #region EventData
+
+        private static List<EventData> Query2EventData(List<string> RetVal){
+            List<EventData> Events = new List<EventData>();
+            if (RetVal.Count % 12 != 0)
+            {
+                return Events;
+            }
+            
             for (int i = 0; i < RetVal.Count; i += 12)
             {
+                EventData data = new EventData();
                 data.eventID = Convert.ToUInt32(RetVal[i]);
                 data.creator = RetVal[i + 1];
                 data.name = RetVal[i + 2];
@@ -741,9 +739,40 @@ namespace Aurora.Services.DataService
                 Vector3.TryParse(RetVal[i + 10], out data.globalPos);
                 data.eventFlags = Convert.ToUInt32(RetVal[i + 11]);
                 data.maturity = Convert.ToInt32(RetVal[i + 12]);
+
+                Events.Add(data);
             }
-            return data;
+
+            return Events;
         }
+
+        /// <summary>
+        ///   Gets more info about the event by the events unique event ID
+        /// </summary>
+        /// <param name = "EventID"></param>
+        /// <returns></returns>
+        public EventData GetEventInfo(string EventID)
+        {
+            EventData data = new EventData();
+            List<string> RetVal = GD.Query("EID", EventID, "events",
+                                           "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
+            if (RetVal.Count == 0)
+                return null;
+
+            return Query2EventData(RetVal)[0];
+        }
+
+        public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
+        {
+            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(filter, new Dictionary<string, uint>(0), sort, start, count, "events", "*"));
+        }
+
+        public uint GetNumberOfEvents(Dictionary<string, object> filter)
+        {
+            return uint.Parse(GD.Query(filter, new Dictionary<string,uint>(0), new Dictionary<string,bool>(0), "events", "COUNT(EID)")[0]);
+        }
+
+        #endregion
 
         /// <summary>
         ///   Gets all classifieds in the given region

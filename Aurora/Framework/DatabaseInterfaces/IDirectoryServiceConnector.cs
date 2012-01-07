@@ -169,6 +169,23 @@ namespace Aurora.Framework
         EventData GetEventInfo(string EventID);
 
         /// <summary>
+        /// Gets a list of events with optional filters
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="sort"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter);
+
+        /// <summary>
+        /// Get the number of events matching the specified filters
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        uint GetNumberOfEvents(Dictionary<string, object> filter);
+
+        /// <summary>
         ///   Gets all classifieds in the given region
         /// </summary>
         /// <param name = "regionName"></param>
