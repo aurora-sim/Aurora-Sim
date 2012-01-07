@@ -267,8 +267,7 @@ namespace Aurora.DataManager.MySQL
             return Query(query, new Dictionary<string, object>());
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
-                                           string order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
         {
             IDataReader reader = null;
             List<string> retVal = new List<string>();
@@ -378,7 +377,7 @@ namespace Aurora.DataManager.MySQL
         private static void QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue, out string query, out Dictionary<string, object> ps){
             
             ps = new Dictionary<string, object>();
-            query = String.Format("select {0} from {1} where ", wantedValue, table);
+            query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
 
             List<string> parts = new List<string>();
 
