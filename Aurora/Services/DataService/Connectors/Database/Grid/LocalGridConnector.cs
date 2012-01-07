@@ -164,6 +164,77 @@ namespace Aurora.Services.DataService
             return ParseQuery(query);
         }
 
+        public List<GridRegion> Get(uint start, uint count, uint estateID, RegionFlags flags, Dictionary<string, bool> sort)
+        {
+            List<GridRegion> resp = new List<GridRegion>();
+            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+
+            if (count == 0 || estates == null)
+            {
+                return resp;
+            }
+
+            EstateSettings es = estates.GetEstateSettings((int)estateID);
+
+            Dictionary<string, object> where = new Dictionary<string,object>(0);
+
+            Dictionary<string, uint> bitfields = new Dictionary<string,uint>(1);
+            bitfields["Flags"] = (uint)flags;
+
+            while (resp.Count < count)
+            {
+                uint limit = count - (uint)resp.Count;
+                List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, sort, start, limit, m_realm, "*"));
+
+                if (query.Count == 0)
+                {
+                    break;
+                }
+
+                query.ForEach(delegate(GridRegion region)
+                {
+                    if (region.EstateOwner == es.EstateOwner && estates.GetEstateID(region.RegionID) == es.EstateID)
+                    {
+                        resp.Add(region);
+                    }
+                });
+
+                start += limit;
+            }
+
+            return resp;
+        }
+
+        public uint Count(uint estateID, RegionFlags flags)
+        {
+            IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+
+            if (estates == null)
+            {
+                return 0;
+            }
+
+            EstateSettings es = estates.GetEstateSettings((int)estateID);
+
+            Dictionary<string, object> where = new Dictionary<string, object>(0);
+
+            Dictionary<string, uint> bitfields = new Dictionary<string, uint>(1);
+            bitfields["Flags"] = (uint)flags;
+
+            List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, new Dictionary<string, bool>(0), m_realm, "*"));
+
+            uint count = 0;
+            query.ForEach(delegate(GridRegion region)
+            {
+                if (region.EstateOwner == es.EstateOwner && estates.GetEstateID(region.RegionID) == es.EstateID)
+                {
+                    ++count;
+                }
+            });
+
+            return count;
+        }
+
         public bool Store(GridRegion region)
         {
             List<string> keys = new List<string>();
