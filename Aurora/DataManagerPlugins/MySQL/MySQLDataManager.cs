@@ -895,7 +895,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool DeleteByTime(string table, string key)
         {
-            string query = "DELETE FROM " + table + " WHERE (UNIX_TIMESTAMP('" + key + "') - UNIX_TIMESTAMP()) <= 0";
+            string query = "DELETE FROM " + table + " WHERE (UNIX_TIMESTAMP(`" + key + "`) - UNIX_TIMESTAMP()) <= 0";
             try
             {
                 ExecuteNonQuery(query, new Dictionary<string, object>());
