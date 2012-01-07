@@ -35,6 +35,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -2231,6 +2232,10 @@ namespace Aurora.Framework
         {
             if (iPAddress == null)
                 return clientIP.Address;
+            /*if(IsLanIP(clientIP.Address))
+            {
+                return clientIP.Address;
+            }*/
             if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)
@@ -2256,6 +2261,49 @@ namespace Aurora.Framework
                 }
             }
             return iPAddress;
+        }
+
+        public static bool IsLanIP(IPAddress address)
+        {
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (var iface in interfaces)
+            {
+                var properties = iface.GetIPProperties();
+                foreach (var ifAddr in properties.UnicastAddresses)
+                {
+                    if (ifAddr.IPv4Mask != null &&
+                        ifAddr.Address.AddressFamily == AddressFamily.InterNetwork &&
+                        CheckMask(ifAddr.Address, ifAddr.IPv4Mask, address))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool CheckMask(IPAddress address, IPAddress mask, IPAddress target)
+        {
+            if (mask == null)
+                return false;
+
+            var ba = address.GetAddressBytes();
+            var bm = mask.GetAddressBytes();
+            var bb = target.GetAddressBytes();
+
+            if (ba.Length != bm.Length || bm.Length != bb.Length)
+                return false;
+
+            for (var i = 0; i < ba.Length; i++)
+            {
+                int m = bm[i];
+
+                int a = ba[i] & m;
+                int b = bb[i] & m;
+
+                if (a != b)
+                    return false;
+            }
+
+            return true;
         }
 
         public static IPEndPoint ResolveAddressForClient(IPEndPoint iPAddress, IPEndPoint clientIP)
@@ -2523,6 +2571,18 @@ namespace Aurora.Framework
                 list.Add(o);
             }
             return list.ConvertAll<T>(converter);
+        }
+
+        public static OSDArray ToOSDArray<T>(this List<T> array)
+        {
+            OSDArray list = new OSDArray();
+            foreach (object o in array)
+            {
+                OSD osd = OSD.FromObject(o);
+                if(osd != null)
+                    list.Add(osd);
+            }
+            return list;
         }
 
         /// <summary>

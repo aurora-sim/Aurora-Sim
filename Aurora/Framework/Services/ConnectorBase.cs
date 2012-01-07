@@ -29,9 +29,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Data;
+using System.IO;
+using System.Net;
 using System.Reflection;
+using System.Text;
+using System.Web;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
@@ -165,9 +170,8 @@ namespace Aurora.Framework
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = SynchronousRestFormsRequester.MakeRequest("POST",
-                                                          url,
-                                                          OSDParser.SerializeJsonString(map, true));
+            string resp = ServiceOSDRequest(url, map, "POST", 10000);
+            
             if (resp == "")
                 return false;
             try
@@ -180,6 +184,91 @@ namespace Aurora.Framework
                 return false;
             }
             return response["Success"];
+        }
+
+        public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
+        {
+            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
+
+            string errorMessage = "unknown error";
+            int tickstart = Util.EnvironmentTickCount();
+            int tickdata = 0;
+            int tickserialize = 0;
+
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = method;
+                request.Timeout = timeout;
+                request.KeepAlive = false;
+                request.MaximumAutomaticRedirections = 10;
+                request.ReadWriteTimeout = timeout / 4;
+
+                // If there is some input, write it into the request
+                if (data != null)
+                {
+                    string strBuffer = OSDParser.SerializeJsonString(data);
+                    byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
+
+                    if (buffer.Length <= 0)
+                    {
+                    }
+                    else
+                    {
+                        request.ContentType = "application/json";
+                        request.ContentLength = buffer.Length; //Count bytes to send
+                        using (Stream requestStream = request.GetRequestStream())
+                            requestStream.Write(buffer, 0, buffer.Length); //Send it
+                    }
+                }
+
+                // capture how much time was spent writing, this may seem silly
+                // but with the number concurrent requests, this often blocks
+                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
+
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (Stream responseStream = response.GetResponseStream())
+                    {
+                        // capture how much time was spent writing, this may seem silly
+                        // but with the number concurrent requests, this often blocks
+                        tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
+                        string responseStr = null;
+                        responseStr = responseStream.GetStreamString();
+                        // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
+                        return responseStr;
+                    }
+                }
+            }
+            catch (WebException we)
+            {
+                errorMessage = we.Message;
+                if (we.Status == WebExceptionStatus.ProtocolError)
+                {
+                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
+                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+            finally
+            {
+                // This just dumps a warning for any operation that takes more than 500 ms
+                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                MainConsole.Instance.TraceFormat(
+                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                    url, method, tickdiff, tickdata, tickserialize);
+                if (tickdiff > 5000)
+                    MainConsole.Instance.InfoFormat(
+                        "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                        url, method, tickdiff, tickdata, tickserialize);
+            }
+
+            MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
+                             data != null ? data.AsString() : "");
+            return "";
         }
     }
 }

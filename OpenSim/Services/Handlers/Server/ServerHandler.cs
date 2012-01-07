@@ -28,8 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
@@ -54,6 +57,11 @@ namespace OpenSim.Services
         public string UrlName
         {
             get { return "ServerURI"; }
+        }
+
+        public bool DoMultiplePorts
+        {
+            get { return true; }
         }
 
         public void AddExistingUrlForClient(string SessionID, string url, uint port)
@@ -100,9 +108,25 @@ namespace OpenSim.Services
 
         public void FinishedStartup()
         {
-            if(m_registry != null)
+            if (m_registry != null)
+            {
                 AddExistingUrlForClient("", "/", 8003);
+                //AddUDPConector(8008);
+            }
         }
+
+        /*private void AddUDPConector(int port)
+        {
+            Thread thread = new Thread(delegate()
+                {
+                    UdpClient server = new UdpClient("127.0.0.1", port);
+                    IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+                    byte[] data = server.Receive(ref sender);
+                    OSDMap map = (OSDMap)OSDParser.DeserializeJson(new MemoryStream(data));
+                    ServerHandler handler = new ServerHandler("", "", m_registry);
+                    byte[] Data = handler.HandleMap(map);
+                });
+        }*/
 
         #endregion
     }
@@ -114,7 +138,7 @@ namespace OpenSim.Services
         public CanBeReflected Attribute;
     }
 
-    public unsafe class ServerHandler : BaseStreamHandler
+    public class ServerHandler : BaseStreamHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -161,6 +185,11 @@ namespace OpenSim.Services
             body = body.Trim();
 
             OSDMap args = WebUtils.GetOSDMap(body);
+            return HandleMap(args);
+        }
+
+        public byte[] HandleMap(OSDMap args)
+        {
             if (args.ContainsKey("Method"))
             {
                 IGridRegistrationService urlModule =
@@ -183,7 +212,7 @@ namespace OpenSim.Services
                     int paramNum = 0;
                     foreach (ParameterInfo param in paramInfo)
                         parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
-                    
+
                     object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
@@ -217,6 +246,7 @@ namespace OpenSim.Services
                     }
                 }
             }
+            MainConsole.Instance.Warn("COULD NOT FIND METHOD: " + method);
             methodInfo = null;
             return false;
         }

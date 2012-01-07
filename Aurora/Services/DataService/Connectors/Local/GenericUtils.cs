@@ -217,11 +217,11 @@ namespace Aurora.Services.DataService
 
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key)
         {
-            return GD.Query(string.Format("Type = '{0}' AND Key = '{1}'", Type, Key), "generics", "OwnerID").ConvertAll(x => new UUID(x));
+            return GD.Query(new string[2] { "Type", "`Key`" }, new string[2] { Type, Key }, "generics", "OwnerID").ConvertAll<UUID>(x => new UUID(x));
         }
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key, OSDMap Value)
         {
-            return GD.Query(string.Format("Type = '{0}' AND Key = '{1}' AND Value = '{2}'", Type, Key, OSDParser.SerializeJsonString(Value)), "generics", "OwnerID").ConvertAll(x => new UUID(x));
+            return GD.Query(new string[3] { "Type", "`Key`", "Value" }, new string[3] { Type, Key, OSDParser.SerializeJsonString(Value) }, "generics", "OwnerID").ConvertAll<UUID>(x => new UUID(x));
         }
     }
 }

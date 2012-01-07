@@ -713,6 +713,11 @@ namespace OpenSim.Services.Interfaces
         string UrlName { get; }
 
         /// <summary>
+        /// Give the region all of the ports assigned for this module
+        /// </summary>
+        bool DoMultiplePorts { get; }
+
+        /// <summary>
         /// Get the Url for the given sessionID
         /// </summary>
         /// <param name="SessionID"></param>

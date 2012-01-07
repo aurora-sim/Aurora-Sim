@@ -85,6 +85,18 @@ namespace Aurora.Services.DataService
             return settings;
         }
 
+        public EstateSettings GetEstateSettings(int EstateID)
+        {
+            return GetEstate(EstateID);
+        }
+
+        public EstateSettings GetEstateSettings(string name)
+        {
+            return GetEstate(
+                int.Parse(GD.Query("EstateName", name, "estatesettings", "EstateID")[0])
+            );
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public int CreateNewEstate(EstateSettings es, UUID RegionID)
         {
@@ -234,7 +246,7 @@ namespace Aurora.Services.DataService
 
         #region Helpers
 
-        private int GetEstateID(UUID regionID)
+        public int GetEstateID(UUID regionID)
         {
             List<string> retVal = GD.Query("RegionID", regionID, "estateregions", "EstateID");
             if (retVal.Count > 0)
