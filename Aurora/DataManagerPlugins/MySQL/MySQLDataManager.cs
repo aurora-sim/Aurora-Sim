@@ -1063,6 +1063,10 @@ namespace Aurora.DataManager.MySQL
                     return "int(11)";
                 case ColumnTypes.Integer30:
                     return "int(30)";
+                case ColumnTypes.UInteger11:
+                    return "INT(11) UNSIGNED";
+                case ColumnTypes.UInteger30:
+                    return "INT(30) UNSIGNED";
                 case ColumnTypes.Char36:
                     return "char(36)";
                 case ColumnTypes.Char32:

@@ -124,6 +124,8 @@ namespace Aurora.Framework
         Double,
         Integer11,
         Integer30,
+        UInteger11,
+        UInteger30,
         String,
         String1,
         String2,
