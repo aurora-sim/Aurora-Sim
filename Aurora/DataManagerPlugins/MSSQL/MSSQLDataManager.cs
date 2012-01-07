@@ -328,7 +328,7 @@ namespace Aurora.DataManager.MSSQL
 
         protected static string QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
         {
-            query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
+            string query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
 
             List<string> parts = new List<string>();
 

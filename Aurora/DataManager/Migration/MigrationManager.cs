@@ -242,6 +242,10 @@ namespace Aurora.DataManager.Migration
                                 string.Format("Migrating to version {0} did not validate. Restoring to restore point.",
                                               currentMigrator.Version));
                     }
+                    else
+                    {
+                        executingMigrator.FinishedMigration(genericData);
+                    }
 
                     if (executingMigrator.Version == operationDescription.EndVersion)
                         break;
@@ -253,8 +257,6 @@ namespace Aurora.DataManager.Migration
                 {
                     currentMigrator.ClearRestorePoint(genericData);
                 }
-                if (currentMigrator != null)
-                    currentMigrator.FinishedMigration(genericData);
             }
         }
 
