@@ -127,6 +127,10 @@ namespace Aurora.Framework
         /// </summary>
         List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
+        List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, uint start, uint count, string table, string wantedValue);
+
+        List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, string table, string wantedValue);
+
         /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         ///   This gives the row names as well as the values

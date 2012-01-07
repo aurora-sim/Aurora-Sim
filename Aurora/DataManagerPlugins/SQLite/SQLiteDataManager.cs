@@ -396,7 +396,97 @@ namespace Aurora.DataManager.SQLite
                     for (i = 0; i < reader.FieldCount; i++)
                     {
                         Type r = reader[i].GetType();
-                        RetVal.Add(r == typeof (DBNull) ? null : reader[i].ToString());
+                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
+                    }
+                }
+                //reader.Close();
+                CloseReaderCommand(cmd);
+
+                return RetVal;
+            }
+        }
+
+        private static void QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue, out string query, out Dictionary<string, object> ps)
+        {
+            ps = new Dictionary<string, object>();
+            query = String.Format("select {0} from {1} where ", wantedValue, table);
+
+            List<string> parts = new List<string>();
+
+            foreach (KeyValuePair<string, object> where in whereClause)
+            {
+                ps[":" + where.Key.Replace("`", "")] = where.Value;
+                parts.Add(String.Format("{0} = :{1}", where.Key, where.Key.Replace("`", "")));
+            }
+            query += string.Join(" AND ", parts.ToArray());
+
+            parts = new List<string>();
+            foreach (KeyValuePair<string, uint> where in whereBitfield)
+            {
+                ps[":" + where.Key.Replace("`", "")] = where.Value;
+                parts.Add(String.Format("{0} & :{1}", where.Key, where.Key.Replace("`", "")));
+            }
+            query += string.Join(" AND ", parts.ToArray());
+
+            parts = new List<string>();
+            foreach (KeyValuePair<string, bool> sort in order)
+            {
+                parts.Add(string.Format("{0} {1}", sort.Key, sort.Value ? "ASC" : "DESC"));
+            }
+            query += string.Join(", ", parts.ToArray());
+        }
+
+        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, uint start, uint count, string table, string wantedValue)
+        {
+            Dictionary<string, object> ps;
+            string query;
+
+            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
+
+            query += string.Format(" LIMIT {0},{1}", start, count);
+
+            int i = 0;
+
+            var cmd = PrepReader(query);
+            AddParams(ref cmd, ps);
+            using (IDataReader reader = cmd.ExecuteReader())
+            {
+                var RetVal = new List<string>();
+                while (reader.Read())
+                {
+                    for (i = 0; i < reader.FieldCount; i++)
+                    {
+                        Type r = reader[i].GetType();
+                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
+                    }
+                }
+                //reader.Close();
+                CloseReaderCommand(cmd);
+
+                return RetVal;
+            }
+        }
+
+        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
+        {
+            Dictionary<string, object> ps;
+            string query;
+
+            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
+
+            int i = 0;
+
+            var cmd = PrepReader(query);
+            AddParams(ref cmd, ps);
+            using (IDataReader reader = cmd.ExecuteReader())
+            {
+                var RetVal = new List<string>();
+                while (reader.Read())
+                {
+                    for (i = 0; i < reader.FieldCount; i++)
+                    {
+                        Type r = reader[i].GetType();
+                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
                     }
                 }
                 //reader.Close();
