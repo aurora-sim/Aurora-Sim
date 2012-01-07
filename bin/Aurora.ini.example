@@ -40,7 +40,7 @@
     ;; Should we restart Aurora if the sim crashes?
     AutoRestartOnCrash = false
 
-    ;; Should OpenSim wait until all modules have finished starting up before allowing logins and use of the console?
+    ;; Should Aurora wait until all modules have finished starting up before allowing logins and use of the console?
     ;; Default is true
     CompleteStartupAfterAllModulesLoad = true
 
