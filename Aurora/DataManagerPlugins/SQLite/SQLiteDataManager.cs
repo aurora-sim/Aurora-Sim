@@ -845,7 +845,6 @@ namespace Aurora.DataManager.SQLite
                 }
                 columnDefinition +=
                     column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
                     ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
@@ -864,12 +863,18 @@ namespace Aurora.DataManager.SQLite
                 multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
-                                         multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
 
-            var cmd = new SQLiteCommand {CommandText = query};
+            SQLiteCommand  cmd = new SQLiteCommand { CommandText = query };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+
+            foreach (IndexDefinition index in indices)
+            {
+                cmd = new SQLiteCommand { CommandText = string.Format("CREATE{0}INDEX idx_{1} ON {2} ({3})", (index.Type == IndexType.Index ? " " : " UNIQUE "), table + (index.Type != IndexType.Index ? "_unique" : string.Empty), table, string.Join(", ", index.Fields)) };
+                ExecuteNonQuery(cmd);
+                CloseReaderCommand(cmd);
+            }
         }
 
         public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
@@ -1121,7 +1126,85 @@ namespace Aurora.DataManager.SQLite
         //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN MSSQL DB SETUP TO TEST IT
         protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
         {
-            return new Dictionary<string, IndexDefinition>();
+            Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
+
+            Dictionary<string, bool> uniqueLookup = new Dictionary<string, bool>();
+
+            SQLiteCommand cmd = PrepReader(string.Format("PRAGMA index_list({0})", tableName));
+            using (IDataReader rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    uint seq = uint.Parse(rdr["seq"].ToString());
+                    string name = rdr["name"].ToString();
+                    bool unique = uint.Parse(rdr["unique"].ToString()) == 1;
+                    uniqueLookup[name] = unique;
+                }
+                rdr.Close();
+            }
+            CloseReaderCommand(cmd);
+
+            foreach (KeyValuePair<string, bool> index in uniqueLookup)
+            {
+                cmd = PrepReader(string.Format("PRAGMA index_info({0})", tableName));
+                defs[index.Key] = new IndexDefinition
+                {
+                    Fields = new string[]{ },
+                    Type = index.Value ? IndexType.Unique : IndexType.Index
+                };
+                using (IDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        uint seqno = uint.Parse(rdr["seqno"].ToString());
+                        uint cid = uint.Parse(rdr["cid"].ToString());
+                        string name = rdr["name"].ToString();
+                        defs[index.Key].Fields[seqno] = name;
+                    }
+                    rdr.Close();
+                }
+                CloseReaderCommand(cmd);
+            }
+
+            IndexDefinition primary = new IndexDefinition{
+                Type = IndexType.Primary,
+                Fields = new string[]{ }
+            };
+            List<ColumnDefinition> fields = ExtractColumnsFromTable(tableName);
+
+            uint i = 0;
+            foreach (ColumnDefinition field in fields)
+            {
+                if (field.IsPrimary)
+                {
+                    primary.Fields[i++] = field.Name;
+                }
+            }
+
+            foreach (KeyValuePair<string, IndexDefinition> index in defs)
+            {
+                if (index.Value.Type == IndexType.Unique && index.Value.Fields.Length == primary.Fields.Length)
+                {
+                    i = 0;
+                    bool found = true;
+                    foreach (string field in index.Value.Fields)
+                    {
+                        if (primary.Fields[i++] != field)
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found)
+                    {
+                        defs[index.Key].Type = IndexType.Primary;
+                        break;
+                    }
+                }
+            }
+
+
+            return defs;
         }
 
         private ColumnTypes ConvertTypeToColumnType(string typeString)
