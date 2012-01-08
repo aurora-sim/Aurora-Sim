@@ -945,21 +945,6 @@ namespace Aurora.DataManager.MySQL
                     (column.AutoIncrement ? " NOT NULL AUTO_INCREMENT" : string.Empty);
             }
 
-            string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += "`" + column.Name + "`";
-                }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
-            }
-
             List<string> indicesQuery = new List<string>(indices.Length);
             foreach (IndexDefinition index in indices)
             {
