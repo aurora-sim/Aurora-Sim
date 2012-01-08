@@ -1045,6 +1045,12 @@ namespace Aurora.DataManager.MSSQL
             return defs;
         }
 
+        //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN MSSQL DB SETUP TO TEST IT
+        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
+        {
+            return new Dictionary<string, IndexDefinition>();
+        }
+
         private ColumnTypes ConvertTypeToColumnType(string typeString)
         {
             string tStr = typeString.ToLower();

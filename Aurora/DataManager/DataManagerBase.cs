@@ -235,6 +235,49 @@ namespace Aurora.DataManager
                 }
             }
 
+            Dictionary<string, IndexDefinition> extractedIndices = ExtractIndicesFromTable(tableName);
+
+            MainConsole.Instance.Info(string.Format("{0}; Old index length: {1}, new index length {2}", tableName, extractedIndices.Count, indices.Length));
+
+            if (extractedIndices.Count == 0 && indices.Length > 0 || indices.Length == 0 && extractedIndices.Count > 0)
+            {
+                return false;
+            }
+
+            foreach (KeyValuePair<string, IndexDefinition> extractedIndex in extractedIndices)
+            {
+                bool found = false;
+                foreach (IndexDefinition newIndex in indices)
+                {
+                    if (extractedIndex.Value.Equals(newIndex))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    return false;
+                }
+            }
+
+            foreach (IndexDefinition newIndex in indices)
+            {
+                bool found = false;
+                foreach (KeyValuePair<string, IndexDefinition> extractedIndex in extractedIndices)
+                {
+                    if (newIndex.Equals(extractedIndex.Value))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -276,5 +319,7 @@ namespace Aurora.DataManager
         protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
+
+        protected abstract Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName);
     }
 }

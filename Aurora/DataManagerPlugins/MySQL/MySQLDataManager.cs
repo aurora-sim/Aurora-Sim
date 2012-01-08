@@ -1084,6 +1084,64 @@ namespace Aurora.DataManager.MySQL
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] UpdateTable", e);
             }
+
+            Dictionary<string, IndexDefinition> oldIndices = ExtractIndicesFromTable(table);
+            Dictionary<string, IndexDefinition> removeIndices = new Dictionary<string, IndexDefinition>();
+            List<IndexDefinition> newIndices = new List<IndexDefinition>();
+
+            foreach(IndexDefinition index in indices){
+                bool found = false;
+                foreach(KeyValuePair<string, IndexDefinition> oldIndex in oldIndices){
+                    if (oldIndex.Value.Equals(index))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    newIndices.Add(index);
+                }
+            }
+
+            foreach(KeyValuePair<string, IndexDefinition> index in oldIndices){
+                bool found = false;
+                foreach (IndexDefinition newIndex in indices)
+                {
+                    if (newIndices.Contains(newIndex))
+                    {
+                        continue;
+                    }
+                    if (index.Value.Equals(newIndex))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    removeIndices[index.Key] = index.Value;
+                }
+            }
+
+            foreach (IndexDefinition newIndex in newIndices)
+            {
+                foreach (KeyValuePair<string, IndexDefinition> oldIndex in removeIndices)
+                {
+                    if (oldIndex.Value.Equals(newIndex))
+                    {
+                        removeIndices.Remove(oldIndex.Key);
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<string, IndexDefinition> oldIndex in removeIndices)
+            {
+                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` DROP INDEX `{1}`", table, oldIndex.Key), new Dictionary<string, object>());
+            }
+            foreach (IndexDefinition newIndex in newIndices)
+            {
+                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` ADD {1} (`{2}`)", table, newIndex.Type == IndexType.Primary ? "PRIMARY KEY" : (newIndex.Type == IndexType.Unique ? "UNIQUE" : "INDEX"), string.Join("`, `", newIndex.Fields)), new Dictionary<string,object>());
+            }
         }
 
         public override string GetColumnTypeStringSymbol(ColumnTypes type)
@@ -1259,12 +1317,12 @@ namespace Aurora.DataManager.MySQL
                     var type = rdr["Type"];
                     var extra = rdr["Extra"];
                     defs.Add(new ColumnDefinition
-                                 {
-                                     Name = name.ToString(),
-                                     IsPrimary = pk.ToString() == "PRI",
-                                     Type = ConvertTypeToColumnType(type.ToString()),
-                                     AutoIncrement = extra.ToString() == "auto_incremement"
-                                 });
+                    {
+                        Name = name.ToString(),
+                        IsPrimary = pk.ToString() == "PRI",
+                        Type = ConvertTypeToColumnType(type.ToString()),
+                        AutoIncrement = extra.ToString() == "auto_incremement"
+                    });
                 }
             }
             catch (Exception e)
@@ -1286,6 +1344,63 @@ namespace Aurora.DataManager.MySQL
                     MainConsole.Instance.Debug("[MySQLDataLoader] ExtractColumnsFromTable", e);
                 }
             }
+            return defs;
+        }
+
+        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
+        {
+            Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
+            tableName = tableName.ToLower();
+            IDataReader rdr = null;
+            Dictionary<string, Dictionary<uint, string>> indexLookup = new Dictionary<string, Dictionary<uint, string>>();
+            Dictionary<string, bool> indexIsUnique = new Dictionary<string,bool>();
+
+            try
+            {
+                rdr = Query(string.Format("SHOW INDEX IN {0}", tableName), new Dictionary<string, object>());
+                while (rdr.Read())
+                {
+                    string name = rdr["Column_name"].ToString();
+                    bool unique = uint.Parse(rdr["Non_unique"].ToString()) == 0;
+                    string index = rdr["Key_name"].ToString();
+                    uint sequence = uint.Parse(rdr["Seq_in_index"].ToString());
+                    if (indexLookup.ContainsKey(index) == false)
+                    {
+                        indexLookup[index] = new Dictionary<uint, string>();
+                    }
+                    indexIsUnique[index] = unique;
+                    indexLookup[index][sequence - 1] = name;
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[MySQLDataLoader] ExtractIndicesFromTable", e);
+            }
+            finally
+            {
+                try
+                {
+                    if (rdr != null)
+                    {
+                        rdr.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    MainConsole.Instance.Debug("[MySQLDataLoader] ExtractIndicesFromTable", e);
+                }
+            }
+
+            foreach (KeyValuePair<string, Dictionary<uint, string>> index in indexLookup)
+            {
+                index.Value.OrderBy(x=>x.Key);
+                defs[index.Key] = new IndexDefinition
+                {
+                    Fields = index.Value.Values.ToArray<string>(),
+                    Type = (indexIsUnique[index.Key] ? (index.Key == "PRIMARY" ? IndexType.Primary : IndexType.Unique) : IndexType.Index)
+                };
+            }
+
             return defs;
         }
 
