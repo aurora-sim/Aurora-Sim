@@ -71,7 +71,11 @@ namespace Aurora.DataManager
 
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
-        public abstract void CreateTable(string table, ColumnDefinition[] columns);
+        public void CreateTable(string table, ColumnDefinition[] columns)
+        {
+            CreateTable(table, columns, new IndexDefinition[0]);
+        }
+        public abstract void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices);
 
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract bool DirectReplace(string table, string[] keys, object[] values);
@@ -139,35 +143,32 @@ namespace Aurora.DataManager
             Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
         }
 
-        public void CopyTableToTable(string sourceTableName, string destinationTableName,
-                                     ColumnDefinition[] columnDefinitions)
+        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             if (!TableExists(sourceTableName))
             {
-                throw new MigrationOperationException("Cannot copy table to new name, source table does not exist: " +
-                                                      sourceTableName);
+                throw new MigrationOperationException("Cannot copy table to new name, source table does not exist: " + sourceTableName);
             }
 
             if (TableExists(destinationTableName))
             {
                 this.DropTable(destinationTableName);
                 if (TableExists(destinationTableName))
-                    throw new MigrationOperationException(
-                        "Cannot copy table to new name, table with same name already exists: " + destinationTableName);
+                    throw new MigrationOperationException("Cannot copy table to new name, table with same name already exists: " + destinationTableName);
             }
 
-            if (!VerifyTableExists(sourceTableName, columnDefinitions))
+            if (!VerifyTableExists(sourceTableName, columnDefinitions, indexDefinitions))
             {
                 throw new MigrationOperationException(
                     "Cannot copy table to new name, source table does not match columnDefinitions: " +
                     destinationTableName);
             }
 
-            EnsureTableExists(destinationTableName, columnDefinitions, null);
+            EnsureTableExists(destinationTableName, columnDefinitions, indexDefinitions, null);
             CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions);
         }
 
-        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indices)
         {
             if (!TableExists(tableName))
             {
@@ -237,20 +238,19 @@ namespace Aurora.DataManager
             return true;
         }
 
-        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
-                                      Dictionary<string, string> renameColumns)
+        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
         {
             if (TableExists(tableName))
             {
-                if (!VerifyTableExists(tableName, columnDefinitions))
+                if (!VerifyTableExists(tableName, columnDefinitions, indices))
                 {
                     //throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
-                    UpdateTable(tableName, columnDefinitions, renameColumns);
+                    UpdateTable(tableName, columnDefinitions, indices, renameColumns);
                 }
                 return;
             }
 
-            CreateTable(tableName, columnDefinitions);
+            CreateTable(tableName, columnDefinitions, indices);
         }
 
         public void RenameTable(string oldTableName, string newTableName)
@@ -264,14 +264,16 @@ namespace Aurora.DataManager
 
         #endregion
 
-        public abstract void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns);
+        public void UpdateTable(string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns)
+        {
+            UpdateTable(table, columns, new IndexDefinition[0], renameColumns);
+        }
+        public abstract void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns);
 
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
-        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
-                                                                 ColumnDefinition[] columnDefinitions);
+        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
     }

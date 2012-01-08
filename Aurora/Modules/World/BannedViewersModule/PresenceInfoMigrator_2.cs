@@ -39,7 +39,7 @@ namespace Aurora.Modules.Ban
             Version = new Version(0, 0, 2);
             MigrationName = "PresenceInfo";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("baninfo", ColDefs(
                 ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50, true),

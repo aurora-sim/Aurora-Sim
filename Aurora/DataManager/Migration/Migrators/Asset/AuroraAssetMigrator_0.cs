@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
             Version = new Version(0, 0, 0);
             MigrationName = "BlackholeAsset";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("auroraassets_A", ColDefs(ColDef("id", ColumnTypes.String36, true),
                                                 ColDef("hash_code", ColumnTypes.String64, true),

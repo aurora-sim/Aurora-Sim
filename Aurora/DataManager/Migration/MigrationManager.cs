@@ -182,7 +182,7 @@ namespace Aurora.DataManager.Migration
                     validated = currentMigrator.Validate(genericData);
                     if (!validated)
                     {
-                        Rec<string, ColumnDefinition[]> rec;
+                        Rec<string, ColumnDefinition[], IndexDefinition[]> rec;
                         currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
                         MainConsole.Instance.Fatal(
                             string.Format(

@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 2);
             MigrationName = "Directory";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
                                               ColDef("ParcelID", ColumnTypes.String50, true),

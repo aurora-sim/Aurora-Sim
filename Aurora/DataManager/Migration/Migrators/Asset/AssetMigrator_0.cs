@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Asset";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
                                                 ColDef("KeySetting", ColumnTypes.String50, true),

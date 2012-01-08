@@ -235,8 +235,7 @@ namespace Aurora.DataManager.MSSQL
             return Query(query, new Dictionary<string, object>(), dbcon).ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
-                                           string order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -435,8 +434,7 @@ namespace Aurora.DataManager.MSSQL
             }
         }
 
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -492,14 +490,12 @@ namespace Aurora.DataManager.MSSQL
             dic[key].Add(value);
         }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                          object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                    object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -793,7 +789,7 @@ namespace Aurora.DataManager.MSSQL
             m_connection.Dispose();
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns)
+        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
         {
             if (TableExists(table))
             {
@@ -810,8 +806,10 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition +=
+                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
+                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -839,8 +837,7 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
         {
             if (TableExists(table))
             {
@@ -857,8 +854,10 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition +=
+                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
+                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -1030,11 +1029,13 @@ namespace Aurora.DataManager.MSSQL
                 var name = rdr["Field"];
                 var pk = rdr["Key"];
                 var type = rdr["Type"];
+                var extra = rdr["Extra"];
                 defs.Add(new ColumnDefinition
                              {
                                  Name = name.ToString(),
                                  IsPrimary = pk.ToString() == "PRI",
-                                 Type = ConvertTypeToColumnType(type.ToString())
+                                 Type = ConvertTypeToColumnType(type.ToString()),
+                                 AutoIncrement = extra.ToString() == "auto_incremement"
                              });
             }
             rdr.Close();
@@ -1058,6 +1059,12 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.Integer30;
                 case "integer":
                     return ColumnTypes.Integer11;
+                case "int(11) unsigned":
+                    return ColumnTypes.UInteger11;
+                case "int(30) unsigned":
+                    return ColumnTypes.UInteger30;
+                case "integer unsigned":
+                    return ColumnTypes.UInteger11;
                 case "char(36)":
                     return ColumnTypes.Char36;
                 case "char(32)":

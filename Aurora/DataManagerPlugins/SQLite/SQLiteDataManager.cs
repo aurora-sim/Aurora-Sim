@@ -331,8 +331,7 @@ namespace Aurora.DataManager.SQLite
             return cmd.ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
-                                           string Order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = "";
@@ -496,8 +495,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = String.Format("select {0} from {1} where ",
@@ -772,14 +770,12 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                          object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                    object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             var cmd = new SQLiteCommand();
             string query = String.Format("update {0} set ", table);
@@ -830,7 +826,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns)
+        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
         {
             if (TableExists(table))
             {
@@ -847,8 +843,10 @@ namespace Aurora.DataManager.SQLite
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition +=
+                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
+                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -874,8 +872,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
         {
             if (!TableExists(table))
             {
@@ -917,7 +914,9 @@ namespace Aurora.DataManager.SQLite
                     renamedTempTableColumn += ", ";
                 }
                 renamedTempTableColumn += column.Name;
-                renamedTempTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
+                renamedTempTableColumnDefinition +=
+                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty);
             }
             string query = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");";
 
@@ -954,8 +953,10 @@ namespace Aurora.DataManager.SQLite
                 {
                     newTableColumnDefinition += ", ";
                 }
-                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                            ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                newTableColumnDefinition +=
+                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
+                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
             string multiplePrimaryString = string.Empty;
             if (multiplePrimary)
@@ -1101,11 +1102,13 @@ namespace Aurora.DataManager.SQLite
                     var name = rdr["name"];
                     var pk = rdr["pk"];
                     var type = rdr["type"];
+                    var extra = rdr["exta"];
                     defs.Add(new ColumnDefinition
                                  {
                                      Name = name.ToString(),
                                      IsPrimary = (int.Parse(pk.ToString()) > 0),
-                                     Type = ConvertTypeToColumnType(type.ToString())
+                                     Type = ConvertTypeToColumnType(type.ToString()),
+                                     AutoIncrement = extra.ToString() == "auto_incremement"
                                  });
                 }
                 rdr.Close();
@@ -1129,6 +1132,12 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Integer11;
                 case "int(30)":
                     return ColumnTypes.Integer30;
+                case "int(11) unsigned":
+                    return ColumnTypes.UInteger11;
+                case "int(30) unsigned":
+                    return ColumnTypes.UInteger30;
+                case "integer unsigned":
+                    return ColumnTypes.UInteger11;
                 case "char(36)":
                     return ColumnTypes.Char36;
                 case "char(32)":
@@ -1211,8 +1220,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
-                                                                 ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
             var cmd = new SQLiteCommand
                           {

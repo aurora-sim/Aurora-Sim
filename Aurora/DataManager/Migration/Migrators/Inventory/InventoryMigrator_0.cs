@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Inventory";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("inventoryfolders", ColDefs(ColDef("folderID", ColumnTypes.Char36, true),
                                                   ColDef("agentID", ColumnTypes.Char36, true),

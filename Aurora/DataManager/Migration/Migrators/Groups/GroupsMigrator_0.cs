@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Groups";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("osagent", ColDefs(ColDef("AgentID", ColumnTypes.String50, true),
                                          ColDef("ActiveGroupID", ColumnTypes.String50)));

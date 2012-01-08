@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
@@ -30,38 +30,40 @@ using System.Collections.Generic;
 using Aurora.Framework;
 using C5;
 
-namespace Aurora.DataManager.Migration.Migrators.Scheduler
+namespace Aurora.DataManager.Migration.Migrators
 {
-    public class SchedulerMigrator_1 : Migrator
+    public class DirectoryMigrator_6 : Migrator
     {
-        public SchedulerMigrator_1()
+        public DirectoryMigrator_6()
         {
-            Version = new Version(0, 0, 1);
-            MigrationName = "Scheduler";
+            Version = new Version(0, 0, 6);
+            MigrationName = "Directory";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("scheduler", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                                                ColDef("fire_function", ColumnTypes.String128),
-                                                ColDef("fire_params", ColumnTypes.String1024),
-                                                ColDef("run_once", ColumnTypes.TinyInt1),
-                                                ColDef("run_every", ColumnTypes.Integer30),
-                                                ColDef("runs_next", ColumnTypes.Integer30, true),
-                                                ColDef("keep_history", ColumnTypes.TinyInt1),
-                                                ColDef("require_reciept", ColumnTypes.TinyInt1),
-                                                ColDef("last_history_id", ColumnTypes.String36),
-                                                ColDef("create_time", ColumnTypes.Integer30),
-                                                ColDef("enabled", ColumnTypes.TinyInt1, true)
-                                            ));
-
-            AddSchema("scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                                                ColDef("scheduler_id", ColumnTypes.String36, true),
-                                                ColDef("ran_time", ColumnTypes.Integer30),
-                                                ColDef("run_time", ColumnTypes.Integer30),
-                                                ColDef("reciept", ColumnTypes.String1024),
-                                                ColDef("is_complete", ColumnTypes.TinyInt1),
-                                                ColDef("complete_time", ColumnTypes.Integer30)
-                                            ));
+            AddSchema("asevents", ColDefs(
+                ColDef("EID", ColumnTypes.UInteger11, true, true),
+                ColDef("creator", ColumnTypes.Char36),
+                ColDef("region", ColumnTypes.Char36),
+                ColDef("parcel", ColumnTypes.Char36),
+                ColDef("date", ColumnTypes.DateTime),
+                ColDef("cover", ColumnTypes.UInteger11),
+                ColDef("maturity", ColumnTypes.UInteger11),
+                ColDef("flags", ColumnTypes.UInteger11),
+                ColDef("duration", ColumnTypes.UInteger11),
+                ColDef("localPosX", ColumnTypes.Float),
+                ColDef("localPosY", ColumnTypes.Float),
+                ColDef("localPosZ", ColumnTypes.Float),
+                ColDef("name", ColumnTypes.String50),
+                ColDef("description", ColumnTypes.String255)
+            ), IndexDefs(
+                IndexDef(new string[]{ "EID" }, IndexType.Primary),
+                IndexDef(new string[]{ "creator" }, IndexType.Index),
+                IndexDef(new string[]{ "region", "parcel" }, IndexType.Index),
+                IndexDef(new string[]{ "date" }, IndexType.Index),
+                IndexDef(new string[]{ "maturity" }, IndexType.Index),
+                IndexDef(new string[]{ "name" }, IndexType.Index)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
