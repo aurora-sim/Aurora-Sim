@@ -1089,29 +1089,33 @@ namespace Aurora.DataManager.MySQL
             Dictionary<string, IndexDefinition> removeIndices = new Dictionary<string, IndexDefinition>();
             List<IndexDefinition> newIndices = new List<IndexDefinition>();
 
-            foreach(IndexDefinition index in indices){
+            foreach (KeyValuePair<string, IndexDefinition> oldIndex in oldIndices)
+            {
                 bool found = false;
-                foreach(KeyValuePair<string, IndexDefinition> oldIndex in oldIndices){
-                    if (oldIndex.Value.Equals(index))
+                foreach (IndexDefinition newIndex in indices)
+                {
+                    if (oldIndex.Value.Equals(newIndex))
                     {
                         found = true;
                         break;
                     }
+                    else
+                    {
+                        MainConsole.Instance.Info(oldIndex.Value.Type.ToString() + " " + string.Join(", ", oldIndex.Value.Fields) + " does not match new index " + newIndex.Type.ToString() + " " + string.Join(", ", newIndex.Fields));
+                    }
                 }
-                if(!found){
-                    newIndices.Add(index);
+                if (!found)
+                {
+                    removeIndices.Add(oldIndex.Key, oldIndex.Value);
                 }
             }
 
-            foreach(KeyValuePair<string, IndexDefinition> index in oldIndices){
+            foreach (IndexDefinition newIndex in indices)
+            {
                 bool found = false;
-                foreach (IndexDefinition newIndex in indices)
+                foreach (KeyValuePair<string, IndexDefinition> oldIndex in oldIndices)
                 {
-                    if (newIndices.Contains(newIndex))
-                    {
-                        continue;
-                    }
-                    if (index.Value.Equals(newIndex))
+                    if (oldIndex.Value.Equals(newIndex))
                     {
                         found = true;
                         break;
@@ -1119,18 +1123,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 if (!found)
                 {
-                    removeIndices[index.Key] = index.Value;
-                }
-            }
-
-            foreach (IndexDefinition newIndex in newIndices)
-            {
-                foreach (KeyValuePair<string, IndexDefinition> oldIndex in removeIndices)
-                {
-                    if (oldIndex.Value.Equals(newIndex))
-                    {
-                        removeIndices.Remove(oldIndex.Key);
-                    }
+                    newIndices.Add(newIndex);
                 }
             }
 
@@ -1248,14 +1241,13 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             sourceTableName = sourceTableName.ToLower();
             destinationTableName = destinationTableName.ToLower();
             try
             {
-                ExecuteNonQuery(string.Format("insert into {0} select * from {1}", destinationTableName,
-                                              sourceTableName), new Dictionary<string, object>());
+                ExecuteNonQuery(string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName), new Dictionary<string, object>());
             }
             catch (Exception e)
             {

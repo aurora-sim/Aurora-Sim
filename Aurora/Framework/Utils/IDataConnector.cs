@@ -198,9 +198,17 @@ namespace Aurora.Framework
         public override bool Equals(object obj)
         {
             var idef = obj as IndexDefinition;
-            if (idef != null)
+            if (idef != null && idef.Type == Type && idef.Fields.Length == Fields.Length)
             {
-                return (idef.Type == Type && idef.Fields.Equals(Fields));
+                uint i = 0;
+                foreach (string field in idef.Fields)
+                {
+                    if (field != Fields[i++])
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
             return false;
         }

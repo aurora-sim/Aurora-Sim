@@ -1226,14 +1226,12 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             var cmd = new SQLiteCommand
-                          {
-                              CommandText =
-                                  string.Format("insert into {0} select * from {1}", destinationTableName,
-                                                sourceTableName)
-                          };
+            {
+                CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName)
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }

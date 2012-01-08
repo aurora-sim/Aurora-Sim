@@ -165,7 +165,7 @@ namespace Aurora.DataManager
             }
 
             EnsureTableExists(destinationTableName, columnDefinitions, indexDefinitions, null);
-            CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions);
+            CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions, indexDefinitions);
         }
 
         public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indices)
@@ -316,7 +316,7 @@ namespace Aurora.DataManager
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
-        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
+        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
 
