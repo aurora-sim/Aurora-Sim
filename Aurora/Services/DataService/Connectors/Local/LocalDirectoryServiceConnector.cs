@@ -824,8 +824,6 @@ namespace Aurora.Services.DataService
             if (RetVal.Count == 0)
                 return null;
 
-            MainConsole.Instance.Info(Query2EventData(RetVal).Count);
-
             return Query2EventData(RetVal)[0];
         }
 
