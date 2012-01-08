@@ -76,14 +76,14 @@
     ;; Default: 1
     RegionSightSize = 1
 
-    ;; Should registration of new regions (existing regions can still connector) be allowed currently?
+    ;; Should registration of new regions (existing regions can still connect) be allowed currently?
     AllowNewRegistrations = true
     
     ;; Should any registrations be allowed currently?
     DisableRegistrations = false
 	
 [AgentProcessing]
-	;; Changes how many regions the agent can see into by letting the distance that they can see on how far the Draw Distance is set in the viewer.
+	;; Changes how many regions the agent can see into by letting the distance that they can see be based on how far the Draw Distance is set in the viewer.
     ;; This option will allow you to see into any regions nearby within your draw distance (configurable per user).
     ;; Default: false
     UseVariableRegionSightDistance = false
