@@ -1097,9 +1097,9 @@ namespace Aurora.DataManager.SQLite
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
-            var defs = new List<ColumnDefinition>();
+            List<ColumnDefinition> defs = new List<ColumnDefinition>();
 
-            var cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
+            SQLiteCommand cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
             using (IDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())
@@ -1107,14 +1107,12 @@ namespace Aurora.DataManager.SQLite
                     var name = rdr["name"];
                     var pk = rdr["pk"];
                     var type = rdr["type"];
-                    var extra = rdr["exta"];
                     defs.Add(new ColumnDefinition
-                                 {
-                                     Name = name.ToString(),
-                                     IsPrimary = (int.Parse(pk.ToString()) > 0),
-                                     Type = ConvertTypeToColumnType(type.ToString()),
-                                     AutoIncrement = extra.ToString() == "auto_incremement"
-                                 });
+                    {
+                        Name = name.ToString(),
+                        IsPrimary = (int.Parse(pk.ToString()) > 0),
+                        Type = ConvertTypeToColumnType(type.ToString())
+                    });
                 }
                 rdr.Close();
             }
@@ -1123,7 +1121,7 @@ namespace Aurora.DataManager.SQLite
             return defs;
         }
 
-        //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN MSSQL DB SETUP TO TEST IT
+        //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN SQLite DB SETUP TO TEST IT
         protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
         {
             Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
@@ -1144,14 +1142,16 @@ namespace Aurora.DataManager.SQLite
             }
             CloseReaderCommand(cmd);
 
+            List<string> Fields;
             foreach (KeyValuePair<string, bool> index in uniqueLookup)
             {
-                cmd = PrepReader(string.Format("PRAGMA index_info({0})", tableName));
+                cmd = PrepReader(string.Format("PRAGMA index_info({0})", index.Key));
                 defs[index.Key] = new IndexDefinition
                 {
                     Fields = new string[]{ },
                     Type = index.Value ? IndexType.Unique : IndexType.Index
                 };
+                Fields = new List<string>();
                 using (IDataReader rdr = cmd.ExecuteReader())
                 {
                     while (rdr.Read())
@@ -1159,11 +1159,12 @@ namespace Aurora.DataManager.SQLite
                         uint seqno = uint.Parse(rdr["seqno"].ToString());
                         uint cid = uint.Parse(rdr["cid"].ToString());
                         string name = rdr["name"].ToString();
-                        defs[index.Key].Fields[seqno] = name;
+                        Fields.Add(name);
                     }
                     rdr.Close();
                 }
                 CloseReaderCommand(cmd);
+                defs[index.Key].Fields = Fields.ToArray();
             }
 
             IndexDefinition primary = new IndexDefinition{
@@ -1171,15 +1172,17 @@ namespace Aurora.DataManager.SQLite
                 Fields = new string[]{ }
             };
             List<ColumnDefinition> fields = ExtractColumnsFromTable(tableName);
+            Fields = new List<string>();
 
             uint i = 0;
             foreach (ColumnDefinition field in fields)
             {
                 if (field.IsPrimary)
                 {
-                    primary.Fields[i++] = field.Name;
+                    Fields.Add(field.Name);
                 }
             }
+            primary.Fields = Fields.ToArray();
 
             foreach (KeyValuePair<string, IndexDefinition> index in defs)
             {
