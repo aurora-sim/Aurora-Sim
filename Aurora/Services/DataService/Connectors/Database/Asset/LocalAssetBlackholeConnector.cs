@@ -687,7 +687,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if ((wasErrorLoading) && (!waserror))
                 return RestoreBackup(hashCode) ? LoadFile(hashCode, true) : null;
             if (wasErrorLoading)
-                return new byte[] { };
+                return null;
 
             Util.FireAndForget(delegate
             {
