@@ -29,13 +29,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Aurora.Framework;
-using Aurora.Simulation.Base;
+
 using Nini.Config;
+
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework.Servers.HttpServer;
+using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
+
 using OpenSim.Services.Interfaces;
+
+using Aurora.Framework;
+using Aurora.Simulation.Base;
+using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Services.DataService
 {
@@ -384,8 +389,7 @@ namespace Aurora.Services.DataService
             List<DirEventsReplyData> Events = new List<DirEventsReplyData>();
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 Events.AddRange(from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString) into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply) select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new DirEventsReplyData(valuevalue));
                 return Events.ToArray();
             }
@@ -452,21 +456,23 @@ namespace Aurora.Services.DataService
             return null;
         }
 
-        public EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity)
+        public EventData CreateEvent(UUID creator, UUID regionID, UUID parcelID, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             sendData["METHOD"] = "CreateEvent";
             sendData["Creator"] = creator;
-            sendData["Name"] = name;
-            sendData["Category"] = category;
-            sendData["Description"] = description;
+            sendData["RegionID"] = regionID;
+            sendData["ParcelID"] = parcelID;
             sendData["Date"] = date;
-            sendData["Duration"] = duration;
             sendData["Cover"] = cover;
-            sendData["SimName"] = simName;
-            sendData["GlobalPos"] = globalPos;
-            sendData["EventFlags"] = eventFlags;
             sendData["Maturity"] = maturity;
+            sendData["Flags"] = flags;
+            sendData["Duration"] = duration;
+            sendData["LocalPos"] = localPos;
+            sendData["Name"] = name;
+            sendData["Description"] = description;
+            sendData["Category"] = category;
+
 
             string reqString = WebUtils.BuildQueryString(sendData);
             try

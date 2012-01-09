@@ -30,10 +30,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Aurora.Framework;
+
 using Nini.Config;
+
+using Aurora.Framework;
+
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
+
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
@@ -684,8 +689,7 @@ namespace Aurora.Services.DataService
                 string StringDay = queryText.Split('|')[0];
                 if (StringDay == "u") //"u" means search for events that are going on today
                 {
-                    whereClause = " EDate >= '" + Util.ToUnixTime(DateTime.Today) + "' LIMIT " + StartQuery.ToString() +
-                                  ",50 ";
+                    whereClause = " UNIX_TIMESTAMP(date) >= '" + Util.ToUnixTime(DateTime.Today) + "'";
                 }
                 else
                 {
@@ -694,46 +698,44 @@ namespace Aurora.Services.DataService
                     DateTime SearchedDay = DateTime.Today.AddDays(Day);
                     //We only look at one day at a time
                     DateTime NextDay = SearchedDay.AddDays(1);
-                    whereClause = " EDate >= '" + Util.ToUnixTime(SearchedDay) + "' and EDate <= '" +
-                                  Util.ToUnixTime(NextDay) + "' and EFlags <= '" + flags + "' LIMIT " +
-                                  StartQuery.ToString() + ",50 ";
+                    whereClause = " UNIX_TIMESTAMP(date) >= '" + Util.ToUnixTime(SearchedDay) + "' AND UNIX_TIMESTAMP(date) <= '" + Util.ToUnixTime(NextDay) + "' and flags <= '" + flags + "'";
                 }
             }
             else
             {
                 //Else, search for the search term
-                whereClause = " EName LIKE '%" + queryText + "%' LIMIT " + StartQuery.ToString() + ",50 ";
+                whereClause = " name LIKE '%" + queryText + "%'";
             }
-            List<string> retVal = GD.Query(whereClause, "events", "EOwnerID,EName,EID,EDate,EFlags,EMature");
-            if (retVal.Count == 0)
-                return Data.ToArray();
+            whereClause += " LIMIT " + StartQuery.ToString() + ",50 ";
+            List<string> retVal = GD.Query(whereClause, "asevents", "EID, creator, date, maturity, flags, name");
 
-            DirEventsReplyData replyData;
-            for (int i = 0; i < retVal.Count; i += 6)
+            if (retVal.Count > 0)
             {
-                replyData = new DirEventsReplyData
-                                {
-                                    ownerID = new UUID(retVal[i]),
-                                    name = retVal[i + 1],
-                                    eventID = Convert.ToUInt32(retVal[i + 2])
-                                };
-                DateTime date = Util.ToDateTime(ulong.Parse(retVal[i + 3]));
-                replyData.date = date.ToString(new DateTimeFormatInfo());
-                replyData.unixTime = (uint) Util.ToUnixTime(date);
-                replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
+                DirEventsReplyData replyData;
+                for (int i = 0; i < retVal.Count; i += 6)
+                {
+                    replyData = new DirEventsReplyData
+                    {
+                        eventID = Convert.ToUInt32(retVal[i]),
+                        ownerID = new UUID(retVal[i + 1]),
+                        name = retVal[i + 5],
+                    };
+                    DateTime date = DateTime.Parse(retVal[i + 2].ToString());
+                    replyData.date = date.ToString(new DateTimeFormatInfo());
+                    replyData.unixTime = (uint)Util.ToUnixTime(date);
+                    replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
 
-                //Check the maturity levels
-                if (Convert.ToInt32(retVal[i + 5]) == 2 &&
-                    (eventFlags & (uint) DirectoryManager.EventFlags.Adult) == (uint) DirectoryManager.EventFlags.Adult)
-                    Data.Add(replyData);
-                else if (Convert.ToInt32(retVal[i + 5]) == 1 &&
-                         (eventFlags & (uint) DirectoryManager.EventFlags.Mature) ==
-                         (uint) DirectoryManager.EventFlags.Mature)
-                    Data.Add(replyData);
-                else if (Convert.ToInt32(retVal[i + 5]) == 0 &&
-                         (eventFlags & (uint) DirectoryManager.EventFlags.PG) ==
-                         (uint) DirectoryManager.EventFlags.PG)
-                    Data.Add(replyData);
+                    //Check the maturity levels
+                    uint maturity = Convert.ToUInt32(retVal[i + 3]);
+                    if(
+                            (maturity == 0 && (eventFlags & (uint)DirectoryManager.EventFlags.PG) == (uint)DirectoryManager.EventFlags.PG) ||
+                            (maturity == 1 && (eventFlags & (uint)DirectoryManager.EventFlags.Mature) == (uint)DirectoryManager.EventFlags.Mature) ||
+                            (maturity == 2 && (eventFlags & (uint)DirectoryManager.EventFlags.Adult) == (uint)DirectoryManager.EventFlags.Adult)
+                    )
+                    {
+                        Data.Add(replyData);
+                    }
+                }
             }
 
             return Data.ToArray();
@@ -749,30 +751,37 @@ namespace Aurora.Services.DataService
         {
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 
-            List<string> retVal = GD.Query("ESimName", regionName, "events", "EOwnerID,EName,EID,EDate,EFlags,EMature");
-
-            if (retVal.Count == 0)
-                return Data.ToArray();
-
-            DirEventsReplyData replyData = new DirEventsReplyData();
-            for (int i = 0; i < retVal.Count; i += 6)
+            IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (regiondata != null)
             {
-                //Check maturity level
-                if (int.Parse(retVal[i + 5]) != maturity)
-                    continue;
+                List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero);
+                if (regions.Count >= 1)
+                {
+                    Dictionary<string, object> whereClause = new Dictionary<string, object>();
+                    whereClause["region"] = regions[0].RegionID.ToString();
+                    whereClause["maturity"] = maturity;
+                    List<string> retVal = GD.Query(whereClause, new Dictionary<string, uint>(0), new Dictionary<string, bool>(0), "asevents", "EID, creator, date, maturity, flags, name");
 
-                replyData.ownerID = new UUID(retVal[i]);
-                replyData.name = retVal[i + 1];
-                replyData.eventID = Convert.ToUInt32(retVal[i + 2]);
+                    if (retVal.Count > 0)
+                    {
+                        DirEventsReplyData replyData;
+                        for (int i = 0; i < retVal.Count; i += 6)
+                        {
+                            replyData = new DirEventsReplyData
+                            {
+                                eventID = Convert.ToUInt32(retVal[i]),
+                                ownerID = new UUID(retVal[i + 1]),
+                                name = retVal[i + 5],
+                            };
+                            DateTime date = DateTime.Parse(retVal[i + 2].ToString());
+                            replyData.date = date.ToString(new DateTimeFormatInfo());
+                            replyData.unixTime = (uint)Util.ToUnixTime(date);
+                            replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
 
-                //Parse the date for the viewer
-                DateTime date = Util.ToDateTime(ulong.Parse(retVal[i + 3]));
-                replyData.date = date.ToString(new DateTimeFormatInfo());
-                replyData.unixTime = (uint) Util.ToUnixTime(date);
-
-                replyData.eventFlags = Convert.ToUInt32(retVal[i + 4]);
-                Data.Add(replyData);
-                replyData = new DirEventsReplyData();
+                            Data.Add(replyData);
+                        }
+                    }
+                }
             }
 
             return Data.ToArray();
@@ -780,31 +789,48 @@ namespace Aurora.Services.DataService
         
         private static List<EventData> Query2EventData(List<string> RetVal){
             List<EventData> Events = new List<EventData>();
-            if (RetVal.Count % 13 != 0)
+            IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            if (RetVal.Count % 15 != 0 || regiondata == null)
             {
                 return Events;
             }
+
+            GridRegion region;
+            EventData data;
             
-            for (int i = 0; i < RetVal.Count; i += 13)
+            for (int i = 0; i < RetVal.Count; i += 15)
             {
-                EventData data = new EventData();
+                data = new EventData();
+
+                region = regiondata.Get(UUID.Parse(RetVal[2].ToString()), UUID.Zero);
+                if (region == null)
+                {
+                    continue;
+                }
+                data.simName = region.RegionName;
+
                 data.eventID = Convert.ToUInt32(RetVal[i]);
                 data.creator = RetVal[i + 1];
-                data.name = RetVal[i + 2];
-                data.category = RetVal[i + 3];
-                data.description = RetVal[i + 4];
-                //Parse the time out for the viewer
-                DateTime date = Util.ToDateTime(ulong.Parse(RetVal[i + 5]));
-                data.date = date.ToString(new DateTimeFormatInfo());
-                data.dateUTC = (uint) Util.ToUnixTime(date);
 
-                data.duration = Convert.ToUInt32(RetVal[i + 6]);
-                data.cover = Convert.ToUInt32(RetVal[i + 7]);
-                data.amount = Convert.ToUInt32(RetVal[i + 8]);
-                data.simName = RetVal[i + 9];
-                Vector3.TryParse(RetVal[i + 10], out data.globalPos);
-                data.eventFlags = Convert.ToUInt32(RetVal[i + 11]);
-                data.maturity = Convert.ToInt32(RetVal[i + 12]);
+                //Parse the time out for the viewer
+                DateTime date = DateTime.Parse(RetVal[i + 4].ToString());
+                data.date = date.ToString(new DateTimeFormatInfo());
+                data.dateUTC = (uint)Util.ToUnixTime(date);
+
+                data.cover = data.amount = Convert.ToUInt32(RetVal[i + 5]);
+                data.maturity = Convert.ToInt32(RetVal[i + 6]);
+                data.eventFlags = Convert.ToUInt32(RetVal[i + 7]);
+                data.duration = Convert.ToUInt32(RetVal[i + 8]);
+
+                data.globalPos = new Vector3(
+                        region.RegionLocX + float.Parse(RetVal[i + 9]),
+                        region.RegionLocY + float.Parse(RetVal[i + 10]),
+                        region.RegionLocZ + float.Parse(RetVal[i + 11])
+                );
+
+                data.name = RetVal[i + 12];
+                data.description = RetVal[i + 13];
+                data.category = RetVal[i + 14];
 
                 Events.Add(data);
             }
@@ -820,61 +846,83 @@ namespace Aurora.Services.DataService
         public EventData GetEventInfo(uint EventID)
         {
             EventData data = new EventData();
-            List<string> RetVal = GD.Query("EID", EventID, "events", "EID, ECreatorID, EName, ECategory, EDesc, EDate, EDuration, ECoverCharge, ECoverAmount, ESimName, EGlobalPos, EFlags, EMature");
-            if (RetVal.Count == 0)
-                return null;
-
-            return Query2EventData(RetVal)[0];
+            List<string> RetVal = GD.Query("EID", EventID, "asevents", "*");
+            return (RetVal.Count == 0) ? null : Query2EventData(RetVal)[0];
         }
 
-        public EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity)
+        public EventData CreateEvent(UUID creator, UUID regionID, UUID parcelID, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category)
         {
+            IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
+            IParcelServiceConnector parceldata = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
+            if(regiondata == null || parceldata == null){
+                return null;
+            }
+
+            GridRegion region = regiondata.Get(regionID, UUID.Zero);
+            if(region == null){
+                return null;
+            }
+            if (parcelID != UUID.Zero)
+            {
+                LandData parcel = parceldata.GetLandData(region.RegionID, parcelID);
+                if (parcel == null)
+                {
+                    return null;
+                }
+            }
+
+
             EventData eventData = new EventData();
             eventData.eventID = GetMaxEventID() + 1;
             eventData.creator = creator.ToString();
+            eventData.simName = region.RegionName;
+            eventData.date = date.ToString(new DateTimeFormatInfo());
+            eventData.dateUTC = (uint)Util.ToUnixTime(date);
+            eventData.cover = eventData.amount = cover;
+            eventData.maturity = (int)maturity;
+            eventData.eventFlags = flags | (uint)maturity;
+            eventData.duration = duration;
+            eventData.globalPos = new Vector3(
+                region.RegionLocX + localPos.X,
+                region.RegionLocY + localPos.Y,
+                region.RegionLocZ + localPos.Z
+            );
             eventData.name = name;
             eventData.description = description;
             eventData.category = category;
-            eventData.date = date.ToString(new DateTimeFormatInfo());
-            eventData.dateUTC = (uint)Util.ToUnixTime(date);
-            eventData.duration = duration;
-            eventData.cover = cover;
-            eventData.amount = cover;
-            eventData.simName = simName;
-            eventData.globalPos = globalPos;
-            eventData.eventFlags = eventFlags;
-            eventData.maturity = (int)maturity;
 
-            GD.Insert("events", new string[]{
+            GD.Insert("asevents", new string[]{
                 "EID",
-                "ECreatorID",
-                "EOwnerID",
-                "EName", 
-                "ECategory", 
-                "EDesc", 
-                "EDate", 
-                "EDuration", 
-                "ECoverCharge", 
-                "ECoverAmount", 
-                "ESimName", 
-                "EGlobalPos", 
-                "EFlags", 
-                "EMature"
+                "creator",
+                "region",
+                "parcel", 
+                "date", 
+                "cover", 
+                "maturity", 
+                "flags", 
+                "duration", 
+                "localPosX", 
+                "localPosY", 
+                "localPosZ", 
+                "name",
+                "description",
+                "category"
             }, new object[]{
                 eventData.eventID,
-                eventData.creator,
-                eventData.creator,
-                eventData.name,
-                eventData.category,
-                eventData.description,
-                eventData.dateUTC,
-                eventData.duration,
+                creator.ToString(),
+                regionID.ToString(),
+                parcelID.ToString(),
+                date.ToString("s"),
                 eventData.cover,
-                eventData.amount,
-                eventData.simName,
-                eventData.globalPos.ToString(),
-                eventData.eventFlags,
-                eventData.maturity
+                (uint)maturity,
+                flags,
+                duration,
+                localPos.X,
+                localPos.Y,
+                localPos.Z,
+                name,
+                description,
+                category
             });
 
             return eventData;
@@ -882,12 +930,12 @@ namespace Aurora.Services.DataService
 
         public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
         {
-            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(filter, new Dictionary<string, uint>(0), sort, start, count, "events", "*"));
+            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(filter, new Dictionary<string, uint>(0), sort, start, count, "asevents", "*"));
         }
 
         public uint GetNumberOfEvents(Dictionary<string, object> filter)
         {
-            return uint.Parse(GD.Query(filter, new Dictionary<string,uint>(0), new Dictionary<string,bool>(0), "events", "COUNT(EID)")[0]);
+            return uint.Parse(GD.Query(filter, new Dictionary<string,uint>(0), new Dictionary<string,bool>(0), "asevents", "COUNT(EID)")[0]);
         }
 
         public uint GetMaxEventID()
@@ -898,7 +946,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                return uint.Parse(GD.Query("1=1", "events", "MAX(EID)")[0]);
+                return uint.Parse(GD.Query("1=1", "asevents", "MAX(EID)")[0]);
             }
         }
 

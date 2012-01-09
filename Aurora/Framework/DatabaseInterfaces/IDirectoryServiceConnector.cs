@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 
 using OpenMetaverse;
+using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
 
 using Aurora.Framework;
 
@@ -193,22 +194,24 @@ namespace Aurora.Framework
         /// <returns></returns>
         EventData GetEventInfo(uint EventID);
 
+
         /// <summary>
-        /// Creates an event
+        /// creates an event
         /// </summary>
         /// <param name="creator"></param>
-        /// <param name="name"></param>
-        /// <param name="category"></param>
-        /// <param name="description"></param>
+        /// <param name="region"></param>
+        /// <param name="parcel"></param>
         /// <param name="date"></param>
-        /// <param name="duration"></param>
         /// <param name="cover"></param>
-        /// <param name="simName"></param>
-        /// <param name="globalPos"></param>
-        /// <param name="eventFlags"></param>
         /// <param name="maturity"></param>
+        /// <param name="flags"></param>
+        /// <param name="duration"></param>
+        /// <param name="localPos"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="category"></param>
         /// <returns></returns>
-        EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity);
+        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category);
 
         /// <summary>
         /// Gets a list of events with optional filters

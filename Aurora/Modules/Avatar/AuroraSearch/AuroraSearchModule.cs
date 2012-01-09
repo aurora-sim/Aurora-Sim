@@ -289,11 +289,9 @@ namespace Aurora.Modules.Search
 #endif
         }
 
-        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
-                                   string queryText, uint queryFlags, int queryStart)
+        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues =
-                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
+            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
 
 #if (!ISWIN)
             SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
@@ -301,8 +299,7 @@ namespace Aurora.Modules.Search
                 remoteClient.SendDirEventsReply(queryID, data);
             });
 #else
-            SplitPackets(ReturnValues,
-                         data => remoteClient.SendDirEventsReply(queryID, data));
+            SplitPackets(ReturnValues, data => remoteClient.SendDirEventsReply(queryID, data));
 #endif
         }
 
