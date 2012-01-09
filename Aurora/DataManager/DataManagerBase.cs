@@ -201,8 +201,7 @@ namespace Aurora.DataManager
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                             continue; //They are the same type, let them go on through
                     }
-                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name +
-                               " when verifing tables exist");
+                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist");
                     return false;
                 }
             }
