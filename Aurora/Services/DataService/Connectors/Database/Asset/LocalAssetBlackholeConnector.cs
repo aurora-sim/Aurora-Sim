@@ -69,6 +69,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private IGenericData m_Gd;
         private bool m_pointInventory2ParentAssets = true;
         private bool needsConversion;
+        private readonly List<string> lastNotFound = new List<string>();
+
 
         private delegate void Blank();
 
@@ -178,6 +180,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private AssetBase GetAsset(UUID uuid, bool metaOnly, bool displayMessages)
         {
             ResetTimer(15000);
+            if (lastNotFound.Contains(uuid.ToString())) return null;
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
             IDataReader dr = null;
             AssetBase asset = null;
@@ -218,7 +221,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if ((asset == null) && (displayMessages))
                 {
                     // oh well.. we tried
-                    MainConsole.Instance.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid + "); Unable to find asset " + uuid);
+                    MainConsole.Instance.Warn("[LocalAssetBlackholeConnector] GetAsset(" + uuid +
+                                              "); Unable to find asset " + uuid);
+                    lastNotFound.Add(uuid.ToString());
                 }
                 if (asset == null) return null;
 
@@ -228,9 +233,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     asset.Data = LoadFile(asset.HashCode);
                 }
                 asset.MetaOnly = metaOnly;
-                // save down last time updated
-                m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" },
-                            new[] { "id" }, new object[] { asset.ID });
+                Util.FireAndForget(delegate
+                {
+                    updateAccessTime(databaseTable, asset.ID);
+                });
             }
             catch (Exception e)
             {
@@ -242,6 +248,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (dr != null) dr.Close();
             }
             return asset;
+        }
+
+        public void updateAccessTime(string databaseTable, UUID assetID)
+        {
+            // save down last time updated
+            m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" },
+                        new[] { "id" }, new object[] { assetID });
         }
 
         private AssetBase LoadAssetFromDR(IDataReader dr)
@@ -354,13 +367,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         AssetFlags thisassetflag;
                         if ((results != null) && (results.Count >= 1))
                         {
-                            thisassetflag = (AssetFlags)int.Parse(results[0].ToString());
+                            thisassetflag = (AssetFlags)int.Parse(results[0]);
                         }
                         else
                         {
                             databaseTable = "auroraassets_old";
                             results = m_Gd.Query("id", asset.ID, databaseTable, "asset_flags");
-                            thisassetflag = (AssetFlags)int.Parse(results[0].ToString());
+                            thisassetflag = (AssetFlags)int.Parse(results[0]);
                         }
 
                         if ((thisassetflag & AssetFlags.Rewritable) != AssetFlags.Rewritable)
@@ -418,12 +431,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
 
                 // Ensure some data is correct
-                
-                
+
+
 
                 string database = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
                 // Delete and save the asset
-                if (assetDoesExist) 
+                if (assetDoesExist)
                     Delete(asset.ID, false, true, asset);
                 m_Gd.Insert(database,
                             new[]
@@ -443,7 +456,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     Util.ToUnixTime(asset.CreationDate), Util.ToUnixTime(DateTime.UtcNow)
                                     , (int) asset.Flags, asset.HostUri
                                 });
-
+                if (lastNotFound.Contains(asset.ID.ToString()))
+                    lastNotFound.Remove(asset.ID.ToString());
                 // Double checked its saved. Just for debug
                 if (needsConversion)
                 {
@@ -666,7 +680,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (stream != null)
                 {
                     stream.Close();
-                    stream = null;
                 }
             }
 
@@ -674,8 +687,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             if ((wasErrorLoading) && (!waserror))
                 return RestoreBackup(hashCode) ? LoadFile(hashCode, true) : null;
             if (wasErrorLoading)
-                return null;
+                return new byte[] { };
 
+            Util.FireAndForget(delegate
+            {
+                FileCheck(hashCode, results, waserror);
+            });
+            return results;
+        }
+
+        public void FileCheck(string hashCode, byte[] results, bool waserror)
+        {
             // check the files results with hash.. see if they match
             if (hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
             {
@@ -683,15 +705,15 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (!waserror)
                 {
                     if (RestoreBackup(hashCode))
-                        return LoadFile(hashCode, true);
-                    MainConsole.Instance.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
+                        LoadFile(hashCode, true);
+                    else
+                        MainConsole.Instance.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery");
                 }
                 else
                     MainConsole.Instance.Error("[AssetDataPlugin]: Resulting files didn't match hash. Failed recovery 2");
             }
             else if (waserror)
                 MainConsole.Instance.Error("[AssetDataPlugin]: Asset recovery successfully");
-            return results;
         }
 
         private bool RestoreBackup(string hashCode)
