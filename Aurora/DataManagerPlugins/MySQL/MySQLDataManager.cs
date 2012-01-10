@@ -648,7 +648,7 @@ namespace Aurora.DataManager.MySQL
             if (queryFilter.Count > 0)
             {
                 uint j = 0;
-                query += "WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+                query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
             }
 
             if (sort.Count > 0)
