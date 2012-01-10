@@ -131,6 +131,8 @@ namespace Aurora.Framework
 
         List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, string table, string wantedValue);
 
+        List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue);
+
         /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
         ///   This gives the row names as well as the values
@@ -255,6 +257,42 @@ namespace Aurora.Framework
         string ConCat(string[] toConCat);
     }
 
+    public class QueryFilter
+    {
+        public Dictionary<string, object> andFilters = new Dictionary<string, object>();
+        public Dictionary<string, object> orFilters = new Dictionary<string, object>();
+
+        public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
+        public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
+
+        public Dictionary<string, int> greaterThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> lessThanFilters = new Dictionary<string, int>();
+
+        public List<QueryFilter> subFilters = new List<QueryFilter>();
+
+        public uint Count
+        {
+            get
+            {
+                uint total = (uint)(
+                    andFilters.Count +
+                    orFilters.Count +
+                    andBitfieldAndFilters.Count +
+                    orBitfieldAndFilters.Count +
+                    greaterThanFilters.Count +
+                    lessThanFilters.Count
+                );
+
+                subFilters.ForEach(delegate(QueryFilter filter)
+                {
+                    total += filter.Count;
+                });
+
+                return total;
+            }
+        }
+    }
+
     public interface IAuroraDataPlugin
     {
         /// <summary>
@@ -269,7 +307,6 @@ namespace Aurora.Framework
         /// <param name = "GenericData">The Database Plugin</param>
         /// <param name = "source">Config if more parameters are needed</param>
         /// <param name = "DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                        string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
     }
 }

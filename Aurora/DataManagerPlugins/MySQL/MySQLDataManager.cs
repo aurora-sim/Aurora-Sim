@@ -500,8 +500,145 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
+        private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
+        {
+            ps = new Dictionary<string,object>();
+            Dictionary<string, object>[] pss = {ps};
+            string query = "";
+            List<string> parts;
+            uint i = j;
+            bool had = false;
+            if (filter.Count > 0)
+            {
+                query += "(";
+
+                parts = new List<string>();
+                foreach(KeyValuePair<string, object> where in filter.andFilters){
+                    string key = "?where_AND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if(parts.Count > 0){
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach(KeyValuePair<string, object> where in filter.orFilters){
+                    string key = "?where_OR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if(parts.Count > 0){
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+                
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach(KeyValuePair<string, uint> where in filter.andBitfieldAndFilters){
+                    string key = "?where_bAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if(parts.Count > 0){
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+                
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach(KeyValuePair<string, uint> where in filter.orBitfieldAndFilters){
+                    string key = "?where_bOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if(parts.Count > 0){
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                foreach(QueryFilter subFilter in filter.subFilters){
+                    Dictionary<string, object> sps;
+                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
+                    pss[pss.Length] = sps;
+                    had = subFilter.Count > 0;
+                }
+                query += ")";
+            }
+            pss.SelectMany(x => x).ToLookup(x=>x.Key, x=>x.Value).ToDictionary(x => x.Key, x=>x.First());
+            return query;
+        }
+
+        public override List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue)
+        {
+            string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
+            Dictionary<string, object> ps = new Dictionary<string,object>();
+            List<string> retVal = new List<string>();
+            List<string> parts = new List<string>();
+
+            if (queryFilter.Count > 0)
+            {
+                uint j = 0;
+                query += "WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+            }
+
+            if (sort.Count > 0)
+            {
+                parts = new List<string>();
+                foreach (KeyValuePair<string, bool> sortOrder in sort)
+                {
+                    parts.Add(string.Format("`{0}` {1}", sortOrder.Key, sortOrder.Value ? "ASC" : "DESC"));
+                }
+                query += " ORDER BY " + string.Join(", ", parts.ToArray());
+            }
+
+            if(start.HasValue){
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
+
+            IDataReader reader = null;
+            int i = 0;
+            try
+            {
+                using (reader = Query(query, ps))
+                {
+                    while (reader.Read())
+                    {
+                        for (i = 0; i < reader.FieldCount; i++)
+                        {
+                            Type r = reader[i].GetType();
+                            retVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
+                        }
+                    }
+                    return retVal;
+                }
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
+                return null;
+            }
+            finally
+            {
+                try
+                {
+                    if (reader != null)
+                    {
+                        reader.Close();
+                        //reader.Dispose ();
+                    }
+                }
+                catch (Exception e)
+                {
+                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
+                }
+            }
+        }
+
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             IDataReader reader = null;
             Dictionary<string, List<string>> retVal = new Dictionary<string, List<string>>();

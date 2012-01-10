@@ -54,6 +54,7 @@ namespace Aurora.DataManager
         public abstract List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
         public abstract List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, uint start, uint count, string table, string wantedValue);
         public abstract List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, string table, string wantedValue);
+        public abstract List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue);
 
         public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
@@ -139,8 +140,7 @@ namespace Aurora.DataManager
             Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
         }
 
-        public void CopyTableToTable(string sourceTableName, string destinationTableName,
-                                     ColumnDefinition[] columnDefinitions)
+        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
         {
             if (!TableExists(sourceTableName))
             {
@@ -237,8 +237,7 @@ namespace Aurora.DataManager
             return true;
         }
 
-        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
-                                      Dictionary<string, string> renameColumns)
+        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns)
         {
             if (TableExists(tableName))
             {
@@ -264,14 +263,12 @@ namespace Aurora.DataManager
 
         #endregion
 
-        public abstract void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns);
+        public abstract void UpdateTable(string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns);
 
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
-        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
-                                                                 ColumnDefinition[] columnDefinitions);
+        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
     }

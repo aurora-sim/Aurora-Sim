@@ -88,8 +88,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "tableName"></param>
         /// <param name = "columnDefinitions"></param>
-        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions,
-                               Dictionary<string, string> renameColumns);
+        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns);
 
         /// <summary>
         ///   Rename the table from oldTableName to newTableName
