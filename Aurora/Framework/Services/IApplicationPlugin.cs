@@ -265,8 +265,11 @@ namespace Aurora.Framework
         public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
         public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
 
-        public Dictionary<string, int> greaterThanFilters = new Dictionary<string, int>();
-        public Dictionary<string, int> lessThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
+
+        public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
 
         public List<QueryFilter> subFilters = new List<QueryFilter>();
 
@@ -279,8 +282,10 @@ namespace Aurora.Framework
                     orFilters.Count +
                     andBitfieldAndFilters.Count +
                     orBitfieldAndFilters.Count +
-                    greaterThanFilters.Count +
-                    lessThanFilters.Count
+                    andGreaterThanFilters.Count +
+                    orGreaterThanFilters.Count +
+                    andLessThanFilters.Count +
+                    orLessThanFilters.Count
                 );
 
                 subFilters.ForEach(delegate(QueryFilter filter)

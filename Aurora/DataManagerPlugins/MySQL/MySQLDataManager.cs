@@ -512,6 +512,8 @@ namespace Aurora.DataManager.MySQL
             {
                 query += "(";
 
+                #region equality
+
                 parts = new List<string>();
                 foreach(KeyValuePair<string, object> where in filter.andFilters){
                     string key = "?where_AND_" + (++i) + where.Key.Replace("`", "");
@@ -532,7 +534,11 @@ namespace Aurora.DataManager.MySQL
                 if(parts.Count > 0){
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
-                
+
+                #endregion
+
+                #region bitfield &
+
                 had = parts.Count > 0;
                 parts = new List<string>();
                 foreach(KeyValuePair<string, uint> where in filter.andBitfieldAndFilters){
@@ -541,19 +547,83 @@ namespace Aurora.DataManager.MySQL
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
                 if(parts.Count > 0){
-                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
                 }
-                
+
                 had = parts.Count > 0;
                 parts = new List<string>();
-                foreach(KeyValuePair<string, uint> where in filter.orBitfieldAndFilters){
+                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
+                {
                     string key = "?where_bOR_" + (++i) + where.Key.Replace("`", "");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
-                if(parts.Count > 0){
+                if (parts.Count > 0)
+                {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
+
+                #endregion
+
+                #region greater than
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
+                {
+                    string key = "?where_gtAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
+                {
+                    string key = "?where_gtOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
+
+                #region less than
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
+                {
+                    string key = "?where_ltAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
+                {
+                    string key = "?where_ltOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
 
                 had = parts.Count > 0;
                 foreach(QueryFilter subFilter in filter.subFilters){
