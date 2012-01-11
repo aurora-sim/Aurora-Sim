@@ -279,51 +279,6 @@ namespace Aurora.DataManager.MSSQL
                 }
             }
         }
-
-        public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} where ",
-                                         wantedValue, table);
-            int i = 0;
-            foreach (object value in keyValue)
-            {
-                query += String.Format("{0} = '{1}' and ", keyRow[i], value);
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
         
         private static string QueryFilter2Query(QueryFilter filter)
         {
