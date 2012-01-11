@@ -362,8 +362,15 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     assetDoesExist = ExistsAsset(asset.ID);
                     if (assetDoesExist)
                     {
+                        Dictionary<string, object> where = new Dictionary<string, object>(1);
+                        where["id"] = asset.ID;
+                        QueryFilter filter = new QueryFilter
+                        {
+                            andFilters = where
+                        };
+
                         string databaseTable = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
-                        List<string> results = m_Gd.Query("id", asset.ID, databaseTable, "asset_flags");
+                        List<string> results = m_Gd.Query(new string[] { "asset_flags" }, databaseTable, filter, null, null, null);
                         AssetFlags thisassetflag;
                         if ((results != null) && (results.Count >= 1))
                         {
@@ -372,7 +379,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         else
                         {
                             databaseTable = "auroraassets_old";
-                            results = m_Gd.Query("id", asset.ID, databaseTable, "asset_flags");
+                            results = m_Gd.Query(new string[] { "asset_flags" }, databaseTable, filter, null, null, null);
                             thisassetflag = (AssetFlags)int.Parse(results[0]);
                         }
 
@@ -461,8 +468,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 // Double checked its saved. Just for debug
                 if (needsConversion)
                 {
-                    if (m_Gd.Query("id", asset.ID, "auroraassets_" + asset.ID.ToString().Substring(0, 1), "id").Count ==
-                        0)
+                    Dictionary<string, object> where = new Dictionary<string, object>(1);
+                    where["id"] = asset.ID;
+                    if(m_Gd.Query(new string[]{ "id" }, "auroraassets_" + asset.ID.ToString().Substring(0, 1), new QueryFilter{
+                        andFilters = where
+                    }, null, null, null).Count == 0)
                     {
                         MainConsole.Instance.Error("[AssetDataPlugin] Asset did not saver propery: " + asset.ID);
                         successful = false;
@@ -494,9 +504,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(15000);
             try
             {
-                bool result = m_Gd.Query("id", uuid, "auroraassets_" + uuid.ToString().Substring(0, 1), "id").Count >= 1;
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["id"] = uuid;
+
+                bool result = m_Gd.Query(new string[] { "id" }, "auroraassets_" + uuid.ToString().Substring(0, 1), filter, null, null, null).Count >= 1;
                 if (!result)
-                    result = m_Gd.Query("id", uuid, "auroraassets_old", "id").Count > 0;
+                {
+                    result = m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count >= 1;
+                }
                 if ((!result) && (needsConversion))
                 {
                     AssetBase a = Convert2BH(uuid);
@@ -1114,12 +1129,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             "id");
                     if (findOld2.Count >= 1)
                     {
+                        Dictionary<string, object> where = new Dictionary<string, object>(1);
                         foreach (string ass in findOld2)
                         {
-                            List<string> findOld = m_Gd.Query(" id = '" + ass + "'",
-                                                              "auroraassets_" + ass.ToCharArray()[0],
-                                                              "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,host_uri,parent_id");
-                            if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count == 0)
+                            List<string> findOld = m_Gd.Query(" id = '" + ass + "'", "auroraassets_" + ass.ToCharArray()[0], "id,hash_code,name,description,asset_type,create_time,access_time,asset_flags,creator_id,host_uri,parent_id");
+                            where["id"] = ass;
+                            if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", new QueryFilter
+                            {
+                                andFilters = where
+                            }, null, null, null).Count == 0)
+                            {
                                 m_Gd.Insert("auroraassets_old",
                                             new[]
                                                 {
@@ -1135,8 +1154,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                                     findOld[6], findOld[7], findOld[8], findOld[9],
                                                     findOld[10]
                                                 });
-                            if (m_Gd.Query("id", ass, "auroraassets_old", "id").Count > 0)
+                            }
+                            if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", new QueryFilter
+                            {
+                                andFilters = where
+                            }, null, null, null).Count > 0)
+                            {
                                 m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
+                            }
                         }
                         ResetTimer(100);
                         return;
@@ -1152,42 +1177,41 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private int TaskGetHashCodeUseCount(string hash_code)
         {
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["hash_code"] = hash_code;
+            QueryFilter filter = new QueryFilter
+            {
+                andFilters = where
+            };
+
+            string[] tables = {
+                "auroraassets_1",
+                "auroraassets_2",
+                "auroraassets_3",
+                "auroraassets_4",
+                "auroraassets_5",
+                "auroraassets_6",
+                "auroraassets_7",
+                "auroraassets_8",
+                "auroraassets_9",
+                "auroraassets_0",
+                "auroraassets_a",
+                "auroraassets_b",
+                "auroraassets_c",
+                "auroraassets_d",
+                "auroraassets_e",
+                "auroraassets_f",
+            };
+
             try
             {
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_1", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_2", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_3", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_4", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_5", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_6", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_7", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_8", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_9", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_0", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_a", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_b", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_c", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_d", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_e", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_f", "id").Count >= 1)
-                    return 1;
-                if (m_Gd.Query("hash_code", hash_code, "auroraassets_old", "id").Count >= 1)
-                    return 1;
+                foreach (string table in tables)
+                {
+                    if (m_Gd.Query(new string[] { "id" }, table, filter, null, null, null).Count >= 1)
+                    {
+                        return 1;
+                    }
+                }
                 return 0;
             }
             catch
