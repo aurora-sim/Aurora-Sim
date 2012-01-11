@@ -69,7 +69,18 @@ namespace Aurora.Services.DataService
 
         public UserAccount[] Get(string[] fields, string[] values)
         {
-            List<string> query = GD.Query(fields, values, m_realm, "*");
+            Dictionary<string, object> where = new Dictionary<string, object>(values.Length);
+
+            for (uint i = 0; i < values.Length; ++i)
+            {
+                where[fields[i]] = values[i];
+            }
+
+            List<string> query = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1]{ "*" });
+
             List<UserAccount> list = new List<UserAccount>();
 
             ParseQuery(query, ref list);
