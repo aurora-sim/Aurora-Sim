@@ -324,116 +324,7 @@ namespace Aurora.DataManager.MSSQL
                 }
             }
         }
-
-        protected static string QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
-        {
-            string query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
-
-            List<string> parts = new List<string>();
-
-            foreach (KeyValuePair<string, object> where in whereClause)
-            {
-                parts.Add(String.Format("{0} = '{1}'", where.Key, where.Value));
-            }
-            query += string.Join(" AND ", parts.ToArray());
-
-            parts = new List<string>();
-            foreach (KeyValuePair<string, uint> where in whereBitfield)
-            {
-                parts.Add(String.Format("{0} & {1}", where.Key, where.Value));
-            }
-            query += string.Join(" AND ", parts.ToArray());
-
-            parts = new List<string>();
-            foreach (KeyValuePair<string, bool> sort in order)
-            {
-                parts.Add(string.Format("{0} {1}", sort.Key, sort.Value ? "ASC" : "DESC"));
-            }
-            query += string.Join(", ", parts.ToArray());
-
-            return query;
-        }
-
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, uint start, uint count, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-
-            string query = QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue);
-
-            query += string.Format(" LIMIT {0},{1}", start, count);
-
-            int i = 0;
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-
-            string query = QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue);
-
-            int i = 0;
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
+        
         private static string QueryFilter2Query(QueryFilter filter)
         {
             string query = "";
@@ -567,8 +458,6 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
             SqlConnection dbcon = GetLockedConnection();
 
-
-
             if (queryFilter.Count > 0)
             {
                 query += " WHERE " + QueryFilter2Query(queryFilter);
@@ -623,8 +512,7 @@ namespace Aurora.DataManager.MSSQL
 
         }
 
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;

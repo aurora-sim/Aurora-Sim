@@ -184,7 +184,10 @@ namespace Aurora.Services.DataService
             while (resp.Count < count)
             {
                 uint limit = count - (uint)resp.Count;
-                List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, sort, start, limit, m_realm, "*"));
+                List<GridRegion> query = ParseQuery(GD.Query(new QueryFilter
+                {
+                    andFilters = where
+                }, sort, start, count, m_realm, new string[] { "*" }));
 
                 if (query.Count == 0)
                 {
@@ -221,7 +224,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, uint> bitfields = new Dictionary<string, uint>(1);
             bitfields["Flags"] = (uint)flags;
 
-            List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, new Dictionary<string, bool>(0), m_realm, "*"));
+            List<GridRegion> query = ParseQuery(GD.Query(new QueryFilter{
+                andFilters = where,
+                andBitfieldAndFilters = bitfields
+            }, new Dictionary<string,bool>(0), null, null, m_realm, new string[]{ "*" }));
 
             uint count = 0;
             query.ForEach(delegate(GridRegion region)

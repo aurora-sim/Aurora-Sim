@@ -760,7 +760,18 @@ namespace Aurora.Services.DataService
                     Dictionary<string, object> whereClause = new Dictionary<string, object>();
                     whereClause["region"] = regions[0].RegionID.ToString();
                     whereClause["maturity"] = maturity;
-                    List<string> retVal = GD.Query(whereClause, new Dictionary<string, uint>(0), new Dictionary<string, bool>(0), "asevents", "EID, creator, date, maturity, flags, name");
+
+                    List<string> retVal = GD.Query(new QueryFilter
+                    {
+                        andFilters = whereClause
+                    }, new Dictionary<string, bool>(0), null, null, "asevents", new string[]{
+                        "EID",
+                        "creator",
+                        "date",
+                        "maturity",
+                        "flags",
+                        "name"
+                    });
 
                     if (retVal.Count > 0)
                     {
@@ -930,12 +941,18 @@ namespace Aurora.Services.DataService
 
         public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
         {
-            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(filter, new Dictionary<string, uint>(0), sort, start, count, "asevents", "*"));
+            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(new QueryFilter{
+                andFilters = filter
+            }, sort, start, count, "asevents", new string[]{ "*" } ));
         }
 
         public uint GetNumberOfEvents(Dictionary<string, object> filter)
         {
-            return uint.Parse(GD.Query(filter, new Dictionary<string,uint>(0), new Dictionary<string,bool>(0), "asevents", "COUNT(EID)")[0]);
+            return uint.Parse(GD.Query(new QueryFilter{
+                andFilters = filter
+            }, new Dictionary<string,bool>(0), null, null, "asevents", new string[]{
+                "COUNT(EID)"
+            })[0]);
         }
 
         public uint GetMaxEventID()

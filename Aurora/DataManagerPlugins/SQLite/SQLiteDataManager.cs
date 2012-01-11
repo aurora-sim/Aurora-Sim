@@ -331,8 +331,7 @@ namespace Aurora.DataManager.SQLite
             return cmd.ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue,
-                                           string Order)
+        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = "";
@@ -406,44 +405,182 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        private static void QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue, out string query, out Dictionary<string, object> ps)
+        private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
         {
             ps = new Dictionary<string, object>();
-            query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
+            Dictionary<string, object>[] pss = { ps };
+            string query = "";
+            List<string> parts;
+            uint i = j;
+            bool had = false;
+            if (filter.Count > 0)
+            {
+                query += "(";
 
+                #region equality
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.andFilters)
+                {
+                    string key = ":where_AND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.orFilters)
+                {
+                    string key = ":where_OR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
+
+                #region bitfield &
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.andBitfieldAndFilters)
+                {
+                    string key = ":where_bAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
+                {
+                    string key = ":where_bOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
+
+                #region greater than
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
+                {
+                    string key = ":where_gtAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
+                {
+                    string key = ":where_gtOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
+
+                #region less than
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
+                {
+                    string key = ":where_ltAND_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
+                {
+                    string key = ":where_ltOR_" + (++i) + where.Key.Replace("`", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                #endregion
+
+                had = parts.Count > 0;
+                foreach (QueryFilter subFilter in filter.subFilters)
+                {
+                    Dictionary<string, object> sps;
+                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
+                    pss[pss.Length] = sps;
+                    had = subFilter.Count > 0;
+                }
+                query += ")";
+            }
+            pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());
+            return query;
+        }
+
+        public override List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue)
+        {
+            string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+            List<string> retVal = new List<string>();
             List<string> parts = new List<string>();
 
-            foreach (KeyValuePair<string, object> where in whereClause)
+            if (queryFilter.Count > 0)
             {
-                ps[":" + where.Key.Replace("`", "")] = where.Value;
-                parts.Add(String.Format("{0} = :{1}", where.Key, where.Key.Replace("`", "")));
+                uint j = 0;
+                query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
             }
-            query += string.Join(" AND ", parts.ToArray());
 
-            parts = new List<string>();
-            foreach (KeyValuePair<string, uint> where in whereBitfield)
+            if (sort.Count > 0)
             {
-                ps[":" + where.Key.Replace("`", "")] = where.Value;
-                parts.Add(String.Format("{0} & :{1}", where.Key, where.Key.Replace("`", "")));
+                parts = new List<string>();
+                foreach (KeyValuePair<string, bool> sortOrder in sort)
+                {
+                    parts.Add(string.Format("`{0}` {1}", sortOrder.Key, sortOrder.Value ? "ASC" : "DESC"));
+                }
+                query += " ORDER BY " + string.Join(", ", parts.ToArray());
             }
-            query += string.Join(" AND ", parts.ToArray());
 
-            parts = new List<string>();
-            foreach (KeyValuePair<string, bool> sort in order)
+            if (start.HasValue)
             {
-                parts.Add(string.Format("{0} {1}", sort.Key, sort.Value ? "ASC" : "DESC"));
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
             }
-            query += string.Join(", ", parts.ToArray());
-        }
-
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, uint start, uint count, string table, string wantedValue)
-        {
-            Dictionary<string, object> ps;
-            string query;
-
-            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
-
-            query += string.Format(" LIMIT {0},{1}", start, count);
 
             int i = 0;
 
@@ -467,37 +604,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
-        {
-            Dictionary<string, object> ps;
-            string query;
-
-            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
-
-            int i = 0;
-
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                while (reader.Read())
-                {
-                    for (i = 0; i < reader.FieldCount; i++)
-                    {
-                        Type r = reader[i].GetType();
-                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
-                    }
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
-        }
-
-        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table,
-                                                                    string wantedValue)
+        public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = String.Format("select {0} from {1} where ",
