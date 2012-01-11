@@ -87,17 +87,25 @@ namespace Aurora.Services.DataService
 
             for (int i = 0; i < query.Count; i += 2)
             {
-                FriendInfo info = new FriendInfo
-                                      {PrincipalID = principalID, Friend = query[i], MyFlags = int.Parse(query[i + 1])};
+                FriendInfo info = new FriendInfo{
+                    PrincipalID = principalID,
+                    Friend = query[i],
+                    MyFlags = int.Parse(query[i + 1])
+                };
                 infos.Add(info);
 
-                keys.Add("PrincipalID");
-                keys.Add("Friend");
-                values.Add(info.Friend);
-                values.Add(info.PrincipalID);
+                Dictionary<string, object> where = new Dictionary<string, object>(2);
+                where["PrincipalID"] = info.Friend;
+                where["Friend"] = info.PrincipalID;
 
-                List<string> query2 = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
-                if (query2.Count >= 1) infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
+                List<string> query2 = GD.Query(new QueryFilter{
+                    andFilters = where
+                }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1] { "Flags" });
+
+                if (query2.Count >= 1)
+                {
+                    infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
+                }
 
                 keys = new List<string>();
                 values = new List<object>();
