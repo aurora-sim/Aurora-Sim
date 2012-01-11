@@ -180,10 +180,19 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(ownerID, name);
             if (remoteValue != null)
+            {
                 return (int)remoteValue;
+            }
 
-            List<string> retVal = GD.Query(new string[] { "EstateOwner", "EstateName" },
-                new object[] { ownerID, name }, "estatesettings", "EstateID");
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["EstateOwner"] = ownerID;
+            where["EstateName"] = name;
+
+            List<string> retVal = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "estatesettings", new string[1] { "EstateID" });
+
             if (retVal.Count > 0)
                 return int.Parse(retVal[0]);
             return 0;
