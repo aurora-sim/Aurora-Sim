@@ -83,10 +83,10 @@ namespace Aurora.Services.DataService
                 where["`Key`"] = "LLProfile";
                 List<string> query = null;
                 //Grab it from the almost generic interface
-                query = GD.Query(new QueryFilter
+                query = GD.Query(new string[] { "Value" }, "userdata", new QueryFilter
                 {
                     andFilters = where
-                }, new Dictionary<string, bool>(0), null, null, "userdata", new string[] { "Value" });
+                }, null, null, null);
 
                 if (query == null || query.Count == 0)
                     return null;
@@ -175,10 +175,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new QueryFilter
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "userclassifieds", new string[1] { "*" });
+            }, null, null, null);
 
             List<Classified> classifieds = new List<Classified>();
             for (int i = 0; i < query.Count; i += 6)
@@ -195,10 +195,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["ClassifiedUUID"] = queryClassifiedID;
 
-            List<string> query = GD.Query(new QueryFilter
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "userclassifieds", new string[1] { "*" });
+            }, null, null, null);
 
             if (query.Count < 6)
             {
@@ -237,10 +237,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["PickUUID"] = queryPickID;
 
-            List<string> query = GD.Query(new QueryFilter
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "userpicks", new string[1] { "*" });
+            }, null, null, null);
 
             if (query.Count < 5)
                 return null;
@@ -254,10 +254,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new QueryFilter
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "userpicks", new string[1] { "*" });
+            }, null, null, null);
 
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
             for (int i = 0; i < query.Count; i += 5)

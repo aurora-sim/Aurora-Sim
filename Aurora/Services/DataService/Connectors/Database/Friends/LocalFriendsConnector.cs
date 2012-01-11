@@ -98,9 +98,9 @@ namespace Aurora.Services.DataService
                 where["PrincipalID"] = info.Friend;
                 where["Friend"] = info.PrincipalID;
 
-                List<string> query2 = GD.Query(new QueryFilter{
+                List<string> query2 = GD.Query(new string[1] { "Flags" }, m_realm, new QueryFilter{
                     andFilters = where
-                }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1] { "Flags" });
+                }, null, null, null);
 
                 if (query2.Count >= 1)
                 {

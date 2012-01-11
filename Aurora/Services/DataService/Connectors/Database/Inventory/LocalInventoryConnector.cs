@@ -157,10 +157,10 @@ namespace Aurora.Services.DataService
             where["assetID"] = assetID;
             where["avatarID"] = userID;
 
-            List<string> q = GD.Query(new QueryFilter
+            List<string> q = GD.Query(new string[1] { "*" }, m_itemsrealm, new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_itemsrealm, new string[1] { "*" });
+            }, null, null, null);
 
             return !(q != null && q.Count > 0);
         }
@@ -170,10 +170,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["assetID"] = assetID;
 
-            List<string> q = GD.Query(new QueryFilter
+            List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_itemsrealm, new string[1] { "inventoryName" });
+            }, null, null, null);
 
 
             return (q != null && q.Count > 0) ? q[0] :  "";

@@ -188,10 +188,10 @@ namespace Aurora.Services.DataService
             where["EstateOwner"] = ownerID;
             where["EstateName"] = name;
 
-            List<string> retVal = GD.Query(new QueryFilter
+            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estatesettings", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "estatesettings", new string[1] { "EstateID" });
+            }, null, null, null);
 
             if (retVal.Count > 0)
                 return int.Parse(retVal[0]);

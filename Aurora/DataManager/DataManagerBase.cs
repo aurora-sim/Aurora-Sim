@@ -51,7 +51,7 @@ namespace Aurora.DataManager
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
         public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
         public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-        public abstract List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue);
+        public abstract List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
 
         public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 

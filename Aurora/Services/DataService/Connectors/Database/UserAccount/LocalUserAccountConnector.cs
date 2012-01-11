@@ -76,10 +76,10 @@ namespace Aurora.Services.DataService
                 where[fields[i]] = values[i];
             }
 
-            List<string> query = GD.Query(new QueryFilter
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1]{ "*" });
+            }, null, null, null);
 
             List<UserAccount> list = new List<UserAccount>();
 

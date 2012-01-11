@@ -79,10 +79,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["Token"] = token.MySqlEscape(50);
             where["KeySetting"] = token.MySqlEscape(50);
-            return GD.Query(new QueryFilter
+            return GD.Query(new string[1] { "*" }, "lslgenericdata", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "lslgenericdata", new string[1] { "*" });
+            }, null, null, null);
         }
 
         #endregion

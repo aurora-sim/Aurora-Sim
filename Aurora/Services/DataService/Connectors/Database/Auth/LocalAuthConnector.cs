@@ -70,9 +70,9 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["UUID"] = principalID;
             where["accountType"] = authType;
-            List<string> query = GD.Query(new QueryFilter{
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter{
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1] { "*" });
+            }, null, null, null);
             AuthData data = null;
             for (int i = 0; i < query.Count; i += 5)
             {

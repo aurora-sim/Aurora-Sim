@@ -99,9 +99,9 @@ namespace Aurora.Services.DataService
                 where["ScopeID"] = scopeID;
             }
 
-            query = GD.Query(new QueryFilter{
+            query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter{
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1]{ "*" });
+            }, null, null, null);
 
             return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
@@ -117,10 +117,10 @@ namespace Aurora.Services.DataService
                 where["ScopeID"] = scopeID;
             }
 
-            query = GD.Query(new QueryFilter
+            query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1] { "*" });
+            }, null, null, null);
 
             return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
@@ -189,10 +189,10 @@ namespace Aurora.Services.DataService
             while (resp.Count < count)
             {
                 uint limit = count - (uint)resp.Count;
-                List<GridRegion> query = ParseQuery(GD.Query(new QueryFilter
+                List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, new QueryFilter
                 {
                     andFilters = where
-                }, sort, start, count, m_realm, new string[] { "*" }));
+                }, sort, start, count));
 
                 if (query.Count == 0)
                 {
@@ -229,10 +229,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, uint> bitfields = new Dictionary<string, uint>(1);
             bitfields["Flags"] = (uint)flags;
 
-            List<GridRegion> query = ParseQuery(GD.Query(new QueryFilter{
+            List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, new QueryFilter{
                 andFilters = where,
                 andBitfieldAndFilters = bitfields
-            }, new Dictionary<string,bool>(0), null, null, m_realm, new string[]{ "*" }));
+            }, null, null, null));
 
             uint count = 0;
             query.ForEach(delegate(GridRegion region)

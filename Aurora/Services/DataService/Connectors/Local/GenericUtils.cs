@@ -64,10 +64,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(3);
             where["OwnerID"] = OwnerID;
             where["Type"] = Type;
-            List<string> retVal = GD.Query(new QueryFilter
+            List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "`value`" });
+            }, null, null, null);
 
             List<T> Values = new List<T>();
             foreach (string ret in retVal)
@@ -97,10 +97,10 @@ namespace Aurora.Services.DataService
             where["OwnerID"] = OwnerID;
             where["Type"] = Type;
             where["`Key`"] = Key;
-            List<string> retVal = GD.Query(new QueryFilter
+            List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "`value`" });
+            }, null, null, null);
 
             if (retVal.Count == 0)
             {
@@ -126,9 +126,9 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["OwnerID"] = OwnerID;
             where["Type"] = Type;
-            List<string> retVal = GD.Query(new QueryFilter{
+            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", new QueryFilter{
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1]{ "COUNT(*)" });
+            }, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
@@ -147,9 +147,9 @@ namespace Aurora.Services.DataService
             where["OwnerID"] = OwnerID;
             where["Type"] = Type;
             where["`Key`"] = Key;
-            List<string> retVal = GD.Query(new QueryFilter{
+            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", new QueryFilter{
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1]{ "COUNT(*)" });
+            }, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
@@ -165,10 +165,10 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["OwnerID"] = OwnerID;
-            List<string> retVal = GD.Query(new QueryFilter
+            List<string> retVal = GD.Query(new string[1] { "COUNT(*)" }, "generics", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "COUNT(*)" });
+            }, null, null, null);
 
             return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
@@ -237,10 +237,10 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["Type"] = Type;
             where["`Key`"] = Key;
-            return GD.Query(new QueryFilter
+            return GD.Query(new string[1] { "OwnerID" }, "generics", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "OwnerID" }).ConvertAll<UUID>( x => new UUID(x));
+            }, null, null, null).ConvertAll<UUID>(x => new UUID(x));
         }
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key, OSDMap Value)
         {
@@ -248,10 +248,10 @@ namespace Aurora.Services.DataService
             where["Type"] = Type;
             where["`Key`"] = Key;
             where["`Value`"] = OSDParser.SerializeJsonString(Value);
-            return GD.Query(new QueryFilter
+            return GD.Query(new string[1] { "OwnerID" }, "generics", new QueryFilter
             {
                 andFilters = where
-            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "OwnerID" }).ConvertAll<UUID>(x => new UUID(x));
+            }, null, null, null).ConvertAll<UUID>(x => new UUID(x));
         }
     }
 }

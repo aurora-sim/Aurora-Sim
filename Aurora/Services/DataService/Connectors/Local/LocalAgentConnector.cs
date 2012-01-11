@@ -83,10 +83,10 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> where = new Dictionary<string, object>(2);
                 where["ID"] = agentID;
                 where["`Key`"] = "AgentInfo";
-                query = GD.Query(new QueryFilter
+                query = GD.Query(new string[1] { "`Value`" }, "userdata", new QueryFilter
                 {
                     andFilters = where
-                }, new Dictionary<string, bool>(0), null, null, "userdata", new string[1] { "`Value`" });
+                }, null, null, null);
             }
             catch
             {

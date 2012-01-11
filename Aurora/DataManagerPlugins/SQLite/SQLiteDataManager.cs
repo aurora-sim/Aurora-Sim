@@ -517,7 +517,7 @@ namespace Aurora.DataManager.SQLite
             return query;
         }
 
-        public override List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue)
+        public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
             string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
             Dictionary<string, object> ps = new Dictionary<string, object>();
@@ -530,7 +530,7 @@ namespace Aurora.DataManager.SQLite
                 query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
             }
 
-            if (sort.Count > 0)
+            if (sort != null && sort.Count > 0)
             {
                 parts = new List<string>();
                 foreach (KeyValuePair<string, bool> sortOrder in sort)
