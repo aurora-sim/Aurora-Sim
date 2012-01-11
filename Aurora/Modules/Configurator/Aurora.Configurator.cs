@@ -89,10 +89,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraConfigMySql()
         {
-            if (!File.Exists("Configuration/Data/MySql.ini")) return;
+            if (!File.Exists("Configuration/Data/MySQL.ini")) return;
             try
             {
-                File.Move("Configuration/Data/MySql.ini", "Configuration/Data/MySql.ini.old");
+                File.Move("Configuration/Data/MySQL.ini", "Configuration/Data/MySQL.ini.old");
             }
             catch
             {
@@ -486,9 +486,9 @@ namespace Aurora.Configuration
             CheckAuroraConfigMySql();
             try
             {
-                using (TextReader reader = new StreamReader("Configuration/Data/MySql.ini.example"))
+                using (TextReader reader = new StreamReader("Configuration/Data/MySQL.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("Configuration/Data/MySql.ini"))
+                    using (TextWriter writer = new StreamWriter("Configuration/Data/MySQL.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -510,11 +510,11 @@ namespace Aurora.Configuration
             catch (Exception exception)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error configuring MySql.ini " + exception.Message);
+                Console.WriteLine("Error configuring MySQL.ini " + exception.Message);
                 return;
             }
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your MySql.ini has been successfully configured");
+            Console.WriteLine("Your MySQL.ini has been successfully configured");
         }
 
         private static void ConfigureAuroraServerMySQL()
@@ -652,7 +652,7 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("http://" + ipAddress + ":8003/");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("\nNow press any key to start AuroraServer.exe \nthen press any key to start Aurora.exe.\nUse this name for your Welcome Land: ");
+                Console.WriteLine("\nNow press any key to start AuroraServer.exe \nthen press Enter key to start Aurora.exe.\nUse this name for your Welcome Land: ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(regionFlag);
                 Console.ForegroundColor = ConsoleColor.White;
@@ -662,7 +662,7 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora.Server>");
+                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora.Server>");
                 Console.ReadLine();
                 Process AuroraServer = new Process();
                 Process Aurora = new Process();
@@ -672,7 +672,7 @@ namespace Aurora.Configuration
 
                 AuroraServer.Start();
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Press any key to start the region...");
+                Console.WriteLine("Press Enter key to start the region...");
                 Console.Read();
                 Aurora.Start();
 
@@ -700,7 +700,7 @@ namespace Aurora.Configuration
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press any key to start your Aurora>");
+                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora>");
                 Console.ReadLine();
                 Process Aurora = new Process { StartInfo = { FileName = "Aurora.exe" } };
 
