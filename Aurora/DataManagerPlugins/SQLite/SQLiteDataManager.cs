@@ -228,48 +228,6 @@ namespace Aurora.DataManager.SQLite
             //cmd.Dispose ();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            string query = "";
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps[":" + keyRow.Replace("`", "")] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
-            }
-            SQLiteCommand cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                try
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            if (reader[i] is byte[])
-                                RetVal.Add(Utils.BytesToString((byte[]) reader[i]));
-                            else
-                                RetVal.Add(reader[i].ToString());
-                        }
-                    }
-                    //reader.Close();
-                    CloseReaderCommand(cmd);
-                }
-                catch
-                {
-                }
-                return RetVal;
-            }
-        }
-
         private void AddParams(ref SQLiteCommand cmd, Dictionary<string, object> ps)
         {
             foreach (KeyValuePair<string, object> p in ps)

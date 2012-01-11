@@ -119,62 +119,6 @@ namespace Aurora.DataManager.MySQL
             migrationManager.ExecuteOperation();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            IDataReader reader = null;
-            List<string> retVal = new List<string>();
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query;
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps["?" + keyRow] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = ?{3}",
-                                      wantedValue, table, keyRow, keyRow);
-            }
-            try
-            {
-                using (reader = Query(query, ps))
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            if (reader[i] is byte[])
-                                retVal.Add(Utils.BytesToString((byte[]) reader[i]));
-                            else
-                                retVal.Add(reader.GetString(i));
-                        }
-                    }
-                    return retVal;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                return retVal;
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                }
-            }
-        }
-
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             IDataReader reader = null;

@@ -113,50 +113,6 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result = null;
-            IDataReader reader = null;
-            List<string> RetVal = new List<string>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
-            }
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
         public override List<string> Query(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
