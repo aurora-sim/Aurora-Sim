@@ -153,20 +153,30 @@ namespace Aurora.Services.DataService
 
         public virtual bool HasAssetForUser(UUID userID, UUID assetID)
         {
-            List<string> q = GD.Query(new string[2] {"assetID", "avatarID"}, new object[2] {assetID, userID},
-                                      m_itemsrealm, "*");
-            if (q != null && q.Count > 0)
-                return true;
-            return false;
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["assetID"] = assetID;
+            where["avatarID"] = userID;
+
+            List<string> q = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, m_itemsrealm, new string[1] { "*" });
+
+            return !(q != null && q.Count > 0);
         }
 
         public virtual string GetItemNameByAsset(UUID assetID)
         {
-            List<string> q = GD.Query(new string[1] {"assetID"}, new object[1] {assetID}, m_itemsrealm, "inventoryName");
-            if (q != null && q.Count > 0)
-                return q[0];
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["assetID"] = assetID;
 
-            return "";
+            List<string> q = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, m_itemsrealm, new string[1] { "inventoryName" });
+
+
+            return (q != null && q.Count > 0) ? q[0] :  "";
         }
 
         public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)

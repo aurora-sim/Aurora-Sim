@@ -92,32 +92,37 @@ namespace Aurora.Services.DataService
         public GridRegion Get(int posX, int posY, UUID scopeID)
         {
             List<string> query;
-            if (scopeID != UUID.Zero)
-                query = GD.Query(new string[3] {"LocX", "LocY", "ScopeID"},
-                                 new object[3] {posX, posY, scopeID}, m_realm, "*");
-            else
-                query = GD.Query(new string[2] {"LocX", "LocY"},
-                                 new object[2] {posX, posY}, m_realm, "*");
+            Dictionary<string, object> where = new Dictionary<string, object>();
+            where["LocX"] = posX;
+            where["LocY"] = posY;
+            if (scopeID != UUID.Zero){
+                where["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return null;
+            query = GD.Query(new QueryFilter{
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1]{ "*" });
 
-            return ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
 
         public GridRegion Get(UUID regionID, UUID scopeID)
         {
             List<string> query;
+            Dictionary<string, object> where = new Dictionary<string, object>();
+
+            where["RegionUUID"] = regionID;
             if (scopeID != UUID.Zero)
-                query = GD.Query(new string[2] {"RegionUUID", "ScopeID"}, new object[2] {regionID, scopeID}, m_realm,
-                                 "*");
-            else
-                query = GD.Query("RegionUUID", regionID, m_realm, "*");
+            {
+                where["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return null;
+            query = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, m_realm, new string[1] { "*" });
 
-            return ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
 
         public List<GridRegion> Get(int startX, int startY, int endX, int endY, UUID scopeID)
