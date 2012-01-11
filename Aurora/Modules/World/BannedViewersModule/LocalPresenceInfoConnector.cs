@@ -68,15 +68,23 @@ namespace Aurora.Modules.Ban
         public PresenceInfo GetPresenceInfo(UUID agentID)
 		{
             PresenceInfo agent = new PresenceInfo();
-            List<string> query = GD.Query("AgentID", agentID, "baninfo", "*");
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["AgentID"] = agentID;
+            List<string> query = GD.Query(new string[] { "*" }, "baninfo", new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
 
-			if (query.Count == 0)
-				//Couldn't find it, return null then.
-				return null;
+            if (query.Count == 0) //Couldn't find it, return null then.
+            {
+                return null;
+            }
 
             agent.AgentID = agentID;
-            if(query[1] != "")
-                agent.Flags = (PresenceInfo.PresenceInfoFlags)Enum.Parse(typeof(PresenceInfo.PresenceInfoFlags),query[1]);
+            if (query[1] != "")
+            {
+                agent.Flags = (PresenceInfo.PresenceInfoFlags)Enum.Parse(typeof(PresenceInfo.PresenceInfoFlags), query[1]);
+            }
             agent.KnownAlts = Util.ConvertToList(query[2]);
             agent.KnownID0s = Util.ConvertToList(query[3]);
             agent.KnownIPs = Util.ConvertToList(query[4]);
@@ -124,8 +132,7 @@ namespace Aurora.Modules.Ban
 
         public void Check(List<string> viewers, bool includeList)
         {
-            //Get all UUIDS
-            List<string> query = GD.Query("", "", "baninfo", "AgentID"/*"AgentID"*/);
+            List<string> query = GD.Query(new string[] { "AgentID" }, "baninfo", new QueryFilter(), null, null, null);
             foreach (string ID in query)
             {
                 //Check all
@@ -144,16 +151,30 @@ namespace Aurora.Modules.Ban
 
             #region Check Password
 
-            List<string> query = GD.Query("UUID", info.AgentID, DatabaseToAuthTable, "passwordHash");
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["UUID"] = info.AgentID;
+
+            List<string> query = GD.Query(new string[] { "passwordHash" }, DatabaseToAuthTable, new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
             if (query.Count != 0)
             {
-                string password = query[0];
-                query = GD.Query("passwordHash", password, DatabaseToAuthTable, "UUID");
+                where.Remove("UUID");
+                where["passwordHash"] = query[0];
+                query = GD.Query(new string[] { "UUID" }, DatabaseToAuthTable, new QueryFilter
+                {
+                    andFilters = where
+                }, null, null, null);
+
                 foreach (string ID in query)
                 {
                     PresenceInfo suspectedInfo = GetPresenceInfo(UUID.Parse(ID));
                     if (suspectedInfo.AgentID == info.AgentID)
+                    {
                         continue;
+                    }
 
                     CoralateLists (info, suspectedInfo);
 

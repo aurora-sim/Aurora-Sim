@@ -107,7 +107,12 @@ namespace Aurora.DataManager
                                                     });
             }
 
-            List<string> results = Query(COLUMN_NAME, migratorName, VERSION_TABLE_NAME, COLUMN_VERSION);
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where[COLUMN_NAME] = migratorName;
+            List<string> results = Query(new string[] { COLUMN_VERSION }, VERSION_TABLE_NAME, new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
             if (results.Count > 0)
             {
                 Version[] highestVersion = {null};
