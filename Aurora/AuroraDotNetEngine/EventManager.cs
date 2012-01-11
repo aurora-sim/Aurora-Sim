@@ -118,8 +118,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         //private void HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         private bool HandleObjectPaid(UUID objectID, UUID agentID, int amount)
         {
-            bool ret = false;
-            ISceneChildEntity part = m_scriptEngine.findPrim(objectID);
+            //bool ret = false;
+            //ISceneChildEntity part = m_scriptEngine.findPrim(objectID);
 
             //if (part == null)
             //    return;
@@ -132,16 +132,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //{
             //    money(part.LocalId, agentID, amount);
             //}
-            if (part != null)
-            {
-                MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
-                if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
-                if (part != null)
-                {
-                    ret = money(part.LocalId, agentID, amount);
-                }
-            }
-            return ret;
+            //if (part != null)
+            //{
+            //    MainConsole.Instance.Debug("Paid: " + objectID + " from " + agentID + ", amount " + amount);
+            //    if (part.ParentEntity != null) part = part.ParentEntity.RootChild;
+            //    if (part != null)
+            //    {
+            //        ret = money(part.LocalId, agentID, amount);
+            //    }
+            //}
+            //return ret;
+            return true;
         }
 
         private bool HandlePostObjectPaid(uint localID, ulong regionHandle, UUID agentID, int amount)
