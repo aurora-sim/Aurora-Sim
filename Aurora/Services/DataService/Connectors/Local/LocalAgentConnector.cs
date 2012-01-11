@@ -80,13 +80,22 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {agentID, "AgentInfo"}, "userdata", "Value");
+                Dictionary<string, object> where = new Dictionary<string, object>(2);
+                where["ID"] = agentID;
+                where["`Key`"] = "AgentInfo";
+                query = GD.Query(new QueryFilter
+                {
+                    andFilters = where
+                }, new Dictionary<string, bool>(0), null, null, "userdata", new string[1] { "`Value`" });
             }
             catch
             {
             }
+
             if (query == null || query.Count == 0)
+            {
                 return null; //Couldn't find it, return null then.
+            }
 
             OSDMap agentInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
 
