@@ -122,11 +122,6 @@ namespace Aurora.Framework
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
 
-        /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        /// </summary>
-        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
-
         List<string> Query(QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count, string table, string[] wantedValue);
 
         /// <summary>
