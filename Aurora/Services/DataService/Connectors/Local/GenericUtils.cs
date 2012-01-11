@@ -51,6 +51,37 @@ namespace Aurora.Services.DataService
     public class GenericUtils
     {
         /// <summary>
+        ///   Gets a list of generic T's from the database
+        /// </summary>
+        /// <typeparam name = "T"></typeparam>
+        /// <param name = "OwnerID"></param>
+        /// <param name = "Type"></param>
+        /// <param name = "GD"></param>
+        /// <param name = "data">a default T</param>
+        /// <returns></returns>
+        public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD) where T : IDataTransferable
+        {
+            Dictionary<string, object> where = new Dictionary<string, object>(3);
+            where["OwnerID"] = OwnerID;
+            where["Type"] = Type;
+            List<string> retVal = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "`value`" });
+
+            List<T> Values = new List<T>();
+            foreach (string ret in retVal)
+            {
+                OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
+                T data = (T)System.Activator.CreateInstance(typeof(T));
+                data.FromOSD(map);
+                Values.Add(data);
+            }
+
+            return Values;
+        }
+
+        /// <summary>
         ///   Gets a Generic type as set by T
         /// </summary>
         /// <typeparam name = "T"></typeparam>
@@ -60,14 +91,21 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         /// <param name = "data">a default T to copy all data into</param>
         /// <returns></returns>
-        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD)
-            where T : IDataTransferable
+        public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD) where T : IDataTransferable
         {
-            List<string> retVal = GD.Query(new[] {"OwnerID", "Type", "`Key`"}, new object[] {OwnerID, Type, Key},
-                                           "generics", "`value`");
+            Dictionary<string, object> where = new Dictionary<string, object>(3);
+            where["OwnerID"] = OwnerID;
+            where["Type"] = Type;
+            where["`Key`"] = Key;
+            List<string> retVal = GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "`value`" });
 
             if (retVal.Count == 0)
+            {
                 return null;
+            }
 
             OSDMap map = (OSDMap)OSDParser.DeserializeJson(retVal[0]);
             T data = (T)System.Activator.CreateInstance(typeof(T));
@@ -85,13 +123,14 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, string Type, IGenericData GD)
         {
-            List<string> retVal = GD.Query(new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type}, "generics",
-                                           "count(*)");
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["OwnerID"] = OwnerID;
+            where["Type"] = Type;
+            List<string> retVal = GD.Query(new QueryFilter{
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1]{ "COUNT(*)" });
 
-            if (retVal == null || retVal.Count == 0)
-                return 0;
-
-            return int.Parse(retVal[0]);
+            return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
@@ -104,13 +143,15 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, string Type, string Key, IGenericData GD)
         {
-            List<string> retVal = GD.Query(new[] {"OwnerID", "Type", "`Key`"}, new object[] {OwnerID, Type, Key},
-                                           "generics", "count(*)");
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["OwnerID"] = OwnerID;
+            where["Type"] = Type;
+            where["`Key`"] = Key;
+            List<string> retVal = GD.Query(new QueryFilter{
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1]{ "COUNT(*)" });
 
-            if (retVal == null || retVal.Count == 0)
-                return 0;
-
-            return int.Parse(retVal[0]);
+            return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
@@ -122,38 +163,14 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static int GetGenericCount(UUID OwnerID, IGenericData GD)
         {
-            List<string> retVal = GD.Query(new[] {"OwnerID"}, new object[] {OwnerID}, "generics", "count(*)");
-
-            if (retVal.Count == 0)
-                return 0;
-
-            return int.Parse(retVal[0]);
-        }
-
-        /// <summary>
-        ///   Gets a list of generic T's from the database
-        /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        /// <param name = "data">a default T</param>
-        /// <returns></returns>
-        public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD)
-            where T : IDataTransferable
-        {
-            List<T> Values = new List<T>();
-            List<string> retVal = GD.Query(new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type}, "generics",
-                                           "`value`");
-            foreach (string ret in retVal)
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["OwnerID"] = OwnerID;
+            List<string> retVal = GD.Query(new QueryFilter
             {
-                OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
-                T data = (T)System.Activator.CreateInstance(typeof(T));
-                data.FromOSD(map);
-                Values.Add(data);
-            }
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "COUNT(*)" });
 
-            return Values;
+            return (retVal == null || retVal.Count == 0) ? 0 : int.Parse(retVal[0]);
         }
 
         /// <summary>
@@ -217,11 +234,24 @@ namespace Aurora.Services.DataService
 
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key)
         {
-            return GD.Query(new string[2] { "Type", "`Key`" }, new string[2] { Type, Key }, "generics", "OwnerID").ConvertAll<UUID>(x => new UUID(x));
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["Type"] = Type;
+            where["`Key`"] = Key;
+            return GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "OwnerID" }).ConvertAll<UUID>( x => new UUID(x));
         }
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key, OSDMap Value)
         {
-            return GD.Query(new string[3] { "Type", "`Key`", "Value" }, new string[3] { Type, Key, OSDParser.SerializeJsonString(Value) }, "generics", "OwnerID").ConvertAll<UUID>(x => new UUID(x));
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["Type"] = Type;
+            where["`Key`"] = Key;
+            where["`Value`"] = OSDParser.SerializeJsonString(Value);
+            return GD.Query(new QueryFilter
+            {
+                andFilters = where
+            }, new Dictionary<string, bool>(0), null, null, "generics", new string[1] { "OwnerID" }).ConvertAll<UUID>(x => new UUID(x));
         }
     }
 }
