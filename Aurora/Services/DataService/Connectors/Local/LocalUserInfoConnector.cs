@@ -140,18 +140,24 @@ namespace Aurora.Services.DataService
         public UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
         {
             onlineStatusChanged = false;
-            List<string> query = GD.Query("UserID", userID, m_realm, "*");
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UserID"] = userID;
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+
             if (query.Count == 0)
+            {
                 return null;
+            }
             UserInfo user = new UserInfo
-                                {
-                                    UserID = query[0],
-                                    CurrentRegionID = UUID.Parse(query[1]),
-                                    IsOnline = query[3] == "1" ? true : false,
-                                    LastLogin = Util.ToDateTime(int.Parse(query[4])),
-                                    LastLogout = Util.ToDateTime(int.Parse(query[5])),
-                                    Info = (OSDMap) OSDParser.DeserializeJson(query[6])
-                                };
+            {
+                UserID = query[0],
+                CurrentRegionID = UUID.Parse(query[1]),
+                IsOnline = query[3] == "1",
+                LastLogin = Util.ToDateTime(int.Parse(query[4])),
+                LastLogout = Util.ToDateTime(int.Parse(query[5])),
+                Info = (OSDMap)OSDParser.DeserializeJson(query[6])
+            };
             try
             {
                 user.CurrentRegionID = UUID.Parse(query[7]);

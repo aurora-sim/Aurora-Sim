@@ -92,8 +92,10 @@ namespace Aurora.Services.DataService
 
         public EstateSettings GetEstateSettings(string name)
         {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateName"] = name;
             return GetEstate(
-                int.Parse(GD.Query("EstateName", name, "estatesettings", "EstateID")[0])
+                int.Parse(GD.Query(new string[1]{ "EstateID" }, "estatesettings", filter, null, null, null)[0])
             );
         }
 
@@ -203,12 +205,13 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null)
+            {
                 return (List<UUID>)remoteValue;
-            List<string> retVal = GD.Query("EstateID", estateID, "estateregions", "RegionID");
-            List<UUID> regions = new List<UUID>();
-            foreach (string ret in retVal)
-                regions.Add(UUID.Parse(ret));
-            return regions;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateID"] = estateID;
+            return GD.Query(new string[1] { "RegionID" }, "estateregions", filter, null, null, null).ConvertAll(x => UUID.Parse(x));
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -222,14 +225,19 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(OwnerID, boolFields);
             if (remoteValue != null)
+            {
                 return (List<EstateSettings>)remoteValue;
+            }
 
             List<EstateSettings> settings = new List<EstateSettings>();
-            List<string> retVal = GD.Query("EstateOwner", OwnerID, m_estateTable, "EstateID");
-            foreach (string s in retVal)
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateOwner"] = OwnerID;
+            List<int> retVal = GD.Query(new string[1] { "EstateID" }, m_estateTable, filter, null, null, null).ConvertAll(x => int.Parse(x));
+            foreach (int estateID in retVal)
             {
                 bool Add = true;
-                EstateSettings es = GetEstate(int.Parse(s));
+                EstateSettings es = GetEstate(estateID);
 
                 if(boolFields.Count > 0){
                     OSDMap esmap = es.ToOSD();
@@ -242,7 +250,9 @@ namespace Aurora.Services.DataService
                 }
 
                 if (Add)
+                {
                     settings.Add(es);
+                }
             }
             return settings;
         }
@@ -257,18 +267,26 @@ namespace Aurora.Services.DataService
 
         public int GetEstateID(UUID regionID)
         {
-            List<string> retVal = GD.Query("RegionID", regionID, "estateregions", "EstateID");
-            if (retVal.Count > 0)
-                return int.Parse(retVal[0]);
-            return 0;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+
+            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estateregions", filter, null, null, null);
+
+            return (retVal.Count > 0) ? int.Parse(retVal[0]) : 0;
         }
 
         private EstateSettings GetEstate(int estateID)
         {
-            List<string> retVals = GD.Query("EstateID", estateID, m_estateTable, "*");
-            EstateSettings settings = new EstateSettings() { EstateID = 0 };
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateID"] = estateID;
+            List<string> retVals = GD.Query(new string[1] { "*" }, m_estateTable, filter, null, null, null);
+            EstateSettings settings = new EstateSettings{
+                EstateID = 0
+            };
             if (retVals.Count > 0)
+            {
                 settings.FromOSD((OSDMap)OSDParser.DeserializeJson(retVals[4]));
+            }
             return settings;
         }
 

@@ -98,11 +98,6 @@ namespace Aurora.Framework
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-
-        /// <summary>
         ///   select 'wantedValue' from 'table' where 'whereClause'
         /// </summary>
         List<string> Query(string whereClause, string table, string wantedValue);

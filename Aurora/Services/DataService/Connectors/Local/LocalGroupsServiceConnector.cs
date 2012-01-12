@@ -195,30 +195,33 @@ namespace Aurora.Services.DataService
 
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
-            if (data.Query("AgentID", AgentID, "osagent", "*").Count != 0)
-                data.Update("osagent", new object[] {GroupID}, new[] {"ActiveGroupID"}, new[] {"AgentID"},
-                            new object[] {AgentID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
+            if (data.Query(new string[1] { "*" }, "osagent", filter, null, null, null).Count != 0)
+            {
+                data.Update("osagent", new object[] { GroupID }, new[] { "ActiveGroupID" }, new[] { "AgentID" }, new object[] { AgentID });
+            }
             else
-                data.Insert("osagent", new[]
-                                           {
-                                               "AgentID",
-                                               "ActiveGroupID"
-                                           }, new object[]
-                                                  {
-                                                      AgentID,
-                                                      GroupID
-                                                  });
+            {
+                data.Insert("osagent", new[]{
+                    "AgentID",
+                    "ActiveGroupID"
+                }, new object[]{
+                    AgentID,
+                    GroupID
+                });
+            }
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
         }
 
         public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
         {
-            List<string> groups = data.Query("AgentID", AgentID, "osagent", "ActiveGroupID");
-            if (groups.Count != 0)
-                return UUID.Parse(groups[0]);
-            else
-                return UUID.Zero;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
+            List<string> groups = data.Query(new string[1] { "ActiveGroupID" }, "osagent", filter, null, null, null);
+
+            return (groups.Count != 0) ? UUID.Parse(groups[0]) : UUID.Zero;
         }
 
         public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
@@ -1007,10 +1010,14 @@ namespace Aurora.Services.DataService
 
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
-                return new List<GroupMembersData>();
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
+            {
+                return new List<GroupMembersData>(0);
+            }
 
-            List<string> Agents = data.Query("GroupID", GroupID, "osgroupmembership", "AgentID");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
+            List<string> Agents = data.Query(new string[1] { "AgentID" }, "osgroupmembership", filter, null, null, null);
 #if (!ISWIN)
             List<GroupMembersData> list = new List<GroupMembersData>();
             foreach (string agent in Agents)
@@ -1069,45 +1076,67 @@ namespace Aurora.Services.DataService
                 return new List<GroupRolesData>(0);
             }
 
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["AgentID"] = AgentID;
-            where["GroupID"] = GroupID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
+            filter.andFilters["GroupID"] = GroupID;
 
-            List<string> RoleIDs = data.Query(new string[1] { "RoleID" }, "osgrouprolemembership", new QueryFilter
+            List<string> RoleIDs = data.Query(new string[1] { "RoleID" }, "osgrouprolemembership", filter, null, null, null);
+
+
+
+            filter = new QueryFilter();
+
+            List<GroupRolesData> RolesData = new List<GroupRolesData>();
+            List<string> Role;
+
+            foreach (string RoleID in RoleIDs)
             {
-                andFilters = where
-            }, null, null, null);
+                filter.andFilters["RoleID"] = RoleID;
+                Role = data.Query(new string[4]{
+                    "Name",
+                    "Description",
+                    "Title",
+                    "Powers"
+                }, "osrole", filter, null, null, null);
+                RolesData.Add(new GroupRolesData
+                {
+                    RoleID = UUID.Parse(RoleID),
+                    Name = Role[0],
+                    Description = Role[1],
+                    Powers = ulong.Parse(Role[3]),
+                    Title = Role[2]
+                });
+            }
 
-            return (from RoleID in RoleIDs
-                    let Role = data.Query("RoleID", RoleID, "osrole", "Name,Description,Title,Powers")
-                    select new GroupRolesData
-                    {
-                        RoleID = UUID.Parse(RoleID),
-                        Name = Role[0],
-                        Description = Role[1],
-                        Powers = ulong.Parse(Role[3]),
-                        Title = Role[2]
-                    }).ToList();
+            return RolesData;
         }
 
         public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
-                return new List<GroupRolesData>();
-            List<GroupRolesData> GroupRoles = new List<GroupRolesData>();
-            List<string> Roles = data.Query("GroupID", GroupID, "osrole", "Name,Description,Title,Powers,RoleID");
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
+            {
+                return new List<GroupRolesData>(0);
+            }
 
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["GroupID"] = GroupID;
-            where["RoleID"] = UUID.Zero;
+            List<GroupRolesData> GroupRoles = new List<GroupRolesData>();
+
+            QueryFilter rolesFilter = new QueryFilter();
+            rolesFilter.andFilters["GroupID"] = GroupID;
+            List<string> Roles = data.Query(new string[5]{
+                "Name",
+                "Description",
+                "Title",
+                "Powers",
+                "RoleID"
+            }, "osrole", rolesFilter, null, null, null);
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
 
             for (int i = 0; i < Roles.Count; i += 5)
             {
-                where["RoleID"] = UUID.Parse(Roles[i + 4]);
-                int Count = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", new QueryFilter
-                {
-                    andFilters = where
-                }, null, null, null)[0]);
+                filter.andFilters["RoleID"] = UUID.Parse(Roles[i + 4]);
+                int Count = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]);
 
                 GroupRoles.Add(new GroupRolesData
                 {
@@ -1125,8 +1154,17 @@ namespace Aurora.Services.DataService
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID)
         {
             List<GroupRoleMembersData> RoleMembers = new List<GroupRoleMembersData>();
-            List<string> Roles = data.Query("GroupID", GroupID, "osgrouprolemembership", "RoleID,AgentID");
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
+            List<string> Roles = data.Query(new string[2]{
+                "RoleID",
+                "AgentID"
+            }, "osgrouprolemembership", filter, null, null, null);
+
             GroupMembersData GMD = GetAgentGroupMemberData(requestingAgentID, GroupID, requestingAgentID);
+            long canViewMemebersBit = 140737488355328L;
+            long canDoBit;
             for (int i = 0; i < Roles.Count; i += 2)
             {
                 GroupRoleMembersData RoleMember = new GroupRoleMembersData
@@ -1134,13 +1172,15 @@ namespace Aurora.Services.DataService
                     RoleID = UUID.Parse(Roles[i]),
                     MemberID = UUID.Parse(Roles[i + 1])
                 };
-                List<string> roleInfo = data.Query("RoleID", RoleMember.RoleID, "osrole", "Powers");
-                long canViewMemebersBit = 140737488355328L;
-                long canDoBit = long.Parse(roleInfo[0]);
+                filter.andFilters.Remove("GroupID");
+                filter.andFilters["RoleID"] = RoleMember.RoleID;
+                List<string> roleInfo = data.Query(new string[1] { "Powers" }, "osrole", filter, null, null, null);
+                canDoBit = long.Parse(roleInfo[0]);
                 // if they are a member, they can see everyone, otherwise, only the roles that are supposed to be shown
-                if (GMD != null ||
-                    ((canDoBit & canViewMemebersBit) == canViewMemebersBit || RoleMember.MemberID == requestingAgentID))
+                if (GMD != null || ((canDoBit & canViewMemebersBit) == canViewMemebersBit || RoleMember.MemberID == requestingAgentID))
+                {
                     RoleMembers.Add(RoleMember);
+                }
             }
 
             return RoleMembers;
@@ -1148,16 +1188,28 @@ namespace Aurora.Services.DataService
 
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
-            List<string> notice = data.Query("NoticeID", noticeID, "osgroupnotice",
-                                             "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,Message,AssetType,ItemName");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["NoticeID"] = noticeID;
+            List<string> notice = data.Query(new string[9]{
+                "GroupID",
+                "Timestamp",
+                "FromName",
+                "Subject",
+                "ItemID",
+                "HasAttachment",
+                "Message",
+                "AssetType",
+                "ItemName"
+            }, "osgroupnotice", filter, null, null, null);
+
             GroupNoticeData GND = new GroupNoticeData
-                                      {
-                                          NoticeID = noticeID,
-                                          Timestamp = uint.Parse(notice[1]),
-                                          FromName = notice[2],
-                                          Subject = notice[3],
-                                          HasAttachment = int.Parse(notice[5]) == 1
-                                      };
+            {
+                NoticeID = noticeID,
+                Timestamp = uint.Parse(notice[1]),
+                FromName = notice[2],
+                Subject = notice[3],
+                HasAttachment = int.Parse(notice[5]) == 1
+            };
             if (GND.HasAttachment)
             {
                 GND.ItemID = UUID.Parse(notice[4]);
@@ -1166,18 +1218,14 @@ namespace Aurora.Services.DataService
             }
 
             GroupNoticeInfo info = new GroupNoticeInfo
-                                       {
-                                           BinaryBucket = new byte[0],
-                                           GroupID = UUID.Parse(notice[0]),
-                                           Message = notice[6],
-                                           noticeData = GND
-                                       };
-
-            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong)GroupPowers.ReceiveNotices))
             {
-                return null;
-            }
-            return info;
+                BinaryBucket = new byte[0],
+                GroupID = UUID.Parse(notice[0]),
+                Message = notice[6],
+                noticeData = GND
+            };
+
+            return (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, info.GroupID, (ulong)GroupPowers.ReceiveNotices)) ? null : info;
         }
 
         private static GroupNoticeData GroupNoticeQueryResult2GroupNoticeData(List<string> result)

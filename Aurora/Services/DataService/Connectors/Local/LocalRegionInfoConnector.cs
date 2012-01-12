@@ -95,18 +95,25 @@ namespace Aurora.Services.DataService
 
         public RegionInfo[] GetRegionInfos(bool nonDisabledOnly)
         {
-            List<RegionInfo> Infos = new List<RegionInfo>();
-            List<string> RetVal = nonDisabledOnly ?
-                GD.Query("Disabled", 0, "simulator", "RegionInfo") :
-                GD.Query("", "", "simulator", "RegionInfo");
+            QueryFilter filter = new QueryFilter();
+            if (!nonDisabledOnly)
+            {
+                filter.andFilters["Disabled"] = 0;
+            }
+            List<string> RetVal = GD.Query(new string[1] { "RegionInfo" }, "simulator", filter, null, null, null);
+
             if (RetVal.Count == 0)
-                return Infos.ToArray();
-            RegionInfo replyData = new RegionInfo();
+            {
+                return new RegionInfo[0]{};
+            }
+
+            List<RegionInfo> Infos = new List<RegionInfo>();
+            RegionInfo replyData;
             foreach (string t in RetVal)
             {
+                replyData = new RegionInfo();
                 replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(t));
                 Infos.Add(replyData);
-                replyData = new RegionInfo();
             }
             //Sort by startup number
             Infos.Sort(RegionInfoStartupSorter);
@@ -120,21 +127,32 @@ namespace Aurora.Services.DataService
 
         public RegionInfo GetRegionInfo (UUID regionID)
         {
-            List<string> RetVal = GD.Query("RegionID", regionID, "simulator", "RegionInfo");
-            RegionInfo replyData = new RegionInfo();
-            if (RetVal.Count == 0)
-                return null;
-            replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            List<string> RetVal = GD.Query(new string[1] { "RegionInfo" }, "simulator", filter, null, null, null);
 
+            if (RetVal.Count == 0)
+            {
+                return null;
+            }
+
+            RegionInfo replyData = new RegionInfo();
+            replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
             return replyData;
         }
 
         public RegionInfo GetRegionInfo (string regionName)
         {
-            List<string> RetVal = GD.Query("RegionName", regionName.MySqlEscape(50), "simulator", "RegionInfo");
-            RegionInfo replyData = new RegionInfo();
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionName"] = regionName.MySqlEscape(50);
+            List<string> RetVal = GD.Query(new string[1] { "RegionInfo" }, "simulator", filter, null, null, null);
+
             if (RetVal.Count == 0)
+            {
                 return null;
+            }
+
+            RegionInfo replyData = new RegionInfo();
             replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(RetVal[0]));
             return replyData;
         }
