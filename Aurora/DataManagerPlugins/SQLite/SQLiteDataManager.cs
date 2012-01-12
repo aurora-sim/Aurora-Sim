@@ -290,9 +290,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in filter.orFilters)
                 {
@@ -303,9 +303,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
                 {
@@ -319,13 +319,13 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region LIKE
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
                 {
@@ -336,9 +336,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
                 {
@@ -349,9 +349,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
                 {
@@ -365,13 +365,13 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region bitfield &
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in filter.andBitfieldAndFilters)
                 {
@@ -382,9 +382,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
                 {
@@ -395,13 +395,13 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region greater than
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
                 {
@@ -412,9 +412,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
                 {
@@ -425,9 +425,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
                 {
@@ -438,13 +438,13 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region less than
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
                 {
@@ -455,9 +455,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
                 {
@@ -468,9 +468,9 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
                 {
@@ -481,11 +481,11 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
-                had = parts.Count > 0;
                 foreach (QueryFilter subFilter in filter.subFilters)
                 {
                     Dictionary<string, object> sps;

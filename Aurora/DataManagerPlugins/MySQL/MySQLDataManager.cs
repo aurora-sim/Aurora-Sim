@@ -190,9 +190,9 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach(KeyValuePair<string, object> where in filter.orFilters){
                     string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
@@ -201,9 +201,9 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
                 {
@@ -217,13 +217,13 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region LIKE
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
                 {
@@ -234,9 +234,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
                 {
@@ -247,9 +247,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
                 {
@@ -263,13 +263,13 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
                 #region bitfield &
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach(KeyValuePair<string, uint> where in filter.andBitfieldAndFilters){
                     string key = "?where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
@@ -278,9 +278,9 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
                 {
@@ -308,9 +308,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
                 {
@@ -351,9 +351,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
                 {
@@ -364,9 +364,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
                 {
@@ -377,11 +377,11 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = parts.Count > 0;
                 }
 
                 #endregion
 
-                had = parts.Count > 0;
                 foreach(QueryFilter subFilter in filter.subFilters){
                     Dictionary<string, object> sps;
                     query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
