@@ -345,7 +345,7 @@ namespace Aurora.Services.DataService
             return Land.ToArray();
         }
 
-        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
+        public DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -360,8 +360,7 @@ namespace Aurora.Services.DataService
             List<DirLandReplyData> Land = new List<DirLandReplyData>();
             try
             {
-                List<string> m_ServerURIs =
-                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+                List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
                 Land.AddRange(from m_ServerURI in m_ServerURIs select SynchronousRestFormsRequester.MakeRequest("POST", m_ServerURI, reqString) into reply where reply != string.Empty from object f in WebUtils.ParseXmlResponse(reply) select (KeyValuePair<string, object>) f into value where value.Value is Dictionary<string, object> select value.Value as Dictionary<string, object> into valuevalue select new DirLandReplyData(valuevalue));
                 return Land.ToArray();
             }
@@ -376,7 +375,7 @@ namespace Aurora.Services.DataService
 
         #region Events
 
-        public DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery)
+        public DirEventsReplyData[] FindEvents(string queryText, uint flags, int StartQuery)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
@@ -609,7 +608,7 @@ namespace Aurora.Services.DataService
 
         #region Classifieds
 
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
+        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 

@@ -11334,8 +11334,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                     dirLandQueryPacket.QueryData.QueryID,
                                     dirLandQueryPacket.QueryData.QueryFlags,
                                     dirLandQueryPacket.QueryData.SearchType,
-                                    dirLandQueryPacket.QueryData.Price,
-                                    dirLandQueryPacket.QueryData.Area,
+                                    (uint)dirLandQueryPacket.QueryData.Price,
+                                    (uint)dirLandQueryPacket.QueryData.Area,
                                     dirLandQueryPacket.QueryData.QueryStart);
             }
             return true;
