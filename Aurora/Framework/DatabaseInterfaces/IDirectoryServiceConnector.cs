@@ -143,7 +143,7 @@ namespace Aurora.Framework
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags);
+        DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags);
 
         #endregion
 
@@ -157,7 +157,7 @@ namespace Aurora.Framework
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery);
+        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery);
 
         /// <summary>
         ///   Gets all classifieds in the given region
@@ -177,7 +177,7 @@ namespace Aurora.Framework
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery);
+        DirEventsReplyData[] FindEvents(string queryText, uint flags, int StartQuery);
 
         /// <summary>
         ///   Retrives all events in the given region by their maturity level
