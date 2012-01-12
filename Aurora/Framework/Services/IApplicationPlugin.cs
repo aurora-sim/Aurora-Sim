@@ -103,6 +103,13 @@ namespace Aurora.Framework
         List<string> Query(string whereClause, string table, string wantedValue);
 
         /// <summary>
+        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
+        /// </summary>
+        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
+
+        List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
+
+        /// <summary>
         ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         List<string> QueryFullData(string whereClause, string table, string wantedValue);
@@ -111,13 +118,6 @@ namespace Aurora.Framework
         ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         IDataReader QueryData(string whereClause, string table, string wantedValue);
-
-        /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
-        /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
-
-        List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
 
         /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
@@ -247,6 +247,10 @@ namespace Aurora.Framework
     {
         public Dictionary<string, object> andFilters = new Dictionary<string, object>();
         public Dictionary<string, object> orFilters = new Dictionary<string, object>();
+        public Dictionary<string, List<object>> orMultiFilters = new Dictionary<string, List<object>>();
+
+        public Dictionary<string, string> andLikeFilters = new Dictionary<string, string>();
+        public Dictionary<string, string> orLikeFilters = new Dictionary<string, string>();
 
         public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
         public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
@@ -254,8 +258,12 @@ namespace Aurora.Framework
         public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
 
+        public Dictionary<string, int> andGreaterThanEqFilters = new Dictionary<string, int>();
+
         public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
+
+        public Dictionary<string, int> andLessThanEqFilters = new Dictionary<string, int>();
 
         public List<QueryFilter> subFilters = new List<QueryFilter>();
 
@@ -266,12 +274,17 @@ namespace Aurora.Framework
                 uint total = (uint)(
                     andFilters.Count +
                     orFilters.Count +
+                    orMultiFilters.Count +
+                    andLikeFilters.Count +
+                    orLikeFilters.Count +
                     andBitfieldAndFilters.Count +
                     orBitfieldAndFilters.Count +
                     andGreaterThanFilters.Count +
                     orGreaterThanFilters.Count +
+                    andGreaterThanEqFilters.Count +
                     andLessThanFilters.Count +
-                    orLessThanFilters.Count
+                    orLessThanFilters.Count +
+                    andLessThanEqFilters.Count
                 );
 
                 subFilters.ForEach(delegate(QueryFilter filter)

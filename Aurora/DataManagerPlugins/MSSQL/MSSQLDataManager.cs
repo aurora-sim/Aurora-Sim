@@ -250,7 +250,7 @@ namespace Aurora.DataManager.MSSQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in filter.andFilters)
                 {
-                    parts.Add(string.Format("{0} = {1}", where.Key, where.Value));
+                    parts.Add(string.Format("{0} = '{1}'", where.Key, where.Value));
                 }
                 if (parts.Count > 0)
                 {
@@ -261,7 +261,43 @@ namespace Aurora.DataManager.MSSQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in filter.orFilters)
                 {
-                    parts.Add(string.Format("{0} = {1}", where.Key, where.Value));
+                    parts.Add(string.Format("{0} = '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
+                {
+                    foreach (object value in where.Value)
+                    {
+                        parts.Add(string.Format("{0} = '{1}'", where.Key, value));
+                    }
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
+                {
+                    parts.Add(string.Format("{0} LIKE '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
+                {
+                    parts.Add(string.Format("{0} LIKE '{1}'", where.Key, where.Value));
                 }
                 if (parts.Count > 0)
                 {
@@ -320,6 +356,17 @@ namespace Aurora.DataManager.MSSQL
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
 
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
+                {
+                    parts.Add(string.Format("{0} >= {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
                 #endregion
 
                 #region less than
@@ -346,6 +393,17 @@ namespace Aurora.DataManager.MSSQL
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
 
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
+                {
+                    parts.Add(string.Format("{0} <= {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                }
+
                 #endregion
 
                 had = parts.Count > 0;
@@ -369,7 +427,7 @@ namespace Aurora.DataManager.MSSQL
             IDataReader reader;
             SqlConnection dbcon = GetLockedConnection();
 
-            if (queryFilter.Count > 0)
+            if (queryFilter != null && queryFilter.Count > 0)
             {
                 query += " WHERE " + QueryFilter2Query(queryFilter);
             }
