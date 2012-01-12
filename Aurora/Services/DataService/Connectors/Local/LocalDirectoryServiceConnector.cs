@@ -248,10 +248,14 @@ namespace Aurora.Services.DataService
                 return null;
             }
             //Get info about a specific parcel somewhere in the metaverse
-            List<string> Query = GD.Query("RegionID", r.RegionID, "searchparcel", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = r.RegionID;
+            List<string> Query = GD.Query(new string[] { "*" }, "searchparcel", filter, null, null, null);
             //Cant find it, return
             if (Query.Count == 0)
+            {
                 return null;
+            }
 
             List<LandData> Lands = Query2LandData(Query);
             LandData LandData = null;
@@ -313,14 +317,12 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public LandData[] GetParcelByOwner(UUID OwnerID)
         {
-            List<LandData> Lands = new List<LandData>();
             //NOTE: this does check for group deeded land as well, so this can check for that as well
-            List<string> Query = GD.Query("OwnerID", OwnerID, "searchparcel", "*");
-            //Return if no values
-            if (Query.Count == 0)
-                return Lands.ToArray();
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            List<string> Query = GD.Query(new string[] { "*" }, "searchparcel", filter, null, null, null);
 
-            return Query2LandData(Query).ToArray();
+            return (Query.Count == 0) ? new LandData[0] { } : Query2LandData(Query).ToArray();
         }
 
         private static string GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
@@ -650,19 +652,23 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public Classified[] GetClassifiedsInRegion(string regionName)
         {
-            List<Classified> Classifieds = new List<Classified>();
-            List<string> retVal = GD.Query("SimName", regionName, "userclassifieds", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["SimName"] = regionName;
+            List<string> retVal = GD.Query(new string[] { "*" }, "userclassifieds", filter, null, null, null);
 
             if (retVal.Count == 0)
-                return Classifieds.ToArray();
+            {
+                return new Classified[0] { };
+            }
 
-            Classified classified = new Classified();
+            List<Classified> Classifieds = new List<Classified>();
+            Classified classified;
             for (int i = 0; i < retVal.Count; i += 6)
             {
+                classified = new Classified();
                 //Pull the classified out of OSD
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
                 Classifieds.Add(classified);
-                classified = new Classified();
             }
             return Classifieds.ToArray();
         }
@@ -856,8 +862,9 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public EventData GetEventInfo(uint EventID)
         {
-            EventData data = new EventData();
-            List<string> RetVal = GD.Query("EID", EventID, "asevents", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EID"] = EventID;
+            List<string> RetVal = GD.Query(new string[] { "*" }, "asevents", filter, null, null, null);
             return (RetVal.Count == 0) ? null : Query2EventData(RetVal)[0];
         }
 

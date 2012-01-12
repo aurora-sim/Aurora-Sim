@@ -150,7 +150,10 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
-            List<string> found = GD.Query("macaddress", Mac, "macban", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["macaddress"] = Mac;
+            List<string> found = GD.Query(new string[] { "*" }, "macban", filter, null, null, null);
+
             if (found.Count != 0)
             {
                 //Found a mac that matched
@@ -160,8 +163,11 @@ namespace Aurora.Services.DataService
             }
 
             //Viewer Ban Start
-            List<string> clientfound = GD.Query("Client", viewer, "bannedviewers", "*");
-            if (clientfound.Count != 0)
+            filter.andFilters.Remove("macaddress");
+            filter.andFilters["Client"] = viewer;
+            found = GD.Query(new string[] { "*" }, "bannedviewers", filter, null, null, null);
+
+            if (found.Count != 0)
             {
                 reason = "The viewer you are using has been banned, please use a different viewer.";
                 MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);
