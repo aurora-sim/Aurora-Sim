@@ -551,30 +551,30 @@ namespace Aurora.Services.DataService
                 groupIDs = GroupIDs;
             }
 
-            List<string> numGroupNotices = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'", "osgroupnotice", "Count(NoticeID)");
-            return uint.Parse(numGroupNotices[0]);
+            QueryFilter filter = new QueryFilter();
+            filter.orMultiFilters["GroupID"] = new List<object>(groupIDs.Count);
+            foreach (UUID GroupID in groupIDs)
+            {
+                filter.orMultiFilters["GroupID"].Add(GroupID);
+            }
+
+            return uint.Parse(data.Query(new string[1] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
         }
 
         public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
-            string whereClause = "1=1";
-            List<string> filter = new List<string>();
+            QueryFilter filter = new QueryFilter();
+
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
             foreach (string field in BoolFields)
             {
                 if (boolFields.ContainsKey(field) == true)
                 {
-                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
+                    filter.andFilters[field] = boolFields[field] ? "1" : "0";
                 }
             }
-            if (filter.Count > 0)
-            {
-                whereClause = string.Join(" AND ", filter.ToArray());
-            }
 
-
-            List<string> numGroups = data.Query(whereClause, "osgroup", "COUNT(GroupID)");
-            return uint.Parse(numGroups[0]);
+            return uint.Parse(data.Query(new string[1] { "COUNT(GroupID)" }, "osgroup", filter, null, null, null)[0]);
         }
 
         private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result){
@@ -634,8 +634,7 @@ namespace Aurora.Services.DataService
 
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
-            string whereClause = "1=1";
-            List<string> filter = new List<string>();
+//            List<string> filter = new List<string>();
 
             string[] sortAndBool = { "OpenEnrollment", "MaturePublish" };
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
@@ -648,38 +647,33 @@ namespace Aurora.Services.DataService
                     sort.Remove(field);
                 }
             }
+
+            QueryFilter filter = new QueryFilter();
+
             foreach (string field in BoolFields)
             {
                 if (boolFields.ContainsKey(field) == true)
                 {
-                    filter.Add(string.Format("{0} = {1}", field, boolFields[field] ? "1" : "0"));
+                    filter.andFilters[field] = boolFields[field] ? "1" : "0";
                 }
             }
-            if (filter.Count > 0)
-            {
-                whereClause = string.Join(" AND ", filter.ToArray());
-            }
-
-            filter = new List<string>();
-            foreach (string field in SortFields)
-            {
-                if (sort.ContainsKey(field) == true)
-                {
-                    filter.Add(string.Format("{0} {1}", field, sort[field] ? "ASC" : "DESC"));
-                }
-            }
-
-            if (filter.Count > 0)
-            {
-                whereClause += " ORDER BY " + string.Join(", ", filter.ToArray());
-            }
-
-            whereClause += string.Format(" LIMIT {0},{1}", start, count);
-
 
             List<GroupRecord> Reply = new List<GroupRecord>();
 
-            List<string> osgroupsData = data.Query(whereClause, "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
+            List<string> osgroupsData = data.Query(new string[]{
+                "GroupID",
+                "Name",
+                "Charter",
+                "InsigniaID",
+                "FounderID",
+                "MembershipFee",
+                "OpenEnrollment",
+                "ShowInList",
+                "AllowPublish",
+                "MaturePublish",
+                "OwnerRoleID"
+            }, "osgroup", filter, sort, start, count);
+
             if (osgroupsData.Count < 11)
             {
                 return Reply;
@@ -699,9 +693,27 @@ namespace Aurora.Services.DataService
                 return Reply;
             }
 
-            string whereClause = "GroupID = '" + string.Join("' OR GroupID = '", GroupIDs.ConvertAll(x => x.ToString()).ToArray()) + "'";
+            QueryFilter filter = new QueryFilter();
+            filter.orMultiFilters["GroupID"] = new List<object>();
+            foreach (UUID groupID in GroupIDs)
+            {
+                filter.orMultiFilters["GroupID"].Add(groupID);
+            }
 
-            List<string> osgroupsData = data.Query(whereClause, "osgroup", "GroupID, Name, Charter, InsigniaID, FounderID, MembershipFee, OpenEnrollment, ShowInList, AllowPublish, MaturePublish, OwnerRoleID");
+            List<string> osgroupsData = data.Query(new string[11]{
+                "GroupID",
+                "Name",
+                "Charter",
+                "InsigniaID",
+                "FounderID",
+                "MembershipFee",
+                "OpenEnrollment",
+                "ShowInList",
+                "AllowPublish",
+                "MaturePublish",
+                "OwnerRoleID"
+            }, "osgroup", filter, null, null, null);
+
             if (osgroupsData.Count < 11)
             {
                 return Reply;
@@ -1030,9 +1042,16 @@ namespace Aurora.Services.DataService
 
         public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
         {
-            string whereClause = " Name LIKE '%" + search.MySqlEscape(50) + "%' LIMIT " + StartQuery + ",50 ";
-            List<string> retVal = data.Query(whereClause, "osgroup",
-                                             "GroupID,Name,ShowInList,AllowPublish,MaturePublish");
+            QueryFilter filter = new QueryFilter();
+            filter.andLikeFilters["Name"] = "%" + search.MySqlEscape(50) + "%";
+
+            List<string> retVal = data.Query(new string[5]{
+                "GroupID",
+                "Name",
+                "ShowInList",
+                "AllowPublish",
+                "MaturePublish"
+            }, "osgroup", filter, null, (uint)StartQuery, 50);
 
             List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
             DirGroupsReplyData dirgroup;
@@ -1272,10 +1291,34 @@ namespace Aurora.Services.DataService
             {
                 groupIDs = GroupIDs;
             }
+
             List<GroupNoticeData> AllNotices = new List<GroupNoticeData>();
-            if (GroupIDs.Count > 0)
+            if (groupIDs.Count > 0)
             {
-                List<string> notice = data.Query("GroupID = '" + string.Join("' OR GroupID = '", groupIDs.ConvertAll(x => x.ToString()).ToArray()) + "' ORDER BY Timestamp DESC" + string.Format(" LIMIT {0},{1}", start, count), "osgroupnotice", "GroupID,Timestamp,FromName,Subject,ItemID,HasAttachment,NoticeID,Message,AssetType,ItemName");
+
+                QueryFilter filter = new QueryFilter();
+                filter.orMultiFilters["GroupID"] = new List<object>(groupIDs.Count);
+                foreach (UUID groupID in groupIDs)
+                {
+                    filter.orMultiFilters["GroupID"].Add(groupID);
+                }
+
+                Dictionary<string, bool> sort = new Dictionary<string,bool>(1);
+                sort["Timestamp"] = false;
+
+                List<string> notice = data.Query(new string[]{
+                    "GroupID",
+                    "Timestamp",
+                    "FromName",
+                    "Subject",
+                    "ItemID",
+                    "HasAttachment",
+                    "NoticeID",
+                    "Message",
+                    "AssetType",
+                    "ItemName"
+                }, "osgroupnotice", filter, sort, start, count);
+
                 for (int i = 0; i < notice.Count; i += 10)
                 {
                     AllNotices.Add(GroupNoticeQueryResult2GroupNoticeData(notice.GetRange(i, 10)));

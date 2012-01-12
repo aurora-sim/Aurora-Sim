@@ -292,10 +292,11 @@ namespace Aurora.Services.DataService
 
         private uint GetNewEstateID()
         {
-            List<string> QueryResults = GD.Query("ORDER BY EstateID DESC", m_estateTable, "EstateID");
-            if (QueryResults.Count > 0)
-                return uint.Parse(QueryResults[0]) + 1;
-            return 100;
+            List<string> QueryResults = GD.Query(new string[2]{
+                "COUNT(EstateID)",
+                "MAX(EstateID)"
+            }, m_estateTable, null, null, null, null);
+            return (uint.Parse(QueryResults[0]) > 0) ? uint.Parse(QueryResults[1]) + 1 : 100;
         }
 
         protected void SaveEstateSettings(EstateSettings es, bool doInsert)

@@ -51,8 +51,7 @@ namespace Aurora.Services.DataService
 
         #region IDirectoryServiceConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             GD = GenericData;
             m_registry = simBase;
@@ -300,7 +299,11 @@ namespace Aurora.Services.DataService
                 if (region != null)
                 {
                     UUID parcelInfoID = UUID.Zero;
-                    if (UUID.TryParse(GD.Query(string.Format("Name = '{0}' AND RegionID = '{1}' LIMIT 0,1", ParcelName, RegionID), "searchparcel", "InfoUUID")[0], out parcelInfoID))
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["Name"] = ParcelName;
+                    filter.andFilters["RegionID"] = RegionID;
+
+                    if (UUID.TryParse(GD.Query(new string[1] { "InfoUUID" }, "searchparcel", filter, null, 0, 1)[0], out parcelInfoID))
                     {
                         return GetParcelInfo(parcelInfoID);
                     }
@@ -325,25 +328,27 @@ namespace Aurora.Services.DataService
             return (Query.Count == 0) ? new LandData[0] { } : Query2LandData(Query).ToArray();
         }
 
-        private static string GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
-            string whereClause = string.Format("RegionID = '{0}'", RegionID);
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = RegionID;
 
             if (owner != UUID.Zero)
             {
-                whereClause += string.Format(" AND OwnerID = '{0}'", owner);
+                filter.andFilters["OwnerID"] = owner;
             }
 
             if (flags != ParcelFlags.None)
             {
-                whereClause += string.Format(" AND Flags & {0}", flags);
+                filter.andBitfieldAndFilters["Flags"] = (uint)flags;
             }
 
             if (category != ParcelCategory.Any)
             {
-                whereClause += string.Format(" AND Category = {0,D}", category);
+                filter.andFilters["Category"] = (int)category;
             }
-            return whereClause;
+
+            return filter;
         }
         
         public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
@@ -360,10 +365,10 @@ namespace Aurora.Services.DataService
                 GridRegion region = regiondata.Get(RegionID, scopeID);
                 if (region != null)
                 {
-                    string whereClause = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
-                    whereClause += " ORDER BY OwnerID DESC, Name DESC";
-                    whereClause += string.Format(" LIMIT {0}, {1}", start, count);
-                    return Query2LandData(GD.Query(whereClause, "searchparcel", "*"));
+                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
+                    Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
+                    sort["OwnerID"] = false;
+                    return Query2LandData(GD.Query(new string[1] { "*" }, "searchparcel", filter, sort, start, count));
                 }
             }
             return resp;
@@ -377,7 +382,8 @@ namespace Aurora.Services.DataService
                 GridRegion region = regiondata.Get(RegionID, scopeID);
                 if (region != null)
                 {
-                    return uint.Parse(GD.Query(GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category), "searchparcel", "COUNT(ParcelID)")[0]);
+                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
+                    return uint.Parse(GD.Query(new string[1] { "COUNT(ParcelID)" }, "searchparcel", filter, null, null, null)[0]);
                 }
             }
             return 0;
@@ -397,12 +403,14 @@ namespace Aurora.Services.DataService
                 GridRegion region = regiondata.Get(RegionID, ScopeID);
                 if (region != null)
                 {
-                    return Query2LandData(GD.Query(string.Format("RegionID = '{0}' AND Name = '{1}' ORDER BY OwnerID DESC LIMIT {2}, {3}",
-                        RegionID,
-                        name,
-                        start,
-                        count
-                    ), "searchparcel", "*"));
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["RegionID"] = RegionID;
+                    filter.andFilters["Name"] = name;
+                    
+                    Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
+                    sort["OwnerID"] = false;
+
+                    return Query2LandData(GD.Query(new string[1] { "*" }, "searchparcel", filter, sort, start, count));
                 }
             }
 
@@ -417,7 +425,11 @@ namespace Aurora.Services.DataService
                 GridRegion region = regiondata.Get(RegionID, ScopeID);
                 if (region != null)
                 {
-                    return uint.Parse(GD.Query(string.Format("RegionID = '{0}' AND Name = '{1}'", RegionID, name), "searchparcel", "COUNT(ParcelID)")[0]);
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["RegionID"] = RegionID;
+                    filter.andFilters["Name"] = name;
+
+                    return uint.Parse(GD.Query(new string[1] { "COUNT(ParcelID)" }, "searchparcel", filter, null, null, null)[0]);
                 }
             }
             return 0;
@@ -432,43 +444,54 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery, uint Flags)
         {
-            List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
+            QueryFilter filter = new QueryFilter();
+            Dictionary<string, bool> sort = new Dictionary<string, bool>();
 
-            string categoryString = "";
-            string dwell = "";
-
-            if (category != "-1") //Check for category
-                categoryString = " Category = '" + category + "' &&";
+            if (category != "-1")
+            {
+                filter.andFilters["Category"] = category;
+            }
 
             //If they dwell sort flag is there, sort by dwell going down
-            if ((Flags & (uint) DirectoryManager.DirFindFlags.DwellSort) ==
-                (uint) DirectoryManager.DirFindFlags.DwellSort)
-                dwell = " ORDER BY Dwell DESC";
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.DwellSort) == (uint)DirectoryManager.DirFindFlags.DwellSort)
+            {
+                sort["Dwell"] = false;
+            }
 
-            string whereClause = categoryString + " Description LIKE '%" + queryText + "%' OR Name LIKE '%" + queryText +
-                                 "%' and ShowInSearch = '1'" + dwell + " LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,ForSale,Auction,Dwell,Flags");
+            filter.orLikeFilters["Description"] = "%" + queryText + "%";
+            filter.orLikeFilters["Name"] = "%" + queryText + "%";
+            filter.andFilters["ShowInSearch"] = 1;
+
+            List<string> retVal = GD.Query(new string[6]{
+                "InfoUUID",
+                "Name",
+                "ForSale",
+                "Auction",
+                "Dwell",
+                "Flags"
+            }, "searchparcel", filter, sort, (uint)StartQuery, 50);
+
             if (retVal.Count == 0)
-                return Data.ToArray();
+            {
+                return new DirPlacesReplyData[0] { };
+            }
 
-            DirPlacesReplyData replyData = new DirPlacesReplyData();
+            List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
 
             for (int i = 0; i < retVal.Count; i += 6)
             {
-                replyData.parcelID = new UUID(retVal[i]);
-                replyData.name = retVal[i + 1];
-                replyData.forSale = int.Parse(retVal[i + 2]) == 1;
-                replyData.auction = retVal[i + 3] == "0"; //Auction is stored as a 0 if there is no auction
-                replyData.dwell = float.Parse(retVal[i + 4]);
-
                 //Check to make sure we are sending the requested maturity levels
-                if ((int.Parse(retVal[i + 5]) & (int) ParcelFlags.MaturePublish) == (int) ParcelFlags.MaturePublish &&
-                    ((Flags & (uint) DirectoryManager.DirFindFlags.IncludeMature)) == 0)
+                if (!((int.Parse(retVal[i + 5]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0))
                 {
+                    Data.Add(new DirPlacesReplyData
+                    {
+                        parcelID = new UUID(retVal[i]),
+                        name = retVal[i + 1],
+                        forSale = int.Parse(retVal[i + 2]) == 1,
+                        auction = retVal[i + 3] == "0", //Auction is stored as a 0 if there is no auction
+                        dwell = float.Parse(retVal[i + 4])
+                    });
                 }
-                else
-                    Data.Add(replyData);
-                replyData = new DirPlacesReplyData();
             }
 
             return Data.ToArray();
@@ -477,82 +500,72 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Searches for parcels for sale around the grid
         /// </summary>
-        /// <param name = "searchType"></param>
+        /// <param name = "searchType">2 = Auction only, 8 = For Sale - Mainland, 16 = For Sale - Estate, 4294967295 = All</param>
         /// <param name = "price"></param>
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags)
+        public DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
         {
-            //searchType
-            // 2 - Auction only
-            // 8 - For Sale - Mainland
-            // 16 - For Sale - Estate
-            // 4294967295 - All
-            List<DirLandReplyData> Data = new List<DirLandReplyData>();
 
-            string dwell = "";
-            string pricestring = "";
-            string areastring = "";
-            string forsalestring = "";
+            QueryFilter filter = new QueryFilter();
 
             //They requested a sale price check
-            if ((Flags & (uint) DirectoryManager.DirFindFlags.LimitByPrice) ==
-                (uint) DirectoryManager.DirFindFlags.LimitByPrice)
-                pricestring = " SalePrice <= '" + price + "'";
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByPrice) == (uint)DirectoryManager.DirFindFlags.LimitByPrice)
+            {
+                filter.andLessThanEqFilters["SalePrice"] = (int)price;
+            }
 
             //They requested a 
-            if ((Flags & (uint) DirectoryManager.DirFindFlags.LimitByArea) ==
-                (uint) DirectoryManager.DirFindFlags.LimitByArea)
+            if ((Flags & (uint) DirectoryManager.DirFindFlags.LimitByArea) == (uint) DirectoryManager.DirFindFlags.LimitByArea)
             {
-                //Check to make sure we add the 'and' into the SQL statement
-                // If the price string exists, we need the and inbetween these two statements
-                areastring = pricestring == "" ? "" : " and";
-                //Add the area command
-                areastring += " Area >= '" + area + "'";
+                filter.andGreaterThanEqFilters["Area"] = (int)area;
             }
-            //If either exists, we need the 'and' between these and the for sale statement
-            if (areastring != "" || pricestring != "")
-                forsalestring = " and";
 
             //Only parcels set for sale will be checked
-            forsalestring += " ForSale = '1'";
+            filter.andFilters["ForSale"] = "1";
 
-            string whereClause = pricestring + areastring + forsalestring + " LIMIT " + StartQuery.ToString() + ",50 " +
-                                 dwell;
-            List<string> retVal = GD.Query(whereClause, "searchparcel", "InfoUUID,Name,Auction,SalePrice,Area,Flags");
+            List<string> retVal = GD.Query(new string[]{
+                "InfoUUID",
+                "Name",
+                "Auction",
+                "SalePrice",
+                "Area",
+                "Flags"
+            }, "searchparcel", filter, null, (uint)StartQuery, 50);
 
             //if there are none, return
             if (retVal.Count == 0)
-                return Data.ToArray();
+            {
+                return new DirLandReplyData[0] { };
+            }
 
+            List<DirLandReplyData> Data = new List<DirLandReplyData>();
             DirLandReplyData replyData;
             for (int i = 0; i < retVal.Count; i += 6)
             {
                 replyData = new DirLandReplyData
-                                {
-                                    forSale = true,
-                                    parcelID = new UUID(retVal[i]),
-                                    name = retVal[i + 1],
-                                    auction = (retVal[i + 2] != "0")
-                                };
+                {
+                    forSale = true,
+                    parcelID = new UUID(retVal[i]),
+                    name = retVal[i + 1],
+                    auction = (retVal[i + 2] != "0")
+                };
                 //If its an auction and we didn't request to see auctions, skip to the next and continue
-                if ((Flags & (uint) DirectoryManager.SearchTypeFlags.Auction) ==
-                    (uint) DirectoryManager.SearchTypeFlags.Auction && !replyData.auction)
+                if ((Flags & (uint)DirectoryManager.SearchTypeFlags.Auction) == (uint)DirectoryManager.SearchTypeFlags.Auction && !replyData.auction)
+                {
                     continue;
+                }
 
                 replyData.salePrice = Convert.ToInt32(retVal[i + 3]);
                 replyData.actualArea = Convert.ToInt32(retVal[i + 4]);
-                //0 flag is an override so that we can get all lands for sale, regardless of maturity
-                if (Flags == 0)
-                    Data.Add(replyData);
+
                 //Check maturity levels depending on what flags the user has set
-                if ((int.Parse(retVal[i + 5]) & (int) ParcelFlags.MaturePublish) == (int) ParcelFlags.MaturePublish &&
-                    ((Flags & (uint) DirectoryManager.DirFindFlags.IncludeMature)) == 0)
+                //0 flag is an override so that we can get all lands for sale, regardless of maturity
+                if (Flags == 0 || !((int.Parse(retVal[i + 5]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0))
                 {
-                }
-                else
                     Data.Add(replyData);
+                }
             }
 
             return Data.ToArray();
@@ -598,24 +611,26 @@ namespace Aurora.Services.DataService
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery)
+        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
-            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
 
-            string whereClause = "";
-            string classifiedClause = "";
-            uint cqf = uint.Parse(queryFlags);
+            QueryFilter filter = new QueryFilter();
 
-            if (int.Parse(category) != (int) DirectoryManager.ClassifiedCategories.Any) //Check the category
-                classifiedClause = " and Category = '" + category + "'";
+            if (int.Parse(category) != (int)DirectoryManager.ClassifiedCategories.Any) //Check the category
+            {
+                filter.andFilters["Category"] = category;
+            }
 
-            whereClause = " Name LIKE '%" + queryText + "%'" + classifiedClause + " LIMIT " + StartQuery.ToString() +
-                          ",50 ";
-            List<string> retVal = GD.Query(whereClause, "userclassifieds", "*");
+            filter.andLikeFilters["Name"] = "%" + queryText + "%";
+
+            List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
-                return Data.ToArray();
+            {
+                return new DirClassifiedReplyData[0] { };
+            }
 
-            DirClassifiedReplyData replyData = null;
+            List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
+            DirClassifiedReplyData replyData;
             for (int i = 0; i < retVal.Count; i += 6)
             {
                 //Pull the classified out of OSD
@@ -623,24 +638,26 @@ namespace Aurora.Services.DataService
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
 
                 replyData = new DirClassifiedReplyData
-                                {
-                                    classifiedFlags = classified.ClassifiedFlags,
-                                    classifiedID = classified.ClassifiedUUID,
-                                    creationDate = classified.CreationDate,
-                                    expirationDate = classified.ExpirationDate,
-                                    price = classified.PriceForListing,
-                                    name = classified.Name
-                                };
-                //Check maturity levels
-                if ((replyData.classifiedFlags & (uint) DirectoryManager.ClassifiedFlags.Mature) ==
-                    (uint) DirectoryManager.ClassifiedFlags.Mature)
                 {
-                    if ((cqf & (uint) DirectoryManager.ClassifiedQueryFlags.Mature) ==
-                        (uint) DirectoryManager.ClassifiedQueryFlags.Mature)
+                    classifiedFlags = classified.ClassifiedFlags,
+                    classifiedID = classified.ClassifiedUUID,
+                    creationDate = classified.CreationDate,
+                    expirationDate = classified.ExpirationDate,
+                    price = classified.PriceForListing,
+                    name = classified.Name
+                };
+                //Check maturity levels
+                if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) == (uint)DirectoryManager.ClassifiedFlags.Mature)
+                {
+                    if ((queryFlags & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) == (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
+                    {
                         Data.Add(replyData);
+                    }
                 }
-                else //Its PG, add all
+                else
+                { //Its PG, add all
                     Data.Add(replyData);
+                }
             }
             return Data.ToArray();
         }
@@ -684,18 +701,19 @@ namespace Aurora.Services.DataService
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery)
+        public DirEventsReplyData[] FindEvents(string queryText, uint eventFlags, int StartQuery)
         {
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
-            string whereClause = "";
-            uint eventFlags = uint.Parse(flags);
+
+            QueryFilter filter = new QueryFilter();
+
             //|0| means search between some days
             if (queryText.Contains("|0|"))
             {
                 string StringDay = queryText.Split('|')[0];
                 if (StringDay == "u") //"u" means search for events that are going on today
                 {
-                    whereClause = " UNIX_TIMESTAMP(date) >= '" + Util.ToUnixTime(DateTime.Today) + "'";
+                    filter.andGreaterThanEqFilters["UNIX_TIMESTAMP(date)"] = Util.ToUnixTime(DateTime.Today);
                 }
                 else
                 {
@@ -704,16 +722,24 @@ namespace Aurora.Services.DataService
                     DateTime SearchedDay = DateTime.Today.AddDays(Day);
                     //We only look at one day at a time
                     DateTime NextDay = SearchedDay.AddDays(1);
-                    whereClause = " UNIX_TIMESTAMP(date) >= '" + Util.ToUnixTime(SearchedDay) + "' AND UNIX_TIMESTAMP(date) <= '" + Util.ToUnixTime(NextDay) + "' and flags <= '" + flags + "'";
+                    filter.andGreaterThanEqFilters["UNIX_TIMESTAMP(date)"] = Util.ToUnixTime(SearchedDay);
+                    filter.andLessThanEqFilters["UNIX_TIMESTAMP(date)"] = Util.ToUnixTime(NextDay);
+                    filter.andLessThanEqFilters["flags"] = (int)eventFlags;
                 }
             }
             else
             {
-                //Else, search for the search term
-                whereClause = " name LIKE '%" + queryText + "%'";
+                filter.andLikeFilters["name"] = "%" + queryText + "%";
             }
-            whereClause += " LIMIT " + StartQuery.ToString() + ",50 ";
-            List<string> retVal = GD.Query(whereClause, "asevents", "EID, creator, date, maturity, flags, name");
+
+            List<string> retVal = GD.Query(new string[]{
+                "EID",
+                "creator",
+                "date",
+                "maturity",
+                "flags",
+                "name"
+            }, "asevents", filter, null, (uint)StartQuery, 50);
 
             if (retVal.Count > 0)
             {
@@ -955,7 +981,7 @@ namespace Aurora.Services.DataService
 
         public uint GetNumberOfEvents(Dictionary<string, object> filter)
         {
-            return uint.Parse(GD.Query(new string[]{
+            return uint.Parse(GD.Query(new string[1]{
                 "COUNT(EID)"
             }, "asevents", new QueryFilter{
                 andFilters = filter
@@ -970,7 +996,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                return uint.Parse(GD.Query("1=1", "asevents", "MAX(EID)")[0]);
+                return uint.Parse(GD.Query(new string[1] { "MAX(EID)" }, "asevents", null, null, null, null)[0]);
             }
         }
 
