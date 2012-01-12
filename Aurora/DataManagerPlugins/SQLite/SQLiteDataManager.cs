@@ -266,47 +266,6 @@ namespace Aurora.DataManager.SQLite
             return cmd.ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)
-        {
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps[":" + keyRow.Replace("`", "")] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
-            }
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                try
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            Type r = reader[i].GetType();
-                            RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                        }
-                    }
-                }
-                catch
-                {
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
-        }
-
         private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
         {
             ps = new Dictionary<string, object>();

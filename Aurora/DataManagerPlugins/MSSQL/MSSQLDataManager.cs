@@ -155,51 +155,6 @@ namespace Aurora.DataManager.MSSQL
                                          wantedValue, table, whereClause);
             return Query(query, new Dictionary<string, object>(), dbcon).ExecuteReader();
         }
-
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
-            }
-            using (result = Query(query + order, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
         
         private static string QueryFilter2Query(QueryFilter filter)
         {

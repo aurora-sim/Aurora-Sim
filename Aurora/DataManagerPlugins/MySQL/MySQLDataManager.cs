@@ -168,60 +168,6 @@ namespace Aurora.DataManager.MySQL
             return Query(query, new Dictionary<string, object>());
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
-        {
-            IDataReader reader = null;
-            List<string> retVal = new List<string>();
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps["?" + keyRow.Replace("`", "")] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = ?{3}",
-                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
-            }
-            try
-            {
-                using (reader = Query(query + order, ps))
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            Type r = reader[i].GetType();
-                            retVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                        }
-                    }
-                    return retVal;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                return new List<string>();
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                }
-            }
-        }
-
         private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
         {
             ps = new Dictionary<string,object>();

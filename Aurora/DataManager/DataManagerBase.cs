@@ -45,7 +45,6 @@ namespace Aurora.DataManager
         public abstract string Identifier { get; }
         public abstract void ConnectToDatabase(string connectionString, string migratorName, bool validateTables);
 
-        public abstract List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
         public abstract List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
 
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);

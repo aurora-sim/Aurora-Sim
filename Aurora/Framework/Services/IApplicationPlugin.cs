@@ -98,10 +98,15 @@ namespace Aurora.Framework
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
+        /// SELECT string.join(", ", wantedValue) FROM table {magic happens with queryFilter here} {magic happens with sort here} [LIMIT start[, count]]
         /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
-
+        /// <param name="wantedValue"></param>
+        /// <param name="table"></param>
+        /// <param name="queryFilter"></param>
+        /// <param name="sort"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
 
         /// <summary>
