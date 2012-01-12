@@ -98,11 +98,6 @@ namespace Aurora.Framework
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' where 'whereClause'
-        /// </summary>
-        List<string> Query(string whereClause, string table, string wantedValue);
-
-        /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
         /// </summary>
         List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
@@ -251,6 +246,7 @@ namespace Aurora.Framework
 
         public Dictionary<string, string> andLikeFilters = new Dictionary<string, string>();
         public Dictionary<string, string> orLikeFilters = new Dictionary<string, string>();
+        public Dictionary<string, List<string>> orLikeMultiFilters = new Dictionary<string, List<string>>();
 
         public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
         public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
@@ -277,6 +273,7 @@ namespace Aurora.Framework
                     orMultiFilters.Count +
                     andLikeFilters.Count +
                     orLikeFilters.Count +
+                    orLikeMultiFilters.Count +
                     andBitfieldAndFilters.Count +
                     orBitfieldAndFilters.Count +
                     andGreaterThanFilters.Count +

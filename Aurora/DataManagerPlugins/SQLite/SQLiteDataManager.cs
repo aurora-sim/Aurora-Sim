@@ -234,29 +234,6 @@ namespace Aurora.DataManager.SQLite
                 cmd.Parameters.AddWithValue(p.Key, p.Value);
         }
 
-        public override List<string> Query(string whereClause, string table, string wantedValue)
-        {
-            string query = "";
-            query = String.Format("select {0} from {1}{3} {2}",
-                wantedValue, table, whereClause, whereClause.StartsWith("ORDER") ? "" : " where");
-            var cmd = PrepReader(query);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                while (reader.Read())
-                {
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        RetVal.Add(reader[i].ToString());
-                    }
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
-        }
-
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
             string query = "";
@@ -385,6 +362,10 @@ namespace Aurora.DataManager.SQLite
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
 
+                #endregion
+
+                #region LIKE
+
                 had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
@@ -405,6 +386,22 @@ namespace Aurora.DataManager.SQLite
                     string key = ":where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
+                    {
+                        string key = ":where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                    }
                 }
                 if (parts.Count > 0)
                 {

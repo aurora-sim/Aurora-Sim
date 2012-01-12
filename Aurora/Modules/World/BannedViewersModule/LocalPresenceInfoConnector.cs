@@ -188,10 +188,17 @@ namespace Aurora.Modules.Ban
 
             //Only check suspected and known offenders in this scan
             // 2 == Flags
-            query = GD.Query(" (Flags = 'SuspectedAltAccountOfKnown'" +
-                " or Flags = 'Known' or Flags = 'SuspectedAltAccountOfSuspected'" +
-                " or Flags = 'Banned'" +
-                " or Flags = 'Suspected')", "baninfo", "AgentID");
+
+            QueryFilter filter = new QueryFilter();
+            filter.orMultiFilters["Flags"] = new List<object>(5);
+            filter.orMultiFilters["Flags"].Add("SuspectedAltAccountOfKnown");
+            filter.orMultiFilters["Flags"].Add("Known");
+            filter.orMultiFilters["Flags"].Add("SuspectedAltAccountOfSuspected");
+            filter.orMultiFilters["Flags"].Add("Banned");
+            filter.orMultiFilters["Flags"].Add("Suspected");
+
+            query = GD.Query(new string[1] { "AgentID" }, "baninfo", filter, null, null, null);
+
             foreach (string ID in query)
             {
                 PresenceInfo suspectedInfo = GetPresenceInfo(UUID.Parse(ID));

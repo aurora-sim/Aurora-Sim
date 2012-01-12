@@ -119,49 +119,6 @@ namespace Aurora.DataManager.MySQL
             migrationManager.ExecuteOperation();
         }
 
-        public override List<string> Query(string whereClause, string table, string wantedValue)
-        {
-            IDataReader reader = null;
-            List<string> retVal = new List<string>();
-            string query = String.Format("select {0} from {1}{3} {2}",
-                wantedValue, table, whereClause, whereClause.StartsWith("ORDER") ? "" : " where");
-            try
-            {
-                using (reader = Query(query, new Dictionary<string, object>()))
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            if (reader[i] != DBNull.Value)
-                                retVal.Add(reader.GetString(i));
-                        }
-                    }
-                    return retVal;
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                return null;
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                    {
-                        reader.Close();
-                        //reader.Dispose ();
-                    }
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
-                }
-            }
-        }
-
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
             IDataReader reader = null;
@@ -316,6 +273,10 @@ namespace Aurora.DataManager.MySQL
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
 
+                #endregion
+
+                #region LIKE
+
                 had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
@@ -336,6 +297,22 @@ namespace Aurora.DataManager.MySQL
                     string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
+                    {
+                        string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                    }
                 }
                 if (parts.Count > 0)
                 {

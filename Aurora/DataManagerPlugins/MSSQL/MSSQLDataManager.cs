@@ -113,41 +113,6 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
-        public override List<string> Query(string whereClause, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} where {2}",
-                                         wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -282,6 +247,10 @@ namespace Aurora.DataManager.MSSQL
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                 }
 
+                #endregion
+
+                #region LIKE
+
                 had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
@@ -298,6 +267,20 @@ namespace Aurora.DataManager.MSSQL
                 foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
                 {
                     parts.Add(string.Format("{0} LIKE '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                }
+
+                had = parts.Count > 0;
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
+                    {
+                        parts.Add(string.Format("{0} LIKE '{1}'", where.Key, value));
+                    }
                 }
                 if (parts.Count > 0)
                 {

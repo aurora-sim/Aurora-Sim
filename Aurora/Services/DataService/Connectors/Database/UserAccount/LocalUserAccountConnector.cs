@@ -130,29 +130,42 @@ namespace Aurora.Services.DataService
                 }
             }
 
+            QueryFilter filter = new QueryFilter();
+
+            filter.orMultiFilters["ScopeID"] = new List<object>(2);
+            filter.orMultiFilters["ScopeID"].Add(scopeID);
+            filter.orMultiFilters["ScopeID"].Add(UUID.Zero);
+
             List<string> retVal;
-            if (words.Length == 0)
+            if (words.Length > 0)
             {
-                retVal =
-                    GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') LIMIT 10",
-                             m_realm,
-                             " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, " +
-                             GD.IsNull("Name", GD.ConCat(new[] {"FirstName", "' '", "LastName"})) + " as Name ");
-
-                ParseQuery(retVal, ref data);
-
-                return data.ToArray();
+                filter.orLikeFilters["Name"] = "%" + query + "%";
+                filter.orLikeFilters["FirstName"] = "%" + words[0] + "%";
+                if (words.Length == 1)
+                {
+                    filter.orLikeMultiFilters["LastName"] = new List<string>(2);
+                    filter.orLikeMultiFilters["LastName"].Add("%" + words[0]);
+                    filter.orLikeMultiFilters["LastName"].Add("%" + words[1] + "%");
+                }
+                else
+                {
+                    filter.orLikeFilters["LastName"] = "%" + words[0] + "%";
+                }
             }
 
-            retVal = GD.Query("(ScopeID='" + scopeID + "' or ScopeID='00000000-0000-0000-0000-000000000000') " +
-                              "and (Name like '%" + query + "%' or " +
-                              "FirstName like '%" + words[0] + "%' " +
-                              ((words.Length == 1)
-                                   ? " or LastName like '%" + words[0]
-                                   : " and LastName like '%" + words[1])
-                              + "%')", m_realm,
-                              " PrincipalID, ScopeID, FirstName, LastName, Email, ServiceURLs, Created, UserLevel, UserFlags, UserTitle, " +
-                              GD.IsNull("Name", GD.ConCat(new[] {"FirstName", "' '", "LastName"})) + " as Name ");
+            retVal = GD.Query(new string[]{
+                "PrincipalID",
+                "ScopeID",
+                "FirstName",
+                "LastName",
+                "Email",
+                "ServiceURLs",
+                "Created",
+                "UserLevel",
+                "UserFlags",
+                "UserTitle",
+                GD.IsNull("Name", GD.ConCat(new[] {"FirstName", "' '", "LastName"})) + " as Name "
+            }, m_realm, filter, null, null, null);
 
             ParseQuery(retVal, ref data);
 
