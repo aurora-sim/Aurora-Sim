@@ -79,7 +79,12 @@ namespace Aurora.Services.DataService
         public FriendInfo[] GetFriends(UUID principalID)
         {
             List<FriendInfo> infos = new List<FriendInfo>();
-            List<string> query = GD.Query("PrincipalID", principalID, m_realm, "Friend,Flags");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = principalID;
+            List<string> query = GD.Query(new string[]{
+                "Friend",
+                "Flags"
+            }, m_realm, filter, null, null, null);
 
             //These are used to get the other flags below
             List<string> keys = new List<string>();

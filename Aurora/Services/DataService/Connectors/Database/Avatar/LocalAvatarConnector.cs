@@ -100,8 +100,16 @@ namespace Aurora.Services.DataService
 
         private AvatarData InternalGet(string realm, string field, string val)
         {
-            List<string> data = GD.Query(field, val, realm, "Name, Value");
-            AvatarData retVal = new AvatarData {AvatarType = 1, Data = new Dictionary<string, string>()};
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
+            List<string> data = GD.Query(new string[]{
+                "Name",
+                "`Value`"
+            }, realm, filter, null, null, null);
+            AvatarData retVal = new AvatarData {
+                AvatarType = 1,
+                Data = new Dictionary<string, string>()
+            };
             for (int i = 0; i < data.Count; i += 2)
             {
                 retVal.Data[data[i]] = data[i + 1];

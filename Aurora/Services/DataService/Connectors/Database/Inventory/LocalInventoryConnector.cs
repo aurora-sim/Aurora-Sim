@@ -326,7 +326,13 @@ namespace Aurora.Services.DataService
 
                 contents.WriteStartArray("categories"); //We don't send any folders
                 int version = 0;
-                List<string> versionRetVal = GD.Query("folderID", folder_id, m_foldersrealm, "version, type");
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["folderID"] = folder_id;
+                List<string> versionRetVal = GD.Query(new string[]{
+                    "version",
+                    "type"
+                }, m_foldersrealm, filter, null, null, null);
+
                 List<InventoryFolderBase> foldersToAdd = new List<InventoryFolderBase>();
                 if (versionRetVal.Count > 0)
                 {
@@ -462,9 +468,13 @@ namespace Aurora.Services.DataService
 
         public virtual void IncrementFolderByItem(UUID itemID)
         {
-            List<string> values = GD.Query("inventoryID", itemID, m_itemsrealm, "parentFolderID");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = itemID;
+            List<string> values = GD.Query(new string[] { "parentFolderID" }, m_itemsrealm, filter, null, null, null);
             if (values.Count > 0)
+            {
                 IncrementFolder(UUID.Parse(values[0]));
+            }
         }
 
         public virtual InventoryItemBase[] GetActiveGestures(UUID principalID)
