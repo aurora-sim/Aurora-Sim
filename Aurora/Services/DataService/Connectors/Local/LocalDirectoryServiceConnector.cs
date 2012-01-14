@@ -303,7 +303,9 @@ namespace Aurora.Services.DataService
                     filter.andFilters["Name"] = ParcelName;
                     filter.andFilters["RegionID"] = RegionID;
 
-                    if (UUID.TryParse(GD.Query(new string[1] { "InfoUUID" }, "searchparcel", filter, null, 0, 1)[0], out parcelInfoID))
+                    List<string> query = GD.Query(new string[1] { "InfoUUID" }, "searchparcel", filter, null, 0, 1);
+
+                    if (query.Count >= 1 && UUID.TryParse(query[0], out parcelInfoID))
                     {
                         return GetParcelInfo(parcelInfoID);
                     }
