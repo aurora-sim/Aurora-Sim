@@ -125,7 +125,9 @@ namespace Aurora.Services.DataService
                 if (words[i].Length < 3)
                 {
                     if (i != words.Length - 1)
+                    {
                         Array.Copy(words, i + 1, words, i, words.Length - i - 1);
+                    }
                     Array.Resize(ref words, words.Length - 1);
                 }
             }
@@ -141,7 +143,7 @@ namespace Aurora.Services.DataService
             {
                 filter.orLikeFilters["Name"] = "%" + query + "%";
                 filter.orLikeFilters["FirstName"] = "%" + words[0] + "%";
-                if (words.Length == 1)
+                if (words.Length == 2)
                 {
                     filter.orLikeMultiFilters["LastName"] = new List<string>(2);
                     filter.orLikeMultiFilters["LastName"].Add("%" + words[0]);
