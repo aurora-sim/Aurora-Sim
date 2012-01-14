@@ -69,6 +69,9 @@ namespace Aurora.Framework
             if (!firstLoad.Contains(moduleDir))
             {
                 DirectoryInfo dir = new DirectoryInfo(moduleDir);
+
+                #region blacklist
+
                 if (dllBlackList == null || dllBlackList.Count == 0)
                 {
                     dllBlackList = new List<string>
@@ -178,6 +181,9 @@ namespace Aurora.Framework
                                            Path.Combine(dir.FullName, "zlib.net.dll")
                                        };
                 }
+
+                #endregion
+
                 if (ALLOW_CACHE)
                     LoadedDlls.Add(moduleDir, new List<Type>());
                 foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
