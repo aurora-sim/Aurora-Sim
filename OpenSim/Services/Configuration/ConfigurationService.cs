@@ -349,10 +349,12 @@ namespace OpenSim.Services.ConfigurationService
         {
             List<string> keys = new List<string>();
             int next = urls["Next" + key].AsInteger();
-            if (next == urls.Count - 1)
-                next = 0;
             string[] configKeys = urls[key].AsString().Split(',');
-            for (int i = next; i < urls.Count - 1; i++)
+            if (configKeys.Length == 1)
+                return new List<string>(configKeys);
+            if (next >= configKeys.Length - 1)
+                next = 0;
+            for (int i = next; i < configKeys.Length - 1; i++)
                 keys.Add(configKeys[i]);
             for (int i = 0; i < next; i++)
                 keys.Add(configKeys[i]);

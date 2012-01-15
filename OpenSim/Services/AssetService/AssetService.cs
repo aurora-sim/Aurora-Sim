@@ -105,10 +105,6 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual AssetBase Get(string id)
         {
-            object remoteValue = DoRemote(id);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (AssetBase)remoteValue;
-
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
@@ -116,6 +112,11 @@ namespace OpenSim.Services.AssetService
                 if (cachedAsset != null && cachedAsset.Data.Length != 0)
                     return cachedAsset;
             }
+
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (AssetBase)remoteValue;
+
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             if (cache != null && asset != null)
                 cache.Cache(asset);
@@ -134,10 +135,6 @@ namespace OpenSim.Services.AssetService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual byte[] GetData(string id)
         {
-            object remoteValue = DoRemote(id);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (byte[])remoteValue;
-
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
@@ -145,6 +142,11 @@ namespace OpenSim.Services.AssetService
                 if (cachedAsset != null && cachedAsset.Data.Length != 0)
                     return cachedAsset.Data;
             }
+
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (byte[])remoteValue;
+
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             if (cache != null && asset != null)
                 cache.Cache(asset);
@@ -193,10 +195,10 @@ namespace OpenSim.Services.AssetService
         {
             object remoteValue = DoRemote(asset);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UUID)remoteValue;
-
-            //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
-            asset.ID = m_database.Store(asset);
+                asset.ID = (UUID)remoteValue;
+            else
+                //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
+                asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
