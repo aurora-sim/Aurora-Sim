@@ -157,14 +157,14 @@ namespace Aurora.Framework
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery);
+        List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery);
 
         /// <summary>
         ///   Gets all classifieds in the given region
         /// </summary>
         /// <param name = "regionName"></param>
         /// <returns></returns>
-        Classified[] GetClassifiedsInRegion(string regionName);
+        List<Classified> GetClassifiedsInRegion(string regionName);
 
         #endregion
 

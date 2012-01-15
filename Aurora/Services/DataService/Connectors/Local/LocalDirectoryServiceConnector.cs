@@ -350,7 +350,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["OwnerID"] = OwnerID;
             List<string> Query = GD.Query(new string[] { "*" }, "searchparcel", filter, null, null, null);
 
-            return (Query.Count == 0) ? new LandData[0] { } : Query2LandData(Query).ToArray();
+            return (Query.Count == 0) ? new List<LandData>() : Query2LandData(Query);
         }
 
         private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
@@ -523,7 +523,7 @@ namespace Aurora.Services.DataService
 
             if (retVal.Count == 0)
             {
-                return new DirPlacesReplyData[0] { };
+                return new List<DirPlacesReplyData>();
             }
 
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
@@ -558,7 +558,6 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
         {
-
             object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirLandReplyData>)remoteValue;
@@ -592,7 +591,7 @@ namespace Aurora.Services.DataService
             //if there are none, return
             if (retVal.Count == 0)
             {
-                return new DirLandReplyData[0] { };
+                return new List<DirLandReplyData>();
             }
 
             List<DirLandReplyData> Data = new List<DirLandReplyData>();
@@ -623,7 +622,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return Data.ToArray();
+            return Data;
         }
 
         private void ConvertBytesToLandBitmap(ref bool[,] tempConvertMap, byte[] Bitmap, int sizeX)
@@ -666,8 +665,11 @@ namespace Aurora.Services.DataService
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
+        public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
+            object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirClassifiedReplyData>)remoteValue;
 
             QueryFilter filter = new QueryFilter();
 
@@ -681,7 +683,7 @@ namespace Aurora.Services.DataService
             List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
             {
-                return new DirClassifiedReplyData[0] { };
+                return new List<DirClassifiedReplyData>();
             }
 
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
@@ -722,15 +724,19 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "regionName"></param>
         /// <returns></returns>
-        public Classified[] GetClassifiedsInRegion(string regionName)
+        public List<Classified> GetClassifiedsInRegion(string regionName)
         {
+            object remoteValue = DoRemote(regionName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<Classified>)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["SimName"] = regionName;
             List<string> retVal = GD.Query(new string[] { "*" }, "userclassifieds", filter, null, null, null);
 
             if (retVal.Count == 0)
             {
-                return new Classified[0] { };
+                return new List<Classified>();
             }
 
             List<Classified> Classifieds = new List<Classified>();
@@ -742,7 +748,7 @@ namespace Aurora.Services.DataService
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
                 Classifieds.Add(classified);
             }
-            return Classifieds.ToArray();
+            return Classifieds;
         }
 
         #endregion
@@ -759,7 +765,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirEventsReplyData> FindEvents(string queryText, uint eventFlags, int StartQuery)
         {
-            object remoteValue = DoRemote(queryText, flags, StartQuery);
+            object remoteValue = DoRemote(queryText, eventFlags, StartQuery);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirEventsReplyData>)remoteValue;
 
@@ -952,11 +958,11 @@ namespace Aurora.Services.DataService
         /// <param name = "EventID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<Classified> GetEventInfo(uint EventID)
+        public EventData GetEventInfo(uint EventID)
         {
-            object remoteValue = DoRemote(regionName);
+            object remoteValue = DoRemote(EventID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<Classified>)remoteValue;
+                return (EventData)remoteValue;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EID"] = EventID;
