@@ -214,7 +214,7 @@ namespace OpenSim.Services.AssetService
         {
             object remoteValue = DoRemote(id, data);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UUID)remoteValue;
+                return remoteValue == null ? UUID.Zero : (UUID)remoteValue;
 
             UUID newID;
             m_database.UpdateContent(id, data, out newID);

@@ -938,7 +938,7 @@ namespace Aurora.Modules.WorldMap
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != UUID.Zero)
                     m_scene.RegionInfo.RegionSettings.TerrainMapImageID = 
                         m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata);
-                else
+                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
                 {
                     AssetBase Terrainasset = new AssetBase(
                         UUID.Random(),
@@ -959,7 +959,7 @@ namespace Aurora.Modules.WorldMap
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID != UUID.Zero)
                     m_scene.RegionInfo.RegionSettings.TerrainImageID = 
                         m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata);
-                else 
+                if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
                 {
                     AssetBase Mapasset = new AssetBase(
                         UUID.Random(),
