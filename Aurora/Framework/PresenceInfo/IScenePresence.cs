@@ -56,6 +56,11 @@ namespace Aurora.Framework
         bool IsChildAgent { get; set; }
 
         /// <summary>
+        /// Gets the region handle of the region the root agent is in
+        /// </summary>
+        ulong RootAgentHandle { get; set; }
+
+        /// <summary>
         /// Where this client is looking
         /// </summary>
         Vector3 Lookat { get; }

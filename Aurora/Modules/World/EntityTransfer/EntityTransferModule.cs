@@ -1027,6 +1027,8 @@ namespace Aurora.Modules.EntityTransfer
             reason = String.Empty;
             UDPPort = GetUDPPort (scene);
 
+            CacheUserInfo(scene, agent.OtherInformation);
+
             // Don't disable this log message - it's too helpful
             MainConsole.Instance.TraceFormat (
                 "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
@@ -1082,6 +1084,16 @@ namespace Aurora.Modules.EntityTransfer
             responseMap["Success"] = true;
             reason = OSDParser.SerializeJsonString (responseMap);
             return true;
+        }
+
+        private void CacheUserInfo(IScene scene, OSDMap map)
+        {
+            CachedUserInfo cache = new CachedUserInfo();
+            cache.FromOSD((OSDMap)map["CachedUserInfo"]);
+            IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            if (conn != null)
+                conn.CacheAgent(cache.AgentInfo);
+            scene.UserAccountService.CacheAccount(cache.UserAccount);
         }
 
         private readonly Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();

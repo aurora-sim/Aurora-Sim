@@ -25,11 +25,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
+    public class CachedUserInfo : IDataTransferable
+    {
+        public IAgentInfo AgentInfo;
+        public UserAccount UserAccount;
+
+        public override void FromOSD(OSDMap map)
+        {
+            AgentInfo = new IAgentInfo();
+            AgentInfo.FromOSD((OSDMap)(map["AgentInfo"]));
+            UserAccount = new UserAccount();
+            UserAccount.FromOSD((OSDMap)(map["UserAccount"]));
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["AgentInfo"] = AgentInfo.ToOSD();
+            map["UserAccount"] = UserAccount.ToOSD();
+            return map;
+        }
+    }
+
     public interface ISimulationService
     {
         #region Local Initalization

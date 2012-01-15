@@ -339,5 +339,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 }
             }
         }
+
+        public void CacheAccount(UserAccount account)
+        {
+        }
     }
 }

@@ -46,7 +46,7 @@ namespace OpenSim.Services.UserAccountService
         protected IUserAccountData m_Database;
         protected IGridService m_GridService;
         protected IInventoryService m_InventoryService;
-        protected UserAccountCache m_cache = new UserAccountCache();
+        protected GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
 
         #endregion
 
@@ -162,8 +162,15 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
-            m_cache.Cache(d[0].PrincipalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
+        }
+
+        public void CacheAccount(UserAccount account)
+        {
+            if ((account != null) && (account.UserLevel <= -1))
+                return;
+            m_cache.Cache(account.PrincipalID, account);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -207,7 +214,7 @@ namespace OpenSim.Services.UserAccountService
                 return null;
             }
 
-            m_cache.Cache(d[0].PrincipalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
         }
 
@@ -255,7 +262,7 @@ namespace OpenSim.Services.UserAccountService
                 return null;
             }
 
-            m_cache.Cache(principalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
         }
 
@@ -326,7 +333,7 @@ namespace OpenSim.Services.UserAccountService
 
                     MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
-                    m_cache.Cache(account.PrincipalID, account);
+                    CacheAccount(account);
                 }
                 else
                 {

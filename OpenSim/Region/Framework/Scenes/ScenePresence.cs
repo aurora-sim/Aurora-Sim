@@ -596,6 +596,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public ulong RootAgentHandle { get; set; }
+
         private UUID m_parentID;
 
         public UUID ParentID
@@ -782,6 +784,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
 
             IsChildAgent = false;
+            RootAgentHandle = Scene.RegionInfo.RegionHandle;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion (Scene.RegionInfo, AbsolutePosition, look);
@@ -813,8 +816,6 @@ namespace OpenSim.Region.Framework.Scenes
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
             // elsewhere anyway
             // Animator.SendAnimPack();
-
-            IsChildAgent = false;
 
             SendScriptEventToAllAttachments(Changed.TELEPORT);
 
@@ -851,7 +852,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It doesn't get called for a teleport.  Reason being, an agent that
         /// teleports out may not end up anywhere near this region
         /// </summary>
-        public virtual void MakeChildAgent (GridRegion destindation)
+        public virtual void MakeChildAgent(GridRegion destination)
         {
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -866,11 +867,12 @@ namespace OpenSim.Region.Framework.Scenes
                  Name, UUID, m_scene.RegionInfo.RegionName);
 
             IsChildAgent = true;
+            RootAgentHandle = destination.RegionHandle;
             RemoveFromPhysicalScene ();
             m_sceneViewer.Reset ();
 
             SendScriptEventToAllAttachments(Changed.TELEPORT);
-            m_scene.EventManager.TriggerOnMakeChildAgent(this, destindation);
+            m_scene.EventManager.TriggerOnMakeChildAgent(this, destination);
 
             Reset();
         }

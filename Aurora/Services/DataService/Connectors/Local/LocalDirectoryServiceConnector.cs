@@ -68,6 +68,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name

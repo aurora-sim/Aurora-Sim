@@ -941,8 +941,7 @@ namespace Aurora.Modules.Inventory
                 return;
             }
 
-            TaskInventoryItem item = part.Inventory.GetInventoryItem(itemId);
-            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
             {
                 // If the item to be moved is no copy, we need to be able to
                 // edit the prim.
@@ -977,7 +976,6 @@ namespace Aurora.Modules.Inventory
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
             if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
             {
-
                 if (agentItem == null)
                     return null;
 

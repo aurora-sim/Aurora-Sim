@@ -127,6 +127,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     MainConsole.Instance.Error("[LocalAssetDatabase] UpdateContent(" + id + ") - Errored, " + e);
                 }
+                newID = id;
             }
             else
             {

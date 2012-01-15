@@ -1311,6 +1311,9 @@ namespace Aurora.Modules.Groups
 
         private void EventManager_OnClientLogin(IClientAPI client)
         {
+            if (client.Scene.GetScenePresence(client.AgentId).IsChildAgent)
+                return;
+
             List<GroupInviteInfo> inviteInfo = m_groupData.GetGroupInvites(client.AgentId);
 
             if (inviteInfo.Count != 0)

@@ -37,6 +37,7 @@ namespace Aurora.Services.DataService
     public class LocalAgentConnector : ConnectorBase, IAgentConnector
     {
         private IGenericData GD;
+        private GenericAccountCache<IAgentInfo> m_cache = new GenericAccountCache<IAgentInfo>();
 
         #region IAgentConnector Members
 
@@ -73,11 +74,19 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
+            IAgentInfo agent = new IAgentInfo();
+            if (m_cache.Get(agentID, out agent))
+                return agent;
+            else
+                agent = new IAgentInfo();
+
             object remoteValue = DoRemoteForUser(agentID, agentID);
             if (remoteValue != null || m_doRemoteOnly)
+            {
+                m_cache.Cache(agentID, (IAgentInfo)remoteValue);
                 return (IAgentInfo)remoteValue;
+            }
 
-            IAgentInfo agent = new IAgentInfo();
             List<string> query = null;
             try
             {
@@ -95,6 +104,7 @@ namespace Aurora.Services.DataService
 
             if (query == null || query.Count == 0)
             {
+                m_cache.Cache(agentID, null);
                 return null; //Couldn't find it, return null then.
             }
 
@@ -102,6 +112,7 @@ namespace Aurora.Services.DataService
 
             agent.FromOSD(agentInfo);
             agent.PrincipalID = agentID;
+            m_cache.Cache(agentID, agent);
             return agent;
         }
 
@@ -113,6 +124,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
+            CacheAgent(agent);
             object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
             if (remoteValue != null || m_doRemoteOnly)
                 return;
@@ -126,6 +138,11 @@ namespace Aurora.Services.DataService
             List<string> KeyRow = new List<string> {"ID", "`Key`"};
 
             GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+        }
+
+        public void CacheAgent(IAgentInfo agent)
+        {
+            m_cache.Cache(agent.PrincipalID, agent);
         }
 
         /// <summary>

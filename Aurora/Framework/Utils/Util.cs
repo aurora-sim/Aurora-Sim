@@ -1683,6 +1683,8 @@ namespace Aurora.Framework
                 }
                 return array;
             }
+            if (t.BaseType == typeof(Enum))
+                return OSD.FromString(o.ToString());
             return null;
         }
 
@@ -1703,8 +1705,13 @@ namespace Aurora.Framework
         {
             if (o.Type == OSDType.UUID || PossibleArrayType == typeof(UUID))
                 return o.AsUUID();
-            if (PossibleArrayType == typeof(string) || PossibleArrayType == typeof(OSDString))
+            if (PossibleArrayType == typeof(string) || PossibleArrayType == typeof(OSDString) || PossibleArrayType.BaseType == typeof(Enum))
+            {
+                if (PossibleArrayType.BaseType == typeof(Enum))
+                    return Enum.Parse(PossibleArrayType, o.AsString());
+
                 return o.AsString();
+            }
             if (o.Type == OSDType.Integer || PossibleArrayType == typeof(int))
                 return o.AsInteger();
             if (o.Type == OSDType.Binary || PossibleArrayType == typeof(byte[]))

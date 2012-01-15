@@ -27,31 +27,34 @@
 
 using System.Collections.Generic;
 using OpenMetaverse;
-using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.Connectors
+namespace Aurora.Framework
 {
-    public class UserAccountCache
+    public interface BaseCacheAccount
+    {
+        UUID PrincipalID { get; set; }
+        string Name { get; set; }
+    }
+
+    public class GenericAccountCache<T> where T : BaseCacheAccount
     {
         private const double CACHE_EXPIRATION_SECONDS = 6*60*1000;
                              // 6 hour cache on useraccounts, since they should not change
 
         private const bool m_allowNullCaching = true;
         private readonly ExpiringCache<string, UUID> m_NameCache;
-        private readonly ExpiringCache<UUID, UserAccount> m_UUIDCache;
+        private readonly ExpiringCache<UUID, T> m_UUIDCache;
         private readonly Dictionary<UUID, int> m_nullCacheTimes = new Dictionary<UUID, int>();
 
-        public UserAccountCache()
+        public GenericAccountCache()
         {
-            m_UUIDCache = new ExpiringCache<UUID, UserAccount>();
+            m_UUIDCache = new ExpiringCache<UUID, T>();
             m_NameCache = new ExpiringCache<string, UUID>();
         }
 
-        public void Cache(UUID userID, UserAccount account)
+        public void Cache(UUID userID, T account)
         {
             if (!m_allowNullCaching && account == null)
-                return;
-            if ((account != null) && (account.UserLevel <= -1))
                 return;
             if (account == null)
             {
@@ -66,13 +69,13 @@ namespace OpenSim.Services.Connectors
                 m_nullCacheTimes.Remove(userID);
             // Cache even null accounts
             m_UUIDCache.AddOrUpdate(userID, account, CACHE_EXPIRATION_SECONDS);
-            if (account != null)
+            if (account != null && !string.IsNullOrEmpty(account.Name))
                 m_NameCache.AddOrUpdate(account.Name, account.PrincipalID, CACHE_EXPIRATION_SECONDS);
 
             //MainConsole.Instance.DebugFormat("[USER CACHE]: cached user {0}", userID);
         }
 
-        public bool Get(UUID userID, out UserAccount account)
+        public bool Get(UUID userID, out T account)
         {
             if (m_UUIDCache.TryGetValue(userID, out account))
                 return true;
@@ -80,9 +83,9 @@ namespace OpenSim.Services.Connectors
             return false;
         }
 
-        public bool Get(string name, out UserAccount account)
+        public bool Get(string name, out T account)
         {
-            account = null;
+            account = default(T);
 
             UUID uuid = UUID.Zero;
             if (m_NameCache.TryGetValue(name, out uuid))

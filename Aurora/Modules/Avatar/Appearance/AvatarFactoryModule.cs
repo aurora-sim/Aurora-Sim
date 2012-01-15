@@ -362,7 +362,7 @@ textures 1
         /// <param name = "wearables"></param>
         private void CacheWearableData(IScenePresence sp, Primitive.TextureEntry textureEntry, WearableCache[] wearables)
         {
-            if (textureEntry == null || wearables.Length == 0)
+            /*if (textureEntry == null || wearables.Length == 0)
                 return;
 
             AvatarWearable cachedWearable = new AvatarWearable {MaxItems = 0};
@@ -381,7 +381,7 @@ textures 1
                 cachedWearable.Add(item.CacheID, textureEntry.FaceTextures[item.TextureIndex].TextureID);
             }
 #endif
-            m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);
+            m_scene.AvatarService.CacheWearableData(sp.UUID, cachedWearable);*/
         }
 
         /// <summary>

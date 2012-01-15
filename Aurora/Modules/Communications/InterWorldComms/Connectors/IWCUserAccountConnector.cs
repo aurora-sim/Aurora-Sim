@@ -136,6 +136,11 @@ namespace Aurora.Modules
             m_localService.CreateUser(userID, name, md5password, email);
         }
 
+        public void CacheAccount(UserAccount account)
+        {
+            m_localService.CacheAccount(account);
+        }
+
         #endregion
 
         private IEnumerable<UserAccount> FixRemoteAccounts (List<UserAccount> list)

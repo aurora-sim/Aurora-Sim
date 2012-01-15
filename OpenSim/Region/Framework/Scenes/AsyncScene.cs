@@ -714,6 +714,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //Create the scenepresence
                         IScenePresence sp = CreateAndAddChildScenePresence(client);
                         sp.IsChildAgent = aCircuit.child;
+                        sp.RootAgentHandle = aCircuit.roothandle;
                         sp.DrawDistance = aCircuit.DrawDistance;
 
                         //Trigger events

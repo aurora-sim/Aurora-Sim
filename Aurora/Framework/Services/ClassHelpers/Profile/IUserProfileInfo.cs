@@ -48,7 +48,7 @@ namespace Aurora.Framework
         PastPrelude = 10
     }
 
-    public class IAgentInfo : IDataTransferable
+    public class IAgentInfo : IDataTransferable, BaseCacheAccount
     {
         /// <summary>
         ///   Did this user accept the TOS?
@@ -89,7 +89,12 @@ namespace Aurora.Framework
         /// <summary>
         ///   The ID value for this user
         /// </summary>
-        public UUID PrincipalID = UUID.Zero;
+        public UUID PrincipalID { get; set; }
+
+        /// <summary>
+        /// Unused, only exists for caching purposes
+        /// </summary>
+        public string Name { get; set; }
 
         public override Dictionary<string, object> ToKVP()
         {

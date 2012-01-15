@@ -34,13 +34,13 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class UserAccount : IDataTransferable
+    public class UserAccount : IDataTransferable, BaseCacheAccount
     {
         public int Created;
         public string Email;
-        public string Name;
+        public string Name { get; set;}
         public OSDMap GenericData = new OSDMap();
-        public UUID PrincipalID;
+        public UUID PrincipalID { get; set; }
         public UUID ScopeID;
         public Dictionary<string, object> ServiceURLs;
         public int UserFlags;
@@ -126,7 +126,11 @@ namespace OpenSim.Services.Interfaces
             if (kvp.ContainsKey("Email"))
                 Email = kvp["Email"].ToString();
             if (kvp.ContainsKey("PrincipalID"))
-                UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
+            {
+                UUID id;
+                if (UUID.TryParse(kvp["PrincipalID"].ToString(), out id))
+                    PrincipalID = id;
+            }
             if (kvp.ContainsKey("ScopeID"))
                 UUID.TryParse(kvp["ScopeID"].ToString(), out ScopeID);
             if (kvp.ContainsKey("UserLevel"))
@@ -280,6 +284,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "data"></param>
         /// <returns></returns>
         bool StoreUserAccount(UserAccount data);
+
+        /// <summary>
+        /// Cache the given userAccount so that it doesn't have to be queried later
+        /// </summary>
+        /// <param name="account"></param>
+        void CacheAccount(UserAccount account);
 
         /// <summary>
         ///   Create the user with the given info
