@@ -130,7 +130,13 @@ namespace OpenSim.Services.UserAccountService
 
             object remoteValue = DoRemote(scopeID, firstName, lastName);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UserAccount)remoteValue;
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(acc.PrincipalID, acc);
+
+                return acc;
+            }
 
             UserAccount[] d;
 
@@ -169,7 +175,13 @@ namespace OpenSim.Services.UserAccountService
 
             object remoteValue = DoRemote(scopeID, name);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UserAccount)remoteValue;
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(acc.PrincipalID, acc);
+
+                return acc;
+            }
 
             UserAccount[] d;
 
@@ -208,7 +220,13 @@ namespace OpenSim.Services.UserAccountService
 
             object remoteValue = DoRemote(scopeID, principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UserAccount)remoteValue;
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(principalID, acc);
+
+                return acc;
+            }
 
             UserAccount[] d;
 

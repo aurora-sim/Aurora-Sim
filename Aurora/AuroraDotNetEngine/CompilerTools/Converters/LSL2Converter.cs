@@ -130,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (string function in m_scriptApis.Keys)
                 m_functionRegex += function + "|";
             m_functionRegex = m_functionRegex.Remove(m_functionRegex.Length - 1);
-            bool success = RunTest1();
+            //bool success = RunTest1();
         }
 
         #region Tests 
