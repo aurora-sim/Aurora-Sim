@@ -58,7 +58,6 @@ namespace Aurora.Framework
 
         public AvatarAppearance(UUID owner)
         {
-            MainConsole.Instance.Info("[AvatarAppearence] Initilizing-" + owner);
             // MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE]: create empty appearance for {0}",owner);
 
             m_serial = 1;
