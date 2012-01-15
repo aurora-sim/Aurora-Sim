@@ -9,5 +9,6 @@ namespace Aurora.Framework
     public class CanBeReflected : Attribute
     {
         public ThreatLevel ThreatLevel;
+        public string RenamedMethod = "";
     }
 }

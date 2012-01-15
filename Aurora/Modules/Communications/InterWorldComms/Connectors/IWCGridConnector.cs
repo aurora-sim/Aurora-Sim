@@ -39,11 +39,9 @@ using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules
 {
-    public class IWCGridConnector : IGridService, IService
+    public class IWCGridConnector : ConnectorBase, IGridService, IService
     {
         protected IGridService m_localService;
-        protected IRegistryCore m_registry;
-        protected GridServicesConnector m_remoteService;
 
         public string Name
         {
@@ -91,15 +89,14 @@ namespace Aurora.Modules
             get { return m_localService.RegionViewSize; }
         }
 
-        public string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID,
-                                     out List<GridRegion> neighbors)
+        public RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
         {
-            return m_localService.RegisterRegion(regionInfos, oldSessionID, out SessionID, out neighbors);
+            return m_localService.RegisterRegion(regionInfos, oldSessionID);
         }
 
-        public bool DeregisterRegion(ulong regionHandle, UUID regionID, UUID SessionID)
+        public bool DeregisterRegion(GridRegion region)
         {
-            return m_localService.DeregisterRegion(regionHandle, regionID, SessionID);
+            return m_localService.DeregisterRegion(region);
         }
 
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
@@ -107,9 +104,10 @@ namespace Aurora.Modules
             GridRegion r = m_localService.GetRegionByUUID(scopeID, regionID);
             if (r == null)
             {
-                r = m_remoteService.GetRegionByUUID(scopeID, regionID);
+                r = (GridRegion)DoRemoteForced(scopeID, regionID);
                 UpdateGridRegionForIWC(ref r);
             }
+
             return r;
         }
 
@@ -118,7 +116,7 @@ namespace Aurora.Modules
             GridRegion r = m_localService.GetRegionByPosition(scopeID, x, y);
             if (r == null)
             {
-                r = m_remoteService.GetRegionByPosition(scopeID, x, y);
+                r = (GridRegion)DoRemoteForced(scopeID, x, y);
                 UpdateGridRegionForIWC(ref r);
             }
             return r;
@@ -129,7 +127,7 @@ namespace Aurora.Modules
             GridRegion r = m_localService.GetRegionByName(scopeID, regionName);
             if (r == null)
             {
-                r = m_remoteService.GetRegionByName(scopeID, regionName);
+                r = (GridRegion)DoRemoteForced(scopeID, regionName);
                 UpdateGridRegionForIWC(ref r);
             }
             return r;
@@ -138,9 +136,12 @@ namespace Aurora.Modules
         public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
             List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
-            List<GridRegion> remoteRegions = m_remoteService.GetRegionsByName(scopeID, name, maxNumber);
-            UpdateGridRegionsForIWC(ref remoteRegions);
-            r.AddRange(remoteRegions);
+            List<GridRegion> remoteRegions = (List<GridRegion>)DoRemoteForced(scopeID, name, maxNumber);
+            if (remoteRegions != null)
+            {
+                UpdateGridRegionsForIWC(ref remoteRegions);
+                r.AddRange(remoteRegions);
+            }
             //Sort to find the region with the exact name that was given
             r.Sort(new GridService.RegionDataComparison(name));
             //Results are backwards... so it needs reversed
@@ -151,9 +152,12 @@ namespace Aurora.Modules
         public List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
             List<GridRegion> r = m_localService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
-            List<GridRegion> remoteRegions = m_remoteService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
-            UpdateGridRegionsForIWC(ref remoteRegions);
-            r.AddRange(remoteRegions);
+            List<GridRegion> remoteRegions = (List<GridRegion>)DoRemoteForced(scopeID, xmin, xmax, ymin, ymax);
+            if (remoteRegions != null)
+            {
+                UpdateGridRegionsForIWC(ref remoteRegions);
+                r.AddRange(remoteRegions);
+            }
             return r;
         }
 
@@ -176,9 +180,8 @@ namespace Aurora.Modules
         {
             int flags = m_localService.GetRegionFlags(scopeID, regionID);
             if (flags == -1)
-            {
-                flags = m_remoteService.GetRegionFlags(scopeID, regionID);
-            }
+                flags = (int)DoRemoteForced(scopeID, regionID);
+
             return flags;
         }
 
@@ -191,9 +194,8 @@ namespace Aurora.Modules
         {
             multipleMapItemReply reply = m_localService.GetMapItems(regionHandle, gridItemType);
             if (reply.items.Count == 0)
-            {
-                reply = m_remoteService.GetMapItems(regionHandle, gridItemType);
-            }
+                reply = (multipleMapItemReply)DoRemoteForced(regionHandle, gridItemType);
+
             return reply;
         }
 
@@ -215,7 +217,7 @@ namespace Aurora.Modules
         public List<GridRegion> GetNeighbors(GridRegion r)
         {
             List<GridRegion> neighbors = m_localService.GetNeighbors(r);
-            List<GridRegion> remoteNeighbors = m_remoteService.GetNeighbors(r);
+            List<GridRegion> remoteNeighbors = (List<GridRegion>)DoRemoteForced(r);
             UpdateGridRegionsForIWC(ref remoteNeighbors);
             neighbors.AddRange(remoteNeighbors);
             return neighbors;
@@ -247,9 +249,8 @@ namespace Aurora.Modules
             if (m_localService == null)
                 m_localService = new GridService();
             m_localService.Configure(config, registry);
-            m_remoteService = new GridServicesConnector();
-            m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IGridService>(this);
+            Init(registry, Name);
         }
 
         #endregion

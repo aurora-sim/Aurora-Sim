@@ -167,6 +167,7 @@ namespace OpenSim.Services
                         "{0} is not a valid logging level.  Valid logging levels are " + forms,
                         rawLevel));
             }
+
             MainConsole.Instance.MaxLogLevel = m_consoleAppender.Threshold;
             MainConsole.Instance.Fatal(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
         }

@@ -73,7 +73,7 @@ namespace Aurora.Services.DataService
         public EstateSettings GetEstateSettings(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (EstateSettings)remoteValue;
 
 
@@ -103,7 +103,7 @@ namespace Aurora.Services.DataService
         public int CreateNewEstate(EstateSettings es, UUID RegionID)
         {
             object remoteValue = DoRemote(es.ToOSD(), RegionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (int)remoteValue;
 
 
@@ -124,7 +124,7 @@ namespace Aurora.Services.DataService
         public void SaveEstateSettings(EstateSettings es)
         {
             object remoteValue = DoRemote(es.ToOSD());
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             SaveEstateSettings(es, false);
@@ -134,7 +134,7 @@ namespace Aurora.Services.DataService
         public bool LinkRegion(UUID regionID, int estateID)
         {
             object remoteValue = DoRemote(regionID, estateID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             GD.Replace("estateregions", new[] { "RegionID", "EstateID" },
@@ -151,7 +151,7 @@ namespace Aurora.Services.DataService
         public bool DelinkRegion(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
             GD.Delete("estateregions", new[] {"RegionID"},
@@ -167,7 +167,7 @@ namespace Aurora.Services.DataService
         public bool DeleteEstate(int estateID)
         {
             object remoteValue = DoRemote(estateID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (bool)remoteValue;
 
 
@@ -181,7 +181,7 @@ namespace Aurora.Services.DataService
         public int GetEstate(UUID ownerID, string name)
         {
             object remoteValue = DoRemote(ownerID, name);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
             {
                 return (int)remoteValue;
             }
@@ -204,7 +204,7 @@ namespace Aurora.Services.DataService
         public List<UUID> GetRegions(int estateID)
         {
             object remoteValue = DoRemote(estateID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
             {
                 return (List<UUID>)remoteValue;
             }
@@ -224,7 +224,7 @@ namespace Aurora.Services.DataService
         public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(OwnerID, boolFields);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
             {
                 return (List<EstateSettings>)remoteValue;
             }

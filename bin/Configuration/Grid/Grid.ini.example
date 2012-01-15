@@ -15,16 +15,16 @@
     RegionInfoConnector = LocalConnector
     ParcelConnector = LocalConnector
     WebStatsDataConnector = LocalConnector
-    AssetConnector = RemoteConnector
-    GroupsConnector = RemoteConnector
-    AgentConnector = RemoteConnector
-    RegionConnector = RemoteConnector
-    ProfileConnector = RemoteConnector
+    AssetConnector = LocalConnector
+    GroupsConnector = LocalConnector
+    AgentConnector = LocalConnector
+    RegionConnector = LocalConnector
+    ProfileConnector = LocalConnector
     EstateConnector = LocalConnector
-    OfflineMessagesConnector = RemoteConnector
-    DirectoryServiceConnector = RemoteConnector
-    MuteListConnector = RemoteConnector
-    EmailConnector = RemoteConnector
+    OfflineMessagesConnector = LocalConnector
+    DirectoryServiceConnector = LocalConnector
+    MuteListConnector = LocalConnector
+    EmailConnector = LocalConnector
 
     DoRemoteCalls = True
     AllowRemoteCalls = False
@@ -33,22 +33,22 @@
 
 [Handlers]
 
-    AbuseReportHandler = AbuseReportsConnector
-    AgentInfoHandler = AgentInfoConnector
-    AssetHandler = AssetServicesConnector
+    AbuseReportHandler = AbuseReportsService
+    AgentInfoHandler = AgentInfoService
+    AssetHandler = AssetService
     AsyncMessageRequesterServiceHandler = AsyncMessageRequesterService
     AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
-    AvatarHandler = AvatarServicesConnector
+    AvatarHandler = AvatarService
     ConfigurationHandler = ConfigurationService
     EventQueueHandler = EventQueueServicesConnector
     FreeSwitchHandler = RemoteFreeswitchConnector
-    FriendsHandler = FriendsServicesConnector
-    GridHandler = GridServicesConnector
-    InventoryHandler = XInventoryServicesConnector
+    FriendsHandler = FriendsService
+    GridHandler = GridService
+    InventoryHandler = InventoryService
     MessagingServiceInHandler = MessagingServiceInHandler
     SyncMessagePosterServiceHandler = RemoteSyncMessagePosterService
-    UserAccountHandler = UserAccountServicesConnector
+    UserAccountHandler = UserAccountService
 
     SimulationHandler = SimulationServiceConnector
     SimulationInHandler = SimulationServiceInConnector

@@ -28,8 +28,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
@@ -54,6 +57,11 @@ namespace OpenSim.Services
         public string UrlName
         {
             get { return "ServerURI"; }
+        }
+
+        public bool DoMultiplePorts
+        {
+            get { return true; }
         }
 
         public void AddExistingUrlForClient(string SessionID, string url, uint port)
@@ -100,7 +108,25 @@ namespace OpenSim.Services
 
         public void FinishedStartup()
         {
+            if (m_registry != null)
+            {
+                AddExistingUrlForClient("", "/", 8003);
+                //AddUDPConector(8008);
+            }
         }
+
+        /*private void AddUDPConector(int port)
+        {
+            Thread thread = new Thread(delegate()
+                {
+                    UdpClient server = new UdpClient("127.0.0.1", port);
+                    IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+                    byte[] data = server.Receive(ref sender);
+                    OSDMap map = (OSDMap)OSDParser.DeserializeJson(new MemoryStream(data));
+                    ServerHandler handler = new ServerHandler("", "", m_registry);
+                    byte[] Data = handler.HandleMap(map);
+                });
+        }*/
 
         #endregion
     }
@@ -108,37 +134,43 @@ namespace OpenSim.Services
     public class MethodImplementation
     {
         public MethodInfo Method;
-        public IAuroraDataPlugin Reference;
+        public ConnectorBase Reference;
+        public CanBeReflected Attribute;
     }
 
-    public unsafe class ServerHandler : BaseStreamHandler
+    public class ServerHandler : BaseStreamHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
-        protected static Dictionary<string, List<MethodImplementation>> m_methods = new Dictionary<string, List<MethodImplementation>>();
+        protected static Dictionary<string, List<MethodImplementation>> m_methods = null;
 
         public ServerHandler(string url, string SessionID, IRegistryCore registry) :
             base("POST", url)
         {
             m_SessionID = SessionID;
             m_registry = registry;
-            m_methods = new Dictionary<string, List<MethodImplementation>>();
-            List<string> alreadyRunPlugins = new List<string>();
-            foreach(IAuroraDataPlugin plugin in Aurora.DataManager.DataManager.GetPlugins())
+            if (m_methods == null)
             {
-                if (alreadyRunPlugins.Contains(plugin.Name))
-                    continue;
-                alreadyRunPlugins.Add(plugin.Name);
-                foreach (MethodInfo method in plugin.GetType().GetMethods())
+                m_methods = new Dictionary<string, List<MethodImplementation>>();
+                List<string> alreadyRunPlugins = new List<string>();
+                foreach (ConnectorBase plugin in ConnectorRegistry.Connectors)
                 {
-                    if (Attribute.GetCustomAttribute(method, typeof(CanBeReflected)) != null)
+                    if (alreadyRunPlugins.Contains(plugin.PluginName))
+                        continue;
+                    alreadyRunPlugins.Add(plugin.PluginName);
+                    foreach (MethodInfo method in plugin.GetType().GetMethods())
                     {
-                        List<MethodImplementation> methods = new List<MethodImplementation>();
-                        MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin };
-                        if (!m_methods.TryGetValue(method.Name, out methods))
-                            m_methods.Add(method.Name, (methods = new List<MethodImplementation>()));
+                        CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+                        if (reflection != null)
+                        {
+                            string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
+                            List<MethodImplementation> methods = new List<MethodImplementation>();
+                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin, Attribute = reflection };
+                            if (!m_methods.TryGetValue(methodName, out methods))
+                                m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
 
-                        methods.Add(imp);
+                            methods.Add(imp);
+                        }
                     }
                 }
             }
@@ -153,6 +185,11 @@ namespace OpenSim.Services
             body = body.Trim();
 
             OSDMap args = WebUtils.GetOSDMap(body);
+            return HandleMap(args);
+        }
+
+        public byte[] HandleMap(OSDMap args)
+        {
             if (args.ContainsKey("Method"))
             {
                 IGridRegistrationService urlModule =
@@ -162,7 +199,12 @@ namespace OpenSim.Services
                 MethodImplementation methodInfo;
                 if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                 {
-                    if (!urlModule.CheckThreatLevel(m_SessionID, method, ((CanBeReflected)Attribute.GetCustomAttribute(methodInfo.Method, typeof(CanBeReflected))).ThreatLevel))
+                    if (m_SessionID == "")
+                    {
+                        if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
+                            return new byte[0];
+                    }
+                    else if (!urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
                         return new byte[0];
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
@@ -170,15 +212,15 @@ namespace OpenSim.Services
                     int paramNum = 0;
                     foreach (ParameterInfo param in paramInfo)
                         parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
-                    
-                    object o = methodInfo.Method.Invoke(methodInfo.Reference, parameters);
+
+                    object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
                     OSDMap response = new OSDMap();
                     if (o == null)//void method
-                        response["Value"] = true;
+                        response["Value"] = "null";
                     else
                         response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
                     response["Success"] = true;
-                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response));
+                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
                 }
             }
 
@@ -204,6 +246,7 @@ namespace OpenSim.Services
                     }
                 }
             }
+            MainConsole.Instance.Warn("COULD NOT FIND METHOD: " + method);
             methodInfo = null;
             return false;
         }

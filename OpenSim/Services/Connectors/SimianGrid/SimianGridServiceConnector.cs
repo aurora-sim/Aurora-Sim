@@ -92,9 +92,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public string UpdateMap(GridRegion region, UUID sessionID)
         {
-            UUID SessionID;
-            List<GridRegion> neighbors;
-            return RegisterRegion(region, UUID.Zero, out SessionID, out neighbors);
+            return RegisterRegion(region, UUID.Zero).Error;
         }
 
         public List<GridRegion> GetNeighbors(GridRegion r)
@@ -324,11 +322,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IGridService
 
-        public string RegisterRegion(GridRegion regionInfo, UUID oldSessionID, out UUID SessionID,
-                                     out List<GridRegion> neighbors)
+        public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID)
         {
-            neighbors = new List<GridRegion>();
-            SessionID = UUID.Zero;
             // Generate and upload our map tile in PNG format to the SimianGrid AddMapTile service
             IScene scene;
             if (m_scenes.TryGetValue(regionInfo.RegionID, out scene))
@@ -375,17 +370,17 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
             OSDMap response = WebUtils.PostToService(m_serverUrl, requestArgs);
             if (response["Success"].AsBoolean())
-                return String.Empty;
+                return new RegisterRegion() { Neighbors = GetNeighbors(regionInfo) };
             else
-                return "Region registration for " + regionInfo.RegionName + " failed: " + response["Message"].AsString();
+                return new RegisterRegion() { Error = "Region registration for " + regionInfo.RegionName + " failed: " + response["Message"].AsString() };
         }
 
-        public bool DeregisterRegion(ulong regionhandle, UUID regionID, UUID SessionID)
+        public bool DeregisterRegion(GridRegion region)
         {
             NameValueCollection requestArgs = new NameValueCollection
                                                   {
                                                       {"RequestMethod", "AddScene"},
-                                                      {"SceneID", regionID.ToString()},
+                                                      {"SceneID", region.RegionID.ToString()},
                                                       {"Enabled", "0"}
                                                   };
 
@@ -393,7 +388,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
             bool success = response["Success"].AsBoolean();
 
             if (!success)
-                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Region deregistration for " + regionID + " failed: " +
+                MainConsole.Instance.Warn("[SIMIAN GRID CONNECTOR]: Region deregistration for " + region.RegionID + " failed: " +
                            response["Message"].AsString());
 
             return success;

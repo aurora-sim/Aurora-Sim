@@ -33,12 +33,9 @@ using OpenMetaverse;
 
 namespace Aurora.Modules
 {
-    public class IWCProfileConnector : IProfileConnector
+    public class IWCProfileConnector : ConnectorBase, IProfileConnector
     {
         protected LocalProfileConnector m_localService;
-
-        private IRegistryCore m_registry;
-        protected RemoteProfileConnector m_remoteService;
 
         #region IProfileConnector Members
 
@@ -49,10 +46,9 @@ namespace Aurora.Modules
             {
                 m_localService = new LocalProfileConnector();
                 m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
-                m_remoteService = new RemoteProfileConnector();
-                m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(this);
+                Init(simBase, Name);
             }
         }
 
@@ -65,7 +61,7 @@ namespace Aurora.Modules
         {
             IUserProfileInfo profile = m_localService.GetUserProfile(agentID);
             if (profile == null)
-                profile = m_remoteService.GetUserProfile(agentID);
+                profile = (IUserProfileInfo)DoRemoteForced(agentID);
             return profile;
         }
 
@@ -73,7 +69,7 @@ namespace Aurora.Modules
         {
             bool success = m_localService.UpdateUserProfile(Profile);
             if (!success)
-                success = m_remoteService.UpdateUserProfile(Profile);
+                success = (bool)DoRemoteForced(Profile);
             return success;
         }
 
@@ -86,7 +82,7 @@ namespace Aurora.Modules
         {
             bool success = m_localService.AddClassified(classified);
             if (!success)
-                success = m_remoteService.AddClassified(classified);
+                success = (bool)DoRemoteForced(classified);
             return success;
         }
 
@@ -94,7 +90,7 @@ namespace Aurora.Modules
         {
             Classified Classified = m_localService.GetClassified(queryClassifiedID);
             if (Classified == null)
-                Classified = m_remoteService.GetClassified(queryClassifiedID);
+                Classified = (Classified)DoRemoteForced(queryClassifiedID);
             return Classified;
         }
 
@@ -102,21 +98,21 @@ namespace Aurora.Modules
         {
             List<Classified> Classifieds = m_localService.GetClassifieds(ownerID);
             if (Classifieds == null)
-                Classifieds = m_remoteService.GetClassifieds(ownerID);
+                Classifieds = (List<Classified>)DoRemoteForced(ownerID);
             return Classifieds;
         }
 
         public void RemoveClassified(UUID queryClassifiedID)
         {
             m_localService.RemoveClassified(queryClassifiedID);
-            m_remoteService.RemoveClassified(queryClassifiedID);
+            DoRemoteForced(queryClassifiedID);
         }
 
         public bool AddPick(ProfilePickInfo pick)
         {
             bool success = m_localService.AddPick(pick);
             if (!success)
-                success = m_remoteService.AddPick(pick);
+                success = (bool)DoRemoteForced(pick);
             return success;
         }
 
@@ -124,7 +120,7 @@ namespace Aurora.Modules
         {
             ProfilePickInfo pick = m_localService.GetPick(queryPickID);
             if (pick == null)
-                pick = m_remoteService.GetPick(queryPickID);
+                pick = (ProfilePickInfo)DoRemoteForced(queryPickID);
             return pick;
         }
 
@@ -132,14 +128,14 @@ namespace Aurora.Modules
         {
             List<ProfilePickInfo> picks = m_localService.GetPicks(ownerID);
             if (picks == null)
-                picks = m_remoteService.GetPicks(ownerID);
+                picks = (List<ProfilePickInfo>)DoRemoteForced(ownerID);
             return picks;
         }
 
         public void RemovePick(UUID queryPickID)
         {
             m_localService.RemovePick(queryPickID);
-            m_remoteService.RemovePick(queryPickID);
+            DoRemoteForced(queryPickID);
         }
 
         #endregion

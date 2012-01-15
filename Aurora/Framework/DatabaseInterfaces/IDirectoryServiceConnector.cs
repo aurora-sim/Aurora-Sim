@@ -78,7 +78,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "OwnerID"></param>
         /// <returns></returns>
-        LandData[] GetParcelByOwner(UUID OwnerID);
+        List<LandData> GetParcelByOwner(UUID OwnerID);
 
         /// <summary>
         /// Gets all parcels in a region, optionally filtering by owner, parcel flags and category.
@@ -133,7 +133,7 @@ namespace Aurora.Framework
         /// <param name = "category"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery, uint Flags);
+        List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags);
 
         /// <summary>
         ///   Searches for parcels for sale around the grid
@@ -143,7 +143,7 @@ namespace Aurora.Framework
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags);
+        List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags);
 
         #endregion
 
@@ -177,7 +177,7 @@ namespace Aurora.Framework
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirEventsReplyData[] FindEvents(string queryText, uint flags, int StartQuery);
+        List<DirEventsReplyData> FindEvents(string queryText, uint flags, int StartQuery);
 
         /// <summary>
         ///   Retrives all events in the given region by their maturity level
@@ -185,7 +185,7 @@ namespace Aurora.Framework
         /// <param name = "regionName"></param>
         /// <param name = "maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
         /// <returns></returns>
-        DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity);
+        List<DirEventsReplyData> FindAllEventsInRegion(string regionName, int maturity);
 
         /// <summary>
         ///   Gets more info about the event by the events unique event ID

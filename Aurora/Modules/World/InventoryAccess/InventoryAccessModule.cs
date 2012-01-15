@@ -160,10 +160,8 @@ namespace Aurora.Modules.InventoryAccess
                     }
 
                     UUID newID;
-                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
-                    {
+                    if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
                         item.AssetID = newID;
-                    }
                     else
                         remoteClient.SendAlertMessage("Failed to update notecard asset");
 
@@ -177,7 +175,7 @@ namespace Aurora.Modules.InventoryAccess
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
                     UUID newID;
-                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
+                    if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
                         item.AssetID = newID;
                     else
                         remoteClient.SendAlertMessage("Failed to update script asset");

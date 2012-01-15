@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Addon.Hypergrid
 {
-    public class RobustInventoryConnector : LocalInventoryConnector
+    /*public class RobustInventoryConnector : LocalInventoryConnector
     {
         private IRegistryCore m_registry;
 
@@ -209,7 +209,7 @@ namespace Aurora.Addon.Hypergrid
                                 contents["creator_id"] = UUID.Zero;
                             contents["base_mask"] = uint.Parse(retVal["inventoryBasePermissions"].ToString());
                             contents["everyone_mask"] = uint.Parse(retVal["inventoryEveryOnePermissions"].ToString());
-                            contents.WriteEndMap( /*Permissions*/);
+                            contents.WriteEndMap( /*Permissions*//*);
 
                             contents.WriteKey("sale_info"); //Start permissions kvp
                             contents.WriteStartMap("sale_info"); //Start sale_info kvp
@@ -229,7 +229,7 @@ namespace Aurora.Addon.Hypergrid
                                     contents["sale_type"] = "contents";
                                     break;
                             }
-                            contents.WriteEndMap( /*sale_info*/);
+                            contents.WriteEndMap( /*sale_info*//*);
 
 
                             contents["created_at"] = int.Parse(retVal["creationDate"].ToString());
@@ -251,7 +251,7 @@ namespace Aurora.Addon.Hypergrid
 
                             if (addToCount)
                                 count++;
-                            contents.WriteEndMap( /*"item"*/); //end array items
+                            contents.WriteEndMap( /*"item"*//*); //end array items
                         }
                     }
                     catch
@@ -307,7 +307,7 @@ namespace Aurora.Addon.Hypergrid
                     moreLinkedItems.Clear();
                     goto redoQuery;
                 }
-                contents.WriteEndArray( /*"items"*/); //end array items
+                contents.WriteEndArray( /*"items"*//*); //end array items
 
                 contents.WriteStartArray("categories"); //We don't send any folders
                 int version = 0;
@@ -340,7 +340,7 @@ namespace Aurora.Addon.Hypergrid
                                     contents["preferred_type"] = type;
 
                                     count++;
-                                    contents.WriteEndMap( /*"folder"*/); //end array items
+                                    contents.WriteEndMap( /*"folder"*//*); //end array items
                                 }
                             }
                             catch
@@ -365,7 +365,7 @@ namespace Aurora.Addon.Hypergrid
                     }
                 }
 
-                contents.WriteEndArray( /*"categories"*/);
+                contents.WriteEndArray( /*"categories"*//*);
                 contents["descendents"] = count;
                 contents["version"] = version;
 
@@ -374,7 +374,7 @@ namespace Aurora.Addon.Hypergrid
             }
 
             contents.WriteEndArray(); //end array folders
-            contents.WriteEndMap( /*"llsd"*/); //end llsd
+            contents.WriteEndMap( /*"llsd"*//*); //end llsd
 
             try
             {
@@ -685,5 +685,5 @@ namespace Aurora.Addon.Hypergrid
         }
 
         #endregion
-    }
+    }*/
 }

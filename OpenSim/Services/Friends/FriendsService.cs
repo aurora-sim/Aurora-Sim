@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Aurora.DataManager;
 using Aurora.Simulation.Base;
 using Nini.Config;
@@ -35,21 +37,19 @@ using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace OpenSim.Services.Friends
 {
-    public class FriendsService : IFriendsService, IService
+    public class FriendsService : ConnectorBase, IFriendsService, IService
     {
+        #region Declares
+
         protected IFriendsData m_Database;
-        protected IRegistryCore m_registry;
+
+        #endregion
+
+        #region IService Members
 
         public virtual string Name
         {
             get { return GetType().Name; }
-        }
-
-        #region IFriendsService Members
-
-        public virtual IFriendsService InnerService
-        {
-            get { return this; }
         }
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
@@ -60,6 +60,7 @@ namespace OpenSim.Services.Friends
 
             registry.RegisterModuleInterface<IFriendsService>(this);
             m_registry = registry;
+            Init(registry, Name);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -71,9 +72,18 @@ namespace OpenSim.Services.Friends
         {
         }
 
-        public virtual FriendInfo[] GetFriends(UUID PrincipalID)
+        #endregion
+
+        #region IFriendsService Members
+
+        public virtual IFriendsService InnerService
         {
-            return m_Database.GetFriends(PrincipalID);
+            get { return this; }
+        }
+
+        public virtual List<FriendInfo> GetFriends(UUID PrincipalID)
+        {
+            return new List<FriendInfo>(m_Database.GetFriends(PrincipalID));
         }
 
         public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)

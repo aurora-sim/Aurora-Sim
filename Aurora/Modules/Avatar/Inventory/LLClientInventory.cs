@@ -2286,7 +2286,7 @@ namespace Aurora.Modules.Inventory
                 // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
 
                 // Update item with new asset
-                if (!m_scene.AssetService.UpdateContent(item.AssetID, data, out newID) || newID == UUID.Zero)
+                if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) == UUID.Zero)
                 {
                     errors.Add("Failed to save script to asset storage. Please try again later.");
                 }

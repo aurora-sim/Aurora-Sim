@@ -5,7 +5,7 @@
     Include-SQLite = Configuration/Data/SQLite.ini
 
     ;; If you want to use MySQL, select this file.
-    ;Include-MySQL = Configuration/Data/MySQL.ini
+    ;Include-MySQL = Configuration/Data/RMySQL.ini
 
     ;; If you want to use MSSQL, select this file.
     ;Include-MSSQL = Configuration/Data/MSSQL.ini

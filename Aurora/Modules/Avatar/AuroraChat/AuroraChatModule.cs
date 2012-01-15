@@ -301,11 +301,10 @@ namespace Aurora.Modules.Chat
             if (MuteListConnector == null)
                 return List;
             if (!MuteListCache.TryGetValue(AgentID, out List))
-                List = MuteListConnector.GetMuteList(AgentID);
+                List = MuteListConnector.GetMuteList(AgentID).ToArray();
             else
-            {
                 Cached = true;
-            }
+
             return List;
         }
 

@@ -53,11 +53,11 @@ namespace OpenSim.Services.RobustCompat
             return Get(sendData);
         }
 
-        public UserInfo[] GetUserInfos(string[] userIDs)
+        public List<UserInfo> GetUserInfos(List<string> userIDs)
         {
-            UserInfo[] us = new UserInfo[userIDs.Length];
-            for (int i = 0; i < userIDs.Length; i++)
-                us[i] = GetUserInfo(userIDs[i]);
+            List<UserInfo> us =new List<UserInfo>();
+            for (int i = 0; i < userIDs.Count; i++)
+                us.Add(GetUserInfo(userIDs[i]));
             return us;
         }
 
@@ -120,7 +120,7 @@ namespace OpenSim.Services.RobustCompat
             get { return null; }
         }
 
-        public string[] GetAgentsLocations(string requestor, string[] userIDs)
+        public List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -128,7 +128,7 @@ namespace OpenSim.Services.RobustCompat
             sendData["VERSIONMAX"] = ProtocolVersions.ClientProtocolVersionMax.ToString();
             sendData["METHOD"] = "getagents";
 
-            sendData["uuids"] = new List<string>(userIDs);
+            sendData["uuids"] = userIDs;
 
             List<string> rinfos = new List<string>();
             List<string> urls =
@@ -157,7 +157,7 @@ namespace OpenSim.Services.RobustCompat
                     if (replyData.ContainsKey("result") &&
                         (replyData["result"].ToString() == "null" || replyData["result"].ToString() == "Failure"))
                     {
-                        return new string[0];
+                        return new List<string>();
                     }
 
                     Dictionary<string, object>.ValueCollection pinfosList = replyData.Values;
@@ -176,7 +176,7 @@ namespace OpenSim.Services.RobustCompat
                 }
             }
 
-            return rinfos.ToArray();
+            return rinfos;
         }
 
         #endregion

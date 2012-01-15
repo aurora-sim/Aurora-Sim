@@ -38,7 +38,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.RobustCompat
 {
-    public class RobustGridServicesConnector : GridServicesConnector
+    /*public class RobustGridServicesConnector : GridServicesConnector
     {
         #region IGridService
 
@@ -122,5 +122,5 @@ namespace OpenSim.Services.RobustCompat
 
             registry.RegisterModuleInterface<IGridService>(this);
         }
-    }
+    }*/
 }

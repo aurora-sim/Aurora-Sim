@@ -39,8 +39,10 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.InventoryService
 {
-    public class InventoryService : IInventoryService, IService
+    public class InventoryService : ConnectorBase, IInventoryService, IService
     {
+        #region Declares
+
         protected bool m_AllowDelete = true;
 
         protected IAssetService m_AssetService;
@@ -48,15 +50,56 @@ namespace OpenSim.Services.InventoryService
         protected ILibraryService m_LibraryService;
         protected IUserAccountService m_UserAccountService;
 
+        #endregion
+
+        #region IService Members
+
         public virtual string Name
         {
             get { return GetType().Name; }
         }
 
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("InventoryHandler", "") != Name)
+                return;
+
+            IConfig invConfig = config.Configs["InventoryService"];
+            if (invConfig != null)
+                m_AllowDelete = invConfig.GetBoolean("AllowDelete", true);
+
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("fix inventory", "fix inventory",
+                                                         "If the user's inventory has been corrupted, this function will attempt to fix it",
+                                                         FixInventory);
+            registry.RegisterModuleInterface<IInventoryService>(this);
+            Init(registry, Name);
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_Database = DataManager.RequestPlugin<IInventoryData>();
+            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
+            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
+            m_AssetService = registry.RequestModuleInterface<IAssetService>();
+        }
+
+        public virtual void FinishedStartup()
+        {
+        }
+
+        #endregion
+
         #region IInventoryService Members
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool CreateUserRootFolder(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             bool result = false;
 
             InventoryFolderBase rootFolder = GetRootFolder(principalID);
@@ -86,8 +129,13 @@ namespace OpenSim.Services.InventoryService
             return result;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems)
         {
+            object remoteValue = DoRemote(principalID, createDefaultItems);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             // This is braindeaad. We can't ever communicate that we fixed
             // an existing inventory. Well, just return root folder status,
             // but check sanity anyway.
@@ -359,8 +407,13 @@ namespace OpenSim.Services.InventoryService
             return result;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<InventoryFolderBase>)remoteValue;
+
             List<InventoryFolderBase> allFolders = m_Database.GetFolders(
                 new[] {"agentID"},
                 new[] {principalID.ToString()});
@@ -371,15 +424,25 @@ namespace OpenSim.Services.InventoryService
             return allFolders;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryFolderBase> GetRootFolders(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<InventoryFolderBase>)remoteValue;
+
             return m_Database.GetFolders(
                 new[] {"agentID", "parentFolderID"},
                 new[] {principalID.ToString(), UUID.Zero.ToString()});
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Medium)]
         public virtual InventoryFolderBase GetRootFolder(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
             List<InventoryFolderBase> folders = m_Database.GetFolders(
                 new[] {"agentID", "parentFolderID"},
                 new[] {principalID.ToString(), UUID.Zero.ToString()});
@@ -403,9 +466,13 @@ namespace OpenSim.Services.InventoryService
             return root;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryFolderBase GetFolderForType(UUID principalID, InventoryType invType, AssetType type)
         {
-//            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Getting folder type {0} for user {1}", type, principalID);
+            object remoteValue = DoRemote(principalID, invType, type);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
             if (invType == InventoryType.Snapshot)
                 type = AssetType.SnapshotFolder;
                     //Fix for snapshots, as they get the texture asset type, but need to get checked as snapshotfolder types
@@ -427,8 +494,13 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryCollection GetFolderContent(UUID principalID, UUID folderID)
         {
+            object remoteValue = DoRemote(principalID, folderID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryCollection)remoteValue;
+
             // This method doesn't receive a valud principal id from the
             // connector. So we disregard the principal and look
             // by ID.
@@ -450,9 +522,12 @@ namespace OpenSim.Services.InventoryService
             return inventory;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
-            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+            object remoteValue = DoRemote(principalID, folderID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<InventoryItemBase>)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -461,9 +536,12 @@ namespace OpenSim.Services.InventoryService
                 new[] {folderID.ToString(), principalID.ToString()});
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID)
         {
-            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch items for folder {0}", folderID);
+            object remoteValue = DoRemote(principalID, folderID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (OSDArray)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -472,9 +550,12 @@ namespace OpenSim.Services.InventoryService
                 new[] {folderID.ToString(), principalID.ToString()});
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<InventoryFolderBase> GetFolderFolders(UUID principalID, UUID folderID)
         {
-            //            MainConsole.Instance.DebugFormat("[XINVENTORY]: Fetch folders for folder {0}", folderID);
+            object remoteValue = DoRemote(principalID, folderID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<InventoryFolderBase>)remoteValue;
 
             // Since we probably don't get a valid principal here, either ...
             //
@@ -485,8 +566,13 @@ namespace OpenSim.Services.InventoryService
             return invItems;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool AddFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             InventoryFolderBase check = GetFolder(folder);
             if (check != null)
                 return false;
@@ -494,8 +580,13 @@ namespace OpenSim.Services.InventoryService
             return m_Database.StoreFolder(folder);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool UpdateFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             if (!m_AllowDelete) //Initial item MUST be created as a link folder
                 if (folder.Type == (sbyte) AssetType.LinkFolder)
                     return false;
@@ -522,8 +613,13 @@ namespace OpenSim.Services.InventoryService
             return m_Database.StoreFolder(folder);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool MoveFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             List<InventoryFolderBase> x = m_Database.GetFolders(
                 new[] {"folderID"},
                 new[] {folder.ID.ToString()});
@@ -538,8 +634,13 @@ namespace OpenSim.Services.InventoryService
 
         // We don't check the principal's ID here
         //
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
         public virtual bool DeleteFolders(UUID principalID, List<UUID> folderIDs)
         {
+            object remoteValue = DoRemote(principalID, folderIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             if (!m_AllowDelete)
             {
                 foreach (UUID id in folderIDs)
@@ -567,8 +668,13 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
         public virtual bool PurgeFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
                 return false;
 
@@ -590,8 +696,13 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool ForcePurgeFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             List<InventoryFolderBase> subFolders = m_Database.GetFolders(
                 new[] {"parentFolderID"},
                 new[] {folder.ID.ToString()});
@@ -608,15 +719,22 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool AddItem(InventoryItemBase item)
         {
+            object remoteValue = DoRemote(item);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             return AddItem(item, true);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[XINVENTORY SERVICE]: Adding item {0} to folder {1} for {2}", item.ID, item.Folder, item.Owner);
+            object remoteValue = DoRemote(item);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
 
             if (doParentFolderCheck)
             {
@@ -629,8 +747,13 @@ namespace OpenSim.Services.InventoryService
             return m_Database.StoreItem(item);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool UpdateItem(InventoryItemBase item)
         {
+            object remoteValue = DoRemote(item);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             if (!m_AllowDelete) //Initial item MUST be created as a link or link folder
                 if (item.AssetType == (sbyte) AssetType.Link || item.AssetType == (sbyte) AssetType.LinkFolder)
                     return false;
@@ -638,10 +761,13 @@ namespace OpenSim.Services.InventoryService
             return m_Database.StoreItem(item);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool MoveItems(UUID principalID, List<InventoryItemBase> items)
         {
-            // Principal is b0rked. *sigh*
-            //
+            object remoteValue = DoRemote(principalID, items);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             foreach (InventoryItemBase i in items)
             {
                 m_Database.IncrementFolder(i.Folder); //Increment the new folder
@@ -653,8 +779,13 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
         public virtual bool DeleteItems(UUID principalID, List<UUID> itemIDs)
         {
+            object remoteValue = DoRemote(principalID, itemIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (bool)remoteValue;
+
             if (!m_AllowDelete)
             {
                 foreach (UUID id in itemIDs)
@@ -680,8 +811,13 @@ namespace OpenSim.Services.InventoryService
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
+            object remoteValue = DoRemote(item);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryItemBase)remoteValue;
+
             List<InventoryItemBase> items = m_Database.GetItems(
                 new[] {"inventoryID"},
                 new[] {item.ID.ToString()});
@@ -729,15 +865,25 @@ namespace OpenSim.Services.InventoryService
             return items[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual OSDArray GetItem(UUID itemID)
         {
+            object remoteValue = DoRemote(itemID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (OSDArray)remoteValue;
+
             return m_Database.GetLLSDItems(
                 new string[1] {"inventoryID"},
                 new string[1] {itemID.ToString()});
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryFolderBase GetFolder(InventoryFolderBase folder)
         {
+            object remoteValue = DoRemote(folder);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
             List<InventoryFolderBase> folders = m_Database.GetFolders(
                 new[] {"folderID"},
                 new[] {folder.ID.ToString()});
@@ -748,45 +894,19 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<InventoryItemBase>)remoteValue;
+
             return new List<InventoryItemBase>(m_Database.GetActiveGestures(principalID));
         }
 
         #endregion
 
-        #region IService Members
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("InventoryHandler", "") != Name)
-                return;
-
-            IConfig invConfig = config.Configs["InventoryService"];
-            if (invConfig != null)
-                m_AllowDelete = invConfig.GetBoolean("AllowDelete", true);
-
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("fix inventory", "fix inventory",
-                                                         "If the user's inventory has been corrupted, this function will attempt to fix it",
-                                                         FixInventory);
-            registry.RegisterModuleInterface<IInventoryService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_Database = DataManager.RequestPlugin<IInventoryData>();
-            m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
-            m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
-            m_AssetService = registry.RequestModuleInterface<IAssetService>();
-        }
-
-        public virtual void FinishedStartup()
-        {
-        }
-
-        #endregion
+        #region Console Commands
 
         public virtual void FixInventory(string[] cmd)
         {
@@ -958,6 +1078,10 @@ namespace OpenSim.Services.InventoryService
             MainConsole.Instance.Warn("Completed the check");
         }
 
+        #endregion
+
+        #region Helpers
+
         protected InventoryFolderBase CreateFolder(UUID principalID, UUID parentID, int type, string name)
         {
             InventoryFolderBase newFolder = new InventoryFolderBase
@@ -1054,5 +1178,7 @@ namespace OpenSim.Services.InventoryService
             }
             return false;
         }
+
+        #endregion
     }
 }

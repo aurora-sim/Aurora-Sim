@@ -37,11 +37,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class IWCAssetConnector : IAssetService, IService
+    public class IWCAssetConnector : ConnectorBase, IAssetService, IService
     {
         protected IAssetService m_localService;
-        protected IRegistryCore m_registry;
-        protected AssetServicesConnector m_remoteService;
 
         public string Name
         {
@@ -83,7 +81,7 @@ namespace Aurora.Modules
         {
             AssetBase asset = m_localService.Get(id);
             if (asset == null)
-                asset = m_remoteService.Get(id);
+                asset = (AssetBase)DoRemoteForced(id);
             return asset;
         }
 
@@ -91,7 +89,7 @@ namespace Aurora.Modules
         {
             bool exists = m_localService.GetExists(id);
             if (!exists)
-                exists = m_remoteService.GetExists(id);
+                exists = (bool)DoRemoteForced(id);
             return exists;
         }
 
@@ -99,7 +97,7 @@ namespace Aurora.Modules
         {
             byte[] asset = m_localService.GetData(id);
             if (asset == null)
-                asset = m_remoteService.GetData(id);
+                asset = (byte[])DoRemoteForced(id);
             return asset;
         }
 
@@ -107,39 +105,38 @@ namespace Aurora.Modules
         {
             AssetBase asset = m_localService.GetCached(id);
             if (asset == null)
-                asset = m_remoteService.GetCached(id);
+                asset = (AssetBase)DoRemoteForced(id);
             return asset;
         }
 
-        public bool Get(string id, object sender, AssetRetrieved handler)
+        public void Get(string id, object sender, AssetRetrieved handler)
         {
-            bool asset = m_localService.Get(id, sender, handler);
-            if (!asset)
-                asset = m_remoteService.Get(id, sender, handler);
-            return asset;
+            m_localService.Get(id, sender, delegate(string idd, object senderr, AssetBase asset)
+            {
+                if (asset == null)
+                    handler(id, sender, Get(id));
+                else
+                    handler(id, sender, asset);
+            });
         }
 
         public UUID Store(AssetBase asset)
         {
             UUID retVal = m_localService.Store(asset);
-            //m_remoteService.Store(asset);
             return retVal;
         }
 
-        public bool UpdateContent(UUID id, byte[] data, out UUID newID)
+        public UUID UpdateContent(UUID id, byte[] data)
         {
-            bool asset = m_localService.UpdateContent(id, data, out newID);
-            if (!asset)
-                asset = m_remoteService.UpdateContent(id, data, out newID);
+            UUID asset = m_localService.UpdateContent(id, data);
+            if (asset == UUID.Zero)
+                asset = (UUID)DoRemoteForced(id, data);
             return asset;
         }
 
         public bool Delete(UUID id)
         {
-            bool asset = m_localService.Delete(id);
-            if (!asset)
-                asset = m_remoteService.Delete(id);
-            return asset;
+            return m_localService.Delete(id);
         }
 
         #endregion
@@ -167,8 +164,7 @@ namespace Aurora.Modules
             if (m_localService == null)
                 m_localService = new AssetService();
             m_localService.Configure(config, registry);
-            m_remoteService = new AssetServicesConnector();
-            m_remoteService.Initialize(config, registry);
+            Init(registry, Name);
             registry.RegisterModuleInterface<IAssetService>(this);
             m_registry = registry;
         }

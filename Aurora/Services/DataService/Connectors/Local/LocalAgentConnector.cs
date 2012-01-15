@@ -73,9 +73,10 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
-            /*object remoteValue = DoRemoteForUser(agentID, agentID);
-            if (remoteValue != null)
-                return (IAgentInfo)remoteValue;*/
+            object remoteValue = DoRemoteForUser(agentID, agentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (IAgentInfo)remoteValue;
+
             IAgentInfo agent = new IAgentInfo();
             List<string> query = null;
             try
@@ -112,9 +113,9 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void UpdateAgent(IAgentInfo agent)
         {
-            /*object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
-            if (remoteValue != null)
-                return;*/
+            object remoteValue = DoRemoteForUser(agent.PrincipalID, agent.ToOSD());
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
 
             List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};
             List<string> SetRows = new List<string> {"Value"};
