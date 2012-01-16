@@ -158,12 +158,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         {
             try
             {
-                return m_Gd.Query("id", uuid, "assets", "id").Count > 0;
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["id"] = uuid;
+                return m_Gd.Query(new string[] { "id" }, "assets", filter, null, null, null).Count > 0;
             }
             catch (Exception e)
             {
-                MainConsole.Instance.ErrorFormat(
-                    "[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
+                MainConsole.Instance.ErrorFormat("[LocalAssetDatabase]: Failure fetching asset {0}" + Environment.NewLine + e, uuid);
             }
             return false;
         }

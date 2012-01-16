@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 
 using OpenMetaverse;
+using EventFlags = OpenMetaverse.DirectoryManager.EventFlags;
 
 using Aurora.Framework;
 
@@ -142,7 +143,7 @@ namespace Aurora.Framework
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirLandReplyData[] FindLandForSale(string searchType, string price, string area, int StartQuery, uint Flags);
+        DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags);
 
         #endregion
 
@@ -156,7 +157,7 @@ namespace Aurora.Framework
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, string queryFlags, int StartQuery);
+        DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery);
 
         /// <summary>
         ///   Gets all classifieds in the given region
@@ -176,7 +177,7 @@ namespace Aurora.Framework
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        DirEventsReplyData[] FindEvents(string queryText, string flags, int StartQuery);
+        DirEventsReplyData[] FindEvents(string queryText, uint flags, int StartQuery);
 
         /// <summary>
         ///   Retrives all events in the given region by their maturity level
@@ -193,22 +194,24 @@ namespace Aurora.Framework
         /// <returns></returns>
         EventData GetEventInfo(uint EventID);
 
+
         /// <summary>
-        /// Creates an event
+        /// creates an event
         /// </summary>
         /// <param name="creator"></param>
-        /// <param name="name"></param>
-        /// <param name="category"></param>
-        /// <param name="description"></param>
+        /// <param name="region"></param>
+        /// <param name="parcel"></param>
         /// <param name="date"></param>
-        /// <param name="duration"></param>
         /// <param name="cover"></param>
-        /// <param name="simName"></param>
-        /// <param name="globalPos"></param>
-        /// <param name="eventFlags"></param>
         /// <param name="maturity"></param>
+        /// <param name="flags"></param>
+        /// <param name="duration"></param>
+        /// <param name="localPos"></param>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="category"></param>
         /// <returns></returns>
-        EventData CreateEvent(UUID creator, string name, string description, string category, DateTime date, uint duration, uint cover, string simName, Vector3 globalPos, uint eventFlags, uint maturity);
+        EventData CreateEvent(UUID creator, UUID region, UUID parcel, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category);
 
         /// <summary>
         /// Gets a list of events with optional filters

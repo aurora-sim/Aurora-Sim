@@ -727,15 +727,19 @@ namespace Aurora.Modules.InventoryAccess
                 (doc.FirstChild.NextSibling != null &&
                 doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
             {
-                if (doc.FirstChild.NextSibling != null)
-                {
-                    XmlNodeList nodes = doc.FirstChild.OuterXml.StartsWith ("<groups>") ? doc.FirstChild.ChildNodes : doc.FirstChild.NextSibling.ChildNodes;
+                    XmlNodeList nodes;
+                    if (doc.FirstChild.OuterXml.StartsWith("<groups>")) nodes = doc.FirstChild.ChildNodes;
+                    else if (doc.FirstChild.NextSibling != null) nodes = doc.FirstChild.NextSibling.ChildNodes;
+                    else
+                    {
+                        remoteClient.SendAlertMessage("Failed to find the item you requested.");
+                        return null;
+                    }
                     List<SceneObjectGroup> Groups = RezMultipleObjectsFromInventory (nodes, itemID, remoteClient, pos, RezSelected, item, RayTargetID, BypassRayCast, RayEndIsIntersection, RayEnd, RayStart, bRayEndIsIntersection);
                     if (Groups.Count != 0)
                         return Groups[0];
                     remoteClient.SendAlertMessage ("Failed to rez the item you requested.");
                     return null;
-                }
             }
             if(group == null)
             {

@@ -112,7 +112,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public bool SchedulerExist(string id)
         {
-            return m_Gd.Query("id", id, "scheduler", "id").Count >= 1;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["id"] = id;
+            return m_Gd.Query(new string[] { "id" }, "scheduler", filter, null, null, null).Count >= 1;
         }
 
 

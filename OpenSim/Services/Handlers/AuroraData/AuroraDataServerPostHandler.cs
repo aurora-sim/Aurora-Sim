@@ -1165,12 +1165,11 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             string SEARCHTYPE = request["SEARCHTYPE"].ToString();
-            int PRICE = int.Parse(request["PRICE"].ToString());
-            int AREA = int.Parse(request["AREA"].ToString());
+            uint PRICE = uint.Parse(request["PRICE"].ToString());
+            uint AREA = uint.Parse(request["AREA"].ToString());
             int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
             uint FLAGS = uint.Parse(request["FLAGS"].ToString());
-            DirLandReplyData[] lands = DirectoryServiceConnector.FindLandForSale(SEARCHTYPE, PRICE.ToString(),
-                                                                                 AREA.ToString(), STARTQUERY, FLAGS);
+            DirLandReplyData[] lands = DirectoryServiceConnector.FindLandForSale(SEARCHTYPE, PRICE, AREA, STARTQUERY, FLAGS);
 
             int i = 0;
             foreach (DirLandReplyData land in lands)
@@ -1190,9 +1189,9 @@ namespace OpenSim.Services
             Dictionary<string, object> result = new Dictionary<string, object>();
 
             string QUERYTEXT = request["QUERYTEXT"].ToString();
-            int FLAGS = int.Parse(request["FLAGS"].ToString());
+            uint FLAGS = uint.Parse(request["FLAGS"].ToString());
             int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
-            DirEventsReplyData[] lands = DirectoryServiceConnector.FindEvents(QUERYTEXT, FLAGS.ToString(), STARTQUERY);
+            DirEventsReplyData[] lands = DirectoryServiceConnector.FindEvents(QUERYTEXT, FLAGS, STARTQUERY);
 
             int i = 0;
             foreach (DirEventsReplyData land in lands)
@@ -1234,10 +1233,9 @@ namespace OpenSim.Services
 
             string QUERYTEXT = request["QUERYTEXT"].ToString();
             string CATEGORY = request["CATEGORY"].ToString();
-            string QUERYFLAGS = request["QUERYFLAGS"].ToString();
+            uint QUERYFLAGS = uint.Parse(request["QUERYFLAGS"].ToString());
             int STARTQUERY = int.Parse(request["STARTQUERY"].ToString());
-            DirClassifiedReplyData[] lands = DirectoryServiceConnector.FindClassifieds(QUERYTEXT, CATEGORY, QUERYFLAGS,
-                                                                                       STARTQUERY);
+            DirClassifiedReplyData[] lands = DirectoryServiceConnector.FindClassifieds(QUERYTEXT, CATEGORY, QUERYFLAGS, STARTQUERY);
 
             int i = 0;
             foreach (DirClassifiedReplyData land in lands)

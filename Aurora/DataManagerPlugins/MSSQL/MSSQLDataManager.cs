@@ -113,85 +113,6 @@ namespace Aurora.DataManager.MSSQL
             return true;
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result = null;
-            IDataReader reader = null;
-            List<string> RetVal = new List<string>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
-            }
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
-        public override List<string> Query(string whereClause, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} where {2}",
-                                         wantedValue, table, whereClause);
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                RetVal.Add(reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
-        }
-
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
         {
             SqlConnection dbcon = GetLockedConnection();
@@ -234,137 +155,242 @@ namespace Aurora.DataManager.MSSQL
                                          wantedValue, table, whereClause);
             return Query(query, new Dictionary<string, object>(), dbcon).ExecuteReader();
         }
-
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string order)
+        
+        private static string QueryFilter2Query(QueryFilter filter)
         {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
             string query = "";
-            if (keyRow == "")
+            List<string> parts;
+            bool had = false;
+            if (filter.Count > 0)
             {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                query = String.Format("select {0} from {1} where {2} = '{3}'",
-                                      wantedValue, table, keyRow, keyValue);
-            }
-            using (result = Query(query + order, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
+                query += "(";
+
+                #region equality
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.andFilters)
                 {
-                    try
+                    parts.Add(string.Format("{0} = '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.orFilters)
+                {
+                    parts.Add(string.Format("{0} = '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
+                {
+                    foreach (object value in where.Value)
                     {
-                        while (reader.Read())
-                        {
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        parts.Add(string.Format("{0} = '{1}'", where.Key, value));
                     }
                 }
-            }
-        }
-
-        public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-            string query = String.Format("select {0} from {1} where ",
-                                         wantedValue, table);
-            int i = 0;
-            foreach (object value in keyValue)
-            {
-                query += String.Format("{0} = '{1}' and ", keyRow[i], value);
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
+                if (parts.Count > 0)
                 {
-                    try
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region LIKE
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
+                {
+                    parts.Add(string.Format("{0} LIKE '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
+                {
+                    parts.Add(string.Format("{0} LIKE '{1}'", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
                     {
-                        while (reader.Read())
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
+                        parts.Add(string.Format("{0} LIKE '{1}'", where.Key, value));
                     }
                 }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region bitfield &
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.andBitfieldAndFilters)
+                {
+                    parts.Add(string.Format("{0} & {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
+                {
+                    parts.Add(string.Format("{0} & {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region greater than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
+                {
+                    parts.Add(string.Format("{0} > {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
+                {
+                    parts.Add(string.Format("{0} > {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
+                {
+                    parts.Add(string.Format("{0} >= {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region less than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
+                {
+                    parts.Add(string.Format("{0} > {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
+                {
+                    parts.Add(string.Format("{0} > {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
+                {
+                    parts.Add(string.Format("{0} <= {1}", where.Key, where.Value));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                foreach (QueryFilter subFilter in filter.subFilters)
+                {
+                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter);
+                    if (subFilter.Count > 0)
+                    {
+                        had = true;
+                    }
+                }
+                query += ")";
             }
-        }
-
-        protected static string QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
-        {
-            string query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
-
-            List<string> parts = new List<string>();
-
-            foreach (KeyValuePair<string, object> where in whereClause)
-            {
-                parts.Add(String.Format("{0} = '{1}'", where.Key, where.Value));
-            }
-            query += string.Join(" AND ", parts.ToArray());
-
-            parts = new List<string>();
-            foreach (KeyValuePair<string, uint> where in whereBitfield)
-            {
-                parts.Add(String.Format("{0} & {1}", where.Key, where.Value));
-            }
-            query += string.Join(" AND ", parts.ToArray());
-
-            parts = new List<string>();
-            foreach (KeyValuePair<string, bool> sort in order)
-            {
-                parts.Add(string.Format("{0} {1}", sort.Key, sort.Value ? "ASC" : "DESC"));
-            }
-            query += string.Join(", ", parts.ToArray());
-
             return query;
         }
 
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, uint start, uint count, string table, string wantedValue)
+        public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
-            SqlConnection dbcon = GetLockedConnection();
+            string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table);
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+            List<string> retVal = new List<string>();
+            List<string> parts = new List<string>();
             IDbCommand result;
             IDataReader reader;
-            List<string> RetVal = new List<string>();
+            SqlConnection dbcon = GetLockedConnection();
 
-            string query = QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue);
+            if (queryFilter != null && queryFilter.Count > 0)
+            {
+                query += " WHERE " + QueryFilter2Query(queryFilter);
+            }
 
-            query += string.Format(" LIMIT {0},{1}", start, count);
+            if (sort != null && sort.Count > 0)
+            {
+                parts = new List<string>();
+                foreach (KeyValuePair<string, bool> sortOrder in sort)
+                {
+                    parts.Add(string.Format("`{0}` {1}", sortOrder.Key, sortOrder.Value ? "ASC" : "DESC"));
+                }
+                query += " ORDER BY " + string.Join(", ", parts.ToArray());
+            }
 
+            if (start.HasValue)
+            {
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
             int i = 0;
 
             using (result = Query(query, new Dictionary<string, object>(), dbcon))
@@ -378,10 +404,10 @@ namespace Aurora.DataManager.MSSQL
                             for (i = 0; i < reader.FieldCount; i++)
                             {
                                 Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
+                                retVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
                             }
                         }
-                        return RetVal;
+                        return retVal;
                     }
                     finally
                     {
@@ -393,45 +419,7 @@ namespace Aurora.DataManager.MSSQL
                     }
                 }
             }
-        }
 
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
-        {
-            SqlConnection dbcon = GetLockedConnection();
-            IDbCommand result;
-            IDataReader reader;
-            List<string> RetVal = new List<string>();
-
-            string query = QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue);
-
-            int i = 0;
-
-            using (result = Query(query, new Dictionary<string, object>(), dbcon))
-            {
-                using (reader = result.ExecuteReader())
-                {
-                    try
-                    {
-                        while (reader.Read())
-                        {
-                            for (i = 0; i < reader.FieldCount; i++)
-                            {
-                                Type r = reader[i].GetType();
-                                RetVal.Add(r == typeof(DBNull) ? null : reader.GetString(i));
-                            }
-                        }
-                        return RetVal;
-                    }
-                    finally
-                    {
-                        reader.Close();
-                        reader.Dispose();
-                        result.Cancel();
-                        result.Dispose();
-                        CloseDatabase(dbcon);
-                    }
-                }
-            }
         }
 
         public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
@@ -490,12 +478,14 @@ namespace Aurora.DataManager.MSSQL
             dic[key].Add(value);
         }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                          object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                    object[] keyValues)
         {
             SqlConnection dbcon = GetLockedConnection();
             IDbCommand result;
@@ -789,7 +779,7 @@ namespace Aurora.DataManager.MSSQL
             m_connection.Dispose();
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
+        public override void CreateTable(string table, ColumnDefinition[] columns)
         {
             if (TableExists(table))
             {
@@ -806,10 +796,8 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition +=
-                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
-                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -837,7 +825,8 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns,
+                                         Dictionary<string, string> renameColumns)
         {
             if (TableExists(table))
             {
@@ -854,10 +843,8 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition +=
-                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
-                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -981,11 +968,13 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
+                                                                 ColumnDefinition[] columnDefinitions)
         {
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
+            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName,
+                                                  sourceTableName);
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
         }
@@ -1027,13 +1016,11 @@ namespace Aurora.DataManager.MSSQL
                 var name = rdr["Field"];
                 var pk = rdr["Key"];
                 var type = rdr["Type"];
-                var extra = rdr["Extra"];
                 defs.Add(new ColumnDefinition
                              {
                                  Name = name.ToString(),
                                  IsPrimary = pk.ToString() == "PRI",
-                                 Type = ConvertTypeToColumnType(type.ToString()),
-                                 AutoIncrement = extra.ToString() == "auto_incremement"
+                                 Type = ConvertTypeToColumnType(type.ToString())
                              });
             }
             rdr.Close();
@@ -1041,12 +1028,6 @@ namespace Aurora.DataManager.MSSQL
             dbcommand.Dispose();
             CloseDatabase(dbcon);
             return defs;
-        }
-
-        //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN MSSQL DB SETUP TO TEST IT
-        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
-        {
-            return new Dictionary<string, IndexDefinition>();
         }
 
         private ColumnTypes ConvertTypeToColumnType(string typeString)
@@ -1063,12 +1044,6 @@ namespace Aurora.DataManager.MSSQL
                     return ColumnTypes.Integer30;
                 case "integer":
                     return ColumnTypes.Integer11;
-                case "int(11) unsigned":
-                    return ColumnTypes.UInteger11;
-                case "int(30) unsigned":
-                    return ColumnTypes.UInteger30;
-                case "integer unsigned":
-                    return ColumnTypes.UInteger11;
                 case "char(36)":
                     return ColumnTypes.Char36;
                 case "char(32)":

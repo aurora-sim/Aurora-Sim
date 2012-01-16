@@ -72,6 +72,7 @@ bin/Configuration/*/*.ini.old
 bin/Configuration/*.ini
 bin/Configuration/*.ini.old
 bin/MapTiles/*
+bin/MapAPI_tileCache/*
 Examples/*.dll
 Aurora.build
 Aurora.sln

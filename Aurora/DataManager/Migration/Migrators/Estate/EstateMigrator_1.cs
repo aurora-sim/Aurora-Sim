@@ -93,17 +93,24 @@ namespace Aurora.DataManager.Migration.Migrators
                         {
                             UUID ID = UUID.Parse(dr["ID"].ToString());
                             string value = dr["Value"].ToString();
-                            List<string> results = genericData.Query("`ID` = '" + value + "' AND `Key` = 'EstateSettings'", "estates", "`Value`");
+                            QueryFilter filter = new QueryFilter();
+                            filter.andFilters["`ID`"] = value;
+                            filter.andFilters["`Key`"] = "EstateSettings";
+                            List<string> results = genericData.Query(new string[1] { "`Value`" }, "estates", filter, null, null, null);
                             if ((results != null) && (results.Count >= 1))
                             {
                                 EstateSettings es = new EstateSettings();
                                 es.FromOSD((OSDMap)OSDParser.DeserializeLLSDXml(results[0]));
                                 genericData.Insert("estateregions", new object[] { ID, value });
-                                List<string> exist =
-                                    genericData.Query("`EstateID` = '" + value + "'", "estatesettings", "`EstateID`");
-                                if ((exist == null) || (exist.Count == 0))
-                                    genericData.Insert("estatesettings",
-                                                   new object[] { value, es.EstateName, es.EstateOwner, es.ParentEstateID, es.ToOSD() });
+
+                                filter = new QueryFilter();
+                                filter.andFilters["`EstateID`"] = value;
+
+                                List<string> exist = genericData.Query(new string[1] { "`EstateID`" }, "estatesettings", filter, null, null, null);
+                                if (exist == null || exist.Count == 0)
+                                {
+                                    genericData.Insert("estatesettings", new object[] { value, es.EstateName, es.EstateOwner, es.ParentEstateID, es.ToOSD() });
+                                }
                             }
                         }
                         catch

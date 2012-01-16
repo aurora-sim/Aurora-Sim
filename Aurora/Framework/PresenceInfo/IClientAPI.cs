@@ -431,7 +431,7 @@ namespace Aurora.Framework
         IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart);
 
     public delegate void DirLandQuery(
-        IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, int price, int area, int queryStart);
+        IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart);
 
     public delegate void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags);
 

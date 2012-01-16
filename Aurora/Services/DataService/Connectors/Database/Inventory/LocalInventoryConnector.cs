@@ -153,20 +153,30 @@ namespace Aurora.Services.DataService
 
         public virtual bool HasAssetForUser(UUID userID, UUID assetID)
         {
-            List<string> q = GD.Query(new string[2] {"assetID", "avatarID"}, new object[2] {assetID, userID},
-                                      m_itemsrealm, "*");
-            if (q != null && q.Count > 0)
-                return true;
-            return false;
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["assetID"] = assetID;
+            where["avatarID"] = userID;
+
+            List<string> q = GD.Query(new string[1] { "*" }, m_itemsrealm, new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
+            return !(q != null && q.Count > 0);
         }
 
         public virtual string GetItemNameByAsset(UUID assetID)
         {
-            List<string> q = GD.Query(new string[1] {"assetID"}, new object[1] {assetID}, m_itemsrealm, "inventoryName");
-            if (q != null && q.Count > 0)
-                return q[0];
+            Dictionary<string, object> where = new Dictionary<string, object>(2);
+            where["assetID"] = assetID;
 
-            return "";
+            List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
+
+            return (q != null && q.Count > 0) ? q[0] :  "";
         }
 
         public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
@@ -316,7 +326,13 @@ namespace Aurora.Services.DataService
 
                 contents.WriteStartArray("categories"); //We don't send any folders
                 int version = 0;
-                List<string> versionRetVal = GD.Query("folderID", folder_id, m_foldersrealm, "version, type");
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["folderID"] = folder_id;
+                List<string> versionRetVal = GD.Query(new string[]{
+                    "version",
+                    "type"
+                }, m_foldersrealm, filter, null, null, null);
+
                 List<InventoryFolderBase> foldersToAdd = new List<InventoryFolderBase>();
                 if (versionRetVal.Count > 0)
                 {
@@ -452,9 +468,13 @@ namespace Aurora.Services.DataService
 
         public virtual void IncrementFolderByItem(UUID itemID)
         {
-            List<string> values = GD.Query("inventoryID", itemID, m_itemsrealm, "parentFolderID");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = itemID;
+            List<string> values = GD.Query(new string[] { "parentFolderID" }, m_itemsrealm, filter, null, null, null);
             if (values.Count > 0)
+            {
                 IncrementFolder(UUID.Parse(values[0]));
+            }
         }
 
         public virtual InventoryItemBase[] GetActiveGestures(UUID principalID)

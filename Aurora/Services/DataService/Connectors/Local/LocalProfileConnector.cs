@@ -78,15 +78,22 @@ namespace Aurora.Services.DataService
                 return UserProfile;
             else
             {
-                UserProfile = new IUserProfileInfo();
+                Dictionary<string, object> where = new Dictionary<string, object>();
+                where["ID"] = agentID;
+                where["`Key`"] = "LLProfile";
                 List<string> query = null;
                 //Grab it from the almost generic interface
-                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {agentID, "LLProfile"}, "userdata", "Value");
+                query = GD.Query(new string[] { "Value" }, "userdata", new QueryFilter
+                {
+                    andFilters = where
+                }, null, null, null);
 
                 if (query == null || query.Count == 0)
                     return null;
                 //Pull out the OSDmap
                 OSDMap profile = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+
+                UserProfile = new IUserProfileInfo();
                 UserProfile.FromOSD(profile);
 
                 //Add to the cache
@@ -165,8 +172,15 @@ namespace Aurora.Services.DataService
 
         public List<Classified> GetClassifieds(UUID ownerID)
         {
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["OwnerUUID"] = ownerID;
+
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
             List<Classified> classifieds = new List<Classified>();
-            List<string> query = GD.Query(new string[1] {"OwnerUUID"}, new object[1] {ownerID}, "userclassifieds", "*");
             for (int i = 0; i < query.Count; i += 6)
             {
                 Classified classified = new Classified();
@@ -178,10 +192,18 @@ namespace Aurora.Services.DataService
 
         public Classified GetClassified(UUID queryClassifiedID)
         {
-            List<string> query = GD.Query(new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID},
-                                          "userclassifieds", "*");
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["ClassifiedUUID"] = queryClassifiedID;
+
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
             if (query.Count < 6)
+            {
                 return null;
+            }
             Classified classified = new Classified();
             classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[5]));
             return classified;
@@ -212,7 +234,14 @@ namespace Aurora.Services.DataService
 
         public ProfilePickInfo GetPick(UUID queryPickID)
         {
-            List<string> query = GD.Query(new string[1] {"PickUUID"}, new object[1] {queryPickID}, "userpicks", "*");
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["PickUUID"] = queryPickID;
+
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
             if (query.Count < 5)
                 return null;
             ProfilePickInfo pick = new ProfilePickInfo();
@@ -222,8 +251,15 @@ namespace Aurora.Services.DataService
 
         public List<ProfilePickInfo> GetPicks(UUID ownerID)
         {
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where["OwnerUUID"] = ownerID;
+
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
+
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
-            List<string> query = GD.Query(new string[1] {"OwnerUUID"}, new object[1] {ownerID}, "userpicks", "*");
             for (int i = 0; i < query.Count; i += 5)
             {
                 ProfilePickInfo pick = new ProfilePickInfo();

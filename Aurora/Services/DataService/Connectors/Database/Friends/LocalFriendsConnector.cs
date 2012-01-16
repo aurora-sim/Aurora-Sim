@@ -79,7 +79,12 @@ namespace Aurora.Services.DataService
         public FriendInfo[] GetFriends(UUID principalID)
         {
             List<FriendInfo> infos = new List<FriendInfo>();
-            List<string> query = GD.Query("PrincipalID", principalID, m_realm, "Friend,Flags");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = principalID;
+            List<string> query = GD.Query(new string[]{
+                "Friend",
+                "Flags"
+            }, m_realm, filter, null, null, null);
 
             //These are used to get the other flags below
             List<string> keys = new List<string>();
@@ -87,17 +92,25 @@ namespace Aurora.Services.DataService
 
             for (int i = 0; i < query.Count; i += 2)
             {
-                FriendInfo info = new FriendInfo
-                                      {PrincipalID = principalID, Friend = query[i], MyFlags = int.Parse(query[i + 1])};
+                FriendInfo info = new FriendInfo{
+                    PrincipalID = principalID,
+                    Friend = query[i],
+                    MyFlags = int.Parse(query[i + 1])
+                };
                 infos.Add(info);
 
-                keys.Add("PrincipalID");
-                keys.Add("Friend");
-                values.Add(info.Friend);
-                values.Add(info.PrincipalID);
+                Dictionary<string, object> where = new Dictionary<string, object>(2);
+                where["PrincipalID"] = info.Friend;
+                where["Friend"] = info.PrincipalID;
 
-                List<string> query2 = GD.Query(keys.ToArray(), values.ToArray(), m_realm, "Flags");
-                if (query2.Count >= 1) infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
+                List<string> query2 = GD.Query(new string[1] { "Flags" }, m_realm, new QueryFilter{
+                    andFilters = where
+                }, null, null, null);
+
+                if (query2.Count >= 1)
+                {
+                    infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
+                }
 
                 keys = new List<string>();
                 values = new List<object>();

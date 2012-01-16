@@ -39,30 +39,48 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 6);
             MigrationName = "Directory";
 
-            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[]>>();
+
+            AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
+                                              ColDef("ParcelID", ColumnTypes.String50, true),
+                                              ColDef("LocalID", ColumnTypes.String50),
+                                              ColDef("LandingX", ColumnTypes.String50),
+                                              ColDef("LandingY", ColumnTypes.String50),
+                                              ColDef("LandingZ", ColumnTypes.String50),
+                                              ColDef("Name", ColumnTypes.String50),
+                                              ColDef("Description", ColumnTypes.String255),
+                                              ColDef("Flags", ColumnTypes.String50),
+                                              ColDef("Dwell", ColumnTypes.String50),
+                                              ColDef("InfoUUID", ColumnTypes.String50),
+                                              ColDef("ForSale", ColumnTypes.String50),
+                                              ColDef("SalePrice", ColumnTypes.String50),
+                                              ColDef("Auction", ColumnTypes.String50),
+                                              ColDef("Area", ColumnTypes.String50),
+                                              ColDef("EstateID", ColumnTypes.String50),
+                                              ColDef("Maturity", ColumnTypes.String50),
+                                              ColDef("OwnerID", ColumnTypes.String50),
+                                              ColDef("GroupID", ColumnTypes.String50),
+                                              ColDef("ShowInSearch", ColumnTypes.String50),
+                                              ColDef("SnapshotID", ColumnTypes.String50),
+                                              ColDef("Bitmap", ColumnTypes.LongText),
+                                              ColDef("Category", ColumnTypes.String50)));
 
             AddSchema("asevents", ColDefs(
-                ColDef("EID", ColumnTypes.UInteger11, true, true),
+                ColDef("EID", ColumnTypes.Integer11, true),
                 ColDef("creator", ColumnTypes.Char36),
                 ColDef("region", ColumnTypes.Char36),
                 ColDef("parcel", ColumnTypes.Char36),
                 ColDef("date", ColumnTypes.DateTime),
-                ColDef("cover", ColumnTypes.UInteger11),
-                ColDef("maturity", ColumnTypes.UInteger11),
-                ColDef("flags", ColumnTypes.UInteger11),
-                ColDef("duration", ColumnTypes.UInteger11),
+                ColDef("cover", ColumnTypes.Integer11),
+                ColDef("maturity", ColumnTypes.TinyInt4),
+                ColDef("flags", ColumnTypes.Integer11),
+                ColDef("duration", ColumnTypes.Integer11),
                 ColDef("localPosX", ColumnTypes.Float),
                 ColDef("localPosY", ColumnTypes.Float),
                 ColDef("localPosZ", ColumnTypes.Float),
                 ColDef("name", ColumnTypes.String50),
-                ColDef("description", ColumnTypes.String255)
-            ), IndexDefs(
-                IndexDef(new string[]{ "EID" }, IndexType.Primary),
-                IndexDef(new string[]{ "creator" }, IndexType.Index),
-                IndexDef(new string[]{ "region", "parcel" }, IndexType.Index),
-                IndexDef(new string[]{ "date" }, IndexType.Index),
-                IndexDef(new string[]{ "maturity" }, IndexType.Index),
-                IndexDef(new string[]{ "name" }, IndexType.Index)
+                ColDef("description", ColumnTypes.String255),
+                ColDef("category", ColumnTypes.String50)
             ));
         }
 

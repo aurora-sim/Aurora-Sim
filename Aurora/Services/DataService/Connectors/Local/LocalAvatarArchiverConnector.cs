@@ -44,13 +44,14 @@ namespace Aurora.Services.DataService
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
                                string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") ==
-                "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("AvatarArchiverConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
                 if (source.Configs[Name] != null)
+                {
                     defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+                }
 
                 GD.ConnectToDatabase(defaultConnectionString, "AvatarArchive",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
@@ -65,12 +66,14 @@ namespace Aurora.Services.DataService
 
         public AvatarArchive GetAvatarArchive(string Name)
         {
-            List<string> RetVal = GD.Query("Name", Name, "avatararchives", "*");
-            if (RetVal.Count == 0)
-                return null;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["Name"] = Name;
+            List<string> RetVal = GD.Query(new string[] { "*" }, "avatararchives", filter, null, null, null);
 
-            AvatarArchive Archive = new AvatarArchive {Name = RetVal[0], ArchiveXML = RetVal[1]};
-            return Archive;
+            return (RetVal.Count == 0) ?  null :  new AvatarArchive {
+                Name = RetVal[0],
+                ArchiveXML = RetVal[1]
+            };
         }
 
         /// <summary>
@@ -106,7 +109,9 @@ namespace Aurora.Services.DataService
 
         public void SaveAvatarArchive(AvatarArchive archive)
         {
-            List<string> Check = GD.Query("Name", archive.Name, "avatararchives", "Name");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["Name"] = archive.Name;
+            List<string> Check = GD.Query(new string[] { "Name" }, "avatararchives", filter, null, null, null);
             if (Check.Count == 0)
             {
                 GD.Insert("avatararchives", new object[]
@@ -119,8 +124,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                GD.Update("avatararchives", new object[] {archive.ArchiveXML}, new[] {"Archive"}, new[] {"Name"},
-                          new object[] {archive.Name.MySqlEscape()});
+                GD.Update("avatararchives", new object[] {archive.ArchiveXML}, new[] { "Archive" }, new[] { "Name" }, new object[] {archive.Name.MySqlEscape()});
             }
         }
 

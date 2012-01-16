@@ -311,7 +311,9 @@ namespace Aurora.Addon.Hypergrid
 
                 contents.WriteStartArray("categories"); //We don't send any folders
                 int version = 0;
-                List<string> versionRetVal = GD.Query("folderID", folder_id, m_foldersrealm, "version, type");
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["folderID"] = folder_id;
+                List<string> versionRetVal = GD.Query(new string[2] { "version", "type" }, m_foldersrealm, filter, null, null, null);
                 List<InventoryFolderBase> foldersToAdd = new List<InventoryFolderBase>();
                 if (versionRetVal.Count > 0)
                 {

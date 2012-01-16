@@ -89,7 +89,7 @@ namespace Aurora.Framework
 #endif
         }
 
-        public List<Vector3> BuildToList(string SpawnPos)
+        public static List<Vector3> BuildToList(string SpawnPos)
         {
             if (SpawnPos == "" || SpawnPos == " ")
                 return new List<Vector3>();

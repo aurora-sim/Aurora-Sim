@@ -51,6 +51,8 @@ namespace OpenSim.Services.Connectors
         {
             if (!m_allowNullCaching && account == null)
                 return;
+            if ((account != null) && (account.UserLevel <= -1))
+                return;
             if (account == null)
             {
                 if (!m_nullCacheTimes.ContainsKey(userID))

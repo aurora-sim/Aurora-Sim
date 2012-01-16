@@ -228,75 +228,10 @@ namespace Aurora.DataManager.SQLite
             //cmd.Dispose ();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue)
-        {
-            string query = "";
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps[":" + keyRow.Replace("`", "")] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
-            }
-            SQLiteCommand cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                try
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            if (reader[i] is byte[])
-                                RetVal.Add(Utils.BytesToString((byte[]) reader[i]));
-                            else
-                                RetVal.Add(reader[i].ToString());
-                        }
-                    }
-                    //reader.Close();
-                    CloseReaderCommand(cmd);
-                }
-                catch
-                {
-                }
-                return RetVal;
-            }
-        }
-
         private void AddParams(ref SQLiteCommand cmd, Dictionary<string, object> ps)
         {
             foreach (KeyValuePair<string, object> p in ps)
                 cmd.Parameters.AddWithValue(p.Key, p.Value);
-        }
-
-        public override List<string> Query(string whereClause, string table, string wantedValue)
-        {
-            string query = "";
-            query = String.Format("select {0} from {1}{3} {2}",
-                wantedValue, table, whereClause, whereClause.StartsWith("ORDER") ? "" : " where");
-            var cmd = PrepReader(query);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                while (reader.Read())
-                {
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        RetVal.Add(reader[i].ToString());
-                    }
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
         }
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
@@ -331,147 +266,273 @@ namespace Aurora.DataManager.SQLite
             return cmd.ExecuteReader();
         }
 
-        public override List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order)
-        {
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = "";
-            if (keyRow == "")
-            {
-                query = String.Format("select {0} from {1}",
-                                      wantedValue, table);
-            }
-            else
-            {
-                ps[":" + keyRow.Replace("`", "")] = keyValue;
-                query = String.Format("select {0} from {1} where {2} = :{3}",
-                                      wantedValue, table, keyRow, keyRow.Replace("`", ""));
-            }
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                try
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            Type r = reader[i].GetType();
-                            RetVal.Add(r == typeof (DBNull) ? null : reader.GetString(i));
-                        }
-                    }
-                }
-                catch
-                {
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
-        }
-
-        public override List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue)
-        {
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = String.Format("select {0} from {1} where ",
-                                         wantedValue, table);
-            int i = 0;
-            foreach (object value in keyValue)
-            {
-                ps[":" + keyRow[i].Replace("`", "")] = value;
-                query += String.Format("{0} = :{1} and ", keyRow[i], keyRow[i].Replace("`", ""));
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                while (reader.Read())
-                {
-                    for (i = 0; i < reader.FieldCount; i++)
-                    {
-                        Type r = reader[i].GetType();
-                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
-                    }
-                }
-                //reader.Close();
-                CloseReaderCommand(cmd);
-
-                return RetVal;
-            }
-        }
-
-        private static void QueryParams2Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue, out string query, out Dictionary<string, object> ps)
+        private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
         {
             ps = new Dictionary<string, object>();
-            query = String.Format((whereClause.Count > 0 || whereBitfield.Count > 0) ? "select {0} from {1} where " : "select {0} from {1} ", wantedValue, table);
-
-            List<string> parts = new List<string>();
-
-            foreach (KeyValuePair<string, object> where in whereClause)
+            Dictionary<string, object>[] pss = { ps };
+            string query = "";
+            List<string> parts;
+            uint i = j;
+            bool had = false;
+            if (filter.Count > 0)
             {
-                ps[":" + where.Key.Replace("`", "")] = where.Value;
-                parts.Add(String.Format("{0} = :{1}", where.Key, where.Key.Replace("`", "")));
-            }
-            query += string.Join(" AND ", parts.ToArray());
+                query += "(";
 
-            parts = new List<string>();
-            foreach (KeyValuePair<string, uint> where in whereBitfield)
-            {
-                ps[":" + where.Key.Replace("`", "")] = where.Value;
-                parts.Add(String.Format("{0} & :{1}", where.Key, where.Key.Replace("`", "")));
-            }
-            query += string.Join(" AND ", parts.ToArray());
+                #region equality
 
-            parts = new List<string>();
-            foreach (KeyValuePair<string, bool> sort in order)
-            {
-                parts.Add(string.Format("{0} {1}", sort.Key, sort.Value ? "ASC" : "DESC"));
-            }
-            query += string.Join(", ", parts.ToArray());
-        }
-
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, uint start, uint count, string table, string wantedValue)
-        {
-            Dictionary<string, object> ps;
-            string query;
-
-            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
-
-            query += string.Format(" LIMIT {0},{1}", start, count);
-
-            int i = 0;
-
-            var cmd = PrepReader(query);
-            AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
-            {
-                var RetVal = new List<string>();
-                while (reader.Read())
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.andFilters)
                 {
-                    for (i = 0; i < reader.FieldCount; i++)
+                    string key = ":where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.orFilters)
+                {
+                    string key = ":where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
+                {
+                    foreach (object value in where.Value)
                     {
-                        Type r = reader[i].GetType();
-                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
+                        string key = ":where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} = {1}", where.Key, key));
                     }
                 }
-                //reader.Close();
-                CloseReaderCommand(cmd);
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
 
-                return RetVal;
+                #endregion
+
+                #region LIKE
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
+                {
+                    string key = ":where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
+                {
+                    string key = ":where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
+                    {
+                        string key = ":where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                    }
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region bitfield &
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.andBitfieldAndFilters)
+                {
+                    string key = ":where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
+                {
+                    string key = ":where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region greater than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
+                {
+                    string key = ":where_gtAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
+                {
+                    string key = ":where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
+                {
+                    string key = ":where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region less than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
+                {
+                    string key = ":where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
+                {
+                    string key = ":where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
+                {
+                    string key = ":where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} <= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                foreach (QueryFilter subFilter in filter.subFilters)
+                {
+                    Dictionary<string, object> sps;
+                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
+                    pss[pss.Length] = sps;
+                    if (subFilter.Count > 0)
+                    {
+                        had = true;
+                    }
+                }
+                query += ")";
             }
+            pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());
+            return query;
         }
 
-        public override List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> order, string table, string wantedValue)
+        public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
-            Dictionary<string, object> ps;
-            string query;
+            string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+            List<string> retVal = new List<string>();
+            List<string> parts = new List<string>();
 
-            QueryParams2Query(whereClause, whereBitfield, order, table, wantedValue, out query, out ps);
+            if (queryFilter != null && queryFilter.Count > 0)
+            {
+                uint j = 0;
+                query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+            }
+
+            if (sort != null && sort.Count > 0)
+            {
+                parts = new List<string>();
+                foreach (KeyValuePair<string, bool> sortOrder in sort)
+                {
+                    parts.Add(string.Format("`{0}` {1}", sortOrder.Key, sortOrder.Value ? "ASC" : "DESC"));
+                }
+                query += " ORDER BY " + string.Join(", ", parts.ToArray());
+            }
+
+            if (start.HasValue)
+            {
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
 
             int i = 0;
 
@@ -770,12 +831,14 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                          object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
+                                    object[] keyValues)
         {
             var cmd = new SQLiteCommand();
             string query = String.Format("update {0} set ", table);
@@ -826,7 +889,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
+        public override void CreateTable(string table, ColumnDefinition[] columns)
         {
             if (TableExists(table))
             {
@@ -843,9 +906,8 @@ namespace Aurora.DataManager.SQLite
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition +=
-                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
 
             string multiplePrimaryString = string.Empty;
@@ -863,21 +925,16 @@ namespace Aurora.DataManager.SQLite
                 multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
+                                         multiplePrimaryString);
 
-            SQLiteCommand  cmd = new SQLiteCommand { CommandText = query };
+            var cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
-
-            foreach (IndexDefinition index in indices)
-            {
-                cmd = new SQLiteCommand { CommandText = string.Format("CREATE{0}INDEX idx_{1} ON {2} ({3})", (index.Type == IndexType.Index ? " " : " UNIQUE "), table + (index.Type != IndexType.Index ? "_unique" : string.Empty), table, string.Join(", ", index.Fields)) };
-                ExecuteNonQuery(cmd);
-                CloseReaderCommand(cmd);
-            }
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns,
+                                         Dictionary<string, string> renameColumns)
         {
             if (!TableExists(table))
             {
@@ -919,9 +976,7 @@ namespace Aurora.DataManager.SQLite
                     renamedTempTableColumn += ", ";
                 }
                 renamedTempTableColumn += column.Name;
-                renamedTempTableColumnDefinition +=
-                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty);
+                renamedTempTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
             string query = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");";
 
@@ -958,10 +1013,8 @@ namespace Aurora.DataManager.SQLite
                 {
                     newTableColumnDefinition += ", ";
                 }
-                newTableColumnDefinition +=
-                    column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) +
-                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
+                                            ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
             }
             string multiplePrimaryString = string.Empty;
             if (multiplePrimary)
@@ -1097,9 +1150,9 @@ namespace Aurora.DataManager.SQLite
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
-            List<ColumnDefinition> defs = new List<ColumnDefinition>();
+            var defs = new List<ColumnDefinition>();
 
-            SQLiteCommand cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
+            var cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
             using (IDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())
@@ -1108,104 +1161,15 @@ namespace Aurora.DataManager.SQLite
                     var pk = rdr["pk"];
                     var type = rdr["type"];
                     defs.Add(new ColumnDefinition
-                    {
-                        Name = name.ToString(),
-                        IsPrimary = (int.Parse(pk.ToString()) > 0),
-                        Type = ConvertTypeToColumnType(type.ToString())
-                    });
+                                 {
+                                     Name = name.ToString(),
+                                     IsPrimary = (int.Parse(pk.ToString()) > 0),
+                                     Type = ConvertTypeToColumnType(type.ToString())
+                                 });
                 }
                 rdr.Close();
             }
             CloseReaderCommand(cmd);
-
-            return defs;
-        }
-
-        //! THIS IS CURRENTLY NOT IMPLEMENTED AS I DON'T HAVE AN SQLite DB SETUP TO TEST IT
-        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
-        {
-            Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
-
-            Dictionary<string, bool> uniqueLookup = new Dictionary<string, bool>();
-
-            SQLiteCommand cmd = PrepReader(string.Format("PRAGMA index_list({0})", tableName));
-            using (IDataReader rdr = cmd.ExecuteReader())
-            {
-                while (rdr.Read())
-                {
-                    uint seq = uint.Parse(rdr["seq"].ToString());
-                    string name = rdr["name"].ToString();
-                    bool unique = uint.Parse(rdr["unique"].ToString()) == 1;
-                    uniqueLookup[name] = unique;
-                }
-                rdr.Close();
-            }
-            CloseReaderCommand(cmd);
-
-            List<string> Fields;
-            foreach (KeyValuePair<string, bool> index in uniqueLookup)
-            {
-                cmd = PrepReader(string.Format("PRAGMA index_info({0})", index.Key));
-                defs[index.Key] = new IndexDefinition
-                {
-                    Fields = new string[]{ },
-                    Type = index.Value ? IndexType.Unique : IndexType.Index
-                };
-                Fields = new List<string>();
-                using (IDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
-                    {
-                        uint seqno = uint.Parse(rdr["seqno"].ToString());
-                        uint cid = uint.Parse(rdr["cid"].ToString());
-                        string name = rdr["name"].ToString();
-                        Fields.Add(name);
-                    }
-                    rdr.Close();
-                }
-                CloseReaderCommand(cmd);
-                defs[index.Key].Fields = Fields.ToArray();
-            }
-
-            IndexDefinition primary = new IndexDefinition{
-                Type = IndexType.Primary,
-                Fields = new string[]{ }
-            };
-            List<ColumnDefinition> fields = ExtractColumnsFromTable(tableName);
-            Fields = new List<string>();
-
-            uint i = 0;
-            foreach (ColumnDefinition field in fields)
-            {
-                if (field.IsPrimary)
-                {
-                    Fields.Add(field.Name);
-                }
-            }
-            primary.Fields = Fields.ToArray();
-
-            foreach (KeyValuePair<string, IndexDefinition> index in defs)
-            {
-                if (index.Value.Type == IndexType.Unique && index.Value.Fields.Length == primary.Fields.Length)
-                {
-                    i = 0;
-                    bool found = true;
-                    foreach (string field in index.Value.Fields)
-                    {
-                        if (primary.Fields[i++] != field)
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
-                    if (found)
-                    {
-                        defs[index.Key].Type = IndexType.Primary;
-                        break;
-                    }
-                }
-            }
-
 
             return defs;
         }
@@ -1224,12 +1188,6 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Integer11;
                 case "int(30)":
                     return ColumnTypes.Integer30;
-                case "int(11) unsigned":
-                    return ColumnTypes.UInteger11;
-                case "int(30) unsigned":
-                    return ColumnTypes.UInteger30;
-                case "integer unsigned":
-                    return ColumnTypes.UInteger11;
                 case "char(36)":
                     return ColumnTypes.Char36;
                 case "char(32)":
@@ -1312,12 +1270,15 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
+                                                                 ColumnDefinition[] columnDefinitions)
         {
             var cmd = new SQLiteCommand
-            {
-                CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName)
-            };
+                          {
+                              CommandText =
+                                  string.Format("insert into {0} select * from {1}", destinationTableName,
+                                                sourceTableName)
+                          };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }

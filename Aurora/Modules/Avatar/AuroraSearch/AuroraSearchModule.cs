@@ -143,13 +143,9 @@ namespace Aurora.Modules.Search
         /// <param name = "price"></param>
         /// <param name = "area"></param>
         /// <param name = "queryStart"></param>
-        public void DirLandQuery(IClientAPI remoteClient, UUID queryID,
-                                 uint queryFlags, uint searchType, int price, int area,
-                                 int queryStart)
+        public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart)
         {
-            List<DirLandReplyData> ReturnValues =
-                new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price.ToString(),
-                                                                            area.ToString(), queryStart, queryFlags));
+            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area, queryStart, queryFlags));
 
 #if (!ISWIN)
             SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
@@ -289,11 +285,9 @@ namespace Aurora.Modules.Search
 #endif
         }
 
-        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID,
-                                   string queryText, uint queryFlags, int queryStart)
+        public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues =
-                new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags.ToString(), queryStart));
+            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart));
 
 #if (!ISWIN)
             SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
@@ -301,18 +295,13 @@ namespace Aurora.Modules.Search
                 remoteClient.SendDirEventsReply(queryID, data);
             });
 #else
-            SplitPackets(ReturnValues,
-                         data => remoteClient.SendDirEventsReply(queryID, data));
+            SplitPackets(ReturnValues, data => remoteClient.SendDirEventsReply(queryID, data));
 #endif
         }
 
-        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID,
-                                       string queryText, uint queryFlags, uint category,
-                                       int queryStart)
+        public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, uint category, int queryStart)
         {
-            List<DirClassifiedReplyData> ReturnValues =
-                new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(),
-                                                                                  queryFlags.ToString(), queryStart));
+            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags, queryStart));
 
 #if (!ISWIN)
             SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
@@ -420,7 +409,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
+                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
 
                 int locX = 0;
                 int locY = 0;
@@ -488,7 +477,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", int.MaxValue.ToString(), "0", 0, 0);
+                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
 
                 int locX = 0;
                 int locY = 0;

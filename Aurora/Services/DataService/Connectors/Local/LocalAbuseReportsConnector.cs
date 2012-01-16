@@ -83,28 +83,33 @@ namespace Aurora.Services.DataService
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
             if (!CheckPassword(Password))
+            {
                 return null;
-            AbuseReport report = new AbuseReport();
-            List<string> Reports = GD.Query("Number", Number, "abusereports", "*");
-            if (Reports.Count == 0)
-                return null;
-            report.Category = Reports[0];
-            report.ReporterName = Reports[1];
-            report.ObjectName = Reports[2];
-            report.ObjectUUID = new UUID(Reports[3]);
-            report.AbuserName = Reports[4];
-            report.AbuseLocation = Reports[5];
-            report.AbuseDetails = Reports[6];
-            report.ObjectPosition = Reports[7];
-            report.RegionName = Reports[8];
-            report.ScreenshotID = new UUID(Reports[9]);
-            report.AbuseSummary = Reports[10];
-            report.Number = int.Parse(Reports[11]);
-            report.AssignedTo = Reports[12];
-            report.Active = int.Parse(Reports[13]) == 1;
-            report.Checked = int.Parse(Reports[14]) == 1;
-            report.Notes = Reports[15];
-            return report;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["Number"] = Number;
+            List<string> Reports = GD.Query(new string[] { "*" }, "abusereports", filter, null, null, null);
+
+            return (Reports.Count == 0) ? null : new AbuseReport
+            {
+                Category = Reports[0],
+                ReporterName = Reports[1],
+                ObjectName = Reports[2],
+                ObjectUUID = new UUID(Reports[3]),
+                AbuserName = Reports[4],
+                AbuseLocation = Reports[5],
+                AbuseDetails = Reports[6],
+                ObjectPosition = Reports[7],
+                RegionName = Reports[8],
+                ScreenshotID = new UUID(Reports[9]),
+                AbuseSummary = Reports[10],
+                Number = int.Parse(Reports[11]),
+                AssignedTo = Reports[12],
+                Active = int.Parse(Reports[13]) == 1,
+                Checked = int.Parse(Reports[14]) == 1,
+                Notes = Reports[15]
+            };
         }
 
         public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
@@ -156,23 +161,25 @@ namespace Aurora.Services.DataService
         /// <param name = "Password"></param>
         public void AddAbuseReport(AbuseReport report)
         {
-            List<object> InsertValues = new List<object>
-                                            {
-                                                report.Category.ToString().MySqlEscape(100),
-                                                report.ReporterName.MySqlEscape(100),
-                                                report.ObjectName.MySqlEscape(100),
-                                                report.ObjectUUID,
-                                                report.AbuserName.MySqlEscape(100),
-                                                report.AbuseLocation.MySqlEscape(100),
-                                                report.AbuseDetails.MySqlEscape(512),
-                                                report.ObjectPosition.MySqlEscape(100),
-                                                report.RegionName.MySqlEscape(100),
-                                                report.ScreenshotID,
-                                                report.AbuseSummary.MySqlEscape(100)
-                                            };
+            List<object> InsertValues = new List<object>{
+                report.Category.ToString().MySqlEscape(100),
+                report.ReporterName.MySqlEscape(100),
+                report.ObjectName.MySqlEscape(100),
+                report.ObjectUUID,
+                report.AbuserName.MySqlEscape(100),
+                report.AbuseLocation.MySqlEscape(100),
+                report.AbuseDetails.MySqlEscape(512),
+                report.ObjectPosition.MySqlEscape(100),
+                report.RegionName.MySqlEscape(100),
+                report.ScreenshotID,
+                report.AbuseSummary.MySqlEscape(100)
+            };
+
+            Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
+            sort["Number"] = false;
 
             //We do not trust the number sent by the region. Always find it ourselves
-            List<string> values = GD.Query("", "", "abusereports", "Number", " ORDER BY Number DESC");
+            List<string> values = GD.Query(new string[1] { "Number" }, "abusereports", null, sort, null, null);
             report.Number = values.Count == 0 ? 0 : int.Parse(values[0]);
 
             report.Number++;
@@ -254,16 +261,22 @@ namespace Aurora.Services.DataService
         private bool CheckPassword(string Password)
         {
             if (Password == WebPassword)
+            {
                 return true;
+            }
             string OtherPass = Util.Md5Hash(Password);
             if (OtherPass == WebPassword)
+            {
                 return true;
-            List<string> TruePassword = GD.Query("Method", "abusereports", "passwords", "Password");
-            if (TruePassword.Count == 0)
-                return false;
-            if (OtherPass == TruePassword[0])
-                return true;
-            return false;
+            }
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["Method"] = "abusereports";
+            List<string> TruePassword = GD.Query(new string[] { "Password" }, "passwords", filter, null, null, null);
+
+            return !(
+                TruePassword.Count == 0 ||
+                OtherPass == TruePassword[0]
+            );
         }
     }
 }

@@ -98,14 +98,16 @@ namespace Aurora.Framework
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
         /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
+        /// SELECT string.join(", ", wantedValue) FROM table {magic happens with queryFilter here} {magic happens with sort here} [LIMIT start[, count]]
         /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue);
-
-        /// <summary>
-        ///   select 'wantedValue' from 'table' where 'whereClause'
-        /// </summary>
-        List<string> Query(string whereClause, string table, string wantedValue);
+        /// <param name="wantedValue"></param>
+        /// <param name="table"></param>
+        /// <param name="queryFilter"></param>
+        /// <param name="sort"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
 
         /// <summary>
         ///   select 'wantedValue' from 'table' 'whereClause'
@@ -116,20 +118,6 @@ namespace Aurora.Framework
         ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
         IDataReader QueryData(string whereClause, string table, string wantedValue);
-
-        /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue' 'Order'
-        /// </summary>
-        List<string> Query(string keyRow, object keyValue, string table, string wantedValue, string Order);
-
-        /// <summary>
-        ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
-        /// </summary>
-        List<string> Query(string[] keyRow, object[] keyValue, string table, string wantedValue);
-
-        List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, uint start, uint count, string table, string wantedValue);
-
-        List<string> Query(Dictionary<string, object> whereClause, Dictionary<string, uint> whereBitfield, Dictionary<string, bool> sort, string table, string wantedValue);
 
         /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
@@ -255,6 +243,62 @@ namespace Aurora.Framework
         string ConCat(string[] toConCat);
     }
 
+    public class QueryFilter
+    {
+        public Dictionary<string, object> andFilters = new Dictionary<string, object>();
+        public Dictionary<string, object> orFilters = new Dictionary<string, object>();
+        public Dictionary<string, List<object>> orMultiFilters = new Dictionary<string, List<object>>();
+
+        public Dictionary<string, string> andLikeFilters = new Dictionary<string, string>();
+        public Dictionary<string, string> orLikeFilters = new Dictionary<string, string>();
+        public Dictionary<string, List<string>> orLikeMultiFilters = new Dictionary<string, List<string>>();
+
+        public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
+        public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
+
+        public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
+
+        public Dictionary<string, int> andGreaterThanEqFilters = new Dictionary<string, int>();
+
+        public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
+
+        public Dictionary<string, int> andLessThanEqFilters = new Dictionary<string, int>();
+
+        public List<QueryFilter> subFilters = new List<QueryFilter>();
+
+        public uint Count
+        {
+            get
+            {
+                uint total = (uint)(
+                    andFilters.Count +
+                    orFilters.Count +
+                    orMultiFilters.Count +
+                    andLikeFilters.Count +
+                    orLikeFilters.Count +
+                    orLikeMultiFilters.Count +
+                    andBitfieldAndFilters.Count +
+                    orBitfieldAndFilters.Count +
+                    andGreaterThanFilters.Count +
+                    orGreaterThanFilters.Count +
+                    andGreaterThanEqFilters.Count +
+                    andLessThanFilters.Count +
+                    orLessThanFilters.Count +
+                    andLessThanEqFilters.Count
+                );
+
+                subFilters.ForEach(delegate(QueryFilter filter)
+                {
+                    total += filter.Count;
+                });
+
+                return total;
+            }
+        }
+    }
+
     public interface IAuroraDataPlugin
     {
         /// <summary>
@@ -269,7 +313,6 @@ namespace Aurora.Framework
         /// <param name = "GenericData">The Database Plugin</param>
         /// <param name = "source">Config if more parameters are needed</param>
         /// <param name = "DefaultConnectionString">The connection string to use</param>
-        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                        string DefaultConnectionString);
+        void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
     }
 }

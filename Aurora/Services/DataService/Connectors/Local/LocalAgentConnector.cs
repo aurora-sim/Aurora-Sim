@@ -80,13 +80,22 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                query = GD.Query(new[] {"ID", "`Key`"}, new object[] {agentID, "AgentInfo"}, "userdata", "Value");
+                Dictionary<string, object> where = new Dictionary<string, object>(2);
+                where["ID"] = agentID;
+                where["`Key`"] = "AgentInfo";
+                query = GD.Query(new string[1] { "`Value`" }, "userdata", new QueryFilter
+                {
+                    andFilters = where
+                }, null, null, null);
             }
             catch
             {
             }
+
             if (query == null || query.Count == 0)
+            {
                 return null; //Couldn't find it, return null then.
+            }
 
             OSDMap agentInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
 
@@ -141,7 +150,10 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
         {
-            List<string> found = GD.Query("macaddress", Mac, "macban", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["macaddress"] = Mac;
+            List<string> found = GD.Query(new string[] { "*" }, "macban", filter, null, null, null);
+
             if (found.Count != 0)
             {
                 //Found a mac that matched
@@ -151,8 +163,11 @@ namespace Aurora.Services.DataService
             }
 
             //Viewer Ban Start
-            List<string> clientfound = GD.Query("Client", viewer, "bannedviewers", "*");
-            if (clientfound.Count != 0)
+            filter.andFilters.Remove("macaddress");
+            filter.andFilters["Client"] = viewer;
+            found = GD.Query(new string[] { "*" }, "bannedviewers", filter, null, null, null);
+
+            if (found.Count != 0)
             {
                 reason = "The viewer you are using has been banned, please use a different viewer.";
                 MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);

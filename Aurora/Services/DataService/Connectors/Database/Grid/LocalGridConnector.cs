@@ -69,99 +69,80 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> Get(string regionName, UUID scopeID)
         {
-            List<string> query;
+            QueryFilter filter = new QueryFilter();
+            filter.andLikeFilters["RegionName"] = regionName.MySqlEscape();
             if (scopeID != UUID.Zero)
-                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "' and ScopeID = '" + scopeID + "'",
-                                 m_realm, "*");
-            else
-                query = GD.Query("RegionName like '" + regionName.MySqlEscape() + "'", m_realm, "*");
+            {
+                filter.andFilters["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return null;
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 
-            return ParseQuery(query);
+            return (query.Count == 0) ? null : ParseQuery(query);
         }
 
         public List<GridRegion> Get(RegionFlags flags)
         {
-            List<string> query;
-            query = GD.Query("Flags & '" + ((int) flags).ToString() + "'", m_realm, "*");
-            return ParseQuery(query);
+            QueryFilter filter = new QueryFilter();
+            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
+            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
         public GridRegion Get(int posX, int posY, UUID scopeID)
         {
-            List<string> query;
-            if (scopeID != UUID.Zero)
-                query = GD.Query(new string[3] {"LocX", "LocY", "ScopeID"},
-                                 new object[3] {posX, posY, scopeID}, m_realm, "*");
-            else
-                query = GD.Query(new string[2] {"LocX", "LocY"},
-                                 new object[2] {posX, posY}, m_realm, "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["LocX"] = posX;
+            filter.andFilters["LocY"] = posY;
+            if (scopeID != UUID.Zero){
+                filter.andFilters["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return null;
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 
-            return ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
 
         public GridRegion Get(UUID regionID, UUID scopeID)
         {
             List<string> query;
+            Dictionary<string, object> where = new Dictionary<string, object>();
+
+            where["RegionUUID"] = regionID;
             if (scopeID != UUID.Zero)
-                query = GD.Query(new string[2] {"RegionUUID", "ScopeID"}, new object[2] {regionID, scopeID}, m_realm,
-                                 "*");
-            else
-                query = GD.Query("RegionUUID", regionID, m_realm, "*");
+            {
+                where["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return null;
+            query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
+            {
+                andFilters = where
+            }, null, null, null);
 
-            return ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(query)[0];
         }
 
         public List<GridRegion> Get(int startX, int startY, int endX, int endY, UUID scopeID)
         {
-            List<string> query;
+            QueryFilter filter = new QueryFilter();
+            filter.andGreaterThanEqFilters["LocX"] = startX;
+            filter.andLessThanEqFilters["LocX"] = endX;
+            filter.andGreaterThanEqFilters["LocY"] = startY;
+            filter.andLessThanEqFilters["LocY"] = endY;
+
             if (scopeID != UUID.Zero)
-                query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                                 "' and LocY between '" + startY + "' and '" + endY +
-                                 "' and ScopeID = '" + scopeID + "'", m_realm, "*");
-            else
-                query = GD.Query("LocX between '" + startX + "' and '" + endX +
-                                 "' and LocY between '" + startY + "' and '" + endY + "'",
-                                 m_realm, "*");
+            {
+                filter.andFilters["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return new List<GridRegion>();
-
-            return ParseQuery(query);
+            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
-        public List<GridRegion> Get(RegionFlags flags, bool? regionName, bool? locX, bool? locY)
+        public List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort)
         {
-            if (regionName.HasValue == false && locX.HasValue == false && locY.HasValue == false)
-            {
-                return Get(flags);
-            }
-            List<string> query;
-            List<string> sort = new List<string>();
-            if (regionName.HasValue)
-            {
-                sort.Add("RegionName " + (regionName.Value ? "DESC" : "ASC"));
-            }
-            if (locX.HasValue)
-            {
-                sort.Add("LocX " + (locX.Value ? "DESC" : "ASC"));
-            }
-            if (locY.HasValue)
-            {
-                sort.Add("LocY " + (locY.Value ? "DESC" : "ASC"));
-            }
-            
-            query = GD.Query("(Flags & '" + ((int)flags).ToString() + "') ORDER BY " + string.Join(", ", sort.ToArray()), m_realm, "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
 
-            return ParseQuery(query);
+            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, sort, null, null));
         }
 
         public List<GridRegion> Get(uint start, uint count, uint estateID, RegionFlags flags, Dictionary<string, bool> sort)
@@ -176,15 +157,13 @@ namespace Aurora.Services.DataService
 
             EstateSettings es = estates.GetEstateSettings((int)estateID);
 
-            Dictionary<string, object> where = new Dictionary<string,object>(0);
-
-            Dictionary<string, uint> bitfields = new Dictionary<string,uint>(1);
-            bitfields["Flags"] = (uint)flags;
+            QueryFilter filter = new QueryFilter();
+            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
 
             while (resp.Count < count)
             {
                 uint limit = count - (uint)resp.Count;
-                List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, sort, start, limit, m_realm, "*"));
+                List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count));
 
                 if (query.Count == 0)
                 {
@@ -216,12 +195,10 @@ namespace Aurora.Services.DataService
 
             EstateSettings es = estates.GetEstateSettings((int)estateID);
 
-            Dictionary<string, object> where = new Dictionary<string, object>(0);
+            QueryFilter filter = new QueryFilter();
+            filter.andBitfieldAndFilters["Flags"] = (uint)flags;
 
-            Dictionary<string, uint> bitfields = new Dictionary<string, uint>(1);
-            bitfields["Flags"] = (uint)flags;
-
-            List<GridRegion> query = ParseQuery(GD.Query(where, bitfields, new Dictionary<string, bool>(0), m_realm, "*"));
+            List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, null, null, null));
 
             uint count = 0;
             query.ForEach(delegate(GridRegion region)
@@ -314,35 +291,35 @@ namespace Aurora.Services.DataService
 
         private List<GridRegion> Get(int regionFlags, UUID scopeID)
         {
-            List<string> query;
+            QueryFilter filter = new QueryFilter();
+            filter.andBitfieldAndFilters["Flags"] = (uint)regionFlags;
             if (scopeID != UUID.Zero)
-                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0 and ScopeID = '" + scopeID + "'",
-                                 m_realm, "*");
-            else
-                query = GD.Query("(Flags & " + regionFlags.ToString() + ") <> 0", m_realm, "*");
+            {
+                filter.andFilters["ScopeID"] = scopeID;
+            }
 
-            if (query.Count == 0)
-                return new List<GridRegion>();
-
-            return ParseQuery(query);
+            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
         protected List<GridRegion> ParseQuery(List<string> query)
         {
             List<GridRegion> regionData = new List<GridRegion>();
 
-            for (int i = 0; i < query.Count; i += 14)
+            if ((query.Count % 14) == 0)
             {
-                GridRegion data = new GridRegion();
-                OSDMap map = (OSDMap) OSDParser.DeserializeJson(query[i + 13]);
-                data.FromOSD(map);
+                for (int i = 0; i < query.Count; i += 14)
+                {
+                    GridRegion data = new GridRegion();
+                    OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
+                    data.FromOSD(map);
 
-                //Check whether it should be down
-                if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000*6)))
-                    data.Access |= (int) SimAccess.Down;
+                    //Check whether it should be down
+                    if (data.LastSeen > (Util.UnixTimeSinceEpoch() + (1000 * 6)))
+                        data.Access |= (int)SimAccess.Down;
 
-                if (!regionData.Contains(data))
-                    regionData.Add(data);
+                    if (!regionData.Contains(data))
+                        regionData.Add(data);
+                }
             }
 
             return regionData;

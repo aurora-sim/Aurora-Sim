@@ -191,15 +191,22 @@ namespace Aurora.Services.DataService
         /// <param name = "LandData"></param>
         private void BuildParcelAccessList(LandData LandData)
         {
-            List<string> Query = GD.Query("ParcelID", LandData.GlobalID, "parcelaccess", "AccessID, Flags, Time");
-            ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ParcelID"] = LandData.GlobalID;
+            List<string> Query = GD.Query(new string[3]{
+                "AccessID",
+                "Flags",
+                "Time"
+            }, "parcelaccess", filter, null, null, null);
+
+            ParcelManager.ParcelAccessEntry entry;
             for (int i = 0; i < Query.Count; i += 3)
             {
+                entry = new ParcelManager.ParcelAccessEntry();
                 entry.AgentID = UUID.Parse(Query[i]);
                 entry.Flags = (AccessList) Enum.Parse(typeof (AccessList), Query[i + 1]);
                 entry.Time = new DateTime(long.Parse(Query[i + 2]));
                 LandData.ParcelAccessList.Add(entry);
-                entry = new ParcelManager.ParcelAccessEntry();
             }
         }
     }
