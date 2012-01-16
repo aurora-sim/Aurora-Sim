@@ -290,7 +290,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -303,7 +303,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -319,7 +319,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -336,7 +336,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -349,7 +349,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -365,7 +365,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -382,7 +382,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -395,7 +395,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -412,7 +412,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -425,7 +425,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -438,7 +438,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -455,7 +455,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -468,7 +468,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -481,7 +481,7 @@ namespace Aurora.DataManager.SQLite
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -491,7 +491,10 @@ namespace Aurora.DataManager.SQLite
                     Dictionary<string, object> sps;
                     query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
                     pss[pss.Length] = sps;
-                    had = subFilter.Count > 0;
+                    if (subFilter.Count > 0)
+                    {
+                        had = true;
+                    }
                 }
                 query += ")";
             }

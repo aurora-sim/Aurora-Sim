@@ -190,7 +190,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -201,7 +201,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -217,7 +217,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -234,7 +234,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -247,7 +247,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -263,7 +263,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -278,7 +278,7 @@ namespace Aurora.DataManager.MySQL
                 }
                 if(parts.Count > 0){
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -291,13 +291,13 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
                 }
 
                 #endregion
 
                 #region greater than
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
                 {
@@ -308,7 +308,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -321,9 +321,9 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
                 }
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
                 {
@@ -334,13 +334,13 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
                 }
 
                 #endregion
 
                 #region less than
 
-                had = parts.Count > 0;
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
                 {
@@ -351,7 +351,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -364,7 +364,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 parts = new List<string>();
@@ -377,7 +377,7 @@ namespace Aurora.DataManager.MySQL
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = parts.Count > 0;
+                    had = true;
                 }
 
                 #endregion
@@ -386,7 +386,10 @@ namespace Aurora.DataManager.MySQL
                     Dictionary<string, object> sps;
                     query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
                     pss[pss.Length] = sps;
-                    had = subFilter.Count > 0;
+                    if (subFilter.Count > 0)
+                    {
+                        had = true;
+                    }
                 }
                 query += ")";
             }
