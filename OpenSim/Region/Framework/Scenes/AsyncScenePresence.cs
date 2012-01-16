@@ -1027,6 +1027,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(pos, m_flying, m_objectToSitOn == null);
+            Animator.NeedsAnimationResent = true;
 
             if (m_objectToSitOn != null)
             {
