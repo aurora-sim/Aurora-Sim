@@ -44,6 +44,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         protected Dictionary<string, AssetType> m_assetTypes = new Dictionary<string, AssetType>();
         protected IRegistryCore m_registry;
         protected ILibraryService m_service;
+        protected IInventoryData m_Database;
 
         #region IDefaultLibraryLoader Members
 
@@ -51,6 +52,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             m_service = service;
             m_registry = registry;
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             const string pLibrariesLocation = "DefaultInventory/";
@@ -162,13 +164,16 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 if (nodes.Count == 0)
                     return;
                 InventoryFolderBase f = (InventoryFolderBase) nodes[0];
+                UUID IARRootID = f.ID;
+                UUID LibraryRootID = new UUID("00000112-000f-0000-0000-000100bba000");
 
-                TraverseFolders(nodes[0].ID, m_MockScene);
-                //This is our loaded folder
-                //Fix the name for later
+                TraverseFolders(IARRootID, m_MockScene);
+                FixParent(IARRootID, m_MockScene, LibraryRootID);
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
-                //f.Type = (int)AssetType.RootFolder;
+                f.ID = LibraryRootID;
+                f.Type = (int)AssetType.RootFolder;
+                f.Version = 1;
                 m_MockScene.InventoryService.UpdateFolder(f);
             }
             catch (Exception e)
@@ -208,6 +213,18 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 }
 #endif
                 TraverseFolders(folder.ID, m_MockScene);
+            }
+        }
+
+        private void FixParent(UUID ID, IScene m_MockScene, UUID LibraryRootID)
+        {
+            List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
+            foreach (InventoryFolderBase folder in folders)
+            {
+                if(folder.ParentID == ID) {
+                    folder.ParentID = LibraryRootID;
+                    m_Database.StoreFolder(folder);
+                }
             }
         }
 
