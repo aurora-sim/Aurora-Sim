@@ -46,6 +46,23 @@ namespace Aurora.DataManager.MySQL
             get { return "MySQLData"; }
         }
 
+        #region Database
+
+        public override void ConnectToDatabase(string connectionstring, string migratorName, bool validateTables)
+        {
+            m_connectionString = connectionstring;
+            MySqlConnection c = new MySqlConnection(connectionstring);
+            int subStrA = connectionstring.IndexOf("Database=");
+            int subStrB = connectionstring.IndexOf(";", subStrA);
+            string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB+1);
+
+            ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>());
+
+            var migrationManager = new MigrationManager(this, migratorName, validateTables);
+            migrationManager.DetermineOperation();
+            migrationManager.ExecuteOperation();
+        }
+
         public void CloseDatabase(MySqlConnection connection)
         {
             //Interlocked.Decrement (ref m_locked);
@@ -59,6 +76,10 @@ namespace Aurora.DataManager.MySQL
             //m_connection.Close();
             //m_connection.Dispose();
         }
+
+        #endregion
+
+        #region Query
 
         public IDataReader Query(string sql, Dictionary<string, object> parameters)
         {
@@ -102,21 +123,6 @@ namespace Aurora.DataManager.MySQL
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e);
             }
-        }
-
-        public override void ConnectToDatabase(string connectionstring, string migratorName, bool validateTables)
-        {
-            m_connectionString = connectionstring;
-            MySqlConnection c = new MySqlConnection(connectionstring);
-            int subStrA = connectionstring.IndexOf("Database=");
-            int subStrB = connectionstring.IndexOf(";", subStrA);
-            string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB+1);
-
-            ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>());
-
-            var migrationManager = new MigrationManager(this, migratorName, validateTables);
-            migrationManager.DetermineOperation();
-            migrationManager.ExecuteOperation();
         }
 
         public override List<string> QueryFullData(string whereClause, string table, string wantedValue)
@@ -524,10 +530,16 @@ namespace Aurora.DataManager.MySQL
         private void AddValueToList(ref Dictionary<string, List<string>> dic, string key, string value)
         {
             if (!dic.ContainsKey(key))
+            {
                 dic.Add(key, new List<string>());
+            }
 
             dic[key].Add(value);
         }
+
+        #endregion
+
+        #region Update
 
         public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
@@ -603,6 +615,10 @@ namespace Aurora.DataManager.MySQL
             }
             return true;
         }
+
+        #endregion
+
+        #region Insert
 
         public override bool InsertMultiple(string table, List<object[]> values)
         {
@@ -793,6 +809,10 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        #endregion
+
+        #region Delete
+
         public override bool Delete(string table, string[] keys, object[] values)
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
@@ -816,30 +836,6 @@ namespace Aurora.DataManager.MySQL
                 return false;
             }
             return true;
-        }
-
-        public override string FormatDateTimeString(int time)
-        {
-            if (time == 0)
-                return "now()";
-            return "date_add(now(), interval " + time + " minute)";
-        }
-
-        public override string IsNull(string field, string defaultValue)
-        {
-            return "IFNULL(" + field + "," + defaultValue + ")";
-        }
-
-        public override string ConCat(string[] toConcat)
-        {
-#if (!ISWIN)
-            string returnValue = "concat(";
-            foreach (string s in toConcat)
-                returnValue = returnValue + (s + ",");
-#else
-            string returnValue = toConcat.Aggregate("concat(", (current, s) => current + (s + ","));
-#endif
-            return returnValue.Substring(0, returnValue.Length - 1) + ")";
         }
 
         public override bool Delete(string table, string whereclause)
@@ -872,6 +868,34 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        #endregion
+
+        public override string FormatDateTimeString(int time)
+        {
+            if (time == 0)
+                return "now()";
+            return "date_add(now(), interval " + time + " minute)";
+        }
+
+        public override string IsNull(string field, string defaultValue)
+        {
+            return "IFNULL(" + field + "," + defaultValue + ")";
+        }
+
+        public override string ConCat(string[] toConcat)
+        {
+#if (!ISWIN)
+            string returnValue = "concat(";
+            foreach (string s in toConcat)
+                returnValue = returnValue + (s + ",");
+#else
+            string returnValue = toConcat.Aggregate("concat(", (current, s) => current + (s + ","));
+#endif
+            return returnValue.Substring(0, returnValue.Length - 1) + ")";
+        }
+
+        #region Tables
+
         public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
         {
             table = table.ToLower();
@@ -881,25 +905,6 @@ namespace Aurora.DataManager.MySQL
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;
-            if (multiplePrimary)
-            {
-                string[] primaryKeyFields = new string[primaryColumns.Count()];
-                uint i = 0;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    primaryKeyFields[i++] = column.Name;
-                }
-                if (indices.IsFixedSize && indices.Length == 0)
-                {
-                    indices = new IndexDefinition[] { new IndexDefinition { Fields = primaryKeyFields, Type = IndexType.Primary } };
-                }
-                else
-                {
-                    indices[indices.Length - 1] = new IndexDefinition { Fields = primaryKeyFields, Type = IndexType.Primary };
-                }
-            }
 
             foreach (ColumnDefinition column in columns)
             {
@@ -967,27 +972,32 @@ namespace Aurora.DataManager.MySQL
                     if (addedColumns.ContainsKey(column.Name.ToLower()))
                     {
                         if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() || column.Type != addedColumns[column.Name.ToLower()].Type)
+                        {
                             modifiedColumns.Add(column.Name.ToLower(), addedColumns[column.Name.ToLower()]);
+                        }
                         addedColumns.Remove(column.Name.ToLower());
                     }
                     else
+                    {
                         removedColumns.Add(column.Name.ToLower(), column);
+                    }
                 }
             }
 #else
-            Dictionary<string, ColumnDefinition> addedColumns =
-                columns.Where(column => !oldColumns.Contains(column)).ToDictionary(column => column.Name.ToLower());
+            Dictionary<string, ColumnDefinition> addedColumns = columns.Where(column => !oldColumns.Contains(column)).ToDictionary(column => column.Name.ToLower());
             foreach (ColumnDefinition column in oldColumns.Where(column => !columns.Contains(column)))
             {
                 if (addedColumns.ContainsKey(column.Name.ToLower()))
                 {
-                    if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() ||
-                        column.Type != addedColumns[column.Name.ToLower()].Type)
+                    if (column.Name.ToLower() != addedColumns[column.Name.ToLower()].Name.ToLower() || column.Type != addedColumns[column.Name.ToLower()].Type)
+                    {
                         modifiedColumns.Add(column.Name.ToLower(), addedColumns[column.Name.ToLower()]);
+                    }
                     addedColumns.Remove(column.Name.ToLower());
                 }
-                else
+                else{
                     removedColumns.Add(column.Name.ToLower(), column);
+                }
             }
 #endif
 
@@ -1035,37 +1045,46 @@ namespace Aurora.DataManager.MySQL
                 MainConsole.Instance.Error("[MySQLDataLoader] UpdateTable", e);
             }
 
-            Dictionary<string, IndexDefinition> oldIndices = ExtractIndicesFromTable(table);
-            Dictionary<string, IndexDefinition> removeIndices = new Dictionary<string, IndexDefinition>();
+            Dictionary<string, IndexDefinition> oldIndicesDict = ExtractIndicesFromTable(table);
+
+            List<string> removeIndices = new List<string>();
+            List<string> oldIndexNames = new List<string>(oldIndicesDict.Count);
+            List<IndexDefinition> oldIndices = new List<IndexDefinition>(oldIndicesDict.Count);
             List<IndexDefinition> newIndices = new List<IndexDefinition>();
 
-            foreach (KeyValuePair<string, IndexDefinition> oldIndex in oldIndices)
+            foreach (KeyValuePair<string, IndexDefinition> oldIndex in oldIndicesDict)
             {
+                oldIndexNames.Add(oldIndex.Key);
+                oldIndices.Add(oldIndex.Value);
+            }
+            int i=0;
+            foreach(IndexDefinition oldIndex in oldIndices){
                 bool found = false;
                 foreach (IndexDefinition newIndex in indices)
                 {
-                    if (oldIndex.Value.Equals(newIndex))
+                    if (oldIndex.Equals(newIndex))
                     {
                         found = true;
                         break;
                     }
                     else
                     {
-                        MainConsole.Instance.Info(oldIndex.Value.Type.ToString() + " " + string.Join(", ", oldIndex.Value.Fields) + " does not match new index " + newIndex.Type.ToString() + " " + string.Join(", ", newIndex.Fields));
+                        MainConsole.Instance.Info(oldIndex.Type.ToString() + " " + string.Join(", ", oldIndex.Fields) + " does not match new index " + newIndex.Type.ToString() + " " + string.Join(", ", newIndex.Fields));
                     }
                 }
                 if (!found)
                 {
-                    removeIndices.Add(oldIndex.Key, oldIndex.Value);
+                    removeIndices.Add(oldIndexNames[i]);
                 }
+                ++i;
             }
 
             foreach (IndexDefinition newIndex in indices)
             {
                 bool found = false;
-                foreach (KeyValuePair<string, IndexDefinition> oldIndex in oldIndices)
+                foreach (IndexDefinition oldIndex in oldIndices)
                 {
-                    if (oldIndex.Value.Equals(newIndex))
+                    if (oldIndex.Equals(newIndex))
                     {
                         found = true;
                         break;
@@ -1077,9 +1096,9 @@ namespace Aurora.DataManager.MySQL
                 }
             }
 
-            foreach (KeyValuePair<string, IndexDefinition> oldIndex in removeIndices)
+            foreach (string oldIndex in removeIndices)
             {
-                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` DROP INDEX `{1}`", table, oldIndex.Key), new Dictionary<string, object>());
+                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` DROP INDEX `{1}`", table, oldIndex), new Dictionary<string, object>());
             }
             foreach (IndexDefinition newIndex in newIndices)
             {
@@ -1441,6 +1460,8 @@ namespace Aurora.DataManager.MySQL
                 "You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " +
                 tStr);
         }
+
+        #endregion
 
         public override IGenericData Copy()
         {

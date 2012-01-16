@@ -787,8 +787,6 @@ namespace Aurora.DataManager.MSSQL
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
             {
@@ -796,27 +794,10 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
 
-            string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += column.Name;
-                }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
-            }
-
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
-                                         multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, string.Empty);
 
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
@@ -833,8 +814,6 @@ namespace Aurora.DataManager.MSSQL
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
             {
@@ -842,27 +821,10 @@ namespace Aurora.DataManager.MSSQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
 
-            string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += column.Name;
-                }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
-            }
-
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
-                                         multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, string.Empty);
 
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();

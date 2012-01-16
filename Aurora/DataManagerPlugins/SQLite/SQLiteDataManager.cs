@@ -895,8 +895,6 @@ namespace Aurora.DataManager.SQLite
             }
 
             string columnDefinition = string.Empty;
-            var primaryColumns = (from cd in columns where cd.IsPrimary select cd);
-            bool multiplePrimary = primaryColumns.Count() > 1;
 
             foreach (ColumnDefinition column in columns)
             {
@@ -904,27 +902,10 @@ namespace Aurora.DataManager.SQLite
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                    ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
+                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
 
-            string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += column.Name;
-                }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
-            }
-
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition,
-                                         multiplePrimaryString);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, string.Empty);
 
             var cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
@@ -992,17 +973,6 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
 
             string newTableColumnDefinition = string.Empty;
-#if (!ISWIN)
-            List<ColumnDefinition> primaryColumns = new List<ColumnDefinition>();
-            foreach (ColumnDefinition column in columns)
-            {
-                if (column.IsPrimary) primaryColumns.Add(column);
-            }
-#else
-            List<ColumnDefinition> primaryColumns = columns.Where(column => column.IsPrimary).ToList();
-#endif
-
-            bool multiplePrimary = primaryColumns.Count > 1;
 
             foreach (ColumnDefinition column in columns)
             {
@@ -1010,26 +980,10 @@ namespace Aurora.DataManager.SQLite
                 {
                     newTableColumnDefinition += ", ";
                 }
-                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type) +
-                                            ((column.IsPrimary && !multiplePrimary) ? " PRIMARY KEY" : string.Empty);
-            }
-            string multiplePrimaryString = string.Empty;
-            if (multiplePrimary)
-            {
-                string listOfPrimaryNamesString = string.Empty;
-                foreach (ColumnDefinition column in primaryColumns)
-                {
-                    if (listOfPrimaryNamesString != string.Empty)
-                    {
-                        listOfPrimaryNamesString += ", ";
-                    }
-                    listOfPrimaryNamesString += column.Name;
-                }
-                multiplePrimaryString = string.Format(", PRIMARY KEY ({0}) ", listOfPrimaryNamesString);
+                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
 
-            query = string.Format("create table " + table + " ( {0} {1}) ", newTableColumnDefinition,
-                                  multiplePrimaryString);
+            query = string.Format("create table " + table + " ( {0} {1}) ", newTableColumnDefinition, string.Empty);
             cmd = new SQLiteCommand {CommandText = query};
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);

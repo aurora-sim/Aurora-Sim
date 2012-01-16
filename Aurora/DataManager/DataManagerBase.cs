@@ -68,10 +68,6 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions);
-        public void CreateTable(string table, ColumnDefinition[] columns)
-        {
-            CreateTable(table, columns, new IndexDefinition[0]);
-        }
 
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract bool DirectReplace(string table, string[] keys, object[] values);
@@ -85,13 +81,16 @@ namespace Aurora.DataManager
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
-                CreateTable(VERSION_TABLE_NAME, new[]
-                                                    {
-                                                        new ColumnDefinition
-                                                            {Name = COLUMN_VERSION, Type = ColumnTypes.String},
-                                                        new ColumnDefinition
-                                                            {Name = COLUMN_NAME, Type = ColumnTypes.String}
-                                                    });
+                CreateTable(VERSION_TABLE_NAME, new[]{
+                    new ColumnDefinition{
+                        Name = COLUMN_VERSION,
+                        Type = ColumnTypes.String
+                    },
+                    new ColumnDefinition{
+                        Name = COLUMN_NAME,
+                        Type = ColumnTypes.String
+                    }
+                }, new IndexDefinition[0]);
             }
 
             Dictionary<string, object> where = new Dictionary<string, object>(1);
@@ -134,7 +133,7 @@ namespace Aurora.DataManager
                 CreateTable(VERSION_TABLE_NAME, new[]{new ColumnDefinition{
                     Name = COLUMN_VERSION,
                     Type = ColumnTypes.String100
-                }});
+                }}, new IndexDefinition[0]);
             }
             //Remove previous versions
             Delete(VERSION_TABLE_NAME, new string[1] {COLUMN_NAME}, new object[1] {MigrationName});
@@ -196,10 +195,11 @@ namespace Aurora.DataManager
                     if (thisDef != null)
                     {
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                        {
                             continue; //They are the same type, let them go on through
+                        }
                     }
-                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name +
-                               " when verifing tables exist");
+                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist");
                     return false;
                 }
             }
@@ -224,11 +224,60 @@ namespace Aurora.DataManager
                     if (thisDef != null)
                     {
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                        {
                             continue; //They are the same type, let them go on through
+                        }
                     }
-                    MainConsole.Instance.Debug("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name +
-                                " when verifing tables exist");
+                    MainConsole.Instance.Debug("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist");
                     return false;
+                }
+            }
+
+            Dictionary<string, IndexDefinition> ei = ExtractIndicesFromTable(tableName);
+            List<IndexDefinition> extractedIndices = new List<IndexDefinition>(ei.Count);
+            foreach(KeyValuePair<string, IndexDefinition> kvp in ei){
+                extractedIndices.Add(kvp.Value);
+            }
+            List<IndexDefinition> newIndices = new List<IndexDefinition>(indexDefinitions);
+
+            foreach (IndexDefinition indexDefinition in indexDefinitions)
+            {
+                if (!extractedIndices.Contains(indexDefinition))
+                {
+                    IndexDefinition thisDef = null;
+                    foreach (IndexDefinition extractedDefinition in extractedIndices)
+                    {
+                        if (extractedDefinition.Equals(indexDefinition))
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+                    if (thisDef == null)
+                    {
+                        MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " index " + indexDefinition.Type.ToString() + " (" + string.Join(", ", indexDefinition.Fields) + ") when verifing tables exist");
+                        return false;
+                    }
+                }
+            }
+            foreach (IndexDefinition indexDefinition in extractedIndices)
+            {
+                if (!newIndices.Contains(indexDefinition))
+                {
+                    IndexDefinition thisDef = null;
+                    foreach (IndexDefinition extractedDefinition in newIndices)
+                    {
+                        if (extractedDefinition.Equals(indexDefinition))
+                        {
+                            thisDef = extractedDefinition;
+                            break;
+                        }
+                    }
+                    if (thisDef == null)
+                    {
+                        MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " index " + indexDefinition.Type.ToString() + " (" + string.Join(", ", indexDefinition.Fields) + ") when verifing tables exist");
+                        return false;
+                    }
                 }
             }
 
@@ -247,7 +296,7 @@ namespace Aurora.DataManager
                 return;
             }
 
-            CreateTable(tableName, columnDefinitions);
+            CreateTable(tableName, columnDefinitions, indexDefinitions);
         }
 
         public void RenameTable(string oldTableName, string newTableName)

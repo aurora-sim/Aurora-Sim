@@ -48,13 +48,6 @@ namespace Aurora.Framework
         bool TableExists(string table);
 
         /// <summary>
-        ///   Create a generic table
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "columns"></param>
-        void CreateTable(string table, ColumnDefinition[] columns);
-
-        /// <summary>
         /// Creates a table with indices
         /// </summary>
         /// <param name="table"></param>

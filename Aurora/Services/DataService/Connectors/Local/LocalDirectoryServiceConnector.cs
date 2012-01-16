@@ -791,9 +791,9 @@ namespace Aurora.Services.DataService
                 List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero);
                 if (regions.Count >= 1)
                 {
-                    Dictionary<string, object> whereClause = new Dictionary<string, object>();
-                    whereClause["region"] = regions[0].RegionID.ToString();
-                    whereClause["maturity"] = maturity;
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["region"] = regions[0].RegionID.ToString();
+                    filter.andFilters["maturity"] = maturity;
 
                     List<string> retVal = GD.Query(new string[]{
                         "EID",
@@ -802,10 +802,7 @@ namespace Aurora.Services.DataService
                         "maturity",
                         "flags",
                         "name"
-                    }, "asevents", new QueryFilter
-                    {
-                        andFilters = whereClause
-                    }, null, null, null);
+                    }, "asevents", filter, null, null, null);
 
                     if (retVal.Count > 0)
                     {
