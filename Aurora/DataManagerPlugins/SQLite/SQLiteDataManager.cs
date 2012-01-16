@@ -74,6 +74,8 @@ namespace Aurora.DataManager.SQLite
             get { return "SQLiteConnector"; }
         }
 
+        #region Database
+
         public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
         {
             string[] s1 = connectionString.Split(new[] { "Data Source=", "," }, StringSplitOptions.RemoveEmptyEntries);
@@ -85,6 +87,15 @@ namespace Aurora.DataManager.SQLite
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
         }
+
+        public override void CloseDatabase()
+        {
+            m_Connection.Close();
+        }
+
+        #endregion
+
+        #region Query
 
         protected IDataReader ExecuteReader(SQLiteCommand cmd)
         {
@@ -201,6 +212,11 @@ namespace Aurora.DataManager.SQLite
             return 0;
         }
 
+        protected IDataReader GetReader(SQLiteCommand cmd)
+        {
+            return ExecuteReader(cmd);
+        }
+
         private static void UnescapeSQL(SQLiteCommand cmd)
         {
             foreach (SQLiteParameter v in cmd.Parameters)
@@ -214,11 +230,6 @@ namespace Aurora.DataManager.SQLite
                     v.Value = v.Value.ToString().Replace("\\\"", "\"");
                 }
             }
-        }
-
-        protected IDataReader GetReader(SQLiteCommand cmd)
-        {
-            return ExecuteReader(cmd);
         }
 
         protected void CloseReaderCommand(SQLiteCommand cmd)
@@ -600,6 +611,47 @@ namespace Aurora.DataManager.SQLite
             dic[key].Add(value);
         }
 
+        #endregion
+
+        #region Update
+
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            return Update(table, setValues, setRows, keyRows, keyValues);
+        }
+
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            var cmd = new SQLiteCommand();
+            string query = String.Format("update {0} set ", table);
+            int i = 0;
+
+            foreach (object value in setValues)
+            {
+                query += string.Format("{0} = :{1},", setRows[i], setRows[i]);
+
+                cmd.Parameters.AddWithValue(":" + setRows[i], value);
+                i++;
+            }
+            i = 0;
+            query = query.Remove(query.Length - 1);
+            query += " where ";
+            foreach (object value in keyValues)
+            {
+                query += String.Format("{0} = '{1}' and ", keyRows[i], value);
+                i++;
+            }
+            query = query.Remove(query.Length - 5);
+            cmd.CommandText = query;
+            ExecuteNonQuery(cmd);
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        #endregion
+
+        #region Insert
+
         public override bool InsertMultiple(string table, List<object[]> values)
         {
             var cmd = new SQLiteCommand();
@@ -679,6 +731,40 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        public override bool Insert(string table, object[] values, string updateKey, object updateValue)
+        {
+            var cmd = new SQLiteCommand();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+
+            string query = "";
+            query = String.Format("insert into {0} values (", table);
+            int i = 0;
+            foreach (object value in values)
+            {
+                ps[":" + Util.ConvertDecString(i)] = value;
+                query = String.Format(query + ":{0},", Util.ConvertDecString(i++));
+            }
+            query = query.Remove(query.Length - 1);
+            query += ")";
+            cmd.CommandText = query;
+            AddParams(ref cmd, ps);
+            try
+            {
+                ExecuteNonQuery(cmd);
+                CloseReaderCommand(cmd);
+            }
+                //Execute the update then...
+            catch (Exception)
+            {
+                cmd = new SQLiteCommand();
+                query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);
+                cmd.CommandText = query;
+                ExecuteNonQuery(cmd);
+                CloseReaderCommand(cmd);
+            }
+            return true;
+        }
+
         public override bool DirectReplace(string table, string[] keys, object[] values)
         {
             return Replace(table, keys, values);
@@ -728,6 +814,10 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        #endregion
+
+        #region Delete
+
         public override bool Delete(string table, string[] keys, object[] values)
         {
             var cmd = new SQLiteCommand();
@@ -773,6 +863,8 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        #endregion
+
         public override string FormatDateTimeString(int time)
         {
             if (time == 0)
@@ -797,77 +889,7 @@ namespace Aurora.DataManager.SQLite
             return returnValue.Substring(0, returnValue.Length - 4);
         }
 
-        public override bool Insert(string table, object[] values, string updateKey, object updateValue)
-        {
-            var cmd = new SQLiteCommand();
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-
-            string query = "";
-            query = String.Format("insert into {0} values (", table);
-            int i = 0;
-            foreach (object value in values)
-            {
-                ps[":" + Util.ConvertDecString(i)] = value;
-                query = String.Format(query + ":{0},", Util.ConvertDecString(i++));
-            }
-            query = query.Remove(query.Length - 1);
-            query += ")";
-            cmd.CommandText = query;
-            AddParams(ref cmd, ps);
-            try
-            {
-                ExecuteNonQuery(cmd);
-                CloseReaderCommand(cmd);
-            }
-                //Execute the update then...
-            catch (Exception)
-            {
-                cmd = new SQLiteCommand();
-                query = String.Format("UPDATE {0} SET {1} = '{2}'", table, updateKey, updateValue);
-                cmd.CommandText = query;
-                ExecuteNonQuery(cmd);
-                CloseReaderCommand(cmd);
-            }
-            return true;
-        }
-
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
-        {
-            return Update(table, setValues, setRows, keyRows, keyValues);
-        }
-
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
-        {
-            var cmd = new SQLiteCommand();
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-
-            foreach (object value in setValues)
-            {
-                query += string.Format("{0} = :{1},", setRows[i], setRows[i]);
-
-                cmd.Parameters.AddWithValue(":" + setRows[i], value);
-                i++;
-            }
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
-            {
-                query += String.Format("{0} = '{1}' and ", keyRows[i], value);
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
-            CloseReaderCommand(cmd);
-            return true;
-        }
-
-        public override void CloseDatabase()
-        {
-            m_Connection.Close();
-        }
+        #region Tables
 
         public override bool TableExists(string tableName)
         {
@@ -1235,6 +1257,8 @@ namespace Aurora.DataManager.SQLite
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }
+
+        #endregion
 
         public override IGenericData Copy()
         {
