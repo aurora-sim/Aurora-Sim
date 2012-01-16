@@ -52,7 +52,7 @@ namespace Aurora.DataManager.Migration.Migrators
             ));
 
             AddSchema("estatesettings", ColDefs(
-                ColDef("EstateID", ColumnTypes.Integer11, true),
+                ColDef("EstateID", ColumnTypes.Integer11),
                 ColDef("EstateName", ColumnTypes.String100),
                 ColDef("EstateOwner", ColumnTypes.String36),
                 ColDef("ParentEstateID", ColumnTypes.Integer11),
@@ -81,51 +81,6 @@ namespace Aurora.DataManager.Migration.Migrators
         protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
-        }
-
-        public override void FinishedMigration(IDataConnector genericData)
-        {
-            if (!genericData.TableExists("estates")) return;
-            IDataReader dr = genericData.QueryData("WHERE `Key` = 'EstateID'", "estates", "`ID`, `Key`, `Value`");
-
-            if (dr != null)
-            {
-                try
-                {
-                    while (dr.Read())
-                    {
-                        try
-                        {
-                            UUID ID = UUID.Parse(dr["ID"].ToString());
-                            string value = dr["Value"].ToString();
-                            List<string> results = genericData.Query("`ID` = '" + value + "' AND `Key` = 'EstateSettings'", "estates", "`Value`");
-                            if ((results != null) && (results.Count >= 1))
-                            {
-                                EstateSettings es = new EstateSettings();
-                                es.FromOSD((OSDMap)OSDParser.DeserializeLLSDXml(results[0]));
-                                genericData.Insert("estateregions", new object[] { ID, value });
-                                List<string> exist =
-                                    genericData.Query("`EstateID` = '" + value + "'", "estatesettings", "`EstateID`");
-                                if ((exist == null) || (exist.Count == 0))
-                                    genericData.Insert("estatesettings",
-                                                   new object[] { value, es.EstateName, es.EstateOwner, es.ParentEstateID, es.ToOSD() });
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-                catch
-                {
-
-                }
-                finally
-                {
-                    dr.Close();
-                }
-            }
         }
     }
 }

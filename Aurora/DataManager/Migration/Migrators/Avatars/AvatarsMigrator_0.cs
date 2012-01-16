@@ -43,9 +43,13 @@ namespace Aurora.DataManager.Migration.Migrators
             this.RenameSchema("Avatars", "avatars");
             this.RemoveSchema("avatars");
 
-            AddSchema("avatars", ColDefs(ColDef("PrincipalID", ColumnTypes.Char36, true),
-                                         ColDef("Name", ColumnTypes.String32, true),
-                                         ColDef("Value", ColumnTypes.Text)));
+            AddSchema("avatars", ColDefs(
+                ColDef("PrincipalID", ColumnTypes.Char36),
+                ColDef("Name", ColumnTypes.String32),
+                ColDef("Value", ColumnTypes.Text)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "PrincipalID", "Name" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

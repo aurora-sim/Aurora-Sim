@@ -46,16 +46,21 @@ namespace Aurora.DataManager.Migration.Migrators
 
             RemoveSchema("estates");
             AddSchema("estateregions", ColDefs(
-                ColDef("RegionID", ColumnTypes.String36, true),
+                ColDef("RegionID", ColumnTypes.String36),
                 ColDef("EstateID", ColumnTypes.Integer11)
-                                     ));
+            ), IndexDefs(
+                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+            ));
 
             AddSchema("estatesettings", ColDefs(
-                ColDef("EstateID", ColumnTypes.Integer11, true),
+                ColDef("EstateID", ColumnTypes.Integer11),
                 ColDef("EstateName", ColumnTypes.String100),
                 ColDef("EstateOwner", ColumnTypes.String36),
                 ColDef("ParentEstateID", ColumnTypes.Integer11),
-                ColDef("Settings", ColumnTypes.Text)));
+                ColDef("Settings", ColumnTypes.Text)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "EstateID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

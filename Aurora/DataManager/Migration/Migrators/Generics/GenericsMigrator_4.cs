@@ -42,11 +42,13 @@ namespace Aurora.DataManager.Migration.Migrators
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("generics", ColDefs(
-                ColDef("OwnerID", ColumnTypes.String36, true),
-                ColDef("Type", ColumnTypes.String64, true),
-                ColDef("Key", ColumnTypes.String64, true),
+                ColDef("OwnerID", ColumnTypes.String36),
+                ColDef("Type", ColumnTypes.String64),
+                ColDef("Key", ColumnTypes.String64),
                 ColDef("Value", ColumnTypes.LongText)
-                                      ));
+            ), IndexDefs(
+                IndexDef(new string[3]{ "OwnerID", "Type", "Key" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)
