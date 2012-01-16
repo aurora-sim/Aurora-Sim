@@ -916,22 +916,57 @@ namespace Aurora.DataManager.SQLite
                 throw new DataManagerException("Trying to create a table with name of one that already exists.");
             }
 
-            string columnDefinition = string.Empty;
+            IndexDefinition primary = null;
+            foreach (IndexDefinition index in indices)
+            {
+                if (index.Type == IndexType.Primary)
+                {
+                    primary = index;
+                    break;
+                }
+            }
+
+            List<string> columnDefinition = new List<string>();
 
             foreach (ColumnDefinition column in columns)
             {
-                if (columnDefinition != string.Empty)
-                {
-                    columnDefinition += ", ";
-                }
-                columnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
+                columnDefinition.Add(column.Name + " " + GetColumnTypeStringSymbol(column.Type));
+            }
+            if (primary != null && primary.Fields.Length > 0)
+            {
+                columnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, string.Empty);
-
-            var cmd = new SQLiteCommand {CommandText = query};
+            var cmd = new SQLiteCommand {
+                CommandText = string.Format("create table " + table + " ({0})", string.Join(", ", columnDefinition.ToArray()))
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+
+            if (indices.Length >= 1 && (primary == null || indices.Length >= 2))
+            {
+                columnDefinition = new List<string>(primary != null ? indices.Length : indices.Length - 1); // reusing existing variable for laziness
+                uint i = 0;
+                foreach (IndexDefinition index in indices)
+                {
+                    if (index.Type == IndexType.Primary || index.Fields.Length < 1)
+                    {
+                        continue;
+                    }
+
+                    i++;
+                    columnDefinition.Add("CREATE " + (index.Type == IndexType.Unique ? "UNIQUE " : string.Empty) + "INDEX idx_" + table + "_" + i.ToString() + " ON " + table + "(" + string.Join(", ", index.Fields) + ")");
+                }
+                foreach (string query in columnDefinition)
+                {
+                    cmd = new SQLiteCommand
+                    {
+                        CommandText = query
+                    };
+                    ExecuteNonQuery(cmd);
+                    CloseReaderCommand(cmd);
+                }
+            }
         }
 
         public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
@@ -978,37 +1013,77 @@ namespace Aurora.DataManager.SQLite
                 renamedTempTableColumn += column.Name;
                 renamedTempTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
-            string query = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");";
 
-            var cmd = new SQLiteCommand {CommandText = query};
+            var cmd = new SQLiteCommand {
+                CommandText = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");"
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            query = "INSERT INTO " + table + "__temp SELECT " + renamedTempTableColumn + " from " + table + ";";
-            cmd = new SQLiteCommand {CommandText = query};
+            cmd = new SQLiteCommand {
+                CommandText = "INSERT INTO " + table + "__temp SELECT " + renamedTempTableColumn + " from " + table + ";"
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            query = "drop table " + table;
-            cmd = new SQLiteCommand {CommandText = query};
+            cmd = new SQLiteCommand {
+                CommandText = "drop table " + table
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            string newTableColumnDefinition = string.Empty;
+            List<string> newTableColumnDefinition = new List<string>(columns.Length);
+
+            IndexDefinition primary = null;
+            foreach (IndexDefinition index in indices)
+            {
+                if (index.Type == IndexType.Primary)
+                {
+                    primary = index;
+                    break;
+                }
+            }
 
             foreach (ColumnDefinition column in columns)
             {
-                if (newTableColumnDefinition != string.Empty)
-                {
-                    newTableColumnDefinition += ", ";
-                }
-                newTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
+                newTableColumnDefinition.Add(column.Name + " " + GetColumnTypeStringSymbol(column.Type));
+            }
+            if (primary != null && primary.Fields.Length > 0){
+                newTableColumnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
 
-            query = string.Format("create table " + table + " ( {0} {1}) ", newTableColumnDefinition, string.Empty);
-            cmd = new SQLiteCommand {CommandText = query};
+            cmd = new SQLiteCommand {
+                CommandText = string.Format("create table " + table + " ({0}) ", string.Join(", ", newTableColumnDefinition.ToArray()))
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
+
+            if (indices.Length >= 1 && (primary == null || indices.Length >= 2))
+            {
+                newTableColumnDefinition = new List<string>(primary != null ? indices.Length : indices.Length - 1); // reusing existing variable for laziness
+                uint i = 0;
+                foreach (IndexDefinition index in indices)
+                {
+                    if (index.Type == IndexType.Primary || index.Fields.Length < 1)
+                    {
+                        continue;
+                    }
+
+                    i++;
+                    newTableColumnDefinition.Add("CREATE " + (index.Type == IndexType.Unique ? "UNIQUE " : string.Empty) + "INDEX idx_" + table + "_" + i.ToString() + " ON " + table + "(" + string.Join(", ", index.Fields) + ")");
+                }
+                foreach (string query in newTableColumnDefinition)
+                {
+                    cmd = new SQLiteCommand
+                    {
+                        CommandText = query
+                    };
+                    ExecuteNonQuery(cmd);
+                    CloseReaderCommand(cmd);
+                }
+            }
+
+
 
             string InsertFromTempTableColumnDefinition = string.Empty;
             string InsertIntoFromTempTableColumnDefinition = string.Empty;
@@ -1029,15 +1104,16 @@ namespace Aurora.DataManager.SQLite
                     InsertIntoFromTempTableColumnDefinition += column.Name;
                 InsertFromTempTableColumnDefinition += column.Name;
             }
-            query = "INSERT INTO " + table + " (" + InsertIntoFromTempTableColumnDefinition + ") SELECT " +
-                    InsertFromTempTableColumnDefinition + " from " + table + "__temp;";
-            cmd = new SQLiteCommand {CommandText = query};
+
+            cmd = new SQLiteCommand {
+                CommandText = "INSERT INTO " + table + " (" + InsertIntoFromTempTableColumnDefinition + ") SELECT " + InsertFromTempTableColumnDefinition + " from " + table + "__temp;"
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-
-            query = "drop table " + table + "__temp";
-            cmd = new SQLiteCommand {CommandText = query};
+            cmd = new SQLiteCommand {
+                CommandText = "drop table " + table + "__temp"
+            };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }
@@ -1148,7 +1224,83 @@ namespace Aurora.DataManager.SQLite
 
         protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
         {
-            throw new NotImplementedException();
+            Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
+            IndexDefinition primary = new IndexDefinition
+            {
+                Fields = new string[]{},
+                Type = IndexType.Primary
+            };
+
+            List<string> fields = new List<string>();
+
+            SQLiteCommand cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
+            using (IDataReader rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    if (uint.Parse(rdr["pk"].ToString()) > 0)
+                    {
+                        fields.Add(rdr["name"].ToString());
+                    }
+                }
+                rdr.Close();
+            }
+            CloseReaderCommand(cmd);
+            primary.Fields = fields.ToArray();
+
+            cmd = PrepReader(string.Format("PRAGMA index_list({0})", tableName));
+            Dictionary<string, bool> indices = new Dictionary<string, bool>();
+            using (IDataReader rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    indices[rdr["name"].ToString()] = (uint.Parse(rdr["unique"].ToString()) > 0);
+                }
+                rdr.Close();
+            }
+            CloseReaderCommand(cmd);
+
+            bool checkForPrimary = primary.Fields.Length > 0;
+            foreach (KeyValuePair<string, bool> index in indices)
+            {
+                defs[index.Key] = new IndexDefinition
+                {
+                    Type = index.Value ? IndexType.Unique : IndexType.Index
+                };
+                fields = new List<string>();
+                cmd = PrepReader(string.Format("PRAGMA index_info({0})", index.Key));
+                using (IDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        fields.Add(rdr["name"].ToString());
+                    }
+                    rdr.Close();
+                }
+                defs[index.Key].Fields = fields.ToArray();
+                CloseReaderCommand(cmd);
+                if (checkForPrimary && defs[index.Key].Fields.Length == primary.Fields.Length)
+                {
+                    uint i = 0;
+                    bool isPrimary = true;
+                    foreach (string pkField in primary.Fields)
+                    {
+                        if (defs[index.Key].Fields[i++] != pkField)
+                        {
+                            isPrimary = false;
+                            break;
+                        }
+                    }
+                    if (isPrimary)
+                    {
+                        MainConsole.Instance.Warn("[" + Identifier + "]: Primary Key found (" + string.Join(", ", defs[index.Key].Fields) + ")");
+                        defs[index.Key].Type = IndexType.Primary;
+                        checkForPrimary = false;
+                    }
+                }
+            }
+
+            return defs;
         }
 
         private ColumnTypes ConvertTypeToColumnType(string typeString)
