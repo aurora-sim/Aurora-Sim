@@ -157,8 +157,7 @@ namespace Aurora.Services.DataService
             OSDMap mess = new OSDMap();
             mess["Method"] = "getparcelbyowner";
             mess["OwnerID"] = OwnerID;
-            List<string> m_ServerURIs =
-                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
+            List<string> m_ServerURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("RemoteServerURI");
             foreach (string m_ServerURI in m_ServerURIs)
             {
                 OSDMap results = WebUtils.PostToService(m_ServerURI + "osd", mess, true, false);
