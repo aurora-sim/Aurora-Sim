@@ -70,11 +70,11 @@ namespace Aurora.Services.DataService
         public List<GridRegion> Get(string regionName, UUID scopeID)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andLikeFilters["RegionName"] = regionName.MySqlEscape();
             if (scopeID != UUID.Zero)
             {
                 filter.andFilters["ScopeID"] = scopeID;
             }
+            filter.andLikeFilters["RegionName"] = regionName.MySqlEscape();
 
             List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 
@@ -107,11 +107,11 @@ namespace Aurora.Services.DataService
             List<string> query;
             Dictionary<string, object> where = new Dictionary<string, object>();
 
-            where["RegionUUID"] = regionID;
             if (scopeID != UUID.Zero)
             {
                 where["ScopeID"] = scopeID;
             }
+            where["RegionUUID"] = regionID;
 
             query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
             {
