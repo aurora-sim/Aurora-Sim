@@ -907,9 +907,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     columnDefinition += ", ";
                 }
-                columnDefinition +=
-                    "`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) +
-                    (column.AutoIncrement ? " NOT NULL AUTO_INCREMENT" : string.Empty);
+                columnDefinition += "`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type);
             }
 
             List<string> indicesQuery = new List<string>(indices.Length);
@@ -999,13 +997,13 @@ namespace Aurora.DataManager.MySQL
 #if (!ISWIN)
                 foreach (ColumnDefinition column in addedColumns.Values)
                 {
-                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty ) + " ";
+                    string addedColumnsQuery = "add `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
                     string query = string.Format("alter table " + table + " " + addedColumnsQuery);
                     ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
                 foreach (ColumnDefinition column in modifiedColumns.Values)
                 {
-                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + (column.AutoIncrement ? " AUTO_INCREMENT" : string.Empty) + " ";
+                    string modifiedColumnsQuery = "modify column `" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type) + " ";
                     string query = string.Format("alter table " + table + " " + modifiedColumnsQuery);
                     ExecuteNonQuery(query, new Dictionary<string, object>());
                 }
@@ -1263,9 +1261,7 @@ namespace Aurora.DataManager.MySQL
                     defs.Add(new ColumnDefinition
                     {
                         Name = name.ToString(),
-                        IsPrimary = pk.ToString() == "PRI",
-                        Type = ConvertTypeToColumnType(type.ToString()),
-                        AutoIncrement = extra.ToString() == "auto_incremement"
+                        Type = ConvertTypeToColumnType(type.ToString())
                     });
                 }
             }

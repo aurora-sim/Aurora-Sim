@@ -42,7 +42,7 @@ namespace Aurora.Modules.Ban
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("baninfo", ColDefs(
-                ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50, true),
+                ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50),
                 ColDef("Flags", /*"Flags"*/ ColumnTypes.String50),
                 ColDef("KnownAlts", /*"KnownAlts"*/ ColumnTypes.Text),
                 ColDef("KnownID0s", /*"KnownID0s"*/ ColumnTypes.Text),
@@ -53,7 +53,11 @@ namespace Aurora.Modules.Ban
                 ColDef("LastKnownIP", /*"LastKnownIP"*/ ColumnTypes.String50),
                 ColDef("LastKnownMac", /*"LastKnownMac"*/ ColumnTypes.String50),
                 ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
-                ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)));
+                ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
+            ));
+
             RemoveSchema("presenceinfo");
         }
 

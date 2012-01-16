@@ -779,7 +779,7 @@ namespace Aurora.DataManager.MSSQL
             m_connection.Dispose();
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns)
+        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
         {
             if (TableExists(table))
             {
@@ -825,8 +825,7 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
         {
             if (TableExists(table))
             {
@@ -968,13 +967,11 @@ namespace Aurora.DataManager.MSSQL
             CloseDatabase(dbcon);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
-                                                                 ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             SqlConnection dbcon = GetLockedConnection();
             SqlCommand dbcommand = dbcon.CreateCommand();
-            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName,
-                                                  sourceTableName);
+            dbcommand.CommandText = string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName);
             dbcommand.ExecuteNonQuery();
             CloseDatabase(dbcon);
         }
@@ -1019,7 +1016,6 @@ namespace Aurora.DataManager.MSSQL
                 defs.Add(new ColumnDefinition
                              {
                                  Name = name.ToString(),
-                                 IsPrimary = pk.ToString() == "PRI",
                                  Type = ConvertTypeToColumnType(type.ToString())
                              });
             }
@@ -1028,6 +1024,11 @@ namespace Aurora.DataManager.MSSQL
             dbcommand.Dispose();
             CloseDatabase(dbcon);
             return defs;
+        }
+
+        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
+        {
+            throw new NotImplementedException();
         }
 
         private ColumnTypes ConvertTypeToColumnType(string typeString)

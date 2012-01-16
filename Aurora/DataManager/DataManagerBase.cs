@@ -67,7 +67,11 @@ namespace Aurora.DataManager
 
         public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
-        public abstract void CreateTable(string table, ColumnDefinition[] columns);
+        public abstract void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions);
+        public void CreateTable(string table, ColumnDefinition[] columns)
+        {
+            CreateTable(table, columns, new IndexDefinition[0]);
+        }
 
         public abstract bool Replace(string table, string[] keys, object[] values);
         public abstract bool DirectReplace(string table, string[] keys, object[] values);
@@ -127,12 +131,10 @@ namespace Aurora.DataManager
         {
             if (!TableExists(VERSION_TABLE_NAME))
             {
-                CreateTable(VERSION_TABLE_NAME,
-                            new[]
-                                {
-                                    new ColumnDefinition
-                                        {Name = COLUMN_VERSION, IsPrimary = true, Type = ColumnTypes.String100}
-                                });
+                CreateTable(VERSION_TABLE_NAME, new[]{new ColumnDefinition{
+                    Name = COLUMN_VERSION,
+                    Type = ColumnTypes.String100
+                }});
             }
             //Remove previous versions
             Delete(VERSION_TABLE_NAME, new string[1] {COLUMN_NAME}, new object[1] {MigrationName});
@@ -140,34 +142,30 @@ namespace Aurora.DataManager
             Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
         }
 
-        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions)
+        public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             if (!TableExists(sourceTableName))
             {
-                throw new MigrationOperationException("Cannot copy table to new name, source table does not exist: " +
-                                                      sourceTableName);
+                throw new MigrationOperationException("Cannot copy table to new name, source table does not exist: " + sourceTableName);
             }
 
             if (TableExists(destinationTableName))
             {
                 this.DropTable(destinationTableName);
                 if (TableExists(destinationTableName))
-                    throw new MigrationOperationException(
-                        "Cannot copy table to new name, table with same name already exists: " + destinationTableName);
+                    throw new MigrationOperationException("Cannot copy table to new name, table with same name already exists: " + destinationTableName);
             }
 
-            if (!VerifyTableExists(sourceTableName, columnDefinitions))
+            if (!VerifyTableExists(sourceTableName, columnDefinitions, indexDefinitions))
             {
-                throw new MigrationOperationException(
-                    "Cannot copy table to new name, source table does not match columnDefinitions: " +
-                    destinationTableName);
+                throw new MigrationOperationException("Cannot copy table to new name, source table does not match columnDefinitions: " + destinationTableName);
             }
 
-            EnsureTableExists(destinationTableName, columnDefinitions, null);
-            CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions);
+            EnsureTableExists(destinationTableName, columnDefinitions, indexDefinitions, null);
+            CopyAllDataBetweenMatchingTables(sourceTableName, destinationTableName, columnDefinitions, indexDefinitions);
         }
 
-        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions)
+        public bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             if (!TableExists(tableName))
             {
@@ -237,14 +235,14 @@ namespace Aurora.DataManager
             return true;
         }
 
-        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns)
+        public void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns)
         {
             if (TableExists(tableName))
             {
-                if (!VerifyTableExists(tableName, columnDefinitions))
+                if (!VerifyTableExists(tableName, columnDefinitions, indexDefinitions))
                 {
                     //throw new MigrationOperationException("Cannot create, table with same name and different columns already exists. This should be fixed in a migration: " + tableName);
-                    UpdateTable(tableName, columnDefinitions, renameColumns);
+                    UpdateTable(tableName, columnDefinitions, indexDefinitions, renameColumns);
                 }
                 return;
             }
@@ -263,13 +261,14 @@ namespace Aurora.DataManager
 
         #endregion
 
-        public abstract void UpdateTable(string table, ColumnDefinition[] columns, Dictionary<string, string> renameColumns);
+        public abstract void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
-        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
+        protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
+        protected abstract Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName);
     }
 }

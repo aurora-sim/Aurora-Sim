@@ -113,17 +113,7 @@ namespace Aurora.DataManager.Migration
 
         protected ColumnDefinition ColDef(string name, ColumnTypes columnType)
         {
-            return new ColumnDefinition {Name = name, Type = columnType, IsPrimary = false};
-        }
-
-        protected ColumnDefinition ColDef(string name, ColumnTypes columnType, bool isPrimary)
-        {
-            return new ColumnDefinition {Name = name, Type = columnType, IsPrimary = isPrimary};
-        }
-
-        protected ColumnDefinition ColDef(string name, ColumnTypes columnType, bool isPrimary, bool autoIncrement)
-        {
-            return new ColumnDefinition { Name = name, Type = columnType, IsPrimary = (isPrimary || autoIncrement), AutoIncrement = autoIncrement };
+            return new ColumnDefinition {Name = name, Type = columnType};
         }
 
         protected IndexDefinition[] IndexDefs(params IndexDefinition[] defs)

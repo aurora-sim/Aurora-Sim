@@ -831,14 +831,12 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                          object[] keyValues)
+        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows,
-                                    object[] keyValues)
+        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
             var cmd = new SQLiteCommand();
             string query = String.Format("update {0} set ", table);
@@ -889,7 +887,7 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override void CreateTable(string table, ColumnDefinition[] columns)
+        public override void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices)
         {
             if (TableExists(table))
             {
@@ -933,8 +931,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        public override void UpdateTable(string table, ColumnDefinition[] columns,
-                                         Dictionary<string, string> renameColumns)
+        public override void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indices, Dictionary<string, string> renameColumns)
         {
             if (!TableExists(table))
             {
@@ -1163,7 +1160,6 @@ namespace Aurora.DataManager.SQLite
                     defs.Add(new ColumnDefinition
                                  {
                                      Name = name.ToString(),
-                                     IsPrimary = (int.Parse(pk.ToString()) > 0),
                                      Type = ConvertTypeToColumnType(type.ToString())
                                  });
                 }
@@ -1172,6 +1168,11 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
 
             return defs;
+        }
+
+        protected override Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName)
+        {
+            throw new NotImplementedException();
         }
 
         private ColumnTypes ConvertTypeToColumnType(string typeString)
@@ -1270,14 +1271,12 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
         }
 
-        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName,
-                                                                 ColumnDefinition[] columnDefinitions)
+        protected override void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
         {
             var cmd = new SQLiteCommand
                           {
                               CommandText =
-                                  string.Format("insert into {0} select * from {1}", destinationTableName,
-                                                sourceTableName)
+                                  string.Format("insert into {0} select * from {1}", destinationTableName, sourceTableName)
                           };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
