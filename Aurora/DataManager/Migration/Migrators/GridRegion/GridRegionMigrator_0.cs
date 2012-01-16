@@ -62,7 +62,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SessionID", ColumnTypes.String45),
                 ColDef("Info", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[1]{ "RegionUUID" } , IndexType.Primary)
+                IndexDef(new string[1] { "RegionUUID" }, IndexType.Primary)
             ));
         }
 
