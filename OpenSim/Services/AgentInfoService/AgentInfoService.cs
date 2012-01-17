@@ -137,7 +137,7 @@ namespace OpenSim.Services
         {
             object remoteValue = DoRemote(userID, homeID, homePosition, homeLookAt);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
             return true;

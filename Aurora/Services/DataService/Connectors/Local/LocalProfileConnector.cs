@@ -119,7 +119,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(Profile);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             IUserProfileInfo previousProfile = GetUserProfile(Profile.PrincipalID);
             //Make sure the previous one exists
@@ -173,7 +173,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(classified);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
@@ -254,7 +254,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(pick);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (GetUserProfile(pick.CreatorUUID) == null)
                 return false;

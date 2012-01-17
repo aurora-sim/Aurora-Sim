@@ -102,7 +102,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(message);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (message.fromGroup)
             {

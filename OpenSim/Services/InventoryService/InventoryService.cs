@@ -98,7 +98,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             bool result = false;
 
@@ -108,18 +108,18 @@ namespace OpenSim.Services.InventoryService
             {
                 List<InventoryFolderBase> rootFolders = GetInventorySkeleton(principalID);
                 if (rootFolders.Count == 0)
-                    rootFolder = CreateFolder(principalID, UUID.Zero, (int) AssetType.RootFolder, "My Inventory");
+                    rootFolder = CreateFolder(principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
                 else
                 {
                     rootFolder = new InventoryFolderBase
-                                     {
-                                         Name = "My Inventory",
-                                         Type = (short) AssetType.RootFolder,
-                                         Version = 1,
-                                         ID = rootFolders[0].ParentID,
-                                         Owner = principalID,
-                                         ParentID = UUID.Zero
-                                     };
+                    {
+                        Name = "My Inventory",
+                        Type = (short)AssetType.RootFolder,
+                        Version = 1,
+                        ID = rootFolders[0].ParentID,
+                        Owner = principalID,
+                        ParentID = UUID.Zero
+                    };
 
 
                     m_Database.StoreFolder(rootFolder);
@@ -134,7 +134,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(principalID, createDefaultItems);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             // This is braindeaad. We can't ever communicate that we fixed
             // an existing inventory. Well, just return root folder status,
@@ -146,103 +146,103 @@ namespace OpenSim.Services.InventoryService
 
             if (rootFolder == null)
             {
-                rootFolder = CreateFolder(principalID, UUID.Zero, (int) AssetType.RootFolder, "My Inventory");
+                rootFolder = CreateFolder(principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
                 result = true;
             }
 
             InventoryFolderBase[] sysFolders = GetSystemFolders(principalID);
 
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Animation) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Animation, "Animations");
+            {
+                if (f.Type == (short)AssetType.Animation) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Animation, "Animations");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Bodypart) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Bodypart, "Body Parts");
+            {
+                if (f.Type == (short)AssetType.Bodypart) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Bodypart, "Body Parts");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.CallingCard) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.CallingCard, "Calling Cards");
+            {
+                if (f.Type == (short)AssetType.CallingCard) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.CallingCard, "Calling Cards");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Clothing) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Clothing, "Clothing");
+            {
+                if (f.Type == (short)AssetType.Clothing) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Clothing, "Clothing");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Gesture) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Gesture, "Gestures");
+            {
+                if (f.Type == (short)AssetType.Gesture) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Gesture, "Gestures");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Landmark) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Landmark, "Landmarks");
+            {
+                if (f.Type == (short)AssetType.Landmark) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Landmark, "Landmarks");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.LostAndFoundFolder) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.LostAndFoundFolder, "Lost And Found");
+            {
+                if (f.Type == (short)AssetType.LostAndFoundFolder) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.LostAndFoundFolder, "Lost And Found");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Notecard) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Notecard, "Notecards");
+            {
+                if (f.Type == (short)AssetType.Notecard) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Notecard, "Notecards");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Object) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Object, "Objects");
+            {
+                if (f.Type == (short)AssetType.Object) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Object, "Objects");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.SnapshotFolder) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.SnapshotFolder, "Photo Album");
+            {
+                if (f.Type == (short)AssetType.SnapshotFolder) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.SnapshotFolder, "Photo Album");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.LSLText) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.LSLText, "Scripts");
+            {
+                if (f.Type == (short)AssetType.LSLText) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.LSLText, "Scripts");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Sound) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Sound, "Sounds");
+            {
+                if (f.Type == (short)AssetType.Sound) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Sound, "Sounds");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Texture) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Texture, "Textures");
+            {
+                if (f.Type == (short)AssetType.Texture) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Texture, "Textures");
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.TrashFolder) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.TrashFolder, "Trash");
+            {
+                if (f.Type == (short)AssetType.TrashFolder) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.TrashFolder, "Trash");
 
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
-                                              {
-                                                  if (f.Type == (short) AssetType.Mesh) return true;
-                                                  return false;
-                                              }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Mesh, "Mesh");
+            {
+                if (f.Type == (short)AssetType.Mesh) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Mesh, "Mesh");
 
             if (createDefaultItems && m_LibraryService != null)
             {
@@ -253,14 +253,14 @@ namespace OpenSim.Services.InventoryService
 
                 // Default items
                 InventoryItemBase defaultShape = new InventoryItemBase
-                                                     {
-                                                         Name = "Default shape",
-                                                         Description = "Default shape description",
-                                                         AssetType = (int) AssetType.Bodypart,
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         Flags = (uint) WearableType.Shape,
-                                                         ID = AvatarWearable.DEFAULT_BODY_ITEM
-                                                     };
+                {
+                    Name = "Default shape",
+                    Description = "Default shape description",
+                    AssetType = (int)AssetType.Bodypart,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Shape,
+                    ID = AvatarWearable.DEFAULT_BODY_ITEM
+                };
                 //Give a new copy to every person
                 AssetBase asset = m_AssetService.Get(AvatarWearable.DEFAULT_BODY_ASSET.ToString());
                 if (asset != null)
@@ -274,14 +274,14 @@ namespace OpenSim.Services.InventoryService
                 }
 
                 InventoryItemBase defaultSkin = new InventoryItemBase
-                                                    {
-                                                        Name = "Default skin",
-                                                        Description = "Default skin description",
-                                                        AssetType = (int) AssetType.Bodypart,
-                                                        InvType = (int) InventoryType.Wearable,
-                                                        Flags = (uint) WearableType.Skin,
-                                                        ID = AvatarWearable.DEFAULT_SKIN_ITEM
-                                                    };
+                {
+                    Name = "Default skin",
+                    Description = "Default skin description",
+                    AssetType = (int)AssetType.Bodypart,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Skin,
+                    ID = AvatarWearable.DEFAULT_SKIN_ITEM
+                };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SKIN_ASSET.ToString());
                 if (asset != null)
@@ -292,22 +292,22 @@ namespace OpenSim.Services.InventoryService
                     defaultSkin.Folder = bodypartFolder.ID;
                     defaultSkin.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultSkin.Owner = principalID;
-                    defaultSkin.BasePermissions = (uint) PermissionMask.All;
-                    defaultSkin.CurrentPermissions = (uint) PermissionMask.All;
-                    defaultSkin.EveryOnePermissions = (uint) PermissionMask.None;
-                    defaultSkin.NextPermissions = (uint) PermissionMask.All;
+                    defaultSkin.BasePermissions = (uint)PermissionMask.All;
+                    defaultSkin.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultSkin.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultSkin.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultSkin, false);
                 }
 
                 InventoryItemBase defaultHair = new InventoryItemBase
-                                                    {
-                                                        Name = "Default hair",
-                                                        Description = "Default hair description",
-                                                        AssetType = (int) AssetType.Bodypart,
-                                                        InvType = (int) InventoryType.Wearable,
-                                                        Flags = (uint) WearableType.Hair,
-                                                        ID = AvatarWearable.DEFAULT_HAIR_ITEM
-                                                    };
+                {
+                    Name = "Default hair",
+                    Description = "Default hair description",
+                    AssetType = (int)AssetType.Bodypart,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Hair,
+                    ID = AvatarWearable.DEFAULT_HAIR_ITEM
+                };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_HAIR_ASSET.ToString());
                 if (asset != null)
@@ -318,22 +318,22 @@ namespace OpenSim.Services.InventoryService
                     defaultHair.Folder = bodypartFolder.ID;
                     defaultHair.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultHair.Owner = principalID;
-                    defaultHair.BasePermissions = (uint) PermissionMask.All;
-                    defaultHair.CurrentPermissions = (uint) PermissionMask.All;
-                    defaultHair.EveryOnePermissions = (uint) PermissionMask.None;
-                    defaultHair.NextPermissions = (uint) PermissionMask.All;
+                    defaultHair.BasePermissions = (uint)PermissionMask.All;
+                    defaultHair.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultHair.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultHair.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultHair, false);
                 }
 
                 InventoryItemBase defaultEyes = new InventoryItemBase
-                                                    {
-                                                        Name = "Default eyes",
-                                                        Description = "Default eyes description",
-                                                        AssetType = (int) AssetType.Bodypart,
-                                                        InvType = (int) InventoryType.Wearable,
-                                                        Flags = (uint) WearableType.Eyes,
-                                                        ID = AvatarWearable.DEFAULT_EYES_ITEM
-                                                    };
+                {
+                    Name = "Default eyes",
+                    Description = "Default eyes description",
+                    AssetType = (int)AssetType.Bodypart,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Eyes,
+                    ID = AvatarWearable.DEFAULT_EYES_ITEM
+                };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_EYES_ASSET.ToString());
                 if (asset != null)
@@ -344,22 +344,22 @@ namespace OpenSim.Services.InventoryService
                     defaultEyes.Folder = bodypartFolder.ID;
                     defaultEyes.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultEyes.Owner = principalID;
-                    defaultEyes.BasePermissions = (uint) PermissionMask.All;
-                    defaultEyes.CurrentPermissions = (uint) PermissionMask.All;
-                    defaultEyes.EveryOnePermissions = (uint) PermissionMask.None;
-                    defaultEyes.NextPermissions = (uint) PermissionMask.All;
+                    defaultEyes.BasePermissions = (uint)PermissionMask.All;
+                    defaultEyes.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultEyes.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultEyes, false);
                 }
 
                 InventoryItemBase defaultShirt = new InventoryItemBase
-                                                     {
-                                                         Name = "Default shirt",
-                                                         Description = "Default shirt description",
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         Flags = (uint) WearableType.Shirt,
-                                                         ID = AvatarWearable.DEFAULT_SHIRT_ITEM
-                                                     };
+                {
+                    Name = "Default shirt",
+                    Description = "Default shirt description",
+                    AssetType = (int)AssetType.Clothing,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Shirt,
+                    ID = AvatarWearable.DEFAULT_SHIRT_ITEM
+                };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SHIRT_ASSET.ToString());
                 if (asset != null)
@@ -370,22 +370,22 @@ namespace OpenSim.Services.InventoryService
                     defaultShirt.Folder = clothingFolder.ID;
                     defaultShirt.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultShirt.Owner = principalID;
-                    defaultShirt.BasePermissions = (uint) PermissionMask.All;
-                    defaultShirt.CurrentPermissions = (uint) PermissionMask.All;
-                    defaultShirt.EveryOnePermissions = (uint) PermissionMask.None;
-                    defaultShirt.NextPermissions = (uint) PermissionMask.All;
+                    defaultShirt.BasePermissions = (uint)PermissionMask.All;
+                    defaultShirt.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultShirt.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultShirt.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultShirt, false);
                 }
 
                 InventoryItemBase defaultPants = new InventoryItemBase
-                                                     {
-                                                         Name = "Default pants",
-                                                         Description = "Default pants description",
-                                                         AssetType = (int) AssetType.Clothing,
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         Flags = (uint) WearableType.Pants,
-                                                         ID = AvatarWearable.DEFAULT_PANTS_ITEM
-                                                     };
+                {
+                    Name = "Default pants",
+                    Description = "Default pants description",
+                    AssetType = (int)AssetType.Clothing,
+                    InvType = (int)InventoryType.Wearable,
+                    Flags = (uint)WearableType.Pants,
+                    ID = AvatarWearable.DEFAULT_PANTS_ITEM
+                };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
                 if (asset != null)
@@ -396,10 +396,10 @@ namespace OpenSim.Services.InventoryService
                     defaultPants.Folder = clothingFolder.ID;
                     defaultPants.CreatorId = m_LibraryService.LibraryOwner.ToString();
                     defaultPants.Owner = principalID;
-                    defaultPants.BasePermissions = (uint) PermissionMask.All;
-                    defaultPants.CurrentPermissions = (uint) PermissionMask.All;
-                    defaultPants.EveryOnePermissions = (uint) PermissionMask.None;
-                    defaultPants.NextPermissions = (uint) PermissionMask.All;
+                    defaultPants.BasePermissions = (uint)PermissionMask.All;
+                    defaultPants.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultPants.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultPants.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultPants, false);
                 }
             }
@@ -415,8 +415,8 @@ namespace OpenSim.Services.InventoryService
                 return (List<InventoryFolderBase>)remoteValue;
 
             List<InventoryFolderBase> allFolders = m_Database.GetFolders(
-                new[] {"agentID"},
-                new[] {principalID.ToString()});
+                new[] { "agentID" },
+                new[] { principalID.ToString() });
 
             if (allFolders.Count == 0)
                 return null;
@@ -432,8 +432,8 @@ namespace OpenSim.Services.InventoryService
                 return (List<InventoryFolderBase>)remoteValue;
 
             return m_Database.GetFolders(
-                new[] {"agentID", "parentFolderID"},
-                new[] {principalID.ToString(), UUID.Zero.ToString()});
+                new[] { "agentID", "parentFolderID" },
+                new[] { principalID.ToString(), UUID.Zero.ToString() });
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Medium)]
@@ -444,8 +444,8 @@ namespace OpenSim.Services.InventoryService
                 return (InventoryFolderBase)remoteValue;
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
-                new[] {"agentID", "parentFolderID"},
-                new[] {principalID.ToString(), UUID.Zero.ToString()});
+                new[] { "agentID", "parentFolderID" },
+                new[] { principalID.ToString(), UUID.Zero.ToString() });
 
             if (folders.Count == 0)
                 return null;
@@ -475,21 +475,21 @@ namespace OpenSim.Services.InventoryService
 
             if (invType == InventoryType.Snapshot)
                 type = AssetType.SnapshotFolder;
-                    //Fix for snapshots, as they get the texture asset type, but need to get checked as snapshotfolder types
+            //Fix for snapshots, as they get the texture asset type, but need to get checked as snapshotfolder types
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
-                new[] {"agentID", "type"},
-                new[] {principalID.ToString(), ((int) type).ToString()});
+                new[] { "agentID", "type" },
+                new[] { principalID.ToString(), ((int)type).ToString() });
 
             if (folders.Count == 0)
             {
-//                MainConsole.Instance.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
+                //                MainConsole.Instance.WarnFormat("[XINVENTORY SERVICE]: Found no folder for type {0} for user {1}", type, principalID);
                 return null;
             }
 
-//            MainConsole.Instance.DebugFormat(
-//                "[XINVENTORY SERVICE]: Found folder {0} {1} for type {2} for user {3}", 
-//                folders[0].folderName, folders[0].folderID, type, principalID);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[XINVENTORY SERVICE]: Found folder {0} {1} for type {2} for user {3}", 
+            //                folders[0].folderName, folders[0].folderID, type, principalID);
 
             return folders[0];
         }
@@ -507,15 +507,15 @@ namespace OpenSim.Services.InventoryService
             //
             MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
             InventoryCollection inventory = new InventoryCollection
-                                                {
-                                                    UserID = principalID,
-                                                    Folders = m_Database.GetFolders(
-                                                        new[] {"parentFolderID"},
-                                                        new[] {folderID.ToString()}),
-                                                    Items = m_Database.GetItems(
-                                                        new[] {"parentFolderID"},
-                                                        new[] {folderID.ToString()})
-                                                };
+            {
+                UserID = principalID,
+                Folders = m_Database.GetFolders(
+                    new[] { "parentFolderID" },
+                    new[] { folderID.ToString() }),
+                Items = m_Database.GetItems(
+                    new[] { "parentFolderID" },
+                    new[] { folderID.ToString() })
+            };
 
 
 
@@ -532,8 +532,8 @@ namespace OpenSim.Services.InventoryService
             // Since we probably don't get a valid principal here, either ...
             //
             return m_Database.GetItems(
-                new[] {"parentFolderID", "avatarID"},
-                new[] {folderID.ToString(), principalID.ToString()});
+                new[] { "parentFolderID", "avatarID" },
+                new[] { folderID.ToString(), principalID.ToString() });
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -546,8 +546,8 @@ namespace OpenSim.Services.InventoryService
             // Since we probably don't get a valid principal here, either ...
             //
             return m_Database.GetLLSDItems(
-                new[] {"parentFolderID", "avatarID"},
-                new[] {folderID.ToString(), principalID.ToString()});
+                new[] { "parentFolderID", "avatarID" },
+                new[] { folderID.ToString(), principalID.ToString() });
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -560,8 +560,8 @@ namespace OpenSim.Services.InventoryService
             // Since we probably don't get a valid principal here, either ...
             //
             List<InventoryFolderBase> invItems = m_Database.GetFolders(
-                new[] {"parentFolderID"},
-                new[] {folderID.ToString()});
+                new[] { "parentFolderID" },
+                new[] { folderID.ToString() });
 
             return invItems;
         }
@@ -571,7 +571,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             InventoryFolderBase check = GetFolder(folder);
             if (check != null)
@@ -585,10 +585,10 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete) //Initial item MUST be created as a link folder
-                if (folder.Type == (sbyte) AssetType.LinkFolder)
+                if (folder.Type == (sbyte)AssetType.LinkFolder)
                     return false;
 
             InventoryFolderBase check = GetFolder(folder);
@@ -618,11 +618,11 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             List<InventoryFolderBase> x = m_Database.GetFolders(
-                new[] {"folderID"},
-                new[] {folder.ID.ToString()});
+                new[] { "folderID" },
+                new[] { folder.ID.ToString() });
 
             if (x.Count == 0)
                 return false;
@@ -639,7 +639,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(principalID, folderIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete)
             {
@@ -647,7 +647,7 @@ namespace OpenSim.Services.InventoryService
                 {
                     if (!ParentIsLinkFolder(id))
                         continue;
-                    InventoryFolderBase f = new InventoryFolderBase {ID = id};
+                    InventoryFolderBase f = new InventoryFolderBase { ID = id };
                     PurgeFolder(f);
                     m_Database.DeleteFolders("folderID", id.ToString(), true);
                 }
@@ -660,7 +660,7 @@ namespace OpenSim.Services.InventoryService
             {
                 if (!ParentIsTrash(id))
                     continue;
-                InventoryFolderBase f = new InventoryFolderBase {ID = id};
+                InventoryFolderBase f = new InventoryFolderBase { ID = id };
                 PurgeFolder(f);
                 m_Database.DeleteFolders("folderID", id.ToString(), true);
             }
@@ -673,7 +673,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete && !ParentIsLinkFolder(folder.ID))
                 return false;
@@ -682,8 +682,8 @@ namespace OpenSim.Services.InventoryService
                 return false;
 
             List<InventoryFolderBase> subFolders = m_Database.GetFolders(
-                new[] {"parentFolderID"},
-                new[] {folder.ID.ToString()});
+                new[] { "parentFolderID" },
+                new[] { folder.ID.ToString() });
 
             foreach (InventoryFolderBase x in subFolders)
             {
@@ -701,11 +701,11 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(folder);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             List<InventoryFolderBase> subFolders = m_Database.GetFolders(
-                new[] {"parentFolderID"},
-                new[] {folder.ID.ToString()});
+                new[] { "parentFolderID" },
+                new[] { folder.ID.ToString() });
 
             foreach (InventoryFolderBase x in subFolders)
             {
@@ -724,7 +724,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             return AddItem(item, true);
         }
@@ -734,7 +734,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (doParentFolderCheck)
             {
@@ -752,10 +752,10 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete) //Initial item MUST be created as a link or link folder
-                if (item.AssetType == (sbyte) AssetType.Link || item.AssetType == (sbyte) AssetType.LinkFolder)
+                if (item.AssetType == (sbyte)AssetType.Link || item.AssetType == (sbyte)AssetType.LinkFolder)
                     return false;
             m_Database.IncrementFolder(item.Folder);
             return m_Database.StoreItem(item);
@@ -766,13 +766,13 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(principalID, items);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             foreach (InventoryItemBase i in items)
             {
                 m_Database.IncrementFolder(i.Folder); //Increment the new folder
                 m_Database.IncrementFolderByItem(i.ID);
-                    //And the old folder too (have to use this one because we don't know the old folder)
+                //And the old folder too (have to use this one because we don't know the old folder)
                 m_Database.MoveItem(i.ID.ToString(), i.Folder.ToString());
             }
 
@@ -784,7 +784,7 @@ namespace OpenSim.Services.InventoryService
         {
             object remoteValue = DoRemote(principalID, itemIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (!m_AllowDelete)
             {
@@ -819,8 +819,8 @@ namespace OpenSim.Services.InventoryService
                 return (InventoryItemBase)remoteValue;
 
             List<InventoryItemBase> items = m_Database.GetItems(
-                new[] {"inventoryID"},
-                new[] {item.ID.ToString()});
+                new[] { "inventoryID" },
+                new[] { item.ID.ToString() });
 
             foreach (InventoryItemBase xitem in items)
             {
@@ -873,8 +873,8 @@ namespace OpenSim.Services.InventoryService
                 return (OSDArray)remoteValue;
 
             return m_Database.GetLLSDItems(
-                new string[1] {"inventoryID"},
-                new string[1] {itemID.ToString()});
+                new string[1] { "inventoryID" },
+                new string[1] { itemID.ToString() });
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -885,8 +885,8 @@ namespace OpenSim.Services.InventoryService
                 return (InventoryFolderBase)remoteValue;
 
             List<InventoryFolderBase> folders = m_Database.GetFolders(
-                new[] {"folderID"},
-                new[] {folder.ID.ToString()});
+                new[] { "folderID" },
+                new[] { folder.ID.ToString() });
 
             if (folders.Count == 0)
                 return null;
@@ -932,14 +932,14 @@ namespace OpenSim.Services.InventoryService
                 else
                 {
                     rootFolder = new InventoryFolderBase
-                                     {
-                                         Name = "My Inventory",
-                                         Type = (short) AssetType.RootFolder,
-                                         Version = 1,
-                                         ID = skel[0].ParentID,
-                                         Owner = account.PrincipalID,
-                                         ParentID = UUID.Zero
-                                     };
+                    {
+                        Name = "My Inventory",
+                        Type = (short)AssetType.RootFolder,
+                        Version = 1,
+                        ID = skel[0].ParentID,
+                        Owner = account.PrincipalID,
+                        ParentID = UUID.Zero
+                    };
 
                 }
             }
@@ -998,7 +998,7 @@ namespace OpenSim.Services.InventoryService
                     m_Database.StoreFolder(f);
                     MainConsole.Instance.WarnFormat("Fixing folder {0}", f.Name);
                 }
-                else if (f.Type == (short) AssetType.CurrentOutfitFolder)
+                else if (f.Type == (short)AssetType.CurrentOutfitFolder)
                 {
                     List<InventoryItemBase> items = GetFolderItems(account.PrincipalID, f.ID);
                     //Check the links!
@@ -1025,7 +1025,7 @@ namespace OpenSim.Services.InventoryService
                     if (brokenLinks.Count != 0)
                         DeleteItems(account.PrincipalID, brokenLinks);
                 }
-                else if (f.Type == (short) AssetType.Mesh)
+                else if (f.Type == (short)AssetType.Mesh)
                 {
                     ForcePurgeFolder(f);
                 }
@@ -1085,14 +1085,14 @@ namespace OpenSim.Services.InventoryService
         protected InventoryFolderBase CreateFolder(UUID principalID, UUID parentID, int type, string name)
         {
             InventoryFolderBase newFolder = new InventoryFolderBase
-                                                {
-                                                    Name = name,
-                                                    Type = (short) type,
-                                                    Version = 1,
-                                                    ID = UUID.Random(),
-                                                    Owner = principalID,
-                                                    ParentID = parentID
-                                                };
+            {
+                Name = name,
+                Type = (short)type,
+                Version = 1,
+                ID = UUID.Random(),
+                Owner = principalID,
+                ParentID = parentID
+            };
 
 
             m_Database.StoreFolder(newFolder);
@@ -1102,48 +1102,48 @@ namespace OpenSim.Services.InventoryService
 
         protected virtual InventoryFolderBase[] GetSystemFolders(UUID principalID)
         {
-//            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Getting system folders for {0}", principalID);
+            //            MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Getting system folders for {0}", principalID);
 
             InventoryFolderBase[] allFolders = m_Database.GetFolders(
-                new[] {"agentID"},
-                new[] {principalID.ToString()}).ToArray();
+                new[] { "agentID" },
+                new[] { principalID.ToString() }).ToArray();
 
             InventoryFolderBase[] sysFolders = Array.FindAll(
                 allFolders,
                 delegate(InventoryFolderBase f)
-                    {
-                        if (f.Type > 0)
-                            return true;
-                        return false;
-                    });
+                {
+                    if (f.Type > 0)
+                        return true;
+                    return false;
+                });
 
-//            MainConsole.Instance.DebugFormat(
-//                "[XINVENTORY SERVICE]: Found {0} system folders for {1}", sysFolders.Length, principalID);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[XINVENTORY SERVICE]: Found {0} system folders for {1}", sysFolders.Length, principalID);
 
             return sysFolders;
         }
 
         private bool ParentIsTrash(UUID folderID)
         {
-            List<InventoryFolderBase> folder = m_Database.GetFolders(new[] {"folderID"}, new[] {folderID.ToString()});
+            List<InventoryFolderBase> folder = m_Database.GetFolders(new[] { "folderID" }, new[] { folderID.ToString() });
             if (folder.Count < 1)
                 return false;
 
-            if (folder[0].Type == (int) AssetType.TrashFolder)
+            if (folder[0].Type == (int)AssetType.TrashFolder)
                 return true;
 
             UUID parentFolder = folder[0].ParentID;
 
             while (parentFolder != UUID.Zero)
             {
-                List<InventoryFolderBase> parent = m_Database.GetFolders(new[] {"folderID"},
-                                                                         new[] {parentFolder.ToString()});
+                List<InventoryFolderBase> parent = m_Database.GetFolders(new[] { "folderID" },
+                                                                         new[] { parentFolder.ToString() });
                 if (parent.Count < 1)
                     return false;
 
-                if (parent[0].Type == (int) AssetType.TrashFolder)
+                if (parent[0].Type == (int)AssetType.TrashFolder)
                     return true;
-                if (parent[0].Type == (int) AssetType.RootFolder)
+                if (parent[0].Type == (int)AssetType.RootFolder)
                     return false;
 
                 parentFolder = parent[0].ParentID;
@@ -1153,25 +1153,25 @@ namespace OpenSim.Services.InventoryService
 
         private bool ParentIsLinkFolder(UUID folderID)
         {
-            List<InventoryFolderBase> folder = m_Database.GetFolders(new[] {"folderID"}, new[] {folderID.ToString()});
+            List<InventoryFolderBase> folder = m_Database.GetFolders(new[] { "folderID" }, new[] { folderID.ToString() });
             if (folder.Count < 1)
                 return false;
 
-            if (folder[0].Type == (int) AssetType.LinkFolder)
+            if (folder[0].Type == (int)AssetType.LinkFolder)
                 return true;
 
             UUID parentFolder = folder[0].ParentID;
 
             while (parentFolder != UUID.Zero)
             {
-                List<InventoryFolderBase> parent = m_Database.GetFolders(new[] {"folderID"},
-                                                                         new[] {parentFolder.ToString()});
+                List<InventoryFolderBase> parent = m_Database.GetFolders(new[] { "folderID" },
+                                                                         new[] { parentFolder.ToString() });
                 if (parent.Count < 1)
                     return false;
 
-                if (parent[0].Type == (int) AssetType.LinkFolder)
+                if (parent[0].Type == (int)AssetType.LinkFolder)
                     return true;
-                if (parent[0].Type == (int) AssetType.RootFolder)
+                if (parent[0].Type == (int)AssetType.RootFolder)
                     return false;
 
                 parentFolder = parent[0].ParentID;

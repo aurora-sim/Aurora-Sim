@@ -122,7 +122,7 @@ namespace OpenSim.Services.AvatarService
         {
             object remoteValue = DoRemote(principalID, avatar);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
                                                                                                       new object[2]
@@ -138,7 +138,7 @@ namespace OpenSim.Services.AvatarService
         {
             object remoteValue = DoRemote(principalID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             return m_Database.Delete("PrincipalID", principalID.ToString());
         }

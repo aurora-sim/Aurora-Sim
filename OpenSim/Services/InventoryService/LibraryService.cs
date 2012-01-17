@@ -134,6 +134,11 @@ namespace OpenSim.Services.InventoryService
             string sure = MainConsole.Instance.Prompt("Are you sure you want to delete the default inventory?", "yes");
             if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
                 return;
+            ClearDefaultInventory();
+        }
+
+        public void ClearDefaultInventory()
+        {
             IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService>();
             //Delete the root folders
             InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);

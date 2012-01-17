@@ -159,7 +159,7 @@ namespace OpenSim.Services.AssetService
         {
             object remoteValue = DoRemote(id);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             return m_database.ExistsAsset(UUID.Parse(id));
         }
@@ -209,7 +209,7 @@ namespace OpenSim.Services.AssetService
         {
             object remoteValue = DoRemote(id);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             return m_database.Delete(id);

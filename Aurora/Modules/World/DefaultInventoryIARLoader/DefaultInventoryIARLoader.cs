@@ -59,6 +59,12 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             AddDefaultAssetTypes();
             if (libConfig != null)
             {
+                if (libConfig.GetBoolean("WipeLibrariesOnNextLoad", false))
+                {
+                    service.ClearDefaultInventory();//Nuke it
+                    libConfig.Set("WipeLibrariesOnNextLoad", false);
+                    source.Save();
+                }
                 if (libConfig.GetBoolean("PreviouslyLoaded", false))
                     return; //If it is loaded, don't reload
                 foreach (string iarFileName in Directory.GetFiles(pLibrariesLocation, "*.iar"))

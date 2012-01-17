@@ -779,7 +779,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void MakeRootAgent(Vector3 pos, bool isFlying, bool makePhysicalActor)
         {
-            MainConsole.Instance.Info("[AsyncScencePrence] MakeRootAgent");
+            MainConsole.Instance.Debug("[AsyncScencePrence] MakeRootAgent");
             AbsolutePosition = pos;
 
             int xmult = m_savedVelocity.X > 0 ? 1 : -1;

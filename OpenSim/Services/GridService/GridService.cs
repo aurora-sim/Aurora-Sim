@@ -583,7 +583,7 @@ namespace OpenSim.Services.GridService
         {
             object remoteValue = DoRemote(gregion);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, UUID.Zero);
             if (region == null)

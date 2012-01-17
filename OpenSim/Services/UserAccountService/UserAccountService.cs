@@ -271,7 +271,7 @@ namespace OpenSim.Services.UserAccountService
         {
             object remoteValue = DoRemote(data);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (data.UserTitle == null)
                 data.UserTitle = "";

@@ -135,7 +135,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID, estateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             GD.Replace("estateregions", new[] { "RegionID", "EstateID" },
                        new object[]
@@ -152,7 +152,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             GD.Delete("estateregions", new[] {"RegionID"},
                       new object[]
@@ -168,7 +168,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
 
             GD.Delete("estateregions", new[] { "EstateID" }, new object[] { estateID });

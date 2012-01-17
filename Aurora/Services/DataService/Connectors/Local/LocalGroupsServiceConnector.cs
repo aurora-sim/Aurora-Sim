@@ -322,7 +322,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
                 (requestingAgentID != AgentID)) //Allow kicking yourself
