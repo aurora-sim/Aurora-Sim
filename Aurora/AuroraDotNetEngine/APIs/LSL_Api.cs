@@ -5430,16 +5430,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return Math.Asin(val);
         }
 
-        // Xantor 30/apr/2008
         public LSL_Float llAngleBetween(LSL_Rotation a, LSL_Rotation b)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
 
-            double angle = Math.Acos(a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s) * 2;
-            if (angle < 0) angle = -angle;
-            if (angle > Math.PI) return (Math.PI * 2 - angle);
-            return angle;
+            double aa = (a.x * a.x + a.y * a.y + a.z * a.z + a.s * a.s);
+            double bb = (b.x * b.x + b.y * b.y + b.z * b.z + b.s * b.s);
+            double aa_bb = aa * bb;
+            if (aa_bb == 0) return 0.0;
+            double ab = (a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s);
+            double quotient = (ab * ab) / aa_bb;
+            if (quotient >= 1.0) return 0.0;
+            return Math.Acos(2 * quotient - 1);
         }
 
         public LSL_String llGetInventoryKey(string name)
