@@ -1129,7 +1129,8 @@ namespace OpenSim.Services.InventoryService
             if (folder.Count < 1)
                 return false;
 
-            if (folder[0].Type == (int)AssetType.TrashFolder)
+            if (folder[0].Type == (int)AssetType.TrashFolder ||
+                folder[0].Type == (int)AssetType.LostAndFoundFolder)
                 return true;
 
             UUID parentFolder = folder[0].ParentID;
@@ -1141,7 +1142,8 @@ namespace OpenSim.Services.InventoryService
                 if (parent.Count < 1)
                     return false;
 
-                if (parent[0].Type == (int)AssetType.TrashFolder)
+                if (parent[0].Type == (int)AssetType.TrashFolder ||
+                    parent[0].Type == (int)AssetType.LostAndFoundFolder)
                     return true;
                 if (parent[0].Type == (int)AssetType.RootFolder)
                     return false;
