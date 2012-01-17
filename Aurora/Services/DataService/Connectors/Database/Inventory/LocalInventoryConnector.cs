@@ -179,7 +179,7 @@ namespace Aurora.Services.DataService
             return (q != null && q.Count > 0) ? q[0] :  "";
         }
 
-        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
+        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -209,8 +209,8 @@ namespace Aurora.Services.DataService
                 List<UUID> moreLinkedItems = new List<UUID>();
                 int count = 0;
                 bool addToCount = true;
-                string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
-                                             "avatarID", AgentID);
+                string query = String.Format("where {0} = '{1}' and {2} = '{3}' or {4} = '{5}'", "parentFolderID", folder_id,
+                                             "avatarID", AgentID, "avatarID", libraryOwnerID);
                 redoQuery:
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))
                 {

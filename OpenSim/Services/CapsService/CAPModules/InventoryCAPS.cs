@@ -184,7 +184,7 @@ namespace OpenSim.Services.CapsService
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
 
                 return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested, AgentID,
-                                                                                       UUID.Zero);
+                                                                                       UUID.Zero, m_libraryService.LibraryOwner);
             }
             catch (Exception ex)
             {
@@ -212,7 +212,7 @@ namespace OpenSim.Services.CapsService
 
                 return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested,
                                                                                        m_libraryService.LibraryOwner,
-                                                                                       AgentID);
+                                                                                       AgentID, m_libraryService.LibraryOwner);
             }
             catch (Exception ex)
             {

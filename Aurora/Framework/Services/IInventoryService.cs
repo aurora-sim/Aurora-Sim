@@ -242,7 +242,7 @@ namespace OpenSim.Services.Interfaces
         bool MoveItem(string id, string newParent);
         InventoryItemBase[] GetActiveGestures(UUID principalID);
 
-        byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID);
+        byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID);
 
         void IncrementFolder(UUID folderID);
         void IncrementFolderByItem(UUID folderID);
