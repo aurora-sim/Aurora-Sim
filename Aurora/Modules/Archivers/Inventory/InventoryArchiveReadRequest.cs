@@ -69,6 +69,8 @@ namespace Aurora.Modules.Archivers
         /// </value>
         protected IRegistryCore m_registry;
 
+        public bool ReplaceAssets { get; set; }
+
         public InventoryArchiveReadRequest(
             IRegistryCore registry, UserAccount userInfo, string invPath, string loadPath, bool merge)
             : this(
@@ -532,7 +534,12 @@ namespace Aurora.Modules.Archivers
 
                 AssetBase asset = new AssetBase(UUID.Parse(uuid), "RandomName", assetType, UUID.Zero)
                                       {Data = data, Flags = AssetFlags.Normal};
-                asset.ID = m_registry.RequestModuleInterface<IAssetService>().Store(asset);
+                IAssetService assetService = m_registry.RequestModuleInterface<IAssetService>();
+                IAssetDataPlugin assetData = Aurora.DataManager.DataManager.RequestPlugin<IAssetDataPlugin>();
+                if (assetData != null && ReplaceAssets)
+                    if (!assetData.Delete(asset.ID, true))
+                        MainConsole.Instance.Info("[IARReader]: Failed to replace asset " + asset.IDString);
+                asset.ID = assetService.Store(asset);
                 return true;
             }
             else
