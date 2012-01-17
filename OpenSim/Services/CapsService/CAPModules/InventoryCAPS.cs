@@ -206,7 +206,7 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
                 OSDArray foldersrequested = (OSDArray) map["folders"];
 
@@ -229,7 +229,7 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
@@ -274,7 +274,7 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 

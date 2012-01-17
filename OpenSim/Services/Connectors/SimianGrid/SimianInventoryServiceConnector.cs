@@ -183,6 +183,11 @@ namespace OpenSim.Services.Connectors.SimianGrid
             return null;
         }
 
+        public virtual bool UpdateAssetIDForItem(UUID itemID, UUID assetID)
+        {
+            return false;
+        }
+
         /// <summary>
         ///   Gets the user folder for the given folder-type
         /// </summary>

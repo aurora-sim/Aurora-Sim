@@ -48,6 +48,14 @@ namespace OpenSim.Region.Framework.Interfaces
         SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID);
 
         /// <summary>
+        ///   Create a SceneObjectGroup representation of an asset xml of the given item
+        /// </summary>
+        /// <param name = "remoteClient"></param>
+        /// <param name = "itemID"></param>
+        /// <returns></returns>
+        SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID);
+
+        /// <summary>
         ///   Rez an object from inventory and add it to the scene
         /// </summary>
         /// <param name = "remoteClient"></param>

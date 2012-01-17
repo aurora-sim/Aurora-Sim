@@ -173,6 +173,14 @@ namespace OpenSim.Services.Interfaces
         bool UpdateItem(InventoryItemBase item);
 
         /// <summary>
+        /// Update the assetID for the given item
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <param name="assetID"></param>
+        /// <returns></returns>
+        bool UpdateAssetIDForItem(UUID itemID, UUID assetID);
+
+        /// <summary>
         ///   Move the given items to the folder given in the inventory item
         /// </summary>
         /// <param name = "ownerID"></param>
@@ -235,6 +243,8 @@ namespace OpenSim.Services.Interfaces
 
         bool StoreFolder(InventoryFolderBase folder);
         bool StoreItem(InventoryItemBase item);
+
+        bool UpdateAssetIDForItem(UUID itemID, UUID assetID);
 
         bool DeleteFolders(string field, string val, bool safe);
         bool DeleteItems(string field, string val);

@@ -444,6 +444,11 @@ namespace Aurora.Services.DataService
                                                       });
         }
 
+        public virtual bool UpdateAssetIDForItem(UUID itemID, UUID assetID)
+        {
+            return GD.Update(m_itemsrealm, new object[1] { assetID }, new string[1] { "assetID" }, new string[1] { "inventoryID" }, new object[1] { itemID });
+        }
+
         public virtual bool DeleteFolders(string field, string val, bool safe)
         {
             if (safe)

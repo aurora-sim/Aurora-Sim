@@ -124,7 +124,7 @@ namespace Aurora.Modules.Attachments
                 {
                     try
                     {
-                        RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, 0);
+                        RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, attach.AssetID, 0);
                     }
                     catch (Exception e)
                     {
@@ -159,9 +159,15 @@ namespace Aurora.Modules.Attachments
                     }
                 }
                 if (group.HasGroupChanged)
-                    UpdateKnownItem(presence.ControllingClient, group,
+                {
+                    UUID assetID = UpdateKnownItem(presence.ControllingClient, group,
                         group.RootChild.FromUserInventoryItemID, group.OwnerID);
+                    group.RootChild.FromUserInventoryAssetID = assetID;
+                }
             }
+            IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+            if (appearance != null)
+                appearance.Appearance.SetAttachments(attachments);
             IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteSceneObjects(attachments, false, true);
@@ -198,7 +204,7 @@ namespace Aurora.Modules.Attachments
         protected UUID ClientRezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
-            ISceneEntity att = RezSingleAttachmentFromInventory (remoteClient, itemID, AttachmentPt);
+            ISceneEntity att = RezSingleAttachmentFromInventory (remoteClient, itemID, UUID.Zero, AttachmentPt);
 
             if (null == att)
                 return UUID.Zero;
@@ -271,7 +277,7 @@ namespace Aurora.Modules.Attachments
             ISceneEntity group, int AttachmentPt)
         {
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
-                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, null);
+                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero);
             else
             {
                 remoteClient.SendAgentAlertMessage(
@@ -284,7 +290,7 @@ namespace Aurora.Modules.Attachments
         }
 
         public ISceneEntity RezSingleAttachmentFromInventory (
-            IClientAPI remoteClient, UUID itemID, int AttachmentPt)
+            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt)
         {
             MainConsole.Instance.DebugFormat(
                 "[ATTACHMENTS MODULE]: Rezzing attachment to point {0} from item {1} for {2}",
@@ -292,27 +298,31 @@ namespace Aurora.Modules.Attachments
             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
             if (invAccess != null)
             {
-                SceneObjectGroup objatt = invAccess.CreateObjectFromInventory(remoteClient,
-                    itemID);
+                SceneObjectGroup objatt = assetID == UUID.Zero ? invAccess.CreateObjectFromInventory(remoteClient,
+                    itemID) : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID);
 
                 if (objatt != null)
                 {
                     #region Set up object for attachment status
+                    InventoryItemBase item = null;
+                    if (assetID == UUID.Zero)
+                    {
+                        item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                        item = m_scene.InventoryService.GetItem(item);
+                        if (item == null)
+                            return null;
+                        assetID = item.AssetID;
 
-                    InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                    item = m_scene.InventoryService.GetItem(item);
-                    if (item == null)
-                        return null;
+                        // Since renaming the item in the inventory does not affect the name stored
+                        // in the serialization, transfer the correct name from the inventory to the
+                        // object itself before we rez.
+                        objatt.RootPart.Name = item.Name;
+                        objatt.RootPart.Description = item.Description;
+                    }
 
                     objatt.RootPart.Flags |= PrimFlags.Phantom;
                     objatt.RootPart.IsAttachment = true;
-                    objatt.SetFromItemID(itemID, item.AssetID);
-
-                    // Since renaming the item in the inventory does not affect the name stored
-                    // in the serialization, transfer the correct name from the inventory to the
-                    // object itself before we rez.
-                    objatt.RootPart.Name = item.Name;
-                    objatt.RootPart.Description = item.Description;
+                    objatt.SetFromItemID(itemID, assetID);
 
                     List<SceneObjectPart> partList = new List<SceneObjectPart>(objatt.ChildrenList);
 
@@ -320,7 +330,7 @@ namespace Aurora.Modules.Attachments
                         part.AttachedAvatar = remoteClient.AgentId;
 
                     objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
-                    if (objatt.RootPart.OwnerID != item.Owner)
+                    if (objatt.RootPart.OwnerID != remoteClient.AgentId)
                     {
                         //Need to kill the for sale here
                         objatt.RootPart.ObjectSaleType = 0;
@@ -328,6 +338,13 @@ namespace Aurora.Modules.Attachments
 
                         if (m_scene.Permissions.PropagatePermissions())
                         {
+                            if (item == null)
+                            {
+                                item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                                item = m_scene.InventoryService.GetItem(item);
+                            }
+                            if (item == null)
+                                return null;
                             if ((item.CurrentPermissions & 8) != 0)
                             {
                                 foreach (SceneObjectPart part in partList)
@@ -344,11 +361,11 @@ namespace Aurora.Modules.Attachments
 
                     foreach (SceneObjectPart part in partList)
                     {
-                        if (part.OwnerID != item.Owner)
+                        if (part.OwnerID != remoteClient.AgentId)
                         {
                             part.LastOwnerID = part.OwnerID;
-                            part.OwnerID = item.Owner;
-                            part.Inventory.ChangeInventoryOwner(item.Owner);
+                            part.OwnerID = remoteClient.AgentId;
+                            part.Inventory.ChangeInventoryOwner(remoteClient.AgentId);
                         }
                     }
                     objatt.RootPart.TrimPermissions();
@@ -356,7 +373,7 @@ namespace Aurora.Modules.Attachments
                     objatt.IsDeleted = false;
 
                     //Update the ItemID with the new item
-                    objatt.SetFromItemID(itemID, item.AssetID);
+                    objatt.SetFromItemID(itemID, assetID);
 
                     //DO NOT SEND THIS KILL ENTITY
                     // If we send this, when someone copies an inworld object, then wears it, the inworld objects disapepars
@@ -372,7 +389,7 @@ namespace Aurora.Modules.Attachments
                     {
                         IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
                         AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
-                        bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, item.ID, item.AssetID);
+                        bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
                         attPlugin.AddAttachment(objatt);
                         appearance.Appearance.SetAttachments(attPlugin.Get());
                         if (save)
@@ -382,7 +399,7 @@ namespace Aurora.Modules.Attachments
                             "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                             objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
 
-                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, item);
+                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID);
                     }
                     else
                         objatt = null;//Presence left, kill the attachment
@@ -574,7 +591,7 @@ namespace Aurora.Modules.Attachments
         /// <param name="item">If this is not null, it saves a query in this method to the InventoryService
         /// This is the Item that the object is in (if it is in one yet)</param>
         protected void FindAttachmentPoint (IClientAPI remoteClient, uint localID, ISceneEntity group,
-            int AttachmentPt, InventoryItemBase item)
+            int AttachmentPt, UUID assetID)
         {
             //Make sure that we arn't over the limit of attachments
             ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
@@ -733,11 +750,10 @@ namespace Aurora.Modules.Attachments
             }
 
             // XXYY!!
-            if (item == null)
+            if (assetID == UUID.Zero)
             {
-                item = new InventoryItemBase(itemID, remoteClient.AgentId);
+                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
                 item = m_scene.InventoryService.GetItem(item);
-
                 //Update the ItemID with the new item
                 group.SetFromItemID(itemID, item.AssetID);
 
@@ -847,14 +863,14 @@ namespace Aurora.Modules.Attachments
         /// <param name="grp"></param>
         /// <param name="itemID"></param>
         /// <param name="agentID"></param>
-        protected void UpdateKnownItem (IClientAPI remoteClient, ISceneEntity grp, UUID itemID, UUID agentID)
+        protected UUID UpdateKnownItem (IClientAPI remoteClient, ISceneEntity grp, UUID itemID, UUID agentID)
         {
             if (grp != null)
             {
                 if (!grp.HasGroupChanged)
                 {
                     //MainConsole.Instance.WarnFormat("[ATTACHMENTS MODULE]: Save request for {0} which is unchanged", grp.UUID);
-                    return;
+                    return UUID.Zero;
                 }
 
                 //let things like state saves and another async things be performed before we serialize the object
@@ -866,43 +882,23 @@ namespace Aurora.Modules.Attachments
 
                 string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup)grp);
 
-                InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                item = m_scene.InventoryService.GetItem(item);
-
-                if (item != null)
-                {
-                    AssetBase asset = new AssetBase(UUID.Random(), grp.Name,
+                AssetBase asset = new AssetBase(UUID.Random(), grp.Name,
                                                     AssetType.Object, remoteClient.AgentId)
                                           {
                                               Description = grp.RootChild.Description,
                                               Data = Utils.StringToBytes(sceneObjectXml)
                                           };
-                    asset.ID = m_scene.AssetService.Store(asset);
+                asset.ID = m_scene.AssetService.Store(asset);
 
-                    if (item.Folder == UUID.Zero)
-                    {
-                        InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType (remoteClient.AgentId, InventoryType.Unknown, AssetType.Object);
-                        if (folder == null)
-                            return;//Probably a non user (bot)
-                        item.Folder = folder.ID;
-                    }
 
-                    item.AssetID = asset.ID;
-                    item.Description = asset.Description;
-                    item.Name = asset.Name;
-                    item.AssetType = asset.Type;
-                    item.InvType = (int)InventoryType.Object;
+                m_scene.InventoryService.UpdateAssetIDForItem(itemID, asset.ID);
 
-                    m_scene.InventoryService.UpdateItem(item);
+                // this gets called when the agent logs off!
+                //remoteClient.SendInventoryItemCreateUpdate(item, 0);
 
-                    // this gets called when the agent logs off!
-                    remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                }
-                else
-                {
-                    MainConsole.Instance.Warn("[AttachmentModule]: Could not find inventory item for attachment to update!");
-                }
+                return asset.ID;
             }
+            return UUID.Zero;
         }
 
         #endregion

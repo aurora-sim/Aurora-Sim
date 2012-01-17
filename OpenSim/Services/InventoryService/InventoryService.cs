@@ -762,6 +762,16 @@ namespace OpenSim.Services.InventoryService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual bool UpdateAssetIDForItem(UUID itemID, UUID assetID)
+        {
+            object remoteValue = DoRemote(itemID, assetID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
+            return m_Database.UpdateAssetIDForItem(itemID, assetID);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool MoveItems(UUID principalID, List<InventoryItemBase> items)
         {
             object remoteValue = DoRemote(principalID, items);

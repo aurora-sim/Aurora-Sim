@@ -269,6 +269,7 @@ namespace Aurora.Modules.EntityTransfer
                 finalDestination.ServerURI, finalDestination.RegionName, position);
 
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
+            sp.SetAgentLeaving(finalDestination);
 
             // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
             // both regions
@@ -288,7 +289,6 @@ namespace Aurora.Modules.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    sp.SetAgentLeaving(finalDestination);
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
@@ -623,16 +623,16 @@ namespace Aurora.Modules.EntityTransfer
                         pos.Y = crossingRegion.RegionSizeY - 1;
                 }
 
+                agent.SetAgentLeaving(crossingRegion);
+
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = pos;
                 if (isFlying)
-                    cAgent.ControlFlags |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+                    cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
                 AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, pos);
-                agentCircuit.teleportFlags = (uint) TeleportFlags.ViaRegionID;
-
-                agent.SetAgentLeaving(crossingRegion);
+                agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
