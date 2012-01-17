@@ -222,7 +222,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return null;
         }
 
-        private bool Delete(UUID id, bool ignoreFlags)
+        public bool Delete(UUID id, bool ignoreFlags)
         {
             try
             {

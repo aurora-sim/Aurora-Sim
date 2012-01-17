@@ -133,5 +133,6 @@ namespace OpenSim.Services.Interfaces
         void UpdateContent(UUID id, byte[] asset, out UUID newID);
         bool ExistsAsset(UUID uuid);
         bool Delete(UUID id);
+        bool Delete(UUID id, bool ignoreFlags);
     }
 }

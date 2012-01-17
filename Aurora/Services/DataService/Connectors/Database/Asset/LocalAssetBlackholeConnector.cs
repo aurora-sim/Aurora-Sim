@@ -540,6 +540,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return Delete(id, true, false);
         }
 
+        public bool Delete(UUID id, bool ignoreFlags)
+        {
+            return Delete(id, true, ignoreFlags);
+        }
+
         private bool Delete(UUID id, bool assignHashCodeCheckTask, bool ignoreFlags)
         {
             AssetBase asset = GetAsset(id, true, false);

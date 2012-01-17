@@ -169,24 +169,7 @@ namespace OpenSim.Services.AssetService
         {
             Util.FireAndForget((o) =>
                 {
-                    AssetBase asset = null;
-                    if (m_doRemoteCalls)
-                    {
-                        asset = Get(id);
-                        if (asset != null)
-                        {
-                            handler(id, sender, asset);
-                            return;
-                        }
-                    }
-                    asset = m_database.GetAsset(UUID.Parse(id));
-                    IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-                    if (cache != null && asset != null && asset.Data.Length != 0)
-                        cache.Cache(asset);
-
-                    //MainConsole.Instance.DebugFormat("[AssetService]: Got asset {0}", asset);
-
-                    handler(id, sender, asset);
+                    handler(id, sender, Get(id));
                 });
         }
 
