@@ -172,13 +172,12 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                     return;
                 InventoryFolderBase f = (InventoryFolderBase) nodes[0];
                 UUID IARRootID = f.ID;
-                UUID LibraryRootID = new UUID("00000112-000f-0000-0000-000100bba000");
 
                 TraverseFolders(IARRootID, m_MockScene);
-                FixParent(IARRootID, m_MockScene, LibraryRootID);
+                FixParent(IARRootID, m_MockScene, m_service.LibraryRootFolderID);
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
-                f.ID = LibraryRootID;
+                f.ID = m_service.LibraryRootFolderID;
                 f.Type = (int)AssetType.RootFolder;
                 f.Version = 1;
                 m_MockScene.InventoryService.UpdateFolder(f);
@@ -219,6 +218,11 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                     break;
                 }
 #endif
+                if (folder.Type == -1)
+                {
+                    folder.Type = (int)AssetType.Folder;
+                    m_MockScene.InventoryService.UpdateFolder(folder);
+                }
                 TraverseFolders(folder.ID, m_MockScene);
             }
         }

@@ -43,6 +43,7 @@ namespace Aurora.Services.DataService
     public class LocalInventoryConnector : IInventoryData
     {
         protected IGenericData GD;
+        protected IRegistryCore m_registry;
         protected string m_foldersrealm = "inventoryfolders";
         protected string m_itemsrealm = "inventoryitems";
 
@@ -64,6 +65,7 @@ namespace Aurora.Services.DataService
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            m_registry = simBase;
         }
 
         public string Name
@@ -209,7 +211,7 @@ namespace Aurora.Services.DataService
                 List<UUID> moreLinkedItems = new List<UUID>();
                 int count = 0;
                 bool addToCount = true;
-                string query = String.Format("where {0} = '{1}' and {2} = '{3}' or {4} = '{5}'", "parentFolderID", folder_id,
+                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
                                              "avatarID", AgentID, "avatarID", libraryOwnerID);
                 redoQuery:
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))

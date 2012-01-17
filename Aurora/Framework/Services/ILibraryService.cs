@@ -37,6 +37,11 @@ namespace OpenSim.Services.Interfaces
         UUID LibraryOwner { get; }
 
         /// <summary>
+        /// The root folderID of the default library
+        /// </summary>
+        UUID LibraryRootFolderID { get; }
+
+        /// <summary>
         /// The owner of the library's name
         /// </summary>
         string LibraryOwnerName { get; }
