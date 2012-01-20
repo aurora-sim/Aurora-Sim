@@ -214,40 +214,36 @@ namespace OpenSim.Services.Connectors
 
         public virtual bool Get(string id, Object sender, AssetRetrieved handler)
         {
+            if ((m_Cache != null) && m_Cache.Contains(id))
+            {
+                Util.FireAndForget(delegate
+                {
+                    handler(id, sender, m_Cache.Get(id));
+                });
+                return true;
+            }
+
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
             if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] {m_serverURL});
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
+                bool result = false;
 
-                AssetBase asset = null;
-                if (m_Cache != null)
-                    asset = m_Cache.Get(id);
+                AsynchronousRestObjectRequester.
+                    MakeRequest("GET", uri, 0,
+                                delegate(AssetBase a)
+                                {
+                                    if (m_Cache != null)
+                                        m_Cache.Cache(a);
+                                    handler(id, sender, a);
+                                    result = true;
+                                });
 
-                if (asset == null)
-                {
-                    bool result = false;
-
-                    AsynchronousRestObjectRequester.
-                        MakeRequest("GET", uri, 0,
-                                    delegate(AssetBase a)
-                                        {
-                                            if (m_Cache != null)
-                                                m_Cache.Cache(a);
-                                            handler(id, sender, a);
-                                            result = true;
-                                        });
-
-                    if (result)
-                        return result;
-                }
-                else
-                {
-                    handler(id, sender, asset);
-                    return true;
-                }
+                if (result)
+                    return result;
             }
 
             return false;

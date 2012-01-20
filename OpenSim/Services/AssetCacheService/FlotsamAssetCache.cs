@@ -457,6 +457,11 @@ namespace OpenSim.Services
             }
         }
 
+        public bool Contains(string id)
+        {
+            return (m_MemoryCacheEnabled && m_MemoryCache.Contains(id)) || (File.Exists(GetFileName(id)));
+        }
+
         private void CleanupExpiredFiles(object source, ElapsedEventArgs e)
         {
             if (m_logLevel >= 2)
