@@ -603,6 +603,11 @@ namespace Aurora.Framework
             }
         }
 
+        public bool Contains(TKey key)
+        {
+            return m_cache.Contains(key);
+        }
+
         /// <summary>
         ///   Returns an enumerator that iterates through the elements stored to <see cref = "ICnmCache{TKey,TValue}" />.
         /// </summary>

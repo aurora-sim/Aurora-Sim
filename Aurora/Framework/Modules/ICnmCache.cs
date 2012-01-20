@@ -443,5 +443,7 @@ namespace Aurora.Framework
         /// <seealso cref = "Clear" />
         /// <seealso cref = "PurgeExpired" />
         bool TryGetValue(TKey key, out TValue value);
+
+        bool Contains(TKey key);
     }
 }

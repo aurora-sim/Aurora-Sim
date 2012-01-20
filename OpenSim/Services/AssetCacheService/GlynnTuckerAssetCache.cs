@@ -122,6 +122,11 @@ namespace OpenSim.Services
             m_Cache.Clear();
         }
 
+        public bool Contains(string id)
+        {
+            return m_Cache.Contains(id);
+        }
+
         private void Debug(Object asset)
         {
             // Temporary instrumentation to measure the hit/miss rate

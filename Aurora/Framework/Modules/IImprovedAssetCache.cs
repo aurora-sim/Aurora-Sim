@@ -33,5 +33,6 @@ namespace Aurora.Framework
         AssetBase Get(string id);
         void Expire(string id);
         void Clear();
+        bool Contains(string id);
     }
 }
