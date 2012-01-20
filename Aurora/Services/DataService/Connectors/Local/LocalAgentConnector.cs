@@ -80,13 +80,10 @@ namespace Aurora.Services.DataService
             List<string> query = null;
             try
             {
-                Dictionary<string, object> where = new Dictionary<string, object>(2);
-                where["ID"] = agentID;
-                where["`Key`"] = "AgentInfo";
-                query = GD.Query(new string[1] { "`Value`" }, "userdata", new QueryFilter
-                {
-                    andFilters = where
-                }, null, null, null);
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["ID"] = agentID;
+                filter.andFilters["`Key`"] = "AgentInfo";
+                query = GD.Query(new string[1] { "`Value`" }, "userdata", filter, null, null, null);
             }
             catch
             {

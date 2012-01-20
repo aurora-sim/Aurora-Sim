@@ -76,13 +76,10 @@ namespace Aurora.Services.DataService
 
         public List<string> FindLSLData(string token, string key)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["Token"] = token.MySqlEscape(50);
-            where["KeySetting"] = token.MySqlEscape(50);
-            return GD.Query(new string[1] { "*" }, "lslgenericdata", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["Token"] = token.MySqlEscape(50);
+            filter.andFilters["KeySetting"] = token.MySqlEscape(50);
+            return GD.Query(new string[1] { "*" }, "lslgenericdata", filter, null, null, null);
         }
 
         #endregion

@@ -78,15 +78,12 @@ namespace Aurora.Services.DataService
                 return UserProfile;
             else
             {
-                Dictionary<string, object> where = new Dictionary<string, object>();
-                where["ID"] = agentID;
-                where["`Key`"] = "LLProfile";
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["ID"] = agentID;
+                filter.andFilters["`Key`"] = "LLProfile";
                 List<string> query = null;
                 //Grab it from the almost generic interface
-                query = GD.Query(new string[] { "Value" }, "userdata", new QueryFilter
-                {
-                    andFilters = where
-                }, null, null, null);
+                query = GD.Query(new string[] { "Value" }, "userdata", filter, null, null, null);
 
                 if (query == null || query.Count == 0)
                     return null;
@@ -172,13 +169,10 @@ namespace Aurora.Services.DataService
 
         public List<Classified> GetClassifieds(UUID ownerID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["OwnerUUID"] = ownerID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, null, null);
 
             List<Classified> classifieds = new List<Classified>();
             for (int i = 0; i < query.Count; i += 6)
@@ -192,13 +186,10 @@ namespace Aurora.Services.DataService
 
         public Classified GetClassified(UUID queryClassifiedID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["ClassifiedUUID"] = queryClassifiedID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ClassifiedUUID"] = queryClassifiedID;
 
-            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, null, null);
 
             if (query.Count < 6)
             {
@@ -234,13 +225,10 @@ namespace Aurora.Services.DataService
 
         public ProfilePickInfo GetPick(UUID queryPickID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["PickUUID"] = queryPickID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PickUUID"] = queryPickID;
 
-            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", filter, null, null, null);
 
             if (query.Count < 5)
                 return null;
@@ -251,13 +239,10 @@ namespace Aurora.Services.DataService
 
         public List<ProfilePickInfo> GetPicks(UUID ownerID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["OwnerUUID"] = ownerID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerUUID"] = ownerID;
 
-            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new string[1] { "*" }, "userpicks", filter, null, null, null);
 
             List<ProfilePickInfo> picks = new List<ProfilePickInfo>();
             for (int i = 0; i < query.Count; i += 5)

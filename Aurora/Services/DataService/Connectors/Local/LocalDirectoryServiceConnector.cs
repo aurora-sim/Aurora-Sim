@@ -618,12 +618,11 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
 
+            filter.andLikeFilters["Name"] = "%" + queryText + "%";
             if (int.Parse(category) != (int)DirectoryManager.ClassifiedCategories.Any) //Check the category
             {
                 filter.andFilters["Category"] = category;
             }
-
-            filter.andLikeFilters["Name"] = "%" + queryText + "%";
 
             List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
