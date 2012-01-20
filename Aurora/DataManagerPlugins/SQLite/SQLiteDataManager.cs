@@ -1136,6 +1136,8 @@ namespace Aurora.DataManager.SQLite
                     return "CHAR(36)";
                 case ColumnTypes.Char32:
                     return "CHAR(32)";
+                case ColumnTypes.Char5:
+                    return "CHAR(5)";
                 case ColumnTypes.String:
                     return "TEXT";
                 case ColumnTypes.String1:
@@ -1321,6 +1323,8 @@ namespace Aurora.DataManager.SQLite
                     return ColumnTypes.Char36;
                 case "char(32)":
                     return ColumnTypes.Char32;
+                case "char(5)":
+                    return ColumnTypes.Char5;
                 case "varchar(1)":
                     return ColumnTypes.String1;
                 case "varchar(2)":

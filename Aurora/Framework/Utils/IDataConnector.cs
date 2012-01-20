@@ -120,6 +120,7 @@ namespace Aurora.Framework
         LongBlob,
         Char36,
         Char32,
+        Char5,
         Date,
         DateTime,
         Double,
