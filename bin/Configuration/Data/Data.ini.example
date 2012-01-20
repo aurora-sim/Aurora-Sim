@@ -6,9 +6,6 @@
 
     ;; If you want to use MySQL, select this file.
     ;Include-MySQL = Configuration/Data/MySQL.ini
-
-    ;; If you want to use MSSQL, select this file.
-    ;Include-MSSQL = Configuration/Data/MSSQL.ini
 	
 	
     ;; If you want to use the FileBased region database, select this file as well as the other choice of database that you are using

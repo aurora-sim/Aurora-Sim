@@ -569,7 +569,6 @@
 
       <Reference name="Aurora.DataManager"/>
       <Reference name="Aurora.DataManager.MySQL"/>
-      <Reference name="Aurora.DataManager.MSSQL"/>
       <Reference name="Aurora.DataManager.SQLite"/>
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="Aurora.Framework"/>

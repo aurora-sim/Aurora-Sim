@@ -45,7 +45,6 @@ have been moved to the AuroraServerConfiguration and Configuration folders (resp
 -----------------
 
 - Data.ini -  Settings to switch between database modules
-- MSSQL.ini -  Settings for the MSSQL Database
 - MySQL.ini -  Settings for the MySQL Database.
 - SQLite.ini -  Settings for the SQLite Database.
 
