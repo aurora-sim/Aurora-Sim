@@ -67,12 +67,10 @@ namespace Aurora.Services.DataService
 
         public AuthData Get(UUID principalID, string authType)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["UUID"] = principalID;
-            where["accountType"] = authType;
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter{
-                andFilters = where
-            }, null, null, null);
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = principalID;
+            filter.andFilters["accountType"] = authType;
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
             AuthData data = null;
             for (int i = 0; i < query.Count; i += 5)
             {

@@ -151,22 +151,16 @@ namespace Aurora.Modules.Ban
 
             #region Check Password
 
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["UUID"] = info.AgentID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = info.AgentID;
 
-            List<string> query = GD.Query(new string[] { "passwordHash" }, DatabaseToAuthTable, new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> query = GD.Query(new string[] { "passwordHash" }, DatabaseToAuthTable, filter, null, null, null);
 
             if (query.Count != 0)
             {
-                where.Remove("UUID");
-                where["passwordHash"] = query[0];
-                query = GD.Query(new string[] { "UUID" }, DatabaseToAuthTable, new QueryFilter
-                {
-                    andFilters = where
-                }, null, null, null);
+                filter.andFilters.Remove("UUID");
+                filter.andFilters["passwordHash"] = query[0];
+                query = GD.Query(new string[] { "UUID" }, DatabaseToAuthTable, filter, null, null, null);
 
                 foreach (string ID in query)
                 {
