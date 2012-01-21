@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("IsPublic", ColumnTypes.Integer11)
             ), IndexDefs(
                 IndexDef(new string[1] { "Name" }, IndexType.Primary),
-                IndexDef(new string[1] { "IsPublic" }, IndexType.Primary)
+                IndexDef(new string[1] { "IsPublic" }, IndexType.Index)
             ));
 
             AddSchema("passwords", ColDefs(
