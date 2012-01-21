@@ -408,15 +408,12 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            Dictionary<string, object> where = new Dictionary<string, object>(3);
-            where["AgentID"] = AgentID;
-            where["RoleID"] = RoleID;
-            where["GroupID"] = GroupID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
+            filter.andFilters["RoleID"] = RoleID;
+            filter.andFilters["AgentID"] = AgentID;
             //Make sure they arn't already in this role
-            if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null)[0]) == 0)
+            if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
             {
                 data.Insert("osgrouprolemembership", new[]{
                     "GroupID",
