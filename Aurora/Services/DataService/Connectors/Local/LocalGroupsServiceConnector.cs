@@ -597,19 +597,19 @@ namespace Aurora.Services.DataService
         {
             GroupRecord record = new GroupRecord();
 
-            Dictionary<string, object> where = new Dictionary<string, object>();
+            QueryFilter filter = new QueryFilter();
 
             List<string> Keys = new List<string>();
             List<object> Values = new List<object>();
             if (GroupID != UUID.Zero)
             {
-                where["GroupID"] = GroupID;
+                filter.andFilters["GroupID"] = GroupID;
             }
             if (!string.IsNullOrEmpty(GroupName))
             {
-                where["Name"] = GroupName.MySqlEscape(50);
+                filter.andFilters["Name"] = GroupName.MySqlEscape(50);
             }
-            if (where.Count == 0)
+            if (filter.Count == 0)
             {
                 return null;
             }
@@ -625,10 +625,7 @@ namespace Aurora.Services.DataService
                 "AllowPublish",
                 "MaturePublish",
                 "OwnerRoleID"
-            }, "osgroup", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroup", filter, null, null, null);
             return (osgroupsData.Count == 0) ? null : GroupRecordQueryResult2GroupRecord(osgroupsData);
         }
 
@@ -733,40 +730,29 @@ namespace Aurora.Services.DataService
             GroupProfileData GPD = new GroupProfileData();
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
 
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["GroupID"] = AgentID; // yes these look the wrong way around
-            where["AgentID"] = GroupID; // but they were like that when I got here! ~ SignpostMarv
+            QueryFilter filter1 = new QueryFilter();
+            filter1.andFilters["GroupID"] = AgentID; // yes these look the wrong way around
+            filter1.andFilters["AgentID"] = GroupID; // but they were like that when I got here! ~ SignpostMarv
 
-            Dictionary<string, object> where2 = new Dictionary<string, object>(1);
-            where["GroupID"] = GroupID;
+            QueryFilter filter2 = new QueryFilter();
+            filter2.andFilters["GroupID"] = GroupID;
 
             List<string> Membership = data.Query(new string[3]{
                 "Contribution",
                 "ListInProfile",
                 "SelectedRoleID"
-            }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroupmembership", filter1, null, null, null);
 
-            int GroupMemCount = int.Parse(data.Query(new string[] { "COUNT(AgentID)" }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where2
-            }, null, null, null)[0]);
+            int GroupMemCount = int.Parse(data.Query(new string[] { "COUNT(AgentID)" }, "osgroupmembership", filter2, null, null, null)[0]);
 
-            int GroupRoleCount = int.Parse(data.Query(new string[] { "COUNT(RoleID)" }, "osrole", new QueryFilter
-            {
-                andFilters = where2
-            }, null, null, null)[0]);
+            int GroupRoleCount = int.Parse(data.Query(new string[] { "COUNT(RoleID)" }, "osrole", filter2, null, null, null)[0]);
 
-            Dictionary<string, object> where3 = new Dictionary<string, object>(1);
+            QueryFilter filter3 = new QueryFilter();
+            filter3.andFilters["RoleID"] = Membership[2];
             List<string> GroupRole = data.Query(new string[] {
                 "Name",
                 "Powers"
-            }, "osrole", new QueryFilter
-            {
-                andFilters = where3
-            }, null, null, null);
+            }, "osrole", filter3, null, null, null);
 
             GPD.AllowPublish = record.AllowPublish;
             GPD.Charter = record.Charter;
@@ -798,34 +784,28 @@ namespace Aurora.Services.DataService
             }
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
 
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["GroupID"] = GroupID;
-            where["AgentID"] = AgentID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
+            filter.andFilters["AgentID"] = AgentID;
 
             List<string> Membership = data.Query(new string[]{
                 "AcceptNotices",
                 "Contribution",
                 "ListInProfile",
                 "SelectedRoleID"
-            }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroupmembership", filter, null, null, null);
 
             if (Membership.Count != 4)
             {
                 return null;
             }
-            where.Remove("AgentID");
-            where["RoleID"] = Membership[3];
+            filter.andFilters.Remove("AgentID");
+            filter.andFilters["RoleID"] = Membership[3];
 
             List<string> GroupRole = data.Query(new string[]{
                 "Title",
                 "Powers"
-            }, "osrole", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osrole", filter, null, null, null);
 
             if (GroupRole.Count != 2)
             {
@@ -856,13 +836,10 @@ namespace Aurora.Services.DataService
 
         public List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID AgentID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["AgentID"] = AgentID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
 
-            List<string> Groups = data.Query(new string[1] { "GroupID" }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> Groups = data.Query(new string[1] { "GroupID" }, "osgroupmembership", filter, null, null, null);
 
 #if (!ISWIN)
             List<GroupMembershipData> list = new List<GroupMembershipData>();
@@ -904,14 +881,10 @@ namespace Aurora.Services.DataService
 
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = requestingAgentID;
 
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-            where["AgentID"] = requestingAgentID;
-
-            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", filter, null, null, null);
 
             List<GroupInviteInfo> invites = new List<GroupInviteInfo>();
 
@@ -932,10 +905,9 @@ namespace Aurora.Services.DataService
 
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
-
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["GroupID"] = GroupID;
-            where["AgentID"] = requestingAgentID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = GroupID;
+            filter.andFilters["AgentID"] = requestingAgentID;
 
             //Permissions
             List<string> OtherPermiss = data.Query(new string[4] { 
@@ -943,67 +915,52 @@ namespace Aurora.Services.DataService
                 "Contribution",
                 "ListInProfile", 
                 "SelectedRoleID"
-            }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroupmembership", filter, null, null, null);
 
             if (OtherPermiss.Count == 0)
             {
                 return null;
             }
 
-            where["AgentID"] = AgentID;
+            filter.andFilters["AgentID"] = AgentID;
 
             List<string> Membership = data.Query(new string[4] { 
                 "AcceptNotices",
                 "Contribution",
                 "ListInProfile", 
                 "SelectedRoleID"
-            }, "osgroupmembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroupmembership", filter, null, null, null);
 
             if (Membership.Count != 4)
             {
                 return null;
             }
 
-            where.Remove("AgentID");
-            where["RoleID"] = Membership[3];
+            filter.andFilters.Remove("AgentID");
+            filter.andFilters["RoleID"] = Membership[3];
 
             List<string> GroupRole = data.Query(new string[2] { 
                 "Title",
                 "Powers"
-            }, "osrole", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osrole", filter, null, null, null);
 
             if (GroupRole.Count != 2)
             {
                 return null;
             }
 
-            where.Remove("RoleID");
+            filter.andFilters.Remove("RoleID");
 
             List<string> OwnerRoleID = data.Query(new string[1] { 
                 "OwnerRoleID"
-            }, "osgroup", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            }, "osgroup", filter, null, null, null);
 
-            where["RoleID"] = OwnerRoleID[0];
-            where["AgentID"] = AgentID;
+            filter.andFilters["RoleID"] = OwnerRoleID[0];
+            filter.andFilters["AgentID"] = AgentID;
 
             bool IsOwner = uint.Parse(data.Query(new string[1] { 
                 "COUNT(AgentID)"
-            }, "osgrouprolemembership", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null)[0]) == 1;
+            }, "osgrouprolemembership", filter, null, null, null)[0]) == 1;
 
             GroupMembersData GMD = new GroupMembersData
             {
@@ -1056,8 +1013,6 @@ namespace Aurora.Services.DataService
             List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
             DirGroupsReplyData dirgroup;
 
-            Dictionary<string, object> where = new Dictionary<string, object>(1);
-
             for (int i = 0; i < retVal.Count; i += 5)
             {
                 if (retVal[i + 2] == "0")// (ShowInList param) They don't want to be shown in search.. respect this
@@ -1078,10 +1033,9 @@ namespace Aurora.Services.DataService
                 dirgroup.groupID = UUID.Parse(retVal[i]);
                 dirgroup.groupName = retVal[i + 1];
 
-                where["GroupID"] = dirgroup.groupID;
-                dirgroup.members = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgroupmembership", new QueryFilter{
-                    andFilters = where
-                }, null, null, null)[0]);
+                filter = new QueryFilter();
+                filter.andFilters["GroupID"] = dirgroup.groupID;
+                dirgroup.members = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgroupmembership", filter, null, null, null)[0]);
 
                 Reply.Add(dirgroup);
             }
