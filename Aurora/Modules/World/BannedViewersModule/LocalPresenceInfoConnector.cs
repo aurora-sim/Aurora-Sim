@@ -158,7 +158,7 @@ namespace Aurora.Modules.Ban
 
             if (query.Count != 0)
             {
-                filter.andFilters.Remove("UUID");
+                filter = new QueryFilter();
                 filter.andFilters["passwordHash"] = query[0];
                 query = GD.Query(new string[] { "UUID" }, DatabaseToAuthTable, filter, null, null, null);
 
@@ -183,7 +183,7 @@ namespace Aurora.Modules.Ban
             //Only check suspected and known offenders in this scan
             // 2 == Flags
 
-            QueryFilter filter = new QueryFilter();
+            filter = new QueryFilter();
             filter.orMultiFilters["Flags"] = new List<object>(5);
             filter.orMultiFilters["Flags"].Add("SuspectedAltAccountOfKnown");
             filter.orMultiFilters["Flags"].Add("Known");

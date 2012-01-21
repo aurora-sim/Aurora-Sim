@@ -300,8 +300,8 @@ namespace Aurora.Services.DataService
                 {
                     UUID parcelInfoID = UUID.Zero;
                     QueryFilter filter = new QueryFilter();
-                    filter.andFilters["Name"] = ParcelName;
                     filter.andFilters["RegionID"] = RegionID;
+                    filter.andFilters["Name"] = ParcelName;
 
                     List<string> query = GD.Query(new string[1] { "InfoUUID" }, "searchparcel", filter, null, 0, 1);
 
@@ -449,20 +449,19 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             Dictionary<string, bool> sort = new Dictionary<string, bool>();
 
-            if (category != "-1")
-            {
-                filter.andFilters["Category"] = category;
-            }
-
             //If they dwell sort flag is there, sort by dwell going down
             if ((Flags & (uint)DirectoryManager.DirFindFlags.DwellSort) == (uint)DirectoryManager.DirFindFlags.DwellSort)
             {
                 sort["Dwell"] = false;
             }
 
-            filter.orLikeFilters["Description"] = "%" + queryText + "%";
             filter.orLikeFilters["Name"] = "%" + queryText + "%";
+            filter.orLikeFilters["Description"] = "%" + queryText + "%";
             filter.andFilters["ShowInSearch"] = 1;
+            if (category != "-1")
+            {
+                filter.andFilters["Category"] = category;
+            }
 
             List<string> retVal = GD.Query(new string[6]{
                 "InfoUUID",
@@ -512,6 +511,9 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
 
+            //Only parcels set for sale will be checked
+            filter.andFilters["ForSale"] = "1";
+
             //They requested a sale price check
             if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByPrice) == (uint)DirectoryManager.DirFindFlags.LimitByPrice)
             {
@@ -523,9 +525,6 @@ namespace Aurora.Services.DataService
             {
                 filter.andGreaterThanEqFilters["Area"] = (int)area;
             }
-
-            //Only parcels set for sale will be checked
-            filter.andFilters["ForSale"] = "1";
 
             List<string> retVal = GD.Query(new string[]{
                 "InfoUUID",
