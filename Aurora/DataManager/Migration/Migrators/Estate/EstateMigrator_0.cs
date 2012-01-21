@@ -39,13 +39,15 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Estate";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("estates", ColDefs(
-                ColDef("ID", ColumnTypes.String45, true),
-                ColDef("Key", ColumnTypes.String50, true),
+                ColDef("ID", ColumnTypes.String45),
+                ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
-                                     ));
+            ), IndexDefs(
+                IndexDef(new string[2]{ "ID", "Key" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

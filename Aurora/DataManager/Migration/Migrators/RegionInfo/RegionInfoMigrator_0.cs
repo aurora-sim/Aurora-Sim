@@ -39,13 +39,16 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "RegionInfo";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("simulator", ColDefs(
-                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionID", ColumnTypes.String50),
                 ColDef("RegionName", ColumnTypes.String50),
                 ColDef("RegionInfo", ColumnTypes.String1024),
-                ColDef("Disabled", ColumnTypes.String45)));
+                ColDef("Disabled", ColumnTypes.String45)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

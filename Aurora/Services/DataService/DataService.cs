@@ -28,7 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Aurora.DataManager.MSSQL;
+//using Aurora.DataManager.MSSQL;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
 using Aurora.Framework;
@@ -72,7 +72,7 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }
-            else if (StorageProvider == "MSSQL2008")
+            /*else if (StorageProvider == "MSSQL2008")
             {
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
@@ -83,7 +83,7 @@ namespace Aurora.Services.DataService
                 MSSQLDataLoader GenericData = new MSSQLDataLoader();
 
                 DataConnector = GenericData;
-            }
+            }*/
             else if (StorageProvider == "SQLite" || StorageProvider == "Aurora.DataManager.SQLite.dll")
                 //Allow for fallback when AuroraData isn't set
             {

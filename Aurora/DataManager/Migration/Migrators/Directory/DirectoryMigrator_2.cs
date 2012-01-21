@@ -39,35 +39,39 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 2);
             MigrationName = "Directory";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("searchparcel", ColDefs(ColDef("RegionID", ColumnTypes.String50),
-                                              ColDef("ParcelID", ColumnTypes.String50, true),
-                                              ColDef("LocalID", ColumnTypes.String50),
-                                              ColDef("LandingX", ColumnTypes.String50),
-                                              ColDef("LandingY", ColumnTypes.String50),
-                                              ColDef("LandingZ", ColumnTypes.String50),
-                                              ColDef("Name", ColumnTypes.String50),
-                                              ColDef("Description", ColumnTypes.String50),
-                                              ColDef("Flags", ColumnTypes.String50),
-                                              ColDef("Dwell", ColumnTypes.String50),
-                                              ColDef("InfoUUID", ColumnTypes.String50),
-                                              ColDef("ForSale", ColumnTypes.String50),
-                                              ColDef("SalePrice", ColumnTypes.String50),
-                                              ColDef("Auction", ColumnTypes.String50),
-                                              ColDef("Area", ColumnTypes.String50),
-                                              ColDef("EstateID", ColumnTypes.String50),
-                                              ColDef("Maturity", ColumnTypes.String50),
-                                              ColDef("OwnerID", ColumnTypes.String50),
-                                              ColDef("GroupID", ColumnTypes.String50),
-                                              ColDef("ShowInSearch", ColumnTypes.String50),
-                                              ColDef("SnapshotID", ColumnTypes.String50),
-                                              ColDef("Bitmap", ColumnTypes.LongText)));
+            AddSchema("searchparcel", ColDefs(
+                ColDef("RegionID", ColumnTypes.String50),
+                ColDef("ParcelID", ColumnTypes.String50),
+                ColDef("LocalID", ColumnTypes.String50),
+                ColDef("LandingX", ColumnTypes.String50),
+                ColDef("LandingY", ColumnTypes.String50),
+                ColDef("LandingZ", ColumnTypes.String50),
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Description", ColumnTypes.String50),
+                ColDef("Flags", ColumnTypes.String50),
+                ColDef("Dwell", ColumnTypes.String50),
+                ColDef("InfoUUID", ColumnTypes.String50),
+                ColDef("ForSale", ColumnTypes.String50),
+                ColDef("SalePrice", ColumnTypes.String50),
+                ColDef("Auction", ColumnTypes.String50),
+                ColDef("Area", ColumnTypes.String50),
+                ColDef("EstateID", ColumnTypes.String50),
+                ColDef("Maturity", ColumnTypes.String50),
+                ColDef("OwnerID", ColumnTypes.String50),
+                ColDef("GroupID", ColumnTypes.String50),
+                ColDef("ShowInSearch", ColumnTypes.String50),
+                ColDef("SnapshotID", ColumnTypes.String50),
+                ColDef("Bitmap", ColumnTypes.LongText)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
+            ));
 
             AddSchema("events", ColDefs(
                 ColDef("EOwnerID", ColumnTypes.String50),
                 ColDef("EName", ColumnTypes.String50),
-                ColDef("EID", ColumnTypes.String50, true),
+                ColDef("EID", ColumnTypes.String50),
                 ColDef("ECreatorID", ColumnTypes.String50),
                 ColDef("ECategory", ColumnTypes.String50),
                 ColDef("EDesc", ColumnTypes.String50),
@@ -79,7 +83,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("EFlags", ColumnTypes.String50),
                 ColDef("EMature", ColumnTypes.String50),
                 ColDef("EDuration", ColumnTypes.String50)
-                                    ));
+            ), IndexDefs(
+                IndexDef(new string[1]{ "EID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

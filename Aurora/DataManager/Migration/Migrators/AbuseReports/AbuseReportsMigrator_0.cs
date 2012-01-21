@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "AbuseReports";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("abusereports", ColDefs(
                 ColDef("Category", ColumnTypes.String100),
@@ -53,12 +53,16 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionName", ColumnTypes.String100),
                 ColDef("ScreenshotID", ColumnTypes.String100),
                 ColDef("AbuseSummary", ColumnTypes.String100),
-                ColDef("Number", ColumnTypes.String100, true),
+                ColDef("Number", ColumnTypes.String100),
                 ColDef("AssignedTo", ColumnTypes.String100),
                 ColDef("Active", ColumnTypes.String100),
                 ColDef("Checked", ColumnTypes.String100),
                 ColDef("Notes", ColumnTypes.String1024)
-                                          ));
+            ),
+                IndexDefs(
+                    IndexDef(new string[1]{ "Number" }, IndexType.Primary)
+                )
+            );
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

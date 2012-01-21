@@ -32,11 +32,11 @@ using C5;
 
 namespace Aurora.DataManager.Migration.Migrators
 {
-    public class DirectoryMigrator_3 : Migrator
+    public class DirectoryMigrator_7 : Migrator
     {
-        public DirectoryMigrator_3()
+        public DirectoryMigrator_7()
         {
-            Version = new Version(0, 0, 3);
+            Version = new Version(0, 0, 7);
             MigrationName = "Directory";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
@@ -63,28 +63,33 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("GroupID", ColumnTypes.String50),
                 ColDef("ShowInSearch", ColumnTypes.String50),
                 ColDef("SnapshotID", ColumnTypes.String50),
-                ColDef("Bitmap", ColumnTypes.LongText)
+                ColDef("Bitmap", ColumnTypes.LongText),
+                ColDef("Category", ColumnTypes.String50)
             ), IndexDefs(
                 IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
             ));
 
-            AddSchema("events", ColDefs(
-                ColDef("EOwnerID", ColumnTypes.String50),
-                ColDef("EName", ColumnTypes.String50),
-                ColDef("EID", ColumnTypes.String50),
-                ColDef("ECreatorID", ColumnTypes.String50),
-                ColDef("ECategory", ColumnTypes.String50),
-                ColDef("EDesc", ColumnTypes.String50),
-                ColDef("EDate", ColumnTypes.String50),
-                ColDef("ECoverCharge", ColumnTypes.String50),
-                ColDef("ECoverAmount", ColumnTypes.String50),
-                ColDef("ESimName", ColumnTypes.String50),
-                ColDef("EGlobalPos", ColumnTypes.String50),
-                ColDef("EFlags", ColumnTypes.String50),
-                ColDef("EMature", ColumnTypes.String50),
-                ColDef("EDuration", ColumnTypes.String50)
+            AddSchema("asevents", ColDefs(
+                ColDef("EID", ColumnTypes.Integer11),
+                ColDef("creator", ColumnTypes.Char36),
+                ColDef("region", ColumnTypes.Char36),
+                ColDef("parcel", ColumnTypes.Char36),
+                ColDef("date", ColumnTypes.DateTime),
+                ColDef("cover", ColumnTypes.Integer11),
+                ColDef("maturity", ColumnTypes.TinyInt4),
+                ColDef("flags", ColumnTypes.Integer11),
+                ColDef("duration", ColumnTypes.Integer11),
+                ColDef("localPosX", ColumnTypes.Float),
+                ColDef("localPosY", ColumnTypes.Float),
+                ColDef("localPosZ", ColumnTypes.Float),
+                ColDef("name", ColumnTypes.String50),
+                ColDef("description", ColumnTypes.String255),
+                ColDef("category", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "EID" }, IndexType.Primary)
+                IndexDef(new string[1]{ "EID" }, IndexType.Primary),
+                IndexDef(new string[1]{ "name" }, IndexType.Index),
+                IndexDef(new string[2]{ "date", "flags" }, IndexType.Index),
+                IndexDef(new string[2]{ "region", "maturity" }, IndexType.Index)
             ));
         }
 

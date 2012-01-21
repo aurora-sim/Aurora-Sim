@@ -39,30 +39,48 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 1);
             MigrationName = "Agent";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("userdata", ColDefs(
-                ColDef("ID", ColumnTypes.String45, true),
-                ColDef("Key", ColumnTypes.String50, true),
+                ColDef("ID", ColumnTypes.String45),
+                ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
-                                      ));
+            ), IndexDefs(
+                IndexDef(new string[2]{ "ID", "Key" }, IndexType.Primary)
+            ));
 
-            AddSchema("userclassifieds", ColDefs(ColDef("Name", ColumnTypes.String50),
-                                                 ColDef("Category", ColumnTypes.String50),
-                                                 ColDef("SimName", ColumnTypes.String50),
-                                                 ColDef("OwnerUUID", ColumnTypes.String50),
-                                                 ColDef("ClassifiedUUID", ColumnTypes.String50, true),
-                                                 ColDef("Classified", ColumnTypes.String8196)));
+            AddSchema("userclassifieds", ColDefs(
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Category", ColumnTypes.String50),
+                ColDef("SimName", ColumnTypes.String50),
+                ColDef("OwnerUUID", ColumnTypes.String50),
+                ColDef("ClassifiedUUID", ColumnTypes.String50),
+                ColDef("Classified", ColumnTypes.String8196)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "ClassifiedUUID" }, IndexType.Primary)
+            ));
 
-            AddSchema("userpicks", ColDefs(ColDef("Name", ColumnTypes.String50),
-                                           ColDef("SimName", ColumnTypes.String50),
-                                           ColDef("OwnerUUID", ColumnTypes.String50),
-                                           ColDef("PickUUID", ColumnTypes.String50, true),
-                                           ColDef("Pick", ColumnTypes.String8196)));
+            AddSchema("userpicks", ColDefs(
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("SimName", ColumnTypes.String50),
+                ColDef("OwnerUUID", ColumnTypes.String50),
+                ColDef("PickUUID", ColumnTypes.String50),
+                ColDef("Pick", ColumnTypes.String8196)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "PickUUID" }, IndexType.Primary)
+            ));
 
-            AddSchema("macban", ColDefs(ColDef("macAddress", ColumnTypes.String50, true)));
+            AddSchema("macban", ColDefs(
+                ColDef("macAddress", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1] { "macAddress" }, IndexType.Primary)
+            ));
 
-            AddSchema("bannedviewers", ColDefs(ColDef("Client", ColumnTypes.String50, true)));
+            AddSchema("bannedviewers", ColDefs(
+                ColDef("Client", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "Client" }, IndexType.Primary )
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

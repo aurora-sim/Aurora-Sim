@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 3);
             MigrationName = "Auth";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //
             // Change summery:
@@ -48,14 +48,21 @@ namespace Aurora.DataManager.Migration.Migrators
             //
 
             AddSchema("auth", ColDefs(
-                ColDef("UUID", ColumnTypes.Char36, true),
+                ColDef("UUID", ColumnTypes.Char36),
                 ColDef("passwordHash", ColumnTypes.String1024),
                 ColDef("passwordSalt", ColumnTypes.String1024),
-                ColDef("accountType", ColumnTypes.Char32, true)));
+                ColDef("accountType", ColumnTypes.Char32)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "UUID", "accountType" }, IndexType.Primary)
+            ));
+
             AddSchema("tokens", ColDefs(
-                ColDef("UUID", ColumnTypes.Char36, true),
-                ColDef("token", ColumnTypes.String255, true),
-                ColDef("validity", ColumnTypes.Date)));
+                ColDef("UUID", ColumnTypes.Char36),
+                ColDef("token", ColumnTypes.String255),
+                ColDef("validity", ColumnTypes.Date)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "UUID", "token" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

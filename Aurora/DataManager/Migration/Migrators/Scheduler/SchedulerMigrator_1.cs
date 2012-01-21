@@ -39,29 +39,35 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
             Version = new Version(0, 0, 1);
             MigrationName = "Scheduler";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("scheduler", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                                                ColDef("fire_function", ColumnTypes.String128),
-                                                ColDef("fire_params", ColumnTypes.String1024),
-                                                ColDef("run_once", ColumnTypes.TinyInt1),
-                                                ColDef("run_every", ColumnTypes.Integer30),
-                                                ColDef("runs_next", ColumnTypes.Integer30, true),
-                                                ColDef("keep_history", ColumnTypes.TinyInt1),
-                                                ColDef("require_reciept", ColumnTypes.TinyInt1),
-                                                ColDef("last_history_id", ColumnTypes.String36),
-                                                ColDef("create_time", ColumnTypes.Integer30),
-                                                ColDef("enabled", ColumnTypes.TinyInt1, true)
-                                            ));
+            AddSchema("scheduler", ColDefs(
+                ColDef("id", ColumnTypes.String36),
+                ColDef("fire_function", ColumnTypes.String128),
+                ColDef("fire_params", ColumnTypes.String1024),
+                ColDef("run_once", ColumnTypes.TinyInt1),
+                ColDef("run_every", ColumnTypes.Integer30),
+                ColDef("runs_next", ColumnTypes.Integer30),
+                ColDef("keep_history", ColumnTypes.TinyInt1),
+                ColDef("require_reciept", ColumnTypes.TinyInt1),
+                ColDef("last_history_id", ColumnTypes.String36),
+                ColDef("create_time", ColumnTypes.Integer30),
+                ColDef("enabled", ColumnTypes.TinyInt1)
+            ),  IndexDefs(
+                IndexDef(new string[3]{ "id", "runs_next", "enabled" }, IndexType.Primary)
+            ));
 
-            AddSchema("scheduler_history", ColDefs(ColDef("id", ColumnTypes.String36, true),
-                                                ColDef("scheduler_id", ColumnTypes.String36, true),
-                                                ColDef("ran_time", ColumnTypes.Integer30),
-                                                ColDef("run_time", ColumnTypes.Integer30),
-                                                ColDef("reciept", ColumnTypes.String1024),
-                                                ColDef("is_complete", ColumnTypes.TinyInt1),
-                                                ColDef("complete_time", ColumnTypes.Integer30)
-                                            ));
+            AddSchema("scheduler_history", ColDefs(
+                ColDef("id", ColumnTypes.String36),
+                ColDef("scheduler_id", ColumnTypes.String36),
+                ColDef("ran_time", ColumnTypes.Integer30),
+                ColDef("run_time", ColumnTypes.Integer30),
+                ColDef("reciept", ColumnTypes.String1024),
+                ColDef("is_complete", ColumnTypes.TinyInt1),
+                ColDef("complete_time", ColumnTypes.Integer30)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "id", "scheduler_id" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

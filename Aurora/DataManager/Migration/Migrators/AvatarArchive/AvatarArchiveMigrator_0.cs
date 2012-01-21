@@ -39,16 +39,23 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "AvatarArchive";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("avatararchives", ColDefs(
-                ColDef("Name", ColumnTypes.String50, true),
+                ColDef("Name", ColumnTypes.String50),
                 ColDef("Archive", ColumnTypes.Blob),
                 ColDef("Snapshot", ColumnTypes.Char36),
-                ColDef("IsPublic", ColumnTypes.Integer11)));
+                ColDef("IsPublic", ColumnTypes.Integer11)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "Name" }, IndexType.Primary )
+            ));
 
-            AddSchema("passwords", ColDefs(ColDef("Method", ColumnTypes.String50, true),
-                                           ColDef("Password", ColumnTypes.String50)));
+            AddSchema("passwords", ColDefs(
+                ColDef("Method", ColumnTypes.String50),
+                ColDef("Password", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "Method" }, IndexType.Primary )
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -39,10 +39,10 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Region";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("telehubs", ColDefs(
-                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionID", ColumnTypes.String50),
                 ColDef("RegionLocX", ColumnTypes.String50),
                 ColDef("RegionLocY", ColumnTypes.String50),
                 ColDef("TelehubLocX", ColumnTypes.String50),
@@ -54,7 +54,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Spawns", ColumnTypes.String1024),
                 ColDef("ObjectUUID", ColumnTypes.String50),
                 ColDef("Name", ColumnTypes.String50)
-                                      ));
+            ), IndexDefs(
+                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -39,16 +39,19 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 2);
             MigrationName = "RegionInfo";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             AddSchema("simulator", ColDefs(
-                ColDef("RegionID", ColumnTypes.String50, true),
+                ColDef("RegionID", ColumnTypes.String50),
                 ColDef("RegionName", ColumnTypes.String50),
                 ColDef("RegionInfo", ColumnTypes.Text),
-                ColDef("Disabled", ColumnTypes.String45)));
+                ColDef("Disabled", ColumnTypes.String45)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+            ));
 
             AddSchema("regionsettings", ColDefs(
-                ColDef("regionUUID", ColumnTypes.Char36, true),
+                ColDef("regionUUID", ColumnTypes.Char36),
                 ColDef("block_terraform", ColumnTypes.Integer11),
                 ColDef("block_fly", ColumnTypes.Integer11),
                 ColDef("allow_damage", ColumnTypes.Integer11),
@@ -91,7 +94,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("terrain_tile_ID", ColumnTypes.Char36),
                 ColDef("minimum_age", ColumnTypes.Integer11),
                 ColDef("covenantlastupdated", ColumnTypes.String36),
-                ColDef("generic", ColumnTypes.LongText)));
+                ColDef("generic", ColumnTypes.LongText)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "regionUUID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

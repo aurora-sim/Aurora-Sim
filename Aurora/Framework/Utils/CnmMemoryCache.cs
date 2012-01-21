@@ -815,6 +815,14 @@ namespace Aurora.Framework
             return false;
         }
 
+        public bool Contains(TKey key)
+        {
+            int bucketIndex = GetBucketIndex(key);
+            bool returnvalue = m_newGeneration.Contains(bucketIndex, key);
+            if (!returnvalue) returnvalue = m_oldGeneration.Contains(bucketIndex, key);
+            return returnvalue;
+        }
+
         /// <summary>
         ///   Returns an enumerator that iterates through a collection.
         /// </summary>

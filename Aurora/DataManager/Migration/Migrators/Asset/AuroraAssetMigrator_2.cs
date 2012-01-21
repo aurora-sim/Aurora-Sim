@@ -32,11 +32,11 @@ using C5;
 
 namespace Aurora.DataManager.Migration.Migrators.Asset
 {
-    public class AuroraAssetMigrator_1 : Migrator
+    public class AuroraAssetMigrator_2 : Migrator
     {
-        public AuroraAssetMigrator_1()
+        public AuroraAssetMigrator_2()
         {
-            Version = new Version(0, 0, 1);
+            Version = new Version(0, 0, 2);
             MigrationName = "BlackholeAsset";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
@@ -55,7 +55,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index )
             ));
 
             AddSchema("auroraassets_B", ColDefs(
@@ -72,7 +73,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_C", ColDefs(
@@ -89,7 +91,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_D", ColDefs(
@@ -106,7 +109,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_E", ColDefs(
@@ -123,7 +127,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_F", ColDefs(
@@ -140,7 +145,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_0", ColDefs(
@@ -157,7 +163,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_1", ColDefs(
@@ -174,7 +181,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_2", ColDefs(
@@ -191,7 +199,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_3", ColDefs(
@@ -208,7 +217,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_4", ColDefs(
@@ -225,7 +235,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_5", ColDefs(
@@ -242,7 +253,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_6", ColDefs(
@@ -259,7 +271,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_7", ColDefs(
@@ -276,7 +289,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_8", ColDefs(
@@ -293,7 +307,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_9", ColDefs(
@@ -310,7 +325,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("host_uri", ColumnTypes.String1024),
                 ColDef("parent_id", ColumnTypes.String36)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "creator_id", "parent_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "creator_id", "parent_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_old", ColDefs(
@@ -327,7 +343,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("owner_id", ColumnTypes.String36),
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
-                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_tasks", ColDefs(
@@ -343,7 +360,8 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("hash_code", ColumnTypes.String64),
                 ColDef("creator_id", ColumnTypes.String36)
             ), IndexDefs(
-                IndexDef(new string[3] { "id", "hash_code", "creator_id" }, IndexType.Primary)
+                IndexDef(new string[3] { "id", "hash_code", "creator_id" }, IndexType.Primary),
+                IndexDef(new string[2] { "hash_code", "creator_id" }, IndexType.Index)
             ));
         }
 

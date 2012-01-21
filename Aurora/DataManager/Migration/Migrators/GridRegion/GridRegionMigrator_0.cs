@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "GridRegions";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //
             // Change summery:
@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
             //
             AddSchema("gridregions", ColDefs(
                 ColDef("ScopeID", ColumnTypes.String45),
-                ColDef("RegionUUID", ColumnTypes.String45, true),
+                ColDef("RegionUUID", ColumnTypes.String45),
                 ColDef("RegionName", ColumnTypes.String50),
                 ColDef("LocX", ColumnTypes.Integer11),
                 ColDef("LocY", ColumnTypes.Integer11),
@@ -60,7 +60,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("SizeZ", ColumnTypes.Integer11),
                 ColDef("Flags", ColumnTypes.Integer11),
                 ColDef("SessionID", ColumnTypes.String45),
-                ColDef("Info", ColumnTypes.Text)));
+                ColDef("Info", ColumnTypes.Text)
+            ), IndexDefs(
+                IndexDef(new string[1] { "RegionUUID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

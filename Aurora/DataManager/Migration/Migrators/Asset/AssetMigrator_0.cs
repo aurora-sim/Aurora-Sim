@@ -39,31 +39,44 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "Asset";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
-                                                ColDef("KeySetting", ColumnTypes.String50, true),
-                                                ColDef("ValueSetting", ColumnTypes.String50)));
+            AddSchema("lslgenericdata", ColDefs(
+                ColDef("Token", ColumnTypes.String50),
+                ColDef("KeySetting", ColumnTypes.String50),
+                ColDef("ValueSetting", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "Token", "KeySetting" }, IndexType.Primary)
+            ));
 
             AddSchema("assetblob", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36, true),
+                ColDef("AssetID", ColumnTypes.Char36),
                 ColDef("AssetType", ColumnTypes.Integer11),
-                ColDef("OwnerID", ColumnTypes.Char36, true),
+                ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.LongBlob),
-                ColDef("Info", ColumnTypes.String512)));
+                ColDef("Info", ColumnTypes.String512)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
+            ));
 
             AddSchema("assettext", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36, true),
+                ColDef("AssetID", ColumnTypes.Char36),
                 ColDef("AssetType", ColumnTypes.Integer11),
-                ColDef("OwnerID", ColumnTypes.Char36, true),
+                ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.Text),
-                ColDef("Info", ColumnTypes.String512)));
+                ColDef("Info", ColumnTypes.String512)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
+            ));
 
             AddSchema("assetmesh", ColDefs(
-                ColDef("AssetID", ColumnTypes.Char36, true),
-                ColDef("OwnerID", ColumnTypes.Char36, true),
+                ColDef("AssetID", ColumnTypes.Char36),
+                ColDef("OwnerID", ColumnTypes.Char36),
                 ColDef("Data", ColumnTypes.LongBlob),
-                ColDef("Info", ColumnTypes.String512)));
+                ColDef("Info", ColumnTypes.String512)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "AssetID", "OwnerID"}, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

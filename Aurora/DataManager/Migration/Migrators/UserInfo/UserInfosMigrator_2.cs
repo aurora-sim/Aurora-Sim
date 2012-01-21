@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 2);
             MigrationName = "UserInfo";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //
             // Change summery:
@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
             //
             RemoveSchema("userinfo");
             AddSchema("userinfo", ColDefs(
-                ColDef("UserID", ColumnTypes.String50, true),
+                ColDef("UserID", ColumnTypes.String50),
                 ColDef("RegionID", ColumnTypes.String50),
                 ColDef("LastSeen", ColumnTypes.Integer30),
                 ColDef("IsOnline", ColumnTypes.String36),
@@ -60,7 +60,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("CurrentLookat", ColumnTypes.String36),
                 ColDef("HomeRegionID", ColumnTypes.Char36),
                 ColDef("HomePosition", ColumnTypes.String36),
-                ColDef("HomeLookat", ColumnTypes.String36)));
+                ColDef("HomeLookat", ColumnTypes.String36)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "UserID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

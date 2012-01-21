@@ -4958,6 +4958,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             m_host.ParentEntity.Damage = (float)damage;
+
+            ICombatModule combatModule = World.RequestModuleInterface<ICombatModule>();
+            if (combatModule != null)
+                combatModule.AddDamageToPrim(m_host.ParentEntity);
         }
 
         public DateTime llTeleportAgentHome(LSL_Key _agent)

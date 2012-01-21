@@ -45,7 +45,6 @@ have been moved to the AuroraServerConfiguration and Configuration folders (resp
 -----------------
 
 - Data.ini -  Settings to switch between database modules
-- MSSQL.ini -  Settings for the MSSQL Database
 - MySQL.ini -  Settings for the MySQL Database.
 - SQLite.ini -  Settings for the SQLite Database.
 
@@ -155,4 +154,4 @@ bin/Aurora.ini
 
 - If you are having issues logging into your simulator, take a look at 
 http://forums.osgrid.org/viewtopic.php?f=14&t=2082
-in the Router Configuration section for more information about how to resolve this issue.
+in the Router Configuration section for more information on ways to resolve this issue.

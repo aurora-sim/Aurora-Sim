@@ -1,5 +1,6 @@
 /*
- * Copyright 2011 Matthew Beardmore
+ * Copyright (c) Contributors, http://aurora-sim.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,39 +27,43 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
-using Aurora.DataManager.Migration;
+using C5;
 
-namespace Aurora.Modules.Ban
+namespace Aurora.DataManager.Migration.Migrators
 {
-    public class PresenceInfoMigrator_2 : Migrator
+    public class GridRegionMigrator_1 : Migrator
     {
-        public PresenceInfoMigrator_2()
+        public GridRegionMigrator_1()
         {
-            Version = new Version(0, 0, 2);
-            MigrationName = "PresenceInfo";
+            Version = new Version(0, 0, 1);
+            MigrationName = "GridRegions";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("baninfo", ColDefs(
-                ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50),
-                ColDef("Flags", /*"Flags"*/ ColumnTypes.String50),
-                ColDef("KnownAlts", /*"KnownAlts"*/ ColumnTypes.Text),
-                ColDef("KnownID0s", /*"KnownID0s"*/ ColumnTypes.Text),
-                ColDef("KnownIPs", /*"KnownIPs"*/ ColumnTypes.Text),
-                ColDef("KnownMacs", /*"KnownMacs"*/ ColumnTypes.Text),
-                ColDef("KnownViewers", /*"KnownViewers"*/ ColumnTypes.Text),
-                ColDef("LastKnownID0", /*"LastKnownID0"*/ ColumnTypes.String50),
-                ColDef("LastKnownIP", /*"LastKnownIP"*/ ColumnTypes.String50),
-                ColDef("LastKnownMac", /*"LastKnownMac"*/ ColumnTypes.String50),
-                ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
-                ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
+            //
+            // Change summery:
+            //
+            //   Add the new 'gridregions' table to replace the old 'regions' table
+            //
+            AddSchema("gridregions", ColDefs(
+                ColDef("ScopeID", ColumnTypes.String45),
+                ColDef("RegionUUID", ColumnTypes.String45),
+                ColDef("RegionName", ColumnTypes.String50),
+                ColDef("LocX", ColumnTypes.Integer11),
+                ColDef("LocY", ColumnTypes.Integer11),
+                ColDef("LocZ", ColumnTypes.Integer11),
+                ColDef("OwnerUUID", ColumnTypes.String45),
+                ColDef("Access", ColumnTypes.Integer11),
+                ColDef("SizeX", ColumnTypes.Integer11),
+                ColDef("SizeY", ColumnTypes.Integer11),
+                ColDef("SizeZ", ColumnTypes.Integer11),
+                ColDef("Flags", ColumnTypes.Integer11),
+                ColDef("SessionID", ColumnTypes.String45),
+                ColDef("Info", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
+                IndexDef(new string[2] { "ScopeID", "RegionUUID" }, IndexType.Primary)
             ));
-
-            RemoveSchema("presenceinfo");
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

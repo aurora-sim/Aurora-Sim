@@ -39,16 +39,19 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 1);
             MigrationName = "Friends";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //Remove the old name
             this.RemoveSchema("friends");
             //Add the new lowercase one
             AddSchema("friends", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36, true),
-                ColDef("Friend", ColumnTypes.Char36, true),
+                ColDef("PrincipalID", ColumnTypes.Char36),
+                ColDef("Friend", ColumnTypes.Char36),
                 ColDef("Flags", ColumnTypes.String16),
-                ColDef("Offered", ColumnTypes.Char32)));
+                ColDef("Offered", ColumnTypes.Char32)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "PrincipalID", "Friend" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -674,12 +674,11 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
 
+            filter.andLikeFilters["Name"] = "%" + queryText + "%";
             if (int.Parse(category) != (int)DirectoryManager.ClassifiedCategories.Any) //Check the category
             {
                 filter.andFilters["Category"] = category;
             }
-
-            filter.andLikeFilters["Name"] = "%" + queryText + "%";
 
             List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
@@ -861,9 +860,9 @@ namespace Aurora.Services.DataService
                 List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero);
                 if (regions.Count >= 1)
                 {
-                    Dictionary<string, object> whereClause = new Dictionary<string, object>();
-                    whereClause["region"] = regions[0].RegionID.ToString();
-                    whereClause["maturity"] = maturity;
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["region"] = regions[0].RegionID.ToString();
+                    filter.andFilters["maturity"] = maturity;
 
                     List<string> retVal = GD.Query(new string[]{
                         "EID",
@@ -872,10 +871,7 @@ namespace Aurora.Services.DataService
                         "maturity",
                         "flags",
                         "name"
-                    }, "asevents", new QueryFilter
-                    {
-                        andFilters = whereClause
-                    }, null, null, null);
+                    }, "asevents", filter, null, null, null);
 
                     if (retVal.Count > 0)
                     {

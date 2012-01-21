@@ -39,7 +39,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 0);
             MigrationName = "UserAccounts";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //
             // Change summery:
@@ -55,7 +55,7 @@ namespace Aurora.DataManager.Migration.Migrators
             this.RemoveSchema("UserAccounts");
             //Add the new lowercase one
             AddSchema("useraccounts", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36, true),
+                ColDef("PrincipalID", ColumnTypes.Char36),
                 ColDef("ScopeID", ColumnTypes.Char36),
                 ColDef("FirstName", ColumnTypes.String64),
                 ColDef("LastName", ColumnTypes.String64),
@@ -64,7 +64,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Created", ColumnTypes.Integer11),
                 ColDef("UserLevel", ColumnTypes.Integer11),
                 ColDef("UserFlags", ColumnTypes.Integer11),
-                ColDef("UserTitle", ColumnTypes.String64)));
+                ColDef("UserTitle", ColumnTypes.String64)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "PrincipalID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

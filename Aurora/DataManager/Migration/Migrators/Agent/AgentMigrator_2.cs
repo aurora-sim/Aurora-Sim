@@ -1,5 +1,6 @@
 /*
- * Copyright 2011 Matthew Beardmore
+ * Copyright (c) Contributors, http://aurora-sim.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,39 +27,63 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
-using Aurora.DataManager.Migration;
+using C5;
 
-namespace Aurora.Modules.Ban
+namespace Aurora.DataManager.Migration.Migrators
 {
-    public class PresenceInfoMigrator_2 : Migrator
+    public class AgentMigrator_2 : Migrator
     {
-        public PresenceInfoMigrator_2()
+        public AgentMigrator_2()
         {
             Version = new Version(0, 0, 2);
-            MigrationName = "PresenceInfo";
+            MigrationName = "Agent";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("baninfo", ColDefs(
-                ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50),
-                ColDef("Flags", /*"Flags"*/ ColumnTypes.String50),
-                ColDef("KnownAlts", /*"KnownAlts"*/ ColumnTypes.Text),
-                ColDef("KnownID0s", /*"KnownID0s"*/ ColumnTypes.Text),
-                ColDef("KnownIPs", /*"KnownIPs"*/ ColumnTypes.Text),
-                ColDef("KnownMacs", /*"KnownMacs"*/ ColumnTypes.Text),
-                ColDef("KnownViewers", /*"KnownViewers"*/ ColumnTypes.Text),
-                ColDef("LastKnownID0", /*"LastKnownID0"*/ ColumnTypes.String50),
-                ColDef("LastKnownIP", /*"LastKnownIP"*/ ColumnTypes.String50),
-                ColDef("LastKnownMac", /*"LastKnownMac"*/ ColumnTypes.String50),
-                ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
-                ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
+            AddSchema("userdata", ColDefs(
+                ColDef("ID", ColumnTypes.String45),
+                ColDef("Key", ColumnTypes.String50),
+                ColDef("Value", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
+                IndexDef(new string[2] { "ID", "Key" }, IndexType.Primary)
             ));
 
-            RemoveSchema("presenceinfo");
+            AddSchema("userclassifieds", ColDefs(
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("Category", ColumnTypes.String50),
+                ColDef("SimName", ColumnTypes.String50),
+                ColDef("OwnerUUID", ColumnTypes.String50),
+                ColDef("ClassifiedUUID", ColumnTypes.String50),
+                ColDef("Classified", ColumnTypes.String8196)
+            ), IndexDefs(
+                IndexDef(new string[1] { "ClassifiedUUID" }, IndexType.Primary),
+                IndexDef(new string[2] { "Name", "Category" }, IndexType.Index),
+                IndexDef(new string[1] { "OwnerUUID" }, IndexType.Index)
+            ));
+
+            AddSchema("userpicks", ColDefs(
+                ColDef("Name", ColumnTypes.String50),
+                ColDef("SimName", ColumnTypes.String50),
+                ColDef("OwnerUUID", ColumnTypes.String50),
+                ColDef("PickUUID", ColumnTypes.String50),
+                ColDef("Pick", ColumnTypes.String8196)
+            ), IndexDefs(
+                IndexDef(new string[1] { "PickUUID" }, IndexType.Primary),
+                IndexDef(new string[1] { "OwnerUUID" }, IndexType.Index)
+            ));
+
+            AddSchema("macban", ColDefs(
+                ColDef("macAddress", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1] { "macAddress" }, IndexType.Primary)
+            ));
+
+            AddSchema("bannedviewers", ColDefs(
+                ColDef("Client", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[1] { "Client" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

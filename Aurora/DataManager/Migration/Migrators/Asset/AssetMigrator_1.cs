@@ -39,11 +39,15 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 1);
             MigrationName = "Asset";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("lslgenericdata", ColDefs(ColDef("Token", ColumnTypes.String50, true),
-                                                ColDef("KeySetting", ColumnTypes.String50, true),
-                                                ColDef("ValueSetting", ColumnTypes.String50)));
+            AddSchema("lslgenericdata", ColDefs(
+                ColDef("Token", ColumnTypes.String50),
+                ColDef("KeySetting", ColumnTypes.String50),
+                ColDef("ValueSetting", ColumnTypes.String50)
+            ), IndexDefs(
+                IndexDef(new string[2]{ "Token", "KeySetting" }, IndexType.Primary)
+            ));
 
             renameColumns.Add("UUID", "id");
             renameColumns.Add("Name", "name");
@@ -53,8 +57,9 @@ namespace Aurora.DataManager.Migration.Migrators
             renameColumns.Add("Temporary", "temporary");
             renameColumns.Add("CreatorID", "creatorID");
             renameColumns.Add("Data", "data");
+
             AddSchema("assets", ColDefs(
-                ColDef("id", ColumnTypes.Char36, true),
+                ColDef("id", ColumnTypes.Char36),
                 ColDef("name", ColumnTypes.String64),
                 ColDef("description", ColumnTypes.String64),
                 ColDef("assetType", ColumnTypes.TinyInt4),
@@ -64,7 +69,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("creatorID", ColumnTypes.String36),
                 ColDef("data", ColumnTypes.LongBlob),
                 ColDef("create_time", ColumnTypes.Integer11),
-                ColDef("access_time", ColumnTypes.Integer11)));
+                ColDef("access_time", ColumnTypes.Integer11)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "id" }, IndexType.Primary)
+            ));
 
             RemoveSchema("assetblob");
             RemoveSchema("assettext");

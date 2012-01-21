@@ -1,5 +1,6 @@
 /*
- * Copyright 2011 Matthew Beardmore
+ * Copyright (c) Contributors, http://aurora-sim.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,39 +27,40 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
+using System.Data;
 using Aurora.Framework;
-using Aurora.DataManager.Migration;
+using C5;
+using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
-namespace Aurora.Modules.Ban
+namespace Aurora.DataManager.Migration.Migrators
 {
-    public class PresenceInfoMigrator_2 : Migrator
+    public class EstateMigrator_2 : Migrator
     {
-        public PresenceInfoMigrator_2()
+        public EstateMigrator_2()
         {
             Version = new Version(0, 0, 2);
-            MigrationName = "PresenceInfo";
+            MigrationName = "Estate";
 
             schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
-            AddSchema("baninfo", ColDefs(
-                ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50),
-                ColDef("Flags", /*"Flags"*/ ColumnTypes.String50),
-                ColDef("KnownAlts", /*"KnownAlts"*/ ColumnTypes.Text),
-                ColDef("KnownID0s", /*"KnownID0s"*/ ColumnTypes.Text),
-                ColDef("KnownIPs", /*"KnownIPs"*/ ColumnTypes.Text),
-                ColDef("KnownMacs", /*"KnownMacs"*/ ColumnTypes.Text),
-                ColDef("KnownViewers", /*"KnownViewers"*/ ColumnTypes.Text),
-                ColDef("LastKnownID0", /*"LastKnownID0"*/ ColumnTypes.String50),
-                ColDef("LastKnownIP", /*"LastKnownIP"*/ ColumnTypes.String50),
-                ColDef("LastKnownMac", /*"LastKnownMac"*/ ColumnTypes.String50),
-                ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
-                ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
+            AddSchema("estateregions", ColDefs(
+                ColDef("RegionID", ColumnTypes.String36),
+                ColDef("EstateID", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
+                IndexDef(new string[]{ "RegionID"}, IndexType.Primary)
             ));
 
-            RemoveSchema("presenceinfo");
+            AddSchema("estatesettings", ColDefs(
+                ColDef("EstateID", ColumnTypes.Integer11),
+                ColDef("EstateName", ColumnTypes.String100),
+                ColDef("EstateOwner", ColumnTypes.String36),
+                ColDef("ParentEstateID", ColumnTypes.Integer11),
+                ColDef("Settings", ColumnTypes.Text)
+            ), IndexDefs(
+                IndexDef(new string[]{ "EstateID" }, IndexType.Primary),
+                IndexDef(new string[]{ "EstateOwner"}, IndexType.Index)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -48,11 +48,12 @@ namespace Aurora.Framework
         bool TableExists(string table);
 
         /// <summary>
-        ///   Create a generic table
+        /// Creates a table with indices
         /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "columns"></param>
-        void CreateTable(string table, ColumnDefinition[] columns);
+        /// <param name="table"></param>
+        /// <param name="columns"></param>
+        /// <param name="indexDefinitions"></param>
+        void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions);
 
         /// <summary>
         ///   Get the latest version of the database
@@ -67,12 +68,13 @@ namespace Aurora.Framework
         void WriteAuroraVersion(Version version, string MigrationName);
 
         /// <summary>
-        ///   Copy tables
+        /// copy tables
         /// </summary>
-        /// <param name = "sourceTableName"></param>
-        /// <param name = "destinationTableName"></param>
-        /// <param name = "columnDefinitions"></param>
-        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions);
+        /// <param name="sourceTableName"></param>
+        /// <param name="destinationTableName"></param>
+        /// <param name="columnDefinitions"></param>
+        /// <param name="indexDefinitions"></param>
+        void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
 
         /// <summary>
         ///   Check whether the data table exists and that the columns are correct
@@ -80,7 +82,7 @@ namespace Aurora.Framework
         /// <param name = "tableName"></param>
         /// <param name = "columnDefinitions"></param>
         /// <returns></returns>
-        bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions);
+        bool VerifyTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
 
         /// <summary>
         ///   Check whether the data table exists and that the columns are correct
@@ -88,7 +90,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "tableName"></param>
         /// <param name = "columnDefinitions"></param>
-        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, Dictionary<string, string> renameColumns);
+        void EnsureTableExists(string tableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 
         /// <summary>
         ///   Rename the table from oldTableName to newTableName
@@ -118,6 +120,7 @@ namespace Aurora.Framework
         LongBlob,
         Char36,
         Char32,
+        Char5,
         Date,
         DateTime,
         Double,
@@ -155,14 +158,49 @@ namespace Aurora.Framework
     {
         public string Name { get; set; }
         public ColumnTypes Type { get; set; }
-        public bool IsPrimary { get; set; }
 
         public override bool Equals(object obj)
         {
             var cdef = obj as ColumnDefinition;
             if (cdef != null)
             {
-                return cdef.Name == Name && cdef.Type == Type && cdef.IsPrimary == IsPrimary;
+                return cdef.Name == Name && cdef.Type == Type;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+    }
+
+    public enum IndexType
+    {
+        Primary,
+        Index,
+        Unique
+    }
+
+    public class IndexDefinition
+    {
+        public string[] Fields { get; set; }
+        public IndexType Type { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var idef = obj as IndexDefinition;
+            if (idef != null && idef.Type == Type && idef.Fields.Length == Fields.Length)
+            {
+                uint i = 0;
+                foreach (string field in idef.Fields)
+                {
+                    if (field != Fields[i++])
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
             return false;
         }

@@ -39,13 +39,13 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 1);
             MigrationName = "UserAccounts";
 
-            schema = new List<Rec<string, ColumnDefinition[]>>();
+            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
 
             //Remove the old name
             this.RemoveSchema("UserAccounts");
             //Add the `Name` column
             AddSchema("useraccounts", ColDefs(
-                ColDef("PrincipalID", ColumnTypes.Char36, true),
+                ColDef("PrincipalID", ColumnTypes.Char36),
                 ColDef("ScopeID", ColumnTypes.Char36),
                 ColDef("FirstName", ColumnTypes.String64),
                 ColDef("LastName", ColumnTypes.String64),
@@ -55,7 +55,10 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("UserLevel", ColumnTypes.Integer11),
                 ColDef("UserFlags", ColumnTypes.Integer11),
                 ColDef("UserTitle", ColumnTypes.String64),
-                ColDef("Name", ColumnTypes.String255)));
+                ColDef("Name", ColumnTypes.String255)
+            ), IndexDefs(
+                IndexDef(new string[1]{ "PrincipalID" }, IndexType.Primary)
+            ));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

@@ -52,5 +52,6 @@ namespace OpenSim.Region.Framework.Interfaces
         void AddCombatPermission(UUID AgentID);
         bool CheckCombatPermission(UUID AgentID);
         List<UUID> GetTeammates(string Team);
+        void AddDamageToPrim(ISceneEntity entity);
     }
 }

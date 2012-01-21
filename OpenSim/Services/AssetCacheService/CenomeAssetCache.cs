@@ -182,6 +182,11 @@ namespace OpenSim.Services
             m_cache.Clear();
         }
 
+        public bool Contains(string id)
+        {
+            return m_cache.Contains(id);
+        }
+
         /// <summary>
         ///   Expire (remove) asset stored to cache.
         /// </summary>
