@@ -493,7 +493,6 @@ namespace OpenSim.Services.CapsService
 
         public Hashtable ProcessGetMesh(Hashtable request)
         {
-
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 400; //501; //410; //404;
             responsedata["content_type"] = "text/plain";

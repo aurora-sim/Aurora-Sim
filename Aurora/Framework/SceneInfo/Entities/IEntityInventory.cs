@@ -119,7 +119,7 @@ namespace Aurora.Framework
         /// <param name = "startParam"></param>
         /// <param name = "postOnRez"></param>
         /// <param name = "stateSource"></param>
-        void UpdateScriptInstance(UUID itemId, int startParam, bool postOnRez, StateSource stateSource);
+        void UpdateScriptInstance(UUID itemId, byte[] assetData, int startParam, bool postOnRez, StateSource stateSource);
 
         /// <summary>
         ///   Stop a script which is in this prim's inventory.

@@ -331,14 +331,14 @@ namespace Aurora.Modules.Combat
 
             public void PhysicsActor_OnCollisionUpdate(EventArgs e)
             {
-                if (HasLeftCombat)
+                /*if (HasLeftCombat)
                     return;
-
+                */
                 if (e == null)
                     return;
-
+                
                 CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
-                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+                /*Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 UUID killerObj = UUID.Zero;
                 foreach (uint localid in coldata.Keys)
@@ -370,7 +370,7 @@ namespace Aurora.Modules.Combat
                 if (Health <= 0)
                 {
                     Die(killerObj);
-                }
+                }*/
             }
 
             public void LeaveCombat()
@@ -428,7 +428,7 @@ namespace Aurora.Modules.Combat
 
             private void Die(UUID OwnerID)
             {
-                foreach (IScriptModule m in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                foreach (IScriptModule m in m_part.Scene.RequestModuleInterfaces<IScriptModule>())
                 {
                     m.PostObjectEvent(m_part.UUID, "dead_object", new object[] {OwnerID});
                 }

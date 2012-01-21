@@ -376,7 +376,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public void UpdateScriptInstance (UUID itemID, int startParam, bool postOnRez, StateSource stateSource)
+        public void UpdateScriptInstance (UUID itemID, byte[] assetData, int startParam, bool postOnRez, StateSource stateSource)
         {
             TaskInventoryItem item = m_items[itemID];
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.UUID, item.OwnerID))
@@ -386,31 +386,19 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                AssetBase asset = m_part.ParentGroup.Scene.AssetService.Get(item.AssetID.ToString());
-                if (null == asset)
+                lock (m_itemsLock)
                 {
-                    MainConsole.Instance.ErrorFormat(
-                        "[PRIM INVENTORY]: " +
-                        "Couldn't start script {0}, {1} at {2} in {3} since asset ID {4} could not be found",
-                        item.Name, item.ItemID, m_part.AbsolutePosition,
-                        m_part.ParentGroup.Scene.RegionInfo.RegionName, item.AssetID);
+                    m_items[item.ItemID].PermsMask = 0;
+                    m_items[item.ItemID].PermsGranter = UUID.Zero;
                 }
-                else
-                {
-                    lock (m_itemsLock)
-                    {
-                        m_items[item.ItemID].PermsMask = 0;
-                        m_items[item.ItemID].PermsGranter = UUID.Zero;
-                    }
 
-                    string script = Utils.BytesToString(asset.Data);
-                    IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
-                    foreach (IScriptModule module in modules)
-                    {
-                        module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
-                    }
-                    ResumeScript(item);
+                string script = Utils.BytesToString(assetData);
+                IScriptModule[] modules = m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>();
+                foreach (IScriptModule module in modules)
+                {
+                    module.UpdateScript(m_part.UUID, item.ItemID, script, startParam, postOnRez, stateSource);
                 }
+                ResumeScript(item);
             }
             HasInventoryChanged = true;
         }

@@ -653,15 +653,8 @@ namespace Aurora.Modules.Startup
                 {
                     try
                     {
-                        AssetBase asset = m_scene.AssetService.GetCached (assetID.ToString ());
-                        if (asset != null)
-                            WriteAsset (assetID.ToString (), asset, writer); //Write it syncronously since we havn't 
-                        else
-                        {
-                            foundAllAssets = false; //Not all are cached
-                            m_missingAssets.Add (assetID);
-                            m_scene.AssetService.Get (assetID.ToString (), writer, RetrievedAsset);
-                        }
+                        foundAllAssets = false; //Not all are cached
+                        m_scene.AssetService.Get (assetID.ToString (), writer, RetrievedAsset);
                     }
                     catch (Exception ex)
                     {
@@ -884,8 +877,7 @@ namespace Aurora.Modules.Startup
                     {
                         AssetBase asset = new AssetBase();
                         asset.Unpack(OSDParser.DeserializeJson(Encoding.UTF8.GetString(data)));
-                        bool exists = scene.AssetService.Get(asset.IDString) != null;
-                        if(!exists)
+                        if(!scene.AssetService.GetExists(asset.IDString))
                             scene.AssetService.Store(asset);
                     }
                 }

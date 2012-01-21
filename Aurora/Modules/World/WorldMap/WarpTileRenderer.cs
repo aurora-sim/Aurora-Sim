@@ -471,7 +471,7 @@ namespace Aurora.Modules.WorldMap
 
                 // Attempt to fetch the texture metadata
                 UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                AssetBase metadata = m_scene.AssetService.GetCached(metadataID.ToString());
+                AssetBase metadata = m_scene.AssetService.Get(metadataID.ToString());
                 if (metadata != null)
                 {
                     OSDMap map = null;

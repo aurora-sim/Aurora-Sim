@@ -102,11 +102,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        AssetBase asset;
                         UUID cacheID = UUID.Combine(TERRAIN_CACHE_MAGIC, textureIDs[i]);
-
-                        // The asset service does this check as well, so I don't think we need to do this.
-                        asset = assetService.GetCached(cacheID.ToString());
+                        AssetBase asset = assetService.Get(cacheID.ToString());
                         if ((asset != null) && (asset.Data != null) && (asset.Data.Length != 0))
                         {
                             try

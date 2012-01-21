@@ -96,6 +96,8 @@ namespace Aurora.Framework
 
     public interface ISceneChildEntity : IEntity
     {
+        event AddPhysics OnAddPhysics;
+        event RemovePhysics OnRemovePhysics;
         ISceneEntity ParentEntity { get; }
         IEntityInventory Inventory { get; }
         void ResetEntityIDs();

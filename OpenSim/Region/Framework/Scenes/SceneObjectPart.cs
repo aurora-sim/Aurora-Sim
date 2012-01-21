@@ -2116,14 +2116,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Public Methods
 
-        #region Delegates
-
-        public delegate void AddPhysics();
-
-        public delegate void RemovePhysics();
-
-        #endregion
-
         internal bool m_hasSubscribedToCollisionEvent;
 
         public void FixOffsetPosition(Vector3 value, bool single)
