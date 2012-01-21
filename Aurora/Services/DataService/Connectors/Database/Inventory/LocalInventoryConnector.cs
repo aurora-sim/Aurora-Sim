@@ -153,27 +153,21 @@ namespace Aurora.Services.DataService
 
         public virtual bool HasAssetForUser(UUID userID, UUID assetID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["assetID"] = assetID;
-            where["avatarID"] = userID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["assetID"] = assetID;
+            filter.andFilters["avatarID"] = userID;
 
-            List<string> q = GD.Query(new string[1] { "*" }, m_itemsrealm, new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> q = GD.Query(new string[1] { "*" }, m_itemsrealm, filter, null, null, null);
 
             return !(q != null && q.Count > 0);
         }
 
         public virtual string GetItemNameByAsset(UUID assetID)
         {
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["assetID"] = assetID;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["assetID"] = assetID;
 
-            List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, filter, null, null, null);
 
 
             return (q != null && q.Count > 0) ? q[0] :  "";
