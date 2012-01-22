@@ -41,6 +41,7 @@ namespace OpenSim.Services.AssetService
         #region Declares
 
         protected IAssetDataPlugin m_database;
+        protected bool doDatabaseCaching = false;
 
         #endregion
 
@@ -122,7 +123,7 @@ namespace OpenSim.Services.AssetService
             }
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
-            if (cache != null && asset != null)
+            if (doDatabaseCaching && cache != null && asset != null)
                 cache.Cache(asset);
             return asset;
         }
@@ -152,10 +153,10 @@ namespace OpenSim.Services.AssetService
                 return (byte[])remoteValue;
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
-            if (cache != null && asset != null)
+            if (doDatabaseCaching && cache != null && asset != null)
                 cache.Cache(asset);
             if (asset != null) return asset.Data;
-            return new byte[] {};
+            return new byte[0];
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -187,7 +188,7 @@ namespace OpenSim.Services.AssetService
                 //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
                 asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
+            if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
                 cache.Expire(asset.ID.ToString());
                 cache.Cache(asset);
@@ -205,6 +206,9 @@ namespace OpenSim.Services.AssetService
 
             UUID newID;
             m_database.UpdateContent(id, data, out newID);
+            IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
+            if (doDatabaseCaching && cache != null)
+                cache.Expire(id.ToString());
             return newID;
         }
 
