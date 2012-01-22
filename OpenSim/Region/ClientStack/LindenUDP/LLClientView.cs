@@ -10444,8 +10444,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 case "refreshmapvisibility":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
-                        IWorldMapModule mapModule = Scene.RequestModuleInterface<IWorldMapModule>();
-                        mapModule.CreateTerrainTexture();
+                        IMapImageGenerator mapModule = Scene.RequestModuleInterface<IMapImageGenerator>();
+                        if(mapModule != null)
+                            mapModule.CreateTerrainTexture();
                     }
                     return true;
 

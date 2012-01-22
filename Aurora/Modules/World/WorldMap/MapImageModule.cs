@@ -322,11 +322,11 @@ namespace Aurora.Modules.WorldMap
 
         protected void CreateMapTileAsyncCompleted(IAsyncResult iar)
         {
-            CreateMapTile icon = (CreateMapTile)iar.AsyncState;
+            CreateMapTileAsyncCall icon = (CreateMapTileAsyncCall)iar.AsyncState;
             icon.EndInvoke(iar);
         }
 
-        public delegate void CreateMapTile(AssetBase Mapasset, AssetBase Terrainasset);
+        public delegate void CreateMapTileAsyncCall(AssetBase Mapasset, AssetBase Terrainasset);
 
         #endregion
 
