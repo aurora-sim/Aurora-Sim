@@ -87,6 +87,8 @@ namespace Aurora.Framework
 {
     public interface IGenericData
     {
+        #region UPDATE
+
         /// <summary>
         ///   update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
         /// </summary>
@@ -96,6 +98,10 @@ namespace Aurora.Framework
         ///   update 'table' set 'setRow' = setValue WHERE 'keyRow' = 'keyValue'
         /// </summary>
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
+        #endregion
+
+        #region SELECT
 
         /// <summary>
         /// SELECT string.join(", ", wantedValue) FROM table {magic happens with queryFilter here} {magic happens with sort here} [LIMIT start[, count]]
@@ -125,10 +131,23 @@ namespace Aurora.Framework
         /// </summary>
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
+        #endregion
+
+        #region INSERT
+
         /// <summary>
         ///   insert into 'table' values ('values')
         /// </summary>
         bool Insert(string table, object[] values);
+
+        /// <summary>
+        ///   insert into 'table' where 'keys' = 'values'
+        /// </summary>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
+        /// <returns></returns>
+        bool Insert(string table, string[] keys, object[] values);
 
         /// <summary>
         /// Runs multiple Insert(table, value) calls in one run
@@ -139,13 +158,41 @@ namespace Aurora.Framework
         bool InsertMultiple(string table, List<object[]> values);
 
         /// <summary>
-        ///   insert into 'table' where 'keys' = 'values'
+        ///   Inserts a row into the database 
+        ///   insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
+        /// </summary>
+        /// <param name = "table">table name</param>
+        /// <param name = "values">All values to be inserted in the correct table order</param>
+        /// <param name = "updateKey">If a row is already existing, update this key</param>
+        /// <param name = "updateValue">If a row is already existing, update this value</param>
+        /// <returns></returns>
+        bool Insert(string table, object[] values, string updateKey, object updateValue);
+
+        #endregion
+
+        #region REPLACE INTO
+
+        /// <summary>
+        ///   Replace into 'table' ('keys') values ('values')
         /// </summary>
         /// <param name = "table"></param>
         /// <param name = "keys"></param>
         /// <param name = "values"></param>
         /// <returns></returns>
-        bool Insert(string table, string[] keys, object[] values);
+        bool Replace(string table, string[] keys, object[] values);
+
+        /// <summary>
+        ///   Same as replace, but without any '' around the values
+        /// </summary>
+        /// <param name = "table"></param>
+        /// <param name = "keys"></param>
+        /// <param name = "values"></param>
+        /// <returns></returns>
+        bool DirectReplace(string table, string[] keys, object[] values);
+
+        #endregion
+
+        #region DELETE
 
         /// <summary>
         ///   delete from 'table' where 'keys' = 'values'
@@ -181,34 +228,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         bool Delete(string table, string whereclause);
 
-        /// <summary>
-        ///   Replace into 'table' ('keys') values ('values')
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool Replace(string table, string[] keys, object[] values);
-
-        /// <summary>
-        ///   Same as replace, but without any '' around the values
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool DirectReplace(string table, string[] keys, object[] values);
-
-        /// <summary>
-        ///   Inserts a row into the database 
-        ///   insert into 'table' values ('values') ON DUPLICATE KEY UPDATE 'updateKey' = 'updateValue'
-        /// </summary>
-        /// <param name = "table">table name</param>
-        /// <param name = "values">All values to be inserted in the correct table order</param>
-        /// <param name = "updateKey">If a row is already existing, update this key</param>
-        /// <param name = "updateValue">If a row is already existing, update this value</param>
-        /// <returns></returns>
-        bool Insert(string table, object[] values, string updateKey, object updateValue);
+        #endregion
 
         /// <summary>
         ///   Connects to the database and then performs migrations

@@ -43,39 +43,8 @@ namespace Aurora.DataManager
         #region IDataConnector Members
 
         public abstract string Identifier { get; }
-        public abstract void ConnectToDatabase(string connectionString, string migratorName, bool validateTables);
-
-        public abstract List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
-
-        public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
-
-        public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
-
-        public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
-
-        public abstract bool Insert(string table, object[] values);
-        public abstract bool InsertMultiple(string table, List<object[]> values);
-        public abstract bool Insert(string table, string[] keys, object[] values);
-        public abstract bool Delete(string table, string[] keys, object[] values);
-        public abstract bool Delete(string table, string whereclause);
-        public abstract bool DeleteByTime(string table, string key);
-        public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
-
-        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-
-        public abstract bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-
-        public abstract void CloseDatabase();
         public abstract bool TableExists(string table);
         public abstract void CreateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions);
-
-        public abstract bool Replace(string table, string[] keys, object[] values);
-        public abstract bool DirectReplace(string table, string[] keys, object[] values);
-        public abstract IGenericData Copy();
-        public abstract void DropTable(string tableName);
-        public abstract string FormatDateTimeString(int time);
-        public abstract string IsNull(string Field, string defaultValue);
-        public abstract string ConCat(string[] toConcat);
 
         public Version GetAuroraVersion(string migratorName)
         {
@@ -307,6 +276,64 @@ namespace Aurora.DataManager
                 ForceRenameTable(oldTableName, newTableName);
             }
         }
+        public abstract void DropTable(string tableName);
+
+        #endregion
+
+        #region IGenericData members
+
+        #region UPDATE
+
+        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
+        public abstract bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
+        #endregion
+
+        #region SELECT
+
+        public abstract List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
+
+        public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
+
+        public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
+
+        public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
+
+        #endregion
+
+        #region INSERT
+
+        public abstract bool Insert(string table, object[] values);
+        public abstract bool Insert(string table, string[] keys, object[] values);
+        public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
+        public abstract bool InsertMultiple(string table, List<object[]> values);
+
+        #endregion
+
+        #region REPLACE INTO
+
+        public abstract bool Replace(string table, string[] keys, object[] values);
+        public abstract bool DirectReplace(string table, string[] keys, object[] values);
+
+        #endregion
+
+        #region DELETE
+
+        public abstract bool Delete(string table, string[] keys, object[] values);
+        public abstract bool Delete(string table, string whereclause);
+        public abstract bool DeleteByTime(string table, string key);
+
+        #endregion
+
+        public abstract void ConnectToDatabase(string connectionString, string migratorName, bool validateTables);
+
+        public abstract void CloseDatabase();
+
+        public abstract IGenericData Copy();
+        public abstract string FormatDateTimeString(int time);
+        public abstract string IsNull(string Field, string defaultValue);
+        public abstract string ConCat(string[] toConcat);
 
         #endregion
 
