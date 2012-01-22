@@ -39,7 +39,6 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
-using System.Timers;
 
 namespace Aurora.Modules.WorldMap
 {
@@ -50,7 +49,6 @@ namespace Aurora.Modules.WorldMap
 
         //private IConfig m_config;
         protected IScene m_scene;
-        private byte[] myMapImageJPEG;
         protected bool m_Enabled;
         private IConfigSource m_config;
         private readonly ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
@@ -59,13 +57,6 @@ namespace Aurora.Modules.WorldMap
         private bool itemRequesterIsRunning;
         private static AuroraThreadPool threadpool;
         private static AuroraThreadPool blockthreadpool;
-        private double minutes = 60 * 24;
-        private const double oneminute = 60000;
-        private System.Timers.Timer UpdateMapImage;
-        private System.Timers.Timer UpdateOnlineStatus;
-        private bool m_generateMapTiles = true;
-        private UUID staticMapTileUUID = UUID.Zero;
-        private bool m_asyncMapTileCreation = false;
         private int MapViewLength = 8;
         
 		#region INonSharedRegionModule Members
@@ -81,10 +72,6 @@ namespace Aurora.Modules.WorldMap
                 m_Enabled = true;
                 //MainConsole.Instance.Info("[AuroraWorldMap] Initializing");
                 m_config = source;
-                m_asyncMapTileCreation = source.Configs["MapModule"].GetBoolean("UseAsyncMapTileCreation", m_asyncMapTileCreation);
-                minutes = source.Configs["MapModule"].GetDouble("TimeBeforeMapTileRegeneration", minutes);
-                m_generateMapTiles = source.Configs["MapModule"].GetBoolean("GenerateMaptiles", true);
-                UUID.TryParse(source.Configs["MapModule"].GetString("MaptileStaticUUID", UUID.Zero.ToString()), out staticMapTileUUID);
                 MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
             }
 		}
@@ -102,10 +89,6 @@ namespace Aurora.Modules.WorldMap
 
                 if (MainConsole.Instance != null)
                 {
-                    MainConsole.Instance.Commands.AddCommand ("update map",
-                        "update map",
-                        "Updates the image of the world map", HandleUpdateWorldMapConsoleCommand);
-
                     MainConsole.Instance.Commands.AddCommand (
                         "export-map",
                         "export-map [<path>]",
@@ -113,15 +96,6 @@ namespace Aurora.Modules.WorldMap
                 }
 
                 AddHandlers();
-
-                string name = scene.RegionInfo.RegionName;
-                name = name.Replace(' ', '_');
-                string regionMapTileUUID = m_config.Configs["MapModule"].GetString(name + "MaptileStaticUUID", "");
-                if (regionMapTileUUID != "")
-                {
-                    //It exists, override the default
-                    UUID.TryParse(regionMapTileUUID, out staticMapTileUUID);
-                }
             }
 		}
 
@@ -136,21 +110,6 @@ namespace Aurora.Modules.WorldMap
 				RemoveHandlers();
 				m_scene = null;
 			}
-            if (UpdateMapImage != null)
-            {
-                UpdateMapImage.Stop();
-                UpdateMapImage.Elapsed -= OnTimedCreateNewMapImage;
-                UpdateMapImage.Enabled = false;
-                UpdateMapImage.Close();
-            }
-
-            if (UpdateOnlineStatus != null)
-            {
-                UpdateOnlineStatus.Stop();
-                UpdateOnlineStatus.Elapsed -= OnUpdateRegion;
-                UpdateOnlineStatus.Enabled = false;
-                UpdateOnlineStatus.Close();
-            }
 		}
 
         public virtual void RegionLoaded (IScene scene)
@@ -162,29 +121,6 @@ namespace Aurora.Modules.WorldMap
                                                  {priority = ThreadPriority.Lowest, Threads = 1};
             threadpool = new AuroraThreadPool(info);
             blockthreadpool = new AuroraThreadPool(info);
-
-            scene.EventManager.OnStartupComplete += StartupComplete;
-        }
-
-        public void StartupComplete(IScene scene, List<string> data)
-        {
-            //Startup complete, we can generate a tile now
-            CreateTerrainTexture();
-            //and set up timers.
-            SetUpTimers();
-        }
-
-        public void SetUpTimers()
-        {
-            if (m_generateMapTiles)
-            {
-                UpdateMapImage = new System.Timers.Timer(oneminute * minutes);
-                UpdateMapImage.Elapsed += OnTimedCreateNewMapImage;
-                UpdateMapImage.Enabled = true;
-            }
-            UpdateOnlineStatus = new System.Timers.Timer(oneminute * 20);
-            UpdateOnlineStatus.Elapsed += OnUpdateRegion;
-            UpdateOnlineStatus.Enabled = true;
         }
 
 		public virtual void Close()
@@ -702,63 +638,54 @@ namespace Aurora.Modules.WorldMap
             const int statuscode = 200;
             byte[] jpeg = new byte[0];
 
-            if (myMapImageJPEG == null ||myMapImageJPEG.Length == 0)
+            MemoryStream imgstream = new MemoryStream();
+            Bitmap mapTexture = new Bitmap(1, 1);
+            Image image = (Image)mapTexture;
+
+            try
             {
-                MemoryStream imgstream = new MemoryStream();
-                Bitmap mapTexture = new Bitmap(1, 1);
-                Image image = (Image)mapTexture;
+                // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
 
-                try
+                imgstream = new MemoryStream();
+
+                // non-async because we know we have the asset immediately.
+                AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
+                if (mapasset != null)
                 {
-                    // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
-
-                    imgstream = new MemoryStream();
-
-                    // non-async because we know we have the asset immediately.
-                    AssetBase mapasset = m_scene.AssetService.Get(m_scene.RegionInfo.RegionSettings.TerrainImageID.ToString());
-                    if (mapasset != null)
+                    image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(mapasset.Data);
+                    // Decode image to System.Drawing.Image
+                    if (image != null)
                     {
-                        image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (mapasset.Data);
-                        // Decode image to System.Drawing.Image
-                        if (image != null)
-                        {
-                            // Save to bitmap
-                            mapTexture = new Bitmap (image);
+                        // Save to bitmap
+                        mapTexture = new Bitmap(image);
 
-                            EncoderParameters myEncoderParameters = new EncoderParameters ();
-                            myEncoderParameters.Param[0] = new EncoderParameter (Encoder.Quality, 95L);
+                        EncoderParameters myEncoderParameters = new EncoderParameters();
+                        myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                            // Save bitmap to stream
-                            mapTexture.Save (imgstream, GetEncoderInfo ("image/jpeg"), myEncoderParameters);
+                        // Save bitmap to stream
+                        mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
 
-                            // Write the stream to a byte array for output
-                            jpeg = imgstream.ToArray ();
-                            myMapImageJPEG = jpeg;
-                        }
+                        // Write the stream to a byte array for output
+                        jpeg = imgstream.ToArray();
                     }
                 }
-                catch (Exception)
-                {
-                    // Dummy!
-                    MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
-                }
-                finally
-                {
-                    // Reclaim memory, these are unmanaged resources
-                    // If we encountered an exception, one or more of these will be null
-                    mapTexture.Dispose();
-
-                    if (image != null)
-                        image.Dispose();
-
-                    imgstream.Close();
-                    imgstream.Dispose();
-                }
             }
-            else
+            catch (Exception)
             {
-                // Use cached version so we don't have to loose our mind
-                jpeg = myMapImageJPEG;
+                // Dummy!
+                MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
+            }
+            finally
+            {
+                // Reclaim memory, these are unmanaged resources
+                // If we encountered an exception, one or more of these will be null
+                mapTexture.Dispose();
+
+                if (image != null)
+                    image.Dispose();
+
+                imgstream.Close();
+                imgstream.Dispose();
             }
 
             reply["str_response_string"] = Convert.ToBase64String(jpeg);
@@ -781,16 +708,6 @@ namespace Aurora.Modules.WorldMap
 #else
             return encoders.FirstOrDefault(t => t.MimeType == mimeType);
 #endif
-        }
-
-        /// <summary>
-        /// Update the world map
-        /// </summary>
-        public void HandleUpdateWorldMapConsoleCommand(string[] cmdparams)
-        {
-            if (MainConsole.Instance.ConsoleScene != null && m_scene != MainConsole.Instance.ConsoleScene)
-                return;
-            CreateTerrainTexture();
         }
 
         /// <summary>
@@ -859,21 +776,6 @@ namespace Aurora.Modules.WorldMap
                 m_scene.RegionInfo.RegionName, exportPath);
         }
 
-        private void OnUpdateRegion(object source, ElapsedEventArgs e)
-        {
-            if (m_scene != null)
-            {
-                IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
-                if (gridRegModule != null)
-                    gridRegModule.UpdateGridRegion(m_scene);
-            }
-        }
-
-        private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)
-        {
-            CreateTerrainTexture();
-        }
-        
         private class MapItemRequester
         {
             public ulong regionhandle = 0;
@@ -881,155 +783,5 @@ namespace Aurora.Modules.WorldMap
             public IClientAPI remoteClient = null;
             public uint flags = 0;
         }
-
-        /// <summary>
-        /// Create a terrain texture for this scene
-        /// </summary>
-        public void CreateTerrainTexture()
-        {
-            if (!m_generateMapTiles)
-            {
-                //They want a static texture, lock it in.
-                m_scene.RegionInfo.RegionSettings.TerrainMapImageID = staticMapTileUUID;
-                m_scene.RegionInfo.RegionSettings.TerrainImageID = staticMapTileUUID;
-                return;
-            }
-
-            // Cannot create a map for a nonexistant heightmap.
-            ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
-            if (heightmap == null)
-                return;
-
-            if (!m_asyncMapTileCreation)
-            {
-                CreateMapTileAsync(null);
-            }
-            else
-            {
-                Util.FireAndForget(CreateMapTileAsync);
-            }
-        }
-
-        #region Async map tile
-
-        protected void CreateMapTileAsyncCompleted(IAsyncResult iar)
-        {
-            CreateMapTile icon = (CreateMapTile)iar.AsyncState;
-            icon.EndInvoke(iar);
-        }
-
-        public delegate void CreateMapTile(AssetBase Mapasset, AssetBase Terrainasset);
-
-        #endregion
-
-        #region Generate map tile
-
-        public void CreateMapTileAsync(object worthless)
-        {
-            IMapImageGenerator terrain = m_scene.RequestModuleInterface<IMapImageGenerator>();
-
-            if (terrain == null)
-                return;
-
-            byte[] terraindata, mapdata;
-            terrain.CreateMapTile(out terraindata, out mapdata);
-            if (terraindata != null)
-            {
-                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != UUID.Zero)
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = 
-                        m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata);
-                if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
-                {
-                    AssetBase Terrainasset = new AssetBase(
-                        UUID.Random(),
-                        "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                        AssetType.Simstate,
-                        m_scene.RegionInfo.RegionID)
-                    {
-                        Data = terraindata,
-                        Description = m_scene.RegionInfo.RegionName,
-                        Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
-                    };
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = m_scene.AssetService.Store(Terrainasset);
-                }
-            }
-
-            if (mapdata != null)
-            {
-                if (m_scene.RegionInfo.RegionSettings.TerrainImageID != UUID.Zero)
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = 
-                        m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata);
-                if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
-                {
-                    AssetBase Mapasset = new AssetBase(
-                        UUID.Random(),
-                        "terrainImage_" + m_scene.RegionInfo.RegionID.ToString(),
-                        AssetType.Simstate,
-                        m_scene.RegionInfo.RegionID)
-                    {
-                        Data = mapdata,
-                        Description = m_scene.RegionInfo.RegionName,
-                        Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
-                    };
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = m_scene.AssetService.Store(Mapasset);
-                }
-            }
-
-            m_scene.RegionInfo.RegionSettings.Save();
-
-            //Update the grid map
-            IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
-            if (gridRegModule != null)
-                gridRegModule.UpdateGridRegion(m_scene);
-        }
-
-        public void RegenerateMaptile(string ID, byte[] data)
-        {
-            MemoryStream imgstream = new MemoryStream();
-            Bitmap mapTexture = new Bitmap(1, 1);
-            Image image = mapTexture;
-
-            try
-            {
-                // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
-
-                imgstream = new MemoryStream();
-
-                image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (data);
-                // Decode image to System.Drawing.Image
-                if (image != null)
-                {
-                    // Save to bitmap
-                    mapTexture = new Bitmap(image);
-
-                    EncoderParameters myEncoderParameters = new EncoderParameters();
-                    myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
-
-                    // Save bitmap to stream
-                    mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
-
-                    // Write the stream to a byte array for output
-                    myMapImageJPEG = imgstream.ToArray();
-                }
-            }
-            catch (Exception)
-            {
-                // Dummy!
-                MainConsole.Instance.Warn("[WORLD MAP]: Unable to generate Map image");
-            }
-            finally
-            {
-                // Reclaim memory, these are unmanaged resources
-                // If we encountered an exception, one or more of these will be null
-                mapTexture.Dispose();
-
-                if (image != null)
-                    image.Dispose();
-
-                imgstream.Close();
-            }
-        }
-
-        #endregion
     }
 }

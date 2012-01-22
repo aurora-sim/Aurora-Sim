@@ -86,6 +86,12 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         #region ISimulationDataStore Members
 
+        public bool MapTileNeedsGenerated
+        {
+            get;
+            set;
+        }
+
         public virtual string Name
         {
             get { return "FileBasedDatabase"; }
@@ -665,6 +671,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
             //Now make it the full file again
             File.Move(fileName + ".tmp", fileName);
+            MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
         }
 

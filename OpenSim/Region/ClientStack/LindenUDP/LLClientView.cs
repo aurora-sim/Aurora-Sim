@@ -1658,11 +1658,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             PlacesReply.TransactionData.TransactionID = transactionID;
             try
             {
-                IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
+                OutPacket(PlacesReply, ThrottleOutPacketType.AvatarInfo);
+                //Disabled for now... it doesn't seem to work right...
+                /*IEventQueueService eq = Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
                 {
                     eq.QueryReply(PlacesReply, AgentId, RegionTypes.ToArray(), Scene.RegionInfo.RegionHandle);
-                }
+                }*/
             }
             catch (Exception ex)
             {

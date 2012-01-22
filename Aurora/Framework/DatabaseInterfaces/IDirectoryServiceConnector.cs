@@ -78,7 +78,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "OwnerID"></param>
         /// <returns></returns>
-        List<LandData> GetParcelByOwner(UUID OwnerID);
+        List<ExtendedLandData> GetParcelByOwner(UUID OwnerID);
 
         /// <summary>
         /// Gets all parcels in a region, optionally filtering by owner, parcel flags and category.

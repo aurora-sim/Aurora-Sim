@@ -39,6 +39,11 @@ namespace Aurora.Framework
         string Name { get; }
 
         /// <summary>
+        /// A new map tile needs generated
+        /// </summary>
+        bool MapTileNeedsGenerated { get; set; }
+
+        /// <summary>
         ///   Whether we should save backups currently or not
         /// </summary>
         bool SaveBackups { get; set; }

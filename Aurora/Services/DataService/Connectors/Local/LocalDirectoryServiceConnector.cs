@@ -227,7 +227,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (Query[i + 22] == string.Empty) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = (string.IsNullOrEmpty(Query[i + 22] )) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
             }
@@ -341,17 +341,32 @@ namespace Aurora.Services.DataService
         /// <param name = "OwnerID"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<LandData> GetParcelByOwner(UUID OwnerID)
+        public List<ExtendedLandData> GetParcelByOwner(UUID OwnerID)
         {
             //NOTE: this does check for group deeded land as well, so this can check for that as well
             object remoteValue = DoRemote(OwnerID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<LandData>)remoteValue;
+                return (List<ExtendedLandData>)remoteValue;
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             List<string> Query = GD.Query(new string[] { "*" }, "searchparcel", filter, null, null, null);
 
-            return (Query.Count == 0) ? new List<LandData>() : Query2LandData(Query);
+            return (Query.Count == 0) ? new List<ExtendedLandData>() : LandDataToExtendedLandData(Query2LandData(Query));
+        }
+
+        public List<ExtendedLandData> LandDataToExtendedLandData(List<LandData> data)
+        {
+           return (from land in data
+                                              let region = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, land.RegionID)
+                                              where region != null
+                                              select new ExtendedLandData
+                                              {
+                                                  LandData = land,
+                                                  RegionType = region.RegionType,
+                                                  RegionName = region.RegionName,
+                                                  GlobalPosX = region.RegionLocX + land.UserLocation.X,
+                                                  GlobalPosY = region.RegionLocY + land.UserLocation.Y
+                                              }).ToList();
         }
 
         private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)

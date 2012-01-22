@@ -636,28 +636,13 @@ namespace Aurora.Modules.Search
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
-                List<LandData> LandData = directoryService.GetParcelByOwner(client.AgentId);
-
-                client.SendPlacesQuery((from land in LandData
-                                        let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
-                                        where region != null
-                                        select new ExtendedLandData
-                                                   {
-                                                       LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
-                                                   }).ToArray(), QueryID, TransactionID);
+                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID, TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
                 //Find all the group owned land
-                List<LandData> LandData = directoryService.GetParcelByOwner(QueryID);
+                List<ExtendedLandData> parcels = directoryService.GetParcelByOwner(QueryID);
 
-                List<ExtendedLandData> parcels = (from land in LandData
-                                                  let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
-                                                  where region != null
-                                                  select new ExtendedLandData
-                                                             {
-                                                                 LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
-                                                             }).ToList();
                 //Send if we have any parcels
                 if (parcels.Count != 0)
                     client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);
