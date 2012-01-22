@@ -649,6 +649,15 @@ namespace Aurora.Modules.Estate
                         AgentConnector.UpdateAgent(agentInfo);
                     }
                 }
+                if (agentInfo.OtherAgentInformation.ContainsKey("LimitedToEstate"))
+                {
+                    int LimitedToEstate = agentInfo.OtherAgentInformation["LimitedToEstate"];
+                    if (scene.RegionInfo.EstateSettings.EstateID != LimitedToEstate)
+                    {
+                        reason = "You may not enter this reason, as it is outside of the estate you are limited to.";
+                        return false;
+                    }
+                }
             }
 
 
