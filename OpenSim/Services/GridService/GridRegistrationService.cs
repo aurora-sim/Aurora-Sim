@@ -246,7 +246,7 @@ namespace OpenSim.Services.GridService
                         if (url.URLS.ContainsKey(module.UrlName))//Make sure it exists
                         {
                             int i = 0;
-                            if(url.HostNames.Type == OSDType.Array)
+                            if (url.HostNames[module.UrlName].Type == OSDType.Array)
                                 foreach (OSD o in (OSDArray)url.URLS[module.UrlName])
                                     module.AddExistingUrlForClient(url.SessionID, ((OSDArray)url.URLS[module.UrlName])[i], ((OSDArray)url.Ports[module.UrlName])[i++]);
                             else
