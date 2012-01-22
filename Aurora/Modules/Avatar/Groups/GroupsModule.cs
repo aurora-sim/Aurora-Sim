@@ -1881,7 +1881,7 @@ namespace Aurora.Modules.Groups
             //Ask the server as we don't know about this user
             if (ourPowers == 0)
             {
-                GroupMembershipData GMD = m_groupData.GetAgentGroupMembership(AgentID, GroupID, AgentID);
+                GroupMembershipData GMD = m_groupData.GetAgentGroupMembership(AgentID, AgentID, GroupID);
                 if (GMD == null)
                 {
                     AddToGroupPowersCache(AgentID, GroupID, 1);

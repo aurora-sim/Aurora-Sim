@@ -213,7 +213,7 @@ namespace Aurora.Modules.Groups
             return GroupsConnector.FindGroups(requestingAgentID, search, queryStart, queryflags);
         }
 
-        public GroupMembershipData GetAgentGroupMembership(UUID requestingAgentID, UUID GroupID, UUID AgentID)
+        public GroupMembershipData GetAgentGroupMembership(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID, GroupID, AgentID);
         }
