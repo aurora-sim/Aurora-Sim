@@ -541,73 +541,51 @@ namespace Aurora.DataManager.MySQL
 
         #region Update
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
-        {
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            foreach (object value in setValues)
-            {
-                query += string.Format("{0} = ?{1},", setRows[i], setRows[i].Replace("`", ""));
-                string valueSTR = value.ToString();
-                if (valueSTR == "")
-                    valueSTR = " ";
-                parameters["?" + setRows[i].Replace("`", "")] = valueSTR;
-                i++;
-            }
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
-            {
-                parameters["?" + keyRows[i].Replace("`", "")] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-            try
-            {
-                ExecuteNonQuery(query, parameters);
-            }
-            catch (MySqlException e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Update(" + query + "), " + e);
-            }
-            return true;
-        }
-
         public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
         {
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-#if (!ISWIN)
-            foreach (object value in setValues)
+            return Update(table, setValues, setRows, keyRows, keyValues);
+        }
+
+        public override bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count)
+        {
+            if (values.Count < 1)
             {
-                string valueSTR = value.ToString();
-                query += string.Format("{0} = {1},", setRows[i], valueSTR);
-                i++;
+                MainConsole.Instance.Warn("Update attempted with no values");
+                return false;
             }
-#else
-            foreach (string valueSTR in setValues.Select(value => value.ToString()))
+
+            string query = string.Format("UPDATE {0}", table); ;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+
+            string filter = "";
+            if (queryFilter != null && queryFilter.Count > 0)
             {
-                query += string.Format("{0} = {1},", setRows[i], valueSTR);
-                i++;
+                uint j = 0;
+                filter = " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
             }
-#endif
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
+
+            List<string> parts = new List<string>();
+            foreach (KeyValuePair<string, object> value in values)
             {
-                parameters["?" + keyRows[i].Replace("`", "")] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
-                i++;
+                string key = "?updateSet_" + value.Key.Replace("`", "");
+                ps[key] = value.Value;
+                parts.Add(string.Format("{0} = {1}", value.Key, key));
             }
-            query = query.Remove(query.Length - 5);
+
+            query += " SET " + string.Join(", ", parts.ToArray()) + filter;
+
+            if (start.HasValue)
+            {
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
+
             try
             {
-                ExecuteNonQuery(query, parameters);
+                ExecuteNonQuery(query, ps);
             }
             catch (MySqlException e)
             {

@@ -620,30 +620,54 @@ namespace Aurora.DataManager.SQLite
             return Update(table, setValues, setRows, keyRows, keyValues);
         }
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count)
         {
-            var cmd = new SQLiteCommand();
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-
-            foreach (object value in setValues)
+            if (values.Count < 1)
             {
-                query += string.Format("{0} = :{1},", setRows[i], setRows[i]);
+                MainConsole.Instance.Warn("Update attempted with no values");
+                return false;
+            }
 
-                cmd.Parameters.AddWithValue(":" + setRows[i], value);
-                i++;
-            }
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
+            string query = string.Format("UPDATE {0}", table); ;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+
+            string filter = "";
+            if (queryFilter != null && queryFilter.Count > 0)
             {
-                query += String.Format("{0} = '{1}' and ", keyRows[i], value);
-                i++;
+                uint j = 0;
+                filter = " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
             }
-            query = query.Remove(query.Length - 5);
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
+
+            List<string> parts = new List<string>();
+            foreach (KeyValuePair<string, object> value in values)
+            {
+                string key = ":updateSet_" + value.Key.Replace("`", "");
+                ps[key] = value.Value;
+                parts.Add(string.Format("{0} = {1}", value.Key, key));
+            }
+
+            query += " SET " + string.Join(", ", parts.ToArray()) + filter;
+
+            if (start.HasValue)
+            {
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
+
+            SQLiteCommand cmd = new SQLiteCommand(query);
+            AddParams(ref cmd, ps);
+
+            try
+            {
+                ExecuteNonQuery(cmd);
+            }
+            catch (SQLiteException e)
+            {
+                MainConsole.Instance.Error("[SQLiteLoader] Update(" + query + "), " + e);
+            }
             CloseReaderCommand(cmd);
             return true;
         }

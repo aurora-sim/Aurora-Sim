@@ -99,6 +99,17 @@ namespace Aurora.Framework
         /// </summary>
         bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
 
+        /// <summary>
+        /// UPDATE table SET values[i].key = values[i].value {magic happens with queryFilter here} [LIMIT start[, count]]
+        /// </summary>
+        /// <param name="table">table to update</param>
+        /// <param name="values">dictionary of table fields and new values</param>
+        /// <param name="filter">filter to control which rows get updated</param>
+        /// <param name="start">LIMIT start or LIMIT start, count</param>
+        /// <param name="count">LIMIT start, count</param>
+        /// <returns></returns>
+        bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count);
+
         #endregion
 
         #region SELECT

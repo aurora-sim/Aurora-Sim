@@ -284,9 +284,28 @@ namespace Aurora.DataManager
 
         #region UPDATE
 
-        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        public bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        {
+            QueryFilter filter = new QueryFilter();
+            int i = 0;
+            foreach (object value in keyValues)
+            {
+                filter.andFilters[keyRows[i++]] = value;
+            }
+
+            Dictionary<string, object> values = new Dictionary<string, object>(setValues.Length);
+            i = 0;
+            foreach (object value in setValues)
+            {
+                values[setRows[i++]] = value;
+            }
+
+            return Update(table, values, filter, null, null);
+        }
 
         public abstract bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+
+        public abstract bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count);
 
         #endregion
 
