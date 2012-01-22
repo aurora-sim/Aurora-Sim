@@ -135,6 +135,7 @@ namespace Aurora.Services.DataService
 
             //Add owner to the group as owner
             AddAgentToGroup(founderID, founderID, groupID, OwnerRoleID);
+            AddAgentToRole(founderID, founderID, groupID, officersRole);
 
             SetAgentGroupSelectedRole(founderID, groupID, OwnerRoleID);
 
