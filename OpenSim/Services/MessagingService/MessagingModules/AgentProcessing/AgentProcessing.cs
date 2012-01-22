@@ -431,9 +431,10 @@ namespace OpenSim.Services.MessagingService
             Util.FireAndForget(delegate
                                    {
                                        int count = 0;
-                                       int xMin = (caps.Region.RegionLocX) + (int) (position.X) - 256;
+                                       IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                                       int xMin = (caps.Region.RegionLocX) + (int)(position.X) - (gridService != null ? gridService.MaxRegionSize : 8192);
                                        int xMax = (caps.Region.RegionLocX) + (int) (position.X) + 256;
-                                       int yMin = (caps.Region.RegionLocY) + (int) (position.Y) - 256;
+                                       int yMin = (caps.Region.RegionLocY) + (int)(position.Y) - (gridService != null ? gridService.MaxRegionSize : 8192);
                                        int yMax = (caps.Region.RegionLocY) + (int) (position.Y) + 256;
 
                                        //Ask the grid service about the range
