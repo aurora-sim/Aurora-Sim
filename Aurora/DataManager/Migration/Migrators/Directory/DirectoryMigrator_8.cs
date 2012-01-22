@@ -70,7 +70,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 IndexDef(new string[4]{ "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
                 IndexDef(new string[2]{ "RegionID", "Name" }, IndexType.Index),
                 IndexDef(new string[1]{ "OwnerID" }, IndexType.Index),
-                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
+//                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
                 IndexDef(new string[3]{ "ForSale", "SalePrice", "Area" }, IndexType.Index)
             ));
 
