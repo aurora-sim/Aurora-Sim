@@ -99,13 +99,11 @@ namespace Aurora.Services.DataService
                 };
                 infos.Add(info);
 
-                Dictionary<string, object> where = new Dictionary<string, object>(2);
-                where["PrincipalID"] = info.Friend;
-                where["Friend"] = info.PrincipalID;
+                filter = new QueryFilter();
+                filter.andFilters["PrincipalID"] = info.Friend;
+                filter.andFilters["Friend"] = info.PrincipalID;
 
-                List<string> query2 = GD.Query(new string[1] { "Flags" }, m_realm, new QueryFilter{
-                    andFilters = where
-                }, null, null, null);
+                List<string> query2 = GD.Query(new string[1] { "Flags" }, m_realm, filter, null, null, null);
 
                 if (query2.Count >= 1)
                 {

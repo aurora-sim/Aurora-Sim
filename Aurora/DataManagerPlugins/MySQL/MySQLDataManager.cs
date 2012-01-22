@@ -904,15 +904,25 @@ namespace Aurora.DataManager.MySQL
                 throw new DataManagerException("Trying to create a table with name of one that already exists.");
             }
 
-            string columnDefinition = string.Empty;
+            IndexDefinition primary = null;
+            foreach (IndexDefinition index in indices)
+            {
+                if (index.Type == IndexType.Primary)
+                {
+                    primary = index;
+                    break;
+                }
+            }
+
+            List<string> columnDefinition = new List<string>();
 
             foreach (ColumnDefinition column in columns)
             {
-                if (columnDefinition != string.Empty)
-                {
-                    columnDefinition += ", ";
-                }
-                columnDefinition += "`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type);
+                columnDefinition.Add("`" + column.Name + "` " + GetColumnTypeStringSymbol(column.Type));
+            }
+            if (primary != null && primary.Fields.Length > 0)
+            {
+                columnDefinition.Add("PRIMARY KEY (`" + string.Join("`, `", primary.Fields) + "`)");
             }
 
             List<string> indicesQuery = new List<string>(indices.Length);
@@ -922,8 +932,7 @@ namespace Aurora.DataManager.MySQL
                 switch (index.Type)
                 {
                     case IndexType.Primary:
-                        type = "PRIMARY KEY";
-                        break;
+                        continue;
                     case IndexType.Unique:
                         type = "UNIQUE";
                         break;
@@ -935,7 +944,7 @@ namespace Aurora.DataManager.MySQL
                 indicesQuery.Add(string.Format("{0}( {1} )", type, "`" + string.Join("`, `", index.Fields) + "`"));
             }
 
-            string query = string.Format("create table " + table + " ( {0} {1}) ", columnDefinition, indicesQuery.Count > 0 ? ", " + string.Join(", ", indicesQuery.ToArray()) : string.Empty);
+            string query = string.Format("create table " + table + " ( {0} {1}) ", string.Join(", ", columnDefinition.ToArray()), indicesQuery.Count > 0 ? ", " + string.Join(", ", indicesQuery.ToArray()) : string.Empty);
 
             try
             {

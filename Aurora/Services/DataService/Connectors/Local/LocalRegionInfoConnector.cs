@@ -97,7 +97,9 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             if (nonDisabledOnly)
+            {
                 filter.andFilters["Disabled"] = 0;
+            }
                 
             List<string> RetVal = GD.Query(new string[1] { "RegionInfo" }, "simulator", filter, null, null, null);
 

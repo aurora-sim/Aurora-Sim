@@ -186,14 +186,11 @@ namespace Aurora.Services.DataService
                 return (int)remoteValue;
             }
 
-            Dictionary<string, object> where = new Dictionary<string, object>(2);
-            where["EstateOwner"] = ownerID;
-            where["EstateName"] = name;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateName"] = name;
+            filter.andFilters["EstateOwner"] = ownerID;
 
-            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estatesettings", new QueryFilter
-            {
-                andFilters = where
-            }, null, null, null);
+            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estatesettings", filter, null, null, null);
 
             if (retVal.Count > 0)
                 return int.Parse(retVal[0]);
