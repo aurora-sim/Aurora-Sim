@@ -541,14 +541,9 @@ namespace Aurora.DataManager.MySQL
 
         #region Update
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues, QueryFilter queryFilter, uint? start, uint? count)
         {
-            return Update(table, setValues, setRows, keyRows, keyValues);
-        }
-
-        public override bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count)
-        {
-            if (values.Count < 1)
+            if (values.Count < 1 && incrementValues.Count < 1)
             {
                 MainConsole.Instance.Warn("Update attempted with no values");
                 return false;
@@ -570,6 +565,12 @@ namespace Aurora.DataManager.MySQL
                 string key = "?updateSet_" + value.Key.Replace("`", "");
                 ps[key] = value.Value;
                 parts.Add(string.Format("{0} = {1}", value.Key, key));
+            }
+            foreach (KeyValuePair<string, int> value in incrementValues)
+            {
+                string key = "?updateSet_increment_" + value.Key.Replace("`", "");
+                ps[key] = value.Value;
+                parts.Add(string.Format("{0} = {0} + {1}", value.Key, key));
             }
 
             query += " SET " + string.Join(", ", parts.ToArray()) + filter;

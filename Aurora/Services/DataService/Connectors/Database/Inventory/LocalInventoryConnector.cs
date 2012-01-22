@@ -456,8 +456,13 @@ namespace Aurora.Services.DataService
 
         public virtual void IncrementFolder(UUID folderID)
         {
-            GD.DirectUpdate(m_foldersrealm, new object[1] {"version + 1"}, new string[1] {"version"},
-                            new string[1] {"folderID"}, new object[1] {folderID.ToString()});
+            Dictionary<string, int> incrementValues = new Dictionary<string, int>(1);
+            incrementValues["version"] = 1;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["folderID"] = folderID.ToString();
+
+            GD.Update(m_foldersrealm, new Dictionary<string, object>(0), incrementValues, filter, null, null);
         }
 
         public virtual void IncrementFolderByItem(UUID itemID)

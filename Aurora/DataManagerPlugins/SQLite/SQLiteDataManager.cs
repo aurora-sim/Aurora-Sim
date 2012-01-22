@@ -615,14 +615,9 @@ namespace Aurora.DataManager.SQLite
 
         #region Update
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues, QueryFilter queryFilter, uint? start, uint? count)
         {
-            return Update(table, setValues, setRows, keyRows, keyValues);
-        }
-
-        public override bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count)
-        {
-            if (values.Count < 1)
+            if (values.Count < 1 && incrementValues.Count < 1)
             {
                 MainConsole.Instance.Warn("Update attempted with no values");
                 return false;

@@ -300,12 +300,10 @@ namespace Aurora.DataManager
                 values[setRows[i++]] = value;
             }
 
-            return Update(table, values, filter, null, null);
+            return Update(table, values, new Dictionary<string,int>(0), filter, null, null);
         }
 
-        public abstract bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-
-        public abstract bool Update(string table, Dictionary<string, object> values, QueryFilter queryFilter, uint? start, uint? count);
+        public abstract bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValue, QueryFilter queryFilter, uint? start, uint? count);
 
         #endregion
 
