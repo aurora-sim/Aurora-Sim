@@ -11,7 +11,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 5;
+        private const int _currentBinVersion = 6;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
@@ -119,6 +119,16 @@ namespace Aurora.Simulation.Base
                 new[] { "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium", "Threat_Level_High","Threat_Level_Full" },
                 new[] { "", "", "", "", ""},
                 new[] { MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add });
+        }
+
+        public void RunMigration6()
+        {
+            ///Asset format changed to protobuf, broke existing cached assets
+            if (!Directory.Exists("assetcache//")) return;
+            foreach (string path in Directory.GetDirectories("assetcache//"))
+            {
+                Directory.Delete(path, true);
+            }
         }
     }
 

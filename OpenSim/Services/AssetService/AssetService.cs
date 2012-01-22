@@ -115,7 +115,11 @@ namespace OpenSim.Services.AssetService
 
             object remoteValue = DoRemote(id);
             if (remoteValue != null || m_doRemoteOnly)
+            {
+                if (cache != null && remoteValue != null)
+                    cache.Cache((AssetBase)remoteValue);
                 return (AssetBase)remoteValue;
+            }
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
             if (cache != null && asset != null)

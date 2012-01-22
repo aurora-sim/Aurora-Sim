@@ -42,6 +42,7 @@ using OpenMetaverse;
 using Aurora.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using ProtoBuf;
 
 namespace OpenSim.Services
 {
@@ -309,12 +310,7 @@ namespace OpenSim.Services
                 {
                     try
                     {
-                        string file = File.ReadAllText(filename);
-                        asset = new AssetBase();
-                        asset.Unpack(OpenMetaverse.StructuredData.OSDParser.DeserializeJson(file));
-                        UpdateMemoryCache(id, asset);
-
-                        m_DiskHits++;
+                        asset = ExtractAsset(id, asset, filename);
                     }
                     catch (Exception e)
                     {
@@ -379,6 +375,49 @@ namespace OpenSim.Services
                 monitor.AddAsset(asset);
 
             return asset;
+        }
+
+        private AssetBase ExtractAsset(string id, AssetBase asset, string filename)
+        {
+            /*string file = File.ReadAllText(filename);
+            asset = new AssetBase();
+            asset.Unpack(OpenMetaverse.StructuredData.OSDParser.DeserializeJson(file));*/
+            try
+            {
+                asset = ProtoBuf.Serializer.Deserialize<AssetBase>(File.Open(filename, FileMode.Open));
+            }
+            catch
+            {
+            }
+            UpdateMemoryCache(id, asset);
+
+            m_DiskHits++;
+            return asset;
+        }
+
+        private static void InsertAsset(string filename, AssetBase asset, string directory, string tempname)
+        {
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            Stream s = File.Open(tempname, FileMode.OpenOrCreate);
+            ProtoBuf.Serializer.Serialize<AssetBase>(s, asset);
+            s.Close();
+            //File.WriteAllText(tempname, OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(asset.ToOSD()));
+
+            // Now that it's written, rename it so that it can be found.
+            if (File.Exists(filename))
+                File.Delete(filename);
+            try
+            {
+                File.Move(tempname, filename);
+            }
+            catch
+            {
+                File.Delete(tempname);
+            }
         }
 
         public void Expire(string id)
@@ -552,24 +591,7 @@ namespace OpenSim.Services
                 {
                     lock (m_fileCacheLock)
                     {
-                        if (!Directory.Exists(directory))
-                        {
-                            Directory.CreateDirectory(directory);
-                        }
-
-                        File.WriteAllText(tempname, OpenMetaverse.StructuredData.OSDParser.SerializeJsonString(asset.ToOSD()));
-
-                        // Now that it's written, rename it so that it can be found.
-                        if (File.Exists(filename))
-                            File.Delete(filename);
-                        try
-                        {
-                            File.Move(tempname, filename);
-                        }
-                        catch
-                        {
-                            File.Delete(tempname);
-                        }
+                        InsertAsset(filename, asset, directory, tempname);
                     }
 
                     if (m_logLevel >= 2)
