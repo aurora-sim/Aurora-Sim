@@ -1233,6 +1233,7 @@ namespace Aurora.Services.DataService
             foreach (string RoleID in RoleIDs)
             {
                 filter.andFilters["RoleID"] = RoleID;
+                filter.andFilters["GroupID"] = GroupID;
                 Role = data.Query(new string[4]{
                     "Name",
                     "Description",

@@ -124,7 +124,7 @@ namespace Aurora.Modules.Groups
             List<GroupTitlesData> titles = new List<GroupTitlesData>();
             foreach (GroupRolesData role in agentRoles)
             {
-                GroupTitlesData title = new GroupTitlesData {Name = role.Name};
+                GroupTitlesData title = new GroupTitlesData {Name = role.Title};
                 if (agentMembership != null)
                 {
                     title.Selected = agentMembership.ActiveRole == role.RoleID;
