@@ -219,94 +219,97 @@ namespace OpenSim.Data.SQLite
             Dictionary<UUID, ISceneEntity> createdObjects = new Dictionary<UUID, ISceneEntity>();
 
             List<ISceneEntity> retvals = new List<ISceneEntity>();
-
-            using (SQLiteCommand cmd = new SQLiteCommand())
+            try
             {
-                string selectExp = "select * from prims where RegionUUID = '" + regionUUID + "'";
-
-                cmd.CommandText = selectExp;
-                cmd.Connection = m_conn;
-
-                List<uint> foundLocalIDs = new List<uint>();
-                // Fill root parts
-                using (IDataReader primRow = cmd.ExecuteReader())
+                using (SQLiteCommand cmd = new SQLiteCommand())
                 {
-                    while (primRow.Read())
+                    string selectExp = "select * from prims where RegionUUID = '" + regionUUID + "'";
+
+                    cmd.CommandText = selectExp;
+                    cmd.Connection = m_conn;
+
+                    List<uint> foundLocalIDs = new List<uint>();
+                    // Fill root parts
+                    using (IDataReader primRow = cmd.ExecuteReader())
                     {
-                        try
+                        while (primRow.Read())
                         {
-                            SceneObjectPart prim = null;
-                            string uuid = primRow["UUID"].ToString();
-                            string objID = primRow["SceneGroupID"].ToString();
-
-                            if (uuid == objID) //is new SceneObjectGroup ?
+                            try
                             {
-                                prim = buildPrim(primRow, scene);
-                                prim.Shape = findPrimShape(uuid);
-                                if (prim.Shape == null)
-                                    continue;
+                                SceneObjectPart prim = null;
+                                string uuid = primRow["UUID"].ToString();
+                                string objID = primRow["SceneGroupID"].ToString();
 
-                                if (!foundLocalIDs.Contains(prim.LocalId))
-                                    foundLocalIDs.Add(prim.LocalId);
-                                else
-                                    prim.LocalId = 0; //Reset it! Only use it once!
+                                if (uuid == objID) //is new SceneObjectGroup ?
+                                {
+                                    prim = buildPrim(primRow, scene);
+                                    prim.Shape = findPrimShape(uuid);
+                                    if (prim.Shape == null)
+                                        continue;
 
-                                SceneObjectGroup group = new SceneObjectGroup(prim, scene);
-                                createdObjects[group.UUID] = group;
-                                retvals.Add(group);
-                                LoadItems(prim);
+                                    if (!foundLocalIDs.Contains(prim.LocalId))
+                                        foundLocalIDs.Add(prim.LocalId);
+                                    else
+                                        prim.LocalId = 0; //Reset it! Only use it once!
+
+                                    SceneObjectGroup group = new SceneObjectGroup(prim, scene);
+                                    createdObjects[group.UUID] = group;
+                                    retvals.Add(group);
+                                    LoadItems(prim);
+                                }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            MainConsole.Instance.Error(
-                                "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
-                            MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
+                            catch (Exception e)
+                            {
+                                MainConsole.Instance.Error(
+                                    "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
+                                MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
+                            }
                         }
                     }
-                }
 
-                // Now fill the groups with part data
-                using (IDataReader primRow = cmd.ExecuteReader())
-                {
-                    while (primRow.Read())
+                    // Now fill the groups with part data
+                    using (IDataReader primRow = cmd.ExecuteReader())
                     {
-                        try
+                        while (primRow.Read())
                         {
-                            SceneObjectPart prim = null;
-
-                            string uuid = (string) primRow["UUID"];
-                            string objID = (string) primRow["SceneGroupID"];
-
-                            if (uuid != objID) //is not new SceneObjectGroup ?
+                            try
                             {
-                                prim = buildPrim(primRow, scene);
-                                prim.Shape = findPrimShape(uuid);
+                                SceneObjectPart prim = null;
 
-                                if (!createdObjects.ContainsKey(new UUID(objID)))
+                                string uuid = (string)primRow["UUID"];
+                                string objID = (string)primRow["SceneGroupID"];
+
+                                if (uuid != objID) //is not new SceneObjectGroup ?
                                 {
-                                    Console.WriteLine(
-                                        "Found an SceneObjectPart without a SceneObjectGroup! ObjectID: " + objID);
-                                    continue;
-                                }
-                                if (!foundLocalIDs.Contains(prim.LocalId))
-                                    foundLocalIDs.Add(prim.LocalId);
-                                else
-                                    prim.LocalId = 0; //Reset it! Only use it once!
+                                    prim = buildPrim(primRow, scene);
+                                    prim.Shape = findPrimShape(uuid);
 
-                                createdObjects[new UUID(objID)].AddChild(prim, prim.LinkNum);
-                                LoadItems(prim);
+                                    if (!createdObjects.ContainsKey(new UUID(objID)))
+                                    {
+                                        Console.WriteLine(
+                                            "Found an SceneObjectPart without a SceneObjectGroup! ObjectID: " + objID);
+                                        continue;
+                                    }
+                                    if (!foundLocalIDs.Contains(prim.LocalId))
+                                        foundLocalIDs.Add(prim.LocalId);
+                                    else
+                                        prim.LocalId = 0; //Reset it! Only use it once!
+
+                                    createdObjects[new UUID(objID)].AddChild(prim, prim.LinkNum);
+                                    LoadItems(prim);
+                                }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                            MainConsole.Instance.Error(
-                                "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
-                            MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
+                            catch (Exception e)
+                            {
+                                MainConsole.Instance.Error(
+                                    "[SQLite REGION DB]: Failed create prim object in new group, exception and data follows");
+                                MainConsole.Instance.Error("[SQLite REGION DB]: ", e);
+                            }
                         }
                     }
                 }
             }
+            catch { }
             return retvals;
         }
 
@@ -317,84 +320,89 @@ namespace OpenSim.Data.SQLite
         /// <returns>Heightfield data</returns>
         public short[] LoadTerrain(IScene scene, bool revert, int RegionSizeX, int RegionSizeY)
         {
-            lock (ds)
+            try
             {
-                String sql = "";
-                if (revert)
+                lock (ds)
                 {
-                    sql = "select Heightfield,X,Y from terrain" +
-                          " where RegionUUID=:RegionUUID and Revert = 'True' order by Revision desc";
-                }
-                else
-                {
-                    sql = "select Heightfield,X,Y from terrain" +
-                          " where RegionUUID=:RegionUUID and Revert = 'False' order by Revision desc";
-                }
-
-                using (SQLiteCommand cmd = new SQLiteCommand(sql, m_conn))
-                {
-                    cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", scene.RegionInfo.RegionID.ToString()));
-
-                    using (IDataReader row = cmd.ExecuteReader())
+                    String sql = "";
+                    if (revert)
                     {
-                        if (row.Read())
-                        {
-                            if (row["X"].ToString() == "-1")
-                            {
-                                byte[] heightmap = (byte[]) row["Heightfield"];
-                                short[] map = new short[RegionSizeX*RegionSizeX];
-                                double[,] terrain = null;
-                                terrain = new double[RegionSizeX,RegionSizeY];
-                                terrain.Initialize();
+                        sql = "select Heightfield,X,Y from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = 'True' order by Revision desc";
+                    }
+                    else
+                    {
+                        sql = "select Heightfield,X,Y from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = 'False' order by Revision desc";
+                    }
 
-                                using (MemoryStream mstr = new MemoryStream(heightmap))
+                    using (SQLiteCommand cmd = new SQLiteCommand(sql, m_conn))
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", scene.RegionInfo.RegionID.ToString()));
+
+                        using (IDataReader row = cmd.ExecuteReader())
+                        {
+                            if (row.Read())
+                            {
+                                if (row["X"].ToString() == "-1")
                                 {
-                                    using (BinaryReader br = new BinaryReader(mstr))
+                                    byte[] heightmap = (byte[])row["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    double[,] terrain = null;
+                                    terrain = new double[RegionSizeX, RegionSizeY];
+                                    terrain.Initialize();
+
+                                    using (MemoryStream mstr = new MemoryStream(heightmap))
                                     {
-                                        for (int x = 0; x < RegionSizeX; x++)
+                                        using (BinaryReader br = new BinaryReader(mstr))
                                         {
-                                            for (int y = 0; y < RegionSizeY; y++)
+                                            for (int x = 0; x < RegionSizeX; x++)
                                             {
-                                                terrain[x, y] = br.ReadDouble();
+                                                for (int y = 0; y < RegionSizeY; y++)
+                                                {
+                                                    terrain[x, y] = br.ReadDouble();
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                for (int x = 0; x < RegionSizeX; x++)
-                                {
-                                    for (int y = 0; y < RegionSizeY; y++)
+                                    for (int x = 0; x < RegionSizeX; x++)
                                     {
-                                        map[y*RegionSizeX + x] = (short) (terrain[x, y]*Constants.TerrainCompression);
+                                        for (int y = 0; y < RegionSizeY; y++)
+                                        {
+                                            map[y * RegionSizeX + x] = (short)(terrain[x, y] * Constants.TerrainCompression);
+                                        }
                                     }
-                                }
 
-                                this.StoreTerrain(map, scene.RegionInfo.RegionID, revert);
-                                return map;
+                                    this.StoreTerrain(map, scene.RegionInfo.RegionID, revert);
+                                    return map;
+                                }
+                                else
+                                {
+                                    byte[] heightmap = (byte[])row["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    {
+                                        map[ii] = Utils.BytesToInt16(heightmap, i);
+                                        ii++;
+                                    }
+                                    heightmap = null;
+                                    return map;
+                                }
                             }
                             else
                             {
-                                byte[] heightmap = (byte[]) row["Heightfield"];
-                                short[] map = new short[RegionSizeX*RegionSizeX];
-                                int ii = 0;
-                                for (int i = 0; i < heightmap.Length; i += sizeof (short))
-                                {
-                                    map[ii] = Utils.BytesToInt16(heightmap, i);
-                                    ii++;
-                                }
-                                heightmap = null;
-                                return map;
+                                MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
+                                return null;
                             }
-                        }
-                        else
-                        {
-                            MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
-                            return null;
-                        }
 
-                        //MainConsole.Instance.Debug("[SQLite REGION DB]: Loaded terrain revision r" + rev.ToString());
+                            //MainConsole.Instance.Debug("[SQLite REGION DB]: Loaded terrain revision r" + rev.ToString());
+                        }
                     }
                 }
             }
+            catch { }
+            return null;
         }
 
         public void RemoveAllLandObjects(UUID regionUUID)
@@ -433,27 +441,31 @@ namespace OpenSim.Data.SQLite
         ///<returns></returns>
         public List<LandData> LoadLandObjects(UUID regionUUID)
         {
-            List<LandData> landDataForRegion = new List<LandData>();
-            lock (ds)
+            try
             {
-                DataTable land = ds.Tables["land"];
-                DataTable landaccesslist = ds.Tables["landaccesslist"];
-                string searchExp = "RegionUUID = '" + regionUUID + "'";
-                DataRow[] rawDataForRegion = land.Select(searchExp);
-                foreach (DataRow rawDataLand in rawDataForRegion)
+                List<LandData> landDataForRegion = new List<LandData>();
+                lock (ds)
                 {
-                    LandData newLand = buildLandData(rawDataLand);
-                    string accessListSearchExp = "LandUUID = '" + newLand.GlobalID + "'";
-                    DataRow[] rawDataForLandAccessList = landaccesslist.Select(accessListSearchExp);
-                    foreach (DataRow rawDataLandAccess in rawDataForLandAccessList)
+                    DataTable land = ds.Tables["land"];
+                    DataTable landaccesslist = ds.Tables["landaccesslist"];
+                    string searchExp = "RegionUUID = '" + regionUUID + "'";
+                    DataRow[] rawDataForRegion = land.Select(searchExp);
+                    foreach (DataRow rawDataLand in rawDataForRegion)
                     {
-                        newLand.ParcelAccessList.Add(buildLandAccessData(rawDataLandAccess));
-                    }
+                        LandData newLand = buildLandData(rawDataLand);
+                        string accessListSearchExp = "LandUUID = '" + newLand.GlobalID + "'";
+                        DataRow[] rawDataForLandAccessList = landaccesslist.Select(accessListSearchExp);
+                        foreach (DataRow rawDataLandAccess in rawDataForLandAccessList)
+                        {
+                            newLand.ParcelAccessList.Add(buildLandAccessData(rawDataLandAccess));
+                        }
 
-                    landDataForRegion.Add(newLand);
+                        landDataForRegion.Add(newLand);
+                    }
                 }
+                return landDataForRegion;
             }
-            return landDataForRegion;
+            catch { return null; }
         }
 
         #endregion
@@ -642,65 +654,70 @@ namespace OpenSim.Data.SQLite
         /// <returns>Heightfield data</returns>
         public short[] LoadWater(IScene scene, bool revert, int RegionSizeX, int RegionSizeY)
         {
-            lock (ds)
+            try
             {
-                double[,] terret = new double[RegionSizeX,RegionSizeY];
-                terret.Initialize();
-
-                String sql = "";
-                if (revert)
+                lock (ds)
                 {
-                    sql = "select Heightfield,X,Y from terrain" +
-                          " where RegionUUID=:RegionUUID and Revert = '3' order by Revision desc";
-                }
-                else
-                {
-                    sql = "select Heightfield,X,Y from terrain" +
-                          " where RegionUUID=:RegionUUID and Revert = '2' order by Revision desc";
-                }
+                    double[,] terret = new double[RegionSizeX, RegionSizeY];
+                    terret.Initialize();
 
-                using (SQLiteCommand cmd = new SQLiteCommand(sql, m_conn))
-                {
-                    cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", scene.RegionInfo.RegionID.ToString()));
-
-                    using (IDataReader row = cmd.ExecuteReader())
+                    String sql = "";
+                    if (revert)
                     {
-                        if (row.Read())
+                        sql = "select Heightfield,X,Y from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = '3' order by Revision desc";
+                    }
+                    else
+                    {
+                        sql = "select Heightfield,X,Y from terrain" +
+                              " where RegionUUID=:RegionUUID and Revert = '2' order by Revision desc";
+                    }
+
+                    using (SQLiteCommand cmd = new SQLiteCommand(sql, m_conn))
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", scene.RegionInfo.RegionID.ToString()));
+
+                        using (IDataReader row = cmd.ExecuteReader())
                         {
-                            if (row["X"].ToString() == "-1")
+                            if (row.Read())
                             {
-                                byte[] heightmap = (byte[]) row["Heightfield"];
-                                short[] map = new short[RegionSizeX*RegionSizeX];
-                                int ii = 0;
-                                for (int i = 0; i < heightmap.Length; i += sizeof (double))
+                                if (row["X"].ToString() == "-1")
                                 {
-                                    map[ii] = (short) (Utils.BytesToDouble(heightmap, i)*Constants.TerrainCompression);
-                                    ii++;
+                                    byte[] heightmap = (byte[])row["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(double))
+                                    {
+                                        map[ii] = (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
+                                        ii++;
+                                    }
+                                    this.StoreWater(map, scene.RegionInfo.RegionID, revert);
+                                    return map;
                                 }
-                                this.StoreWater(map, scene.RegionInfo.RegionID, revert);
-                                return map;
+                                else
+                                {
+                                    byte[] heightmap = (byte[])row["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
+                                    int ii = 0;
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
+                                    {
+                                        map[ii] = Utils.BytesToInt16(heightmap, i);
+                                        ii++;
+                                    }
+                                    return map;
+                                }
                             }
                             else
                             {
-                                byte[] heightmap = (byte[]) row["Heightfield"];
-                                short[] map = new short[RegionSizeX*RegionSizeX];
-                                int ii = 0;
-                                for (int i = 0; i < heightmap.Length; i += sizeof (short))
-                                {
-                                    map[ii] = Utils.BytesToInt16(heightmap, i);
-                                    ii++;
-                                }
-                                return map;
+                                MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
+                                return null;
                             }
-                        }
-                        else
-                        {
-                            MainConsole.Instance.Warn("[SQLite REGION DB]: No terrain found for region");
-                            return null;
                         }
                     }
                 }
             }
+            catch { }
+            return null;
         }
 
         ///<summary>

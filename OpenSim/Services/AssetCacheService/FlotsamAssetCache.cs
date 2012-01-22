@@ -384,7 +384,9 @@ namespace OpenSim.Services
             asset.Unpack(OpenMetaverse.StructuredData.OSDParser.DeserializeJson(file));*/
             try
             {
-                asset = ProtoBuf.Serializer.Deserialize<AssetBase>(File.Open(filename, FileMode.Open));
+                Stream s = File.Open(filename, FileMode.Open);
+                asset = ProtoBuf.Serializer.Deserialize<AssetBase>(s);
+                s.Close();
             }
             catch
             {
