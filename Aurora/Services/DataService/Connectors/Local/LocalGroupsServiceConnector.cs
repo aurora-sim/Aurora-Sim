@@ -1189,7 +1189,11 @@ namespace Aurora.Services.DataService
 #if (!ISWIN)
             List<GroupMembersData> list = new List<GroupMembersData>();
             foreach (string agent in Agents)
-                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
+            {
+                GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
+                if (d != null)
+                    list.Add(d);
+            }
             return list;
 #else
             return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();

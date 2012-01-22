@@ -68,7 +68,7 @@ namespace Aurora.Modules.Startup
         /// </summary>
         /// <param name = "scene"></param>
         /// <param name = "returnResponseFirstTime">Should we try to walk the user through what went wrong?</param>
-        public bool RegisterRegionWithGrid(IScene scene, bool returnResponseFirstTime)
+        public bool RegisterRegionWithGrid(IScene scene, bool returnResponseFirstTime, bool continueTrying)
         {
             GridRegion region = BuildGridRegion(scene.RegionInfo);
 
@@ -103,7 +103,7 @@ namespace Aurora.Modules.Startup
             }
             else
             {
-                if (returnResponseFirstTime)
+                if (returnResponseFirstTime && !continueTrying)
                 {
                     MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region with grid failed again - " + error);
                     return false;
@@ -232,7 +232,7 @@ namespace Aurora.Modules.Startup
                     if (input == "cancel")
                         Environment.Exit(0);
                 }
-                return RegisterRegionWithGrid(scene, true);
+                return RegisterRegionWithGrid(scene, true, continueTrying);
             }
         }
 
@@ -294,7 +294,7 @@ namespace Aurora.Modules.Startup
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
             openSimBase.EventManager.RegisterEventHandler("GridRegionRegistered", OnGenericEvent);
             //Now register our region with the grid
-            RegisterRegionWithGrid(scene, false);
+            RegisterRegionWithGrid(scene, false, true);
         }
 
         public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
@@ -423,7 +423,7 @@ namespace Aurora.Modules.Startup
                         {
                             //Register again...
                             MainConsole.Instance.Error("[GridRegService]: Forcefully reregistered with the grid service... standby");
-                            if (!RegisterRegionWithGrid(scene, true))
+                            if (!RegisterRegionWithGrid(scene, true, true))
                                 MainConsole.Instance.Error("------------- REGION " + scene.RegionInfo.RegionName +
                                             " IS DEAD ---------------");
                         }

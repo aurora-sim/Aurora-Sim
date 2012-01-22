@@ -969,8 +969,8 @@ namespace OpenSim.Services.MessagingService
                 //Query how many regions fit in this size
                 int xMin = (region.RegionLocX) - (userDrawDistance);
                 int xMax = (region.RegionLocX) + (userDrawDistance);
-                int yMin = (region.RegionLocX) - (userDrawDistance);
-                int yMax = (region.RegionLocX) + (userDrawDistance);
+                int yMin = (region.RegionLocY) - (userDrawDistance);
+                int yMax = (region.RegionLocY) + (userDrawDistance);
 
                 //Ask the grid service about the range
                 neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(region.ScopeID,

@@ -502,7 +502,7 @@ namespace OpenSim.Services.GridService
 
         public class GridRegistrationURLs : IDataTransferable
         {
-            public static readonly int CurrentVersionNumber = 3;
+            public static readonly int CurrentVersionNumber = 4;
             public OSDMap URLS;
             public string SessionID;
             public DateTime Expiration;
@@ -614,7 +614,15 @@ namespace OpenSim.Services.GridService
                 {
                     if (ports[i].StartsWith (" "))
                         ports[i] = ports[i].Remove (0, 1);
-                    uPorts.Add (uint.Parse (ports[i]));
+                    if (ports[i].Contains("-"))
+                    {
+                        uint first = (uint.Parse(ports[i].Split('-')[0]));
+                        uint second = (uint.Parse(ports[i].Split('-')[1]));
+                        for (uint port = first; port <= second; port++)
+                            uPorts.Add(port);
+                    }
+                    else
+                        uPorts.Add (uint.Parse (ports[i]));
                 }
                 if (!m_ports.ContainsKey (name))
                     m_ports[name] = new List<uint> ();

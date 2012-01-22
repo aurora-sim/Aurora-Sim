@@ -607,7 +607,7 @@ namespace OpenSim.Region.Framework.Scenes
                     region.GridSecureSessionID = scene.RegionInfo.GridSecureSessionID;
                     scene.RegionInfo = region;
                     if(needsRegistration)
-                        scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false);
+                        scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false, false);
                     else if(needsGridUpdate)
                         scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
                     //Tell clients about the changes
