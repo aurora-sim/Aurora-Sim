@@ -87,24 +87,36 @@ namespace Aurora.Services.DataService
 
         public bool Store(AuthData data)
         {
-            GD.Delete(m_realm, new string[2] {"UUID", "accountType"}, new object[2] {data.PrincipalID, data.AccountType});
-            return GD.Insert(m_realm, new[]
-                                          {
-                                              "UUID", "passwordHash", "passwordSalt",
-                                              "accountType"
-                                          }, new object[]
-                                                 {
-                                                     data.PrincipalID,
-                                                     data.PasswordHash.MySqlEscape(1024), data.PasswordSalt.MySqlEscape(1024),
-                                                     data.AccountType.MySqlEscape(32)
-                                                 });
+            GD.Delete(m_realm, new string[2] {
+                "UUID",
+                "accountType"
+            }, new object[2] {
+                data.PrincipalID,
+                data.AccountType
+            });
+            return GD.Insert(m_realm, new[]{
+                "UUID",
+                "passwordHash",
+                "passwordSalt",
+                "accountType"
+            }, new object[]{
+                data.PrincipalID,
+                data.PasswordHash.MySqlEscape(1024),
+                data.PasswordSalt.MySqlEscape(1024),
+                data.AccountType.MySqlEscape(32)
+            });
         }
 
+        // I don't think this is used anywhere (don't know who wrote this comment ~ SignpostMarv)
         public bool SetDataItem(UUID principalID, string item, string value)
         {
-			// I don't think this is used anywhere
-            return GD.Update(m_realm, new object[1] {value}, new string[1] {item.MySqlEscape()},
-                             new string[1] {"UUID"}, new object[1] {principalID});
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values[item.MySqlEscape()] = value;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = principalID;
+
+            return GD.Update(m_realm, values, null, filter, null, null);
         }
 
         public bool Delete(UUID principalID, string authType)
@@ -124,10 +136,19 @@ namespace Aurora.Services.DataService
         public bool CheckToken(UUID principalID, string token, int lifetime)
         {
             if (Environment.TickCount - m_LastExpire > 30000)
+            {
                 DoExpire();
-            return GD.Update(m_tokensrealm, new object[] {GD.FormatDateTimeString(lifetime)}, new[] {"validity"},
-                             new[] {"UUID", "token", "validity"},
-                             new object[3] {principalID, token, GD.FormatDateTimeString(0)});
+            }
+
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["validity"] = GD.FormatDateTimeString(lifetime);
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = principalID;
+            filter.andFilters["token"] = token;
+            filter.andFilters["validity"] = GD.FormatDateTimeString(0);
+
+            return GD.Update(m_tokensrealm, values, null, filter, null, null);
         }
 
         #endregion
