@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Linq;
 using System.Collections.Generic;
 using System.Data;
 using Nini.Config;
@@ -312,6 +313,255 @@ namespace Aurora.Framework
 
                 return total;
             }
+        }
+
+        public string ToSQL(char prepared, out Dictionary<string, object> ps, ref uint j)
+        {
+            ps = new Dictionary<string, object>();
+            Dictionary<string, object>[] pss = { ps };
+            string query = "";
+            List<string> parts;
+            uint i = j;
+            bool had = false;
+            if (Count > 0)
+            {
+                query += "(";
+
+                #region equality
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in andFilters)
+                {
+                    string key = prepared.ToString() + "where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in orFilters)
+                {
+                    string key = prepared.ToString() + "where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} = {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<object>> where in orMultiFilters)
+                {
+                    foreach (object value in where.Value)
+                    {
+                        string key = prepared.ToString() + "where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} = {1}", where.Key, key));
+                    }
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in andNotFilters)
+                {
+                    string key = prepared.ToString() + "where_AND_NOT_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} != {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region LIKE
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in andLikeFilters)
+                {
+                    string key = prepared.ToString() + "where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, string> where in orLikeFilters)
+                {
+                    string key = prepared.ToString() + "where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, List<string>> where in orLikeMultiFilters)
+                {
+                    foreach (string value in where.Value)
+                    {
+                        string key = prepared.ToString() + "where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        ps[key] = value;
+                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
+                    }
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region bitfield &
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in andBitfieldAndFilters)
+                {
+                    string key = prepared.ToString() + "where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in orBitfieldAndFilters)
+                {
+                    string key = prepared.ToString() + "where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} & {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region greater than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in andGreaterThanFilters)
+                {
+                    string key = prepared.ToString() + "where_gtAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in orGreaterThanFilters)
+                {
+                    string key = prepared.ToString() + "where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in andGreaterThanEqFilters)
+                {
+                    string key = prepared.ToString() + "where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region less than
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in andLessThanFilters)
+                {
+                    string key = prepared.ToString() + "where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in orLessThanFilters)
+                {
+                    string key = prepared.ToString() + "where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in andLessThanEqFilters)
+                {
+                    string key = prepared.ToString() + "where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} <= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                foreach (QueryFilter subFilter in subFilters)
+                {
+                    Dictionary<string, object> sps;
+                    query += (had ? " AND" : string.Empty) + subFilter.ToSQL(prepared, out sps, ref i);
+                    pss[pss.Length] = sps;
+                    if (subFilter.Count > 0)
+                    {
+                        had = true;
+                    }
+                }
+                query += ")";
+            }
+            pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());
+            return query;
         }
     }
 

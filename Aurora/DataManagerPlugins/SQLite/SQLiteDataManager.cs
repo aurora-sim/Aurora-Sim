@@ -277,255 +277,6 @@ namespace Aurora.DataManager.SQLite
             return cmd.ExecuteReader();
         }
 
-        private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
-        {
-            ps = new Dictionary<string, object>();
-            Dictionary<string, object>[] pss = { ps };
-            string query = "";
-            List<string> parts;
-            uint i = j;
-            bool had = false;
-            if (filter.Count > 0)
-            {
-                query += "(";
-
-                #region equality
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, object> where in filter.andFilters)
-                {
-                    string key = ":where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} = {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, object> where in filter.orFilters)
-                {
-                    string key = ":where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} = {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
-                {
-                    foreach (object value in where.Value)
-                    {
-                        string key = ":where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                        ps[key] = value;
-                        parts.Add(string.Format("{0} = {1}", where.Key, key));
-                    }
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, object> where in filter.andNotFilters)
-                {
-                    string key = ":where_AND_NOT_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} != {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region LIKE
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
-                {
-                    string key = ":where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
-                {
-                    string key = ":where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
-                {
-                    foreach (string value in where.Value)
-                    {
-                        string key = ":where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                        ps[key] = value;
-                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                    }
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region bitfield &
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, uint> where in filter.andBitfieldAndFilters)
-                {
-                    string key = ":where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} & {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
-                {
-                    string key = ":where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} & {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region greater than
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
-                {
-                    string key = ":where_gtAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
-                {
-                    string key = ":where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
-                {
-                    string key = ":where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region less than
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
-                {
-                    string key = ":where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
-                {
-                    string key = ":where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
-                {
-                    string key = ":where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} <= {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                foreach (QueryFilter subFilter in filter.subFilters)
-                {
-                    Dictionary<string, object> sps;
-                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
-                    pss[pss.Length] = sps;
-                    if (subFilter.Count > 0)
-                    {
-                        had = true;
-                    }
-                }
-                query += ")";
-            }
-            pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());
-            return query;
-        }
-
         public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
             string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
@@ -536,7 +287,7 @@ namespace Aurora.DataManager.SQLite
             if (queryFilter != null && queryFilter.Count > 0)
             {
                 uint j = 0;
-                query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+                query += " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
             }
 
             if (sort != null && sort.Count > 0)
@@ -643,7 +394,7 @@ namespace Aurora.DataManager.SQLite
             if (queryFilter != null && queryFilter.Count > 0)
             {
                 uint j = 0;
-                filter = " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+                filter = " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
             }
 
             List<string> parts = new List<string>();
@@ -874,7 +625,7 @@ namespace Aurora.DataManager.SQLite
         {
             Dictionary<string, object> ps;
             uint j = 0;
-            string query = "DELETE FROM " + table + " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+            string query = "DELETE FROM " + table + " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
 
             SQLiteCommand cmd = new SQLiteCommand(query);
             AddParams(ref cmd, ps);
