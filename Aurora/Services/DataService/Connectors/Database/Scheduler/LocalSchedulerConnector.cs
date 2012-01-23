@@ -197,7 +197,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public void HistoryDeleteOld(SchedulerItem I)
         {
             if ((I.id != "") && (I.HistoryLastID != ""))
-                m_Gd.Delete("scheduler_history", "WHERE id != '" + I.HistoryLastID + "' AND scheduler_id = '" + I.id + "'");
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andNotFilters["id"] = I.HistoryLastID;
+                filter.andFilters["scheduler_id"] = I.id;
+                m_Gd.Delete("scheduler_history", filter);
+            }
         }
 
         private SchedulerItem LoadFromDataReader(IDataReader dr)

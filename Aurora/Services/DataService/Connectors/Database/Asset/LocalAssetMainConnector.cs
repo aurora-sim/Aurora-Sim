@@ -242,7 +242,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         ignoreFlags = true;
                 }
                 if (ignoreFlags)
-                    m_Gd.Delete("assets", "id = '" + id + "'");
+                {
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["id"] = id;
+                    m_Gd.Delete("assets", filter);
+                }
             }
             catch (Exception e)
             {

@@ -575,10 +575,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                 if (ignoreFlags)
                 {
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["id"] = id;
                     // delete the asset
-                    m_Gd.Delete(tableName, "id = '" + id + "'");
+                    m_Gd.Delete(tableName, filter);
                     // just for safe measure check here as well
-                    m_Gd.Delete("auroraassets_old", "id = '" + id + "'");
+                    m_Gd.Delete("auroraassets_old", filter);
                 }
                 return ignoreFlags;
             }
@@ -961,7 +963,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                                 if (StoreAsset(asset1))
                                 {
-                                    m_Gd.Delete("assets", "id = '" + asset1.ID + "'");
+                                    QueryFilter fitler = new QueryFilter();
+                                    filter.andFilters["id"] = asset1.ID;
+                                    m_Gd.Delete("assets", filter);
                                 }
 
                                 try

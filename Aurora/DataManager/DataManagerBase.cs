@@ -319,8 +319,8 @@ namespace Aurora.DataManager
         #region DELETE
 
         public abstract bool Delete(string table, string[] keys, object[] values);
-        public abstract bool Delete(string table, string whereclause);
         public abstract bool DeleteByTime(string table, string key);
+        public abstract bool Delete(string table, QueryFilter queryFilter);
 
         #endregion
 

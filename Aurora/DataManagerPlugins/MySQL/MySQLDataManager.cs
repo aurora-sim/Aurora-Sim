@@ -226,6 +226,19 @@ namespace Aurora.DataManager.MySQL
                     had = true;
                 }
 
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.andNotFilters)
+                {
+                    string key = "?where_AND_NOT_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} != {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
                 #endregion
 
                 #region LIKE
@@ -823,31 +836,27 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
-        public override bool Delete(string table, string whereclause)
-        {
-            string query = "DELETE FROM " + table + " WHERE " + whereclause;
-            try
-            {
-                ExecuteNonQuery(query, new Dictionary<string, object>());
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Delete", e);
-                return false;
-            }
-            return true;
-        }
-
         public override bool DeleteByTime(string table, string key)
         {
-            string query = "DELETE FROM " + table + " WHERE (UNIX_TIMESTAMP(`" + key + "`) - UNIX_TIMESTAMP()) <= 0";
+            QueryFilter filter = new QueryFilter();
+            filter.andLessThanEqFilters["(UNIX_TIMESTAMP(`" + key.Replace("`","") + "`) - UNIX_TIMESTAMP())"] = 0;
+
+            return Delete(table, filter);
+        }
+
+        public override bool Delete(string table, QueryFilter queryFilter)
+        {
+            Dictionary<string, object> ps;
+            uint j=0;
+            string query = "DELETE FROM " + table + " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+
             try
             {
-                ExecuteNonQuery(query, new Dictionary<string, object>());
+                ExecuteNonQuery(query, ps);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] DeleteByTime", e);
+                MainConsole.Instance.Error("[MySQLDataLoader] Delete(" + query + "), " + e);
                 return false;
             }
             return true;

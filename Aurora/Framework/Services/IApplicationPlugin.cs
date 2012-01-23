@@ -223,12 +223,12 @@ namespace Aurora.Framework
         bool DeleteByTime(string table, string keys);
 
         /// <summary>
-        ///   delete from 'table' where whereclause
+        /// DELETE FROM table WHERE {magic happens with queryFilter here}
         /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "whereclause"></param>
+        /// <param name="table">table name</param>
+        /// <param name="queryFilter">filter for determining which rows to delete</param>
         /// <returns></returns>
-        bool Delete(string table, string whereclause);
+        bool Delete(string table, QueryFilter queryFilter);
 
         #endregion
 
@@ -288,6 +288,8 @@ namespace Aurora.Framework
 
         public Dictionary<string, int> andLessThanEqFilters = new Dictionary<string, int>();
 
+        public Dictionary<string, object> andNotFilters = new Dictionary<string, object>();
+
         public List<QueryFilter> subFilters = new List<QueryFilter>();
 
         public uint Count
@@ -308,7 +310,8 @@ namespace Aurora.Framework
                     andGreaterThanEqFilters.Count +
                     andLessThanFilters.Count +
                     orLessThanFilters.Count +
-                    andLessThanEqFilters.Count
+                    andLessThanEqFilters.Count +
+                    andNotFilters.Count
                 );
 
                 subFilters.ForEach(delegate(QueryFilter filter)

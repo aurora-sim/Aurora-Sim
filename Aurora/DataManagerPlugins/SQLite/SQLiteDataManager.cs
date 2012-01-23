@@ -333,6 +333,19 @@ namespace Aurora.DataManager.SQLite
                     had = true;
                 }
 
+                parts = new List<string>();
+                foreach (KeyValuePair<string, object> where in filter.andNotFilters)
+                {
+                    string key = ":where_AND_NOT_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} != {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
                 #endregion
 
                 #region LIKE
@@ -871,25 +884,31 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Delete(string table, string whereclause)
-        {
-            var cmd = new SQLiteCommand();
-
-            string query = String.Format("delete from {0} " + "where " + whereclause, table);
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
-            CloseReaderCommand(cmd);
-            return true;
-        }
-
         public override bool DeleteByTime(string table, string key)
         {
-            var cmd = new SQLiteCommand();
+            QueryFilter filter = new QueryFilter();
+            filter.andLessThanEqFilters["(datetime(" + key.Replace("`", "") + ", 'localtime') - datetime('now', 'localtime'))"] = 0;
 
-            string query = String.Format("delete from {0} " + "where '" + key + "' < datetime('now', 'localtime')",
-                                         table);
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
+            return Delete(table, filter);
+        }
+
+        public override bool Delete(string table, QueryFilter queryFilter)
+        {
+            Dictionary<string, object> ps;
+            uint j = 0;
+            string query = "DELETE FROM " + table + " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+
+            SQLiteCommand cmd = new SQLiteCommand(query);
+            AddParams(ref cmd, ps);
+            try
+            {
+                ExecuteNonQuery(cmd);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[SQLiteDataManager] Delete(" + query + "), " + e);
+                return false;
+            }
             CloseReaderCommand(cmd);
             return true;
         }
