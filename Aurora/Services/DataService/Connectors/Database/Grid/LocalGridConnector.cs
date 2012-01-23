@@ -252,12 +252,20 @@ namespace Aurora.Services.DataService
 
         public bool Delete(UUID regionID)
         {
-            return GD.Delete(m_realm, new string[1] {"RegionUUID"}, new object[1] {regionID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionUUID"] = regionID;
+            return GD.Delete(m_realm, filter);
         }
 
         public bool DeleteAll(string[] criteriaKey, object[] criteriaValue)
         {
-            return GD.Delete(m_realm, criteriaKey, criteriaValue);
+            QueryFilter filter = new QueryFilter();
+            int i = 0;
+            foreach (object value in criteriaValue)
+            {
+                filter.andFilters[criteriaKey[i++]] = value;
+            }
+            return GD.Delete(m_realm, filter);
         }
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)

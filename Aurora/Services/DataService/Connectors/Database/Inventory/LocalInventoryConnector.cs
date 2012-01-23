@@ -401,51 +401,92 @@ namespace Aurora.Services.DataService
 
         public virtual bool StoreFolder(InventoryFolderBase folder)
         {
-            GD.Delete(m_foldersrealm, new string[1] {"folderID"}, new object[1] {folder.ID});
-            return GD.Insert(m_foldersrealm,
-                             new string[6] {"folderName", "type", "version", "folderID", "agentID", "parentFolderID"},
-                             new object[6]
-                                 {
-                                     folder.Name.MySqlEscape(64), folder.Type, folder.Version, folder.ID, folder.Owner,
-                                     folder.ParentID
-                                 });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["folderID"] = folder.ID;
+            GD.Delete(m_foldersrealm, filter);
+            return GD.Insert(m_foldersrealm, new string[6] {
+                "folderName",
+                "type",
+                "version",
+                "folderID",
+                "agentID",
+                "parentFolderID"
+            }, new object[6]{
+                folder.Name.MySqlEscape(64),
+                folder.Type,
+                folder.Version,
+                folder.ID,
+                folder.Owner,
+                folder.ParentID
+            });
         }
 
         public virtual bool StoreItem(InventoryItemBase item)
         {
-            GD.Delete(m_itemsrealm, new string[1] {"inventoryID"}, new object[1] {item.ID});
-            return GD.Insert(m_itemsrealm, new string[20]
-                                               {
-                                                   "assetID", "assetType", "inventoryName", "inventoryDescription",
-                                                   "inventoryNextPermissions", "inventoryCurrentPermissions", "invType",
-                                                   "creatorID", "inventoryBasePermissions",
-                                                   "inventoryEveryOnePermissions", "salePrice", "saleType",
-                                                   "creationDate", "groupID", "groupOwned",
-                                                   "flags", "inventoryID", "avatarID", "parentFolderID",
-                                                   "inventoryGroupPermissions"
-                                               }, new object[20]
-                                                      {
-                                                          item.AssetID, item.AssetType, item.Name.MySqlEscape(64),
-                                                          item.Description.MySqlEscape(128), item.NextPermissions,
-                                                          item.CurrentPermissions,
-                                                          item.InvType, item.CreatorIdentification, item.BasePermissions
-                                                          , item.EveryOnePermissions, item.SalePrice, item.SaleType,
-                                                          item.CreationDate, item.GroupID, item.GroupOwned ? "1" : "0",
-                                                          item.Flags, item.ID, item.Owner,
-                                                          item.Folder, item.GroupPermissions
-                                                      });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = item.ID;
+            GD.Delete(m_itemsrealm, filter);
+            return GD.Insert(m_itemsrealm, new string[20]{
+                "assetID",
+                "assetType",
+                "inventoryName",
+                "inventoryDescription",
+                "inventoryNextPermissions",
+                "inventoryCurrentPermissions",
+                "invType",
+                "creatorID",
+                "inventoryBasePermissions",
+                "inventoryEveryOnePermissions",
+                "salePrice",
+                "saleType",
+                "creationDate",
+                "groupID",
+                "groupOwned",
+                "flags",
+                "inventoryID",
+                "avatarID",
+                "parentFolderID",
+                "inventoryGroupPermissions"
+            }, new object[20]{
+                item.AssetID,
+                item.AssetType,
+                item.Name.MySqlEscape(64),
+                item.Description.MySqlEscape(128),
+                item.NextPermissions,
+                item.CurrentPermissions,
+                item.InvType,
+                item.CreatorIdentification,
+                item.BasePermissions,
+                item.EveryOnePermissions,
+                item.SalePrice,
+                item.SaleType,
+                item.CreationDate,
+                item.GroupID,
+                item.GroupOwned ? "1" : "0",
+                item.Flags,
+                item.ID,
+                item.Owner,
+                item.Folder,
+                item.GroupPermissions
+            });
         }
 
         public virtual bool DeleteFolders(string field, string val, bool safe)
         {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
             if (safe)
-                return GD.Delete(m_foldersrealm, new string[2] {field, "type"}, new object[2] {val, "-1"});
-            return GD.Delete(m_foldersrealm, new string[1] {field}, new object[1] {val});
+            {
+                filter.andFilters["type"] = "-1";
+            }
+            return GD.Delete(m_foldersrealm, filter);
         }
 
         public virtual bool DeleteItems(string field, string val)
         {
-            return GD.Delete(m_itemsrealm, new string[1] {field}, new object[1] {val});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
+            return GD.Delete(m_itemsrealm, filter);
         }
 
         public virtual bool MoveItem(string id, string newParent)
