@@ -206,14 +206,6 @@ namespace Aurora.Framework
         bool Delete(string table, string[] keys, object[] values);
 
         /// <summary>
-        ///   Formats a datetime string for the given time
-        ///   0 returns now()
-        /// </summary>
-        /// <param name = "time"></param>
-        /// <returns></returns>
-        string FormatDateTimeString(int time);
-
-        /// <summary>
         ///   delete from 'table' where 'key' < now()
         /// </summary>
         /// <param name = "table"></param>
@@ -231,6 +223,14 @@ namespace Aurora.Framework
         bool Delete(string table, QueryFilter queryFilter);
 
         #endregion
+
+        /// <summary>
+        ///   Formats a datetime string for the given time
+        ///   0 returns now()
+        /// </summary>
+        /// <param name = "time"></param>
+        /// <returns></returns>
+        string FormatDateTimeString(int time);
 
         /// <summary>
         ///   Connects to the database and then performs migrations

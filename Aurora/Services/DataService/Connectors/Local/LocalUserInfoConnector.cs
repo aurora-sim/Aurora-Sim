@@ -93,7 +93,10 @@ namespace Aurora.Services.DataService
             values[10] = info.HomeRegionID.ToString();
             values[11] = info.HomePosition.ToString();
             values[12] = info.HomeLookAt.ToString();
-            GD.Delete(m_realm, new string[1] {"UserID"}, new object[1] {info.UserID});
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UserID"] = info.UserID;
+            GD.Delete(m_realm, filter);
             return GD.Insert(m_realm, values);
         }
 
