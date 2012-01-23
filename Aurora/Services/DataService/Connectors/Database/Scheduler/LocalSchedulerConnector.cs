@@ -108,17 +108,26 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public void SchedulerRemove(string id)
         {
-            m_Gd.Delete("scheduler", new[] { "id" }, new object[] { id });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["id"] = id;
+            m_Gd.Delete("scheduler", filter);
         }
 
         private object[] GetDBValues(SchedulerItem I)
         {
-            return new object[]
-                       {
-                           I.id, I.FireFunction, I.FireParams, (I.RunOnce)?1:0, I.RunEvery, Util.ToUnixTime(I.TimeToRun), 
-                           (I.HisotryKeep)?1:0,(I.HistoryReciept)?1:0, I.HistoryLastID, Util.ToUnixTime(I.CreateTime), 
-                           (I.Enabled)?1:0
-                       };
+            return new object[]{
+                I.id, 
+                I.FireFunction, 
+                I.FireParams, 
+                (I.RunOnce) ? 1 : 0,
+                I.RunEvery, 
+                Util.ToUnixTime(I.TimeToRun),
+                (I.HisotryKeep) ? 1 : 0,
+                (I.HistoryReciept) ? 1 : 0,
+                I.HistoryLastID,
+                Util.ToUnixTime(I.CreateTime),
+                (I.Enabled) ? 1 : 0
+            };
         }
 
         public bool SchedulerExist(string id)
