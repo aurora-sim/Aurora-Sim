@@ -317,7 +317,7 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                GD.Insert(m_estateTable, values.Keys.ToArray<string>(), values.Values.ToArray<object>());
+                GD.Insert(m_estateTable, values);
             }
         }
 
