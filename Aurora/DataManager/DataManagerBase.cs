@@ -105,7 +105,9 @@ namespace Aurora.DataManager
                 }}, new IndexDefinition[0]);
             }
             //Remove previous versions
-            Delete(VERSION_TABLE_NAME, new string[1] {COLUMN_NAME}, new object[1] {MigrationName});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[COLUMN_NAME] = MigrationName;
+            Delete(VERSION_TABLE_NAME, filter);
             //Add the new version
             Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
         }
@@ -318,7 +320,6 @@ namespace Aurora.DataManager
 
         #region DELETE
 
-        public abstract bool Delete(string table, string[] keys, object[] values);
         public abstract bool DeleteByTime(string table, string key);
         public abstract bool Delete(string table, QueryFilter queryFilter);
 

@@ -197,15 +197,6 @@ namespace Aurora.Framework
         #region DELETE
 
         /// <summary>
-        ///   delete from 'table' where 'keys' = 'values'
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool Delete(string table, string[] keys, object[] values);
-
-        /// <summary>
         ///   delete from 'table' where 'key' < now()
         /// </summary>
         /// <param name = "table"></param>

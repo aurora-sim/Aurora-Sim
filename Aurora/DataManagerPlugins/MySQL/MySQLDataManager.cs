@@ -811,31 +811,6 @@ namespace Aurora.DataManager.MySQL
 
         #region Delete
 
-        public override bool Delete(string table, string[] keys, object[] values)
-        {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
-            int i = 0;
-            foreach (object value in values)
-            {
-                param["?" + keys[i].Replace("`", "")] = value;
-                query += keys[i] + " = ?" + keys[i].Replace("`", "") + " AND ";
-                i++;
-            }
-            if (keys.Length > 0)
-                query = query.Remove(query.Length - 5);
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Delete(" + query + "), " + e);
-                return false;
-            }
-            return true;
-        }
-
         public override bool DeleteByTime(string table, string key)
         {
             QueryFilter filter = new QueryFilter();

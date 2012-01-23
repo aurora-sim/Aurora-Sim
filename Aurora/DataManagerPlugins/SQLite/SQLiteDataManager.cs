@@ -862,28 +862,6 @@ namespace Aurora.DataManager.SQLite
 
         #region Delete
 
-        public override bool Delete(string table, string[] keys, object[] values)
-        {
-            var cmd = new SQLiteCommand();
-
-            Dictionary<string, object> ps = new Dictionary<string, object>();
-            string query = String.Format("delete from {0} " + (keys.Length > 0 ? "where " : ""), table);
-            int i = 0;
-            foreach (object value in values)
-            {
-                ps[":" + keys[i].Replace("`", "")] = value;
-                query += keys[i] + " = :" + keys[i].Replace("`", "") + " and ";
-                i++;
-            }
-            if (keys.Length > 0)
-                query = query.Remove(query.Length - 4);
-            cmd.CommandText = query;
-            AddParams(ref cmd, ps);
-            ExecuteNonQuery(cmd);
-            CloseReaderCommand(cmd);
-            return true;
-        }
-
         public override bool DeleteByTime(string table, string key)
         {
             QueryFilter filter = new QueryFilter();
