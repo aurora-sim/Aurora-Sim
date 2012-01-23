@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
         /// <param name = "ParcelID"></param>
         public void RemoveAllLandObjects(UUID RegionID)
         {
-            GenericUtils.RemoveGenericByType(RegionID, "LandData", GD);
+            GenericUtils.RemoveGeneric(RegionID, "LandData", GD);
         }
 
         /// <summary>

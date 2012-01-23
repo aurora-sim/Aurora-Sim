@@ -183,7 +183,11 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         public static void RemoveGeneric(UUID AgentID, string Type, string Key, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "Type", "`Key`"}, new object[] {AgentID, Type, Key});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = AgentID;
+            filter.andFilters["Type"] = Type;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
@@ -194,18 +198,10 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         public static void RemoveGenericByKey(UUID OwnerID, string Key, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "`Key`"}, new object[] {OwnerID, Key});
-        }
-
-        /// <summary>
-        ///   Removes a generic from the database
-        /// </summary>
-        /// <param name = "OwnerID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        public static void RemoveGenericByType(UUID OwnerID, string Type, IGenericData GD)
-        {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
@@ -216,7 +212,10 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         public static void RemoveGeneric(UUID AgentID, string Type, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {AgentID, Type});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = AgentID;
+            filter.andFilters["Type"] = Type;
+            GD.Delete("generics", filter);
         }
 
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key)
