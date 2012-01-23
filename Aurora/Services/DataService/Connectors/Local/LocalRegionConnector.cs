@@ -91,22 +91,20 @@ namespace Aurora.Services.DataService
             else
             {
                 //Make a new one
-                List<object> values = new List<object>
-                                          {
-                                              telehub.RegionID,
-                                              telehub.RegionLocX,
-                                              telehub.RegionLocY,
-                                              telehub.TelehubLocX,
-                                              telehub.TelehubLocY,
-                                              telehub.TelehubLocZ,
-                                              telehub.TelehubRotX,
-                                              telehub.TelehubRotY,
-                                              telehub.TelehubRotZ,
-                                              telehub.BuildFromList(telehub.SpawnPos),
-                                              telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape(50)
-                                          };
-                GD.Insert("telehubs", values.ToArray());
+                GD.Insert("telehubs", new object[]{
+                    telehub.RegionID,
+                    telehub.RegionLocX,
+                    telehub.RegionLocY,
+                    telehub.TelehubLocX,
+                    telehub.TelehubLocY,
+                    telehub.TelehubLocZ,
+                    telehub.TelehubRotX,
+                    telehub.TelehubRotY,
+                    telehub.TelehubRotZ,
+                    telehub.BuildFromList(telehub.SpawnPos),
+                    telehub.ObjectUUID,
+                    telehub.Name.MySqlEscape(50)
+                });
             }
         }
 
