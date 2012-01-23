@@ -40,6 +40,7 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD;
         private string m_estateTable = "estatesettings";
+        private string m_estateRegionsTable = "estateregions";
 
         #region IEstateConnector Members
 
@@ -137,7 +138,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null)
                 return (bool)remoteValue;
 
-            GD.Replace("estateregions", new[] { "RegionID", "EstateID" },
+            GD.Replace(m_estateRegionsTable, new[] { "RegionID", "EstateID" },
                        new object[]
                            {
                                regionID,
@@ -152,13 +153,13 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null)
+            {
                 return (bool)remoteValue;
+            }
 
-            GD.Delete("estateregions", new[] {"RegionID"},
-                      new object[]
-                          {
-                              regionID
-                          });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete(m_estateRegionsTable, filter);
 
             return true;
         }
@@ -168,11 +169,14 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null)
+            {
                 return (bool)remoteValue;
+            }
 
-
-            GD.Delete("estateregions", new[] { "EstateID" }, new object[] { estateID });
-            GD.Delete(m_estateTable, new[] { "EstateID" }, new object[] { estateID });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateID"] = estateID;
+            GD.Delete(m_estateRegionsTable, filter);
+            GD.Delete(m_estateTable, filter);
 
             return true;
         }
@@ -208,7 +212,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
-            return GD.Query(new string[1] { "RegionID" }, "estateregions", filter, null, null, null).ConvertAll(x => UUID.Parse(x));
+            return GD.Query(new string[1] { "RegionID" }, m_estateRegionsTable, filter, null, null, null).ConvertAll(x => UUID.Parse(x));
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -267,7 +271,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
 
-            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estateregions", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] { "EstateID" }, m_estateRegionsTable, filter, null, null, null);
 
             return (retVal.Count > 0) ? int.Parse(retVal[0]) : 0;
         }
