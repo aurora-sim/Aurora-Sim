@@ -151,16 +151,17 @@ namespace Aurora.Services.DataService
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
             //It might be updating, delete the old
-            GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {classified.ClassifiedUUID});
-            List<object> values = new List<object>
-                                      {
-                                          classified.Name.MySqlEscape(),
-                                          classified.Category,
-                                          classified.SimName.MySqlEscape(),
-                                          classified.CreatorUUID,
-                                          classified.ClassifiedUUID,
-                                          OSDParser.SerializeJsonString(classified.ToOSD())
-                                      };
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ClassifiedUUID"] = classified.ClassifiedUUID;
+            GD.Delete("userclassifieds", filter);
+            List<object> values = new List<object>{
+                classified.Name.MySqlEscape(),
+                classified.Category,
+                classified.SimName.MySqlEscape(),
+                classified.CreatorUUID,
+                classified.ClassifiedUUID,
+                OSDParser.SerializeJsonString(classified.ToOSD())
+            };
             return GD.Insert("userclassifieds", values.ToArray());
         }
 
@@ -199,7 +200,9 @@ namespace Aurora.Services.DataService
 
         public void RemoveClassified(UUID queryClassifiedID)
         {
-            GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ClassifiedUUID"] = queryClassifiedID;
+            GD.Delete("userclassifieds", filter);
         }
 
         public bool AddPick(ProfilePickInfo pick)
@@ -208,7 +211,9 @@ namespace Aurora.Services.DataService
                 return false;
 
             //It might be updating, delete the old
-            GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {pick.PickUUID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PickUUID"] = pick.PickUUID;
+            GD.Delete("userpicks", filter);
             List<object> values = new List<object>
                                       {
                                           pick.Name.MySqlEscape(),
@@ -253,7 +258,9 @@ namespace Aurora.Services.DataService
 
         public void RemovePick(UUID queryPickID)
         {
-            GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {queryPickID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PickUUID"] = queryPickID;
+            GD.Delete("userpicks", filter);
         }
 
         #endregion
