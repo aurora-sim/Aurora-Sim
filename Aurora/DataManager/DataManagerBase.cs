@@ -306,6 +306,7 @@ namespace Aurora.DataManager
 
         public abstract bool Insert(string table, object[] values);
         public abstract bool Insert(string table, string[] keys, object[] values);
+        public abstract bool Insert(string table, Dictionary<string, object> row);
         public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
         public abstract bool InsertMultiple(string table, List<object[]> values);
 

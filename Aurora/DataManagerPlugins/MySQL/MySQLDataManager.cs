@@ -463,6 +463,28 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
+        public override bool Insert(string table, Dictionary<string, object> row)
+        {
+            string query = "INSERT INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, object> field in row)
+            {
+                string key = "?" + field.Key.Replace("`","");
+                ps[key] = field.Value;
+            }
+            query += " VALUES( " + string.Join(", ", ps.Keys.ToArray<string>()) + " )";
+
+            try
+            {
+                ExecuteNonQuery(query, ps);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
+            }
+            return true;
+        }
+
         public override bool Replace(string table, string[] keys, object[] values)
         {
             string query = String.Format("replace into {0} (", table);

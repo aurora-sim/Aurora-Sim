@@ -526,6 +526,31 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
+        public override bool Insert(string table, Dictionary<string, object> row)
+        {
+            SQLiteCommand cmd = new SQLiteCommand();
+            string query = "INSERT INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
+            List<string> ps = new List<string>();
+            foreach (KeyValuePair<string, object> field in row)
+            {
+                string key = "?" + field.Key.Replace("`", "");
+                ps.Add(key);
+                cmd.Parameters.AddWithValue(key, field.Value);
+            }
+            query += " VALUES( " + string.Join(", ", ps.ToArray<string>()) + " )";
+
+            try
+            {
+                ExecuteNonQuery(cmd);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[SQLiteLoader] Insert(" + query + "), " + e);
+            }
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             var cmd = new SQLiteCommand();

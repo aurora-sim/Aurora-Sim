@@ -77,51 +77,32 @@ namespace Aurora.Services.DataService
 
         public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
         {
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "Name",
-                                        "Charter",
-                                        "InsigniaID",
-                                        "FounderID",
-                                        "MembershipFee",
-                                        "OpenEnrollment",
-                                        "ShowInList",
-                                        "AllowPublish",
-                                        "MaturePublish",
-                                        "OwnerRoleID"
-                                    };
-            List<Object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          name.MySqlEscape(50),
-                                          charter.MySqlEscape(50),
-                                          insigniaID,
-                                          founderID,
-                                          membershipFee,
-                                          openEnrollment ? 1 : 0,
-                                          showInList ? 1 : 0,
-                                          allowPublish ? 1 : 0,
-                                          maturePublish ? 1 : 0,
-                                          OwnerRoleID
-                                      };
-            data.Insert("osgroup", Keys.ToArray(), Values.ToArray());
+            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            row["GroupID"] = groupID;
+            row["Name"] = name.MySqlEscape(50);
+            row["Charter"] = charter.MySqlEscape(50);
+            row["InsigniaID"] = insigniaID;
+            row["FounderID"] = founderID;
+            row["MembershipFee"] = membershipFee;
+            row["OpenEnrollment"] = openEnrollment ? 1 : 0;
+            row["ShowInList"] = showInList ? 1 : 0;
+            row["AllowPublish"] = allowPublish ? 1 : 0;
+            row["MaturePublish"] = maturePublish ? 1 : 0;
+            row["OwnerRoleID"] = OwnerRoleID;
+
+            data.Insert("osgroup", row);
 
             //Add everyone role to group
-            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.",
-                           "Member of " + name, EveryonePowers);
+            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
 
             ulong groupPowers = 296868139497678;
 
             UUID officersRole = UUID.Random();
             //Add officers role to group
-            AddRoleToGroup(founderID, groupID, officersRole, "Officers",
-                           "The officers of the group, with more powers than regular members.", "Officer of " + name,
-                           groupPowers);
+            AddRoleToGroup(founderID, groupID, officersRole, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
 
             //Add owner role to group
-            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name,
-                           OwnerPowers);
+            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, OwnerPowers);
 
             //Add owner to the group as owner
             AddAgentToGroup(founderID, founderID, groupID, OwnerRoleID);
@@ -153,37 +134,22 @@ namespace Aurora.Services.DataService
 
         public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
-            if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
-                return;
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "NoticeID",
-                                        "Timestamp",
-                                        "FromName",
-                                        "Subject",
-                                        "Message",
-                                        "HasAttachment",
-                                        "ItemID",
-                                        "AssetType",
-                                        "ItemName"
-                                    };
+            if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(10);
+                row["GroupID"] = groupID;
+                row["NoticeID"] = noticeID;
+                row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
+                row["FromName"] = fromName.MySqlEscape(50);
+                row["Subject"] = subject.MySqlEscape(50);
+                row["Message"] = message.MySqlEscape(1024);
+                row["HasAttachment"] = (ItemID != UUID.Zero) ? 1 : 0;
+                row["ItemID"] = ItemID;
+                row["AssetType"] = AssetType;
+                row["ItemName"] = ItemName.MySqlEscape(50);
 
-            List<object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          noticeID,
-                                          ((uint) Util.UnixTimeSinceEpoch()),
-                                          fromName.MySqlEscape(50),
-                                          subject.MySqlEscape(50),
-                                          message.MySqlEscape(1024),
-                                          (ItemID != UUID.Zero) ? 1 : 0,
-                                          ItemID,
-                                          AssetType,
-                                          ItemName.MySqlEscape(50)
-                                      };
-
-            data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
+                data.Insert("osgroupnotice", row);
+            }
         }
 
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
@@ -199,13 +165,10 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                data.Insert("osagent", new[]{
-                    "AgentID",
-                    "ActiveGroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(2);
+                row["AgentID"] = AgentID;
+                row["ActiveGroupID"] = GroupID;
+                data.Insert("osagent", row);
             }
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
@@ -251,16 +214,14 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                List<string> Keys = new List<string>{
-                    "GroupID",
-                    "AgentID",
-                    "SelectedRoleID",
-                    "Contribution",
-                    "ListInProfile",
-                    "AcceptNotices"
-                };
-                List<Object> Values = new List<object> {GroupID, AgentID, RoleID, 0, 1, 1};
-                data.Insert("osgroupmembership", Keys.ToArray(), Values.ToArray());
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["AgentID"] = AgentID;
+                row["SelectedRoleID"] = RoleID;
+                row["Contribution"] = 0;
+                row["ListInProfile"] = 1;
+                row["AcceptNotices"] = 1;
+                data.Insert("osgroupmembership", row);
             }
 
             // Make sure they're in the Everyone role
@@ -304,12 +265,17 @@ namespace Aurora.Services.DataService
 
         public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.CreateRole))
-                return;
-            List<string> Keys = new List<string> {"GroupID", "RoleID", "Name", "Description", "Title", "Powers"};
-            List<Object> Values = new List<object>
-                                      {GroupID, RoleID, Name.MySqlEscape(50), Description.MySqlEscape(50), Title, Powers};
-            data.Insert("osrole", Keys.ToArray(), Values.ToArray());
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.CreateRole))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["Name"] = Name.MySqlEscape(50);
+                row["Description"] = Description.MySqlEscape(50);
+                row["Title"] = Title;
+                row["Powers"] = Powers;
+                data.Insert("osrole", row);
+            }
         }
 
         public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
@@ -381,15 +347,11 @@ namespace Aurora.Services.DataService
             //Make sure they arn't already in this role
             if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
             {
-                data.Insert("osgrouprolemembership", new[]{
-                    "GroupID",
-                    "RoleID",
-                    "AgentID"
-                }, new object[]{
-                    GroupID,
-                    RoleID,
-                    AgentID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(3);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["AgentID"] = AgentID;
+                data.Insert("osgrouprolemembership", row);
             }
         }
 
@@ -441,21 +403,15 @@ namespace Aurora.Services.DataService
                 filter.andFilters["AgentID"] = AgentID;
                 filter.andFilters["GroupID"] = GroupID;
                 data.Delete("osgroupinvite", filter);
-                data.Insert("osgroupinvite", new[]{
-                    "InviteID",
-                    "GroupID",
-                    "RoleID",
-                    "AgentID",
-                    "TMStamp",
-                    "FromAgentName"
-                }, new object[]{
-                    inviteID,
-                    GroupID,
-                    roleID,
-                    AgentID,
-                    Util.UnixTimeSinceEpoch(),
-                    FromAgentName.MySqlEscape(50)
-                });
+
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["InviteID"] = inviteID;
+                row["GroupID"] = GroupID;
+                row["RoleID"] = roleID;
+                row["AgentID"] = AgentID;
+                row["TMStamp"] = Util.UnixTimeSinceEpoch();
+                row["FromAgentName"] = FromAgentName.MySqlEscape(50);
+                data.Insert("osgroupinvite", row);
             }
         }
 

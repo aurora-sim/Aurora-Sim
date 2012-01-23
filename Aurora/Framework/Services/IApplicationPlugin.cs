@@ -153,6 +153,14 @@ namespace Aurora.Framework
         bool Insert(string table, string[] keys, object[] values);
 
         /// <summary>
+        /// INSERT INTO table (row.Keys) VALUES(row.Values)
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        bool Insert(string table, Dictionary<string, object> row);
+
+        /// <summary>
         /// Runs multiple Insert(table, value) calls in one run
         /// </summary>
         /// <param name="table"></param>
