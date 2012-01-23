@@ -84,16 +84,15 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public string SchedulerSave(SchedulerItem I)
         {
+            object[] dbv = GetDBValues(I);
+            Dictionary<string, object> values = new Dictionary<string, object>(dbv.Length);
+            int i = 0;
+            foreach (object value in dbv)
+            {
+                values[theFields[i++]] = value;
+            }
             if (SchedulerExist(I.id))
             {
-                object[] dbv = GetDBValues(I);
-                Dictionary<string, object> values = new Dictionary<string, object>(dbv.Length);
-                int i = 0;
-                foreach (object value in dbv)
-                {
-                    values[theFields[i++]] = value;
-                }
-
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["id"] = I.id;
 
@@ -101,7 +100,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             }
             else
             {
-                m_Gd.Insert("scheduler", theFields, GetDBValues(I));
+                m_Gd.Insert("scheduler", values);
             }
             return I.id;
         }
@@ -165,12 +164,17 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public SchedulerItem SaveHistory(SchedulerItem I)
         {
             string his_id = UUID.Random().ToString();
-            m_Gd.Insert("scheduler_history",
-                        new[]
-                            {"id", "scheduler_id", "ran_time", "run_time", "is_complete", "complete_time", "reciept"},
-                        new object[]
-                            {his_id, I.id, Util.ToUnixTime(DateTime.UtcNow), Util.ToUnixTime(I.TimeToRun), 0, 0, ""}
-                );
+
+            Dictionary<string, object> row = new Dictionary<string, object>(7);
+            row["id"] = his_id;
+            row["scheduler_id"] = I.id;
+            row["ran_time"] = Util.ToUnixTime(DateTime.UtcNow);
+            row["run_time"] = Util.ToUnixTime(I.TimeToRun);
+            row["is_complete"] = 0;
+            row["complete_time"] = 0;
+            row["reciept"] = "";
+            m_Gd.Insert("scheduler_history", row);
+
             I.HistoryLastID = his_id;
             return I;
         }
