@@ -178,7 +178,9 @@ namespace Aurora.Services.DataService
 
         public void ClearRegion(UUID regionID)
         {
-            GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete("searchparcel", filter);
         }
 
         #endregion
