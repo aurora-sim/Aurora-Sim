@@ -117,20 +117,17 @@ namespace Aurora.Services.DataService
             Profile.MembershipGroup = previousProfile.MembershipGroup;
             Profile.Created = previousProfile.Created;
 
-            List<object> SetValues = new List<object>();
-            List<string> SetRows = new List<string> {"Value"};
-            SetValues.Add(OSDParser.SerializeLLSDXmlString(Profile.ToOSD()));
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["Value"] = OSDParser.SerializeLLSDXmlString(Profile.ToOSD());
 
-            List<object> KeyValue = new List<object>();
-            List<string> KeyRow = new List<string> {"ID"};
-            KeyValue.Add(Profile.PrincipalID.ToString());
-            KeyRow.Add("`Key`");
-            KeyValue.Add("LLProfile");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ID"] = Profile.PrincipalID.ToString();
+            filter.andFilters["`Key`"] = "LLProfile";
 
             //Update cache
             UserProfilesCache[Profile.PrincipalID] = Profile;
 
-            return GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return GD.Update("userdata", values, null, filter, null, null);
         }
 
         /// <summary>
