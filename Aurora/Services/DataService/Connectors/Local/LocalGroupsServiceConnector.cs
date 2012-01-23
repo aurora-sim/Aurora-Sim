@@ -288,23 +288,14 @@ namespace Aurora.Services.DataService
                 // 1. If group is agent's active group, change active group to uuidZero
                 data.Update("osagent", values, null, filter, null, null);
 
+                filter.andFilters.Remove("ActiveGroupID");
+                filter.andFilters["GroupID"] = GroupID;
+
                 // 2. Remove Agent from group (osgroupmembership)
-                data.Delete("osgrouprolemembership", new[]{
-                    "AgentID",
-                    "GroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
+                data.Delete("osgrouprolemembership", filter);
 
                 // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
-                data.Delete("osgroupmembership", new[]{
-                    "AgentID",
-                    "GroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
+                data.Delete("osgroupmembership", filter);
 
                 return true;
             }
@@ -356,25 +347,17 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["SelectedRoleID"] = UUID.Zero;
 
-                QueryFilter filter = new QueryFilter();
-                filter.andFilters["GroupID"] = GroupID;
-                filter.andFilters["SelectedRoleID"] = RoleID;
+                QueryFilter ufilter = new QueryFilter();
+                ufilter.andFilters["GroupID"] = GroupID;
+                ufilter.andFilters["SelectedRoleID"] = RoleID;
 
-                data.Delete("osgrouprolemembership", new[]{
-                    "GroupID",
-                    "RoleID"
-                }, new object[]{
-                    GroupID,
-                    RoleID
-                });
-                data.Update("osgroupmembership", values, null, filter, null, null);
-                data.Delete("osrole", new[]{
-                    "GroupID",
-                    "RoleID"
-                }, new object[]{
-                    GroupID,
-                    RoleID
-                });
+                QueryFilter dfilter = new QueryFilter();
+                dfilter.andFilters["GroupID"] = GroupID;
+                dfilter.andFilters["RoleID"] = RoleID;
+
+                data.Delete("osgrouprolemembership", dfilter);
+                data.Update("osgroupmembership", values, null, ufilter, null, null);
+                data.Delete("osrole", dfilter);
             }
         }
 
@@ -423,15 +406,10 @@ namespace Aurora.Services.DataService
                 filter.andFilters["SelectedRoleID"] = RoleID;
 
                 data.Update("osgroupmembership", values, null, filter, null, null);
-                data.Delete("osgrouprolemembership", new[]{
-                    "AgentID",
-                    "GroupID",
-                    "RoleID"
-                }, new object[]{
-                    AgentID,
-                    GroupID,
-                    RoleID
-                });
+
+                filter.andFilters.Remove("SelectedRoleID");
+                filter.andFilters["RoleID"] = RoleID;
+                data.Delete("osgrouprolemembership", filter);
             }
         }
 
@@ -459,14 +437,11 @@ namespace Aurora.Services.DataService
         {
             if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.Invite))
             {
-                data.Delete("osgroupinvite", new[]{
-                    "AgentID",
-                    "GroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
-                    data.Insert("osgroupinvite", new[]{
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["GroupID"] = GroupID;
+                data.Delete("osgroupinvite", filter);
+                data.Insert("osgroupinvite", new[]{
                     "InviteID",
                     "GroupID",
                     "RoleID",
@@ -486,7 +461,9 @@ namespace Aurora.Services.DataService
 
         public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
         {
-            data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["InviteID"] = inviteID;
+            data.Delete("osgroupinvite", filter);
         }
 
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
