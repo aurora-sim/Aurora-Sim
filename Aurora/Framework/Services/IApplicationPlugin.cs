@@ -90,16 +90,12 @@ namespace Aurora.Framework
         #region UPDATE
 
         /// <summary>
-        ///   update 'table' set 'setRow' = 'setValue' WHERE 'keyRow' = 'keyValue'
-        /// </summary>
-        bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-
-        /// <summary>
         /// UPDATE table SET values[i].key = values[i].value {magic happens with queryFilter here} [LIMIT start[, count]]
         /// </summary>
         /// <param name="table">table to update</param>
         /// <param name="values">dictionary of table fields and new values</param>
-        /// <param name="filter">filter to control which rows get updated</param>
+        /// <param name="incrementValues">dictionary of table fields and integer to increment by (use negative ints to decrement)</param>
+        /// <param name="queryFilter">filter to control which rows get updated</param>
         /// <param name="start">LIMIT start or LIMIT start, count</param>
         /// <param name="count">LIMIT start, count</param>
         /// <returns></returns>

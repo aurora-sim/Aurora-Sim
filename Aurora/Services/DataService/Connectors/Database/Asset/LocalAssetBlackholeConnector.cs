@@ -252,9 +252,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public void updateAccessTime(string databaseTable, UUID assetID)
         {
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["access_time"] = Util.ToUnixTime(DateTime.UtcNow);
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["id"] = assetID;
+
             // save down last time updated
-            m_Gd.Update(databaseTable, new object[] { Util.ToUnixTime(DateTime.UtcNow) }, new[] { "access_time" },
-                        new[] { "id" }, new object[] { assetID });
+            m_Gd.Update(databaseTable, values, null, filter, null, null);
         }
 
         private AssetBase LoadAssetFromDR(IDataReader dr)
@@ -950,34 +955,43 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     update = true;
                                 }
                                 else
+                                {
                                     asset1.ParentID = asset1.ID;
+                                }
 
                                 if (StoreAsset(asset1))
+                                {
                                     m_Gd.Delete("assets", "id = '" + asset1.ID + "'");
+                                }
 
                                 try
                                 {
                                     if (insert)
-                                        m_Gd.Insert("auroraassets_temp",
-                                                    new[] { "id", "hash_code", "creator_id" },
-                                                    new object[]
-                                                                               {
-                                                                                   asset1.ID, asset1.HashCode,
-                                                                                   asset1.CreatorID
-                                                                               });
+                                    {
+                                        m_Gd.Insert("auroraassets_temp", new[] {
+                                            "id",
+                                            "hash_code",
+                                            "creator_id"
+                                        }, new object[]{
+                                            asset1.ID,
+                                            asset1.HashCode,
+                                            asset1.CreatorID
+                                        });
+                                    }
                                     else if ((update) && (m_pointInventory2ParentAssets))
                                     {
-                                        m_Gd.Update("inventoryitems",
-                                                    new object[] { asset1.ParentID },
-                                                    new[] { "assetID" },
-                                                    new[] { "assetID" }, new object[] { asset1.ID });
+                                        Dictionary<string, object> values = new Dictionary<string, object>(1);
+                                        values["assetID"] = asset1.ParentID;
+
+                                        filter = new QueryFilter();
+                                        filter.andFilters["assetID"] = asset1.ID;
+
+                                        m_Gd.Update("inventoryitems", values, null, filter, null, null);
                                     }
                                 }
                                 catch (Exception e)
                                 {
-                                    MainConsole.Instance.Error(
-                                        "[LocalAssetBlackholeManualMigration] Error on update/insert",
-                                        e);
+                                    MainConsole.Instance.Error("[LocalAssetBlackholeManualMigration] Error on update/insert", e);
                                 }
                                 convertCount++;
                                 m_convertingAssets.Remove(uuid);
@@ -1083,38 +1097,35 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
                                         new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
                             // I admit this might be a bit over kill.. 
-                            m_Gd.Update("auroraassets_a", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_b", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_c", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_d", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_e", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_f", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_0", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_1", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_2", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_3", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_4", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_5", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_6", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_7", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_8", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
-                            m_Gd.Update("auroraassets_9", new object[] { uuid2 }, new[] { "parent_id" },
-                                        new[] { "parent_id" }, new object[] { uuid1 });
+
+                            Dictionary<string, object> values = new Dictionary<string, object>(1);
+                            values["parent_id"] = uuid2;
+
+                            QueryFilter filter = new QueryFilter();
+                            filter.andFilters["parent_id"] = uuid1;
+
+                            string[] tables = new string[16]{
+                                "auroraassets_a",
+                                "auroraassets_b",
+                                "auroraassets_c",
+                                "auroraassets_d",
+                                "auroraassets_e",
+                                "auroraassets_f",
+                                "auroraassets_0",
+                                "auroraassets_1",
+                                "auroraassets_2",
+                                "auroraassets_3",
+                                "auroraassets_4",
+                                "auroraassets_5",
+                                "auroraassets_6",
+                                "auroraassets_7",
+                                "auroraassets_8",
+                                "auroraassets_9"
+                            };
+                            foreach (string table in tables)
+                            {
+                                m_Gd.Update(table, values, null, filter, null, null);
+                            }
                         }
                     }
                 }
