@@ -136,14 +136,14 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(regionID, estateID);
             if (remoteValue != null)
+            {
                 return (bool)remoteValue;
+            }
 
-            GD.Replace(m_estateRegionsTable, new[] { "RegionID", "EstateID" },
-                       new object[]
-                           {
-                               regionID,
-                               estateID
-                           });
+            Dictionary<string, object> row = new Dictionary<string, object>(2);
+            row["RegionID"] = regionID;
+            row["EstateID"] = estateID;
+            GD.Replace(m_estateRegionsTable, row);
 
             return true;
         }

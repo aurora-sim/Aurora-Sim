@@ -460,47 +460,6 @@ namespace Aurora.DataManager.MySQL
             return InsertOrReplace(table, row, false);
         }
 
-        public override bool Replace(string table, string[] keys, object[] values)
-        {
-            string query = String.Format("replace into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            int i = 0;
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-
-                param.Add("?" + kkey, values[i].ToString());
-                query += "`" + kkey + "`" + ",";
-                i++;
-            }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-                query += String.Format("?{0},", kkey);
-            }
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Replace(" + query + "), " + e);
-                return false;
-            }
-            return true;
-        }
-
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             string query = String.Format("insert into {0} VALUES('", table);

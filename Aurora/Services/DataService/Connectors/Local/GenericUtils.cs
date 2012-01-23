@@ -170,17 +170,12 @@ namespace Aurora.Services.DataService
         /// <param name = "GD"></param>
         public static void AddGeneric(UUID OwnerID, string Type, string Key, OSDMap Value, IGenericData GD)
         {
-            GD.Replace("generics", new[] {
-                "OwnerID",
-                "Type",
-                "`Key`",
-                "`Value`"
-            }, new object[] {
-                OwnerID, 
-                Type, 
-                Key,
-                OSDParser.SerializeJsonString(Value)
-            });
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["OwnerID"] = OwnerID;
+            row["Type"] = Type;
+            row["`Key`"] = Key;
+            row["`Value`"] = OSDParser.SerializeJsonString(Value);
+            GD.Replace("generics", row);
         }
 
         /// <summary>

@@ -182,15 +182,6 @@ namespace Aurora.Framework
         /// <returns></returns>
         bool Replace(string table, Dictionary<string, object> row);
 
-        /// <summary>
-        ///   Replace into 'table' ('keys') values ('values')
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool Replace(string table, string[] keys, object[] values);
-
         #endregion
 
         #region DELETE

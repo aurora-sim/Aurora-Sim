@@ -560,50 +560,6 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Replace(string table, string[] keys, object[] values)
-        {
-            var cmd = new SQLiteCommand();
-
-            string query = "";
-            query = String.Format("replace into {0} (", table);
-
-            int i = 0;
-            foreach (string key in keys)
-            {
-                string k = key;
-                if (k.StartsWith("`"))
-                {
-                    k = k.Remove(0, 1);
-                    k = k.Remove(k.Length - 1, 1);
-                }
-                cmd.Parameters.AddWithValue(":" + k, values[i]);
-                query += key + ",";
-                i++;
-            }
-
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-            foreach (string key in keys)
-            {
-                string k = key;
-                if (k.StartsWith("`"))
-                {
-                    k = k.Remove(0, 1);
-                    k = k.Remove(k.Length - 1, 1);
-                }
-                query += String.Format(":{0},", k);
-            }
-
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
-            CloseReaderCommand(cmd);
-            return true;
-        }
-
         #endregion
 
         #region Delete

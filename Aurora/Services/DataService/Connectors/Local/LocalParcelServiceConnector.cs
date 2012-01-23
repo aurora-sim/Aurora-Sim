@@ -170,20 +170,16 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ParcelID"] = data.GlobalID;
             GD.Delete("parcelaccess", filter);
+            Dictionary<string, object> row;
             foreach (ParcelManager.ParcelAccessEntry entry in data.ParcelAccessList)
             {
+                row = new Dictionary<string, object>(4);
+                row["ParcelID"] = data.GlobalID;
+                row["AccessID"] = entry.AgentID;
+                row["Flags"] = entry.Flags;
+                row["Time"] = entry.Time.Ticks;
                 //Replace all the old ones
-                GD.Replace("parcelaccess", new[]{
-                    "ParcelID",
-                    "AccessID",
-                    "Flags",
-                    "Time"
-                }, new object[]{
-                    data.GlobalID,
-                    entry.AgentID,
-                    entry.Flags,
-                    entry.Time.Ticks
-                });
+                GD.Replace("parcelaccess", row);
             }
         }
 

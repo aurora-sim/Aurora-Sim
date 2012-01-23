@@ -77,15 +77,12 @@ namespace Aurora.Services.DataService
                     region
                 });
             }
-            List<object> Values = new List<object>
-                                      {
-                                          region.RegionID,
-                                          region.RegionName.MySqlEscape(50),
-                                          OSDParser.SerializeJsonString(region.PackRegionInfoData(true)),
-                                          region.Disabled ? 1 : 0
-                                      };
-            GD.Replace("simulator", new[]{"RegionID","RegionName",
-                "RegionInfo","Disabled"}, Values.ToArray());
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["RegionID"] = region.RegionID;
+            row["RegionName"] = region.RegionName.MySqlEscape(50);
+            row["RegionInfo"] = OSDParser.SerializeJsonString(region.PackRegionInfoData(true));
+            row["DisableD"] = region.Disabled ? 1 : 0;
+            GD.Replace("simulator", row);
         }
 
         public void Delete(RegionInfo region)
