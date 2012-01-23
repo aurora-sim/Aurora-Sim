@@ -1097,7 +1097,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         AssetBase actemp = GetAsset(uuid2);
                         if ((abtemp == null) && (actemp != null))
                         {
-                            m_Gd.Delete("auroraassets_temp", new[] { "id" }, new object[] { uuid1 });
+                            QueryFilter dfilter = new QueryFilter();
+                            dfilter.andFilters["id"] = uuid1;
+                            m_Gd.Delete("auroraassets_temp", dfilter);
                             m_Gd.Insert("auroraassets_temp", new[] { "id", "hash_code", "creator_id" },
                                         new object[] { actemp.ID, actemp.HashCode, actemp.CreatorID });
                             // I admit this might be a bit over kill.. 
@@ -1139,7 +1141,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 }
                 finally
                 {
-                    m_Gd.Delete("auroraassets_tasks", new[] { "id" }, new object[] { task_id });
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["id"] = task_id;
+                    m_Gd.Delete("auroraassets_tasks", filter);
                     ResetTimer(500);
                 }
             }
@@ -1187,7 +1191,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             }
                             if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count > 0)
                             {
-                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], new[] { "id" }, new object[] { ass });
+                                m_Gd.Delete("auroraassets_" + ass.ToCharArray()[0], filter);
                             }
                         }
                         ResetTimer(100);
