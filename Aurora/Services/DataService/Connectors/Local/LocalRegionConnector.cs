@@ -71,30 +71,22 @@ namespace Aurora.Services.DataService
             //Look for a telehub first.
             if (FindTelehub(new UUID(telehub.RegionID), 0) != null)
             {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["TelehubLocX"] = telehub.TelehubLocX;
+                values["TelehubLocY"] = telehub.TelehubLocY;
+                values["TelehubLocZ"] = telehub.TelehubLocZ;
+                values["TelehubRotX"] = telehub.TelehubRotX;
+                values["TelehubRotY"] = telehub.TelehubRotY;
+                values["TelehubRotZ"] = telehub.TelehubRotZ;
+                values["Spawns"] = telehub.BuildFromList(telehub.SpawnPos);
+                values["ObjectUUID"] = telehub.ObjectUUID;
+                values["Name"] = telehub.Name.MySqlEscape(50);
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["RegionID"] = telehub.RegionID;
+
                 //Found one, time to update it.
-                GD.Update("telehubs", new object[]
-                                          {
-                                              telehub.TelehubLocX,
-                                              telehub.TelehubLocY,
-                                              telehub.TelehubLocZ,
-                                              telehub.TelehubRotX,
-                                              telehub.TelehubRotY,
-                                              telehub.TelehubRotZ,
-                                              telehub.BuildFromList(telehub.SpawnPos),
-                                              telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape(50)
-                                          }, new[]
-                                                 {
-                                                     "TelehubLocX",
-                                                     "TelehubLocY",
-                                                     "TelehubLocZ",
-                                                     "TelehubRotX",
-                                                     "TelehubRotY",
-                                                     "TelehubRotZ",
-                                                     "Spawns",
-                                                     "ObjectUUID",
-                                                     "Name"
-                                                 }, new[] {"RegionID"}, new object[] {telehub.RegionID});
+                GD.Update("telehubs", values, null, filter, null, null);
             }
             else
             {
