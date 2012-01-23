@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Reflection;
+using System.Collections.Generic;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -121,7 +122,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 try
                 {
-                    m_Gd.Update("assets", new object[] { asset }, new[] { "data" }, new[] { "id" }, new object[] { id });
+                    Dictionary<string, object> values = new Dictionary<string, object>(1);
+                    values["data"] = asset;
+
+                    QueryFilter filter = new QueryFilter();
+                    filter.andFilters["id"] = id;
+
+                    m_Gd.Update("assets", values, null, filter, null, null);
                 }
                 catch (Exception e)
                 {
