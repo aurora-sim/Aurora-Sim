@@ -87,13 +87,10 @@ namespace Aurora.Services.DataService
 
         public bool Store(AuthData data)
         {
-            GD.Delete(m_realm, new string[2] {
-                "UUID",
-                "accountType"
-            }, new object[2] {
-                data.PrincipalID,
-                data.AccountType
-            });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = data.PrincipalID;
+            filter.andFilters["accountType"] = data.AccountType;
+            GD.Delete(m_realm, filter);
             return GD.Insert(m_realm, new[]{
                 "UUID",
                 "passwordHash",
@@ -121,16 +118,27 @@ namespace Aurora.Services.DataService
 
         public bool Delete(UUID principalID, string authType)
         {
-            return GD.Delete(m_realm, new string[2] {"UUID", "accountType"}, new object[2] {principalID, authType});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UUID"] = principalID;
+            filter.andFilters["accountType"] = authType;
+            return GD.Delete(m_realm, filter);
         }
 
         public bool SetToken(UUID principalID, string token, int lifetime)
         {
             if (Environment.TickCount - m_LastExpire > 30000)
+            {
                 DoExpire();
-            return GD.DirectReplace(m_tokensrealm, new[] {"UUID", "token", "validity"},
-                                    new object[3]
-                                        {"'" + principalID + "'", "'" + token + "'", GD.FormatDateTimeString(lifetime)});
+            }
+            return GD.DirectReplace(m_tokensrealm, new[] {
+                "UUID",
+                "token",
+                "validity"
+            }, new object[3] {
+                "'" + principalID + "'",
+                "'" + token + "'",
+                GD.FormatDateTimeString(lifetime)
+            });
         }
 
         public bool CheckToken(UUID principalID, string token, int lifetime)
