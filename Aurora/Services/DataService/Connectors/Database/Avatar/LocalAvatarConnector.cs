@@ -72,16 +72,17 @@ namespace Aurora.Services.DataService
 
         public bool Store(UUID PrincipalID, AvatarData data)
         {
-            GD.Delete(m_realm, new string[1] {"PrincipalID"}, new object[1] {PrincipalID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = PrincipalID;
+            GD.Delete(m_realm, filter);
             List<object[]> insertList = new List<object[]>();
             foreach(KeyValuePair<string, string> kvp in data.Data)
             {
-                insertList.Add(new object[3]
-                    {
-                        PrincipalID,
-                        kvp.Key.MySqlEscape(32),
-                        kvp.Key == "Textures" ? kvp.Value : kvp.Value.MySqlEscape()
-                    });
+                insertList.Add(new object[3]{
+                    PrincipalID,
+                    kvp.Key.MySqlEscape(32),
+                    kvp.Key == "Textures" ? kvp.Value : kvp.Value.MySqlEscape()
+                });
             }
             GD.InsertMultiple(m_realm, insertList);
             return true;
@@ -89,7 +90,9 @@ namespace Aurora.Services.DataService
 
         public bool Delete(string field, string val)
         {
-            return GD.Delete(m_realm, new string[1] {field}, new object[1] {val});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
+            return GD.Delete(m_realm, filter);
         }
 
         #endregion
