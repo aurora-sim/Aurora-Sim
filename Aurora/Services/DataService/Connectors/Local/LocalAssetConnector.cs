@@ -70,7 +70,13 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                GD.Update("lslgenericdata", new object[] {value.MySqlEscape(50)}, new[] {"ValueSetting"}, new[] {"KeySetting"}, new object[] {key.MySqlEscape(50)});
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["ValueSetting"] = value.MySqlEscape(50);
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["KeySetting"] = key.MySqlEscape(50);
+
+                GD.Update("lslgenericdata", values, null, filter, null, null);
             }
         }
 
