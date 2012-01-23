@@ -137,31 +137,26 @@ namespace OpenSim.Services
                              LastLogout = DateTime.Now.ToUniversalTime(),
                          });
             }
-            if (m_lockedUsers.Contains(userID))
+            if (m_lockedUsers.Contains(userID)){
                 return; //User is locked, leave them alone
+            }
+
+            Dictionary<string, object> agentUpdateValues = new Dictionary<string, object>();
+            agentUpdateValues["IsOnline"] = loggingIn ? 1 : 0;
             if (loggingIn)
-                if (enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogin", "LastSeen"},
-                                                new object[]
-                                                    {
-                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                        Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                    });
-                else
-                    m_agentInfoConnector.Update(userID,
-                                                new[] {"IsOnline", "LastLogin", "CurrentRegionID", "LastSeen"},
-                                                new object[]
-                                                    {
-                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                        enteringRegion, Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                    });
+            {
+                agentUpdateValues["LastLogin"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+                if (enteringRegion != UUID.Zero)
+                {
+                    agentUpdateValues["CurrentRegionID"] = enteringRegion;
+                }
+            }
             else
-                m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogout", "LastSeen"},
-                                            new object[]
-                                                {
-                                                    loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                    Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                });
+            {
+                agentUpdateValues["LastLogout"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+            }
+            agentUpdateValues["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+            m_agentInfoConnector.Update(userID, agentUpdateValues);
 
             if (fireLoggedInEvent)
             {
