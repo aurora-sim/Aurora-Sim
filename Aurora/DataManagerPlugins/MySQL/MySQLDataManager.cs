@@ -543,7 +543,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues, QueryFilter queryFilter, uint? start, uint? count)
         {
-            if (values.Count < 1 && incrementValues.Count < 1)
+            if ((values == null || values.Count < 1) && (incrementValues == null || incrementValues.Count < 1))
             {
                 MainConsole.Instance.Warn("Update attempted with no values");
                 return false;
@@ -560,17 +560,23 @@ namespace Aurora.DataManager.MySQL
             }
 
             List<string> parts = new List<string>();
-            foreach (KeyValuePair<string, object> value in values)
+            if (values != null)
             {
-                string key = "?updateSet_" + value.Key.Replace("`", "");
-                ps[key] = value.Value;
-                parts.Add(string.Format("{0} = {1}", value.Key, key));
+                foreach (KeyValuePair<string, object> value in values)
+                {
+                    string key = "?updateSet_" + value.Key.Replace("`", "");
+                    ps[key] = value.Value;
+                    parts.Add(string.Format("{0} = {1}", value.Key, key));
+                }
             }
-            foreach (KeyValuePair<string, int> value in incrementValues)
+            if (incrementValues != null)
             {
-                string key = "?updateSet_increment_" + value.Key.Replace("`", "");
-                ps[key] = value.Value;
-                parts.Add(string.Format("{0} = {0} + {1}", value.Key, key));
+                foreach (KeyValuePair<string, int> value in incrementValues)
+                {
+                    string key = "?updateSet_increment_" + value.Key.Replace("`", "");
+                    ps[key] = value.Value;
+                    parts.Add(string.Format("{0} = {0} + {1}", value.Key, key));
+                }
             }
 
             query += " SET " + string.Join(", ", parts.ToArray()) + filter;
