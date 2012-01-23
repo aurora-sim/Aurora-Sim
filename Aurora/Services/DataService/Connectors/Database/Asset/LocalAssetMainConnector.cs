@@ -146,19 +146,20 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private void InsertAsset(AssetBase asset, UUID assetID)
         {
             int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
-            m_Gd.Insert("assets",
-                        new[]
-                                    {
-                                        "id", "name", "description", "assetType", "local", "temporary", "create_time",
-                                        "access_time", "asset_flags", "creatorID", "data"
-                                    },
-                        new object[]
-                                    {
-                                        assetID, asset.Name.MySqlEscape(64), asset.Description.MySqlEscape(64),
-                                        (sbyte) asset.TypeAsset, (asset.Flags & AssetFlags.Local) == AssetFlags.Local,
-                                        (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary, now, now,
-                                        (int) asset.Flags, asset.CreatorID, asset.Data
-                                    });
+            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            row["id"] = assetID;
+            row["name"] = asset.Name.MySqlEscape(64);
+            row["description"] = asset.Description.MySqlEscape(64);
+            row["assetType"] = (sbyte)asset.TypeAsset;
+            row["local"] = (asset.Flags & AssetFlags.Local) == AssetFlags.Local;
+            row["temporary"] = (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary;
+            row["create_time"] = now;
+            row["access_time"] = now;
+            row["asset_flags"] = (int)asset.Flags;
+            row["creatorID"] = asset.CreatorID;
+            row["data"] = asset.Data;
+
+            m_Gd.Insert("assets", row);
         }
 
         public bool ExistsAsset(UUID uuid)
