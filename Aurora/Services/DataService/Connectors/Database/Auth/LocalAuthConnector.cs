@@ -91,17 +91,12 @@ namespace Aurora.Services.DataService
             filter.andFilters["UUID"] = data.PrincipalID;
             filter.andFilters["accountType"] = data.AccountType;
             GD.Delete(m_realm, filter);
-            return GD.Insert(m_realm, new[]{
-                "UUID",
-                "passwordHash",
-                "passwordSalt",
-                "accountType"
-            }, new object[]{
-                data.PrincipalID,
-                data.PasswordHash.MySqlEscape(1024),
-                data.PasswordSalt.MySqlEscape(1024),
-                data.AccountType.MySqlEscape(32)
-            });
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["UUID"] = data.PrincipalID;
+            row["passwordHash"] = data.PasswordHash.MySqlEscape(1024);
+            row["passwordSalt"] = data.PasswordSalt.MySqlEscape(1024);
+            row["accountType"] = data.AccountType.MySqlEscape(32);
+            return GD.Insert(m_realm, row);
         }
 
         // I don't think this is used anywhere (don't know who wrote this comment ~ SignpostMarv)
