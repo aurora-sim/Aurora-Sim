@@ -115,9 +115,12 @@ namespace Aurora.Services.DataService
         public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
             //Look for a telehub first.
+            // Why? ~ SignpostMarv
             if (FindTelehub(regionID, 0) != null)
             {
-                GD.Delete("telehubs", new[] {"RegionID"}, new object[] {regionID});
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["RegionID"] = regionID;
+                GD.Delete("telehubs", filter);
             }
         }
 
