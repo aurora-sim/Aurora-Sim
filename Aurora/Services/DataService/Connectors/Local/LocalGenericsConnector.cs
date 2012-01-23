@@ -123,7 +123,7 @@ namespace Aurora.Services.DataService
         /// <param name = "Key"></param>
         public void RemoveGeneric(UUID AgentID, string Type, string Key)
         {
-            GenericUtils.RemoveGeneric(AgentID, Type, Key, GD);
+            GenericUtils.RemoveGenericByKeyAndType(AgentID, Type, Key, GD);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
         /// <param name = "Type"></param>
         public void RemoveGeneric(UUID AgentID, string Type)
         {
-            GenericUtils.RemoveGeneric(AgentID, Type, GD);
+            GenericUtils.RemoveGenericByType(AgentID, Type, GD);
         }
 
         public List<UUID> GetOwnersByGeneric(string Type, string Key)

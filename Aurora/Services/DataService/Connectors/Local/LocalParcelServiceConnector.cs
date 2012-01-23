@@ -120,7 +120,7 @@ namespace Aurora.Services.DataService
         public void RemoveLandObject(UUID RegionID, UUID ParcelID)
         {
             //Remove both the generic and the parcel access list
-            GenericUtils.RemoveGeneric(RegionID, "LandData", ParcelID.ToString(), GD);
+            GenericUtils.RemoveGenericByKeyAndType(RegionID, "LandData", ParcelID.ToString(), GD);
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ParcelID"] = ParcelID;
             GD.Delete("parcelaccess", filter);
@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
         /// <param name = "ParcelID"></param>
         public void RemoveAllLandObjects(UUID RegionID)
         {
-            GenericUtils.RemoveGeneric(RegionID, "LandData", GD);
+            GenericUtils.RemoveGenericByType(RegionID, "LandData", GD);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService
         {
             List<LandData> parcels = LoadLandObjects(RegionID);
             //Remove both the generic and the parcel access list
-            GenericUtils.RemoveGeneric(RegionID, "LandData", GD);
+            GenericUtils.RemoveGenericByType(RegionID, "LandData", GD);
             QueryFilter filter = new QueryFilter();
             foreach (LandData data in parcels)
             {

@@ -88,7 +88,7 @@ namespace Aurora.Services.DataService
         /// <param name = "AgentID"></param>
         public void DeleteMute(UUID muteID, UUID AgentID)
         {
-            GenericUtils.RemoveGeneric(AgentID, "MuteList", muteID.ToString(), GD);
+            GenericUtils.RemoveGenericByKeyAndType(AgentID, "MuteList", muteID.ToString(), GD);
         }
 
         /// <summary>
