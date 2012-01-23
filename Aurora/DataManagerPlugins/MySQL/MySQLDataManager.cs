@@ -428,41 +428,6 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
-        public override bool Insert(string table, string[] keys, object[] values)
-        {
-            string query = String.Format("insert into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            int i = 0;
-            foreach (string key in keys)
-            {
-                param.Add("?" + key, values[i]);
-                query += String.Format("{0},", key);
-                i++;
-            }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-#if (!ISWIN)
-            foreach (string key in keys)
-                query = query + String.Format("?{0},", key);
-#else
-            query = keys.Aggregate(query, (current, key) => current + String.Format("?{0},", key));
-#endif
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
-            }
-            return true;
-        }
-
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             string query = "INSERT INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";

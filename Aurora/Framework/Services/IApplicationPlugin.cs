@@ -144,15 +144,6 @@ namespace Aurora.Framework
         bool Insert(string table, object[] values);
 
         /// <summary>
-        ///   insert into 'table' where 'keys' = 'values'
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool Insert(string table, string[] keys, object[] values);
-
-        /// <summary>
         /// INSERT INTO table (row.Keys) VALUES(row.Values)
         /// </summary>
         /// <param name="table"></param>

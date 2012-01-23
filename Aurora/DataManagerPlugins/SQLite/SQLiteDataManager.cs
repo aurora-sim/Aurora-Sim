@@ -491,41 +491,6 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Insert(string table, string[] keys, object[] values)
-        {
-            SQLiteCommand cmd = new SQLiteCommand();
-
-            string query = "";
-            query = String.Format("insert into {0} (", table);
-
-            int i = 0;
-            foreach (object key in keys)
-            {
-                cmd.Parameters.AddWithValue(":" + key.ToString().Replace("`", ""), values[i]);
-                query += key + ",";
-                i++;
-            }
-
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-#if (!ISWIN)
-            foreach (object o in keys)
-                query = query + String.Format(":{0},", o.ToString().Replace("`", ""));
-#else
-            query = keys.Cast<object>().Aggregate(query, (current, key) => current + String.Format(":{0},", key.ToString().Replace("`", "")));
-#endif
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            cmd.CommandText = query;
-            ExecuteNonQuery(cmd);
-            CloseReaderCommand(cmd);
-            values = null;
-            keys = null;
-            return true;
-        }
-
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             SQLiteCommand cmd = new SQLiteCommand();
