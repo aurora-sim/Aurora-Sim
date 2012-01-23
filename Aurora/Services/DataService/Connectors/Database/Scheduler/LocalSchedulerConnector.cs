@@ -86,7 +86,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         {
             if (SchedulerExist(I.id))
             {
-                m_Gd.Update("scheduler", GetDBValues(I), theFields, new[] { "id" }, new object[] { I.id });
+                object[] dbv = GetDBValues(I);
+                Dictionary<string, object> values = new Dictionary<string, object>(dbv.Length);
+                int i = 0;
+                foreach (object value in dbv)
+                {
+                    values[theFields[i++]] = value;
+                }
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["id"] = I.id;
+
+                m_Gd.Update("scheduler", values, null, filter, null, null);
             }
             else
             {
@@ -157,17 +168,30 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
 
         public SchedulerItem SaveHistoryComplete(SchedulerItem I)
         {
-            m_Gd.Update("scheduler_history", new object[] { 1, Util.ToUnixTime(I.TimeToRun), "" },
-                        new[] { "is_complete", "complete_time", "reciept" }, new[] { "id" },
-                        new object[] { I.HistoryLastID });
+            Dictionary<string, object> values = new Dictionary<string, object>(3);
+            values["is_complete"] = 1;
+            values["complete_time"] = Util.ToUnixTime(I.TimeToRun);
+            values["receipt"] = "";
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["id"] = I.HistoryLastID;
+
+            m_Gd.Update("scheduler_history", values, null, filter, null, null);
+
             return I;
         }
 
         public void SaveHistoryCompleteReciept(string historyID, string reciept)
         {
-            m_Gd.Update("Scheduler_history", new object[] { 1, Util.ToUnixTime(DateTime.UtcNow), reciept },
-                        new[] { "is_complete", "complete_time", "reciept" }, new[] { "id" },
-                        new object[] { historyID });
+            Dictionary<string, object> values = new Dictionary<string, object>(3);
+            values["is_complete"] = 1;
+            values["complete_time"] = Util.ToUnixTime(DateTime.UtcNow);
+            values["receipt"] = reciept;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["id"] = historyID;
+
+            m_Gd.Update("scheduler_history", values, null, filter, null, null);
         }
 
         public void HistoryDeleteOld(SchedulerItem I)
