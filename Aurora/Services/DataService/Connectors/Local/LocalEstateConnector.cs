@@ -298,26 +298,23 @@ namespace Aurora.Services.DataService
 
         protected void SaveEstateSettings(EstateSettings es, bool doInsert)
         {
-            string[] keys = new string[5]
-            {
-                "EstateID",
-                "EstateName",
-                "EstateOwner",
-                "ParentEstateID",
-                "Settings"
-            };
-            object[] values = new object[5]
-            {
-                es.EstateID,
-                es.EstateName,
-                es.EstateOwner,
-                es.ParentEstateID,
-                OSDParser.SerializeJsonString(es.ToOSD())
-            };
+            Dictionary<string, object> values = new Dictionary<string, object>(5);
+            values["EstateID"] = es.EstateID;
+            values["EstateName"] = es.EstateName;
+            values["EstateOwner"] = es.EstateOwner;
+            values["ParentEstateID"] = es.ParentEstateID;
+            values["Settings"] = OSDParser.SerializeJsonString(es.ToOSD());
+
             if (!doInsert)
-                GD.Update(m_estateTable, values, keys, new string[1] { "EstateID" }, new object[1] { es.EstateID });
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["EstateID"] = es.EstateID;
+                GD.Update(m_estateTable, values, null, filter, null, null);
+            }
             else
-                GD.Insert(m_estateTable, keys, values);
+            {
+                GD.Insert(m_estateTable, values.Keys.ToArray<string>(), values.Values.ToArray<object>());
+            }
         }
 
         #endregion
