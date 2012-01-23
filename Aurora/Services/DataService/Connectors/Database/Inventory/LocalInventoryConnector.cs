@@ -450,8 +450,13 @@ namespace Aurora.Services.DataService
 
         public virtual bool MoveItem(string id, string newParent)
         {
-            return GD.Update(m_itemsrealm, new object[1] {newParent}, new string[1] {"parentFolderID"},
-                             new string[1] {"inventoryID"}, new object[1] {id});
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["parentFolderID"] = newParent;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = id;
+
+            return GD.Update(m_itemsrealm, values, null, filter, null, null);
         }
 
         public virtual void IncrementFolder(UUID folderID)
