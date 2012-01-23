@@ -869,7 +869,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                             asset.Flags |= AssetFlags.Local;
                         if (bool.Parse(dr["temporary"].ToString()))
-                            asset.Flags |= AssetFlags.Temperary;
+                            asset.Flags |= AssetFlags.Temporary;
                         dr.Close();
                         dr = null;
                         m_convertingAssets[uuid] = asset;

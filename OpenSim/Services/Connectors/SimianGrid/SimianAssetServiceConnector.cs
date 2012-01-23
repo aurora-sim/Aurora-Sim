@@ -309,8 +309,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
                                                                                              asset.CreatorID.ToString()),
                                                                  new MultipartForm.Parameter("Temporary",
                                                                                              ((asset.Flags &
-                                                                                               AssetFlags.Temperary) ==
-                                                                                              AssetFlags.Temperary)
+                                                                                               AssetFlags.Temporary) ==
+                                                                                              AssetFlags.Temporary)
                                                                                                  ? "1"
                                                                                                  : "0"),
                                                                  new MultipartForm.Parameter("Public",

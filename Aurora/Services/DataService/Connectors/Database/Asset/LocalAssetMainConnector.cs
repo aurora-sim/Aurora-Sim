@@ -152,7 +152,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             row["description"] = asset.Description.MySqlEscape(64);
             row["assetType"] = (sbyte)asset.TypeAsset;
             row["local"] = (asset.Flags & AssetFlags.Local) == AssetFlags.Local;
-            row["temporary"] = (asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary;
+            row["temporary"] = (asset.Flags & AssetFlags.Temporary) == AssetFlags.Temporary;
             row["create_time"] = now;
             row["access_time"] = now;
             row["asset_flags"] = (int)asset.Flags;
@@ -304,12 +304,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 if (bool.TryParse(temp, out tempbool))
                 {
                     if (tempbool)
-                        asset.Flags |= AssetFlags.Temperary;
+                        asset.Flags |= AssetFlags.Temporary;
                 }
                 else if (int.TryParse(temp, out tempint))
                 {
                     if (tempint == 1)
-                        asset.Flags |= AssetFlags.Temperary;
+                        asset.Flags |= AssetFlags.Temporary;
                 }
             }
             return asset;

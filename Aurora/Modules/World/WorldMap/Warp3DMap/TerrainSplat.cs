@@ -159,7 +159,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                                              Data = data,
                                                              Description = "PNG",
                                                              Flags =
-                                                                 AssetFlags.Collectable | AssetFlags.Temperary |
+                                                                 AssetFlags.Collectable | AssetFlags.Temporary |
                                                                  AssetFlags.Local,
                                                              ID = cacheID,
                                                              Name = String.Empty,
