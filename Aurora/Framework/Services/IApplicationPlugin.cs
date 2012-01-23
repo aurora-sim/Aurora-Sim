@@ -175,6 +175,14 @@ namespace Aurora.Framework
         #region REPLACE INTO
 
         /// <summary>
+        /// REPLACE INTO table (row.Keys) VALUES(row.Values)
+        /// </summary>
+        /// <param name="table">table name</param>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        bool Replace(string table, Dictionary<string, object> row);
+
+        /// <summary>
         ///   Replace into 'table' ('keys') values ('values')
         /// </summary>
         /// <param name = "table"></param>
@@ -182,15 +190,6 @@ namespace Aurora.Framework
         /// <param name = "values"></param>
         /// <returns></returns>
         bool Replace(string table, string[] keys, object[] values);
-
-        /// <summary>
-        ///   Same as replace, but without any '' around the values
-        /// </summary>
-        /// <param name = "table"></param>
-        /// <param name = "keys"></param>
-        /// <param name = "values"></param>
-        /// <returns></returns>
-        bool DirectReplace(string table, string[] keys, object[] values);
 
         #endregion
 

@@ -313,8 +313,8 @@ namespace Aurora.DataManager
 
         #region REPLACE INTO
 
+        public abstract bool Replace(string table, Dictionary<string, object> row);
         public abstract bool Replace(string table, string[] keys, object[] values);
-        public abstract bool DirectReplace(string table, string[] keys, object[] values);
 
         #endregion
 

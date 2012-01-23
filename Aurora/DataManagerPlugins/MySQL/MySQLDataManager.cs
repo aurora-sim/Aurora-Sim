@@ -428,13 +428,13 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
-        public override bool Insert(string table, Dictionary<string, object> row)
+        private bool InsertOrReplace(string table, Dictionary<string, object> row, bool insert)
         {
-            string query = "INSERT INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
+            string query = (insert ? "INSERT" : "REPLACE") + " INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
             Dictionary<string, object> ps = new Dictionary<string, object>();
             foreach (KeyValuePair<string, object> field in row)
             {
-                string key = "?" + field.Key.Replace("`","");
+                string key = "?" + field.Key.Replace("`", "");
                 ps[key] = field.Value;
             }
             query += " VALUES( " + string.Join(", ", ps.Keys.ToArray<string>()) + " )";
@@ -445,9 +445,19 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
+                MainConsole.Instance.Error("[MySQLDataLoader] " + (insert ? "Insert" : "Replace") + "(" + query + "), " + e);
             }
             return true;
+        }
+
+        public override bool Insert(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, true);
+        }
+
+        public override bool Replace(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, false);
         }
 
         public override bool Replace(string table, string[] keys, object[] values)
@@ -486,43 +496,6 @@ namespace Aurora.DataManager.MySQL
             catch (Exception e)
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] Replace(" + query + "), " + e);
-                return false;
-            }
-            return true;
-        }
-
-        public override bool DirectReplace(string table, string[] keys, object[] values)
-        {
-            string query = String.Format("replace into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-
-                query += "`" + kkey + "`" + ",";
-            }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-#if (!ISWIN)
-            foreach (object value in values)
-                query = query + String.Format("{0},", value.ToString());
-#else
-            query = values.Aggregate(query, (current, key) => current + String.Format("{0},", key.ToString()));
-#endif
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] DirectReplace(" + query + "), " + e);
                 return false;
             }
             return true;

@@ -491,14 +491,14 @@ namespace Aurora.DataManager.SQLite
             return true;
         }
 
-        public override bool Insert(string table, Dictionary<string, object> row)
+        private bool InsertOrReplace(string table, Dictionary<string, object> row, bool insert)
         {
             SQLiteCommand cmd = new SQLiteCommand();
-            string query = "INSERT INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
+            string query = (insert ? "INSERT" : "REPLACE") + " INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
             List<string> ps = new List<string>();
             foreach (KeyValuePair<string, object> field in row)
             {
-                string key = "?" + field.Key.Replace("`", "");
+                string key = ":" + field.Key.Replace("`", "");
                 ps.Add(key);
                 cmd.Parameters.AddWithValue(key, field.Value);
             }
@@ -510,10 +510,20 @@ namespace Aurora.DataManager.SQLite
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[SQLiteLoader] Insert(" + query + "), " + e);
+                MainConsole.Instance.Error("[SQLiteLoader] " + (insert ? "Insert" : "Replace") + "(" + query + "), " + e);
             }
             CloseReaderCommand(cmd);
             return true;
+        }
+        
+        public override bool Insert(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, true);
+        }
+
+        public override bool Replace(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, false);
         }
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
@@ -548,11 +558,6 @@ namespace Aurora.DataManager.SQLite
                 CloseReaderCommand(cmd);
             }
             return true;
-        }
-
-        public override bool DirectReplace(string table, string[] keys, object[] values)
-        {
-            return Replace(table, keys, values);
         }
 
         public override bool Replace(string table, string[] keys, object[] values)

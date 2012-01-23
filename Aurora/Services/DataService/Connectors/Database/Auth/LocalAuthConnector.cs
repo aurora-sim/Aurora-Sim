@@ -125,15 +125,13 @@ namespace Aurora.Services.DataService
             {
                 DoExpire();
             }
-            return GD.DirectReplace(m_tokensrealm, new[] {
-                "UUID",
-                "token",
-                "validity"
-            }, new object[3] {
-                "'" + principalID + "'",
-                "'" + token + "'",
-                GD.FormatDateTimeString(lifetime)
-            });
+
+            Dictionary<string, object> row = new Dictionary<string, object>(3);
+            row["UUID"] = principalID;
+            row["token"] = token;
+            row["validity"] = GD.FormatDateTimeString(lifetime);
+
+            return GD.Replace(m_tokensrealm, row);
         }
 
         public bool CheckToken(UUID principalID, string token, int lifetime)
