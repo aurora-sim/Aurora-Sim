@@ -424,9 +424,7 @@ namespace OpenSim.Services.GridService
             if (urls != null)
             {
                 urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
-                //Remove it first just to make sure it is replaced
-                m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID);
-                m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD ());
+                m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD());
                 MainConsole.Instance.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
             else

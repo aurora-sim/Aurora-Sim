@@ -263,8 +263,6 @@ namespace Aurora.Framework
                 try
                 {
                     List<Type> loadedTypes = new List<Type>();
-                    if (ALLOW_CACHE)
-                        loadedTypes = LoadedDlls[moduleDir];
 
                     foreach (Type pluginType in pluginAssembly.GetTypes())
                     {
@@ -274,11 +272,11 @@ namespace Aurora.Framework
                             {
                                 if (!pluginType.IsAbstract)
                                 {
-                                    if (!firstLoad.Contains(moduleDir))
+                                    if (ALLOW_CACHE)
                                     {
-                                        //Only add on the first load
-                                        if (ALLOW_CACHE)
+                                        if (!firstLoad.Contains(moduleDir))
                                         {
+                                            //Only add on the first load
                                             if (!loadedTypes.Contains(pluginType))
                                                 loadedTypes.Add(pluginType);
                                         }
@@ -296,6 +294,8 @@ namespace Aurora.Framework
                                        " : " + ex);
                         }
                     }
+                    if (ALLOW_CACHE)
+                        LoadedDlls[moduleDir].AddRange(loadedTypes);
                 }
                 catch (Exception)
                 {

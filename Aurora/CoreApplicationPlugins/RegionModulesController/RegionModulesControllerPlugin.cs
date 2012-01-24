@@ -118,8 +118,14 @@ namespace OpenSim.CoreApplicationPlugins
 
                     //MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to shared module {1}",
                     //                  scene.RegionInfo.RegionName, module.Name);
-
-                    module.AddRegion(scene);
+                    try
+                    {
+                        module.AddRegion(scene);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                    }
                     AddRegionModule(scene, module.Name, module);
 
                     IRegionModuleBaseModules.Add(module);
@@ -174,7 +180,14 @@ namespace OpenSim.CoreApplicationPlugins
             // won't load.
             foreach (INonSharedRegionModule module in list)
             {
-                module.AddRegion(scene);
+                try
+                {
+                    module.AddRegion(scene);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
                 AddRegionModule(scene, module.Name, module);
             }
 
@@ -198,7 +211,14 @@ namespace OpenSim.CoreApplicationPlugins
                                   scene.RegionInfo.RegionName, module.Name);
 
                 // Not replaced, load the module
-                module.AddRegion(scene);
+                try
+                {
+                    module.AddRegion(scene);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
                 AddRegionModule(scene, module.Name, module);
 
                 IRegionModuleBaseModules.Add(module);
@@ -228,7 +248,14 @@ namespace OpenSim.CoreApplicationPlugins
                 MainConsole.Instance.DebugFormat("[REGIONMODULE]: Adding scene {0} to non-shared module {1} (deferred)",
                                   scene.RegionInfo.RegionName, module.Name);
 
-                module.Initialise(m_openSim.ConfigSource);
+                try
+                {
+                    module.Initialise(m_openSim.ConfigSource);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
 
                 IRegionModuleBaseModules.Add(module);
                 list.Add(module);
@@ -238,7 +265,14 @@ namespace OpenSim.CoreApplicationPlugins
             // Finally, load valid deferred modules
             foreach (INonSharedRegionModule module in deferredlist)
             {
-                module.AddRegion(scene);
+                try
+                {
+                    module.AddRegion(scene);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
                 AddRegionModule(scene, module.Name, module);
             }
 
@@ -254,12 +288,26 @@ namespace OpenSim.CoreApplicationPlugins
             //
             foreach (ISharedRegionModule module in sharedlist)
             {
-                module.RegionLoaded(scene);
+                try
+                {
+                    module.RegionLoaded(scene);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
             }
 
             foreach (INonSharedRegionModule module in list)
             {
-                module.RegionLoaded(scene);
+                try
+                {
+                    module.RegionLoaded(scene);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
             }
         }
 
@@ -316,7 +364,14 @@ namespace OpenSim.CoreApplicationPlugins
             m_sharedInstances = AuroraModuleLoader.PickupModules<ISharedRegionModule>();
             foreach (ISharedRegionModule module in m_sharedInstances)
             {
-                module.Initialise(m_openSim.ConfigSource);
+                try
+                {
+                    module.Initialise(m_openSim.ConfigSource);
+                }
+                catch(Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
             }
         }
 
@@ -325,7 +380,14 @@ namespace OpenSim.CoreApplicationPlugins
             //Update all modules that we have here
             foreach (IRegionModuleBase module in AllModules)
             {
-                module.Initialise(config);
+                try
+                {
+                    module.Initialise(config);
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
             }
         }
 
@@ -348,7 +410,14 @@ namespace OpenSim.CoreApplicationPlugins
             // Immediately run PostInitialise on shared modules
             foreach (ISharedRegionModule module in m_sharedInstances)
             {
-                module.PostInitialise();
+                try
+                {
+                    module.PostInitialise();
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
+                }
             }
         }
 
