@@ -153,35 +153,8 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
-            IAsyncMessageRecievedService service = m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ();
-            if(service != null)
-                service.OnMessageReceived += OnMessageReceived;
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
             LoadFromDatabase ();
-        }
-        
-        /// <summary>
-        /// We do handle the RegisterHandlers message here, as we deal with all of the handlers in this module
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        private OSDMap OnMessageReceived(OSDMap message)
-        {
-            if (!m_useRegistrationService)
-                return null;
-
-            if (message.ContainsKey("Method") && message["Method"].AsString() == "RegisterHandlers")
-            {
-                string SessionID = message["SessionID"];
-                if (CheckThreatLevel (SessionID, "RegisterHandlers", ThreatLevel.None))
-                {
-                    UpdateUrlsForClient (SessionID);
-                    OSDMap resp = new OSDMap ();
-                    resp["Reregistered"] = true;//It was successful
-                    return resp;
-                }
-            }
-            return null;
         }
 
         protected void ReadConfiguration(IConfig config)

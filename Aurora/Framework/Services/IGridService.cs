@@ -686,6 +686,12 @@ namespace OpenSim.Services.Interfaces
         /// <param name="defaultThreatLevel"></param>
         /// <returns></returns>
         bool CheckThreatLevel(string SessionID, string function, ThreatLevel defaultThreatLevel);
+
+        /// <summary>
+        /// Updates the time so that the region does not timeout
+        /// </summary>
+        /// <param name="p"></param>
+        void UpdateUrlsForClient(string SessionID);
     }
 
     /// <summary>

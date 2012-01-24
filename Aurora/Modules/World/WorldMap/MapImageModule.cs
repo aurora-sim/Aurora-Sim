@@ -258,7 +258,7 @@ namespace Aurora.Modules.WorldMap
                 UpdateMapImage.Elapsed += OnTimedCreateNewMapImage;
                 UpdateMapImage.Enabled = true;
             }
-            UpdateOnlineStatus = new System.Timers.Timer(oneminute * 20);
+            UpdateOnlineStatus = new System.Timers.Timer(oneminute * 60);
             UpdateOnlineStatus.Elapsed += OnUpdateRegion;
             UpdateOnlineStatus.Enabled = true;
         }

@@ -47,7 +47,6 @@ namespace Aurora.Modules.Startup
         private readonly Dictionary<UUID, List<GridRegion>> m_knownNeighbors = new Dictionary<UUID, List<GridRegion>>();
         private readonly List<IScene> m_scenes = new List<IScene>();
         private IConfigSource m_config;
-        private Timer m_timer;
 
         #endregion
 
@@ -292,7 +291,6 @@ namespace Aurora.Modules.Startup
             //Register the interface
             m_config = source;
             scene.RegisterModuleInterface<IGridRegisterModule>(this);
-            openSimBase.EventManager.RegisterEventHandler("GridRegionRegistered", OnGenericEvent);
             //Now register our region with the grid
             RegisterRegionWithGrid(scene, false, true);
         }
@@ -334,25 +332,6 @@ namespace Aurora.Modules.Startup
 
         #endregion
 
-        private object OnGenericEvent(string FunctionName, object parameters)
-        {
-            if (FunctionName == "GridRegionRegistered")
-            {
-                object[] o = (object[]) parameters;
-                OSDMap map = (OSDMap) o[1];
-                if (m_timer == null)
-                {
-                    m_timer = new Timer {Interval = (map["TimeBeforeReRegister"].AsReal()*1000*60*60)};
-                    //Give it an extra minute after making hours into milliseconds
-                    m_timer.Interval *= 0.8;
-                        //Make it shorter so that there isn't any chance that it'll have time to fail
-                    m_timer.Elapsed += m_timer_Elapsed;
-                    m_timer.Start();
-                }
-            }
-            return null;
-        }
-
         private OSDMap RegisterRegionWithGridModule_OnMessageReceived(OSDMap message)
         {
             if (!message.ContainsKey("Method"))
@@ -392,48 +371,6 @@ namespace Aurora.Modules.Startup
                 }
             }
             return null;
-        }
-
-        private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            ISyncMessagePosterService syncMessagePoster =
-                m_scenes[0].RequestModuleInterface<ISyncMessagePosterService>();
-            if (syncMessagePoster != null)
-            {
-                List<IScene> FailedScenes = new List<IScene>();
-                foreach (IScene scene in m_scenes)
-                {
-                    OSDMap map = new OSDMap();
-                    map["Method"] = "RegisterHandlers";
-                    map["SessionID"] = scene.RegionInfo.RegionHandle.ToString();
-                    OSDMap resp = syncMessagePoster.Get(map, UUID.Zero, scene.RegionInfo.RegionHandle);
-                    if (resp != null && resp["Reregistered"].AsBoolean())
-                        MainConsole.Instance.Info("[GridRegService]: Successfully reregistered with the grid service");
-                    else
-                    {
-                        //It failed
-                        MainConsole.Instance.Error("[GridRegService]: Failed to successfully reregistered with the grid service");
-                        IGridService GridService = scene.RequestModuleInterface<IGridService>();
-                        if (!GridService.DeregisterRegion(BuildGridRegion(scene.RegionInfo)))
-                        {
-                            MainConsole.Instance.Error("------------- REGION " + scene.RegionInfo.RegionName +
-                                        " IS DEAD ---------------");
-                        }
-                        else
-                        {
-                            //Register again...
-                            MainConsole.Instance.Error("[GridRegService]: Forcefully reregistered with the grid service... standby");
-                            if (!RegisterRegionWithGrid(scene, true, true))
-                                MainConsole.Instance.Error("------------- REGION " + scene.RegionInfo.RegionName +
-                                            " IS DEAD ---------------");
-                        }
-                    }
-                }
-            }
-            else
-            {
-                MainConsole.Instance.ErrorFormat("[RegisterRegionWithGrid]: ISyncMessagePosterService was null in m_timer_Elapsed;");
-            }
         }
 
         private GridRegion BuildGridRegion(RegionInfo regionInfo)

@@ -573,6 +573,10 @@ namespace OpenSim.Services.GridService
                 {
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
                 }
+
+                IGridRegistrationService gridRegModule = m_registry.RequestModuleInterface<IGridRegistrationService>();
+                if (gridRegModule != null)
+                    gridRegModule.UpdateUrlsForClient(region.RegionHandle.ToString());
             }
 
             return "";
