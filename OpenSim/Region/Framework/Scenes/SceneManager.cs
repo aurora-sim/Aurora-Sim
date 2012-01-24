@@ -137,18 +137,20 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
+            List<string> storeNames = new List<string>();
             foreach (ISimulationDataStore store in stores)
             {
-                if (store.Name == name)
+                if (store.Name.ToLower() == name.ToLower())
                 {
                     m_simulationDataService = store;
                     break;
                 }
+                storeNames.Add(store.Name);
             }
 
             if (m_simulationDataService == null)
             {
-                MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", name);
+                MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', ONLY OPTIONS ARE {1}, QUITING...", name, string.Join(", ", storeNames.ToArray()));
                 Console.Read ();//Wait till they see
                 Environment.Exit(0);
             }
