@@ -76,6 +76,7 @@ bin/MapAPI_tileCache/*
 Examples/*.dll
 Aurora.build
 Aurora.sln
+Aurora.sln.cache
 Aurora.suo
 Prebuild/Prebuild.build
 Prebuild/Prebuild.sln

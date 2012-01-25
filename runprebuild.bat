@@ -9,7 +9,7 @@ rem ## Default Visual Studio choice (2008, 2010)
 set vstudio=2010
 
 rem ## Default .NET Framework (3_5, 4_0 (Unsupported on VS2008))
-set framework=4_0
+set framework=3_5
 
 rem ## Default architecture (86 (for 32bit), 64)
 set bits=86
@@ -70,7 +70,7 @@ if exist Compile.*.bat (
 )
 
 echo Calling Prebuild for target %vstudio% with framework %framework%...
-Tools\Prebuild.exe /target vs%vstudio% /targetframework v%framework%
+bin\Prebuild.exe /target vs%vstudio% /targetframework v%framework%
 
 echo.
 echo Creating compile batch file for your convinence...
@@ -79,7 +79,7 @@ if %framework%==4_0 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbu
 if %bits%==64 set args=/p:Platform="x64"
 set filename=Compile.VS%vstudio%.net%framework%.x%bits%.bat
 
-echo %fpath% %args% > %filename% /p:DefineConstants=ISWIN
+echo %fpath% Aurora.sln %args% > %filename% /p:DefineConstants=ISWIN
 
 echo.
 set /p compile_at_end="Done, %filename% created. Compile now? (y,n) [%compile_at_end%]"
