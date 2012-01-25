@@ -496,8 +496,11 @@ namespace OpenSim.Services.LLLoginService
                     string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
-                        m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
+                        AvatarAppearance appearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
+                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                        AvatarData adata = new AvatarData(appearance);
+                        m_AvatarService.SetAppearance(account.PrincipalID, appearance);
                     }
                     if (UPI.IsNewUser)
                     {
