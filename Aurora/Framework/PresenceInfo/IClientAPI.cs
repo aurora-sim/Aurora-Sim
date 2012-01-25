@@ -430,8 +430,7 @@ namespace Aurora.Framework
     public delegate void DirFindQuery(
         IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart);
 
-    public delegate void DirLandQuery(
-        IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart);
+    public delegate void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart);
 
     public delegate void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags);
 
