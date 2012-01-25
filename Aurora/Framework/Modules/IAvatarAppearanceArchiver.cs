@@ -34,6 +34,6 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "FileName"></param>
         /// <param name = "Name"></param>
-        void LoadAvatarArchive(string FileName, string Name);
+        AvatarAppearance LoadAvatarArchive(string FileName, string Name);
     }
 }
