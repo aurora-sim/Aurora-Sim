@@ -461,7 +461,7 @@ namespace Aurora.DataManager.SQLite
                 {
                     string key = ":where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
                     ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                    parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
                 {
@@ -474,7 +474,7 @@ namespace Aurora.DataManager.SQLite
                 {
                     string key = ":where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
                     ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
+                    parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
                 {
