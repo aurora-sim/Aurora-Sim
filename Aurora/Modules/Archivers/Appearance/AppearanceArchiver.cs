@@ -59,14 +59,14 @@ namespace Aurora.Modules.Archivers
 
         #region IAvatarAppearanceArchiver Members
 
-        public void LoadAvatarArchive(string FileName, string Name)
+        public AvatarAppearance LoadAvatarArchive(string FileName, string Name)
         {
             UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
             MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
                 MainConsole.Instance.Error("[AvatarArchive] User not found!");
-                return;
+                return null;
             }
 
             StreamReader reader = new StreamReader(FileName);
@@ -82,19 +82,19 @@ namespace Aurora.Modules.Archivers
                     if (scene.TryGetScenePresence(account.PrincipalID, out SP))
                         break;
                 if (SP == null)
-                    return; //Bad people!
+                    return null; //Bad people!
             }
 
-            if(SP != null)
+            if (SP != null)
                 SP.ControllingClient.SendAlertMessage("Appearance loading in progress...");
 
             string FolderNameToLoadInto = "";
 
-            OSDMap map = ((OSDMap) OSDParser.DeserializeLLSDXml(file));
+            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(file));
 
-            OSDMap assetsMap = ((OSDMap) map["Assets"]);
-            OSDMap itemsMap = ((OSDMap) map["Items"]);
-            OSDMap bodyMap = ((OSDMap) map["Body"]);
+            OSDMap assetsMap = ((OSDMap)map["Assets"]);
+            OSDMap itemsMap = ((OSDMap)map["Items"]);
+            OSDMap bodyMap = ((OSDMap)map["Body"]);
 
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
 
@@ -118,12 +118,16 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(assetsMap);
-                LoadItems(itemsMap, account.PrincipalID, folderForAppearance, out items);
+                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance);
             }
             catch (Exception ex)
             {
                 MainConsole.Instance.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
+
+
+
+
 
             //Now update the client about the new items
             if (SP != null)
@@ -143,6 +147,129 @@ namespace Aurora.Modules.Archivers
                 }
             }
             MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
+            return appearance;
+        }
+
+        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder)
+        {
+
+
+            if (destinationFolder == null)
+                throw new Exception("Cannot locate folder(s)");
+
+
+            // Wearables
+            AvatarWearable[] wearables = avatarAppearance.Wearables;
+
+            for (int i = 0; i < wearables.Length; i++)
+            {
+                AvatarWearable wearable = wearables[i];
+                for (int ii = 0; ii < wearable.Count; ii++)
+                {
+                    if (wearable[ii].ItemID != UUID.Zero)
+                    {
+                        // Get inventory item and copy it
+                        InventoryItemBase item = new InventoryItemBase(wearable[ii].ItemID);
+                        item = InventoryService.GetItem(item);
+
+                        if (item != null)
+                        {
+                            InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
+                                                                    {
+                                                                        Name = item.Name,
+                                                                        Description = item.Description,
+                                                                        InvType = item.InvType,
+                                                                        CreatorId = item.CreatorId,
+                                                                        CreatorData = item.CreatorData,
+                                                                        CreatorIdAsUuid = item.CreatorIdAsUuid,
+                                                                        NextPermissions = item.NextPermissions,
+                                                                        CurrentPermissions = item.CurrentPermissions,
+                                                                        BasePermissions = item.BasePermissions,
+                                                                        EveryOnePermissions = item.EveryOnePermissions,
+                                                                        GroupPermissions = item.GroupPermissions,
+                                                                        AssetType = item.AssetType,
+                                                                        AssetID = item.AssetID,
+                                                                        GroupID = item.GroupID,
+                                                                        GroupOwned = item.GroupOwned,
+                                                                        SalePrice = item.SalePrice,
+                                                                        SaleType = item.SaleType,
+                                                                        Flags = item.Flags,
+                                                                        CreationDate = item.CreationDate,
+                                                                        Folder = destinationFolder.ID
+                                                                    };
+                            if (InventoryService != null)
+                                InventoryService.AddItem(destinationItem);
+                            MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}",
+                                                             destinationItem.ID, destinationFolder.ID);
+
+                            // Wear item
+                            AvatarWearable newWearable = new AvatarWearable();
+                            newWearable.Wear(destinationItem.ID, wearable[ii].AssetID);
+                            avatarAppearance.SetWearable(i, newWearable);
+                        }
+                        else
+                        {
+                            MainConsole.Instance.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}",
+                                                            wearable[ii].ItemID, destinationFolder.ID);
+                        }
+                    }
+                }
+            }
+
+            // Attachments
+            List<AvatarAttachment> attachments = avatarAppearance.GetAttachments();
+
+            foreach (AvatarAttachment attachment in attachments)
+            {
+                int attachpoint = attachment.AttachPoint;
+                UUID itemID = attachment.ItemID;
+
+                if (itemID != UUID.Zero)
+                {
+                    // Get inventory item and copy it
+                    InventoryItemBase item = new InventoryItemBase(itemID, source);
+                    item = InventoryService.GetItem(item);
+
+                    if (item != null)
+                    {
+                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
+                        {
+                            Name = item.Name,
+                            Description = item.Description,
+                            InvType = item.InvType,
+                            CreatorId = item.CreatorId,
+                            CreatorData = item.CreatorData,
+                            CreatorIdAsUuid = item.CreatorIdAsUuid,
+                            NextPermissions = item.NextPermissions,
+                            CurrentPermissions = item.CurrentPermissions,
+                            BasePermissions = item.BasePermissions,
+                            EveryOnePermissions = item.EveryOnePermissions,
+                            GroupPermissions = item.GroupPermissions,
+                            AssetType = item.AssetType,
+                            AssetID = item.AssetID,
+                            GroupID = item.GroupID,
+                            GroupOwned = item.GroupOwned,
+                            SalePrice = item.SalePrice,
+                            SaleType = item.SaleType,
+                            Flags = item.Flags,
+                            CreationDate = item.CreationDate,
+                            Folder = destinationFolder.ID
+                        };
+                        if (InventoryService != null)
+                            InventoryService.AddItem(destinationItem);
+                        MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
+
+                        // Attach item
+                        avatarAppearance.SetAttachment(attachpoint, destinationItem.ID, destinationItem.AssetID);
+                        MainConsole.Instance.DebugFormat("[RADMIN]: Attached {0}", destinationItem.ID);
+                    }
+                    else
+                    {
+                        MainConsole.Instance.WarnFormat("[RADMIN]: Error transferring {0} to folder {1}", itemID, destinationFolder.ID);
+                    }
+                }
+            }
+            return avatarAppearance;
         }
 
         #endregion
@@ -163,29 +290,29 @@ namespace Aurora.Modules.Archivers
                                                     InventoryFolderBase parentFolder)
         {
             InventoryItemBase itemCopy = new InventoryItemBase
-                                             {
-                                                 Owner = recipient,
-                                                 CreatorId = item.CreatorId,
-                                                 CreatorData = item.CreatorData,
-                                                 ID = UUID.Random(),
-                                                 AssetID = item.AssetID,
-                                                 Description = item.Description,
-                                                 Name = item.Name,
-                                                 AssetType = item.AssetType,
-                                                 InvType = item.InvType,
-                                                 Folder = UUID.Zero,
-                                                 NextPermissions = (uint) PermissionMask.All,
-                                                 GroupPermissions = (uint) PermissionMask.All,
-                                                 EveryOnePermissions = (uint) PermissionMask.All,
-                                                 CurrentPermissions = (uint) PermissionMask.All
-                                             };
+            {
+                Owner = recipient,
+                CreatorId = item.CreatorId,
+                CreatorData = item.CreatorData,
+                ID = UUID.Random(),
+                AssetID = item.AssetID,
+                Description = item.Description,
+                Name = item.Name,
+                AssetType = item.AssetType,
+                InvType = item.InvType,
+                Folder = UUID.Zero,
+                NextPermissions = (uint)PermissionMask.All,
+                GroupPermissions = (uint)PermissionMask.All,
+                EveryOnePermissions = (uint)PermissionMask.All,
+                CurrentPermissions = (uint)PermissionMask.All
+            };
 
             //Give full permissions for them
 
             if (parentFolder == null)
             {
                 InventoryFolderBase folder = InventoryService.GetFolderForType(recipient, InventoryType.Unknown,
-                                                                               (AssetType) itemCopy.AssetType);
+                                                                               (AssetType)itemCopy.AssetType);
 
                 if (folder != null)
                     itemCopy.Folder = folder.ID;
@@ -244,7 +371,7 @@ namespace Aurora.Modules.Archivers
                     return; //Bad people!
             }
 
-            if(SP != null)
+            if (SP != null)
                 SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
 
             AvatarAppearance appearance = AvatarService.GetAppearance(SP.UUID);
@@ -339,16 +466,16 @@ namespace Aurora.Modules.Archivers
         private AssetBase LoadAssetBase(OSDMap map)
         {
             AssetBase asset = new AssetBase
-                                  {
-                                      Data = map["AssetData"].AsBinary(),
-                                      TypeString = map["ContentType"].AsString(),
-                                      CreationDate = map["CreationDate"].AsDate(),
-                                      CreatorID = map["CreatorID"].AsUUID(),
-                                      Description = map["Description"].AsString(),
-                                      ID = map["ID"].AsUUID(),
-                                      Name = map["Name"].AsString(),
-                                      Type = (sbyte) map["Type"].AsInteger()
-                                  };
+            {
+                Data = map["AssetData"].AsBinary(),
+                TypeString = map["ContentType"].AsString(),
+                CreationDate = map["CreationDate"].AsDate(),
+                CreatorID = map["CreatorID"].AsUUID(),
+                Description = map["Description"].AsString(),
+                ID = map["ID"].AsUUID(),
+                Name = map["Name"].AsString(),
+                Type = (sbyte)map["Type"].AsInteger()
+            };
             return asset;
         }
 
@@ -357,7 +484,7 @@ namespace Aurora.Modules.Archivers
             InventoryItemBase saveItem = InventoryService.GetItem(new InventoryItemBase(ItemID));
             if (saveItem == null)
             {
-                MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID.ToString());
+                MainConsole.Instance.Warn("[AvatarArchive]: Could not find item to save: " + ItemID);
                 return;
             }
             MainConsole.Instance.Info("[AvatarArchive]: Saving item " + ItemID.ToString());
@@ -370,7 +497,7 @@ namespace Aurora.Modules.Archivers
             foreach (KeyValuePair<string, OSD> kvp in assets)
             {
                 UUID AssetID = UUID.Parse(kvp.Key);
-                OSDMap assetMap = (OSDMap) kvp.Value;
+                OSDMap assetMap = (OSDMap)kvp.Value;
                 AssetBase asset = AssetService.Get(AssetID.ToString());
                 MainConsole.Instance.Info("[AvatarArchive]: Loading asset " + AssetID.ToString());
                 if (asset == null) //Don't overwrite
