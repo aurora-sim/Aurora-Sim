@@ -304,6 +304,11 @@ namespace Aurora.Framework
             }
         }
 
+        private static string preparedKey(string key)
+        {
+            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply");
+        }
+
         public string ToSQL(char prepared, out Dictionary<string, object> ps, ref uint j)
         {
             ps = new Dictionary<string, object>();
@@ -321,7 +326,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in andFilters)
                 {
-                    string key = prepared.ToString() + "where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_AND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} = {1}", where.Key, key));
                 }
@@ -334,7 +339,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in orFilters)
                 {
-                    string key = prepared.ToString() + "where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_OR_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} = {1}", where.Key, key));
                 }
@@ -349,7 +354,7 @@ namespace Aurora.Framework
                 {
                     foreach (object value in where.Value)
                     {
-                        string key = prepared.ToString() + "where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                        string key = prepared.ToString() + "where_OR_" + (++i) + preparedKey(where.Key);
                         ps[key] = value;
                         parts.Add(string.Format("{0} = {1}", where.Key, key));
                     }
@@ -363,7 +368,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, object> where in andNotFilters)
                 {
-                    string key = prepared.ToString() + "where_AND_NOT_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_AND_NOT_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} != {1}", where.Key, key));
                 }
@@ -380,7 +385,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in andLikeFilters)
                 {
-                    string key = prepared.ToString() + "where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_ANDLIKE_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                 }
@@ -393,7 +398,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in orLikeFilters)
                 {
-                    string key = prepared.ToString() + "where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_ORLIKE_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                 }
@@ -408,7 +413,7 @@ namespace Aurora.Framework
                 {
                     foreach (string value in where.Value)
                     {
-                        string key = prepared.ToString() + "where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                        string key = prepared.ToString() + "where_ORLIKE_" + (++i) + preparedKey(where.Key);
                         ps[key] = value;
                         parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                     }
@@ -426,7 +431,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in andBitfieldAndFilters)
                 {
-                    string key = prepared.ToString() + "where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_bAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
@@ -439,7 +444,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in orBitfieldAndFilters)
                 {
-                    string key = prepared.ToString() + "where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_bOR_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
@@ -456,7 +461,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in andGreaterThanFilters)
                 {
-                    string key = prepared.ToString() + "where_gtAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_gtAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} > {1}", where.Key, key));
                 }
@@ -469,7 +474,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in orGreaterThanFilters)
                 {
-                    string key = prepared.ToString() + "where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_gtOR_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} > {1}", where.Key, key));
                 }
@@ -482,7 +487,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in andGreaterThanEqFilters)
                 {
-                    string key = prepared.ToString() + "where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_gteqAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} >= {1}", where.Key, key));
                 }
@@ -499,7 +504,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in andLessThanFilters)
                 {
-                    string key = prepared.ToString() + "where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_ltAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
@@ -512,7 +517,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in orLessThanFilters)
                 {
-                    string key = prepared.ToString() + "where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_ltOR_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
@@ -525,7 +530,7 @@ namespace Aurora.Framework
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in andLessThanEqFilters)
                 {
-                    string key = prepared.ToString() + "where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
+                    string key = prepared.ToString() + "where_lteqAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} <= {1}", where.Key, key));
                 }
