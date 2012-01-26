@@ -77,7 +77,6 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (EstateSettings)remoteValue;
 
-
             EstateSettings settings = new EstateSettings() { EstateID = 0 };
             int estateID = GetEstateID(regionID);
             if (estateID == 0)
@@ -137,7 +136,6 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(regionID, estateID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
-            }
 
             Dictionary<string, object> row = new Dictionary<string, object>(2);
             row["RegionID"] = regionID;
@@ -153,7 +151,6 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
@@ -168,7 +165,6 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
@@ -183,9 +179,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(ownerID, name);
             if (remoteValue != null || m_doRemoteOnly)
-            {
                 return (int)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
@@ -203,9 +197,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(estateID);
             if (remoteValue != null || m_doRemoteOnly)
-            {
                 return (List<UUID>)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
@@ -223,9 +215,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(OwnerID, boolFields);
             if (remoteValue != null || m_doRemoteOnly)
-            {
                 return (List<EstateSettings>)remoteValue;
-            }
 
             List<EstateSettings> settings = new List<EstateSettings>();
 
