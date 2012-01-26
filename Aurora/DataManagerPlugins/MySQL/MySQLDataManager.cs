@@ -190,7 +190,7 @@ namespace Aurora.DataManager.MySQL
 
                 parts = new List<string>();
                 foreach(KeyValuePair<string, object> where in filter.andFilters){
-                    string key = "?where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} = {1}", where.Key, key));
                 }
@@ -201,7 +201,7 @@ namespace Aurora.DataManager.MySQL
 
                 parts = new List<string>();
                 foreach(KeyValuePair<string, object> where in filter.orFilters){
-                    string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} = {1}", where.Key, key));
                 }
@@ -215,7 +215,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     foreach (object value in where.Value)
                     {
-                        string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                         ps[key] = value;
                         parts.Add(string.Format("{0} = {1}", where.Key, key));
                     }
@@ -233,7 +233,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
                 {
-                    string key = "?where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                 }
@@ -246,7 +246,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
                 {
-                    string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                 }
@@ -261,7 +261,7 @@ namespace Aurora.DataManager.MySQL
                 {
                     foreach (string value in where.Value)
                     {
-                        string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                        string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                         ps[key] = value;
                         parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
                     }
@@ -278,7 +278,7 @@ namespace Aurora.DataManager.MySQL
 
                 parts = new List<string>();
                 foreach(KeyValuePair<string, uint> where in filter.andBitfieldAndFilters){
-                    string key = "?where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
@@ -290,7 +290,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
                 {
-                    string key = "?where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} & {1}", where.Key, key));
                 }
@@ -320,7 +320,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
                 {
-                    string key = "?where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} > {1}", where.Key, key));
                 }
@@ -333,7 +333,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
                 {
-                    string key = "?where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} >= {1}", where.Key, key));
                 }
@@ -350,7 +350,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
                 {
-                    string key = "?where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
@@ -363,7 +363,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
                 {
-                    string key = "?where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
@@ -376,7 +376,7 @@ namespace Aurora.DataManager.MySQL
                 parts = new List<string>();
                 foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
                 {
-                    string key = "?where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
+                    string key = "?where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "").Replace(" ","___");
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} <= {1}", where.Key, key));
                 }
