@@ -41,6 +41,7 @@ namespace Aurora.Framework
                          int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish);
 
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
+        GroupProfileData GetGroupProfile(UUID RequestingAgentID, UUID GroupID);
         List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart, uint queryFlags);
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
@@ -92,6 +93,8 @@ namespace Aurora.Framework
         ChatSession GetSession(UUID sessionid);
         ChatSessionMember FindMember(UUID sessionid, UUID Agent);
         void RemoveSession(UUID sessionid);
+
+        List<GroupTitlesData> GetGroupTitles(UUID uUID, UUID groupID);
     }
 
     /// <summary>

@@ -213,6 +213,11 @@ namespace Aurora.Modules.Groups
             return GroupsConnector.FindGroups(requestingAgentID, search, queryStart, queryflags);
         }
 
+        public GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID)
+        {
+            return GroupsConnector.GetGroupProfile(requestingAgentID, GroupID);
+        }
+
         public GroupMembershipData GetAgentGroupMembership(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID, GroupID, AgentID);
@@ -252,7 +257,7 @@ namespace Aurora.Modules.Groups
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
-            return GetGroupNotices(requestingAgentID, 0, GetNumberOfGroupNotices(requestingAgentID, GroupID), GroupID);
+            return GetGroupNotices(requestingAgentID, 0, 0, GroupID);
         }
 
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
@@ -260,10 +265,16 @@ namespace Aurora.Modules.Groups
             return GroupsConnector.GetGroupNotices(requestingAgentID, start, count, GroupID);
         }
 
+        public List<GroupTitlesData> GetGroupTitles(UUID requestingAgentID, UUID GroupID)
+        {
+            return GroupsConnector.GetGroupTitles(requestingAgentID, GroupID);
+        }
+
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
             return GroupsConnector.GetNumberOfGroupNotices(requestingAgentID, GroupID);
         }
+
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
         {
             return GroupsConnector.GetNumberOfGroupNotices(requestingAgentID, GroupIDs);

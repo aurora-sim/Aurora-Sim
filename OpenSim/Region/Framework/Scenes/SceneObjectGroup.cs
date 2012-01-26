@@ -4078,7 +4078,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 (int)(TargetX - Scene.GridService.MaxRegionSize),
                                 (int)(TargetX + 256),
                                 (int)(TargetY - Scene.GridService.MaxRegionSize),
-                                (int)(TargetY + 256)
+                                (int)(TargetY + 256));
                         }
 #if (!ISWIN)
                         GridRegion neighborRegion = null;
