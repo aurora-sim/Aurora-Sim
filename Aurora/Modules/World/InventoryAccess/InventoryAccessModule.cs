@@ -557,11 +557,10 @@ namespace Aurora.Modules.InventoryAccess
             return assetID;
         }
 
-        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID)
+        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item)
         {
             XmlDocument doc;
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
+            item = m_scene.InventoryService.GetItem(new InventoryItemBase(itemID, remoteClient.AgentId));
             UUID itemId = UUID.Zero;
 
             // If we have permission to copy then link the rezzed object back to the user inventory
