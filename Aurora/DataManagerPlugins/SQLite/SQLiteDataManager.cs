@@ -504,6 +504,7 @@ namespace Aurora.DataManager.SQLite
             }
             query += " VALUES( " + string.Join(", ", ps.ToArray<string>()) + " )";
 
+            cmd.CommandText = query;
             try
             {
                 ExecuteNonQuery(cmd);
