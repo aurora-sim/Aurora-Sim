@@ -230,7 +230,8 @@ namespace OpenSim.Services.CapsService
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
                 OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
-
+                if (requestmap["items"].Type == OSDType.Unknown)
+                    return new byte[0]; //Its dead, Jim!!!
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
                 OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};

@@ -298,19 +298,15 @@ namespace Aurora.Modules.Attachments
             IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
             if (invAccess != null)
             {
+                InventoryItemBase item = null;
                 SceneObjectGroup objatt = assetID == UUID.Zero ? invAccess.CreateObjectFromInventory(remoteClient,
-                    itemID) : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID);
+                    itemID, out item) : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID);
 
                 if (objatt != null)
                 {
                     #region Set up object for attachment status
-                    InventoryItemBase item = null;
-                    if (assetID == UUID.Zero)
+                    if (item != null)
                     {
-                        item = new InventoryItemBase(itemID, remoteClient.AgentId);
-                        item = m_scene.InventoryService.GetItem(item);
-                        if (item == null)
-                            return null;
                         assetID = item.AssetID;
 
                         // Since renaming the item in the inventory does not affect the name stored
