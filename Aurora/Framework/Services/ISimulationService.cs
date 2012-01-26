@@ -26,6 +26,8 @@
  */
 
 using Aurora.Framework;
+using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -35,6 +37,8 @@ namespace OpenSim.Services.Interfaces
     {
         public IAgentInfo AgentInfo;
         public UserAccount UserAccount;
+        public GroupMembershipData ActiveGroup;
+        public List<GroupMembershipData> GroupMemberships = new List<GroupMembershipData>();
 
         public override void FromOSD(OSDMap map)
         {
@@ -42,6 +46,19 @@ namespace OpenSim.Services.Interfaces
             AgentInfo.FromOSD((OSDMap)(map["AgentInfo"]));
             UserAccount = new UserAccount();
             UserAccount.FromOSD((OSDMap)(map["UserAccount"]));
+            if (!map.ContainsKey("ActiveGroup"))
+                ActiveGroup = null;
+            else
+            {
+                ActiveGroup = new GroupMembershipData();
+                ActiveGroup.FromOSD((OSDMap)(map["ActiveGroup"]));
+            }
+            GroupMemberships = ((OSDArray)map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) => 
+                {
+                    GroupMembershipData group = new GroupMembershipData();
+                    group.FromOSD((OSDMap)o);
+                    return group;
+                });
         }
 
         public override OSDMap ToOSD()
@@ -49,6 +66,9 @@ namespace OpenSim.Services.Interfaces
             OSDMap map = new OSDMap();
             map["AgentInfo"] = AgentInfo.ToOSD();
             map["UserAccount"] = UserAccount.ToOSD();
+            if(ActiveGroup != null)
+                map["ActiveGroup"] = ActiveGroup.ToOSD();
+            map["GroupMemberships"] = GroupMemberships.ToOSDArray();
             return map;
         }
     }

@@ -907,9 +907,8 @@ namespace Aurora.Services.DataService
 
             GroupMembershipData GMD = new GroupMembershipData();
             if (GroupID == UUID.Zero)
-            {
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
-            }
+
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
 
             QueryFilter filter = new QueryFilter();

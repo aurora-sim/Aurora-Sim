@@ -67,6 +67,7 @@ namespace Aurora.Modules.Groups
         ///  XmlRpcDisableKeepAlive = false
         ///</summary>
         private readonly Dictionary<UUID, GroupMembershipData> m_cachedGroupTitles = new Dictionary<UUID, GroupMembershipData>();
+        private readonly Dictionary<UUID, List<GroupMembershipData>> m_cachedGroupMemberships = new Dictionary<UUID, List<GroupMembershipData>>();
         private readonly List<IScene> m_sceneList = new List<IScene>();
 
         // Configuration settings
@@ -181,7 +182,7 @@ namespace Aurora.Modules.Groups
                     "[GROUPS]: {0} called with groupID={1}, agentID={2}",
                     MethodBase.GetCurrentMethod().Name, groupID, agentID);
 
-            return m_groupData.GetAgentGroupMembership(UUID.Zero, agentID, groupID);
+            return AttemptFindGroupMembershipData(UUID.Zero, agentID, groupID);
         }
 
         public void UpdateGroupInfo(IClientAPI remoteClient, UUID groupID, string charter, bool showInList,
@@ -193,6 +194,7 @@ namespace Aurora.Modules.Groups
             // Note: Permissions checking for modification rights is handled by the Groups Server/Service
             m_groupData.UpdateGroup(GetRequestingAgentID(remoteClient), groupID, charter, showInList, insigniaID,
                                     membershipFee, openEnrollment, allowPublish, maturePublish);
+            NullCacheInfos(groupID);
         }
 
         public void SetGroupAcceptNotices(IClientAPI remoteClient, UUID groupID, bool acceptNotices, bool listInProfile)
@@ -202,6 +204,20 @@ namespace Aurora.Modules.Groups
 
             m_groupData.SetAgentGroupInfo(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient),
                                           groupID, acceptNotices, listInProfile);
+            NullCacheInfos(remoteClient.AgentId, groupID);
+        }
+
+        private void NullCacheInfos(UUID groupID)
+        {
+            foreach (UUID agentID in m_cachedGroupMemberships.Keys)
+                NullCacheInfos(agentID, groupID);
+        }
+
+        private void NullCacheInfos(UUID agentID, UUID groupID)
+        {
+            if (!m_cachedGroupMemberships.ContainsKey(agentID))
+                return;
+            m_cachedGroupMemberships[agentID].RemoveAll((d) => d.GroupID == groupID);
         }
 
         public UUID CreateGroup(IClientAPI remoteClient, string name, string charter, bool showInList, UUID insigniaID,
@@ -241,7 +257,7 @@ namespace Aurora.Modules.Groups
 
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
             m_cachedGroupTitles[remoteClient.AgentId] =
-                m_groupData.GetAgentGroupMembership(remoteClient.AgentId, remoteClient.AgentId, groupID);
+                AttemptFindGroupMembershipData(remoteClient.AgentId, remoteClient.AgentId, groupID);
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
@@ -292,6 +308,7 @@ namespace Aurora.Modules.Groups
             // the client currently has set active, then we need to do a scene presence update too
 
             UpdateAllClientsWithGroupInfo(GetRequestingAgentID(remoteClient), title);
+            NullCacheInfos(remoteClient.AgentId, groupID);
         }
 
         public void UpdateUsersForExternalRoleUpdate(UUID groupID, UUID roleID, ulong regionID)
@@ -683,6 +700,13 @@ namespace Aurora.Modules.Groups
 
         #region Client/Update Tools
 
+        public void UpdateCachedData(UUID agentID, CachedUserInfo cachedInfo)
+        {
+            //Update the cache
+            m_cachedGroupTitles[agentID] = cachedInfo.ActiveGroup;
+            m_cachedGroupMemberships[agentID] = cachedInfo.GroupMemberships;
+        }
+
         /// <summary>
         ///   Try to find an active IClientAPI reference for agentID giving preference to root connections
         /// </summary>
@@ -827,7 +851,8 @@ namespace Aurora.Modules.Groups
             // TODO: Probably isn't nessesary to update every client in every scene.
             // Need to examine client updates and do only what's nessesary.
 
-            List<GroupMembershipData> membershipData = m_groupData.GetAgentGroupMemberships(dataForAgentID,
+            List<GroupMembershipData> membershipData = m_cachedGroupMemberships.ContainsKey(dataForAgentID) ? m_cachedGroupMemberships[dataForAgentID] :
+                                                                                            m_groupData.GetAgentGroupMemberships(dataForAgentID,
                                                                                             dataForAgentID);
 
             lock (m_sceneList)
@@ -904,7 +929,8 @@ namespace Aurora.Modules.Groups
         /// <returns></returns>
         private GroupMembershipData[] GetProfileListedGroupMemberships(IClientAPI requestingClient, UUID dataForAgentID)
         {
-            List<GroupMembershipData> membershipData = m_groupData.GetAgentGroupMemberships(requestingClient.AgentId,
+            List<GroupMembershipData> membershipData = m_cachedGroupMemberships.ContainsKey(dataForAgentID) ? m_cachedGroupMemberships[dataForAgentID] :
+                                                                                            m_groupData.GetAgentGroupMemberships(requestingClient.AgentId,
                                                                                             dataForAgentID);
             GroupMembershipData[] membershipArray;
 
@@ -1439,7 +1465,7 @@ namespace Aurora.Modules.Groups
                             //WTH??? noone but the invitee needs to know
                             //The other client wants to know too...
                             GroupMembershipData gmd =
-                                m_groupData.GetAgentGroupMembership(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
+                                AttemptFindGroupMembershipData(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
                             m_cachedGroupTitles[inviteInfo.AgentID] = gmd;
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
@@ -1647,6 +1673,16 @@ namespace Aurora.Modules.Groups
             }
         }
 
+        private GroupMembershipData AttemptFindGroupMembershipData(UUID requestingAgentID, UUID agentID, UUID groupID)
+        {
+            if (m_cachedGroupMemberships.ContainsKey(agentID))
+            {
+                foreach (GroupMembershipData data in from d in m_cachedGroupMemberships[agentID] where d.GroupID == groupID select d)
+                return data;
+            }
+            return m_groupData.GetAgentGroupMembership(requestingAgentID, agentID, groupID);
+        }
+
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
             if (m_debugEnabled) MainConsole.Instance.InfoFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
@@ -1816,7 +1852,7 @@ namespace Aurora.Modules.Groups
             //Ask the server as we don't know about this user
             if (ourPowers == 0)
             {
-                GroupMembershipData GMD = m_groupData.GetAgentGroupMembership(AgentID, AgentID, GroupID);
+                GroupMembershipData GMD = AttemptFindGroupMembershipData(AgentID, AgentID, GroupID);
                 if (GMD == null)
                 {
                     AddToGroupPowersCache(AgentID, GroupID, 1);
