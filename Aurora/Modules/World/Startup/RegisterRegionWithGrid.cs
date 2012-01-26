@@ -93,6 +93,8 @@ namespace Aurora.Modules.Startup
                 s.SessionID = error.SessionID;
                 //If it registered ok, we save the sessionID to the database and tlel the neighbor service about it
                 scene.RegionInfo.GridSecureSessionID = error.SessionID;
+                //Update our local copy of what our region flags are
+                scene.RegionInfo.RegionFlags = error.RegionFlags;
 
                 //Save the new SessionID to the database
                 g.AddGeneric(scene.RegionInfo.RegionID, "GridSessionID", "GridSessionID", s.ToOSD());

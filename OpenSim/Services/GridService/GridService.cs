@@ -517,7 +517,7 @@ namespace OpenSim.Services.GridService
 
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                       regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
-                    return new RegisterRegion() { Error = "", Neighbors = neighbors, SessionID = SessionID, Urls = 
+                    return new RegisterRegion() { Error = "", Neighbors = neighbors, RegionFlags = regionInfos.Flags, SessionID = SessionID, Urls = 
                     m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString())};
                 }
             }
