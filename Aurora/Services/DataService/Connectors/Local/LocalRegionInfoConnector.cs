@@ -77,20 +77,19 @@ namespace Aurora.Services.DataService
                     region
                 });
             }
-            List<object> Values = new List<object>
-                                      {
-                                          region.RegionID,
-                                          region.RegionName.MySqlEscape(50),
-                                          OSDParser.SerializeJsonString(region.PackRegionInfoData(true)),
-                                          region.Disabled ? 1 : 0
-                                      };
-            GD.Replace("simulator", new[]{"RegionID","RegionName",
-                "RegionInfo","Disabled"}, Values.ToArray());
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["RegionID"] = region.RegionID;
+            row["RegionName"] = region.RegionName.MySqlEscape(50);
+            row["RegionInfo"] = OSDParser.SerializeJsonString(region.PackRegionInfoData(true));
+            row["DisableD"] = region.Disabled ? 1 : 0;
+            GD.Replace("simulator", row);
         }
 
         public void Delete(RegionInfo region)
         {
-            GD.Delete("simulator", new[] { "RegionID" }, new object[] { region.RegionID });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = region.RegionID;
+            GD.Delete("simulator", filter);
         }
 
         public RegionInfo[] GetRegionInfos(bool nonDisabledOnly)
@@ -253,17 +252,56 @@ namespace Aurora.Services.DataService
 
         public void StoreRegionSettings (RegionSettings rs)
         {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["regionUUID"] = rs.RegionUUID;
             //Delete the original
-            GD.Delete (m_regionSettingsRealm, new[] { "regionUUID" }, new object[] { rs.RegionUUID });
+            GD.Delete (m_regionSettingsRealm, filter);
             //Now replace with the new
-            GD.Insert (m_regionSettingsRealm, new object[] { rs.RegionUUID, rs.BlockTerraform ? 1 : 0, rs.BlockFly ? 1 : 0, rs.AllowDamage ? 1 : 0,
-                rs.RestrictPushing ? 1 : 0, rs.AllowLandResell ? 1 : 0, rs.AllowLandJoinDivide ? 1 : 0, rs.BlockShowInSearch ? 1 : 0, rs.AgentLimit, rs.ObjectBonus,
-                rs.Maturity, rs.DisableScripts ? 1 : 0, rs.DisableCollisions ? 1 : 0, rs.DisablePhysics ? 1 : 0, rs.TerrainTexture1,
-                rs.TerrainTexture2, rs.TerrainTexture3, rs.TerrainTexture4, rs.Elevation1NW, rs.Elevation2NW,
-                rs.Elevation1NE, rs.Elevation2NE, rs.Elevation1SE, rs.Elevation2SE, rs.Elevation1SW, rs.Elevation2SW,
-                rs.WaterHeight, rs.TerrainRaiseLimit, rs.TerrainLowerLimit, rs.UseEstateSun ? 1 : 0, rs.FixedSun ? 1 : 0, rs.SunPosition,
-                rs.Covenant, rs.Sandbox ? 1 : 0, rs.SunVector.X, rs.SunVector.Y, rs.SunVector.Z, (rs.LoadedCreationID ?? ""), rs.LoadedCreationDateTime,
-                rs.TerrainMapImageID, rs.TerrainImageID, rs.MinimumAge, rs.CovenantLastUpdated, OSDParser.SerializeJsonString(rs.Generic)});
+            GD.Insert (m_regionSettingsRealm, new object[] {
+                rs.RegionUUID,
+                rs.BlockTerraform ? 1 : 0,
+                rs.BlockFly ? 1 : 0,
+                rs.AllowDamage ? 1 : 0,
+                rs.RestrictPushing ? 1 : 0,
+                rs.AllowLandResell ? 1 : 0,
+                rs.AllowLandJoinDivide ? 1 : 0,
+                rs.BlockShowInSearch ? 1 : 0,
+                rs.AgentLimit, rs.ObjectBonus,
+                rs.Maturity,
+                rs.DisableScripts ? 1 : 0,
+                rs.DisableCollisions ? 1 : 0,
+                rs.DisablePhysics ? 1 : 0,
+                rs.TerrainTexture1,
+                rs.TerrainTexture2,
+                rs.TerrainTexture3,
+                rs.TerrainTexture4,
+                rs.Elevation1NW,
+                rs.Elevation2NW,
+                rs.Elevation1NE,
+                rs.Elevation2NE,
+                rs.Elevation1SE,
+                rs.Elevation2SE,
+                rs.Elevation1SW,
+                rs.Elevation2SW,
+                rs.WaterHeight,
+                rs.TerrainRaiseLimit,
+                rs.TerrainLowerLimit,
+                rs.UseEstateSun ? 1 : 0,
+                rs.FixedSun ? 1 : 0,
+                rs.SunPosition,
+                rs.Covenant,
+                rs.Sandbox ? 1 : 0,
+                rs.SunVector.X,
+                rs.SunVector.Y,
+                rs.SunVector.Z,
+                (rs.LoadedCreationID ?? ""),
+                rs.LoadedCreationDateTime,
+                rs.TerrainMapImageID,
+                rs.TerrainImageID,
+                rs.MinimumAge,
+                rs.CovenantLastUpdated,
+                OSDParser.SerializeJsonString(rs.Generic)
+            });
         }
 
         #endregion

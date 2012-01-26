@@ -174,235 +174,6 @@ namespace Aurora.DataManager.MySQL
             return Query(query, new Dictionary<string, object>());
         }
 
-        private static string QueryFilter2Query(QueryFilter filter, out Dictionary<string, object> ps, ref uint j)
-        {
-            ps = new Dictionary<string,object>();
-            Dictionary<string, object>[] pss = {ps};
-            string query = "";
-            List<string> parts;
-            uint i = j;
-            bool had = false;
-            if (filter.Count > 0)
-            {
-                query += "(";
-
-                #region equality
-
-                parts = new List<string>();
-                foreach(KeyValuePair<string, object> where in filter.andFilters){
-                    string key = "?where_AND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} = {1}", where.Key, key));
-                }
-                if(parts.Count > 0){
-                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach(KeyValuePair<string, object> where in filter.orFilters){
-                    string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} = {1}", where.Key, key));
-                }
-                if(parts.Count > 0){
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, List<object>> where in filter.orMultiFilters)
-                {
-                    foreach (object value in where.Value)
-                    {
-                        string key = "?where_OR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                        ps[key] = value;
-                        parts.Add(string.Format("{0} = {1}", where.Key, key));
-                    }
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region LIKE
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, string> where in filter.andLikeFilters)
-                {
-                    string key = "?where_ANDLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, string> where in filter.orLikeFilters)
-                {
-                    string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, List<string>> where in filter.orLikeMultiFilters)
-                {
-                    foreach (string value in where.Value)
-                    {
-                        string key = "?where_ORLIKE_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                        ps[key] = value;
-                        parts.Add(string.Format("{0} LIKE {1}", where.Key, key));
-                    }
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region bitfield &
-
-                parts = new List<string>();
-                foreach(KeyValuePair<string, uint> where in filter.andBitfieldAndFilters){
-                    string key = "?where_bAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} & {1}", where.Key, key));
-                }
-                if(parts.Count > 0){
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, uint> where in filter.orBitfieldAndFilters)
-                {
-                    string key = "?where_bOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} & {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region greater than
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andGreaterThanFilters)
-                {
-                    string key = "?where_gtAND_" + (++i) + where.Key.Replace("`", "").Replace("(","__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.orGreaterThanFilters)
-                {
-                    string key = "?where_gtOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andGreaterThanEqFilters)
-                {
-                    string key = "?where_gteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                #region less than
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andLessThanFilters)
-                {
-                    string key = "?where_ltAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.orLessThanFilters)
-                {
-                    string key = "?where_ltOR_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} > {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in filter.andLessThanEqFilters)
-                {
-                    string key = "?where_lteqAND_" + (++i) + where.Key.Replace("`", "").Replace("(", "__").Replace(")", "");
-                    ps[key] = where.Value;
-                    parts.Add(string.Format("{0} <= {1}", where.Key, key));
-                }
-                if (parts.Count > 0)
-                {
-                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
-                    had = true;
-                }
-
-                #endregion
-
-                foreach(QueryFilter subFilter in filter.subFilters){
-                    Dictionary<string, object> sps;
-                    query += (had ? " AND" : string.Empty) + QueryFilter2Query(subFilter, out sps, ref i);
-                    pss[pss.Length] = sps;
-                    if (subFilter.Count > 0)
-                    {
-                        had = true;
-                    }
-                }
-                query += ")";
-            }
-            pss.SelectMany(x => x).ToLookup(x=>x.Key, x=>x.Value).ToDictionary(x => x.Key, x=>x.First());
-            return query;
-        }
-
         public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
             string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
@@ -413,7 +184,7 @@ namespace Aurora.DataManager.MySQL
             if (queryFilter != null && queryFilter.Count > 0)
             {
                 uint j = 0;
-                query += " WHERE " + QueryFilter2Query(queryFilter, out ps, ref j);
+                query += " WHERE " + queryFilter.ToSQL('?', out ps, ref j);
             }
 
             if (sort != null && sort.Count > 0)
@@ -471,6 +242,10 @@ namespace Aurora.DataManager.MySQL
                     MainConsole.Instance.Error("[MySQLDataLoader] Query(" + query + "), " + e);
                 }
             }
+        }
+
+        public override Dictionary<string, List<string>> QueryNames(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
+        {
         }
 
         public override Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue)
@@ -541,73 +316,58 @@ namespace Aurora.DataManager.MySQL
 
         #region Update
 
-        public override bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
+        public override bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValues, QueryFilter queryFilter, uint? start, uint? count)
         {
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            foreach (object value in setValues)
+            if ((values == null || values.Count < 1) && (incrementValues == null || incrementValues.Count < 1))
             {
-                query += string.Format("{0} = ?{1},", setRows[i], setRows[i].Replace("`", ""));
-                string valueSTR = value.ToString();
-                if (valueSTR == "")
-                    valueSTR = " ";
-                parameters["?" + setRows[i].Replace("`", "")] = valueSTR;
-                i++;
+                MainConsole.Instance.Warn("Update attempted with no values");
+                return false;
             }
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
-            {
-                parameters["?" + keyRows[i].Replace("`", "")] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
-                i++;
-            }
-            query = query.Remove(query.Length - 5);
-            try
-            {
-                ExecuteNonQuery(query, parameters);
-            }
-            catch (MySqlException e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Update(" + query + "), " + e);
-            }
-            return true;
-        }
 
-        public override bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues)
-        {
-            string query = String.Format("update {0} set ", table);
-            int i = 0;
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-#if (!ISWIN)
-            foreach (object value in setValues)
+            string query = string.Format("UPDATE {0}", table); ;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+
+            string filter = "";
+            if (queryFilter != null && queryFilter.Count > 0)
             {
-                string valueSTR = value.ToString();
-                query += string.Format("{0} = {1},", setRows[i], valueSTR);
-                i++;
+                uint j = 0;
+                filter = " WHERE " + queryFilter.ToSQL('?', out ps, ref j);
             }
-#else
-            foreach (string valueSTR in setValues.Select(value => value.ToString()))
+
+            List<string> parts = new List<string>();
+            if (values != null)
             {
-                query += string.Format("{0} = {1},", setRows[i], valueSTR);
-                i++;
+                foreach (KeyValuePair<string, object> value in values)
+                {
+                    string key = "?updateSet_" + value.Key.Replace("`", "");
+                    ps[key] = value.Value;
+                    parts.Add(string.Format("{0} = {1}", value.Key, key));
+                }
             }
-#endif
-            i = 0;
-            query = query.Remove(query.Length - 1);
-            query += " where ";
-            foreach (object value in keyValues)
+            if (incrementValues != null)
             {
-                parameters["?" + keyRows[i].Replace("`", "")] = value;
-                query += String.Format("{0}  = ?{1} and ", keyRows[i], keyRows[i].Replace("`", ""));
-                i++;
+                foreach (KeyValuePair<string, int> value in incrementValues)
+                {
+                    string key = "?updateSet_increment_" + value.Key.Replace("`", "");
+                    ps[key] = value.Value;
+                    parts.Add(string.Format("{0} = {0} + {1}", value.Key, key));
+                }
             }
-            query = query.Remove(query.Length - 5);
+
+            query += " SET " + string.Join(", ", parts.ToArray()) + filter;
+
+            if (start.HasValue)
+            {
+                query += " LIMIT " + start.Value.ToString();
+                if (count.HasValue)
+                {
+                    query += ", " + count.Value.ToString();
+                }
+            }
+
             try
             {
-                ExecuteNonQuery(query, parameters);
+                ExecuteNonQuery(query, ps);
             }
             catch (MySqlException e)
             {
@@ -672,117 +432,36 @@ namespace Aurora.DataManager.MySQL
             return true;
         }
 
-        public override bool Insert(string table, string[] keys, object[] values)
+        private bool InsertOrReplace(string table, Dictionary<string, object> row, bool insert)
         {
-            string query = String.Format("insert into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            int i = 0;
-            foreach (string key in keys)
+            string query = (insert ? "INSERT" : "REPLACE") + " INTO " + table + " (" + string.Join(", ", row.Keys.ToArray<string>()) + ")";
+            Dictionary<string, object> ps = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, object> field in row)
             {
-                param.Add("?" + key, values[i]);
-                query += String.Format("{0},", key);
-                i++;
+                string key = "?" + field.Key.Replace("`", "");
+                ps[key] = field.Value;
             }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-#if (!ISWIN)
-            foreach (string key in keys)
-                query = query + String.Format("?{0},", key);
-#else
-            query = keys.Aggregate(query, (current, key) => current + String.Format("?{0},", key));
-#endif
-            query = query.Remove(query.Length - 1);
-            query += ")";
+            query += " VALUES( " + string.Join(", ", ps.Keys.ToArray<string>()) + " )";
 
             try
             {
-                ExecuteNonQuery(query, param);
+                ExecuteNonQuery(query, ps);
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] Insert(" + query + "), " + e);
+                MainConsole.Instance.Error("[MySQLDataLoader] " + (insert ? "Insert" : "Replace") + "(" + query + "), " + e);
             }
             return true;
         }
 
-        public override bool Replace(string table, string[] keys, object[] values)
+        public override bool Insert(string table, Dictionary<string, object> row)
         {
-            string query = String.Format("replace into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            int i = 0;
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-
-                param.Add("?" + kkey, values[i].ToString());
-                query += "`" + kkey + "`" + ",";
-                i++;
-            }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-                query += String.Format("?{0},", kkey);
-            }
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Replace(" + query + "), " + e);
-                return false;
-            }
-            return true;
+            return InsertOrReplace(table, row, true);
         }
 
-        public override bool DirectReplace(string table, string[] keys, object[] values)
+        public override bool Replace(string table, Dictionary<string, object> row)
         {
-            string query = String.Format("replace into {0} (", table);
-            Dictionary<string, object> param = new Dictionary<string, object>();
-
-            foreach (string key in keys)
-            {
-                string kkey = key;
-                if (key.Contains('`'))
-                    kkey = key.Replace("`", ""); //Remove them
-
-                query += "`" + kkey + "`" + ",";
-            }
-            query = query.Remove(query.Length - 1);
-            query += ") values (";
-
-#if (!ISWIN)
-            foreach (object value in values)
-                query = query + String.Format("{0},", value.ToString());
-#else
-            query = values.Aggregate(query, (current, key) => current + String.Format("{0},", key.ToString()));
-#endif
-            query = query.Remove(query.Length - 1);
-            query += ")";
-
-            try
-            {
-                ExecuteNonQuery(query, param);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] DirectReplace(" + query + "), " + e);
-                return false;
-            }
-            return true;
+            return InsertOrReplace(table, row, false);
         }
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
@@ -813,56 +492,27 @@ namespace Aurora.DataManager.MySQL
 
         #region Delete
 
-        public override bool Delete(string table, string[] keys, object[] values)
+        public override bool DeleteByTime(string table, string key)
         {
-            Dictionary<string, object> param = new Dictionary<string, object>();
-            string query = "delete from " + table + (keys.Length > 0 ? " WHERE " : "");
-            int i = 0;
-            foreach (object value in values)
-            {
-                param["?" + keys[i].Replace("`", "")] = value;
-                query += keys[i] + " = ?" + keys[i].Replace("`", "") + " AND ";
-                i++;
-            }
-            if (keys.Length > 0)
-                query = query.Remove(query.Length - 5);
+            QueryFilter filter = new QueryFilter();
+            filter.andLessThanEqFilters["(UNIX_TIMESTAMP(`" + key.Replace("`","") + "`) - UNIX_TIMESTAMP())"] = 0;
+
+            return Delete(table, filter);
+        }
+
+        public override bool Delete(string table, QueryFilter queryFilter)
+        {
+            Dictionary<string, object> ps;
+            uint j=0;
+            string query = "DELETE FROM " + table + " WHERE " + queryFilter.ToSQL('?', out ps, ref j);
+
             try
             {
-                ExecuteNonQuery(query, param);
+                ExecuteNonQuery(query, ps);
             }
             catch (Exception e)
             {
                 MainConsole.Instance.Error("[MySQLDataLoader] Delete(" + query + "), " + e);
-                return false;
-            }
-            return true;
-        }
-
-        public override bool Delete(string table, string whereclause)
-        {
-            string query = "DELETE FROM " + table + " WHERE " + whereclause;
-            try
-            {
-                ExecuteNonQuery(query, new Dictionary<string, object>());
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] Delete", e);
-                return false;
-            }
-            return true;
-        }
-
-        public override bool DeleteByTime(string table, string key)
-        {
-            string query = "DELETE FROM " + table + " WHERE (UNIX_TIMESTAMP(`" + key + "`) - UNIX_TIMESTAMP()) <= 0";
-            try
-            {
-                ExecuteNonQuery(query, new Dictionary<string, object>());
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[MySQLDataLoader] DeleteByTime", e);
                 return false;
             }
             return true;

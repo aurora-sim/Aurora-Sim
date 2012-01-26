@@ -120,8 +120,10 @@ namespace Aurora.Services.DataService
         public void RemoveLandObject(UUID RegionID, UUID ParcelID)
         {
             //Remove both the generic and the parcel access list
-            GenericUtils.RemoveGeneric(RegionID, "LandData", ParcelID.ToString(), GD);
-            GD.Delete("parcelaccess", new[] {"ParcelID"}, new object[] {ParcelID});
+            GenericUtils.RemoveGenericByKeyAndType(RegionID, "LandData", ParcelID.ToString(), GD);
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ParcelID"] = ParcelID;
+            GD.Delete("parcelaccess", filter);
         }
 
         /// <summary>
@@ -143,10 +145,12 @@ namespace Aurora.Services.DataService
         {
             List<LandData> parcels = LoadLandObjects(RegionID);
             //Remove both the generic and the parcel access list
-            GenericUtils.RemoveGeneric(RegionID, "LandData", GD);
+            GenericUtils.RemoveGenericByType(RegionID, "LandData", GD);
+            QueryFilter filter = new QueryFilter();
             foreach (LandData data in parcels)
             {
-                GD.Delete("parcelaccess", new[] {"ParcelID"}, new object[] {data.GlobalID});
+                filter.andFilters["ParcelID"] = data.GlobalID;
+                GD.Delete("parcelaccess", filter);
             }
         }
 
@@ -163,25 +167,19 @@ namespace Aurora.Services.DataService
         private void SaveParcelAccessList(LandData data)
         {
             //Clear out all old parcel bans and access list entries
-            GD.Delete("parcelaccess", new[] {"ParcelID"}, new object[] {data.GlobalID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ParcelID"] = data.GlobalID;
+            GD.Delete("parcelaccess", filter);
+            Dictionary<string, object> row;
             foreach (ParcelManager.ParcelAccessEntry entry in data.ParcelAccessList)
             {
+                row = new Dictionary<string, object>(4);
+                row["ParcelID"] = data.GlobalID;
+                row["AccessID"] = entry.AgentID;
+                row["Flags"] = entry.Flags;
+                row["Time"] = entry.Time.Ticks;
                 //Replace all the old ones
-                GD.Replace("parcelaccess", new[]
-                                               {
-                                                   "ParcelID",
-                                                   "AccessID",
-                                                   "Flags",
-                                                   "Time"
-                                               }
-                           ,
-                           new object[]
-                               {
-                                   data.GlobalID,
-                                   entry.AgentID,
-                                   entry.Flags,
-                                   entry.Time.Ticks
-                               });
+                GD.Replace("parcelaccess", row);
             }
         }
 

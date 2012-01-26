@@ -87,51 +87,32 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "Name",
-                                        "Charter",
-                                        "InsigniaID",
-                                        "FounderID",
-                                        "MembershipFee",
-                                        "OpenEnrollment",
-                                        "ShowInList",
-                                        "AllowPublish",
-                                        "MaturePublish",
-                                        "OwnerRoleID"
-                                    };
-            List<Object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          name.MySqlEscape(50),
-                                          charter.MySqlEscape(50),
-                                          insigniaID,
-                                          founderID,
-                                          membershipFee,
-                                          openEnrollment ? 1 : 0,
-                                          showInList ? 1 : 0,
-                                          allowPublish ? 1 : 0,
-                                          maturePublish ? 1 : 0,
-                                          OwnerRoleID
-                                      };
-            data.Insert("osgroup", Keys.ToArray(), Values.ToArray());
+            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            row["GroupID"] = groupID;
+            row["Name"] = name.MySqlEscape(50);
+            row["Charter"] = charter.MySqlEscape(50);
+            row["InsigniaID"] = insigniaID;
+            row["FounderID"] = founderID;
+            row["MembershipFee"] = membershipFee;
+            row["OpenEnrollment"] = openEnrollment ? 1 : 0;
+            row["ShowInList"] = showInList ? 1 : 0;
+            row["AllowPublish"] = allowPublish ? 1 : 0;
+            row["MaturePublish"] = maturePublish ? 1 : 0;
+            row["OwnerRoleID"] = OwnerRoleID;
+
+            data.Insert("osgroup", row);
 
             //Add everyone role to group
-            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.",
-                           "Member of " + name, EveryonePowers);
+            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
 
             ulong groupPowers = 296868139497678;
 
             UUID officersRole = UUID.Random();
             //Add officers role to group
-            AddRoleToGroup(founderID, groupID, officersRole, "Officers",
-                           "The officers of the group, with more powers than regular members.", "Officer of " + name,
-                           groupPowers);
+            AddRoleToGroup(founderID, groupID, officersRole, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
 
             //Add owner role to group
-            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name,
-                           OwnerPowers);
+            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, OwnerPowers);
 
             //Add owner to the group as owner
             AddAgentToGroup(founderID, founderID, groupID, OwnerRoleID);
@@ -149,29 +130,22 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (
-                !CheckGroupPermissions(requestingAgentID, groupID,
-                                       (ulong) (GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
-                return;
-            data.Update("osgroup", new object[]
-                                       {
-                                           charter.MySqlEscape(50),
-                                           insigniaID,
-                                           membershipFee,
-                                           openEnrollment,
-                                           showInList,
-                                           allowPublish,
-                                           maturePublish
-                                       }, new[]
-                                              {
-                                                  "Charter",
-                                                  "InsigniaID",
-                                                  "MembershipFee",
-                                                  "OpenEnrollment",
-                                                  "ShowInList",
-                                                  "AllowPublish",
-                                                  "MaturePublish"
-                                              }, new[] {"GroupID"}, new object[] {groupID});
+            if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)(GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(6);
+                values["Charter"] = charter.MySqlEscape(50);
+                values["InsigniaID"] = insigniaID;
+                values["MembershipFee"] = membershipFee;
+                values["OpenEnrollment"] = openEnrollment;
+                values["ShowInList"] = showInList;
+                values["AllowPublish"] = allowPublish;
+                values["MaturePublish"] = maturePublish;
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["GroupID"] = groupID;
+
+                data.Update("osgroup", values, null, filter, null, null);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -181,37 +155,22 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
-                return;
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "NoticeID",
-                                        "Timestamp",
-                                        "FromName",
-                                        "Subject",
-                                        "Message",
-                                        "HasAttachment",
-                                        "ItemID",
-                                        "AssetType",
-                                        "ItemName"
-                                    };
+            if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(10);
+                row["GroupID"] = groupID;
+                row["NoticeID"] = noticeID;
+                row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
+                row["FromName"] = fromName.MySqlEscape(50);
+                row["Subject"] = subject.MySqlEscape(50);
+                row["Message"] = message.MySqlEscape(1024);
+                row["HasAttachment"] = (ItemID != UUID.Zero) ? 1 : 0;
+                row["ItemID"] = ItemID;
+                row["AssetType"] = AssetType;
+                row["ItemName"] = ItemName.MySqlEscape(50);
 
-            List<object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          noticeID,
-                                          ((uint) Util.UnixTimeSinceEpoch()),
-                                          fromName.MySqlEscape(50),
-                                          subject.MySqlEscape(50),
-                                          message.MySqlEscape(1024),
-                                          (ItemID != UUID.Zero) ? 1 : 0,
-                                          ItemID,
-                                          AssetType,
-                                          ItemName.MySqlEscape(50)
-                                      };
-
-            data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
+                data.Insert("osgroupnotice", row);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -225,17 +184,17 @@ namespace Aurora.Services.DataService
             filter.andFilters["AgentID"] = AgentID;
             if (data.Query(new string[1] { "*" }, "osagent", filter, null, null, null).Count != 0)
             {
-                data.Update("osagent", new object[] { GroupID }, new[] { "ActiveGroupID" }, new[] { "AgentID" }, new object[] { AgentID });
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["ActiveGroupID"] = GroupID;
+
+                data.Update("osagent", values, null, filter, null, null);
             }
             else
             {
-                data.Insert("osagent", new[]{
-                    "AgentID",
-                    "ActiveGroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(2);
+                row["AgentID"] = AgentID;
+                row["ActiveGroupID"] = GroupID;
+                data.Insert("osagent", row);
             }
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
@@ -262,15 +221,15 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
-            data.Update("osgroupmembership", new object[] {RoleID}, new[] {"SelectedRoleID"}, new[]
-                                                                                                  {
-                                                                                                      "AgentID",
-                                                                                                      "GroupID"
-                                                                                                  }, new object[]
-                                                                                                         {
-                                                                                                             AgentID,
-                                                                                                             GroupID
-                                                                                                         });
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["SelectedRoleID"] = RoleID;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
+            filter.andFilters["GroupID"] = GroupID;
+
+            data.Update("osgroupmembership", values, null, filter, null, null);
+
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
         }
@@ -296,16 +255,14 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                List<string> Keys = new List<string>{
-                    "GroupID",
-                    "AgentID",
-                    "SelectedRoleID",
-                    "Contribution",
-                    "ListInProfile",
-                    "AcceptNotices"
-                };
-                List<Object> Values = new List<object> {GroupID, AgentID, RoleID, 0, 1, 1};
-                data.Insert("osgroupmembership", Keys.ToArray(), Values.ToArray());
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["AgentID"] = AgentID;
+                row["SelectedRoleID"] = RoleID;
+                row["Contribution"] = 0;
+                row["ListInProfile"] = 1;
+                row["AcceptNotices"] = 1;
+                data.Insert("osgroupmembership", row);
             }
 
             // Make sure they're in the Everyone role
@@ -321,46 +278,35 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
+            //Allow kicking yourself
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
-                (requestingAgentID != AgentID)) //Allow kicking yourself
-                return false;
-            // 1. If group is agent's active group, change active group to uuidZero
-            // 2. Remove Agent from group (osgroupmembership)
-            // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
-            data.Update("osagent", new object[] {UUID.Zero}, new[] {"ActiveGroupID"}, new[]
-                                                                                          {
-                                                                                              "AgentID",
-                                                                                              "ActiveGroupID"
-                                                                                          }, new object[]
-                                                                                                 {
-                                                                                                     AgentID,
-                                                                                                     GroupID
-                                                                                                 });
+            if ((CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RemoveMember)) && (requestingAgentID != AgentID))
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["ActiveGroupID"] = GroupID;
 
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID
-                                                            });
-            data.Delete("osgroupmembership", new[]
-                                                 {
-                                                     "AgentID",
-                                                     "GroupID"
-                                                 }, new object[]
-                                                        {
-                                                            AgentID,
-                                                            GroupID
-                                                        });
+                Dictionary<string, object> values = new Dictionary<string,object>(1);
+                values["ActiveGroupID"] = UUID.Zero;
 
-            return true;
+                // 1. If group is agent's active group, change active group to uuidZero
+                data.Update("osagent", values, null, filter, null, null);
+
+                filter.andFilters.Remove("ActiveGroupID");
+                filter.andFilters["GroupID"] = GroupID;
+
+                // 2. Remove Agent from group (osgroupmembership)
+                data.Delete("osgrouprolemembership", filter);
+
+                // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
+                data.Delete("osgroupmembership", filter);
+
+                return true;
+            }
+            return false;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -370,12 +316,17 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.CreateRole))
-                return;
-            List<string> Keys = new List<string> {"GroupID", "RoleID", "Name", "Description", "Title", "Powers"};
-            List<Object> Values = new List<object>
-                                      {GroupID, RoleID, Name.MySqlEscape(50), Description.MySqlEscape(50), Title, Powers};
-            data.Insert("osrole", Keys.ToArray(), Values.ToArray());
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.CreateRole))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["Name"] = Name.MySqlEscape(50);
+                row["Description"] = Description.MySqlEscape(50);
+                row["Title"] = Title;
+                row["Powers"] = Powers;
+                data.Insert("osrole", row);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -385,37 +336,30 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RoleProperties))
-                return;
-            List<string> Keys = new List<string> {"RoleID"};
-            if (Name != null)
-                Keys.Add("Name");
-            if (Desc != null)
-                Keys.Add("Description");
-            if (Title != null)
-                Keys.Add("Title");
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RoleProperties))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["RoleID"] = RoleID;
+                if (Name != null)
+                {
+                    values["Name"] = Name.MySqlEscape(512);
+                }
+                if (Desc != null)
+                {
+                    values["Description"] = Desc.MySqlEscape(512);
+                }
+                if (Title != null)
+                {
+                    values["Title"] = Title.MySqlEscape(512);
+                }
+                values["Powers"] = Powers;
 
-            Keys.Add("Powers");
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["GroupID"] = GroupID;
+                filter.andFilters["RoleID"] = RoleID;
 
-            List<object> Values = new List<object> {RoleID};
-            if (Name != null)
-                Values.Add(Name.MySqlEscape(512));
-            if (Desc != null)
-                Values.Add(Desc.MySqlEscape(512));
-            if (Title != null)
-                Values.Add(Title.MySqlEscape(512));
-
-            Values.Add(Powers);
-
-            data.Update("osrole", Values.ToArray(), Keys.ToArray(), new[]
-                                                                        {
-                                                                            "GroupID",
-                                                                            "RoleID"
-                                                                        }, new object[]
-                                                                               {
-                                                                                   GroupID,
-                                                                                   RoleID
-                                                                               });
+                data.Update("osrole", values, null, filter, null, null);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -425,35 +369,23 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.DeleteRole))
-                return;
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "GroupID",
-                                                         "RoleID"
-                                                     }, new object[]
-                                                            {
-                                                                GroupID,
-                                                                RoleID
-                                                            });
-            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
-                                                                                                     {
-                                                                                                         "GroupID",
-                                                                                                         "SelectedRoleID"
-                                                                                                     }, new object[]
-                                                                                                            {
-                                                                                                                GroupID,
-                                                                                                                RoleID
-                                                                                                            });
-            data.Delete("osrole", new[]
-                                      {
-                                          "GroupID",
-                                          "RoleID"
-                                      }, new object[]
-                                             {
-                                                 GroupID,
-                                                 RoleID
-                                             });
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.DeleteRole))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["SelectedRoleID"] = UUID.Zero;
+
+                QueryFilter ufilter = new QueryFilter();
+                ufilter.andFilters["GroupID"] = GroupID;
+                ufilter.andFilters["SelectedRoleID"] = RoleID;
+
+                QueryFilter dfilter = new QueryFilter();
+                dfilter.andFilters["GroupID"] = GroupID;
+                dfilter.andFilters["RoleID"] = RoleID;
+
+                data.Delete("osgrouprolemembership", dfilter);
+                data.Update("osgroupmembership", values, null, ufilter, null, null);
+                data.Delete("osrole", dfilter);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -481,15 +413,11 @@ namespace Aurora.Services.DataService
             //Make sure they arn't already in this role
             if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
             {
-                data.Insert("osgrouprolemembership", new[]{
-                    "GroupID",
-                    "RoleID",
-                    "AgentID"
-                }, new object[]{
-                    GroupID,
-                    RoleID,
-                    AgentID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(3);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["AgentID"] = AgentID;
+                data.Insert("osgrouprolemembership", row);
             }
         }
 
@@ -500,30 +428,22 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
-                return;
-            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
-                                                                                                     {
-                                                                                                         "AgentID",
-                                                                                                         "GroupID",
-                                                                                                         "SelectedRoleID"
-                                                                                                     }, new object[]
-                                                                                                            {
-                                                                                                                AgentID,
-                                                                                                                GroupID,
-                                                                                                                RoleID
-                                                                                                            });
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID",
-                                                         "RoleID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID,
-                                                                RoleID
-                                                            });
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMember))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["SelectedRoleID"] = UUID.Zero;
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["GroupID"] = GroupID;
+                filter.andFilters["SelectedRoleID"] = RoleID;
+
+                data.Update("osgroupmembership", values, null, filter, null, null);
+
+                filter.andFilters.Remove("SelectedRoleID");
+                filter.andFilters["RoleID"] = RoleID;
+                data.Delete("osgrouprolemembership", filter);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -533,28 +453,22 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ChangeIdentity))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ChangeIdentity))
+            {
                 return;
+            }
 
-            data.Update("osgroupmembership", new object[]
-                                                 {
-                                                     AgentID,
-                                                     AcceptNotices,
-                                                     ListInProfile
-                                                 }, new[]
-                                                        {
-                                                            "AgentID",
-                                                            "AcceptNotices",
-                                                            "ListInProfile"
-                                                        }, new[]
-                                                               {
-                                                                   "GroupID",
-                                                                   "AgentID"
-                                                               }, new object[]
-                                                                      {
-                                                                          AgentID,
-                                                                          GroupID
-                                                                      });
+            Dictionary<string, object> values = new Dictionary<string, object>(3);
+            values["AgentID"] = AgentID;
+            values["AcceptNotices"] = AcceptNotices;
+            values["ListInProfile"] = ListInProfile;
+
+            QueryFilter filter = new QueryFilter();
+            // these look the wrong way around ~ SignpostMarv
+            filter.andFilters["GroupID"] = AgentID;
+            filter.andFilters["AgentID"] = GroupID;
+
+            data.Update("osgroupmembership", values, null, filter, null, null);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -564,34 +478,22 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.Invite))
-                return;
-            data.Delete("osgroupinvite", new[]
-                                             {
-                                                 "AgentID",
-                                                 "GroupID"
-                                             }, new object[]
-                                                    {
-                                                        AgentID,
-                                                        GroupID
-                                                    });
-            data.Insert("osgroupinvite", new[]
-                                             {
-                                                 "InviteID",
-                                                 "GroupID",
-                                                 "RoleID",
-                                                 "AgentID",
-                                                 "TMStamp",
-                                                 "FromAgentName"
-                                             }, new object[]
-                                                    {
-                                                        inviteID,
-                                                        GroupID,
-                                                        roleID,
-                                                        AgentID,
-                                                        Util.UnixTimeSinceEpoch(),
-                                                        FromAgentName.MySqlEscape(50)
-                                                    });
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.Invite))
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["GroupID"] = GroupID;
+                data.Delete("osgroupinvite", filter);
+
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["InviteID"] = inviteID;
+                row["GroupID"] = GroupID;
+                row["RoleID"] = roleID;
+                row["AgentID"] = AgentID;
+                row["TMStamp"] = Util.UnixTimeSinceEpoch();
+                row["FromAgentName"] = FromAgentName.MySqlEscape(50);
+                data.Insert("osgroupinvite", row);
+            }
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -601,7 +503,9 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["InviteID"] = inviteID;
+            data.Delete("osgroupinvite", filter);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

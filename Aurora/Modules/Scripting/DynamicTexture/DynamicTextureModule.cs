@@ -342,10 +342,10 @@ namespace Aurora.Modules.Scripting
                     {
                         asset.Flags = asset.Flags & ~AssetFlags.Local;
                     }
-                    if (((asset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary) != ((Disp & DISP_TEMP) != 0))
+                    if (((asset.Flags & AssetFlags.Temporary) == AssetFlags.Temporary) != ((Disp & DISP_TEMP) != 0))
                     {
-                        if ((Disp & DISP_TEMP) != 0) asset.Flags |= AssetFlags.Temperary;
-                        else asset.Flags = asset.Flags & ~AssetFlags.Temperary;
+                        if ((Disp & DISP_TEMP) != 0) asset.Flags |= AssetFlags.Temporary;
+                        else asset.Flags = asset.Flags & ~AssetFlags.Temporary;
                     }
                     asset.ID = scene.AssetService.Store(asset);
                 }
@@ -356,7 +356,7 @@ namespace Aurora.Modules.Scripting
                                           AssetType.Texture,
                                           scene.RegionInfo.RegionID)
                                 {Data = assetData, Description = String.Format("URL image : {0}", Url)};
-                    if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temperary;
+                    if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temporary;
                     asset.ID = scene.AssetService.Store(asset);
                 }
 
@@ -408,7 +408,7 @@ namespace Aurora.Modules.Scripting
                     if (oldAsset == null) oldAsset = scene.AssetService.Get(oldID.ToString());
                     if (oldAsset != null)
                     {
-                        if ((oldAsset.Flags & AssetFlags.Temperary) == AssetFlags.Temperary)
+                        if ((oldAsset.Flags & AssetFlags.Temporary) == AssetFlags.Temporary)
                         {
                             scene.AssetService.Delete(oldID);
                         }

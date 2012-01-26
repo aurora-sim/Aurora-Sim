@@ -188,7 +188,9 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete("searchparcel", filter);
         }
 
         #endregion
@@ -1029,39 +1031,24 @@ namespace Aurora.Services.DataService
             eventData.description = description;
             eventData.category = category;
 
-            GD.Insert("asevents", new string[]{
-                "EID",
-                "creator",
-                "region",
-                "parcel", 
-                "date", 
-                "cover", 
-                "maturity", 
-                "flags", 
-                "duration", 
-                "localPosX", 
-                "localPosY", 
-                "localPosZ", 
-                "name",
-                "description",
-                "category"
-            }, new object[]{
-                eventData.eventID,
-                creator.ToString(),
-                regionID.ToString(),
-                parcelID.ToString(),
-                date.ToString("s"),
-                eventData.cover,
-                (uint)maturity,
-                flags,
-                duration,
-                localPos.X,
-                localPos.Y,
-                localPos.Z,
-                name,
-                description,
-                category
-            });
+            Dictionary<string, object> row = new Dictionary<string, object>(15);
+            row["EID"] = eventData.eventID;
+            row["creator"] = creator.ToString();
+            row["region"] = regionID.ToString();
+            row["parcel"] = parcelID.ToString();
+            row["date"] = date.ToString("s");
+            row["cover"] = eventData.cover;
+            row["maturity"] = (uint)maturity;
+            row["flags"] = flags;
+            row["duration"] = duration;
+            row["localPosX"] = localPos.X;
+            row["localPosY"] = localPos.Y;
+            row["localPosZ"] = localPos.Z;
+            row["name"] = name;
+            row["description"] = description;
+            row["category"] = category;
+
+            GD.Insert("asevents", row);
 
             return eventData;
         }

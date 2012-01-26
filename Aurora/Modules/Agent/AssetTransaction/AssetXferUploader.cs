@@ -108,7 +108,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             m_asset = new AssetBase(assetID, "blank", (AssetType) type, remoteClient.AgentId)
                           {Data = data, Description = "empty"};
             if (storeLocal) m_asset.Flags |= AssetFlags.Local;
-            if (tempFile) m_asset.Flags |= AssetFlags.Temperary;
+            if (tempFile) m_asset.Flags |= AssetFlags.Temporary;
 
             TransactionID = transaction;
             m_storeLocal = storeLocal;

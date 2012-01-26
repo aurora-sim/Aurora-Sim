@@ -101,33 +101,20 @@ namespace Aurora.Modules.Ban
 
         public void UpdatePresenceInfo(PresenceInfo agent)
 		{
-			List<object> SetValues = new List<object>();
-            List<string> SetRows = new List<string>();
-            SetRows.Add("AgentID"/*"AgentID"*/);
-            SetRows.Add("Flags"/*"Flags"*/);
-            SetRows.Add("KnownAlts"/*"KnownAlts"*/);
-            SetRows.Add("KnownID0s"/*"KnownID0s"*/);
-            SetRows.Add("KnownIPs"/*"KnownIPs"*/);
-            SetRows.Add("KnownMacs"/*"KnownMacs"*/);
-            SetRows.Add("KnownViewers"/*"KnownViewers"*/);
-            SetRows.Add("LastKnownID0"/*"LastKnownID0"*/);
-            SetRows.Add("LastKnownIP"/*"LastKnownIP"*/);
-            SetRows.Add("LastKnownMac"/*"LastKnownMac"*/);
-            SetRows.Add("LastKnownViewer"/*"LastKnownViewer"*/);
-            SetRows.Add("Platform"/*"Platform"*/);
-            SetValues.Add(agent.AgentID);
-            SetValues.Add(agent.Flags);
-            SetValues.Add(Util.ConvertToString(agent.KnownAlts));
-            SetValues.Add(Util.ConvertToString(agent.KnownID0s));
-            SetValues.Add(Util.ConvertToString(agent.KnownIPs));
-            SetValues.Add(Util.ConvertToString(agent.KnownMacs));
-            SetValues.Add(Util.ConvertToString(agent.KnownViewers));
-            SetValues.Add(agent.LastKnownID0);
-            SetValues.Add(agent.LastKnownIP);
-            SetValues.Add(agent.LastKnownMac);
-            SetValues.Add(agent.LastKnownViewer);
-            SetValues.Add(agent.Platform);
-            GD.Replace("baninfo", SetRows.ToArray(), SetValues.ToArray());
+            Dictionary<string, object> row = new Dictionary<string, object>(12);
+            row["AgentID"] = agent.AgentID;
+            row["Flags"] = agent.Flags;
+            row["KnownAlts"] = Util.ConvertToString(agent.KnownAlts);
+            row["KnownID0s"] = Util.ConvertToString(agent.KnownID0s);
+            row["KnownIPs"] = Util.ConvertToString(agent.KnownIPs);
+            row["KnownMacs"] = Util.ConvertToString(agent.KnownMacs);
+            row["KnownViewers"] = Util.ConvertToString(agent.KnownViewers);
+            row["LastKnownID0"] = agent.LastKnownID0;
+            row["LastKnownIP"] = agent.LastKnownIP;
+            row["LastKnownMac"] = agent.LastKnownMac;
+            row["LastKnownViewer"] = agent.LastKnownViewer;
+            row["Platform"] = agent.Platform;
+            GD.Replace("baninfo", row);
         }
 
         public void Check(List<string> viewers, bool includeList)

@@ -128,20 +128,17 @@ namespace Aurora.Services.DataService
             Profile.MembershipGroup = previousProfile.MembershipGroup;
             Profile.Created = previousProfile.Created;
 
-            List<object> SetValues = new List<object>();
-            List<string> SetRows = new List<string> {"Value"};
-            SetValues.Add(OSDParser.SerializeLLSDXmlString(Profile.ToOSD()));
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["Value"] = OSDParser.SerializeLLSDXmlString(Profile.ToOSD());
 
-            List<object> KeyValue = new List<object>();
-            List<string> KeyRow = new List<string> {"ID"};
-            KeyValue.Add(Profile.PrincipalID.ToString());
-            KeyRow.Add("`Key`");
-            KeyValue.Add("LLProfile");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ID"] = Profile.PrincipalID.ToString();
+            filter.andFilters["`Key`"] = "LLProfile";
 
             //Update cache
             UserProfilesCache[Profile.PrincipalID] = Profile;
 
-            return GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            return GD.Update("userdata", values, null, filter, null, null);
         }
 
         /// <summary>
@@ -175,16 +172,17 @@ namespace Aurora.Services.DataService
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
             //It might be updating, delete the old
-            GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {classified.ClassifiedUUID});
-            List<object> values = new List<object>
-                                      {
-                                          classified.Name.MySqlEscape(),
-                                          classified.Category,
-                                          classified.SimName.MySqlEscape(),
-                                          classified.CreatorUUID,
-                                          classified.ClassifiedUUID,
-                                          OSDParser.SerializeJsonString(classified.ToOSD())
-                                      };
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ClassifiedUUID"] = classified.ClassifiedUUID;
+            GD.Delete("userclassifieds", filter);
+            List<object> values = new List<object>{
+                classified.Name.MySqlEscape(),
+                classified.Category,
+                classified.SimName.MySqlEscape(),
+                classified.CreatorUUID,
+                classified.ClassifiedUUID,
+                OSDParser.SerializeJsonString(classified.ToOSD())
+            };
             return GD.Insert("userclassifieds", values.ToArray());
         }
 
@@ -238,7 +236,9 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GD.Delete("userclassifieds", new string[1] {"ClassifiedUUID"}, new object[1] {queryClassifiedID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ClassifiedUUID"] = queryClassifiedID;
+            GD.Delete("userclassifieds", filter);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -252,7 +252,9 @@ namespace Aurora.Services.DataService
                 return false;
 
             //It might be updating, delete the old
-            GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {pick.PickUUID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PickUUID"] = pick.PickUUID;
+            GD.Delete("userpicks", filter);
             List<object> values = new List<object>
                                       {
                                           pick.Name.MySqlEscape(),
@@ -312,7 +314,9 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GD.Delete("userpicks", new string[1] {"PickUUID"}, new object[1] {queryPickID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PickUUID"] = queryPickID;
+            GD.Delete("userpicks", filter);
         }
 
         #endregion

@@ -106,7 +106,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GenericUtils.RemoveGeneric(AgentID, "MuteList", muteID.ToString(), GD);
+            GenericUtils.RemoveGenericByKeyAndType(AgentID, "MuteList", muteID.ToString(), GD);
         }
 
         /// <summary>
