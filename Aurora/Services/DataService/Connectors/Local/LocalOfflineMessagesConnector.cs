@@ -88,8 +88,8 @@ namespace Aurora.Services.DataService
             List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD);
             Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD));
             //Clear them out now that we have them
-            GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
-            GenericUtils.RemoveGeneric(agentID, "GroupOfflineMessages", GD);
+            GenericUtils.RemoveGenericByType(agentID, "OfflineMessages", GD);
+            GenericUtils.RemoveGenericByType(agentID, "GroupOfflineMessages", GD);
             return Messages;
         }
 

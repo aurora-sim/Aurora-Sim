@@ -126,15 +126,14 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            List<object> SetValues = new List<object> {OSDParser.SerializeLLSDXmlString(agent.ToOSD())};
-            List<string> SetRows = new List<string> {"Value"};
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["Value"] = OSDParser.SerializeLLSDXmlString(agent.ToOSD());
 
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["ID"] = agent.PrincipalID;
+            filter.andFilters["`Key`"] = "AgentInfo";
 
-            List<object> KeyValue = new List<object> {agent.PrincipalID, "AgentInfo"};
-
-            List<string> KeyRow = new List<string> {"ID", "`Key`"};
-
-            GD.Update("userdata", SetValues.ToArray(), SetRows.ToArray(), KeyRow.ToArray(), KeyValue.ToArray());
+            GD.Update("userdata", values, null, filter, null, null);
         }
 
         public void CacheAgent(IAgentInfo agent)

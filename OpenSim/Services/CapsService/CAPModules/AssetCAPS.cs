@@ -222,7 +222,7 @@ namespace OpenSim.Services.CapsService
                         if (newTexture.Data.Length == 0)
                             return false; // !!! Caller try another codec, please!
 
-                        newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temperary;
+                        newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temporary;
                         newTexture.ID = m_assetService.Store(newTexture);
                         WriteTextureData(httpRequest, httpResponse, newTexture, format);
                         newTexture = null;
@@ -485,7 +485,7 @@ namespace OpenSim.Services.CapsService
         {
             //MainConsole.Instance.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
             AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID)
-                                  {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temperary};
+                                  {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temporary};
             newAssetID = m_assetService.Store(asset);
             MainConsole.Instance.DebugFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
             asset.ID = newAssetID;

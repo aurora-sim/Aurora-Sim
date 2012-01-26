@@ -78,7 +78,7 @@ namespace Aurora.Services.DataService
 
             //Get all the messages
             List<Email> emails = GenericUtils.GetGenerics<Email>(objectID, "Emails", GD);
-            GenericUtils.RemoveGeneric(objectID, "Emails", GD);
+            GenericUtils.RemoveGenericByType(objectID, "Emails", GD);
             return emails;
         }
 

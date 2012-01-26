@@ -633,8 +633,7 @@ namespace Aurora.Modules.Estate
             if (agentInfo != null)
             {
                 //Can only enter prelude regions once!
-                int flags = scene.GridService.GetRegionFlags(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
-                if (flags != -1 && ((flags & (int) RegionFlags.Prelude) == (int) RegionFlags.Prelude) &&
+                if (scene.RegionInfo.RegionFlags != -1 && ((scene.RegionInfo.RegionFlags & (int)RegionFlags.Prelude) == (int)RegionFlags.Prelude) &&
                     agentInfo != null)
                 {
                     if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + scene.RegionInfo.RegionID))

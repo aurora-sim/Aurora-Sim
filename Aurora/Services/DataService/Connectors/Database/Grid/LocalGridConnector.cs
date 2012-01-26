@@ -217,47 +217,41 @@ namespace Aurora.Services.DataService
             List<string> keys = new List<string>();
             List<object> values = new List<object>();
 
-            keys.Add("ScopeID");
-            keys.Add("RegionUUID");
-            keys.Add("RegionName");
-            keys.Add("LocX");
-            keys.Add("LocY");
-            keys.Add("LocZ");
-            keys.Add("OwnerUUID");
-            keys.Add("Access");
-            keys.Add("SizeX");
-            keys.Add("SizeY");
-            keys.Add("SizeZ");
-            keys.Add("Flags");
-            keys.Add("SessionID");
-            keys.Add("Info");
+            Dictionary<string, object> row = new Dictionary<string, object>(14);
+            row["ScopeID"] = region.ScopeID;
+            row["RegionUUID"] = region.RegionID;
+            row["RegionName"] = region.RegionName;
+            row["LocX"] = region.RegionLocX;
+            row["LocY"] = region.RegionLocY;
+            row["LocZ"] = region.RegionLocZ;
+            row["OwnerUUID"] = region.EstateOwner;
+            row["Access"] = region.Access;
+            row["SizeX"] = region.RegionSizeX;
+            row["SizeY"] = region.RegionSizeY;
+            row["SizeZ"] = region.RegionSizeZ;
+            row["Flags"] = region.Flags;
+            row["SessionID"] = region.SessionID;
+            row["Info"] = OSDParser.SerializeJsonString(region.ToOSD());
 
-            values.Add(region.ScopeID);
-            values.Add(region.RegionID);
-            values.Add(region.RegionName.MySqlEscape(50));
-            values.Add(region.RegionLocX);
-            values.Add(region.RegionLocY);
-            values.Add(region.RegionLocZ);
-            values.Add(region.EstateOwner);
-            values.Add(region.Access);
-            values.Add(region.RegionSizeX);
-            values.Add(region.RegionSizeY);
-            values.Add(region.RegionSizeZ);
-            values.Add(region.Flags); //Flags
-            values.Add(region.SessionID);
-            values.Add(OSDParser.SerializeJsonString(region.ToOSD()));
-
-            return GD.Replace(m_realm, keys.ToArray(), values.ToArray());
+            return GD.Replace(m_realm, row);
         }
 
         public bool Delete(UUID regionID)
         {
-            return GD.Delete(m_realm, new string[1] {"RegionUUID"}, new object[1] {regionID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionUUID"] = regionID;
+            return GD.Delete(m_realm, filter);
         }
 
         public bool DeleteAll(string[] criteriaKey, object[] criteriaValue)
         {
-            return GD.Delete(m_realm, criteriaKey, criteriaValue);
+            QueryFilter filter = new QueryFilter();
+            int i = 0;
+            foreach (object value in criteriaValue)
+            {
+                filter.andFilters[criteriaKey[i++]] = value;
+            }
+            return GD.Delete(m_realm, filter);
         }
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)

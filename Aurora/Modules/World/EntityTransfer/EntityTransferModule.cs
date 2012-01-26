@@ -1087,6 +1087,10 @@ namespace Aurora.Modules.EntityTransfer
             if (conn != null)
                 conn.CacheAgent(cache.AgentInfo);
             scene.UserAccountService.CacheAccount(cache.UserAccount);
+
+            IGroupsModule groupsMod = scene.RequestModuleInterface<IGroupsModule>();
+            if (groupsMod != null)
+                groupsMod.UpdateCachedData(cache.UserAccount.PrincipalID, cache);
         }
 
         private readonly Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();

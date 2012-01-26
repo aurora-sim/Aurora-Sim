@@ -2585,7 +2585,7 @@ namespace Aurora.Framework
             OSDArray list = new OSDArray();
             foreach (object o in array)
             {
-                OSD osd = OSD.FromObject(o);
+                OSD osd = Util.MakeOSD(o, o.GetType());
                 if(osd != null)
                     list.Add(osd);
             }

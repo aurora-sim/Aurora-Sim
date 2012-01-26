@@ -44,7 +44,7 @@ namespace Aurora.Framework
         Collectable = 4, // Can be GC'ed after some time
         Deletable = 8, // The asset can be deleted
         Local = 16, // Region-only asset, never stored in the database
-        Temperary = 32,
+        Temporary = 32,
         // Is this asset going to exist permanently in the database, or can it be purged after a set amount of time?
         RemotelyAccessable = 64 // Regions outside of this grid can access this asset
     }

@@ -1263,6 +1263,13 @@ namespace OpenSim.Services.MessagingService
             if (con != null)
                 info.AgentInfo = con.GetAgent(aCircuit.AgentID);
             info.UserAccount = regionCaps.ClientCaps.AccountInfo;
+
+            IGroupsServiceConnector groupsConn = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            if (groupsConn != null)
+            {
+                info.ActiveGroup = groupsConn.GetGroupMembershipData(aCircuit.AgentID, UUID.Zero, aCircuit.AgentID);
+                info.GroupMemberships = groupsConn.GetAgentGroupMemberships(aCircuit.AgentID, aCircuit.AgentID);
+            }
             aCircuit.OtherInformation["CachedUserInfo"] = info.ToOSD();
             return SimulationService.CreateAgent(region, ref aCircuit, aCircuit.teleportFlags, null,
                                                     out requestedUDPPort, out reason);

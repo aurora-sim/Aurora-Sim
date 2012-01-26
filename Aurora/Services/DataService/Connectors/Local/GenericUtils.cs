@@ -163,60 +163,63 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Adds a generic into the database
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
         /// <param name = "Value"></param>
         /// <param name = "GD"></param>
-        public static void AddGeneric(UUID AgentID, string Type, string Key, OSDMap Value, IGenericData GD)
+        public static void AddGeneric(UUID OwnerID, string Type, string Key, OSDMap Value, IGenericData GD)
         {
-            GD.Replace("generics", new[] {"OwnerID", "Type", "`Key`", "`Value`"},
-                       new object[] {AgentID, Type, Key, OSDParser.SerializeJsonString(Value)});
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["OwnerID"] = OwnerID;
+            row["Type"] = Type;
+            row["`Key`"] = Key;
+            row["`Value`"] = OSDParser.SerializeJsonString(Value);
+            GD.Replace("generics", row);
+        }
+
+        /// <summary>
+        /// Remove generic data for the specified owner by type and key
+        /// </summary>
+        /// <param name="OwnerID">ID of the entity that owns the generic data</param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
+        public static void RemoveGenericByKeyAndType(UUID OwnerID, string Type, string Key, IGenericData GD)
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["Type"] = Type;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
         ///   Removes a generic from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "GD"></param>
-        public static void RemoveGeneric(UUID AgentID, string Type, string Key, IGenericData GD)
-        {
-            GD.Delete("generics", new[] {"OwnerID", "Type", "`Key`"}, new object[] {AgentID, Type, Key});
-        }
-
-        /// <summary>
-        ///   Removes a generic from the database
-        /// </summary>
-        /// <param name = "OwnerID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Key"></param>
         /// <param name = "GD"></param>
         public static void RemoveGenericByKey(UUID OwnerID, string Key, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "`Key`"}, new object[] {OwnerID, Key});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
         ///   Removes a generic from the database
         /// </summary>
-        /// <param name = "OwnerID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Type"></param>
         /// <param name = "GD"></param>
         public static void RemoveGenericByType(UUID OwnerID, string Type, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type});
-        }
-
-        /// <summary>
-        ///   Removes a generic from the database
-        /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        public static void RemoveGeneric(UUID AgentID, string Type, IGenericData GD)
-        {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {AgentID, Type});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["Type"] = Type;
+            GD.Delete("generics", filter);
         }
 
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key)

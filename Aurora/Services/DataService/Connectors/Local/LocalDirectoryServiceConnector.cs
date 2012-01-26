@@ -188,7 +188,9 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete("searchparcel", filter);
         }
 
         #endregion
@@ -680,6 +682,7 @@ namespace Aurora.Services.DataService
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
             object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
@@ -738,6 +741,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "regionName"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<Classified> GetClassifiedsInRegion(string regionName)
         {
             object remoteValue = DoRemote(regionName);
@@ -981,6 +985,7 @@ namespace Aurora.Services.DataService
             return (RetVal.Count == 0) ? null : Query2EventData(RetVal)[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public EventData CreateEvent(UUID creator, UUID regionID, UUID parcelID, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category)
         {
             object remoteValue = DoRemote(creator, regionID, parcelID, date, cover, maturity, flags, duration, localPos, name, description, category);
@@ -1026,39 +1031,24 @@ namespace Aurora.Services.DataService
             eventData.description = description;
             eventData.category = category;
 
-            GD.Insert("asevents", new string[]{
-                "EID",
-                "creator",
-                "region",
-                "parcel", 
-                "date", 
-                "cover", 
-                "maturity", 
-                "flags", 
-                "duration", 
-                "localPosX", 
-                "localPosY", 
-                "localPosZ", 
-                "name",
-                "description",
-                "category"
-            }, new object[]{
-                eventData.eventID,
-                creator.ToString(),
-                regionID.ToString(),
-                parcelID.ToString(),
-                date.ToString("s"),
-                eventData.cover,
-                (uint)maturity,
-                flags,
-                duration,
-                localPos.X,
-                localPos.Y,
-                localPos.Z,
-                name,
-                description,
-                category
-            });
+            Dictionary<string, object> row = new Dictionary<string, object>(15);
+            row["EID"] = eventData.eventID;
+            row["creator"] = creator.ToString();
+            row["region"] = regionID.ToString();
+            row["parcel"] = parcelID.ToString();
+            row["date"] = date.ToString("s");
+            row["cover"] = eventData.cover;
+            row["maturity"] = (uint)maturity;
+            row["flags"] = flags;
+            row["duration"] = duration;
+            row["localPosX"] = localPos.X;
+            row["localPosY"] = localPos.Y;
+            row["localPosZ"] = localPos.Z;
+            row["name"] = name;
+            row["description"] = description;
+            row["category"] = category;
+
+            GD.Insert("asevents", row);
 
             return eventData;
         }

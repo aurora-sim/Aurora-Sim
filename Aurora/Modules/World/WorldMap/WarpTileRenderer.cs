@@ -511,7 +511,7 @@ namespace Aurora.Modules.WorldMap
                                            {
                                                Data = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
                                                Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString(),
-                                               Flags = AssetFlags.Collectable | AssetFlags.Temperary | AssetFlags.Local,
+                                               Flags = AssetFlags.Collectable | AssetFlags.Temporary | AssetFlags.Local,
                                                ID = metadataID,
                                                Name = String.Empty,
                                                TypeAsset = AssetType.Simstate
