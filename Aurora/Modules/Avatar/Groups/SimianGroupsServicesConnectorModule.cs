@@ -1078,6 +1078,62 @@ namespace Aurora.Modules.Groups
 
         #endregion
 
+        public GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID)
+        {
+            GroupProfileData profile = new GroupProfileData();
+
+            GroupRecord groupInfo = GetGroupRecord(requestingAgentID, GroupID, null);
+            if (groupInfo != null)
+            {
+                profile.AllowPublish = groupInfo.AllowPublish;
+                profile.Charter = groupInfo.Charter;
+                profile.FounderID = groupInfo.FounderID;
+                profile.GroupID = GroupID;
+                profile.GroupMembershipCount =
+                    GetGroupMembers(requestingAgentID, GroupID).Count;
+                profile.GroupRolesCount = GetGroupRoles(requestingAgentID, GroupID).Count;
+                profile.InsigniaID = groupInfo.GroupPicture;
+                profile.MaturePublish = groupInfo.MaturePublish;
+                profile.MembershipFee = groupInfo.MembershipFee;
+                profile.Money = 0; // TODO: Get this from the currency server?
+                profile.Name = groupInfo.GroupName;
+                profile.OpenEnrollment = groupInfo.OpenEnrollment;
+                profile.OwnerRole = groupInfo.OwnerRoleID;
+                profile.ShowInList = groupInfo.ShowInList;
+            }
+
+            GroupMembershipData memberInfo = GetAgentGroupMembership(requestingAgentID,
+                                                                                 requestingAgentID,
+                                                                                 GroupID);
+            if (memberInfo != null)
+            {
+                profile.MemberTitle = memberInfo.GroupTitle;
+                profile.PowersMask = memberInfo.GroupPowers;
+            }
+
+            return profile;
+        }
+
+        public List<GroupTitlesData> GetGroupTitles(UUID requestingAgentID, UUID GroupID)
+        {
+            List<GroupRolesData> agentRoles = GetAgentGroupRoles(requestingAgentID,
+                                                                             requestingAgentID, GroupID);
+            GroupMembershipData agentMembership = GetAgentGroupMembership(
+                requestingAgentID, requestingAgentID, GroupID);
+
+            List<GroupTitlesData> titles = new List<GroupTitlesData>();
+            foreach (GroupRolesData role in agentRoles)
+            {
+                GroupTitlesData title = new GroupTitlesData { Name = role.Title, UUID = role.RoleID };
+                if (agentMembership != null)
+                    title.Selected = agentMembership.ActiveRole == role.RoleID;
+
+                titles.Add(title);
+            }
+
+            return titles;
+        }
+
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID groupID, UUID memberID)
         {
             if (m_debugEnabled) MainConsole.Instance.InfoFormat("[SIMIAN-GROUPS-CONNECTOR]  {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);

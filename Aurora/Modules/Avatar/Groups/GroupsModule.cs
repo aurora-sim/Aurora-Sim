@@ -115,48 +115,13 @@ namespace Aurora.Modules.Groups
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-
-            List<GroupRolesData> agentRoles = m_groupData.GetAgentGroupRoles(GetRequestingAgentID(remoteClient),
-                                                                             GetRequestingAgentID(remoteClient), groupID);
-            GroupMembershipData agentMembership = m_groupData.GetAgentGroupMembership(
-                GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID);
-
-            List<GroupTitlesData> titles = new List<GroupTitlesData>();
-            foreach (GroupRolesData role in agentRoles)
-            {
-                GroupTitlesData title = new GroupTitlesData {Name = role.Title};
-                if (agentMembership != null)
-                {
-                    title.Selected = agentMembership.ActiveRole == role.RoleID;
-                }
-                title.UUID = role.RoleID;
-
-                titles.Add(title);
-            }
-
-            return titles;
+            return m_groupData.GetGroupTitles(GetRequestingAgentID(remoteClient), groupID);
         }
 
         public List<GroupMembersData> GroupMembersRequest(IClientAPI remoteClient, UUID groupID)
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
             List<GroupMembersData> data = m_groupData.GetGroupMembers(GetRequestingAgentID(remoteClient), groupID);
-
-            if (m_findOnlineStatus)
-            {
-                foreach (GroupMembersData t in data)
-                {
-                    UserInfo info =
-                        m_sceneList[0].RequestModuleInterface<IAgentInfoService>().GetUserInfo(
-                            t.AgentID.ToString());
-                    if (info != null && !info.IsOnline)
-                        t.OnlineStatus = info.LastLogin.ToShortDateString();
-                    else if (info == null)
-                        t.OnlineStatus = "Unknown";
-                    else
-                        t.OnlineStatus = "Online";
-                }
-            }
 
             if (m_debugEnabled)
             {
@@ -199,39 +164,7 @@ namespace Aurora.Modules.Groups
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            GroupProfileData profile = new GroupProfileData();
-
-
-            GroupRecord groupInfo = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, null);
-            if (groupInfo != null)
-            {
-                profile.AllowPublish = groupInfo.AllowPublish;
-                profile.Charter = groupInfo.Charter;
-                profile.FounderID = groupInfo.FounderID;
-                profile.GroupID = groupID;
-                profile.GroupMembershipCount =
-                    m_groupData.GetGroupMembers(GetRequestingAgentID(remoteClient), groupID).Count;
-                profile.GroupRolesCount = m_groupData.GetGroupRoles(GetRequestingAgentID(remoteClient), groupID).Count;
-                profile.InsigniaID = groupInfo.GroupPicture;
-                profile.MaturePublish = groupInfo.MaturePublish;
-                profile.MembershipFee = groupInfo.MembershipFee;
-                profile.Money = 0; // TODO: Get this from the currency server?
-                profile.Name = groupInfo.GroupName;
-                profile.OpenEnrollment = groupInfo.OpenEnrollment;
-                profile.OwnerRole = groupInfo.OwnerRoleID;
-                profile.ShowInList = groupInfo.ShowInList;
-            }
-
-            GroupMembershipData memberInfo = m_groupData.GetAgentGroupMembership(GetRequestingAgentID(remoteClient),
-                                                                                 GetRequestingAgentID(remoteClient),
-                                                                                 groupID);
-            if (memberInfo != null)
-            {
-                profile.MemberTitle = memberInfo.GroupTitle;
-                profile.PowersMask = memberInfo.GroupPowers;
-            }
-
-            return profile;
+            return m_groupData.GetGroupProfile(GetRequestingAgentID(remoteClient), groupID);
         }
 
         public GroupMembershipData[] GetMembershipData(UUID agentID)
@@ -308,7 +241,7 @@ namespace Aurora.Modules.Groups
 
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
             m_cachedGroupTitles[remoteClient.AgentId] =
-                m_groupData.GetAgentActiveMembership(remoteClient.AgentId, remoteClient.AgentId);
+                m_groupData.GetAgentGroupMembership(remoteClient.AgentId, remoteClient.AgentId, groupID);
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
@@ -334,7 +267,7 @@ namespace Aurora.Modules.Groups
             if (m_cachedGroupTitles.ContainsKey(avatarID))
                 membership = m_cachedGroupTitles[avatarID];
             else
-                membership = m_groupData.GetAgentActiveMembership(UUID.Zero, avatarID);
+                membership = m_groupData.GetAgentActiveMembership(avatarID, avatarID);
 
             if (membership != null)
             {
@@ -472,7 +405,7 @@ namespace Aurora.Modules.Groups
             }
         }
 
-        public GridInstantMessage CreateGroupNoticeIM(UUID agentID, UUID groupNoticeID, byte dialog)
+        public GridInstantMessage CreateGroupNoticeIM(UUID agentID, GroupNoticeInfo info, byte dialog)
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
@@ -491,41 +424,26 @@ namespace Aurora.Modules.Groups
             // msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.GroupNotice;
             // Allow this message to be stored for offline use
 
-            GroupNoticeInfo info = m_groupData.GetGroupNotice(agentID, groupNoticeID);
-            if (info != null)
+            msg.fromAgentID = info.GroupID;
+            msg.timestamp = info.noticeData.Timestamp;
+            msg.fromAgentName = info.noticeData.FromName;
+            msg.message = info.noticeData.Subject + "|" + info.Message;
+            if (info.noticeData.HasAttachment)
             {
-                msg.fromAgentID = info.GroupID;
-                msg.timestamp = info.noticeData.Timestamp;
-                msg.fromAgentName = info.noticeData.FromName;
-                msg.message = info.noticeData.Subject + "|" + info.Message;
-                if (info.noticeData.HasAttachment)
-                {
-                    msg.binaryBucket = CreateBitBucketForGroupAttachment(info.noticeData, info.GroupID);
-                    //Save the sessionID for the callback by the client (reject or accept)
-                    //Only save if has attachment
-                    msg.imSessionID = info.noticeData.ItemID;
-                    //GroupAttachmentCache[msg.imSessionID] = info.noticeData.ItemID;
-                }
-                else
-                {
-                    byte[] bucket = new byte[19];
-                    bucket[0] = 0; //Attachment enabled == false so 0
-                    bucket[1] = 0; //No attachment, so no asset type
-                    info.GroupID.ToBytes(bucket, 2);
-                    bucket[18] = 0; //dunno
-                    msg.binaryBucket = bucket;
-                }
+                msg.binaryBucket = CreateBitBucketForGroupAttachment(info.noticeData, info.GroupID);
+                //Save the sessionID for the callback by the client (reject or accept)
+                //Only save if has attachment
+                msg.imSessionID = info.noticeData.ItemID;
+                //GroupAttachmentCache[msg.imSessionID] = info.noticeData.ItemID;
             }
             else
             {
-                if (m_debugEnabled)
-                    MainConsole.Instance.DebugFormat("[GROUPS]: Group Notice {0} not found, composing empty message.", groupNoticeID);
-                msg.fromAgentID = UUID.Zero;
-                msg.timestamp = (uint) Util.UnixTimeSinceEpoch();
-                ;
-                msg.fromAgentName = string.Empty;
-                msg.message = string.Empty;
-                msg.binaryBucket = new byte[0];
+                byte[] bucket = new byte[19];
+                bucket[0] = 0; //Attachment enabled == false so 0
+                bucket[1] = 0; //No attachment, so no asset type
+                info.GroupID.ToBytes(bucket, 2);
+                bucket[18] = 0; //dunno
+                msg.binaryBucket = bucket;
             }
 
             return msg;
@@ -1521,7 +1439,7 @@ namespace Aurora.Modules.Groups
                             //WTH??? noone but the invitee needs to know
                             //The other client wants to know too...
                             GroupMembershipData gmd =
-                                m_groupData.GetAgentActiveMembership(inviteInfo.AgentID, inviteInfo.AgentID);
+                                m_groupData.GetAgentGroupMembership(inviteInfo.AgentID, inviteInfo.AgentID, inviteInfo.GroupID);
                             m_cachedGroupTitles[inviteInfo.AgentID] = gmd;
                             UpdateAllClientsWithGroupInfo(inviteInfo.AgentID, gmd.GroupTitle);
                             SendAgentGroupDataUpdate(remoteClient);
@@ -1579,8 +1497,7 @@ namespace Aurora.Modules.Groups
                         {
                             ItemID = binBucketOSD["item_id"].AsUUID();
 
-                            InventoryItemBase item = new InventoryItemBase(ItemID, GetRequestingAgentID(remoteClient));
-                            item = m_sceneList[0].InventoryService.GetItem(item);
+                            InventoryItemBase item = m_sceneList[0].InventoryService.GetItem(new InventoryItemBase(ItemID, GetRequestingAgentID(remoteClient)));
                             if (item != null)
                             {
                                 AssetType = item.AssetType;
@@ -1595,6 +1512,24 @@ namespace Aurora.Modules.Groups
                                                Subject, Message, ItemID, AssetType, ItemName);
                     if (OnNewGroupNotice != null)
                         OnNewGroupNotice(GroupID, NoticeID);
+                    GroupNoticeInfo notice = new GroupNoticeInfo()
+                    {
+                        BinaryBucket = im.binaryBucket,
+                        GroupID = GroupID,
+                        Message = Message,
+                        noticeData = new GroupNoticeData()
+                        {
+                            AssetType = (byte)AssetType,
+                            FromName = im.fromAgentName,
+                            GroupID = GroupID,
+                            HasAttachment = ItemID != UUID.Zero,
+                            ItemID = ItemID,
+                            ItemName = ItemName,
+                            NoticeID = NoticeID,
+                            Subject = Subject,
+                            Timestamp = im.timestamp
+                        }
+                    };
 
                     // Send notice out to everyone that wants notices
                     foreach (
@@ -1623,7 +1558,7 @@ namespace Aurora.Modules.Groups
                         if (member.AcceptNotices)
                         {
                             // Build notice IIM
-                            GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), NoticeID,
+                            GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), notice,
                                                                          (byte) InstantMessageDialog.GroupNotice);
 
                             msg.toAgentID = member.AgentID;

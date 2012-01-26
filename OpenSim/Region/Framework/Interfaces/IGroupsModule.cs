@@ -92,7 +92,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void GroupRoleChanges(IClientAPI remoteClient, UUID GroupID, UUID RoleID, UUID MemberID, uint changes);
         void GroupNoticeRequest(IClientAPI remoteClient, UUID groupNoticeID);
-        GridInstantMessage CreateGroupNoticeIM(UUID agentID, UUID groupNoticeID, byte dialog);
+        GridInstantMessage CreateGroupNoticeIM(UUID agentID, GroupNoticeInfo info, byte dialog);
         void SendAgentGroupDataUpdate(IClientAPI remoteClient);
         void JoinGroupRequest(IClientAPI remoteClient, UUID GroupID);
         void LeaveGroupRequest(IClientAPI remoteClient, UUID GroupID);

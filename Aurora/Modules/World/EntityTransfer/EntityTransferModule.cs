@@ -148,7 +148,10 @@ namespace Aurora.Modules.EntityTransfer
             
             if (reg == null)
             {
-                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange (sp.Scene.RegionInfo.ScopeID, x - 8192, x + 8192, y - 8192, y + 8192);
+                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.Scene.RegionInfo.ScopeID, x - sp.Scene.GridService.MaxRegionSize,
+                    x + sp.Scene.GridService.MaxRegionSize,
+                    y - sp.Scene.GridService.MaxRegionSize,
+                    y + sp.Scene.GridService.MaxRegionSize);
                 foreach (GridRegion r in regions)
                 {
                     if (r.RegionLocX <= x && r.RegionLocX + r.RegionSizeX > x &&
@@ -598,18 +601,8 @@ namespace Aurora.Modules.EntityTransfer
             {
                 if (!positionIsAlreadyFixed)
                 {
-                    int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
-                    int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
-
-                    if (xOffset < 0)
-                        pos.X += m_scene.RegionInfo.RegionSizeX;
-                    else if (xOffset > 0)
-                        pos.X -= m_scene.RegionInfo.RegionSizeX;
-
-                    if (yOffset < 0)
-                        pos.Y += m_scene.RegionInfo.RegionSizeY;
-                    else if (yOffset > 0)
-                        pos.Y -= m_scene.RegionInfo.RegionSizeY;
+                    pos.X = (m_scene.RegionInfo.RegionLocX + pos.X) - crossingRegion.RegionLocX;
+                    pos.Y = (m_scene.RegionInfo.RegionLocY + pos.Y) - crossingRegion.RegionLocY;
 
                     //Make sure that they are within bounds (velocity can push it out of bounds)
                     if (pos.X < 0)

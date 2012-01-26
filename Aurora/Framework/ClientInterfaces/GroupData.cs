@@ -241,7 +241,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class GroupTitlesData
+    public class GroupTitlesData : IDataTransferable
     {
         public string Name;
         public bool Selected;
@@ -253,12 +253,33 @@ namespace Aurora.Framework
 
         public GroupTitlesData(Dictionary<string, object> values)
         {
+            FromKVP(values);
+        }
+
+        public override void FromKVP(Dictionary<string, object> values)
+        {
             UUID = UUID.Parse(values["UUID"].ToString());
             Name = values["Name"].ToString();
             Selected = bool.Parse(values["Selected"].ToString());
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override OSDMap ToOSD()
+        {
+            OSDMap values = new OSDMap();
+            values["Name"] = Name;
+            values["UUID"] = UUID;
+            values["Selected"] = Selected;
+            return values;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            UUID = map["UUID"];
+            Name = map["Name"];
+            Selected = map["Selected"];
+        }
+
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> values = new Dictionary<string, object>();
             values["Name"] = Name;
