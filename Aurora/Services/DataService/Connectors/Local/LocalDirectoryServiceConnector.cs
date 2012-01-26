@@ -680,6 +680,7 @@ namespace Aurora.Services.DataService
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
             object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
@@ -738,6 +739,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "regionName"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<Classified> GetClassifiedsInRegion(string regionName)
         {
             object remoteValue = DoRemote(regionName);
@@ -981,6 +983,7 @@ namespace Aurora.Services.DataService
             return (RetVal.Count == 0) ? null : Query2EventData(RetVal)[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public EventData CreateEvent(UUID creator, UUID regionID, UUID parcelID, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category)
         {
             object remoteValue = DoRemote(creator, regionID, parcelID, date, cover, maturity, flags, duration, localPos, name, description, category);
