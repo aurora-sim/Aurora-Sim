@@ -929,6 +929,42 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
+        public override string GetColumnTypeStringSymbol(ColumnTypeDef coldef)
+        {
+            switch (coldef.Type)
+            {
+                case ColumnType.Blob:
+                case ColumnType.LongBlob:
+                    return "BLOB";
+                case ColumnType.Boolean:
+                    return "TINYINT(1)";
+                case ColumnType.Char:
+                    return "CHAR(" + coldef.Size + ")";
+                case ColumnType.Date:
+                    return "DATE";
+                case ColumnType.DateTime:
+                    return "DATETIME";
+                case ColumnType.Double:
+                    return "DOUBLE";
+                case ColumnType.Float:
+                    return "FLOAT";
+                case ColumnType.Integer:
+                    return "INT(" + coldef.Size + ")";
+                case ColumnType.TinyInt:
+                    return "TINYINT(" + coldef.Size + ")";
+                case ColumnType.String:
+                    return "VARCHAR(" + coldef.Size + ")";
+                case ColumnType.Text:
+                case ColumnType.MediumText:
+                case ColumnType.LongText:
+                    return "TEXT";
+                case ColumnType.UUID:
+                    return "CHAR(36)";
+                default:
+                    throw new DataManagerException("Unknown column type.");
+            }
+        }
+
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
             var defs = new List<ColumnDefinition>();
@@ -1033,83 +1069,6 @@ namespace Aurora.DataManager.SQLite
             }
 
             return defs;
-        }
-
-        private ColumnTypes ConvertTypeToColumnType(string typeString)
-        {
-            string tStr = typeString.ToLower();
-            //we'll base our names on lowercase
-            switch (tStr)
-            {
-                case "double":
-                    return ColumnTypes.Double;
-                case "integer":
-                    return ColumnTypes.Integer11;
-                case "int(11)":
-                    return ColumnTypes.Integer11;
-                case "int(30)":
-                    return ColumnTypes.Integer30;
-                case "char(36)":
-                    return ColumnTypes.Char36;
-                case "char(32)":
-                    return ColumnTypes.Char32;
-                case "char(5)":
-                    return ColumnTypes.Char5;
-                case "varchar(1)":
-                    return ColumnTypes.String1;
-                case "varchar(2)":
-                    return ColumnTypes.String2;
-                case "varchar(10)":
-                    return ColumnTypes.String10;
-                case "varchar(16)":
-                    return ColumnTypes.String16;
-                case "varchar(30)":
-                    return ColumnTypes.String30;
-                case "varchar(32)":
-                    return ColumnTypes.String32;
-                case "varchar(36)":
-                    return ColumnTypes.String36;
-                case "varchar(45)":
-                    return ColumnTypes.String45;
-                case "varchar(50)":
-                    return ColumnTypes.String50;
-                case "varchar(64)":
-                    return ColumnTypes.String64;
-                case "varchar(128)":
-                    return ColumnTypes.String128;
-                case "varchar(100)":
-                    return ColumnTypes.String100;
-                case "varchar(512)":
-                    return ColumnTypes.String512;
-                case "varchar(255)":
-                    return ColumnTypes.String255;
-                case "varchar(1024)":
-                    return ColumnTypes.String1024;
-                case "date":
-                    return ColumnTypes.Date;
-                case "datetime":
-                    return ColumnTypes.DateTime;
-                case "text":
-                    return ColumnTypes.String512;
-                case "varchar(8196)":
-                    return ColumnTypes.String8196;
-                case "blob":
-                    return ColumnTypes.Blob;
-                case "float":
-                    return ColumnTypes.Float;
-                case "tinyint(1)":
-                    return ColumnTypes.TinyInt1;
-                case "tinyint(4)":
-                    return ColumnTypes.TinyInt4;
-                case "int unsigned":
-                    return ColumnTypes.Unknown;
-                case "":
-                    return ColumnTypes.Unknown;
-                default:
-                    throw new Exception("You've discovered some type in SQLite that's not reconized by Aurora (" +
-                                        typeString +
-                                        "), please place the correct conversion in ConvertTypeToColumnType.");
-            }
         }
 
         public override void DropTable(string tableName)
