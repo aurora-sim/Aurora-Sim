@@ -982,7 +982,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     asset1.ParentID = asset1.ID;
                                 }
 
-                                if (StoreAsset(asset1))
+                                bool wassuccessful;
+                                StoreAsset(asset1, out wassuccessful, true);
+                                if (wassuccessful)
                                 {
                                     QueryFilter fitler = new QueryFilter();
                                     filter.andFilters["id"] = asset1.ID;
