@@ -377,7 +377,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                         string databaseTable = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
                         List<string> results = m_Gd.Query(new string[] { "asset_flags" }, databaseTable, filter, null, null, null);
-                        AssetFlags thisassetflag = AssetFlags.Normal;
+                        AssetFlags thisassetflag = AssetFlags.Rewritable;
                         if ((results != null) && (results.Count >= 1))
                         {
                             thisassetflag = (AssetFlags)int.Parse(results[0]);
@@ -416,7 +416,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             row["task_values"] = asset.LastHashCode;
                             m_Gd.Insert("auroraassets_tasks", row);
                         }
-						row = new Dictionary<string, object>(3);
+                        row = new Dictionary<string, object>(3);
                         QueryFilter filter = new QueryFilter();
                         filter.andFilters["hash_code"] = asset.HashCode;
                         filter.andFilters["creator_id"] = asset.CreatorID;
