@@ -207,7 +207,7 @@ namespace Aurora.Framework
                 // If there is some input, write it into the request
                 if (data != null)
                 {
-                    string strBuffer = OSDParser.SerializeJsonString(data);
+                    string strBuffer = OSDParser.SerializeJsonString(data, true);
                     byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
 
                     if (buffer.Length <= 0)
