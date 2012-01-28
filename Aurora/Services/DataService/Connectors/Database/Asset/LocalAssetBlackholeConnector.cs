@@ -416,6 +416,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             m_Gd.Insert("auroraassets_tasks", row);
                         }
 
+                        row = new Dictionary<string, object>(3);
                         QueryFilter filter = new QueryFilter();
                         filter.andFilters["hash_code"] = asset.HashCode;
                         filter.andFilters["creator_id"] = asset.CreatorID;
