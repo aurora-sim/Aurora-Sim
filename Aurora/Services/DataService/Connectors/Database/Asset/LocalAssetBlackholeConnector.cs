@@ -377,7 +377,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                         string databaseTable = "auroraassets_" + asset.ID.ToString().Substring(0, 1);
                         List<string> results = m_Gd.Query(new string[] { "asset_flags" }, databaseTable, filter, null, null, null);
-                        AssetFlags thisassetflag;
+                        AssetFlags thisassetflag = AssetFlags.Rewritable;
                         if ((results != null) && (results.Count >= 1))
                         {
                             thisassetflag = (AssetFlags)int.Parse(results[0]);
@@ -386,10 +386,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                         {
                             databaseTable = "auroraassets_old";
                             results = m_Gd.Query(new string[] { "asset_flags" }, databaseTable, filter, null, null, null);
-                            thisassetflag = (AssetFlags)int.Parse(results[0]);
+                            if ((results != null) && (results.Count >= 1))
+                                thisassetflag = (AssetFlags)int.Parse(results[0]);
                         }
 
-                        if ((thisassetflag & AssetFlags.Rewritable) != AssetFlags.Rewritable)
+                        if (((thisassetflag & AssetFlags.Rewritable) != AssetFlags.Rewritable))
                         {
                             asset.ID = UUID.Random();
                             asset.CreationDate = DateTime.UtcNow;
@@ -415,7 +416,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             row["task_values"] = asset.LastHashCode;
                             m_Gd.Insert("auroraassets_tasks", row);
                         }
-
+                        row = new Dictionary<string, object>(3);
                         row = new Dictionary<string, object>(3);
                         QueryFilter filter = new QueryFilter();
                         filter.andFilters["hash_code"] = asset.HashCode;
@@ -982,7 +983,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     asset1.ParentID = asset1.ID;
                                 }
 
-                                if (StoreAsset(asset1))
+                                bool wassuccessful;
+                                StoreAsset(asset1, out wassuccessful, true);
+                                if (wassuccessful)
                                 {
                                     QueryFilter fitler = new QueryFilter();
                                     filter.andFilters["id"] = asset1.ID;
