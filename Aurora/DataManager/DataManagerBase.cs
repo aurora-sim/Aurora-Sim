@@ -166,7 +166,7 @@ namespace Aurora.DataManager
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
-                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                        if (thisDef.Type == columnDefinition.Type)
                         {
                             continue; //They are the same type, let them go on through
                         }
@@ -195,7 +195,7 @@ namespace Aurora.DataManager
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
-                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
+                        if (thisDef.Type == columnDefinition.Type)
                         {
                             continue; //They are the same type, let them go on through
                         }
@@ -383,8 +383,8 @@ namespace Aurora.DataManager
                     typeDef.Size = 11;
                     break;
                 default:
-                    string regexInt = "^int\\((\\d+)\\)$";
-                    string regexTinyint = "^tinyint\\((\\d+)\\)$";
+                    string regexInt = "^int\\((\\d+)\\)( unsigned)$";
+                    string regexTinyint = "^tinyint\\((\\d+)\\)( unsigned)$";
                     string regexChar = "^char\\((\\d+)\\)$";
                     string regexString = "^varchar\\((\\d+)\\)$";
 
@@ -408,6 +408,7 @@ namespace Aurora.DataManager
                     if (type.Success)
                     {
                         typeDef.Size = uint.Parse(type.Groups[1].Value);
+                        typeDef.unsigned = (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt) ? (type.Groups.Count == 3 && type.Groups[2].Value == " unsigned") : false;
                         break;
                     }
                     else

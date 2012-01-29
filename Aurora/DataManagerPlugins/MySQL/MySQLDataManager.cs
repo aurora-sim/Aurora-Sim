@@ -846,41 +846,59 @@ namespace Aurora.DataManager.MySQL
 
         public override string GetColumnTypeStringSymbol(ColumnTypeDef coldef)
         {
+            string symbol;
             switch (coldef.Type)
             {
                 case ColumnType.Blob:
-                    return "BLOB";
+                    symbol = "BLOB";
+                    break;
                 case ColumnType.LongBlob:
-                    return "LONGBLOB";
+                    symbol = "LONGBLOB";
+                    break;
                 case ColumnType.Boolean:
-                    return "TINYINT(1)";
+                    symbol = "TINYINT(1)";
+                    break;
                 case ColumnType.Char:
-                    return "CHAR(" + coldef.Size + ")";
+                    symbol = "CHAR(" + coldef.Size + ")";
+                    break;
                 case ColumnType.Date:
-                    return "DATE";
+                    symbol = "DATE";
+                    break;
                 case ColumnType.DateTime:
-                    return "DATETIME";
+                    symbol = "DATETIME";
+                    break;
                 case ColumnType.Double:
-                    return "DOUBLE";
+                    symbol = "DOUBLE";
+                    break;
                 case ColumnType.Float:
-                    return "FLOAT";
+                    symbol = "FLOAT";
+                    break;
                 case ColumnType.Integer:
-                    return "INT(" + coldef.Size + ")";
+                    symbol = "INT(" + coldef.Size + ")" + (coldef.unsigned ? " unsigned" : "");
+                    break;
                 case ColumnType.TinyInt:
-                    return "TINYINT(" + coldef.Size + ")";
+                    symbol = "TINYINT(" + coldef.Size + ")" + (coldef.unsigned ? " unsigned" : "");
+                    break;
                 case ColumnType.String:
-                    return "VARCHAR(" + coldef.Size + ")";
+                    symbol = "VARCHAR(" + coldef.Size + ")";
+                    break;
                 case ColumnType.Text:
-                    return "TEXT";
+                    symbol = "TEXT";
+                    break;
                 case ColumnType.MediumText:
-                    return "MEDIUMTEXT";
+                    symbol = "MEDIUMTEXT";
+                    break;
                 case ColumnType.LongText:
-                    return "LONGTEXT";
+                    symbol = "LONGTEXT";
+                    break;
                 case ColumnType.UUID:
-                    return "CHAR(36)";
+                    symbol = "CHAR(36)";
+                    break;
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
+
+            return symbol + (coldef.isNull ? " NULL" : " NOT NULL") + ((coldef.isNull && coldef.defaultValue == null) ? " DEFAULT NULL" : (coldef.defaultValue != null ? " DEFAULT '" + coldef.defaultValue.MySqlEscape() + "'" : "")) + ((coldef.Type == ColumnType.Integer || coldef.Type == ColumnType.TinyInt) && coldef.auto_increment ? " AUTO_INCREMENT" : "");
         }
 
         public override void DropTable(string tableName)
@@ -977,10 +995,16 @@ namespace Aurora.DataManager.MySQL
                     var pk = rdr["Key"];
                     var type = rdr["Type"];
                     var extra = rdr["Extra"];
+                    string defaultValue = rdr["Default"].ToString();
+
+                    ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
+                    typeDef.isNull = rdr["Null"].ToString() == "YES";
+                    typeDef.auto_increment = rdr["Extra"].ToString().IndexOf("auto_increment") >= 0;
+                    typeDef.defaultValue = defaultValue == "NULL" ? null : defaultValue;
                     defs.Add(new ColumnDefinition
                     {
                         Name = name.ToString(),
-                        Type = ConvertTypeToColumnType(type.ToString())
+                        Type = typeDef,
                     });
                 }
             }
