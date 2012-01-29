@@ -2954,14 +2954,32 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void GetContactParam(PhysicsActor actor, ref d.Contact contact)
         {
-            if ((_parent != null && _parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
-                VehicleType != (int)Vehicle.TYPE_NONE ||
-                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).Parent != null && ((AuroraODEPrim)actor).Parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
-                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).VehicleType != (int)Vehicle.TYPE_NONE))
+            int vehicleType = 0;
+            if ((_parent != null && (vehicleType = _parent.VehicleType) != (int)Vehicle.TYPE_NONE) ||
+                (vehicleType = VehicleType) != (int)Vehicle.TYPE_NONE ||
+                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).Parent != null && (vehicleType = ((AuroraODEPrim)actor).Parent.VehicleType) != (int)Vehicle.TYPE_NONE) ||
+                (actor is AuroraODEPrim && (vehicleType = ((AuroraODEPrim)actor).VehicleType) != (int)Vehicle.TYPE_NONE))
             {
-                contact.surface.bounce = vehicleContactParam.bounce;
-                contact.surface.bounce_vel = 0;
-                contact.surface.mu = vehicleContactParam.mu;
+                if (vehicleType == (int)Vehicle.TYPE_CAR)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 2;
+                }
+                else if (vehicleType == (int)Vehicle.TYPE_SLED)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 0;
+                }
+                else if (vehicleType == (int)Vehicle.TYPE_AIRPLANE ||
+                    vehicleType == (int)Vehicle.TYPE_BALLOON ||
+                    vehicleType == (int)Vehicle.TYPE_BOAT)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 100;
+                }
             }
             else
             {
