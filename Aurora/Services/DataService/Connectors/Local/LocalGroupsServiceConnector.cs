@@ -814,6 +814,8 @@ namespace Aurora.Services.DataService
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
 
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
+            if (record == null)
+                return null;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
