@@ -236,6 +236,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public PhysicsObject Parent
+        {
+            get { return _parent; }
+        }
+
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Prim; }
@@ -2947,10 +2952,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             primContactParam.bounce = _parent_entity.Restitution;
         }
 
-        public void GetContactParam(ActorTypes actorType, ref d.Contact contact)
+        public void GetContactParam(PhysicsActor actor, ref d.Contact contact)
         {
             if ((_parent != null && _parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
-                VehicleType != (int)Vehicle.TYPE_NONE)
+                VehicleType != (int)Vehicle.TYPE_NONE ||
+                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).Parent != null && ((AuroraODEPrim)actor).Parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
+                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).VehicleType != (int)Vehicle.TYPE_NONE))
             {
                 contact.surface.bounce = vehicleContactParam.bounce;
                 contact.surface.bounce_vel = 0;
@@ -2975,13 +2982,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     contact.surface.mode |= d.ContactFlags.Bounce;
                 else
                     contact.surface.mode &= d.ContactFlags.Bounce;
-                if (actorType == ActorTypes.Prim)
+                if (actor.PhysicsActorType == (int)ActorTypes.Prim)
                     contact.surface.mu *= _parent_entity.Friction;
-                else if (actorType == ActorTypes.Ground)
+                else if (actor.PhysicsActorType == (int)ActorTypes.Ground)
                     contact.surface.mu *= 2;
                 else
                     contact.surface.mu /= 2;
-                if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
+                if (m_vehicle.Type != Vehicle.TYPE_NONE && actor.PhysicsActorType != (int)ActorTypes.Agent)
                     contact.surface.mu *= 0.05f;
             }
         }

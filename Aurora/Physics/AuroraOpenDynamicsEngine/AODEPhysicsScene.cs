@@ -837,7 +837,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            ((AuroraODEPrim)p2).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p2).GetContactParam(p2, ref newGlobalcontact);
 
                             joint = CreateContacJoint(ref curContact);
                         }
@@ -858,7 +858,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (p2.PhysicsActorType == (int) ActorTypes.Agent)
                         {
-                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
@@ -870,7 +870,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
 
                             joint = CreateContacJoint(ref curContact);
                         }
