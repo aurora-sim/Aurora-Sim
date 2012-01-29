@@ -150,7 +150,6 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
-#if (!ISWIN)
                     ColumnDefinition thisDef = null;
                     foreach (ColumnDefinition extractedDefinition in extractedColumns)
                     {
@@ -160,13 +159,10 @@ namespace Aurora.DataManager
                             break;
                         }
                     }
-#else
-                    ColumnDefinition thisDef = extractedColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
-#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
-                        if (thisDef.Type == columnDefinition.Type)
+                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                         {
                             continue; //They are the same type, let them go on through
                         }
@@ -195,12 +191,12 @@ namespace Aurora.DataManager
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
-                        if (thisDef.Type == columnDefinition.Type)
+                        if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                         {
                             continue; //They are the same type, let them go on through
                         }
                     }
-                    MainConsole.Instance.Debug("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with old column definitions");
+                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with old column definitions");
                     return false;
                 }
             }
@@ -383,8 +379,8 @@ namespace Aurora.DataManager
                     typeDef.Size = 11;
                     break;
                 default:
-                    string regexInt = "^int\\((\\d+)\\)( unsigned)$";
-                    string regexTinyint = "^tinyint\\((\\d+)\\)( unsigned)$";
+                    string regexInt = "^int\\((\\d+)\\)( unsigned)?$";
+                    string regexTinyint = "^tinyint\\((\\d+)\\)( unsigned)?$";
                     string regexChar = "^char\\((\\d+)\\)$";
                     string regexString = "^varchar\\((\\d+)\\)$";
 

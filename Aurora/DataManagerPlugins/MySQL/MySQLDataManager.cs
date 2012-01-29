@@ -726,10 +726,6 @@ namespace Aurora.DataManager.MySQL
                         found = true;
                         break;
                     }
-                    else
-                    {
-                        MainConsole.Instance.Info(oldIndex.Type.ToString() + " " + string.Join(", ", oldIndex.Fields) + " does not match new index " + newIndex.Type.ToString() + " " + string.Join(", ", newIndex.Fields));
-                    }
                 }
                 if (!found)
                 {
@@ -995,12 +991,12 @@ namespace Aurora.DataManager.MySQL
                     var pk = rdr["Key"];
                     var type = rdr["Type"];
                     var extra = rdr["Extra"];
-                    string defaultValue = rdr["Default"].ToString();
+                    object defaultValue = rdr["Default"];
 
                     ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
                     typeDef.isNull = rdr["Null"].ToString() == "YES";
                     typeDef.auto_increment = rdr["Extra"].ToString().IndexOf("auto_increment") >= 0;
-                    typeDef.defaultValue = defaultValue == "NULL" ? null : defaultValue;
+                    typeDef.defaultValue = defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
                     defs.Add(new ColumnDefinition
                     {
                         Name = name.ToString(),

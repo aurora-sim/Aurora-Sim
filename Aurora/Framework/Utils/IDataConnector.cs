@@ -186,7 +186,7 @@ namespace Aurora.Framework
         public override bool Equals(object obj)
         {
             ColumnTypeDef foo = obj as ColumnTypeDef;
-            return (foo != null && foo.Type == Type && foo.Size == foo.Size && foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned && foo.auto_increment == auto_increment);
+            return (foo != null && foo.Type.ToString() == Type.ToString() && foo.Size == Size && foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned && foo.auto_increment == auto_increment);
         }
 
         public override int GetHashCode()
