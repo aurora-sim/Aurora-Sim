@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Aurora.Framework;
 
 namespace Aurora.DataManager
@@ -53,11 +54,11 @@ namespace Aurora.DataManager
                 CreateTable(VERSION_TABLE_NAME, new[]{
                     new ColumnDefinition{
                         Name = COLUMN_VERSION,
-                        Type = ColumnTypes.String
+                        Type = new ColumnTypeDef{ Type= ColumnType.Text }
                     },
                     new ColumnDefinition{
                         Name = COLUMN_NAME,
-                        Type = ColumnTypes.String
+                        Type = new ColumnTypeDef{ Type= ColumnType.Text }
                     }
                 }, new IndexDefinition[0]);
             }
@@ -101,7 +102,7 @@ namespace Aurora.DataManager
             {
                 CreateTable(VERSION_TABLE_NAME, new[]{new ColumnDefinition{
                     Name = COLUMN_VERSION,
-                    Type = ColumnTypes.String100
+                    Type = new ColumnTypeDef{ Type= ColumnType.String, Size = 100 }
                 }}, new IndexDefinition[0]);
             }
             //Remove previous versions
@@ -338,6 +339,85 @@ namespace Aurora.DataManager
         public abstract void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
+        public abstract string GetColumnTypeStringSymbol(ColumnTypeDef coldef);
+        public ColumnTypeDef ConvertTypeToColumnType(string typeString)
+        {
+            string tStr = typeString.ToLower();
+
+            ColumnTypeDef typeDef = new ColumnTypeDef();
+
+            switch (tStr)
+            {
+                case "blob":
+                    typeDef.Type = ColumnType.Blob;
+                    break;
+                case "longblob":
+                    typeDef.Type = ColumnType.LongBlob;
+                    break;
+                case "date":
+                    typeDef.Type = ColumnType.Date;
+                    break;
+                case "datetime":
+                    typeDef.Type = ColumnType.DateTime;
+                    break;
+                case "double":
+                    typeDef.Type = ColumnType.Double;
+                    break;
+                case "float":
+                    typeDef.Type = ColumnType.Float;
+                    break;
+                case "text":
+                    typeDef.Type = ColumnType.Text;
+                    break;
+                case "mediumtext":
+                    typeDef.Type = ColumnType.MediumText;
+                    break;
+                case "longtext":
+                    typeDef.Type = ColumnType.LongText;
+                    break;
+                case "uuid":
+                    typeDef.Type = ColumnType.UUID;
+                    break;
+                case "integer":
+                    typeDef.Type = ColumnType.Integer;
+                    typeDef.Size = 11;
+                    break;
+                default:
+                    string regexInt = "^int\\((\\d+)\\)$";
+                    string regexTinyint = "^tinyint\\((\\d+)\\)$";
+                    string regexChar = "^char\\((\\d+)\\)$";
+                    string regexString = "^varchar\\((\\d+)\\)$";
+
+                    Dictionary<string, ColumnType> regexChecks = new Dictionary<string, ColumnType>(4);
+                    regexChecks[regexInt] = ColumnType.Integer;
+                    regexChecks[regexTinyint] = ColumnType.TinyInt;
+                    regexChecks[regexChar] = ColumnType.Char;
+                    regexChecks[regexString] = ColumnType.String;
+
+                    Match type = Regex.Match("foo", "^bar$");
+                    foreach (KeyValuePair<string, ColumnType> regexCheck in regexChecks)
+                    {
+                        type = Regex.Match(tStr, regexCheck.Key);
+                        if (type.Success)
+                        {
+                            typeDef.Type = regexCheck.Value;
+                            break;
+                        }
+                    }
+
+                    if (type.Success)
+                    {
+                        typeDef.Size = uint.Parse(type.Groups[1].Value);
+                        break;
+                    }
+                    else
+                    {
+                        throw new Exception("You've discovered some type that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
+                    }
+            }
+
+            return typeDef;
+        }
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
         protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);

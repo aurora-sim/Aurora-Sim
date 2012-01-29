@@ -844,6 +844,45 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
+        public override string GetColumnTypeStringSymbol(ColumnTypeDef coldef)
+        {
+            switch (coldef.Type)
+            {
+                case ColumnType.Blob:
+                    return "BLOB";
+                case ColumnType.LongBlob:
+                    return "LONGBLOB";
+                case ColumnType.Boolean:
+                    return "TINYINT(1)";
+                case ColumnType.Char:
+                    return "CHAR(" + coldef.Size + ")";
+                case ColumnType.Date:
+                    return "DATE";
+                case ColumnType.DateTime:
+                    return "DATETIME";
+                case ColumnType.Double:
+                    return "DOUBLE";
+                case ColumnType.Float:
+                    return "FLOAT";
+                case ColumnType.Integer:
+                    return "INT(" + coldef.Size + ")";
+                case ColumnType.TinyInt:
+                    return "TINYINT(" + coldef.Size + ")";
+                case ColumnType.String:
+                    return "VARCHAR(" + coldef.Size + ")";
+                case ColumnType.Text:
+                    return "TEXT";
+                case ColumnType.MediumText:
+                    return "MEDIUMTEXT";
+                case ColumnType.LongText:
+                    return "LONGTEXT";
+                case ColumnType.UUID:
+                    return "CHAR(36)";
+                default:
+                    throw new DataManagerException("Unknown column type.");
+            }
+        }
+
         public override void DropTable(string tableName)
         {
             tableName = tableName.ToLower();
@@ -1023,107 +1062,7 @@ namespace Aurora.DataManager.MySQL
 
             return defs;
         }
-
-        private ColumnTypes ConvertTypeToColumnType(string typeString)
-        {
-            string tStr = typeString.ToLower();
-            //we'll base our names on lowercase
-            switch (tStr)
-            {
-                case "double":
-                    return ColumnTypes.Double;
-                case "int(11)":
-                    return ColumnTypes.Integer11;
-                case "int(30)":
-                    return ColumnTypes.Integer30;
-                case "integer":
-                    return ColumnTypes.Integer11;
-                case "int(11) unsigned":
-                    return ColumnTypes.UInteger11;
-                case "int(30) unsigned":
-                    return ColumnTypes.UInteger30;
-                case "integer unsigned":
-                    return ColumnTypes.UInteger11;
-                case "char(36)":
-                    return ColumnTypes.Char36;
-                case "char(32)":
-                    return ColumnTypes.Char32;
-                case "char(5)":
-                    return ColumnTypes.Char5;
-                case "varchar(1)":
-                    return ColumnTypes.String1;
-                case "varchar(2)":
-                    return ColumnTypes.String2;
-                case "varchar(10)":
-                    return ColumnTypes.String10;
-                case "varchar(16)":
-                    return ColumnTypes.String16;
-                case "varchar(30)":
-                    return ColumnTypes.String30;
-                case "varchar(32)":
-                    return ColumnTypes.String32;
-                case "varchar(36)":
-                    return ColumnTypes.String36;
-                case "varchar(45)":
-                    return ColumnTypes.String45;
-                case "varchar(50)":
-                    return ColumnTypes.String50;
-                case "varchar(64)":
-                    return ColumnTypes.String64;
-                case "varchar(128)":
-                    return ColumnTypes.String128;
-                case "varchar(100)":
-                    return ColumnTypes.String100;
-                case "varchar(255)":
-                    return ColumnTypes.String255;
-                case "varchar(512)":
-                    return ColumnTypes.String512;
-                case "varchar(1024)":
-                    return ColumnTypes.String1024;
-                case "date":
-                    return ColumnTypes.Date;
-                case "datetime":
-                    return ColumnTypes.DateTime;
-                case "varchar(8196)":
-                    return ColumnTypes.String8196;
-                case "text":
-                    return ColumnTypes.Text;
-                case "mediumtext":
-                    return ColumnTypes.MediumText;
-                case "longtext":
-                    return ColumnTypes.LongText;
-                case "float":
-                    return ColumnTypes.Float;
-                case "blob":
-                    return ColumnTypes.Blob;
-                case "longblob":
-                    return ColumnTypes.LongBlob;
-                case "smallint(6)":
-                    return ColumnTypes.Integer11;
-                case "int(10)":
-                    return ColumnTypes.Integer11;
-                case "tinyint(1)":
-                    return ColumnTypes.TinyInt1;
-                case "tinyint(4)":
-                    return ColumnTypes.TinyInt4;
-            }
-            if (tStr.StartsWith("varchar"))
-            {
-                //... Someone was editing the database
-                // Swallow the exception... but set it to the highest setting so we don't break anything
-                return ColumnTypes.String8196;
-            }
-            if (tStr.StartsWith("int"))
-            {
-                //... Someone was editing the database
-                // Swallow the exception... but set it to the highest setting so we don't break anything
-                return ColumnTypes.Integer11;
-            }
-            throw new Exception(
-                "You've discovered some type in MySQL that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " +
-                tStr);
-        }
-
+        
         #endregion
 
         public override IGenericData Copy()
