@@ -429,7 +429,7 @@ namespace Aurora.Modules.InventoryAccess
                     }
                     else
                     {
-                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.Object);
+                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Object, AssetType.Object);
                     }
                 }
 

@@ -236,6 +236,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public PhysicsObject Parent
+        {
+            get { return _parent; }
+        }
+
         public override int PhysicsActorType
         {
             get { return (int)ActorTypes.Prim; }
@@ -2947,14 +2952,34 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             primContactParam.bounce = _parent_entity.Restitution;
         }
 
-        public void GetContactParam(ActorTypes actorType, ref d.Contact contact)
+        public void GetContactParam(PhysicsActor actor, ref d.Contact contact)
         {
-            if ((_parent != null && _parent.VehicleType != (int)Vehicle.TYPE_NONE) ||
-                VehicleType != (int)Vehicle.TYPE_NONE)
+            int vehicleType = 0;
+            if ((_parent != null && (vehicleType = _parent.VehicleType) != (int)Vehicle.TYPE_NONE) ||
+                (vehicleType = VehicleType) != (int)Vehicle.TYPE_NONE ||
+                (actor is AuroraODEPrim && ((AuroraODEPrim)actor).Parent != null && (vehicleType = ((AuroraODEPrim)actor).Parent.VehicleType) != (int)Vehicle.TYPE_NONE) ||
+                (actor is AuroraODEPrim && (vehicleType = ((AuroraODEPrim)actor).VehicleType) != (int)Vehicle.TYPE_NONE))
             {
-                contact.surface.bounce = vehicleContactParam.bounce;
-                contact.surface.bounce_vel = 0;
-                contact.surface.mu = vehicleContactParam.mu;
+                if (vehicleType == (int)Vehicle.TYPE_CAR)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 2;
+                }
+                else if (vehicleType == (int)Vehicle.TYPE_SLED)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 0;
+                }
+                else if (vehicleType == (int)Vehicle.TYPE_AIRPLANE ||
+                    vehicleType == (int)Vehicle.TYPE_BALLOON ||
+                    vehicleType == (int)Vehicle.TYPE_BOAT)
+                {
+                    contact.surface.bounce = 0;
+                    contact.surface.bounce_vel = 0;
+                    contact.surface.mu = 100;
+                }
             }
             else
             {
@@ -2975,13 +3000,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     contact.surface.mode |= d.ContactFlags.Bounce;
                 else
                     contact.surface.mode &= d.ContactFlags.Bounce;
-                if (actorType == ActorTypes.Prim)
+                if (actor.PhysicsActorType == (int)ActorTypes.Prim)
                     contact.surface.mu *= _parent_entity.Friction;
-                else if (actorType == ActorTypes.Ground)
+                else if (actor.PhysicsActorType == (int)ActorTypes.Ground)
                     contact.surface.mu *= 2;
                 else
                     contact.surface.mu /= 2;
-                if (m_vehicle.Type != Vehicle.TYPE_NONE && actorType != ActorTypes.Agent)
+                if (m_vehicle.Type != Vehicle.TYPE_NONE && actor.PhysicsActorType != (int)ActorTypes.Agent)
                     contact.surface.mu *= 0.05f;
             }
         }
