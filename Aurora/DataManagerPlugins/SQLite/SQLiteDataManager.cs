@@ -659,11 +659,16 @@ namespace Aurora.DataManager.SQLite
 
             List<string> columnDefinition = new List<string>();
 
+            bool has_auto_increment = false;
             foreach (ColumnDefinition column in columns)
             {
+                if (column.Type.auto_increment)
+                {
+                    has_auto_increment = true;
+                }
                 columnDefinition.Add(column.Name + " " + GetColumnTypeStringSymbol(column.Type));
             }
-            if (primary != null && primary.Fields.Length > 0)
+            if (!has_auto_increment && primary != null && primary.Fields.Length > 0)
             {
                 columnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
@@ -775,11 +780,16 @@ namespace Aurora.DataManager.SQLite
                 }
             }
 
+            bool has_auto_increment = false;
             foreach (ColumnDefinition column in columns)
             {
+                if (column.Type.auto_increment)
+                {
+                    has_auto_increment = true;
+                }
                 newTableColumnDefinition.Add(column.Name + " " + GetColumnTypeStringSymbol(column.Type));
             }
-            if (primary != null && primary.Fields.Length > 0){
+            if (!has_auto_increment && primary != null && primary.Fields.Length > 0){
                 newTableColumnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
 
@@ -932,38 +942,59 @@ namespace Aurora.DataManager.SQLite
 
         public override string GetColumnTypeStringSymbol(ColumnTypeDef coldef)
         {
+            string symbol;
             switch (coldef.Type)
             {
                 case ColumnType.Blob:
                 case ColumnType.LongBlob:
-                    return "BLOB";
+                    symbol = "BLOB";
+                    break;
                 case ColumnType.Boolean:
-                    return "TINYINT(1)";
+                    symbol = "TINYINT(1)";
+                    break;
                 case ColumnType.Char:
-                    return "CHAR(" + coldef.Size + ")";
+                    symbol = "CHAR(" + coldef.Size + ")";
+                    break;
                 case ColumnType.Date:
-                    return "DATE";
+                    symbol = "DATE";
+                    break;
                 case ColumnType.DateTime:
-                    return "DATETIME";
+                    symbol = "DATETIME";
+                    break;
                 case ColumnType.Double:
-                    return "DOUBLE";
+                    symbol = "DOUBLE";
+                    break;
                 case ColumnType.Float:
-                    return "FLOAT";
+                    symbol = "FLOAT";
+                    break;
                 case ColumnType.Integer:
-                    return "INT(" + coldef.Size + ")";
+                    if (!coldef.auto_increment)
+                    {
+                        symbol = "INT(" + coldef.Size + ")";
+                    }
+                    else
+                    {
+                        symbol = "INTEGER PRIMARY KEY AUTOINCREMENT";
+                    }
+                    break;
                 case ColumnType.TinyInt:
-                    return "TINYINT(" + coldef.Size + ")";
+                    symbol = "TINYINT(" + coldef.Size + ")";
+                    break;
                 case ColumnType.String:
-                    return "VARCHAR(" + coldef.Size + ")";
+                    symbol = "VARCHAR(" + coldef.Size + ")";
+                    break;
                 case ColumnType.Text:
                 case ColumnType.MediumText:
                 case ColumnType.LongText:
-                    return "TEXT";
+                    symbol = "TEXT";
+                    break;
                 case ColumnType.UUID:
-                    return "CHAR(36)";
+                    symbol = "CHAR(36)";
+                    break;
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
+            return symbol + (coldef.isNull ? " NULL" : " NOT NULL") + ((coldef.isNull && coldef.defaultValue == null) ? " DEFAULT NULL" : (coldef.defaultValue != null ? " DEFAULT '" + coldef.defaultValue.MySqlEscape() + "'" : ""));
         }
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
@@ -978,11 +1009,16 @@ namespace Aurora.DataManager.SQLite
                     var name = rdr["name"];
                     var pk = rdr["pk"];
                     var type = rdr["type"];
+                    object defaultValue = rdr["dflt_value"];
+
+                    ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
+                    typeDef.isNull = uint.Parse(rdr["notnull"].ToString()) == 0;
+                    typeDef.defaultValue = defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
                     defs.Add(new ColumnDefinition
-                                 {
-                                     Name = name.ToString(),
-                                     Type = ConvertTypeToColumnType(type.ToString())
-                                 });
+                    {
+                        Name = name.ToString(),
+                        Type = ConvertTypeToColumnType(type.ToString()),
+                    });
                 }
                 rdr.Close();
             }
@@ -1062,7 +1098,7 @@ namespace Aurora.DataManager.SQLite
                     }
                     if (isPrimary)
                     {
-                        MainConsole.Instance.Warn("[" + Identifier + "]: Primary Key found (" + string.Join(", ", defs[index.Key].Fields) + ")");
+//                        MainConsole.Instance.Warn("[" + Identifier + "]: Primary Key found (" + string.Join(", ", defs[index.Key].Fields) + ")");
                         defs[index.Key].Type = IndexType.Primary;
                         checkForPrimary = false;
                     }
