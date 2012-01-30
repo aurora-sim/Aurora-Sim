@@ -59,5 +59,7 @@ namespace OpenSim.Services.Interfaces
         string Save(SchedulerItem I);
 
         void Remove(string scdID);
+
+        bool Exist(string scdID);
     }
 }

@@ -769,6 +769,19 @@ namespace Aurora.Services.DataService
             return Classifieds;
         }
 
+        public Classified GetClassifiedByID(UUID id)
+        {
+            QueryFilter filter = new QueryFilter();
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where.Add("ClassifiedUUID", id);
+            filter.andFilters = where;
+            List<string> retVal = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
+            if ((retVal == null) || (retVal.Count == 0)) return null;
+            Classified classified = new Classified();
+            classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[5]));
+            return classified;
+        }
+
         #endregion
 
         #region Events
