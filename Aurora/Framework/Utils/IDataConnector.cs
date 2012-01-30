@@ -178,11 +178,15 @@ namespace Aurora.Framework
     {
         public ColumnType Type { get; set; }
         public uint Size { get; set; }
+        public string defaultValue { get; set; }
+        public bool isNull { get; set; }
+        public bool unsigned { get; set; }
+        public bool auto_increment { get; set; }
 
         public override bool Equals(object obj)
         {
             ColumnTypeDef foo = obj as ColumnTypeDef;
-            return (foo != null && foo.Type == Type && foo.Size == foo.Size);
+            return (foo != null && foo.Type.ToString() == Type.ToString() && foo.Size == Size && foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned && foo.auto_increment == auto_increment);
         }
 
         public override int GetHashCode()
