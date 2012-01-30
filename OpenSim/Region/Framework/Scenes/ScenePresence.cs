@@ -1430,7 +1430,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (update_movementflag &&
                 (m_parentID == UUID.Zero) && !SitGround && flags == AgentManager.ControlFlags.NONE)
-                Animator.UpdateMovementAnimations(true);
+                 Animator.UpdateMovementAnimations(true);
             
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
@@ -1957,7 +1957,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!IsChildAgent && m_parentID != UUID.Zero)
             {
-                SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart (m_parentID);
+                SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID) as SceneObjectPart;
                 if (part != null)
                 {
                     part.SetPhysActorCameraPos((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) ==

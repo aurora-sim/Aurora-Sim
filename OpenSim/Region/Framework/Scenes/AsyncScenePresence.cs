@@ -58,17 +58,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private readonly List<OUpdates> m_terseUpdates = new List<OUpdates>();
 
-        public override void Close()
-        {
-            m_sceneViewer.Close();
-
-            RemoveFromPhysicalScene();
-            if (m_animator == null)
-                return;
-            m_animator.Close();
-            m_animator = null;
-        }
-
         public override void Update()
         {
             if ((Taints & PresenceTaint.ObjectUpdates) == PresenceTaint.ObjectUpdates)
@@ -82,70 +71,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_terseUpdates.Clear();
                 }
             }
-            if (!IsChildAgent && m_parentID != UUID.Zero)
-            {
-                SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart(m_parentID);
-                if (part != null)
-                {
-                    part.SetPhysActorCameraPos((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) ==
-                                               AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK
-                                                   ? CameraRotation
-                                                   : Quaternion.Identity);
-                }
-            }
-            if ((Taints & PresenceTaint.SignificantMovement) == PresenceTaint.SignificantMovement)
-            {
-                Taints &= ~PresenceTaint.SignificantMovement;
-                //Trigger the movement now
-                TriggerSignificantClientMovement();
-            }
-            if ((Taints & PresenceTaint.TerseUpdate) == PresenceTaint.TerseUpdate)
-            {
-                Taints &= ~PresenceTaint.TerseUpdate;
-                //Send the terse update
-                SendTerseUpdateToAllClients();
-            }
-            if ((Taints & PresenceTaint.Movement) == PresenceTaint.Movement)
-            {
-                Taints &= ~PresenceTaint.Movement;
-                //Finish out the event
-                UpdatePosAndVelocity();
-            }
-            if (m_enqueueSendChildAgentUpdate &&
-                m_enqueueSendChildAgentUpdateTime != new DateTime())
-            {
-                if (DateTime.Now > m_enqueueSendChildAgentUpdateTime)
-                {
-                    Taints &= ~PresenceTaint.Other;
-                    //Reset it now
-                    m_enqueueSendChildAgentUpdateTime = new DateTime();
-                    m_enqueueSendChildAgentUpdate = false;
-
-                    AgentPosition agentpos = new AgentPosition
-                                                 {
-                                                     AgentID = UUID,
-                                                     AtAxis = CameraAtAxis,
-                                                     Center = m_lastChildAgentUpdateCamPosition,
-                                                     Far = DrawDistance,
-                                                     LeftAxis = CameraLeftAxis,
-                                                     Position = m_lastChildAgentUpdatePosition,
-                                                     RegionHandle = Scene.RegionInfo.RegionHandle,
-                                                     Size =
-                                                         PhysicsActor != null
-                                                             ? PhysicsActor.Size
-                                                             : new Vector3(0, 0, m_avHeight),
-                                                     UpAxis = CameraUpAxis,
-                                                     Velocity = Velocity
-                                                 };
-
-                    //Send the child agent data update
-                    ISyncMessagePosterService syncPoster = Scene.RequestModuleInterface<ISyncMessagePosterService>();
-                    if (syncPoster != null)
-                        syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, m_scene.RegionInfo.RegionHandle), m_scene.RegionInfo.RegionHandle);
-                }
-                else
-                    Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.Other);//We havn't sent the update yet, keep tainting
-            }
+            base.Update();
         }
 
         #endregion
@@ -165,7 +91,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="flags"></param>
         public override void AddUpdateToAvatar(ISceneChildEntity part, PrimUpdateFlags flags)
         {
-           lock (m_terseUpdates)
+            lock (m_terseUpdates)
                 m_terseUpdates.Add(new OUpdates {Child = part, Flags = flags});
             Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.ObjectUpdates);
         }
