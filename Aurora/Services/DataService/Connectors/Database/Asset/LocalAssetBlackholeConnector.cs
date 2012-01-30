@@ -987,7 +987,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 StoreAsset(asset1, out wassuccessful, true);
                                 if (wassuccessful)
                                 {
-                                    QueryFilter fitler = new QueryFilter();
+                                    filter = new QueryFilter();
                                     filter.andFilters["id"] = asset1.ID;
                                     m_Gd.Delete("assets", filter);
                                 }
