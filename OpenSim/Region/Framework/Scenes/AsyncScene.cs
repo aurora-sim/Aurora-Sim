@@ -308,7 +308,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Load region settings
             m_regInfo.RegionSettings = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector> ().LoadRegionSettings (m_regInfo.RegionID);
 
-            m_sceneGraph = new SceneGraph(this, m_regInfo) {Entities = new AsyncEntityManager(this)};
+            m_sceneGraph = new SceneGraph(this, m_regInfo) { Entities = new AsyncEntityManager() };
 
             #region Region Config
 
@@ -559,15 +559,7 @@ namespace OpenSim.Region.Framework.Scenes
                         catch { }
 
                     if(m_frame % m_update_events == 0)
-                    {
-                        try
-                        {
-                            m_sceneGraph.PhysicsScene.UpdatesLoop();
-                        }
-                        catch
-                        {
-                        }
-                    }
+                        m_sceneGraph.PhysicsScene.UpdatesLoop();
 
                     if (m_frame % m_update_events == 0)
                         m_eventManager.TriggerOnFrame();
