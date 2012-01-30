@@ -166,6 +166,8 @@ namespace Aurora.Framework
         /// <returns></returns>
         List<Classified> GetClassifiedsInRegion(string regionName);
 
+        Classified GetClassifiedByID(UUID id);
+
         #endregion
 
         #region Events
