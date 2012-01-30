@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 using Aurora.DataManager;
 using Aurora.Framework;
@@ -54,6 +55,7 @@ namespace OpenSim.Services
         /// <param name = "registry">Place to register the modules into</param>
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterModuleInterface<IScheduleService>(this);
         }
 
         /// <summary>
@@ -110,6 +112,11 @@ namespace OpenSim.Services
             m_database.SchedulerRemove(id);
         }
 
+        public bool Exist(string scdID)
+        {
+            return m_database.SchedulerExist(scdID);
+        }
+
         #endregion
 
         #region Timer
@@ -138,12 +145,23 @@ namespace OpenSim.Services
         {
             try
             {
+                // save chagnes before it fires in case its chagned during the fire
                 I = m_database.SaveHistory(I);
+
+                if (I.RunOnce) I.Enabled = false;
+                if (I.Enabled) I.TimeToRun = I.TimeToRun.AddSeconds(I.RunEvery);
+
+                if (!I.HisotryKeep)
+                    m_database.HistoryDeleteOld(I);
+                m_database.SchedulerSave(I);
+
+                // now fire
                 List<Object> reciept = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
                 if (!I.HistoryReciept)
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
+#if (!ISWIN)
                     foreach (Object o in reciept)
                     {
                         string results = (string)o;
@@ -152,15 +170,15 @@ namespace OpenSim.Services
                             m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
                         }
                     }
+#else
+                    foreach (string results in reciept.Cast<string>().Where(results => results != ""))
+                    {
+                        m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                    }
+#endif
                 }
             
-                if (I.RunOnce) I.Enabled = false;
-                if (I.Enabled) I.TimeToRun = I.TimeToRun.AddSeconds(I.RunEvery);
-
-                if (!I.HisotryKeep)
-                    m_database.HistoryDeleteOld(I);
-
-                m_database.SchedulerSave(I);
+                
             }
             catch (Exception e)
             {
