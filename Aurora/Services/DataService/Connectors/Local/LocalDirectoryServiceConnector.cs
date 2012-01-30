@@ -769,8 +769,18 @@ namespace Aurora.Services.DataService
             return Classifieds;
         }
 
+        /// <summary>
+        ///   Get a classified by its UUID
+        /// </summary>
+        /// <param name = "regionName"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public Classified GetClassifiedByID(UUID id)
         {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (Classified)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where.Add("ClassifiedUUID", id);
