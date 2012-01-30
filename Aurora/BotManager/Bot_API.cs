@@ -268,8 +268,7 @@ namespace Aurora.BotManager
 
         #region IScriptApi Members
 
-        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID,
-                               ScriptProtectionModule module)
+        public void Initialize(IScriptModulePlugin ScriptEngine, ISceneChildEntity host, uint localID, UUID itemID, ScriptProtectionModule module)
         {
             m_itemID = itemID;
             m_ScriptEngine = ScriptEngine;
