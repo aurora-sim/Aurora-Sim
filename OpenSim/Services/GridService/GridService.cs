@@ -53,7 +53,9 @@ namespace OpenSim.Services.GridService
         protected int m_RegionViewSize = 256;
         protected bool m_UseSessionID = true;
         protected IConfigSource m_config;
-        protected int m_maxRegionSize;
+        protected int m_maxRegionSize = 8192;
+        protected int m_cachedMaxRegionSize = 0;
+        protected int m_cachedRegionViewSize = 0;
         protected IRegistryCore m_registryCore;
         protected ISimulationBase m_simulationBase;
         private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
@@ -144,14 +146,33 @@ namespace OpenSim.Services.GridService
 
         #region IGridService Members
 
-        public int MaxRegionSize
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual int GetMaxRegionSize()
         {
-            get { return m_maxRegionSize; }
+            if (m_cachedMaxRegionSize != 0)
+                return m_cachedMaxRegionSize;
+            object remoteValue = DoRemote();
+            if (remoteValue != null || m_doRemoteOnly) {
+                m_cachedMaxRegionSize = (int)remoteValue == 0 ? 8192 : (int)remoteValue;
+                if ((int)remoteValue == 0) return 8192;
+                return (int)remoteValue;
+             }
+            if (m_maxRegionSize == 0) return 8192;
+            return m_maxRegionSize;
         }
 
-        public int RegionViewSize
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual int GetRegionViewSize()
         {
-            get { return m_RegionViewSize; }
+            if (m_cachedRegionViewSize != 0)
+                return m_cachedMaxRegionSize;
+            object remoteValue = DoRemote();
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                m_cachedMaxRegionSize = (int)remoteValue;
+                return (int)remoteValue;
+            }
+            return m_RegionViewSize;
         }
 
         public virtual IGridService InnerService
@@ -1046,15 +1067,15 @@ namespace OpenSim.Services.GridService
         {
             int startX = (region.RegionLocX - 8192); //Give 8196 by default so that we pick up neighbors next to us
             int startY = (region.RegionLocY - 8192);
-            if (MaxRegionSize != 0)
+            if (GetMaxRegionSize() != 0)
             {
-                startX = (region.RegionLocX - MaxRegionSize);
-                startY = (region.RegionLocY - MaxRegionSize);
+                startX = (region.RegionLocX - GetMaxRegionSize());
+                startY = (region.RegionLocY - GetMaxRegionSize());
             }
 
             //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
-            int endX = (region.RegionLocX + RegionViewSize + region.RegionSizeX - 1);
-            int endY = (region.RegionLocY + RegionViewSize + region.RegionSizeY - 1);
+            int endX = (region.RegionLocX + GetRegionViewSize() + region.RegionSizeX - 1);
+            int endY = (region.RegionLocY + GetRegionViewSize() + region.RegionSizeY - 1);
 
             List<GridRegion> neighbors = GetRegionRange(region.ScopeID, startX, endX, startY, endY);
 
@@ -1063,8 +1084,8 @@ namespace OpenSim.Services.GridService
                 if (r.RegionID == region.RegionID)
                     return true;
 
-                if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - RegionViewSize) ||
-                    r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - RegionViewSize))
+                if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - GetRegionViewSize()) ||
+                    r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - GetRegionViewSize()))
                     //Check for regions outside of the boundry (created above when checking for large regions next to us)
                     return true;
 

@@ -79,14 +79,14 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
-        public int MaxRegionSize
+        public virtual int GetMaxRegionSize()
         {
-            get { return m_localService.MaxRegionSize; }
+            return m_localService.GetMaxRegionSize();
         }
 
-        public int RegionViewSize
+        public virtual int GetRegionViewSize()
         {
-            get { return m_localService.RegionViewSize; }
+            return m_localService.GetRegionViewSize();
         }
 
         public RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)

@@ -41,12 +41,12 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// The max size a region can be (meters)
         /// </summary>
-        int MaxRegionSize { get; }
+        int GetMaxRegionSize();
 
         /// <summary>
         /// The size (in meters) of how far neighbors will be found
         /// </summary>
-        int RegionViewSize { get; }
+        int GetRegionViewSize();
 
         /// <summary>
         /// Register a region with the grid service.

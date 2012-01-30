@@ -62,14 +62,14 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IGridService Members
 
-        public int MaxRegionSize
+        public virtual int GetMaxRegionSize()
         {
-            get { return 0; }
+            return 8192;
         }
 
-        public int RegionViewSize
+        public virtual int GetRegionViewSize()
         {
-            get { return 256; }
+            return 256;
         }
 
         public virtual IGridService InnerService

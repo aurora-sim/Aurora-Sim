@@ -148,10 +148,10 @@ namespace Aurora.Modules.EntityTransfer
             
             if (reg == null)
             {
-                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.Scene.RegionInfo.ScopeID, x - sp.Scene.GridService.MaxRegionSize,
-                    x + sp.Scene.GridService.MaxRegionSize,
-                    y - sp.Scene.GridService.MaxRegionSize,
-                    y + sp.Scene.GridService.MaxRegionSize);
+                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.Scene.RegionInfo.ScopeID, x - sp.Scene.GridService.GetMaxRegionSize(),
+                    x + sp.Scene.GridService.GetMaxRegionSize(),
+                    y - sp.Scene.GridService.GetMaxRegionSize(),
+                    y + sp.Scene.GridService.GetMaxRegionSize());
                 foreach (GridRegion r in regions)
                 {
                     if (r.RegionLocX <= x && r.RegionLocX + r.RegionSizeX > x &&
