@@ -43,7 +43,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                                          {
                                              "id", "fire_function", "fire_params", "run_once", "run_every",
                                              "runs_next", "keep_history", "require_reciept", "last_history_id", 
-                                             "create_time", "enabled"
+                                             "create_time", "start_time", "run_every_type", "enabled"
                                          };
 
         #region Implementation of IAuroraDataPlugin
@@ -118,14 +118,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 I.id, 
                 I.FireFunction, 
                 I.FireParams, 
-                (I.RunOnce) ? 1 : 0,
+                I.RunOnce,
                 I.RunEvery, 
-                Util.ToUnixTime(I.TimeToRun),
-                (I.HisotryKeep) ? 1 : 0,
-                (I.HistoryReciept) ? 1 : 0,
+                I.TimeToRun,
+                I.HisotryKeep,
+                I.HistoryReciept,
                 I.HistoryLastID,
-                Util.ToUnixTime(I.CreateTime),
-                (I.Enabled) ? 1 : 0
+                I.CreateTime,
+                I.StartTime,
+                (int)I.RunEveryType,
+                I.Enabled
             };
         }
 
@@ -143,7 +145,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             IDataReader dr = null;
             try
             {
-                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < " + Util.ToUnixTime(DateTime.UtcNow) + " ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
+                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd hh:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
                 if (dr != null)
                 {
                     while (dr.Read())
@@ -168,10 +170,10 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             Dictionary<string, object> row = new Dictionary<string, object>(7);
             row["id"] = his_id;
             row["scheduler_id"] = I.id;
-            row["ran_time"] = Util.ToUnixTime(DateTime.UtcNow);
-            row["run_time"] = Util.ToUnixTime(I.TimeToRun);
+            row["ran_time"] = DateTime.UtcNow;
+            row["run_time"] = I.TimeToRun;
             row["is_complete"] = 0;
-            row["complete_time"] = 0;
+            row["complete_time"] = DateTime.UtcNow;
             row["reciept"] = "";
             m_Gd.Insert("scheduler_history", row);
 
@@ -182,9 +184,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public SchedulerItem SaveHistoryComplete(SchedulerItem I)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(3);
-            values["is_complete"] = 1;
-            values["complete_time"] = Util.ToUnixTime(I.TimeToRun);
-            values["receipt"] = "";
+            values["is_complete"] = true;
+            values["complete_time"] = DateTime.UtcNow;
+            values["reciept"] = "";
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["id"] = I.HistoryLastID;
@@ -198,7 +200,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         {
             Dictionary<string, object> values = new Dictionary<string, object>(3);
             values["is_complete"] = 1;
-            values["complete_time"] = Util.ToUnixTime(DateTime.UtcNow);
+            values["complete_time"] = DateTime.UtcNow;
             values["receipt"] = reciept;
 
             QueryFilter filter = new QueryFilter();
@@ -225,27 +227,16 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                            id = dr["id"].ToString(),
                            FireFunction = dr["fire_function"].ToString(),
                            FireParams = dr["fire_params"].ToString(),
-                           HisotryKeep = (dr["keep_history"].ToString() == "1"),
-                           Enabled = (dr["enabled"].ToString() == "1"),
-                           CreateTime = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
+                           HisotryKeep = bool.Parse(dr["keep_history"].ToString()),
+                           Enabled = bool.Parse(dr["enabled"].ToString()),
+                           CreateTime = DateTime.Parse(dr["create_time"].ToString()),
                            HistoryLastID = dr["last_history_id"].ToString(),
-                           TimeToRun = UnixTimeStampToDateTime(int.Parse(dr["runs_next"].ToString())),
-                           HistoryReciept = (dr["require_reciept"].ToString() == "1"),
+                           TimeToRun = DateTime.Parse(dr["runs_next"].ToString()),
+                           HistoryReciept = bool.Parse(dr["require_reciept"].ToString()),
                            RunEvery = int.Parse(dr["run_every"].ToString()),
-                           RunOnce = (dr["run_once"].ToString() == "1")
+                           RunOnce = bool.Parse(dr["run_once"].ToString()),
+                           RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString())
                        };
-        }
-
-        #endregion
-
-        #region util functions
-
-        private static DateTime UnixTimeStampToDateTime(int unixTimeStamp)
-        {
-            // Unix timestamp is seconds past epoch
-            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
-            return dtDateTime;
         }
 
         #endregion
