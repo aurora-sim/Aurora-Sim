@@ -1323,9 +1323,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             public string value;
 
             #region Constructors
+
             public key(string s)
             {
                 value = s;
+            }
+
+            public key(OpenMetaverse.UUID s)
+            {
+                value = s.ToString();
             }
 
             #endregion
