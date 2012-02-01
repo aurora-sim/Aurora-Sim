@@ -603,11 +603,6 @@ namespace Aurora.DataManager.SQLite
             return "datetime('now', 'localtime', '+" + time.ToString() + " minutes')";
         }
 
-        public override string IsNull(string Field, string defaultValue)
-        {
-            return "IFNULL(" + Field + "," + defaultValue + ")";
-        }
-
         public override string ConCat(string[] toConcat)
         {
 #if (!ISWIN)

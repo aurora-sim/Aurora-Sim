@@ -327,7 +327,6 @@ namespace Aurora.DataManager
 
         public abstract IGenericData Copy();
         public abstract string FormatDateTimeString(int time);
-        public abstract string IsNull(string Field, string defaultValue);
         public abstract string ConCat(string[] toConcat);
 
         #endregion
