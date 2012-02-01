@@ -149,7 +149,7 @@ namespace OpenSim.Services
                 I = m_database.SaveHistory(I);
 
                 if (I.RunOnce) I.Enabled = false;
-                if (I.Enabled) I.TimeToRun = I.TimeToRun.AddSeconds(I.RunEvery);
+                if (I.Enabled) I.CalculateNextRunTime(I.TimeToRun);
 
                 if (!I.HisotryKeep)
                     m_database.HistoryDeleteOld(I);

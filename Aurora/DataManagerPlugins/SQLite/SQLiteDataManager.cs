@@ -999,7 +999,16 @@ namespace Aurora.DataManager.SQLite
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
         {
-            var defs = new List<ColumnDefinition>();
+            List<ColumnDefinition> defs = new List<ColumnDefinition>();
+            IndexDefinition primary = null;
+            foreach (KeyValuePair<string, IndexDefinition> index in ExtractIndicesFromTable(tableName))
+            {
+                if (index.Value.Type == IndexType.Primary)
+                {
+                    primary = index.Value;
+                    break;
+                }
+            }
 
             var cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
             using (IDataReader rdr = cmd.ExecuteReader())
@@ -1007,13 +1016,18 @@ namespace Aurora.DataManager.SQLite
                 while (rdr.Read())
                 {
                     var name = rdr["name"];
-                    var pk = rdr["pk"];
                     var type = rdr["type"];
                     object defaultValue = rdr["dflt_value"];
 
                     ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
                     typeDef.isNull = uint.Parse(rdr["notnull"].ToString()) == 0;
                     typeDef.defaultValue = defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
+
+                    if (uint.Parse(rdr["pk"].ToString()) == 1 && primary == null && (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt))
+                    {
+                        typeDef.auto_increment = true;
+                    }
+
                     defs.Add(new ColumnDefinition
                     {
                         Name = name.ToString(),

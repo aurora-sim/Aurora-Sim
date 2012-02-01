@@ -30,6 +30,22 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
+    public enum RepeatType 
+    {
+        second = 1,
+        minute = 2,
+        hours = 3,
+        days = 4,
+        weeks = 5,
+        months = 6,
+        years = 7,
+        decades = 8,
+        centuries = 9,
+        millennium = 10,
+        Kilenniums = 11,
+        Centrenniums = 12,
+        Megaannum = 13
+    }
 
     public class SchedulerItem
     {
@@ -38,18 +54,49 @@ namespace Aurora.Framework
             SimpleInitilize();
         }
 
-        public SchedulerItem(string sName, string sParams, bool runOnce, TimeSpan runEvery)
+        public SchedulerItem(string sName, string sParams, bool runOnce, DateTime startTime, int runEvery, RepeatType runEveryType)
         {
             SimpleInitilize();
             FireFunction = sName;
             FireParams = sParams;
             RunOnce = runOnce;
-            RunEvery = (int)runEvery.TotalSeconds;
-            TimeToRun = DateTime.UtcNow + runEvery;
+            RunEvery = runEvery;
+            RunEveryType = runEveryType;
+            StartTime = startTime;
+            CalculateNextRunTime(StartTime);
             CreateTime = DateTime.UtcNow;
             Enabled = true;
         }
 
+        public void CalculateNextRunTime(DateTime fromTime)
+        {
+            switch (RunEveryType)
+            {
+                case RepeatType.second:
+                    TimeToRun = fromTime.AddSeconds(RunEvery);
+                    break;
+                case RepeatType.minute:
+                    TimeToRun = fromTime.AddMinutes(RunEvery);
+                    break;
+                case RepeatType.hours:
+                    TimeToRun = fromTime.AddHours(RunEvery);
+                    break;
+                case RepeatType.days:
+                    TimeToRun = fromTime.AddDays(RunEvery);
+                    break;
+                case RepeatType.weeks:
+                    TimeToRun = fromTime.AddDays(RunEvery * 7);
+                    break;
+                case RepeatType.months:
+                    TimeToRun = fromTime.AddMonths(RunEvery);
+                    break;
+                case RepeatType.years:
+                    TimeToRun = fromTime.AddYears(RunEvery);
+                    break;
+            }
+            if (TimeToRun < DateTime.UtcNow)
+                CalculateNextRunTime(TimeToRun);
+        }
 
 
         private void SimpleInitilize()
@@ -86,6 +133,10 @@ namespace Aurora.Framework
         public int RunEvery { get; set; }
 
         public DateTime CreateTime { get; set; }
+
+        public RepeatType RunEveryType { get; set; }
+
+        public DateTime StartTime { get; set; }
     }
 
     public class SchedulerHistory

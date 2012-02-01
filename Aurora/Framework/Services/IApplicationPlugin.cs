@@ -374,7 +374,7 @@ namespace Aurora.Framework
                 }
                 if (parts.Count > 0)
                 {
-                    query += " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
                     had = true;
                 }
 
