@@ -655,6 +655,7 @@ namespace Aurora.Modules.Startup
                     {
                         foundAllAssets = false; //Not all are cached
                         m_scene.AssetService.Get (assetID.ToString (), writer, RetrievedAsset);
+                        m_missingAssets.Add(assetID);
                     }
                     catch (Exception ex)
                     {
@@ -677,16 +678,10 @@ namespace Aurora.Modules.Startup
 
             private void RetrievedAsset(string id, Object sender, AssetBase asset)
             {
-                m_missingAssets.Remove(UUID.Parse(id));
                 TarArchiveWriter writer = (TarArchiveWriter)sender;
-                if (writer == null)
-                {
-                    if (m_missingAssets.Count == 0)
-                        m_isArchiving = false;
-                    return;
-                }
                 //Add the asset
                 WriteAsset(id, asset, writer);
+                m_missingAssets.Remove(UUID.Parse(id));
                 if (m_missingAssets.Count == 0)
                     m_isArchiving = false;
             }

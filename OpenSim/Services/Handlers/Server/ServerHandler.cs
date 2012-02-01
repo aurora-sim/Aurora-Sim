@@ -184,9 +184,13 @@ namespace OpenSim.Services
             sr.Close();
             body = body.Trim();
 
-            OSDMap args = WebUtils.GetOSDMap(body);
-            if(args != null)
-                return HandleMap(args);
+            try
+            {
+                OSDMap args = WebUtils.GetOSDMap(body);
+                if (args != null)
+                    return HandleMap(args);
+            }
+            catch { }
             return new byte[0];
         }
 
