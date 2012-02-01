@@ -624,7 +624,12 @@ namespace Aurora.Modules.Chat
                         if ((c.Type == ChatTypeEnum.SayTo) &&
                             (c.ToAgentID != client.AgentId))
                             return;
-
+                        bool cached = false;
+                        MuteList[] mutes = GetMutes(client.AgentId, out cached);
+                        foreach(MuteList m in mutes)
+                            if (m.MuteID == c.SenderUUID ||
+                                (c.SenderObject != null && m.MuteID == c.SenderObject.ParentEntity.UUID))
+                                return;
                         client.SendChatMessage(c.Message, (byte) cType,
                                                new Vector3(client.Scene.RegionInfo.RegionSizeX*0.5f,
                                                            client.Scene.RegionInfo.RegionSizeY*0.5f, 30), fromName,
