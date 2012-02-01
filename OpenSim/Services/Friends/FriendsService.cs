@@ -81,18 +81,33 @@ namespace OpenSim.Services.Friends
             get { return this; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<FriendInfo> GetFriends(UUID PrincipalID)
         {
+            object remoteValue = DoRemote(PrincipalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<FriendInfo>)remoteValue;
+
             return new List<FriendInfo>(m_Database.GetFriends(PrincipalID));
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
+            object remoteValue = DoRemote(PrincipalID, Friend, flags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             return m_Database.Store(PrincipalID, Friend, flags, 0);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Delete(UUID PrincipalID, string Friend)
         {
+            object remoteValue = DoRemote(PrincipalID, Friend);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             return m_Database.Delete(PrincipalID, Friend);
         }
 
