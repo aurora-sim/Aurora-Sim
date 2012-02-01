@@ -661,6 +661,14 @@ namespace Aurora.Configuration
                                       : "Your Aurora-Sim's configuration is complete.\nPlease revise it.");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.Server then Aurora.exe>");
+                Console.ReadLine();  
+                }
+                else
+                {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora.Server>");
                 Console.ReadLine();
@@ -675,6 +683,7 @@ namespace Aurora.Configuration
                 Console.WriteLine("Press Enter key to start the region...");
                 Console.Read();
                 Aurora.Start();
+                }
 
             }
             else if (mode.Equals("1"))
@@ -699,13 +708,20 @@ namespace Aurora.Configuration
                                       : "Your Aurora-Sim's configuration is complete.\nPlease revise it.");
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.exe>");
+                Console.ReadLine();  
+                }
+                else
+                {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora>");
                 Console.ReadLine();
                 Process Aurora = new Process { StartInfo = { FileName = "Aurora.exe" } };
-
-
                 Aurora.Start();
+                }
             }
 
         }
