@@ -11,8 +11,8 @@ set vstudio=2010
 rem ## Default .NET Framework (3_5, 4_0 (Unsupported on VS2008))
 set framework=3_5
 
-rem ## Default architecture (86 (for 32bit), 64)
-set bits=86
+rem ## Default architecture (86 (for 32bit), 64, AnyCPU)
+set bits=AnyCPU
 
 rem ## Default "run compile batch" choice (y(es),n(o))
 set compile_at_end=n
@@ -53,9 +53,12 @@ goto framework
 	goto framework
 
 :bits
-set /p bits="Choose your architecture (86, 64) [%bits%]: "
+set /p bits="Choose your architecture (AnyCPU, x86, x64) [%bits%]: "
 if %bits%==86 goto final
+if %bits%==x86 goto final
 if %bits%==64 goto final
+if %bits%==x64 goto final
+if %bits%==AnyCPU goto final
 echo "%bits%" isn't a valid choice!
 goto bits
 
@@ -78,6 +81,8 @@ if %framework%==3_5 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild
 if %framework%==4_0 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild
 if %bits%==64 set args=/p:Platform="x64"
 if %bits%==86 set args=/p:Platform="x86"
+if %bits%==x64 set args=/p:Platform="x64"
+if %bits%==x86 set args=/p:Platform="x86"
 set filename=Compile.VS%vstudio%.net%framework%.x%bits%.bat
 
 echo %fpath% Aurora.sln %args% > %filename% /p:DefineConstants=ISWIN
