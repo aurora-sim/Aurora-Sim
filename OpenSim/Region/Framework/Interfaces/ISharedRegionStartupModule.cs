@@ -75,6 +75,14 @@ namespace OpenSim.Region.Framework.Interfaces
         void Close(IScene scene);
 
         /// <summary>
+        ///   Close the module and remove all references to it
+        /// </summary>
+        /// <param name = "scene"></param>
+        /// <param name = "m_config"></param>
+        /// <param name = "m_OpenSimBase"></param>
+        void DeleteRegion(IScene scene);
+
+        /// <summary>
         ///   Fired once when the entire instance is fully started up
         /// </summary>
         void StartupComplete();

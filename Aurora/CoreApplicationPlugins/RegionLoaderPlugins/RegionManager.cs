@@ -579,6 +579,9 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 {
                     takeOffline_Click(sender, e);
                     m_connector.Delete (region);
+                    SceneManager sm = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+                    if (sm != null)
+                        sm.DeleteRegion(region);
                     //Remove everything from the GUI
                     ChangeRegionInfo(null);
                     //Update the regions in the list box as well

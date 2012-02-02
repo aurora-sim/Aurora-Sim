@@ -52,8 +52,7 @@
     ;; For example if your RegionName is "Welcome Area" you have 
     ;; Region_Welcome_Area = "DefaultRegion, FallbackRegion"
     ;; (replacing spaces with underscores)
-
-    Region_RegionName = "DefaultRegion, FallbackRegion"
+    ;Region_RegionName = "DefaultRegion, FallbackRegion"
 	
     AllowDuplicateNames = false
     
