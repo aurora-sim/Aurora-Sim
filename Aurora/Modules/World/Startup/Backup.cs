@@ -872,8 +872,7 @@ namespace Aurora.Modules.Startup
                     {
                         AssetBase asset = new AssetBase();
                         asset.Unpack(OSDParser.DeserializeJson(Encoding.UTF8.GetString(data)));
-                        if(!scene.AssetService.GetExists(asset.IDString))
-                            scene.AssetService.Store(asset);
+                        scene.AssetService.Store(asset);
                     }
                 }
             }

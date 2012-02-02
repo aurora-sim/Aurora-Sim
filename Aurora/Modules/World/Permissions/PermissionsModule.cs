@@ -342,6 +342,7 @@ namespace Aurora.Modules.Permissions
             m_scene.Permissions.OnSubdivideParcel += CanSubdivideParcel;
             m_scene.Permissions.OnEditParcelProperties += CanEditParcelProperties; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnInstantMessage += CanInstantMessage;
+            m_scene.Permissions.OnCanGodTp += CanGodTp;
             m_scene.Permissions.OnInventoryTransfer += CanInventoryTransfer; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnIssueEstateCommand += CanIssueEstateCommand;
             m_scene.Permissions.OnMoveObject += CanMoveObject;
@@ -1550,6 +1551,21 @@ namespace Aurora.Modules.Permissions
                 user = part.OwnerID;
 
             return GenericCommunicationPermission(user, target);
+        }
+
+        private bool CanGodTp(UUID user, UUID target)
+        {
+            DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
+            if (m_bypassPermissions) return m_bypassPermissionsValue;
+
+            if(IsGod(user, m_scene))
+            {
+                if (IsGod(target, m_scene)) //if they are an admin
+                    return false;
+
+                return true;
+            }
+            return false;
         }
 
         private bool CanInventoryTransfer(UUID user, UUID target, IScene startScene)

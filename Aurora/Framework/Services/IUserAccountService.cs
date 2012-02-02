@@ -313,6 +313,7 @@ namespace OpenSim.Services.Interfaces
     /// </summary>
     public interface IUserAccountData : IAuroraDataPlugin
     {
+        string Realm { get; }
         UserAccount[] Get(string[] fields, string[] values);
         bool Store(UserAccount data);
         bool Delete(string field, string val);

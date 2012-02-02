@@ -33,7 +33,7 @@ using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class FriendInfo
+    public class FriendInfo : IDataTransferable
     {
         /// <summary>
         ///   The friend of PrincipalID
@@ -61,6 +61,11 @@ namespace OpenSim.Services.Interfaces
 
         public FriendInfo(Dictionary<string, object> kvp)
         {
+            FromKVP(kvp);
+        }
+
+        public override void FromKVP(Dictionary<string, object> kvp)
+        {
             PrincipalID = UUID.Zero;
             if (kvp.ContainsKey("PrincipalID") && kvp["PrincipalID"] != null)
                 UUID.TryParse(kvp["PrincipalID"].ToString(), out PrincipalID);
@@ -75,13 +80,32 @@ namespace OpenSim.Services.Interfaces
                 Int32.TryParse(kvp["TheirFlags"].ToString(), out TheirFlags);
         }
 
-        public Dictionary<string, object> ToKeyValuePairs()
+        public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
+        {
+            PrincipalID = map["PrincipalID"];
+            Friend = map["Friend"];
+            MyFlags = map["MyFlags"];
+            TheirFlags = map["TheirFlags"];
+        }
+
+        public override Dictionary<string, object> ToKVP()
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
             result["PrincipalID"] = PrincipalID.ToString();
             result["Friend"] = Friend;
             result["MyFlags"] = MyFlags.ToString();
             result["TheirFlags"] = TheirFlags.ToString();
+
+            return result;
+        }
+
+        public override OpenMetaverse.StructuredData.OSDMap ToOSD()
+        {
+            OpenMetaverse.StructuredData.OSDMap result = new OpenMetaverse.StructuredData.OSDMap();
+            result["PrincipalID"] = PrincipalID;
+            result["Friend"] = Friend;
+            result["MyFlags"] = MyFlags;
+            result["TheirFlags"] = TheirFlags;
 
             return result;
         }
