@@ -48,6 +48,7 @@ namespace OpenSim.Services.GridService
         protected bool m_AllowNewRegistrations = true;
         protected IAuthenticationService m_AuthenticationService;
         protected IRegionData m_Database;
+        private bool m_DeleteOnUnregister = true;
         protected bool m_DisableRegistrations;
         protected int m_RegionViewSize = 256;
         protected bool m_UseSessionID = true;
@@ -84,7 +85,6 @@ namespace OpenSim.Services.GridService
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
                 m_RegionViewSize = gridConfig.GetInt("RegionViewSize", m_RegionViewSize / Constants.RegionSize) *
                                    Constants.RegionSize;
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
             }
