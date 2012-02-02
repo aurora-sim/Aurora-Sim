@@ -1549,10 +1549,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public static explicit operator LSLString(bool b)
             {
-                if (b)
-                    return new LSLString("1");
-                else
-                    return new LSLString("0");
+                return new LSLString(b ? "1" : "0");
             }
 
             #endregion
