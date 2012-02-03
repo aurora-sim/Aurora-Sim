@@ -344,7 +344,7 @@ namespace Aurora.Modules.WorldMap
             if (terraindata != null)
             {
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID != UUID.Zero)
-                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID = 
+                    m_scene.RegionInfo.RegionSettings.TerrainMapImageID =
                         m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainMapImageID, terraindata);
                 if (m_scene.RegionInfo.RegionSettings.TerrainMapImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
                 {
@@ -383,12 +383,106 @@ namespace Aurora.Modules.WorldMap
                 }
             }
 
+            byte[] overlay = GenerateOverlay();
+            if (overlay != null)
+            {
+                if (m_scene.RegionInfo.RegionSettings.ParcelMapImageID != UUID.Zero)
+                    m_scene.RegionInfo.RegionSettings.ParcelMapImageID =
+                        m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.ParcelMapImageID, overlay);
+                if (m_scene.RegionInfo.RegionSettings.ParcelMapImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
+                {
+                    AssetBase Parcelasset = new AssetBase(
+                        UUID.Random(),
+                        "terrainMapImage_" + m_scene.RegionInfo.RegionID.ToString(),
+                        AssetType.Simstate,
+                        m_scene.RegionInfo.RegionID)
+                    {
+                        Data = overlay,
+                        Description = m_scene.RegionInfo.RegionName,
+                        Flags = AssetFlags.Deletable | AssetFlags.Rewritable | AssetFlags.Maptile
+                    };
+                    m_scene.RegionInfo.RegionSettings.ParcelMapImageID = m_scene.AssetService.Store(Parcelasset);
+                }
+            }
+            else
+                m_scene.RegionInfo.RegionSettings.ParcelMapImageID = UUID.Zero;
+
             m_scene.RegionInfo.RegionSettings.Save();
 
             //Update the grid map
             IGridRegisterModule gridRegModule = m_scene.RequestModuleInterface<IGridRegisterModule>();
             if (gridRegModule != null)
                 gridRegModule.UpdateGridRegion(m_scene);
+        }
+
+        private Byte[] GenerateOverlay()
+        {
+            Bitmap overlay = new Bitmap(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+
+            bool[,] saleBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeX / 4];
+            bool[,] auctionBitmap = new bool[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeX / 4];
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+            {
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+                {
+                    saleBitmap[x, y] = false;
+                    auctionBitmap[x, y] = false;
+                }
+            }
+
+            bool landForSale = false;
+
+            List<ILandObject> parcels = m_scene.RequestModuleInterface<IParcelManagementModule>().AllParcels();
+
+            Color background = Color.FromArgb(0, 0, 0, 0);
+            SolidBrush transparent = new SolidBrush(background);
+            Graphics g = Graphics.FromImage(overlay);
+            g.FillRectangle(transparent, 0, 0, m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY);
+
+            SolidBrush yellow = new SolidBrush(Color.FromArgb(255, 249, 223, 9));
+            SolidBrush purple = new SolidBrush(Color.Purple);
+
+            foreach (ILandObject land in parcels)
+            {
+                // m_log.DebugFormat("[WORLD MAP]: Parcel {0} flags {1}", land.LandData.Name, land.LandData.Flags);
+                if ((land.LandData.Flags & (uint)ParcelFlags.ForSale) != 0)
+                {
+                    landForSale = true;
+
+                    for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+                    {
+                        for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+                            if (land.LandData.Bitmap[x + (y * (m_scene.RegionInfo.RegionSizeY / 128))] > 0)
+                                if (land.LandData.AuctionID > 0)
+                                    auctionBitmap[x, y] = true;
+                                else
+                                    saleBitmap[x, y] = true;
+                    }
+                }
+            }
+
+            if (!landForSale)
+                return null;
+
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
+            {
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
+                {
+                    if (saleBitmap[x, y])
+                        g.FillRectangle(yellow, x * 4, m_scene.RegionInfo.RegionSizeY - 4 - (y * 4), 4, 4);
+                    if (auctionBitmap[x, y])
+                        g.FillRectangle(purple, x * 4, m_scene.RegionInfo.RegionSizeY - 4 - (y * 4), 4, 4);
+                }
+            }
+
+            try
+            {
+                return OpenJPEG.EncodeFromImage(overlay, true);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public void RegenerateMaptile(string ID, byte[] data)
