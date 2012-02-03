@@ -65,13 +65,12 @@ namespace Aurora.Framework
         /// <param name = "fn"></param>
         public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
         {
-            CommandInfo info = new CommandInfo
-                                   {
-                                       command = command,
-                                       commandHelp = commandHelp,
-                                       info = infomessage,
-                                       fn = new List<CommandDelegate> {fn}
-                                   };
+            CommandInfo info = new CommandInfo{
+                command = command,
+                commandHelp = commandHelp,
+                info = infomessage,
+                fn = new List<CommandDelegate> {fn}
+            };
             tree.AddCommand(info);
         }
 
@@ -131,20 +130,28 @@ namespace Aurora.Framework
                 ourPath = path;
                 string[] paths = path.Split(' ');
                 if (paths.Length != 0)
+                {
                     Path = paths[paths.Length - 1];
+                }
             }
 
             public void AddCommand(CommandInfo info)
             {
                 if (!_ConsoleIsCaseSensitive) //Force to all lowercase
+                {
                     info.command = info.command.ToLower();
+                }
 
                 //If our path is "", we can't replace, otherwise we just get ""
                 string innerPath = info.command;
                 if (ourPath != "")
+                {
                     innerPath = info.command.Replace(ourPath, "");
+                }
                 if (innerPath.StartsWith(" "))
+                {
                     innerPath = innerPath.Remove(0, 1);
+                }
                 string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
                 if (commandPath.Length == 1 || !m_allowSubSets)
                 {
@@ -152,9 +159,13 @@ namespace Aurora.Framework
 
                     //Add commands together if there is more than one event hooked to one command
                     if (commands.ContainsKey(info.command))
+                    {
                         commands[info.command].fn.AddRange(info.fn);
+                    }
                     else
+                    {
                         commands[info.command] = info;
+                    }
                 }
                 else
                 {
@@ -177,11 +188,17 @@ namespace Aurora.Framework
                 {
                     string innerPath = string.Join(" ", command);
                     if (!_ConsoleIsCaseSensitive)
+                    {
                         innerPath = innerPath.ToLower();
+                    }
                     if (ourPath != "")
+                    {
                         innerPath = innerPath.Replace(ourPath, "");
+                    }
                     if (innerPath.StartsWith(" "))
+                    {
                         innerPath = innerPath.Remove(0, 1);
+                    }
                     string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {
@@ -215,7 +232,9 @@ namespace Aurora.Framework
                                 List<string> help = GetHelp();
 
                                 foreach (string s in help)
+                                {
                                     MainConsole.Instance.Output(s, "Severe");
+                                }
                                 return new string[0];
                             }
                             else
@@ -264,9 +283,13 @@ namespace Aurora.Framework
                     {
                         string cmdToExecute = commandPath[0];
                         if (cmdToExecute == "help")
+                        {
                             cmdToExecute = commandPath[1];
+                        }
                         if (!_ConsoleIsCaseSensitive)
+                        {
                             cmdToExecute = cmdToExecute.ToLower();
+                        }
                         //Its down the tree somewhere
                         CommandSet downTheTree;
                         if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
@@ -322,11 +345,17 @@ namespace Aurora.Framework
                 {
                     string innerPath = string.Join(" ", command);
                     if (!_ConsoleIsCaseSensitive)
+                    {
                         innerPath = innerPath.ToLower();
+                    }
                     if (ourPath != "")
+                    {
                         innerPath = innerPath.Replace(ourPath, "");
+                    }
                     if (innerPath.StartsWith(" "))
+                    {
                         innerPath = innerPath.Remove(0, 1);
+                    }
                     string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
                     if ((commandPath.Length == 1 || !m_allowSubSets))
                     {
@@ -336,9 +365,13 @@ namespace Aurora.Framework
                         {
                             string cmdToExecute = commandPath[0];
                             if (cmdToExecute == "help")
+                            {
                                 cmdToExecute = commandPath[1];
+                            }
                             if (!_ConsoleIsCaseSensitive)
+                            {
                                 cmdToExecute = cmdToExecute.ToLower();
+                            }
                             CommandSet downTheTree;
                             if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
                             {
@@ -368,9 +401,13 @@ namespace Aurora.Framework
                     {
                         string cmdToExecute = commandPath[0];
                         if (cmdToExecute == "help")
+                        {
                             cmdToExecute = commandPath[1];
+                        }
                         if (!_ConsoleIsCaseSensitive)
+                        {
                             cmdToExecute = cmdToExecute.ToLower();
+                        }
                         //Its down the tree somewhere
                         CommandSet downTheTree;
                         if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
@@ -464,7 +501,9 @@ namespace Aurora.Framework
                     foreach (string w in words)
                     {
                         if (w != String.Empty)
+                        {
                             result.Add(w);
+                        }
                     }
 #else
                     result.AddRange(words.Where(w => w != String.Empty));
@@ -491,19 +530,15 @@ namespace Aurora.Framework
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] != null)
+            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
-                if (source.Configs["Console"].GetString("Console", String.Empty) != Name)
-                    return;
-            }
-            else
                 return;
+            }
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             MainConsole.Instance = this;
 
-            m_Commands.AddCommand("help", "help",
-                                  "Get a general command list", Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
         }
 
         public void Help(string[] cmd)
@@ -511,7 +546,9 @@ namespace Aurora.Framework
             List<string> help = m_Commands.GetHelp(cmd);
 
             foreach (string s in help)
+            {
                 Output(s, "Severe");
+            }
         }
 
         /// <summary>
@@ -555,7 +592,9 @@ namespace Aurora.Framework
                     for (i = 0; i < cmd.Length; i++)
                     {
                         if (cmd[i].Contains(" "))
+                        {
                             cmd[i] = "\"" + cmd[i] + "\"";
+                        }
                     }
                     return String.Empty;
                 }
@@ -594,7 +633,9 @@ namespace Aurora.Framework
 #if (!ISWIN)
             string optstr = String.Empty;
             foreach (string option in options)
+            {
                 optstr = optstr + (" " + option);
+            }
 #else
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
 #endif
@@ -627,9 +668,13 @@ namespace Aurora.Framework
                         }
                     }
                     if (!found)
+                    {
                         itisdone = true;
+                    }
                     else
+                    {
                         temp = InternalPrompt(prompt, defaultresponse, options);
+                    }
 #else
                     foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
                     {
@@ -646,12 +691,16 @@ namespace Aurora.Framework
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
             m_reading = true;
-            string ret = ReadLine(String.Format("{0}{2} [{1}]: ", prompt, defaultresponse,
-                options.Count == 0 ? "" :
-                ", Options are [" + string.Join(", ", options.ToArray()) + "]"), false, true);
+            string ret = ReadLine(String.Format("{0}{2} [{1}]: ",
+                prompt,
+                defaultresponse,
+                options.Count == 0 ? "" : ", Options are [" + string.Join(", ", options.ToArray()) + "]"
+            ), false, true);
             m_reading = false;
             if (ret == String.Empty)
+            {
                 ret = defaultresponse;
+            }
 
             return ret;
         }
@@ -814,16 +863,12 @@ namespace Aurora.Framework
                     try
                     {
                         if (m_reading)
+                        {
                             System.Threading.Thread.Sleep(1000);
+                        }
                         else
                         {
-                            if ((!result.IsCompleted) &&
-                                (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted))
-                            {
-                            }
-                            else if (action != null &&
-                                     !result.CompletedSynchronously &&
-                                     !m_calledEndInvoke)
+                            if (!((!result.IsCompleted) && (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted)) && action != null && !result.CompletedSynchronously && !m_calledEndInvoke)
                             {
                                 m_calledEndInvoke = true;
                                 action.EndInvoke(result);
@@ -843,11 +888,15 @@ namespace Aurora.Framework
 #else
                 Task prompt = TaskEx.Run(() => { Prompt(); });
                 if (!Processing)
+                {
                     throw new Exception("Restart");
+                }
                 while (!Task.WaitAll(new Task[1] { prompt }, 1000))
                 {
                     if (!Processing)
+                    {
                         throw new Exception("Restart");
+                    }
                 }
 #endif
             }
