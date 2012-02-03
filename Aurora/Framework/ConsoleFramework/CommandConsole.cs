@@ -53,7 +53,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public List<string> GetHelp(string[] cmd)
         {
-            return tree.GetHelp();
+            return tree.GetHelp(new List<string>(0));
         }
 
         /// <summary>
@@ -200,9 +200,28 @@ namespace Aurora.Framework
                         innerPath = innerPath.Remove(0, 1);
                     }
                     string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
+                    List<string> commandPathList = new List<string>(commandPath);
+                    List<string> commandOptions = new List<string>();
+                    int i;
+                    for (i = commandPath.Length - 1; i >= 0; --i)
+                    {
+                        if (commandPath[i].Substring(0, 2) == "--")
+                        {
+                            commandOptions.Add(commandPath[i]);
+                            commandPathList.RemoveAt(i);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    commandOptions.Reverse();
+                    commandPath = commandPathList.ToArray();
+                    MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
+                    List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {
-                        for (int i = 1; i <= command.Length; i++)
+                        for (i = 1; i <= command.Length; i++)
                         {
                             string[] comm = new string[i];
                             Array.Copy(command, comm, i);
@@ -216,20 +235,24 @@ namespace Aurora.Framework
                                 {
                                     if (fn != null)
                                     {
-                                        fn(command);
+                                        cmdList = new List<string>(command);
+                                        cmdList.AddRange(commandOptions);
+                                        fn(cmdList.ToArray());
                                     }
                                 }
 #else
                                 foreach (CommandDelegate fn in commands[com].fn.Where(fn => fn != null))
                                 {
-                                    fn(command);
+                                    cmdList = new List<string>(command);
+                                    cmdList.AddRange(commandOptions);
+                                    fn(cmdList.ToArray());
                                 }
 #endif
                                 return new string[0];
                             }
                             else if (commandPath[0] == "help")
                             {
-                                List<string> help = GetHelp();
+                                List<string> help = GetHelp(commandOptions);
 
                                 foreach (string s in help)
                                 {
@@ -271,7 +294,9 @@ namespace Aurora.Framework
                                 {
                                     foreach (CommandDelegate fn in cmd.Value.fn.Where(fn => fn != null))
                                     {
-                                        fn(command);
+                                        cmdList = new List<string>(command);
+                                        cmdList.AddRange(commandOptions);
+                                        fn(cmdList.ToArray());
                                     }
                                     return new string[0];
                                 }
@@ -294,7 +319,9 @@ namespace Aurora.Framework
                         CommandSet downTheTree;
                         if (commandsets.TryGetValue(cmdToExecute, out downTheTree))
                         {
-                            return downTheTree.ExecuteCommand(commandPath);
+                            cmdList = new List<string>(commandPath);
+                            cmdList.AddRange(commandOptions);
+                            return downTheTree.ExecuteCommand(cmdList.ToArray());
                         }
                         else
                         {
@@ -304,13 +331,17 @@ namespace Aurora.Framework
                             {
                                 if (cmd.Key.StartsWith(commandPath[0]))
                                 {
-                                    return cmd.Value.ExecuteCommand(commandPath);
+                                    cmdList = new List<string>(commandPath);
+                                    cmdList.AddRange(commandOptions);
+                                    return cmd.Value.ExecuteCommand(cmdList.ToArray());
                                 }
                             }
 #else
                             foreach (KeyValuePair<string, CommandSet> cmd in commandsets.Where(cmd => cmd.Key.StartsWith(commandPath[0])))
                             {
-                                return cmd.Value.ExecuteCommand(commandPath);
+                                cmdList = new List<string>(commandPath);
+                                cmdList.AddRange(commandOptions);
+                                return cmd.Value.ExecuteCommand(cmdList.ToArray());
                             }
 #endif
                             if (commands.ContainsKey(cmdToExecute))
@@ -320,13 +351,17 @@ namespace Aurora.Framework
                                 {
                                     if (fn != null)
                                     {
-                                        fn(command);
+                                        cmdList = new List<string>(command);
+                                        cmdList.AddRange(commandOptions);
+                                        fn(cmdList.ToArray());
                                     }
                                 }
 #else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
-                                    fn(command);
+                                    cmdList = new List<string>(command);
+                                    cmdList.AddRange(commandOptions);
+                                    fn(cmdList.ToArray());
                                 }
 #endif
                                 return new string[0];
@@ -438,8 +473,9 @@ namespace Aurora.Framework
                 return values.ToArray();
             }
 
-            public List<string> GetHelp()
+            public List<string> GetHelp(List<string> options)
             {
+                MainConsole.Instance.Info("HTML mode: " + options.Contains("--html"));
                 List<string> help = new List<string>();
                 if (commandsets.Count != 0)
                 {
