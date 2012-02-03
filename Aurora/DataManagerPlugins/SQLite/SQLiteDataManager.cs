@@ -575,9 +575,9 @@ namespace Aurora.DataManager.SQLite
 
         public override bool Delete(string table, QueryFilter queryFilter)
         {
-            Dictionary<string, object> ps;
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             uint j = 0;
-            string query = "DELETE FROM " + table + " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
+            string query = "DELETE FROM " + table + (queryFilter != null ? (" WHERE " + queryFilter.ToSQL(':', out ps, ref j)) : "");
 
             SQLiteCommand cmd = new SQLiteCommand(query);
             AddParams(ref cmd, ps);
