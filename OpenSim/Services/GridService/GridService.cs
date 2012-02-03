@@ -82,11 +82,9 @@ namespace OpenSim.Services.GridService
             {
                 m_DisableRegistrations = gridConfig.GetBoolean("DisableRegistrations", m_DisableRegistrations);
                 m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
                 m_RegionViewSize = gridConfig.GetInt("RegionViewSize", m_RegionViewSize / Constants.RegionSize) *
                                    Constants.RegionSize;
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
             }
@@ -551,16 +549,16 @@ namespace OpenSim.Services.GridService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public virtual string UpdateMap(GridRegion gregion, UUID sessionID)
+        public virtual string UpdateMap(GridRegion gregion)
         {
-            object remoteValue = DoRemote(gregion, sessionID);
+            object remoteValue = DoRemote(gregion);
             if (remoteValue != null || m_doRemoteOnly)
                 return (string)remoteValue;
 
             GridRegion region = m_Database.Get(gregion.RegionID, gregion.ScopeID);
             if (region != null)
             {
-                if (!VerifyRegionSessionID(region, sessionID))
+                if (!VerifyRegionSessionID(region, gregion.SessionID))
                 {
                     MainConsole.Instance.Warn(
                         "[GRID SERVICE]: Region called UpdateMap, but provided incorrect SessionID! Possible attempt to disable a region!!");
@@ -575,7 +573,7 @@ namespace OpenSim.Services.GridService
 
                 region.TerrainImage = gregion.TerrainImage;
                 region.TerrainMapImage = gregion.TerrainMapImage;
-                region.SessionID = sessionID;
+                region.SessionID = gregion.SessionID;
                 //Update all of these as well, as they are able to be set by the region owner
                 region.EstateOwner = gregion.EstateOwner;
                 region.Access = gregion.Access;
@@ -622,23 +620,6 @@ namespace OpenSim.Services.GridService
             }
 
             MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} deregistered", region.RegionID);
-
-            if (!m_DeleteOnUnregister || (region.Flags & (int) RegionFlags.Persistent) != 0 || !m_AllowNewRegistrations)
-            {
-                region.Flags &= ~(int) RegionFlags.RegionOnline;
-                region.LastSeen = Util.UnixTimeSinceEpoch();
-                try
-                {
-                    m_Database.Store(region);
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
-                }
-
-                FixNeighbors(region, GetNeighbors(region), true);
-                return true;
-            }
 
             FixNeighbors(region, GetNeighbors(region), true);
 

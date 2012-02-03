@@ -185,9 +185,9 @@ namespace Aurora.Modules
             return flags;
         }
 
-        public string UpdateMap(GridRegion region, UUID sessionID)
+        public string UpdateMap(GridRegion region)
         {
-            return m_localService.UpdateMap(region, sessionID);
+            return m_localService.UpdateMap(region);
         }
 
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)

@@ -59,7 +59,7 @@ namespace Aurora.Modules.Startup
         public void UpdateGridRegion(IScene scene)
         {
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            GridService.UpdateMap(BuildGridRegion(scene.RegionInfo), scene.RegionInfo.GridSecureSessionID);
+            GridService.UpdateMap(BuildGridRegion(scene.RegionInfo));
         }
 
         /// <summary>
@@ -326,8 +326,18 @@ namespace Aurora.Modules.Startup
 
             //Deregister from the grid server
             IGridService GridService = scene.RequestModuleInterface<IGridService>();
-            if (
-                !GridService.DeregisterRegion(BuildGridRegion(scene.RegionInfo)))
+            GridRegion r = BuildGridRegion(scene.RegionInfo);
+            r.IsOnline = false;
+            string error = "";
+            if ((error = GridService.UpdateMap(r)) != "")
+                MainConsole.Instance.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}, {1}",
+                                 scene.RegionInfo.RegionName, error);
+        }
+
+        public void DeleteRegion(IScene scene)
+        {
+            IGridService GridService = scene.RequestModuleInterface<IGridService>();
+            if (!GridService.DeregisterRegion(BuildGridRegion(scene.RegionInfo)))
                 MainConsole.Instance.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}",
                                  scene.RegionInfo.RegionName);
         }

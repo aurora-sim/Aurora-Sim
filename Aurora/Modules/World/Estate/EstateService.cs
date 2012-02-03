@@ -1114,6 +1114,10 @@ namespace Aurora.Modules.Estate
             scene.EventManager.OnClosingClient -= OnClosingClient;
         }
 
+        public void DeleteRegion(IScene scene)
+        {
+        }
+
         public void StartupComplete()
         {
             if (!StartDisabled)

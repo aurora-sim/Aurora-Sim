@@ -670,11 +670,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected void CloseModules (IScene scene)
+        protected void CloseModules(IScene scene)
         {
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
-                controller.RemoveRegionFromModules (scene);
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
+                controller.RemoveRegionFromModules(scene);
 
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
@@ -682,6 +682,21 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (OnCloseScene != null)
                 OnCloseScene(scene);
+        }
+
+        public void DeleteRegion(RegionInfo region)
+        {
+            IScene scene;
+            if (TryGetScene(region.RegionID, out scene))
+                DeleteSceneFromModules(scene);
+        }
+
+        protected void DeleteSceneFromModules(IScene scene)
+        {
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.DeleteRegion(scene);
+            }
         }
 
         #endregion

@@ -90,9 +90,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
-        public string UpdateMap(GridRegion region, UUID sessionID)
+        public string UpdateMap(GridRegion region)
         {
-            return RegisterRegion(region, UUID.Zero).Error;
+            return RegisterRegion(region, region.SessionID).Error;
         }
 
         public List<GridRegion> GetNeighbors(GridRegion r)

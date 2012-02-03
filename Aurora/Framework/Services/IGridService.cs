@@ -161,9 +161,8 @@ namespace OpenSim.Services.Interfaces
         /// Update the map of the given region if the sessionID is correct
         /// </summary>
         /// <param name="region"></param>
-        /// <param name="sessionID"></param>
         /// <returns></returns>
-        string UpdateMap(GridRegion region, UUID sessionID);
+        string UpdateMap(GridRegion region);
 
         /// <summary>
         /// Get all map items of the given type for the given region
@@ -347,6 +346,19 @@ namespace OpenSim.Services.Interfaces
         {
             get { return m_genericMap; }
             set { m_genericMap = value; }
+        }
+
+        public bool IsOnline
+        {
+            get { return (Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == 1; }
+            set
+            {
+                if (value)
+                    Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
+                else
+                    Flags &= (int)Aurora.Framework.RegionFlags.RegionOnline;
+            }
+
         }
 
         public GridRegion()

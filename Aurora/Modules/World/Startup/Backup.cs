@@ -103,6 +103,10 @@ namespace Aurora.Modules.Startup
             m_backup.Remove(scene);
         }
 
+        public void DeleteRegion(IScene scene)
+        {
+        }
+
         #endregion
 
         #region Console commands
