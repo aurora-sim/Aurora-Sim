@@ -166,6 +166,10 @@ namespace Aurora.DataManager
                         {
                             continue; //They are the same type, let them go on through
                         }
+                        else
+                        {
+                            MainConsole.Instance.Warn("Mismatched Column Type on " + tableName + "." + thisDef.Name + ": " + GetColumnTypeStringSymbol(thisDef.Type) + ", " + GetColumnTypeStringSymbol(columnDefinition.Type));
+                        }
                     }
                     MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with new column definitions");
                     return false;
@@ -327,7 +331,6 @@ namespace Aurora.DataManager
 
         public abstract IGenericData Copy();
         public abstract string FormatDateTimeString(int time);
-        public abstract string IsNull(string Field, string defaultValue);
         public abstract string ConCat(string[] toConcat);
 
         #endregion

@@ -170,7 +170,7 @@ namespace Aurora.Services.DataService
                 "UserLevel",
                 "UserFlags",
                 "UserTitle",
-                GD.IsNull("Name", GD.ConCat(new[] {"FirstName", "' '", "LastName"})) + " as Name "
+                "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
             }, m_realm, filter, null, null, null);
 
             ParseQuery(retVal, ref data);
