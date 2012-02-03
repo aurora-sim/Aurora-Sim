@@ -523,15 +523,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (m_enabled)
                 return;
+            if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
+                return;
+            m_body = pBody;
+            d.BodySetGravityMode(Body, true);
             m_enabled = true;
             m_lastLinearVelocityVector = parent.Velocity;
             m_lastPositionVector = parent.Position;
             m_lastAngularVelocity = parent.RotationalVelocity;
             parent.ThrottleUpdates = false;
-            m_body = pBody;
-            d.BodySetGravityMode(Body, true);
-            if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
-                return;
             GetMass(pBody);
         }
 
@@ -605,7 +605,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // convert requested object velocity to world-referenced vector
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
                 Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W); // rotq = rotation of object
+                Vector3 oldVelocity = m_newVelocity;
                 m_newVelocity = m_lastLinearVelocityVector * rotq; // apply obj rotation to velocity vector
+                //if (oldVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
+                //    m_newVelocity.Z += dvel_now.Z; // Preserve the accumulated falling velocity
             }
 
             //if (m_newVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
@@ -820,10 +823,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_lastPositionVector = parent.Position;
 
-            // Apply velocity
-            if(m_newVelocity != Vector3.Zero)
-                d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z + -3 * Mass);
+            float grav = -1 * Mass * pTimestep;
 
+            // Apply velocity
+            if (m_newVelocity != Vector3.Zero)
+            {
+                if ((Type == Vehicle.TYPE_CAR || Type == Vehicle.TYPE_SLED) && (!parent.IsColliding || (parent.Parent != null && parent.Parent.IsColliding)))
+                {
+                    //Force ODE gravity here!!!
+                }
+                else
+                    d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z + grav);
+            }
             // apply friction
             m_lastLinearVelocityVector.X *= (1.0f - 1/m_linearFrictionTimescale.X);
             m_lastLinearVelocityVector.Y *= (1.0f - 1/m_linearFrictionTimescale.Y);
