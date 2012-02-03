@@ -842,8 +842,15 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.Info("Syntax: set region flags <region name> <flags>");
                 return;
             }
-
-            List<GridRegion> regions = m_Database.Get(cmd[3], UUID.Zero);
+            string regionname = cmd[3];
+            if (cmd.Length > 5)
+            {
+                for (int ii = 4; ii <= cmd.Length - 2; ii++)
+                {
+                    regionname += " " + cmd[ii];
+                }
+            }
+            List<GridRegion> regions = m_Database.Get(regionname, UUID.Zero);
             if (regions == null || regions.Count < 1)
             {
                 MainConsole.Instance.Info("Region not found");
@@ -853,7 +860,7 @@ namespace OpenSim.Services.GridService
             foreach (GridRegion r in regions)
             {
                 int flags = r.Flags;
-                flags = ParseFlags(flags, cmd[4]);
+                flags = ParseFlags(flags, cmd[cmd.Length - 1]);
                 r.Flags = flags;
                 RegionFlags f = (RegionFlags) flags;
 
