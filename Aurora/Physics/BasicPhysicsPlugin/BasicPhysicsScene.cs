@@ -81,6 +81,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
+        public override void DeletePrim(PhysicsObject prim)
+        {
+        }
+
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
             BasicCharacterActor act = (BasicCharacterActor) actor;

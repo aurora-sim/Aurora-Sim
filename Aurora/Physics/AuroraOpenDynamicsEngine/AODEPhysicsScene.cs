@@ -58,6 +58,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             Add = 0, // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
             Remove,
+            Delete,
             Link,
             // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
             //  or removes from a object if arg is null
@@ -307,7 +308,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private AuroraODERayCastRequestManager m_rayCastManager;
         private bool IsLocked;
-        private List<PhysicsActor> RemoveQueue;
+        private List<PhysicsObject> RemoveQueue;
+        private List<PhysicsObject> DeleteQueue;
         private readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
         private readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
@@ -454,7 +456,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void PostInitialise(IConfigSource config)
         {
             m_rayCastManager = new AuroraODERayCastRequestManager(this);
-            RemoveQueue = new List<PhysicsActor>();
+            RemoveQueue = new List<PhysicsObject>();
+            DeleteQueue = new List<PhysicsObject>();
             m_config = config;
             // Defaults
 /*
@@ -1469,6 +1472,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void DeletePrim(PhysicsObject prim)
+        {
+            if (prim is AuroraODEPrim)
+            {
+                if (!IsLocked) //Fix a deadlock situation.. have we been locked by Simulate?
+                {
+                    lock (OdeLock)
+                    {
+                        AuroraODEPrim p = (AuroraODEPrim)prim;
+
+                        p.setPrimForDeletion();
+                        AddPhysicsActorTaint(prim);
+                        //RemovePrimThreadLocked(p);
+                    }
+                }
+                else
+                {
+                    //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
+                    DeleteQueue.Add(prim);
+                }
+            }
+        }
+
         ///<summary>
         ///  This is called from within simulate but outside the locked portion
         ///  We need to do our own locking here
@@ -2174,21 +2200,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             int UnlockedArea = Util.EnvironmentTickCount();
-
+            
             if (RemoveQueue.Count > 0)
             {
                 while (RemoveQueue.Count != 0)
                 {
                     if (RemoveQueue[0] != null)
-                    {
-                        AuroraODEPrim p = (AuroraODEPrim) RemoveQueue[0];
-
-                        p.setPrimForRemoval();
-                        AddPhysicsActorTaint(p);
-                    }
+                        RemovePrim(RemoveQueue[0]);
                     RemoveQueue.RemoveAt(0);
                 }
             }
+            if (DeleteQueue.Count > 0)
+            {
+                while (DeleteQueue.Count != 0)
+                {
+                    if (DeleteQueue[0] != null)
+                        DeletePrim(DeleteQueue[0]);
+
+                    DeleteQueue.RemoveAt(0);
+                }
+            }
+            
             if (ActiveAddCollisionQueue.Count > 0)
             {
                 lock (_collisionEventListLock)

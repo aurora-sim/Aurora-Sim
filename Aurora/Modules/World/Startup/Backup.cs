@@ -514,13 +514,13 @@ namespace Aurora.Modules.Startup
                     IScriptControllerModule m = m_scene.RequestModuleInterface<IScriptControllerModule>();
                     if(m != null)
                         m.RemoveAllScriptControllers(part);
-                    if (part.PhysActor != null)
-                    {
-                        //Remove us from the physics sim
-                        m_scene.PhysicsScene.RemovePrim(part.PhysActor);
-                        //We MUST leave this to the PhysicsScene or it will hate us forever!
-                        //part.PhysActor = null;
-                    }
+                }
+                if (group.RootChild.PhysActor != null)
+                {
+                    //Remove us from the physics sim
+                    m_scene.PhysicsScene.DeletePrim(group.RootChild.PhysActor);
+                    //We MUST leave this to the PhysicsScene or it will hate us forever!
+                    //group.RootChild.PhysActor = null;
                 }
 
                 m_scene.SimulationDataService.Tainted ();
