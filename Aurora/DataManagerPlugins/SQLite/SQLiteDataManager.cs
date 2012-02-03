@@ -996,10 +996,12 @@ namespace Aurora.DataManager.SQLite
         {
             List<ColumnDefinition> defs = new List<ColumnDefinition>();
             IndexDefinition primary = null;
+            bool isFaux = false;
             foreach (KeyValuePair<string, IndexDefinition> index in ExtractIndicesFromTable(tableName))
             {
                 if (index.Value.Type == IndexType.Primary)
                 {
+                    isFaux = index.Key == "#fauxprimary#";
                     primary = index.Value;
                     break;
                 }
@@ -1018,7 +1020,14 @@ namespace Aurora.DataManager.SQLite
                     typeDef.isNull = uint.Parse(rdr["notnull"].ToString()) == 0;
                     typeDef.defaultValue = defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
 
-                    if (uint.Parse(rdr["pk"].ToString()) == 1 && primary == null && (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt))
+                    if (
+                        uint.Parse(rdr["pk"].ToString()) == 1 &&
+                        primary != null &&
+                        isFaux == true &&
+                        primary.Fields.Length == 1 &&
+                        primary.Fields[0].ToLower() == name.ToString().ToLower() &&
+                        (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
+                    )
                     {
                         typeDef.auto_increment = true;
                     }
@@ -1026,7 +1035,7 @@ namespace Aurora.DataManager.SQLite
                     defs.Add(new ColumnDefinition
                     {
                         Name = name.ToString(),
-                        Type = ConvertTypeToColumnType(type.ToString()),
+                        Type = typeDef,
                     });
                 }
                 rdr.Close();
@@ -1045,6 +1054,8 @@ namespace Aurora.DataManager.SQLite
                 Type = IndexType.Primary
             };
 
+            string autoIncrementField = null;
+
             List<string> fields = new List<string>();
 
             SQLiteCommand cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
@@ -1055,6 +1066,14 @@ namespace Aurora.DataManager.SQLite
                     if (uint.Parse(rdr["pk"].ToString()) > 0)
                     {
                         fields.Add(rdr["name"].ToString());
+                        if (autoIncrementField == null)
+                        {
+                            ColumnTypeDef typeDef = ConvertTypeToColumnType(rdr["type"].ToString());
+                            if (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
+                            {
+                                autoIncrementField = rdr["name"].ToString();
+                            }
+                        }
                     }
                 }
                 rdr.Close();
@@ -1112,6 +1131,16 @@ namespace Aurora.DataManager.SQLite
                         checkForPrimary = false;
                     }
                 }
+            }
+
+            if (checkForPrimary == true && autoIncrementField != null)
+            {
+                primary = new IndexDefinition
+                {
+                    Fields = new string[1] { autoIncrementField },
+                    Type = IndexType.Primary
+                };
+                defs["#fauxprimary#"] = primary;
             }
 
             return defs;
