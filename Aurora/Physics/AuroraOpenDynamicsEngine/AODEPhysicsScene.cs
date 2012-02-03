@@ -789,17 +789,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
                 }
 
-                bool p2col = false;
+                bool p2col = true;
 
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int) ActorTypes.Prim)
                 {
                     // Testing if the collision is at the feet of the avatar
-                    if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z*0.6f))
-                        p2col = true;
+                    if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z*0.6f))
+                        p2col = false;
                 }
-                else
-                    p2col = true;
 
                 p2.IsColliding = p2col;
 

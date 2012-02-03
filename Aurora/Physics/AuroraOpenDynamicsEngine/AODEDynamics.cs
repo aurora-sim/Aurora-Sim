@@ -607,8 +607,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_newVelocity *= rotq; // apply obj rotation to velocity vector
             }
 
-            if (m_newVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
-                m_newVelocity.Z += dvel_now.Z; // Preserve the accumulated falling velocity
+            //if (m_newVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
+            //    m_newVelocity.Z += dvel_now.Z; // Preserve the accumulated falling velocity
 
             d.Vector3 dpos = d.BodyGetPosition(Body);
             Vector3 pos = new Vector3(dpos.X, dpos.Y, dpos.Z);
@@ -663,6 +663,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Terrain checks
 
+            bool underground = false;
+            Vector3 rotatedSize = parent.Size * parent.Orientation;
             float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
             if (pos.Z < terrainHeight - 5)
             {
@@ -670,10 +672,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastPositionVector = pos;
                     //Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
+                underground = true;
             }
             else if (pos.Z < terrainHeight)
             {
                 m_newVelocity.Z += 1;
+                underground = true;
             }
 
             #endregion
@@ -808,19 +812,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_newVelocity /= m_newVelocity.Length();
                 m_newVelocity *= 1000f;
             }
-
             else if (m_newVelocity.LengthSquared() < 1e-6f)
                 m_newVelocity = Vector3.Zero;
 
             #endregion
 
             // add Gravity andBuoyancy
-            m_newVelocity.Z += pTimestep*_pParentScene.gravityz*parent.ParentEntity.GravityMultiplier*
-                               (1f - m_VehicleBuoyancy);
+            if (pos.Z > terrainHeight + rotatedSize.Z)
+            {
+                if ((parent.Parent != null && parent.Parent.IsColliding || !parent.IsColliding) && !underground)
+                    m_newVelocity.Z += _pParentScene.gravityz * parent.ParentEntity.GravityMultiplier *
+                                       (1f - m_VehicleBuoyancy) * 3;
+                else
+                    m_newVelocity.Z += _pParentScene.gravityz * parent.ParentEntity.GravityMultiplier *
+                                       (1f - m_VehicleBuoyancy) / 20;
+            }
 
             m_lastPositionVector = parent.Position;
             // Apply velocity
-            d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z);
+            if(m_newVelocity != Vector3.Zero)
+                d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z);
 
             // apply friction
             m_lastLinearVelocityVector.X *= (1.0f - 1/m_linearFrictionTimescale.X);

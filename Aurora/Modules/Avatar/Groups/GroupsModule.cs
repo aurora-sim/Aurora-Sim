@@ -74,7 +74,6 @@ namespace Aurora.Modules.Groups
         private bool m_debugEnabled = true;
         //private Dictionary<UUID, UUID> GroupAttachmentCache = new Dictionary<UUID, UUID> ();
         //private Dictionary<UUID, UUID> GroupSessionIDCache = new Dictionary<UUID, UUID> (); //For offline messages
-        private bool m_findOnlineStatus;
         private IGroupsServicesConnector m_groupData;
         private bool m_groupNoticesEnabled = true;
         private bool m_groupsEnabled;
@@ -1029,7 +1028,6 @@ namespace Aurora.Modules.Groups
 
                 m_groupNoticesEnabled = groupsConfig.GetBoolean("NoticesEnabled", true);
                 m_debugEnabled = groupsConfig.GetBoolean("DebugEnabled", true);
-                m_findOnlineStatus = groupsConfig.GetBoolean("FindUserOnlineStatus", m_findOnlineStatus);
             }
         }
 
