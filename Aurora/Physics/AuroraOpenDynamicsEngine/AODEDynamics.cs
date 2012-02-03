@@ -828,7 +828,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // Apply velocity
             if (m_newVelocity != Vector3.Zero)
             {
-                if ((Type == Vehicle.TYPE_CAR || Type == Vehicle.TYPE_SLED) && (!parent.IsColliding || (parent.Parent != null && parent.Parent.IsColliding)))
+                if ((Type == Vehicle.TYPE_CAR || Type == Vehicle.TYPE_SLED) && !parent.LinkSetIsColliding)
                 {
                     //Force ODE gravity here!!!
                 }
@@ -884,23 +884,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 float VAservo = 0;
                 if (Type == Vehicle.TYPE_BOAT)
                 {
-                    VAservo = 0.2f/(m_verticalAttractionTimescale);
-                    VAservo *= (m_verticalAttractionEfficiency*m_verticalAttractionEfficiency);
+                    VAservo = 0.2f / (m_verticalAttractionTimescale);
+                    VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
                 }
                 else
                 {
                     if (parent.LinkSetIsColliding)
-                        VAservo = 0.05f/(m_verticalAttractionTimescale);
+                        VAservo = 0.05f / (m_verticalAttractionTimescale);
                     else
-                        VAservo = 0.2f/(m_verticalAttractionTimescale);
-                    VAservo *= (m_verticalAttractionEfficiency*m_verticalAttractionEfficiency);
+                        VAservo = 0.2f / (m_verticalAttractionTimescale);
+                    VAservo *= (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
                 }
-                // get present body rotation
                 // make a vector pointing up
                 Vector3 verterr = Vector3.Zero;
                 verterr.Z = 1.0f;
                 // rotate it to Body Angle
-                verterr = verterr*rotq;
+                verterr = verterr * rotq;
                 // verterr.X and .Y are the World error ammounts. They are 0 when there is no error (Vehicle Body is 'vertical'), and .Z will be 1.
                 // As the body leans to its side |.X| will increase to 1 and .Z fall to 0. As body inverts |.X| will fall and .Z will go
                 // negative. Similar for tilt and |.Y|. .X and .Y must be modulated to prevent a stable inverted body.
@@ -911,7 +910,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 // Error is 0 (no error) to +/- 2 (max error)
                 // scale it by VAservo
-                verterr = verterr*VAservo;
+                verterr = verterr * VAservo;
                 //if (frcount == 0) Console.WriteLine("VAerr=" + verterr);
 
                 // As the body rotates around the X axis, then verterr.Y increases; Rotated around Y then .X increases, so
@@ -921,9 +920,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vertattr.Z = 0f;
 
                 // scaling appears better usingsquare-law
-                float bounce = 1.0f - (m_verticalAttractionEfficiency*m_verticalAttractionEfficiency);
-                vertattr.X += bounce*angularVelocity.X;
-                vertattr.Y += bounce*angularVelocity.Y;
+                float bounce = 1.0f - (m_verticalAttractionEfficiency * m_verticalAttractionEfficiency);
+                vertattr.X += bounce * angularVelocity.X;
+                vertattr.Y += bounce * angularVelocity.Y;
             } // else vertical attractor is off
 
             #region Deflection
@@ -954,9 +953,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     effSquared *= -1; //Keep the negative!
 
                 float mix = Math.Abs(m_bankingMix);
-                banking.Z += (effSquared*(mult*mix))*(m_angularMotorVelocity.X);
-                m_angularMotorVelocity.X *= 1 - m_bankingEfficiency;
-                if (!parent.LinkSetIsColliding /* && Math.Abs(angularMotorVelocity.X) > mix*/)
+                if (m_angularMotorVelocity.X == 0)
+                {
+                    /*if (!parent.Orientation.ApproxEquals(this.m_referenceFrame, 0.25f))
+                    {
+                        Vector3 axisAngle;
+                        float angle;
+                        parent.Orientation.GetAxisAngle(out axisAngle, out angle);
+                        Vector3 rotatedVel = parent.Velocity * parent.Orientation;
+                        if ((rotatedVel.X < 0 && axisAngle.Y > 0) || (rotatedVel.X > 0 && axisAngle.Y < 0))
+                            m_angularMotorVelocity.X += (effSquared * (mult * mix)) * (1f) * 10;
+                        else
+                            m_angularMotorVelocity.X += (effSquared * (mult * mix)) * (-1f) * 10;
+                    }*/
+                }
+                else
+                    banking.Z += (effSquared*(mult*mix))*(m_angularMotorVelocity.X) * 4;
+                if (!parent.LinkSetIsColliding && Math.Abs(m_angularMotorVelocity.X) > mix)
                     //If they are colliding, we probably shouldn't shove the prim around... probably
                 {
                     float angVelZ = m_angularMotorVelocity.X*-1;
@@ -973,6 +986,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     bankingRot *= rotq;
                     banking += bankingRot;
                 }
+                m_angularMotorVelocity.X *= m_bankingEfficiency == 1 ? 0.0f : 1 - m_bankingEfficiency;
             }
 
             #endregion
