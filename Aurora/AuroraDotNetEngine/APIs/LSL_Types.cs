@@ -1334,6 +1334,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 value = s.ToString();
             }
 
+            public key(LSLString s)
+            {
+                value = s.ToString();
+            }
+
             #endregion
 
             #region Methods
@@ -1454,7 +1459,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             #endregion
 
             #region Operators
-            static public implicit operator Boolean(LSLString s)
+
+            #region Implicit
+
+            public static implicit operator Boolean(LSLString s)
             {
                 if (s.m_string.Length == 0)
                 {
@@ -1469,20 +1477,82 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return true;
                 }
             }
-            static public implicit operator OpenMetaverse.UUID(LSLString s)
+
+            public static implicit operator OpenMetaverse.UUID(LSLString s)
             {
                 return OpenMetaverse.UUID.Parse(s.m_string);
             }
 
-            static public implicit operator String(LSLString s)
+            public static implicit operator String(LSLString s)
             {
                 return s.m_string;
             }
 
-            static public implicit operator LSLString(string s)
+            public static implicit operator LSLString(string s)
             {
                 return new LSLString(s);
             }
+
+            public static implicit operator Vector3(LSLString s)
+            {
+                return new Vector3(s.m_string);
+            }
+
+            public static implicit operator Quaternion(LSLString s)
+            {
+                return new Quaternion(s.m_string);
+            }
+
+            public static implicit operator LSLFloat(LSLString s)
+            {
+                return new LSLFloat(s);
+            }
+
+            public static implicit operator list(LSLString s)
+            {
+                return new list(new object[]{s});
+            }
+
+            public static implicit operator key(LSLString s)
+            {
+                return new key(s);
+            }
+
+            #endregion
+
+            #region Explicit
+
+            public static explicit operator double(LSLString s)
+            {
+                return new LSLFloat(s).value;
+            }
+
+            public static explicit operator LSLInteger(LSLString s)
+            {
+                return new LSLInteger(s.m_string);
+            }
+
+            public static explicit operator LSLString(LSLFloat f)
+            {
+                return new LSLString(f);
+            }
+
+            public static explicit operator LSLString(double d)
+            {
+                return new LSLString(d);
+            }
+
+            public static explicit operator LSLString(int i)
+            {
+                return new LSLString(i);
+            }
+
+            public static explicit operator LSLString(bool b)
+            {
+                return new LSLString(b ? "1" : "0");
+            }
+
+            #endregion
 
             public static string ToString(LSLString s)
             {
@@ -1539,59 +1609,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             public static LSLString operator +(LSL_Types.LSLFloat s1, LSLString s2)
             {
                 return new LSLString(s1.ToString() + s2.m_string);
-            }
-
-            public static explicit operator double(LSLString s)
-            {
-                return new LSLFloat(s).value;
-            }
-
-            public static explicit operator LSLInteger(LSLString s)
-            {
-                return new LSLInteger(s.m_string);
-            }
-
-            public static explicit operator LSLString(LSLFloat f)
-            {
-                return new LSLString(f);
-            }
-
-            public static explicit operator LSLString(double d)
-            {
-                return new LSLString(d);
-            }
-
-            public static explicit operator LSLString(int i)
-            {
-                return new LSLString(i);
-            }
-
-            static public explicit operator LSLString(bool b)
-            {
-                if (b)
-                    return new LSLString("1");
-                else
-                    return new LSLString("0");
-            }
-
-            public static implicit operator Vector3(LSLString s)
-            {
-                return new Vector3(s.m_string);
-            }
-
-            public static implicit operator Quaternion(LSLString s)
-            {
-                return new Quaternion(s.m_string);
-            }
-
-            public static implicit operator LSLFloat(LSLString s)
-            {
-                return new LSLFloat(s);
-            }
-
-            public static implicit operator list(LSLString s)
-            {
-                return new list(new object[]{s});
             }
 
             #endregion

@@ -527,11 +527,6 @@ namespace Aurora.DataManager.MySQL
             return "date_add(now(), interval " + time + " minute)";
         }
 
-        public override string IsNull(string field, string defaultValue)
-        {
-            return "IFNULL(" + field + "," + defaultValue + ")";
-        }
-
         public override string ConCat(string[] toConcat)
         {
 #if (!ISWIN)
