@@ -106,7 +106,7 @@ namespace Aurora.Modules.Startup
             {
                 if (returnResponseFirstTime && !continueTrying)
                 {
-                    MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region with grid failed again - " + error);
+                    MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region with grid failed again - " + error.Error);
                     return false;
                 }
 

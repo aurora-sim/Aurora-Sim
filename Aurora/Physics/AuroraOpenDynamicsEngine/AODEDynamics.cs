@@ -544,11 +544,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             parent.ForceSetVelocity(Vector3.Zero);
             parent.ForceSetRotVelocity(Vector3.Zero);
             parent.ForceSetPosition(parent.Position);
+            d.BodySetGravityMode(Body, false);
             m_body = IntPtr.Zero;
             m_linearMotorDirection = Vector3.Zero;
             m_linearMotorDirectionLASTSET = Vector3.Zero;
             m_angularMotorDirection = Vector3.Zero;
-            d.BodySetGravityMode(Body, false);
         }
 
         internal void GetMass(IntPtr pBody)
@@ -819,9 +819,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             #endregion
 
             m_lastPositionVector = parent.Position;
+
             // Apply velocity
             if(m_newVelocity != Vector3.Zero)
-                d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z);
+                d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z + -3 * Mass);
 
             // apply friction
             m_lastLinearVelocityVector.X *= (1.0f - 1/m_linearFrictionTimescale.X);

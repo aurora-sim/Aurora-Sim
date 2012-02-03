@@ -458,7 +458,8 @@ namespace OpenSim.Region.Physics.Meshing
                             {
                                 try
                                 {
-                                    idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
+                                    if(idata != null)
+                                        idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
                                 }
                                 catch (Exception e)
                                 {
