@@ -583,7 +583,7 @@ state testing
                     Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
             }
             
-            RegexContains(Script, "^(?=.*?\.\b).*$", out vectorMatches);
+            RegexContains(Script, "^(?=.*?\\.\b).*$", out vectorMatches);
             while ((vectorMatches = vectorMatches.NextMatch()).Success)
             {
                 if (vectorMatches.Value != "")
