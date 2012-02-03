@@ -733,6 +733,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             catch (Exception e)
             {
                 MainConsole.Instance.WarnFormat("[PHYSICS]:  ode Collide failed: {0} ", e);
+
+                PhysicsActor badObj;
+                if (actor_name_map.TryGetValue(g1, out badObj))
+                    if (badObj is AuroraODEPrim)
+                        RemovePrim((AuroraODEPrim)badObj);
+                    else if (badObj is AuroraODECharacter)
+                        RemoveAvatar((AuroraODECharacter)badObj);
+                if (actor_name_map.TryGetValue(g2, out badObj))
+                    if (badObj is AuroraODEPrim)
+                        RemovePrim((AuroraODEPrim)badObj);
+                    else if (badObj is AuroraODECharacter)
+                        RemoveAvatar((AuroraODECharacter)badObj);
                 return;
             }
 

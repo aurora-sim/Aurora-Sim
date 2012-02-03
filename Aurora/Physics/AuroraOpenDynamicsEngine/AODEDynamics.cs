@@ -529,6 +529,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_lastAngularVelocity = parent.RotationalVelocity;
             parent.ThrottleUpdates = false;
             m_body = pBody;
+            d.BodySetGravityMode(Body, true);
             if (pBody == IntPtr.Zero || m_type == Vehicle.TYPE_NONE)
                 return;
             GetMass(pBody);
@@ -547,6 +548,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_linearMotorDirection = Vector3.Zero;
             m_linearMotorDirectionLASTSET = Vector3.Zero;
             m_angularMotorDirection = Vector3.Zero;
+            d.BodySetGravityMode(Body, false);
         }
 
         internal void GetMass(IntPtr pBody)
@@ -595,7 +597,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                Vector3 addAmount = (m_linearMotorDirection - m_lastLinearVelocityVector)/m_linearMotorTimescale;
+                Vector3 addAmount = (m_linearMotorDirection - m_lastLinearVelocityVector)/(m_linearMotorTimescale);
                 m_lastLinearVelocityVector += (addAmount);
 
                 m_linearMotorDirection *= (1.0f - 1.0f/m_linearMotorDecayTimescale);
@@ -603,8 +605,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // convert requested object velocity to world-referenced vector
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
                 Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W); // rotq = rotation of object
-                m_newVelocity = m_lastLinearVelocityVector;
-                m_newVelocity *= rotq; // apply obj rotation to velocity vector
+                m_newVelocity = m_lastLinearVelocityVector * rotq; // apply obj rotation to velocity vector
             }
 
             //if (m_newVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
@@ -816,17 +817,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_newVelocity = Vector3.Zero;
 
             #endregion
-
-            // add Gravity andBuoyancy
-            if (pos.Z > terrainHeight + rotatedSize.Z)
-            {
-                if ((parent.Parent != null && parent.Parent.IsColliding || !parent.IsColliding) && !underground)
-                    m_newVelocity.Z += _pParentScene.gravityz * parent.ParentEntity.GravityMultiplier *
-                                       (1f - m_VehicleBuoyancy) * 3;
-                else
-                    m_newVelocity.Z += _pParentScene.gravityz * parent.ParentEntity.GravityMultiplier *
-                                       (1f - m_VehicleBuoyancy) / 20;
-            }
 
             m_lastPositionVector = parent.Position;
             // Apply velocity

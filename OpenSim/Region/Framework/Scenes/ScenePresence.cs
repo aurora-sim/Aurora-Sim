@@ -2685,9 +2685,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_pos = new Vector3(m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2,
                     128);
-            PhysicsActor.ForceSetPosition(m_pos);
-            PhysicsActor.ForceSetVelocity(Vector3.Zero);
-            RemoveFromPhysicalScene();
+            if (PhysicsActor != null)
+            {
+                PhysicsActor.ForceSetPosition(m_pos);
+                PhysicsActor.ForceSetVelocity(Vector3.Zero);
+                RemoveFromPhysicalScene();
+            }
             MainConsole.Instance.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position, the client may be messed up now.");
 
             //Make them fly so that they don't just fall

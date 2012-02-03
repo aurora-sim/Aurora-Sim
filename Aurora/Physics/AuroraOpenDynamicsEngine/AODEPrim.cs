@@ -2711,10 +2711,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void changeVehicleType(int value)
         {
+            m_vehicle.ProcessTypeChange(this, (Vehicle)value, _parent_scene.ODE_STEPSIZE);
             if (m_vehicle.Type == Vehicle.TYPE_NONE)
                 m_vehicle.Enable(Body, this, _parent_scene);
-
-            m_vehicle.ProcessTypeChange(this, (Vehicle)value, _parent_scene.ODE_STEPSIZE);
         }
 
         private void changeVehicleFloatParam(int param, float value)
