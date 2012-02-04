@@ -220,6 +220,18 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             }
         }
 
+        public SchedulerItem Get(string id)
+        {
+            if (id != "")
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["id"] = id;
+                List<string> results = m_Gd.Query(theFields, "", filter, null, null, null);
+                return LoadFromList(results);
+            }
+            return null;
+        }
+
         private SchedulerItem LoadFromDataReader(IDataReader dr)
         {
             return new SchedulerItem
@@ -235,8 +247,29 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                            HistoryReciept = bool.Parse(dr["require_reciept"].ToString()),
                            RunEvery = int.Parse(dr["run_every"].ToString()),
                            RunOnce = bool.Parse(dr["run_once"].ToString()),
-                           RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString())
+                           RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString()),
+                           StartTime = DateTime.Parse(dr["start_time"].ToString())
                        };
+        }
+
+        private SchedulerItem LoadFromList(List<string> values)
+        {
+            return new SchedulerItem
+            {
+                id = values[0],
+                FireFunction = values[1],
+                FireParams = values[2],
+                RunOnce = bool.Parse(values[4]),
+                RunEvery = int.Parse(values[5]),
+                TimeToRun = DateTime.Parse(values[6]),
+                HisotryKeep = bool.Parse(values[7]),
+                HistoryReciept = bool.Parse(values[8]),
+                HistoryLastID = values[9],
+                CreateTime = DateTime.Parse(values[10]),
+                StartTime = DateTime.Parse(values[11]),
+                RunEveryType = (RepeatType)int.Parse(values[12]),
+                Enabled = bool.Parse(values[13])
+            };
         }
 
         #endregion
