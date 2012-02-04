@@ -59,8 +59,6 @@ namespace Aurora.Framework
         void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName);
         void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID);
 
-        void AddGroupProposal(UUID agentID, GroupProposalInfo info);
-
         uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID);
         uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs);
 
@@ -96,5 +94,10 @@ namespace Aurora.Framework
         GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID);
 
         List<GroupTitlesData> GetGroupTitles(UUID requestingAgentID, UUID GroupID);
+
+        List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID);
+        List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID);
+        void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote);
+        void AddGroupProposal(UUID agentID, GroupProposalInfo info);
     }
 }

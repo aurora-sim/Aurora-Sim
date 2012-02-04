@@ -944,14 +944,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                         {
                                                                                             VoteCast =
                                                                                                 Utils.StringToBytes(
-                                                                                                    "false"),
+                                                                                                    proposal.VoteCast),
                                                                                             VoteID =
                                                                                                 new UUID(proposal.VoteID),
                                                                                             VoteInitiator =
                                                                                                 new UUID(
                                                                                                 proposal.VoteInitiator),
                                                                                             Majority =
-                                                                                                Convert.ToInt32(
+                                                                                                (float)Convert.ToDouble(
                                                                                                     proposal.Majority),
                                                                                             Quorum =
                                                                                                 Convert.ToInt32(
@@ -970,7 +970,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                                 Utils.StringToBytes(
                                                                                                     proposal.
                                                                                                         ProposalText),
-                                                                                            AlreadyVoted = false
+                                                                                            AlreadyVoted = proposal.VoteAlreadyCast
                                                                                         };
                 GAPIRP.ProposalData[i] = ProposalData;
                 i++;
@@ -1009,7 +1009,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                      TotalNumItems = (uint) VoteItems.Length
                                                                  },
                                                              HistoryItemData =
-                                                                 {
+                                                             {
                                                                      VoteID = new UUID(Vote.VoteID),
                                                                      VoteInitiator = new UUID(Vote.VoteInitiator),
                                                                      Majority = Convert.ToInt32(Vote.Majority),

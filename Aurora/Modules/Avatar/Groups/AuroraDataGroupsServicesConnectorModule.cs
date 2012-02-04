@@ -297,9 +297,24 @@ namespace Aurora.Modules.Groups
             GroupsConnector.AddGroupProposal(agentID, info);
         }
 
+        public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
+        {
+            GroupsConnector.VoteOnActiveProposals(agentID, groupID, proposalID, vote);
+        }
+
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
             return GroupsConnector.GetGroupInvites(requestingAgentID);
+        }
+
+        public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
+        {
+            return GroupsConnector.GetActiveProposals(agentID, groupID);
+        }
+
+        public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
+        {
+            return GroupsConnector.GetInactiveProposals(agentID, groupID);
         }
 
         /// <summary>

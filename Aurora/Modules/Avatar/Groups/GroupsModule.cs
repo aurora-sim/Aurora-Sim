@@ -1172,31 +1172,56 @@ namespace Aurora.Modules.Groups
         }
 
         private void GroupProposalBallotRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID,
-                                                UUID ProposalID, string vote)
+                                                UUID proposalID, string vote)
         {
+            m_groupData.VoteOnActiveProposals(agentID, groupID, proposalID, vote);
         }
 
-        private void GroupVoteHistoryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID,
-                                             UUID sessionID)
+        private void GroupVoteHistoryRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID,
+                                             UUID transactionID)
         {
-            GroupVoteHistoryItem[] votes = new GroupVoteHistoryItem[0];
-            GroupVoteHistory history = new GroupVoteHistory();
-            client.SendGroupVoteHistory(groupID, transactionID, history, votes);
+            List<GroupProposalInfo> inactiveProposals = m_groupData.GetInactiveProposals(client.AgentId, groupID);
+            foreach (GroupProposalInfo proposal in inactiveProposals)
+            {
+                GroupVoteHistoryItem[] votes = new GroupVoteHistoryItem[1];
+                votes[0] = new GroupVoteHistoryItem();
+                votes[0].CandidateID = proposal.VoteID;
+                votes[0].NumVotes = proposal.NumVotes;
+                votes[0].VoteCast = proposal.Result ? "Yes" : "No";
+                GroupVoteHistory history = new GroupVoteHistory();
+                history.EndDateTime = Util.BuildYMDDateString(proposal.Ending);
+                history.Majority = proposal.Majority.ToString();
+                history.ProposalText = proposal.Text;
+                history.Quorum = proposal.Quorum.ToString();
+                history.StartDateTime = Util.BuildYMDDateString(proposal.Created);
+                history.VoteID = proposal.VoteID.ToString();
+                history.VoteInitiator = proposal.BallotInitiator.ToString();
+                history.VoteResult = proposal.Result ? "Success" : "Failure";
+                history.VoteType = "Proposal";//Must be set to this, or the viewer won't show it
+                client.SendGroupVoteHistory(groupID, transactionID, history, votes);
+            }
         }
 
-        private void GroupActiveProposalsRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID,
-                                                 UUID sessionID)
+        private void GroupActiveProposalsRequest(IClientAPI client, UUID agentID, UUID sessionID, UUID groupID,
+                                                 UUID transactionID)
         {
-            GroupActiveProposals[] proposals = new GroupActiveProposals[0];
-            /*proposals[0] = new GroupActiveProposals();
-            proposals[0].ProposalText = "TEST PROPOSAL";
-            proposals[0].Majority = "1";
-            proposals[0].Quorum = "0";
-            proposals[0].StartDateTime = "";
-            proposals[0].TerseDateID = "";
-            proposals[0].VoteID = UUID.Random().ToString();
-            proposals[0].VoteInitiator = agentID.ToString();
-            proposals[0].EndDateTime = "";*/
+            List<GroupProposalInfo> activeProposals = m_groupData.GetActiveProposals(client.AgentId, groupID);
+            GroupActiveProposals[] proposals = new GroupActiveProposals[activeProposals.Count];
+            int i = 0;
+            foreach (GroupProposalInfo proposal in activeProposals)
+            {
+                proposals[i] = new GroupActiveProposals();
+                proposals[i].ProposalText = proposal.Text;
+                proposals[i].Majority = proposal.Majority.ToString();
+                proposals[i].Quorum = proposal.Quorum.ToString();
+                proposals[i].StartDateTime = Util.BuildYMDDateString(proposal.Created);
+                proposals[i].TerseDateID = "";
+                proposals[i].VoteID = proposal.VoteID.ToString();
+                proposals[i].VoteInitiator = proposal.BallotInitiator.ToString();
+                proposals[i].VoteAlreadyCast = proposal.VoteCast != "";
+                proposals[i].VoteCast = proposal.VoteCast;
+                proposals[i++].EndDateTime = Util.BuildYMDDateString(proposal.Ending);
+            }
             client.SendGroupActiveProposals(groupID, transactionID, proposals);
         }
 
@@ -1204,10 +1229,11 @@ namespace Aurora.Modules.Groups
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
-            //UUID groupid = map["group-id"].AsUUID();
-            //UUID proposalid = map["proposal-id"].AsUUID();
-            //UUID sessionid = map["session-id"].AsUUID();
-            //string vote = map["vote"].AsString();
+            UUID groupID = map["group-id"].AsUUID();
+            UUID proposalID = map["proposal-id"].AsUUID();
+            string vote = map["vote"].AsString();
+
+            m_groupData.VoteOnActiveProposals(agentID, groupID, proposalID, vote);
 
             OSDMap resp = new OSDMap();
             resp["voted"] = OSD.FromBoolean(true);
@@ -1232,7 +1258,11 @@ namespace Aurora.Modules.Groups
                                              Quorum = quorum,
                                              Session = session,
                                              Text = text,
-                                             Duration = duration
+                                             Duration = duration,
+                                             BallotInitiator = agentID,
+                                             Created = DateTime.Now,
+                                             Ending = DateTime.Now.AddSeconds(duration),
+                                             VoteID = UUID.Random()
                                          };
 
             m_groupData.AddGroupProposal(agentID, info);

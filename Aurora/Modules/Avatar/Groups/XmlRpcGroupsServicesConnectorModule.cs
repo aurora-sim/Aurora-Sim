@@ -928,6 +928,20 @@ namespace Aurora.Modules.Groups
             return MemberGroupProfile;
         }
 
+        public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
+        {
+            return new List<GroupProposalInfo>();
+        }
+
+        public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
+        {
+            return new List<GroupProposalInfo>();
+        }
+
+        public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
+        {
+        }
+
         /// <summary>
         ///   Encapsulate the XmlRpc call to standardize security and error handling.
         /// </summary>

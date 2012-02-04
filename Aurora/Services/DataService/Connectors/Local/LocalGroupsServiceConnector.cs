@@ -515,7 +515,90 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
+            if (CheckGroupPermissions(agentID, info.GroupID, (ulong)GroupPowers.StartProposal))
+                GenericUtils.AddGeneric(info.GroupID, "Proposal", info.VoteID.ToString(), info.ToOSD(), data);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
+        {
+            object remoteValue = DoRemote(agentID, groupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupProposalInfo>)remoteValue;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return new List<GroupProposalInfo>();
+
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            proposals = (from p in proposals where p.Ending > DateTime.Now select p).ToList();
+            foreach (GroupProposalInfo p in proposals)
+                p.VoteCast = GetHasVoted(agentID, p);
+
+            return proposals;//Return only ones that are still running
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
+        {
+            object remoteValue = DoRemote(agentID, groupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupProposalInfo>)remoteValue;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return new List<GroupProposalInfo>();
+
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            proposals = (from p in proposals where p.Ending < DateTime.Now select p).ToList();
+            List<GroupProposalInfo> proposalsNeedingResults = (from p in proposals where !p.HasCalculatedResult select p).ToList();
+            foreach (GroupProposalInfo p in proposalsNeedingResults)
+            {
+                List<OpenMetaverse.StructuredData.OSDMap> maps = GenericUtils.GetGenerics(p.GroupID, p.VoteID.ToString(), data);
+                int yes = 0;
+                int no = 0;
+                foreach (OpenMetaverse.StructuredData.OSDMap vote in maps)
+                {
+                    if (vote["Vote"].AsString().ToLower() == "yes")
+                        yes++;
+                    else if (vote["Vote"].AsString().ToLower() == "no")
+                        no++;
+                }
+                if (yes + no < p.Quorum)
+                    p.Result = false;
+                /*if (yes > no)
+                    p.Result = true;
+                else
+                    p.Result = false;*/
+                p.HasCalculatedResult = true;
+                GenericUtils.AddGeneric(p.GroupID, "Proposal", p.VoteID.ToString(), p.ToOSD(), data);
+            }
+            foreach (GroupProposalInfo p in proposals)
+                p.VoteCast = GetHasVoted(agentID, p);
+
+            return proposals;//Return only ones that are still running
+        }
+
+        private string GetHasVoted(UUID agentID, GroupProposalInfo p)
+        {
+            OpenMetaverse.StructuredData.OSDMap map = GenericUtils.GetGeneric(p.GroupID, p.VoteID.ToString(), agentID.ToString(), data);
+            if (map != null)
+                return map["Vote"];
+            else
+                return "";
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
+        {
+            object remoteValue = DoRemote(agentID, groupID, proposalID, vote);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return;
+
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map["Vote"] = vote;
+            GenericUtils.AddGeneric(groupID, proposalID.ToString(), agentID.ToString(), map, data);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

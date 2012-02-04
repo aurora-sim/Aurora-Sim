@@ -319,6 +319,8 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap rm)
         {
+            if (rm == null)
+                return;
             MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
             ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
             MaximumPrimScale = (float) rm["MaxPrimScale"].AsReal();
