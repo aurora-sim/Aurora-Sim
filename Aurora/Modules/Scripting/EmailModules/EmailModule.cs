@@ -27,10 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Aurora.Framework;
 using DotNetOpenMail;
 using DotNetOpenMail.SmtpAuth;
@@ -40,7 +39,7 @@ using OpenSim.Region.Framework.Interfaces;
 
 namespace Aurora.Modules.Scripting
 {
-    public class EmailModule : ISharedRegionModule, IEmailModule
+    public class EmailModule : IEmailModule
     {
         //
         // Module vars
@@ -52,8 +51,7 @@ namespace Aurora.Modules.Scripting
                                   // 2 hours without llGetNextEmail drops the queue
 
         // Scenes by Region Handle
-        private readonly Dictionary<ulong, IScene> m_Scenes =
-            new Dictionary<ulong, IScene>();
+
 
         private string SMTP_SERVER_HOSTNAME = string.Empty;
         private string SMTP_SERVER_LOGIN = string.Empty;
@@ -64,7 +62,7 @@ namespace Aurora.Modules.Scripting
         private bool m_Enabled;
         private string m_HostName = string.Empty;
         private string m_InterObjectHostname = "lsl.opensim.local";
-        private int m_MaxQueueSize = 50; // maximum size of an object mail queue
+        private const int m_MaxQueueSize = 50; // maximum size of an object mail queue
         private bool m_localOnly = true;
 
         public bool IsSharedModule
@@ -81,18 +79,19 @@ namespace Aurora.Modules.Scripting
         /// <param name = "address"></param>
         /// <param name = "subject"></param>
         /// <param name = "body"></param>
-        public void SendEmail(UUID objectID, string address, string subject, string body)
+        /// <param name="scene">Can be null</param>
+        public void SendEmail(UUID objectID, string address, string subject, string body, IScene scene)
         {
             //Check if address is empty
             if (address == string.Empty)
                 return;
 
             //FIXED:Check the email is correct form in REGEX
-            string EMailpatternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
-                                        + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
-                                        + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
-                                        + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
-                                        + @"[a-zA-Z]{2,}))$";
+            const string EMailpatternStrict = @"^(([^<>()[\]\\.,;:\s@\""]+"
+                                              + @"(\.[^<>()[\]\\.,;:\s@\""]+)*)|(\"".+\""))@"
+                                              + @"((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
+                                              + @"\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+"
+                                              + @"[a-zA-Z]{2,}))$";
             Regex EMailreStrict = new Regex(EMailpatternStrict);
             bool isEMailStrictMatch = EMailreStrict.IsMatch(address);
             if (!isEMailStrictMatch)
@@ -111,7 +110,8 @@ namespace Aurora.Modules.Scripting
             string LastObjectPosition = string.Empty;
             string LastObjectRegionName = string.Empty;
 
-            resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
+            if (scene != null)
+                resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName, scene);
 
             if (!address.EndsWith(m_InterObjectHostname))
             {
@@ -122,20 +122,27 @@ namespace Aurora.Modules.Scripting
                     try
                     {
                         //Creation EmailMessage
+
+                        string fromEmailAddress = "@" + m_HostName;
+                        if (scene != null)
+                            fromEmailAddress = objectID.ToString() + "@" + m_HostName;
+                        else
+                            fromEmailAddress = "noreply@" + m_HostName;
                         EmailMessage emailMessage = new EmailMessage
-                                                        {
-                                                            FromAddress =
-                                                                new EmailAddress(objectID.ToString() + "@" + m_HostName)
-                                                        };
-                        //From
+                                               {
+                                                   FromAddress =
+                                                       new EmailAddress(fromEmailAddress), 
+                                                       Subject = subject
+                                               };
+
                         //To - Only One
                         emailMessage.AddToAddress(new EmailAddress(address));
-                        //Subject
-                        emailMessage.Subject = subject;
                         //Text
-                        emailMessage.BodyText = "Object-Name: " + LastObjectName +
+                        emailMessage.BodyText = body;
+                        if (scene != null)
+                            emailMessage.BodyText = "Object-Name: " + LastObjectName +
                                                 "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                                LastObjectPosition + "\n\n" + body;
+                                                LastObjectPosition + "\n\n" + emailMessage.BodyText;
 
                         //Config SMTP Server
                         //Set SMTP SERVER config
@@ -150,8 +157,7 @@ namespace Aurora.Modules.Scripting
 
                         //Log
                         if (!didError)
-                            MainConsole.Instance.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() +
-                                       "@" + m_HostName);
+                            MainConsole.Instance.Info("[EMAIL] EMail sent to: " + address + " from object: " + fromEmailAddress);
                     }
                     catch (Exception e)
                     {
@@ -159,30 +165,16 @@ namespace Aurora.Modules.Scripting
                         didError = true;
                     }
                 }
-                if ((didError) || (m_localOnly))
+                if (((didError) || (m_localOnly)) && (scene != null))
                 {
                     // Notify Owner
-                    ISceneChildEntity part = findPrim(objectID, out LastObjectRegionName);
+                    ISceneChildEntity part = findPrim(objectID, out LastObjectRegionName, scene);
                     if (part != null)
                     {
-                        lock (m_Scenes)
+                        IScenePresence sp = scene.GetScenePresence(part.OwnerID);
+                        if ((sp != null) && (!sp.IsChildAgent))
                         {
-#if (!ISWIN)
-                            foreach (IScene s in m_Scenes.Values)
-                            {
-                                IScenePresence SP = s.GetScenePresence(part.OwnerID);
-                                if ((SP != null) && (!SP.IsChildAgent))
-                                {
-                                    SP.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
-                                }
-                            }
-#else
-                            foreach (IScenePresence SP in m_Scenes.Values.Select(s => s.GetScenePresence(part.OwnerID)).Where(SP => (SP != null) && (!SP.IsChildAgent)))
-                            {
-                                SP.ControllingClient.SendAlertMessage(
-                                    "llEmail: email module not configured for outgoing emails");
-                            }
-#endif
+                            sp.ControllingClient.SendAlertMessage("llEmail: email module not configured for outgoing emails");
                         }
                     }
                 }
@@ -190,17 +182,17 @@ namespace Aurora.Modules.Scripting
             else
             {
                 // inter object email, keep it in the family
-                string guid = address.Substring(0, address.IndexOf("@"));
+                string guid = address.Substring(0, address.IndexOf("@", StringComparison.Ordinal));
                 UUID toID = new UUID(guid);
 
-                if (IsLocal(toID))
+                if (IsLocal(toID, scene))
                 {
                     // object in this region
                     InsertEmail(toID, new Email
                                   {
                                       time =
                                           ((int) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
-                                          ToString(),
+                                          ToString(CultureInfo.InvariantCulture),
                                       subject = subject,
                                       sender = objectID.ToString() + "@" + m_InterObjectHostname,
                                       message = "Object-Name: " + LastObjectName +
@@ -217,13 +209,13 @@ namespace Aurora.Modules.Scripting
                     {
                         time =
                             ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
-                            ToString(),
+                            ToString(CultureInfo.InvariantCulture),
                         subject = subject,
                         sender = objectID.ToString() + "@" + m_InterObjectHostname,
                         message = body,
                         toPrimID = toID
                     };
-                    Aurora.Framework.IEmailConnector conn = Aurora.DataManager.DataManager.RequestPlugin<Aurora.Framework.IEmailConnector>();
+                    IEmailConnector conn = DataManager.DataManager.RequestPlugin<IEmailConnector>();
                     conn.InsertEmail(email);
                 }
             }
@@ -235,13 +227,16 @@ namespace Aurora.Modules.Scripting
         ///<param name = "objectID"></param>
         ///<param name = "sender"></param>
         ///<param name = "subject"></param>
+        ///<param name="handler"> </param>
+        ///<param name="scene"> </param>
         ///<returns></returns>
-        public void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail handler)
+        public void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail handler, IScene scene)
         {
-            Util.FireAndForget((o) =>
-                {
-                    handler(GetNextEmail(objectID, sender, subject));
-                });
+#if (!ISWIN)
+            Util.FireAndForget(delegate { handler(GetNextEmail(objectID, sender, subject, scene)); });
+#else
+            Util.FireAndForget(state => handler(GetNextEmail(objectID, sender, subject, scene)));
+#endif
         }
 
         ///<summary>
@@ -250,8 +245,9 @@ namespace Aurora.Modules.Scripting
         ///<param name = "objectID"></param>
         ///<param name = "sender"></param>
         ///<param name = "subject"></param>
+        ///<param name="scene"> </param>
         ///<returns></returns>
-        public Email GetNextEmail(UUID objectID, string sender, string subject)
+        public Email GetNextEmail(UUID objectID, string sender, string subject, IScene scene)
         {
             List<Email> queue = null;
 
@@ -286,7 +282,7 @@ namespace Aurora.Modules.Scripting
                 }
             }
 
-            GetRemoteEmails(objectID);
+            GetRemoteEmails(objectID, scene);
             lock (m_MailQueues)
             {
                 if (m_MailQueues.ContainsKey(objectID))
@@ -333,9 +329,9 @@ namespace Aurora.Modules.Scripting
             return null;
         }
 
-        private void GetRemoteEmails(UUID objectID)
+        private void GetRemoteEmails(UUID objectID, IScene scene)
         {
-            IEmailConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEmailConnector>();
+            IEmailConnector conn = DataManager.DataManager.RequestPlugin<IEmailConnector>();
             List<Email> emails = conn.GetEmails(objectID);
             if (emails.Count > 0)
             {
@@ -347,7 +343,7 @@ namespace Aurora.Modules.Scripting
                     string LastObjectPosition = string.Empty;
                     string LastObjectRegionName = string.Empty;
 
-                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
+                    resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName, scene);
 
                     email.message = "Object-Name: " + LastObjectName +
                                   "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
@@ -355,98 +351,6 @@ namespace Aurora.Modules.Scripting
                     InsertEmail(objectID, email);
                 }
             }
-        }
-
-        #endregion
-
-        #region ISharedRegionModule Members
-
-        public void Initialise(IConfigSource config)
-        {
-            m_Config = config;
-            IConfig SMTPConfig;
-
-            //Load SMTP SERVER config
-            try
-            {
-                if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
-                {
-                    MainConsole.Instance.InfoFormat("[SMTP] SMTP server not configured");
-                    m_Enabled = false;
-                    return;
-                }
-                m_Enabled = SMTPConfig.GetBoolean("enabled", true);
-                if (!m_Enabled)
-                {
-                    //MainConsole.Instance.InfoFormat("[SMTP] module disabled in configuration");
-                    m_Enabled = false;
-                    return;
-                }
-                m_localOnly = SMTPConfig.GetBoolean("local_only", true);
-                m_HostName = SMTPConfig.GetString("host_domain_header_from", m_HostName);
-                m_InterObjectHostname = SMTPConfig.GetString("internal_object_host", m_InterObjectHostname);
-                SMTP_SERVER_HOSTNAME = SMTPConfig.GetString("SMTP_SERVER_HOSTNAME", SMTP_SERVER_HOSTNAME);
-                SMTP_SERVER_PORT = SMTPConfig.GetInt("SMTP_SERVER_PORT", SMTP_SERVER_PORT);
-                SMTP_SERVER_LOGIN = SMTPConfig.GetString("SMTP_SERVER_LOGIN", SMTP_SERVER_LOGIN);
-                SMTP_SERVER_PASSWORD = SMTPConfig.GetString("SMTP_SERVER_PASSWORD", SMTP_SERVER_PASSWORD);
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.Error("[EMAIL] DefaultEmailModule not configured: " + e.Message);
-                m_Enabled = false;
-                return;
-            }
-        }
-
-        public void AddRegion(IScene scene)
-        {
-            // It's a go!
-            if (m_Enabled)
-            {
-                lock (m_Scenes)
-                {
-                    // Claim the interface slot
-                    scene.RegisterModuleInterface<IEmailModule>(this);
-
-                    // Add to scene list
-                    if (m_Scenes.ContainsKey(scene.RegionInfo.RegionHandle))
-                    {
-                        m_Scenes[scene.RegionInfo.RegionHandle] = scene;
-                    }
-                    else
-                    {
-                        m_Scenes.Add(scene.RegionInfo.RegionHandle, scene);
-                    }
-                }
-
-                //MainConsole.Instance.Info("[EMAIL] Activated DefaultEmailModule");
-            }
-        }
-
-        public void RemoveRegion(IScene scene)
-        {
-        }
-
-        public void RegionLoaded(IScene scene)
-        {
-        }
-
-        public Type ReplaceableInterface
-        {
-            get { return null; }
-        }
-
-        public void PostInitialise()
-        {
-        }
-
-        public void Close()
-        {
-        }
-
-        public string Name
-        {
-            get { return "DefaultEmailModule"; }
         }
 
         #endregion
@@ -475,46 +379,38 @@ namespace Aurora.Modules.Scripting
             }
         }
 
-        private bool IsLocal(UUID objectID)
+        private bool IsLocal(UUID objectID, IScene scene)
         {
             string unused;
-            return (findPrim(objectID, out unused) != null);
+            return (findPrim(objectID, out unused, scene) != null);
         }
 
-        private ISceneChildEntity findPrim(UUID objectID, out string ObjectRegionName)
+        private ISceneChildEntity findPrim(UUID objectID, out string ObjectRegionName, IScene s)
         {
-            lock (m_Scenes)
+            ISceneChildEntity part = s.GetSceneObjectPart(objectID);
+            if (part != null)
             {
-                foreach (IScene s in m_Scenes.Values)
-                {
-                    ISceneChildEntity part = s.GetSceneObjectPart(objectID);
-                    if (part != null)
-                    {
-                        ObjectRegionName = s.RegionInfo.RegionName;
-                        int localX = s.RegionInfo.RegionLocX;
-                        int localY = s.RegionInfo.RegionLocY;
-                        ObjectRegionName = ObjectRegionName + " (" + localX + ", " + localY + ")";
-                        return part;
-                    }
-                }
+                ObjectRegionName = s.RegionInfo.RegionName;
+                int localX = s.RegionInfo.RegionLocX;
+                int localY = s.RegionInfo.RegionLocY;
+                ObjectRegionName = ObjectRegionName + " (" + localX + ", " + localY + ")";
+                return part;
             }
+
             ObjectRegionName = string.Empty;
             return null;
         }
 
         private void resolveNamePositionRegionName(UUID objectID, out string ObjectName,
-                                                   out string ObjectAbsolutePosition, out string ObjectRegionName)
+                                                   out string ObjectAbsolutePosition, out string ObjectRegionName, IScene scene)
         {
             string m_ObjectRegionName;
-            int objectLocX;
-            int objectLocY;
-            int objectLocZ;
-            ISceneChildEntity part = findPrim(objectID, out m_ObjectRegionName);
+            ISceneChildEntity part = findPrim(objectID, out m_ObjectRegionName, scene);
             if (part != null)
             {
-                objectLocX = (int) part.AbsolutePosition.X;
-                objectLocY = (int) part.AbsolutePosition.Y;
-                objectLocZ = (int) part.AbsolutePosition.Z;
+                int objectLocX = (int) part.AbsolutePosition.X;
+                int objectLocY = (int) part.AbsolutePosition.Y;
+                int objectLocZ = (int) part.AbsolutePosition.Z;
                 ObjectAbsolutePosition = "(" + objectLocX + ", " + objectLocY + ", " + objectLocZ + ")";
                 ObjectName = part.Name;
                 ObjectRegionName = m_ObjectRegionName;
@@ -524,5 +420,62 @@ namespace Aurora.Modules.Scripting
             ObjectAbsolutePosition = null;
             ObjectRegionName = null;
         }
+
+        #region Implementation of IService
+
+        public string Name
+        {
+            get { return "DefaultEmailModule"; }
+        }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_Config = config;
+
+            //Load SMTP SERVER config
+            try
+            {
+                IConfig SMTPConfig;
+                if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
+                {
+                    MainConsole.Instance.InfoFormat("[SMTP] SMTP server not configured");
+                    m_Enabled = false;
+                    return;
+                }
+                m_Enabled = SMTPConfig.GetBoolean("enabled", true);
+                if (!m_Enabled)
+                {
+                    //MainConsole.Instance.InfoFormat("[SMTP] module disabled in configuration");
+                    m_Enabled = false;
+                    return;
+                }
+                m_localOnly = SMTPConfig.GetBoolean("local_only", true);
+                m_HostName = SMTPConfig.GetString("host_domain_header_from", m_HostName);
+                m_InterObjectHostname = SMTPConfig.GetString("internal_object_host", m_InterObjectHostname);
+                SMTP_SERVER_HOSTNAME = SMTPConfig.GetString("SMTP_SERVER_HOSTNAME", SMTP_SERVER_HOSTNAME);
+                SMTP_SERVER_PORT = SMTPConfig.GetInt("SMTP_SERVER_PORT", SMTP_SERVER_PORT);
+                SMTP_SERVER_LOGIN = SMTPConfig.GetString("SMTP_SERVER_LOGIN", SMTP_SERVER_LOGIN);
+                SMTP_SERVER_PASSWORD = SMTPConfig.GetString("SMTP_SERVER_PASSWORD", SMTP_SERVER_PASSWORD);
+
+                registry.RegisterModuleInterface<IEmailModule>(this);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[EMAIL] DefaultEmailModule not configured: " + e.Message);
+                m_Enabled = false;
+            }
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FinishedStartup()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
