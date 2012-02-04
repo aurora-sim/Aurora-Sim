@@ -1,0 +1,18 @@
+[SMTP]
+    ;; This is for emails, either for abuse reports or llEmail
+    ;; Enabled by default for local 'in-simulator' emails.
+    enabled=true
+
+    ;; Name of the default llEmail hostname
+    ;internal_object_host=lsl.opensim.local
+
+    ;; If local_only is enabled, the rest of the options do not matter.
+    ;; local_only enables only llEmail for prims that are trying to email prims in their own region only.
+    local_only = true;
+
+    ;; Settings for connecting to your SMTP server (Email server)
+    ;host_domain_header_from=127.0.0.1
+    ;SMTP_SERVER_HOSTNAME=127.0.0.1
+    ;SMTP_SERVER_PORT=25
+    ;SMTP_SERVER_LOGIN=foo
+    ;SMTP_SERVER_PASSWORD=bar
