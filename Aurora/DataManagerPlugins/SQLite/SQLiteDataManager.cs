@@ -522,11 +522,6 @@ namespace Aurora.DataManager.SQLite
             return InsertOrReplace(table, row, true);
         }
 
-        public override bool Replace(string table, Dictionary<string, object> row)
-        {
-            return InsertOrReplace(table, row, false);
-        }
-
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
             var cmd = new SQLiteCommand();
@@ -559,6 +554,36 @@ namespace Aurora.DataManager.SQLite
                 CloseReaderCommand(cmd);
             }
             return true;
+        }
+
+        public override bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB)
+        {
+            SQLiteCommand cmd = PrepReader(string.Format("INSERT INTO {0}{1} SELECT {2} FROM {3}",
+                tableA,
+                (fieldsA.Length > 0 ? " (" + string.Join(", ", fieldsA) + ")" : ""),
+                string.Join(", ", valuesB),
+                tableB
+            ));
+
+            try
+            {
+                ExecuteNonQuery(cmd);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[SQLiteLoader] INSERT .. SELECT (" + cmd.CommandText + "), " + e);
+            }
+            CloseReaderCommand(cmd);
+            return true;
+        }
+
+        #endregion
+
+        #region REPLACE INTO
+
+        public override bool Replace(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, false);
         }
 
         #endregion
@@ -595,13 +620,6 @@ namespace Aurora.DataManager.SQLite
         }
 
         #endregion
-
-        public override string FormatDateTimeString(int time)
-        {
-            if (time == 0)
-                return "datetime('now', 'localtime')";
-            return "datetime('now', 'localtime', '+" + time.ToString() + " minutes')";
-        }
 
         public override string ConCat(string[] toConcat)
         {
