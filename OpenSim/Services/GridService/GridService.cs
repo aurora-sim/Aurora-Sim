@@ -842,10 +842,11 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.Info("Syntax: set region flags <region name> <flags>");
                 return;
             }
+
             string regionname = cmd[3];
             if (cmd.Length > 5)
             {
-                for (int ii = 4; ii <= cmd.Length - 2; ii++)
+                for (int ii = 4; ii < cmd.Length - 1; ii++)
                 {
                     regionname += " " + cmd[ii];
                 }

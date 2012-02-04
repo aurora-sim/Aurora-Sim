@@ -3885,7 +3885,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llEmail(string address, string subject, string message)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
             IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
@@ -3893,7 +3892,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return DateTime.Now;
             }
 
-            emailModule.SendEmail(m_host.UUID, address, subject, message);
+            emailModule.SendEmail(m_host.UUID, address, subject, message, World);
             return PScriptSleep(20000);
         }
 
@@ -3921,7 +3920,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         new LSL_String(email.message),
                         new LSL_Integer(email.numLeft)}
                         );
-            });
+            }, World);
         }
 
         public LSL_String llGetKey()
