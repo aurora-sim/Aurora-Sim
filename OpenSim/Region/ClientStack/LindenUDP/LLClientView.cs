@@ -1084,13 +1084,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                       CurrentInterval = currentInterval,
                                       IntervalDays = interval,
                                       RequestID = transactionID,
-                                      StartDate = Utils.StringToBytes(DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day)
+                                      StartDate = Utils.StringToBytes(startDate)
                                   };
             OutPacket(GADRP, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier,
-                                               int usedTier, string startDate, int currentInterval, int intervalLength,
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTierDebit,
+                                               int totalTierCredits, string startDate, int currentInterval, int intervalLength,
                                                string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee)
         {
             GroupAccountSummaryReplyPacket GASRP =
@@ -1102,9 +1102,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             GASRP.MoneyData = new GroupAccountSummaryReplyPacket.MoneyDataBlock
                                   {
                                       Balance = moneyAmt,
-                                      TotalCredits = totalTier,
-                                      TotalDebits = usedTier,
-                                      StartDate = Utils.StringToBytes(startDate),
+                                      TotalCredits = totalTierCredits,
+                                      TotalDebits = totalTierDebit,
+                                      StartDate = Utils.StringToBytes(startDate + '\n'),
                                       CurrentInterval = currentInterval,
                                       GroupTaxCurrent = groupTaxFee,
                                       GroupTaxEstimate = groupTaxFee,

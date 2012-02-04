@@ -122,6 +122,11 @@ namespace Aurora.Framework
             return value;
         }
 
+        public static string BuildYMDDateString(DateTime time)
+        {
+            return time.Year + "-" + time.Month + "-" + time.Day;
+        }
+
         /// <summary>
         ///   Gets the name of the directory where the current running executable
         ///   is located

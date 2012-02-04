@@ -586,6 +586,9 @@ namespace Aurora.Framework
         public string Description;
         public string TimeString;
         public string UserCausingCharge;
+        private bool _ispayment = true;
+        public bool Payment { get { return _ispayment; } set { _ispayment = value; } }
+        public bool Stipend { get { return !_ispayment; } set { _ispayment = !value; } }
 
         public override OSDMap ToOSD()
         {
@@ -595,6 +598,7 @@ namespace Aurora.Framework
             map["Description"] = Description;
             map["TimeString"] = TimeString;
             map["UserCausingCharge"] = UserCausingCharge;
+            map["Payment"] = Payment;
 
             return map;
         }
@@ -604,6 +608,7 @@ namespace Aurora.Framework
             Amount = map["Amount"];
             Description = map["Description"];
             TimeString = map["TimeString"];
+            Payment = map["Payment"];
             UserCausingCharge = map["UserCausingCharge"];
         }
     }
