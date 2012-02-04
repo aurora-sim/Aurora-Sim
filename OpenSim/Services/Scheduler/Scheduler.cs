@@ -117,6 +117,11 @@ namespace OpenSim.Services
             return m_database.SchedulerExist(scdID);
         }
 
+        public SchedulerItem Get(string ID)
+        {
+            return m_database.Get(ID);
+        }
+
         #endregion
 
         #region Timer
