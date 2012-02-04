@@ -103,7 +103,7 @@ namespace Aurora.DataManager.Migration.Migrators
             }, "tokens", new string[3]{
                 "UUID",
                 "token",
-                (genericData.GetType().ToString() == "Aurora.DataManager.SQLite.SQLiteLoader") ? "strftime('%s', valdity)" : "UNIX_TIMESTAMP(validity)"
+                (genericData.GetType().ToString() == "Aurora.DataManager.SQLite.SQLiteLoader") ? "strftime('%s', validity)" : "UNIX_TIMESTAMP(validity)"
             });
             genericData.DropTable("tokens");
             genericData.RenameTable("tokens2", "tokens");
