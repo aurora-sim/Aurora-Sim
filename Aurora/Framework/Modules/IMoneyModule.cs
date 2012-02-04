@@ -54,7 +54,7 @@ namespace Aurora.Framework
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                              int amount);
 
-        int Balance(IClientAPI client);
+        int Balance(UUID agentID);
         bool Charge(IClientAPI client, int amount);
         bool Charge(UUID agentID, int amount, string text);
 

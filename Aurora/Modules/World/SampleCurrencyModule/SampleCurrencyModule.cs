@@ -152,7 +152,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         #endregion
 
-        public int Balance(IClientAPI client)
+        public int Balance(UUID agentID)
         {
             return 0;
         }
