@@ -170,6 +170,16 @@ namespace Aurora.Framework
         /// <returns></returns>
         bool Insert(string table, object[] values, string updateKey, object updateValue);
 
+        /// <summary>
+        /// Inserts rows selected from another table.
+        /// </summary>
+        /// <param name="tableA"></param>
+        /// <param name="fieldsA"></param>
+        /// <param name="tableB"></param>
+        /// <param name="valuesB"></param>
+        /// <returns></returns>
+        bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB);
+
         #endregion
 
         #region REPLACE INTO
@@ -204,14 +214,6 @@ namespace Aurora.Framework
         bool Delete(string table, QueryFilter queryFilter);
 
         #endregion
-
-        /// <summary>
-        ///   Formats a datetime string for the given time
-        ///   0 returns now()
-        /// </summary>
-        /// <param name = "time"></param>
-        /// <returns></returns>
-        string FormatDateTimeString(int time);
 
         /// <summary>
         ///   Connects to the database and then performs migrations
@@ -298,7 +300,7 @@ namespace Aurora.Framework
 
         private static string preparedKey(string key)
         {
-            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply");
+            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "");
         }
 
         public string ToSQL(char prepared, out Dictionary<string, object> ps, ref uint j)

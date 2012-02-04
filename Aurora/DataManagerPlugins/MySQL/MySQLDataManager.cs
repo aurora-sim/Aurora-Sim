@@ -438,7 +438,7 @@ namespace Aurora.DataManager.MySQL
             Dictionary<string, object> ps = new Dictionary<string, object>();
             foreach (KeyValuePair<string, object> field in row)
             {
-                string key = "?" + field.Key.Replace("`", "");
+                string key = "?" + field.Key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply");
                 ps[key] = field.Value;
             }
             query += " VALUES( " + string.Join(", ", ps.Keys.ToArray<string>()) + " )";
@@ -457,11 +457,6 @@ namespace Aurora.DataManager.MySQL
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             return InsertOrReplace(table, row, true);
-        }
-
-        public override bool Replace(string table, Dictionary<string, object> row)
-        {
-            return InsertOrReplace(table, row, false);
         }
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
@@ -486,6 +481,35 @@ namespace Aurora.DataManager.MySQL
                 return false;
             }
             return true;
+        }
+
+        public override bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB)
+        {
+            string query = string.Format("INSERT INTO {0}{1} SELECT {2} FROM {3}",
+                tableA,
+                (fieldsA.Length > 0 ? " (" + string.Join(", ", fieldsA) + ")" : ""),
+                string.Join(", ", valuesB),
+                tableB
+            );
+
+            try
+            {
+                ExecuteNonQuery(query, new Dictionary<string,object>(0));
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[MySQLDataLoader] INSERT .. SELECT (" + query + "), " + e);
+            }
+            return true;
+        }
+
+        #endregion
+
+        #region REPLACE INTO
+
+        public override bool Replace(string table, Dictionary<string, object> row)
+        {
+            return InsertOrReplace(table, row, false);
         }
 
         #endregion
@@ -519,13 +543,6 @@ namespace Aurora.DataManager.MySQL
         }
 
         #endregion
-
-        public override string FormatDateTimeString(int time)
-        {
-            if (time == 0)
-                return "now()";
-            return "date_add(now(), interval " + time + " minute)";
-        }
 
         public override string ConCat(string[] toConcat)
         {
