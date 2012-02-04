@@ -144,6 +144,7 @@ namespace Aurora.Framework
         public abstract void RemoveAvatar(PhysicsCharacter actor);
 
         public abstract void RemovePrim(PhysicsObject prim);
+        public abstract void DeletePrim(PhysicsObject prim);
 
         public abstract PhysicsObject AddPrimShape(ISceneChildEntity entity);
         public abstract void AddPhysicsActorTaint(PhysicsActor prim);
@@ -262,6 +263,10 @@ namespace Aurora.Framework
         }
 
         public override void RemovePrim(PhysicsObject prim)
+        {
+        }
+
+        public override void DeletePrim(PhysicsObject prim)
         {
         }
 

@@ -256,6 +256,11 @@ namespace Aurora.Framework
         public UUID TerrainImageID { get; set; }
 
         /// <summary>
+        /// Displays which lands are for sale (and for auction)
+        /// </summary>
+        public UUID ParcelMapImageID { get; set; }
+
+        /// <summary>
         ///   Terrain only asset ID for the map
         /// </summary>
         public UUID TerrainMapImageID { get; set; }
@@ -369,6 +374,7 @@ namespace Aurora.Framework
             map["SunPosition"] = this.SunPosition;
             map["SunVector"] = this.SunVector;
             map["TerrainImageID"] = this.TerrainImageID;
+            map["ParcelMapImageID"] = this.ParcelMapImageID;
             map["TerrainLowerLimit"] = this.TerrainLowerLimit;
             map["TerrainMapImageID"] = this.TerrainMapImageID;
             map["TerrainRaiseLimit"] = this.TerrainRaiseLimit;
@@ -417,6 +423,7 @@ namespace Aurora.Framework
             this.SunPosition = map["SunPosition"];
             this.SunVector = map["SunVector"];
             this.TerrainImageID = map["TerrainImageID"];
+            this.ParcelMapImageID = map["ParcelMapImageID"];
             this.TerrainLowerLimit = map["TerrainLowerLimit"];
             this.TerrainMapImageID = map["TerrainMapImageID"];
             this.TerrainRaiseLimit = map["TerrainRaiseLimit"];

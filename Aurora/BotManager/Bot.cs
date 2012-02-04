@@ -2419,17 +2419,18 @@ namespace Aurora.BotManager
         }
 
         public void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
-                                               int amt)
+                                               int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history)
         {
         }
 
-        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier,
-                                               int usedTier)
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier,
+                                               int usedTier, string startDate, int currentInterval, int intervalLength,
+                                               string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee)
         {
         }
 
         public void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
-                                                        UUID sessionID, int amt)
+                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history)
         {
         }
 

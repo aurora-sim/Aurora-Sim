@@ -582,6 +582,15 @@ state testing
                 if (vectorMatches.Value != "")
                     Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
             }
+            
+            RegexContains(Script, "^(?=.*?\\.\b).*$", out vectorMatches);
+            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            {
+                if (vectorMatches.Value != "")
+                {
+                    //TODO: check for C# syntax
+                }
+            }
             RegexContains(Script, m_functionRegex, out vectorMatches);
             List<string> replacedFunctions = new List<string>();
             while((vectorMatches = vectorMatches.NextMatch()).Success)

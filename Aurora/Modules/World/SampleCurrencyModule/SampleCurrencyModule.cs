@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using Nini.Config;
 using Nwc.XmlRpc;
@@ -152,7 +153,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         #endregion
 
-        public int Balance(IClientAPI client)
+        public int Balance(UUID agentID)
         {
             return 0;
         }
@@ -330,5 +331,16 @@ namespace Aurora.Modules.SampleCurrencyModule
         }
 
         #endregion
+
+
+        public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval, int intervalDays)
+        {
+            return new List<GroupAccountHistory>();
+        }
+
+        public GroupBalance GetGroupBalance(UUID groupID)
+        {
+            return new GroupBalance() { StartingDate = DateTime.Now.AddDays(-4) };
+        }
     }
 }

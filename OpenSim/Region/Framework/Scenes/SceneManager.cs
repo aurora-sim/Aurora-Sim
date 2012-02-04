@@ -613,7 +613,9 @@ namespace OpenSim.Region.Framework.Scenes
                     else if(needsGridUpdate)
                         scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
                     //Tell clients about the changes
-                    scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                    IEstateModule es = scene.RequestModuleInterface<IEstateModule>();
+                    if(es != null)
+                        es.sendRegionHandshakeToAll();
                 }
             }
         }

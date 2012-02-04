@@ -2351,6 +2351,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AddChange(AuroraODEPhysicsScene.changes.Remove, null);
         }
 
+        public void setPrimForDeletion()
+        {
+            if (m_primIsRemoved)
+                return; //Already being removed
+
+            m_primIsRemoved = true;
+            lock (childrenPrim)
+            {
+                foreach (AuroraODEPrim prm in childrenPrim)
+                {
+                    prm.m_primIsRemoved = true;
+                }
+            }
+
+            AddChange(AuroraODEPhysicsScene.changes.Delete, null);
+        }
+
         public override void VehicleFloatParam(int param, float value)
         {
             strVehicleFloatParam strf = new strVehicleFloatParam { param = param, value = value };
@@ -2694,10 +2711,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void changeVehicleType(int value)
         {
+            m_vehicle.ProcessTypeChange(this, (Vehicle)value, _parent_scene.ODE_STEPSIZE);
             if (m_vehicle.Type == Vehicle.TYPE_NONE)
                 m_vehicle.Enable(Body, this, _parent_scene);
-
-            m_vehicle.ProcessTypeChange(this, (Vehicle)value, _parent_scene.ODE_STEPSIZE);
         }
 
         private void changeVehicleFloatParam(int param, float value)
@@ -2728,11 +2744,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public bool DoAChange(AuroraODEPhysicsScene.changes what, object arg)
         {
-            if (m_frozen && what != AuroraODEPhysicsScene.changes.Add && what != AuroraODEPhysicsScene.changes.Remove)
+            if (m_frozen && what != AuroraODEPhysicsScene.changes.Add && what != AuroraODEPhysicsScene.changes.Remove && what != AuroraODEPhysicsScene.changes.Delete)
                 return false;
 
             if (prim_geom == IntPtr.Zero && what != AuroraODEPhysicsScene.changes.Add &&
-                what != AuroraODEPhysicsScene.changes.Remove)
+                what != AuroraODEPhysicsScene.changes.Remove && what != AuroraODEPhysicsScene.changes.Delete)
             {
                 m_frozen = true;
                 return false;
@@ -2752,6 +2768,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                     else
                         ChildRemove(this);
+
+                    RemoveGeom();
+                    m_targetSpace = IntPtr.Zero;
+                    return true;
+                case AuroraODEPhysicsScene.changes.Delete:
+                    if (_parent != null)
+                    {
+                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                        parent.DestroyBody();
+                    }
+                    else
+                        DestroyBody();
 
                     RemoveGeom();
                     m_targetSpace = IntPtr.Zero;

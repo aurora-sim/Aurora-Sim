@@ -335,6 +335,7 @@ namespace OpenSim.Services.Interfaces
 
         public UUID TerrainImage = UUID.Zero;
         public UUID TerrainMapImage = UUID.Zero;
+        public UUID ParcelMapImage = UUID.Zero;
         public byte Access;
         public string AuthToken = string.Empty;
         private IPEndPoint m_remoteEndPoint = null;
@@ -383,6 +384,7 @@ namespace OpenSim.Services.Interfaces
             ServerURI = MainServer.Instance.ServerURI;
             TerrainImage = ConvertFrom.RegionSettings.TerrainImageID;
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
+            ParcelMapImage = ConvertFrom.RegionSettings.ParcelMapImageID;
             Access = ConvertFrom.AccessLevel;
             if(ConvertFrom.EstateSettings != null)
                 EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
@@ -458,73 +460,6 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
-        public GridRegion(Dictionary<string, object> kvp)
-        {
-            Flags = 0;
-            if (kvp.ContainsKey("uuid"))
-                RegionID = new UUID((string)kvp["uuid"]);
-
-            if (kvp.ContainsKey("locX"))
-                RegionLocX = Convert.ToInt32((string)kvp["locX"]);
-
-            if (kvp.ContainsKey("locY"))
-                RegionLocY = Convert.ToInt32((string)kvp["locY"]);
-
-            if (kvp.ContainsKey("regionName"))
-                RegionName = (string)kvp["regionName"];
-
-            if (kvp.ContainsKey("regionType"))
-                RegionType = (string)kvp["regionType"];
-
-            if (kvp.ContainsKey("serverIP"))
-            {
-                //int port = 0;
-                //Int32.TryParse((string)kvp["serverPort"], out port);
-                //IPEndPoint ep = new IPEndPoint(IPAddress.Parse((string)kvp["serverIP"]), port);
-                ExternalHostName = (string)kvp["serverIP"];
-            }
-            else
-                ExternalHostName = "127.0.0.1";
-
-            if (kvp.ContainsKey("serverPort"))
-            {
-                Int32 port = 0;
-                Int32.TryParse((string)kvp["serverPort"], out port);
-                InternalEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
-            }
-
-            if (kvp.ContainsKey("serverHttpPort"))
-            {
-                UInt32 port = 0;
-                UInt32.TryParse((string)kvp["serverHttpPort"], out port);
-                HttpPort = port;
-            }
-
-            if (kvp.ContainsKey("serverURI"))
-                ServerURI = (string)kvp["serverURI"];
-
-            if (kvp.ContainsKey("regionMapTexture"))
-                UUID.TryParse((string)kvp["regionMapTexture"], out TerrainImage);
-
-            if (kvp.ContainsKey("regionTerrainTexture"))
-                UUID.TryParse((string)kvp["regionTerrainTexture"], out TerrainMapImage);
-
-            if (kvp.ContainsKey("access"))
-                Access = Byte.Parse((string)kvp["access"]);
-
-            if (kvp.ContainsKey("owner_uuid"))
-                EstateOwner = new UUID(kvp["owner_uuid"].ToString());
-
-            if (kvp.ContainsKey("Token"))
-                AuthToken = kvp["Token"].ToString();
-
-            if (kvp.ContainsKey("sizeX"))
-                m_RegionSizeX = int.Parse(kvp["sizeX"].ToString());
-
-            if (kvp.ContainsKey("sizeY"))
-                m_RegionSizeY = int.Parse(kvp["sizeY"].ToString());
-        }
-
         #endregion
 
         #region IDataTransferable
@@ -545,6 +480,7 @@ namespace OpenSim.Services.Interfaces
                 map["serverPort"] = InternalEndPoint.Port;
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
+            map["ParcelMapImage"] = ParcelMapImage;
             map["access"] = (int)Access;
             map["owner_uuid"] = EstateOwner;
             map["AuthToken"] = AuthToken;
@@ -609,6 +545,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("regionTerrainTexture"))
                 TerrainMapImage = map["regionTerrainTexture"].AsUUID();
+
+            if (map.ContainsKey("ParcelMapImage"))
+                ParcelMapImage = map["ParcelMapImage"].AsUUID();
 
             if (map.ContainsKey("access"))
                 Access = (byte)map["access"].AsInteger();

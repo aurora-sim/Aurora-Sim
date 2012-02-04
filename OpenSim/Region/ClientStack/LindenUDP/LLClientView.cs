@@ -1059,32 +1059,39 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         }
 
         public void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
-                                               int amt)
+                                               int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history)
         {
             GroupAccountDetailsReplyPacket GADRP = new GroupAccountDetailsReplyPacket
                                                        {
                                                            AgentData = new GroupAccountDetailsReplyPacket.AgentDataBlock
                                                                            {AgentID = sender.AgentId, GroupID = groupID},
                                                            HistoryData =
-                                                               new GroupAccountDetailsReplyPacket.HistoryDataBlock[1]
+                                                               new GroupAccountDetailsReplyPacket.HistoryDataBlock[history.Length]
                                                        };
-            GroupAccountDetailsReplyPacket.HistoryDataBlock History =
-                new GroupAccountDetailsReplyPacket.HistoryDataBlock();
+            int i = 0;
+            foreach (GroupAccountHistory h in history)
+            {
+                GroupAccountDetailsReplyPacket.HistoryDataBlock History =
+                    new GroupAccountDetailsReplyPacket.HistoryDataBlock();
+
+                History.Amount = h.Amount;
+                History.Description = Utils.StringToBytes(h.Description);
+
+                GADRP.HistoryData[i++] = History;
+            }
             GADRP.MoneyData = new GroupAccountDetailsReplyPacket.MoneyDataBlock
                                   {
-                                      CurrentInterval = 0,
-                                      IntervalDays = 7,
+                                      CurrentInterval = currentInterval,
+                                      IntervalDays = interval,
                                       RequestID = transactionID,
-                                      StartDate = Utils.StringToBytes(DateTime.Today.ToString())
+                                      StartDate = Utils.StringToBytes(startDate)
                                   };
-            History.Amount = amt;
-            History.Description = Utils.StringToBytes("");
-            GADRP.HistoryData[0] = History;
             OutPacket(GADRP, ThrottleOutPacketType.AvatarInfo);
         }
 
-        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier,
-                                               int usedTier)
+        public void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTierDebit,
+                                               int totalTierCredits, string startDate, int currentInterval, int intervalLength,
+                                               string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee)
         {
             GroupAccountSummaryReplyPacket GASRP =
                 (GroupAccountSummaryReplyPacket) PacketPool.Instance.GetPacket(
@@ -1094,32 +1101,32 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   {AgentID = sender.AgentId, GroupID = groupID};
             GASRP.MoneyData = new GroupAccountSummaryReplyPacket.MoneyDataBlock
                                   {
-                                      Balance = (int) moneyAmt,
-                                      TotalCredits = totalTier,
-                                      TotalDebits = usedTier,
-                                      StartDate = new byte[1],
-                                      CurrentInterval = 1,
-                                      GroupTaxCurrent = 0,
-                                      GroupTaxEstimate = 0,
-                                      IntervalDays = 0,
-                                      LandTaxCurrent = 0,
-                                      LandTaxEstimate = 0,
-                                      LastTaxDate = new byte[1],
+                                      Balance = moneyAmt,
+                                      TotalCredits = totalTierCredits,
+                                      TotalDebits = totalTierDebit,
+                                      StartDate = Utils.StringToBytes(startDate + '\n'),
+                                      CurrentInterval = currentInterval,
+                                      GroupTaxCurrent = groupTaxFee,
+                                      GroupTaxEstimate = groupTaxFee,
+                                      IntervalDays = intervalLength,
+                                      LandTaxCurrent = landTaxFee,
+                                      LandTaxEstimate = landTaxFee,
+                                      LastTaxDate = Utils.StringToBytes(lastTaxDate),
                                       LightTaxCurrent = 0,
-                                      TaxDate = new byte[1],
-                                      RequestID = sender.AgentId,
-                                      ParcelDirFeeEstimate = 0,
-                                      ParcelDirFeeCurrent = 0,
-                                      ObjectTaxEstimate = 0,
+                                      TaxDate = Utils.StringToBytes(taxDate),
+                                      RequestID = requestID,
+                                      ParcelDirFeeEstimate = parcelDirectoryFee,
+                                      ParcelDirFeeCurrent = parcelDirectoryFee,
+                                      ObjectTaxEstimate = objectTaxFee,
                                       NonExemptMembers = 0,
-                                      ObjectTaxCurrent = 0,
+                                      ObjectTaxCurrent = objectTaxFee,
                                       LightTaxEstimate = 0
                                   };
             OutPacket(GASRP, ThrottleOutPacketType.Asset);
         }
 
         public void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
-                                                        UUID sessionID, int amt)
+                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history)
         {
             GroupAccountTransactionsReplyPacket GATRP =
                 (GroupAccountTransactionsReplyPacket) PacketPool.Instance.GetPacket(
@@ -1129,22 +1136,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   {AgentID = sender.AgentId, GroupID = groupID};
             GATRP.MoneyData = new GroupAccountTransactionsReplyPacket.MoneyDataBlock
                                   {
-                                      CurrentInterval = 0,
-                                      IntervalDays = 7,
+                                      CurrentInterval = currentInterval,
+                                      IntervalDays = intervalDays,
                                       RequestID = transactionID,
-                                      StartDate = Utils.StringToBytes(DateTime.Today.ToString())
+                                      StartDate = Utils.StringToBytes(startingDate)
                                   };
-            GATRP.HistoryData = new GroupAccountTransactionsReplyPacket.HistoryDataBlock[1];
-            GroupAccountTransactionsReplyPacket.HistoryDataBlock History =
-                new GroupAccountTransactionsReplyPacket.HistoryDataBlock
-                    {
-                        Amount = 0,
-                        Item = Utils.StringToBytes(""),
-                        Time = Utils.StringToBytes(""),
-                        Type = 0,
-                        User = Utils.StringToBytes("")
-                    };
-            GATRP.HistoryData[0] = History;
+            GATRP.HistoryData = new GroupAccountTransactionsReplyPacket.HistoryDataBlock[history.Length];
+            int i = 0;
+            foreach (GroupAccountHistory h in history)
+            {
+                GroupAccountTransactionsReplyPacket.HistoryDataBlock History =
+                    new GroupAccountTransactionsReplyPacket.HistoryDataBlock
+                        {
+                            Amount = h.Amount,
+                            Item =  Utils.StringToBytes(h.Description),
+                            Time = Utils.StringToBytes(h.TimeString),
+                            Type = 0,
+                            User = Utils.StringToBytes(h.UserCausingCharge)
+                        };
+                GATRP.HistoryData[i++] = History;
+            }
             OutPacket(GATRP, ThrottleOutPacketType.Asset);
         }
 
@@ -11582,7 +11593,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 handlerGroupAccountDetailsRequest(this, GroupAccountDetailsRequest.AgentData.AgentID,
                                                   GroupAccountDetailsRequest.AgentData.GroupID,
                                                   GroupAccountDetailsRequest.MoneyData.RequestID,
-                                                  GroupAccountDetailsRequest.AgentData.SessionID);
+                                                  GroupAccountDetailsRequest.AgentData.SessionID,
+                                                  GroupAccountDetailsRequest.MoneyData.CurrentInterval,
+                                                  GroupAccountDetailsRequest.MoneyData.IntervalDays);
                 return true;
             }
             return false;
@@ -11596,7 +11609,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (handlerGroupAccountSummaryRequest != null)
             {
                 handlerGroupAccountSummaryRequest(this, GroupAccountSummaryRequest.AgentData.AgentID,
-                                                  GroupAccountSummaryRequest.AgentData.GroupID);
+                                                  GroupAccountSummaryRequest.AgentData.GroupID,
+                                                  GroupAccountSummaryRequest.MoneyData.RequestID,
+                                                  GroupAccountSummaryRequest.MoneyData.CurrentInterval,
+                                                  GroupAccountSummaryRequest.MoneyData.IntervalDays);
                 return true;
             }
             return false;
@@ -11612,7 +11628,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 handlerGroupAccountTransactionsRequest(this, GroupAccountTransactionsRequest.AgentData.AgentID,
                                                        GroupAccountTransactionsRequest.AgentData.GroupID,
                                                        GroupAccountTransactionsRequest.MoneyData.RequestID,
-                                                       GroupAccountTransactionsRequest.AgentData.SessionID);
+                                                       GroupAccountTransactionsRequest.AgentData.SessionID,
+                                                       GroupAccountTransactionsRequest.MoneyData.CurrentInterval,
+                                                       GroupAccountTransactionsRequest.MoneyData.IntervalDays);
                 return true;
             }
             return false;

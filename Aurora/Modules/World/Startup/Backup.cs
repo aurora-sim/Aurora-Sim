@@ -514,13 +514,13 @@ namespace Aurora.Modules.Startup
                     IScriptControllerModule m = m_scene.RequestModuleInterface<IScriptControllerModule>();
                     if(m != null)
                         m.RemoveAllScriptControllers(part);
-                    if (part.PhysActor != null)
-                    {
-                        //Remove us from the physics sim
-                        m_scene.PhysicsScene.RemovePrim(part.PhysActor);
-                        //We MUST leave this to the PhysicsScene or it will hate us forever!
-                        //part.PhysActor = null;
-                    }
+                }
+                if (group.RootChild.PhysActor != null)
+                {
+                    //Remove us from the physics sim
+                    m_scene.PhysicsScene.DeletePrim(group.RootChild.PhysActor);
+                    //We MUST leave this to the PhysicsScene or it will hate us forever!
+                    //group.RootChild.PhysActor = null;
                 }
 
                 m_scene.SimulationDataService.Tainted ();
@@ -545,6 +545,8 @@ namespace Aurora.Modules.Startup
             private readonly List<LandData> m_parcels = new List<LandData>();
             private bool m_merge = false;
             private bool m_loadAssets = false;
+            private GenericAccountCache<OpenSim.Services.Interfaces.UserAccount> m_cache = new GenericAccountCache<OpenSim.Services.Interfaces.UserAccount>();
+            private List<SceneObjectGroup> m_groups = new List<SceneObjectGroup>();
 
             public bool IsArchiving
             {
@@ -756,6 +758,47 @@ namespace Aurora.Modules.Startup
                     else parcelManagementModule.ResetSimLandObjects ();
                     m_parcels.Clear();
                 }
+
+                foreach (SceneObjectGroup sceneObject in m_groups)
+                {
+                    foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
+                    {
+                        if (!ResolveUserUuid(part.CreatorID))
+                            part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        if (!ResolveUserUuid(part.OwnerID))
+                            part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        if (!ResolveUserUuid(part.LastOwnerID))
+                            part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
+
+                        // Fix ownership/creator of inventory items
+                        // Not doing so results in inventory items
+                        // being no copy/no mod for everyone
+                        lock (part.TaskInventory)
+                        {
+                            TaskInventoryDictionary inv = part.TaskInventory;
+                            foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
+                            {
+                                if (!ResolveUserUuid(kvp.Value.OwnerID))
+                                {
+                                    kvp.Value.OwnerID = scene.RegionInfo.EstateSettings.EstateOwner;
+                                }
+                                if (!ResolveUserUuid(kvp.Value.CreatorID))
+                                {
+                                    kvp.Value.CreatorID = scene.RegionInfo.EstateSettings.EstateOwner;
+                                }
+                            }
+                        }
+                    }
+
+                    if (scene.SceneGraph.AddPrimToScene(sceneObject))
+                    {
+                        sceneObject.HasGroupChanged = true;
+                        sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                    }
+                }
             }
 
             public void LoadModuleFromArchive(byte[] data, string filePath, TarArchiveReader.TarEntryType type, IScene scene)
@@ -793,6 +836,7 @@ namespace Aurora.Modules.Startup
                     terrainModule.TerrainWaterRevertMap = ReadTerrain(data, scene);
                 }
                 #endregion
+                #region Old Style Terrain Loading
                 else if (filePath.StartsWith ("terrain/"))
                 {
                     ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
@@ -825,6 +869,7 @@ namespace Aurora.Modules.Startup
                     terrainModule.LoadWaterRevertMapFromStream (filePath, ms, 0, 0);
                     ms.Close ();
                 }
+                #endregion
                 else if (filePath.StartsWith ("entities/"))
                 {
                     MemoryStream ms = new MemoryStream (data);
@@ -832,43 +877,7 @@ namespace Aurora.Modules.Startup
                     ms.Close ();
                     ms = null;
                     data = null;
-                    foreach(ISceneChildEntity part in sceneObject.ChildrenEntities())
-                    {
-                        if (!ResolveUserUuid (part.CreatorID))
-                            part.CreatorID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                        if (!ResolveUserUuid (part.OwnerID))
-                            part.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                        if (!ResolveUserUuid (part.LastOwnerID))
-                            part.LastOwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
-
-                        // Fix ownership/creator of inventory items
-                        // Not doing so results in inventory items
-                        // being no copy/no mod for everyone
-                        lock (part.TaskInventory)
-                        {
-                            TaskInventoryDictionary inv = part.TaskInventory;
-                            foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
-                            {
-                                if (!ResolveUserUuid (kvp.Value.OwnerID))
-                                {
-                                    kvp.Value.OwnerID = scene.RegionInfo.EstateSettings.EstateOwner;
-                                }
-                                if (!ResolveUserUuid (kvp.Value.CreatorID))
-                                {
-                                    kvp.Value.CreatorID = scene.RegionInfo.EstateSettings.EstateOwner;
-                                }
-                            }
-                        }
-                    }
-
-                    if(scene.SceneGraph.AddPrimToScene(sceneObject))
-                    {
-                        sceneObject.HasGroupChanged = true;
-                        sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
-                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
-                    }
+                    m_groups.Add(sceneObject);
                 }
                 else if(filePath.StartsWith("assets/"))
                 {
@@ -890,7 +899,12 @@ namespace Aurora.Modules.Startup
 
             private bool ResolveUserUuid (UUID uuid)
             {
-                return m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, uuid) != null;
+                OpenSim.Services.Interfaces.UserAccount acc;
+                if (m_cache.Get(uuid, out acc))
+                    return acc != null;
+                acc = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, uuid);
+                m_cache.Cache(uuid, acc);
+                return acc != null;
             }
 
             #endregion

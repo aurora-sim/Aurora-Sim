@@ -25,6 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using OpenMetaverse;
 
 namespace Aurora.Framework
@@ -46,6 +48,43 @@ namespace Aurora.Framework
         ObjectPay = 5008
     }
 
+    public class GroupBalance : IDataTransferable
+    {
+        public int TotalTierDebit = 0;
+        public int TotalTierCredits = 0;
+        public int ParcelDirectoryFee = 0;
+        public int LandFee = 0;
+        public int ObjectFee = 0;
+        public int GroupFee = 0;
+        public DateTime StartingDate;
+
+        public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
+        {
+            TotalTierDebit = map["TotalTierDebit"];
+            TotalTierCredits = map["TotalTierCredits"];
+            ParcelDirectoryFee = map["ParcelDirectoryFee"];
+            LandFee = map["LandFee"];
+            ObjectFee = map["ObjectFee"];
+            GroupFee = map["GroupFee"];
+            StartingDate = map["StartingDate"];
+        }
+
+        public override OpenMetaverse.StructuredData.OSDMap ToOSD()
+        {
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+
+            map["TotalTierDebit"] = TotalTierDebit;
+            map["TotalTierCredits"] = TotalTierCredits;
+            map["ParcelDirectoryFee"] = ParcelDirectoryFee;
+            map["LandFee"] = LandFee;
+            map["ObjectFee"] = ObjectFee;
+            map["GroupFee"] = GroupFee;
+            map["StartingDate"] = StartingDate;
+
+            return map;
+        }
+    }
+
     public interface IMoneyModule
     {
         int UploadCharge { get; }
@@ -54,7 +93,7 @@ namespace Aurora.Framework
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                              int amount);
 
-        int Balance(IClientAPI client);
+        int Balance(UUID agentID);
         bool Charge(IClientAPI client, int amount);
         bool Charge(UUID agentID, int amount, string text);
 
@@ -66,6 +105,17 @@ namespace Aurora.Framework
 
         bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
                       TransactionType type);
+
+        /// <summary>
+        /// Get a list of transactions that have occured over the given interval (0 is this period of interval days, positive #s go back previous sets)
+        /// </summary>
+        /// <param name="groupID"></param>
+        /// <param name="agentID">Requesting agentID (must be checked whether they can call this)</param>
+        /// <param name="currentInterval"></param>
+        /// <param name="intervalDays"></param>
+        List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval, int intervalDays);
+
+        GroupBalance GetGroupBalance(UUID groupID);
     }
 
     public delegate void UserDidNotPay(UUID agentID, string paymentTextThatFailed);

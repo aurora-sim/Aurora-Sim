@@ -129,7 +129,7 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> row = new Dictionary<string, object>(3);
             row["UUID"] = principalID;
             row["token"] = token;
-            row["validity"] = GD.FormatDateTimeString(lifetime);
+            row["validity"] = Utils.DateTimeToUnixTime(DateTime.Now) + (lifetime * 60);
 
             return GD.Replace(m_tokensrealm, row);
         }
@@ -141,13 +141,14 @@ namespace Aurora.Services.DataService
                 DoExpire();
             }
 
+            uint now = Utils.DateTimeToUnixTime(DateTime.Now);
             Dictionary<string, object> values = new Dictionary<string, object>(1);
-            values["validity"] = GD.FormatDateTimeString(lifetime);
+            values["validity"] = now + (lifetime * 60) ;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = principalID;
             filter.andFilters["token"] = token;
-            filter.andFilters["validity"] = GD.FormatDateTimeString(0);
+            filter.andLessThanEqFilters["validity"] = (int)now;
 
             return GD.Update(m_tokensrealm, values, null, filter, null, null);
         }
