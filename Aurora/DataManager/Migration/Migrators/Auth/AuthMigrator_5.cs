@@ -57,15 +57,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 IndexDef(new string[1]{ "passwordHash" }, IndexType.Index)
             ));
 
-            AddSchema("tokens", ColDefs(
-                ColDef("UUID", ColumnTypes.Char36),
-                ColDef("token", ColumnTypes.String255),
-                ColDef("validity", ColumnTypes.Date)
-            ), IndexDefs(
-                IndexDef(new string[2] { "UUID", "token" }, IndexType.Primary)
-            ));
+            RemoveSchema("tokens");
 
-            AddSchema("tokens2", ColDefs(
+            AddSchema("tokens", ColDefs(
                 ColDef("UUID", ColumnTypes.Char36),
                 ColDef("token", ColumnTypes.String255),
                 ColDef("validity", ColumnTypes.Integer11)
@@ -92,21 +86,6 @@ namespace Aurora.DataManager.Migration.Migrators
         protected override void DoPrepareRestorePoint(IDataConnector genericData)
         {
             CopyAllTablesToTempVersions(genericData);
-        }
-
-        public override void FinishedMigration(IDataConnector genericData)
-        {
-            genericData.InsertSelect("tokens2", new string[3]{
-                "UUID",
-                "token",
-                "validity"
-            }, "tokens", new string[3]{
-                "UUID",
-                "token",
-                (genericData is Aurora.DataManager.SQLite.SQLiteLoader) ? "strftime('%s', valdity)" : "UNIX_TIMESTAMP(validity)"
-            });
-            genericData.DropTable("tokens");
-            genericData.RenameTable("tokens2", "tokens");
         }
     }
 }
