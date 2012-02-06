@@ -43,7 +43,7 @@ namespace OpenSim.Services.CapsService.CAPModules
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            service.AddStreamHandler("ViewerStats", new RestStreamHandler("POST", service.CreateCAPS("GetTexture", ""), ViewerStatsReport));
+            service.AddStreamHandler("ViewerStats", new RestStreamHandler("POST", service.CreateCAPS("ViewerStats", ""), ViewerStatsReport));
         }
 
         public void DeregisterCaps()
