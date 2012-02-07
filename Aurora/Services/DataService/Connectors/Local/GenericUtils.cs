@@ -93,7 +93,8 @@ namespace Aurora.Services.DataService
             foreach (string ret in retVal)
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
-                Values.Add(map);
+                if(map != null)
+                    Values.Add(map);
             }
 
             return Values;
