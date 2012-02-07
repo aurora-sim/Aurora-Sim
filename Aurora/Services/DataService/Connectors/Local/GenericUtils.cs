@@ -113,6 +113,7 @@ namespace Aurora.Services.DataService
         public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD) where T : IDataTransferable
         {
             OSDMap map = GetGeneric(OwnerID, Type, Key, GD);
+			if (map == null) return null;
             T data = (T)System.Activator.CreateInstance(typeof(T));
             data.FromOSD(map);
             return data;
