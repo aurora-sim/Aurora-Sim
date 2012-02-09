@@ -50,7 +50,6 @@ namespace OpenSim.Services.GridService
         protected IRegionData m_Database;
         private bool m_DeleteOnUnregister = true;
         protected bool m_DisableRegistrations;
-        protected int m_RegionViewSize = 256;
         protected bool m_UseSessionID = true;
         protected IConfigSource m_config;
         protected int m_maxRegionSize = 8192;
@@ -83,8 +82,7 @@ namespace OpenSim.Services.GridService
                 m_DisableRegistrations = gridConfig.GetBoolean("DisableRegistrations", m_DisableRegistrations);
                 m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
-                m_RegionViewSize = gridConfig.GetInt("RegionViewSize", m_RegionViewSize / Constants.RegionSize) *
-                                   Constants.RegionSize;
+                m_cachedRegionViewSize = gridConfig.GetInt("RegionSightSize", m_cachedRegionViewSize);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
             }
@@ -163,14 +161,14 @@ namespace OpenSim.Services.GridService
         public virtual int GetRegionViewSize()
         {
             if (m_cachedRegionViewSize != 0)
-                return m_cachedMaxRegionSize;
+                return m_cachedRegionViewSize;
             object remoteValue = DoRemote();
-            if (remoteValue != null || m_doRemoteOnly)
+            if (remoteValue != null && m_doRemoteOnly)
             {
-                m_cachedMaxRegionSize = (int)remoteValue;
-                return (int)remoteValue;
+                m_cachedRegionViewSize = (int)remoteValue;
             }
-            return m_RegionViewSize;
+            else m_cachedRegionViewSize = 1;
+            return m_cachedRegionViewSize;
         }
 
         public virtual IGridService InnerService
