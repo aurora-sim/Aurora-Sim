@@ -3362,7 +3362,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         float velmag = (float)Util.GetMagnitude(llvel);
 
                         ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
+                        new_group.OnFinishedPhysicalRepresentationBuilding += delegate()
+                        {
+                            //Do this after the physics engine has built the prim
+                            float groupmass = new_group.GetMass();
 
+                            //Recoil to the av
+                            if (m_host.IsAttachment && doRecoil && (new_group.RootChild.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                            {
+                                IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
+                                if (SP != null)
+                                {
+                                    //Push the av backwards (For every action, there is an equal, but opposite reaction)
+                                    Vector3 impulse = llvel * groupmass;
+                                    impulse.X = impulse.X < 1 ? impulse.X : impulse.X > -1 ? impulse.X : -1;
+                                    impulse.Y = impulse.Y < 1 ? impulse.Y : impulse.Y > -1 ? impulse.Y : -1;
+                                    impulse.Z = impulse.Z < 1 ? impulse.Z : impulse.Z > -1 ? impulse.Z : -1;
+                                    SP.PushForce(impulse);
+                                }
+                            }
+                        };
                         // If either of these are null, then there was an unknown error.
                         if(new_group == null || new_group.RootChild == null)
                             continue;
@@ -3370,21 +3389,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // objects rezzed with this method are die_at_edge by default.
                         if(SetDieAtEdge)
                             new_group.RootChild.SetDieAtEdge(true);
-
-                        //Object_rez should be dealt with by the script engine, especially in an async script engine...
-
-                        float groupmass = new_group.GetMass();
-
-                        //Recoil to the av
-                        if (m_host.IsAttachment && doRecoil)
-                        {
-                            IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
-                            if (SP != null)
-                            {
-                                //Push the av backwards (For every action, there is an equal, but opposite reaction)
-                                SP.PushForce(llvel * groupmass);
-                            }
-                        }
 
                         // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
                         return PScriptSleep(100);
