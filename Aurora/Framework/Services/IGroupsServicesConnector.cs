@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using Aurora.Framework;
 using OpenMetaverse;
@@ -94,7 +95,12 @@ namespace Aurora.Framework
         ChatSessionMember FindMember(UUID sessionid, UUID Agent);
         void RemoveSession(UUID sessionid);
 
-        List<GroupTitlesData> GetGroupTitles(UUID uUID, UUID groupID);
+        List<GroupTitlesData> GetGroupTitles(UUID agentID, UUID groupID);
+
+        List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID);
+        List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID);
+
+        void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote);
     }
 
     /// <summary>
@@ -257,6 +263,28 @@ namespace Aurora.Framework
         public int Quorum;
         public UUID Session = UUID.Zero;
         public string Text = string.Empty;
+        public UUID BallotInitiator = UUID.Zero;
+        public DateTime Created = DateTime.Now;
+        public DateTime Ending = DateTime.Now;
+        public UUID VoteID = UUID.Random();
+        /// <summary>
+        /// Only set when a user is calling to find out proposal info, it is what said user voted
+        /// </summary>
+        public string VoteCast = "";
+
+        /// <summary>
+        /// The result of the proposal (success or failure)
+        /// </summary>
+        public bool Result = false;
+        /// <summary>
+        /// The number of votes cast (so far if the proposal is still open)
+        /// </summary>
+        public int NumVotes = 0;
+
+        /// <summary>
+        /// If this is false, the result of the proposal has not been calculated and should be when it is retrieved next
+        /// </summary>
+        public bool HasCalculatedResult = false;
 
         public override void FromOSD(OSDMap map)
         {
@@ -266,6 +294,14 @@ namespace Aurora.Framework
             Text = map["Text"].AsString();
             Quorum = map["Quorum"].AsInteger();
             Session = map["Session"].AsUUID();
+            BallotInitiator = map["BallotInitiator"];
+            Created = map["Created"];
+            Ending = map["Ending"];
+            VoteID = map["VoteID"];
+            VoteCast = map["VoteCast"];
+            Result = map["Result"];
+            NumVotes = map["NumVotes"];
+            HasCalculatedResult = map["HasCalculatedResult"];
         }
 
         public override OSDMap ToOSD()
@@ -277,6 +313,14 @@ namespace Aurora.Framework
             map["Text"] = Text;
             map["Quorum"] = Quorum;
             map["Session"] = Session;
+            map["BallotInitiator"] = BallotInitiator;
+            map["Created"] = Created;
+            map["Ending"] = Ending;
+            map["VoteID"] = VoteID;
+            map["VoteCast"] = VoteCast;
+            map["Result"] = Result;
+            map["NumVotes"] = NumVotes;
+            map["HasCalculatedResult"] = HasCalculatedResult;
             return map;
         }
 

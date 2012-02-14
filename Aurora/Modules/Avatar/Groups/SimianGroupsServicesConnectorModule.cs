@@ -1203,6 +1203,20 @@ namespace Aurora.Modules.Groups
             }
         }
 
+        public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
+        {
+            return new List<GroupProposalInfo>();
+        }
+
+        public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
+        {
+            return new List<GroupProposalInfo>();
+        }
+
+        public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
+        {
+        }
+
         #region Simian Util Methods
 
         private bool SimianAddGeneric(UUID ownerID, string type, string key, OSDMap map)

@@ -674,7 +674,7 @@ namespace Aurora.Framework
         public string VoteType;
     }
 
-    public struct GroupActiveProposals
+    public class GroupActiveProposals
     {
         public string EndDateTime;
         public string Majority;
@@ -684,6 +684,8 @@ namespace Aurora.Framework
         public string TerseDateID;
         public string VoteID;
         public string VoteInitiator;
+        public bool VoteAlreadyCast = false;
+        public string VoteCast = "Null";
     }
 
     public struct GroupVoteHistoryItem

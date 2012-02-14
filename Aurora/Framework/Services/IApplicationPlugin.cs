@@ -265,6 +265,9 @@ namespace Aurora.Framework
 
         public Dictionary<string, object> andNotFilters = new Dictionary<string, object>();
 
+        public List<string> andIsNullFilters = new List<string>();
+        public List<string> andIsNotNullFilters = new List<string>();
+
         public List<QueryFilter> subFilters = new List<QueryFilter>();
 
         public uint Count
@@ -286,7 +289,9 @@ namespace Aurora.Framework
                     andLessThanFilters.Count +
                     orLessThanFilters.Count +
                     andLessThanEqFilters.Count +
-                    andNotFilters.Count
+                    andNotFilters.Count +
+                    andIsNullFilters.Count +
+                    andIsNotNullFilters.Count
                 );
 
                 subFilters.ForEach(delegate(QueryFilter filter)
@@ -527,6 +532,32 @@ namespace Aurora.Framework
                     string key = prepared.ToString() + "where_lteqAND_" + (++i) + preparedKey(where.Key);
                     ps[key] = where.Value;
                     parts.Add(string.Format("{0} <= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                #endregion
+
+                #region NULL
+
+                parts = new List<string>();
+                foreach (string field in andIsNotNullFilters)
+                {
+                    parts.Add(string.Format("{0} IS NOT NULL", field));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (string field in andIsNullFilters)
+                {
+                    parts.Add(string.Format("{0} IS NULL", field));
                 }
                 if (parts.Count > 0)
                 {

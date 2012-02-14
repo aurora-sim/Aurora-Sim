@@ -46,6 +46,7 @@ namespace OpenSim.Services
     public class ServerConnector : IService, IGridRegistrationUrlModule
     {
         private IRegistryCore m_registry;
+        private IConfigSource m_config;
 
         public string Name
         {
@@ -97,6 +98,7 @@ namespace OpenSim.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
+            m_config = config;
             IConfig handlerConfig = config.Configs["AuroraConnectors"];
             if (!handlerConfig.GetBoolean("AllowRemoteCalls", false))
                 return;
@@ -110,7 +112,8 @@ namespace OpenSim.Services
         {
             if (m_registry != null)
             {
-                AddExistingUrlForClient("", "/", 8003);
+                uint port = m_config.Configs["Network"].GetUInt("http_listener_port", 8003);
+                AddExistingUrlForClient("", "/", port);
                 //AddUDPConector(8008);
             }
         }

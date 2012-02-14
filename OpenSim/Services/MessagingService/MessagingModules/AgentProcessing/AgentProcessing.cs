@@ -432,9 +432,9 @@ namespace OpenSim.Services.MessagingService
                                    {
                                        int count = 0;
                                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
-                                       int xMin = (caps.Region.RegionLocX) + (int)(position.X) - (gridService != null ? gridService.GetMaxRegionSize() : 8192);
+                                       int xMin = (caps.Region.RegionLocX) + (int)(position.X) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeX);
                                        int xMax = (caps.Region.RegionLocX) + (int) (position.X) + 256;
-                                       int yMin = (caps.Region.RegionLocY) + (int)(position.Y) - (gridService != null ? gridService.GetMaxRegionSize() : 8192);
+                                       int yMin = (caps.Region.RegionLocY) + (int)(position.Y) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeY);
                                        int yMax = (caps.Region.RegionLocY) + (int) (position.Y) + 256;
 
                                        //Ask the grid service about the range
