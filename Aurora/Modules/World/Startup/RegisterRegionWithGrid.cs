@@ -194,10 +194,12 @@ namespace Aurora.Modules.Startup
                     MainConsole.Instance.Prompt("Press enter when you are ready to exit");
                     Environment.Exit(0);
                 }
-                else if (error.Error == "Error communicating with grid service")
+                else if (error.Error == "Could not reach grid service")
                 {
                     MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
                                 " with the grid failed - The grid service can not be found! Please make sure that you can connect to the grid server and that the grid server is on.");
+                    MainConsole.Instance.Error(
+                        "You should also make sure you've provided the correct address and port of the grid service.");
                     string input =
                         MainConsole.Instance.Prompt(
                             "Press enter when you are ready to proceed, or type cancel to exit");
@@ -226,7 +228,7 @@ namespace Aurora.Modules.Startup
                 else
                 {
                     MainConsole.Instance.Error("[RegisterRegionWithGrid]: Registration of region " + scene.RegionInfo.RegionName +
-                                " with the grid failed - " + error + "!");
+                                " with the grid failed - " + error.Error + "!");
                     string input =
                         MainConsole.Instance.Prompt(
                             "Press enter when you are ready to proceed, or type cancel to exit");
