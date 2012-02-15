@@ -557,6 +557,35 @@ namespace OpenSim.Services.LLLoginService
                     guinfo = new UserInfo {UserID = account.PrincipalID.ToString()};
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
+                if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
+                {
+                    if (m_GridService != null)
+                    {
+                        if (m_DefaultHomeRegion != "")
+                        {
+                            GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
+                            if (newHomeRegion != null)
+                                guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
+                        }
+                        if (guinfo.HomeRegionID == UUID.Zero)
+                        {
+                            List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
+                            GridRegion DefaultRegion = null;
+                            DefaultRegion = DefaultRegions.Count == 0 ? null : DefaultRegions[0];
+
+                            if (DefaultRegion != null)
+                                guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
+                        }
+                    }
+
+                    //Z = 0 so that it fixes it on the region server and puts it on the ground
+                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
+
+                    guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
+
+                    m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
+                    m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
+                }
 
                 //
                 // Find the destination region/grid
@@ -570,34 +599,6 @@ namespace OpenSim.Services.LLLoginService
                 {
                     MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
                     return LLFailedLoginResponse.DeadRegionProblem;
-                }
-                if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
-                {
-                    if (m_GridService != null)
-                    {
-                        List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
-                        GridRegion DefaultRegion = null;
-                        DefaultRegion = DefaultRegions.Count == 0 ? destination : DefaultRegions[0];
-
-                        if (m_DefaultHomeRegion != "" && guinfo.HomeRegionID == UUID.Zero)
-                        {
-                            GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
-                            if (newHomeRegion == null)
-                                guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
-                            else
-                                guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
-                        }
-                        else if (guinfo.HomeRegionID == UUID.Zero)
-                            guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
-                    }
-
-                    //Z = 0 so that it fixes it on the region server and puts it on the ground
-                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
-
-                    guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
-
-                    m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
-                    m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
                 }
 
                 //

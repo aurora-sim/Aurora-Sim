@@ -23,7 +23,7 @@
 
     ;; Should we check for updates?
     ;; Default: true
-    Enabled = true
+    Enabled = false
 
     ;; Should we notify you when there is an update?
     ;; Default: true
