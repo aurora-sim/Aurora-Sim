@@ -620,6 +620,8 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
+            bool had = GroupIDs.Count > 0;
+
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
@@ -636,11 +638,20 @@ namespace Aurora.Services.DataService
                 groupIDs = GroupIDs;
             }
 
+            if (had && groupIDs.Count == 0)
+            {
+                return 0;
+            }
+
             QueryFilter filter = new QueryFilter();
-            filter.orMultiFilters["GroupID"] = new List<object>(groupIDs.Count);
+            List<object> filterGroupIDs = new List<object>(groupIDs.Count);
             foreach (UUID GroupID in groupIDs)
             {
-                filter.orMultiFilters["GroupID"].Add(GroupID);
+                filterGroupIDs.Add(GroupID);
+            }
+            if (filterGroupIDs.Count > 0)
+            {
+                filter.orMultiFilters["GroupID"] = filterGroupIDs;
             }
 
             return uint.Parse(data.Query(new string[1] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
