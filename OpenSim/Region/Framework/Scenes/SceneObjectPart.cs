@@ -2459,8 +2459,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A Linked Child Prim objects position in world</returns>
         public Vector3 GetWorldPosition()
         {
-            Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
-            return (GroupPosition + OffsetPosition*parentRot);
+            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.RotationOffset;
         }
 
         /// <summary>
