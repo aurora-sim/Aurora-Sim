@@ -26,7 +26,9 @@
  */
 
 using System;
+using System.Reflection;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
@@ -47,7 +49,7 @@ namespace Aurora.Framework
         Megaannum = 13
     }
 
-    public class SchedulerItem
+    public class SchedulerItem: IDataTransferable
     {
         public SchedulerItem()
         {
@@ -137,6 +139,45 @@ namespace Aurora.Framework
         public RepeatType RunEveryType { get; set; }
 
         public DateTime StartTime { get; set; }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap returnvalue = new OSDMap()
+                                     {
+                                         {"id", id},
+                                         {"HistoryLastID", HistoryLastID},
+                                         {"TimeToRun",TimeToRun},
+                                         {"Enabled",Enabled},
+                                         {"HisotryKeep",HisotryKeep},
+                                         {"FireParams",FireParams},
+                                         {"FireFunction",FireFunction},
+                                         {"HistoryReciept",HistoryReciept},
+                                         {"RunOnce",RunOnce},
+                                         {"RunEvery",RunEvery},
+                                         {"CreateTime",CreateTime},
+                                         {"RunEveryType", (int)RunEveryType},
+                                         {"StartTime",StartTime}
+                                     };
+            
+            return returnvalue;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            id = map["id"].AsString();
+            HistoryLastID = map["HistoryLastID"].AsString();
+            TimeToRun = map["TimeToRun"].AsDate();
+            Enabled = map["Enabled"].AsBoolean();
+            HisotryKeep = map["HisotryKeep"].AsBoolean();
+            FireParams = map["FireParams"].AsString();
+            FireFunction = map["FireFunction"].AsString();
+            HistoryReciept = map["HistoryReciept"].AsBoolean();
+            RunOnce = map["RunOnce"].AsBoolean();
+            RunEvery = map["RunEvery"].AsInteger();
+            CreateTime = map["CreateTime"].AsDate();
+            RunEveryType = (RepeatType)map["RunEveryType"].AsInteger();
+            StartTime = map["StartTime"].AsDate();
+        }
     }
 
     public class SchedulerHistory

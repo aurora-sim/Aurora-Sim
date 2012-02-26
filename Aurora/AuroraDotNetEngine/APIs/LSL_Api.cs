@@ -7991,7 +7991,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             shapeBlock.PathCurve = part.Shape.PathCurve;
             part.Shape.SetSculptProperties((byte)type, sculptId);
             part.Shape.SculptEntry = true;
-            part.UpdateShape(shapeBlock);
+            part.UpdateShape(shapeBlock, false);
         }
 
         public void llSetPrimitiveParams(LSL_List rules)
