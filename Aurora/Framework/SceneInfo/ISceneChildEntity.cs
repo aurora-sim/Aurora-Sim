@@ -484,5 +484,6 @@ namespace Aurora.Framework
         void ScriptSetTemporaryStatus(bool tempOnRez);
 
         uint InventorySerial { get; set; }
+		void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
     }
 }
