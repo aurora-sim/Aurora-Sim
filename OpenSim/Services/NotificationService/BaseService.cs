@@ -106,6 +106,8 @@ namespace OpenSim.Services
                 MainConsole.Instance.Fatal(String.Format("[Console]: Console log level is {0}", m_consoleAppender.Threshold));
 
             MainConsole.Instance.Commands.AddCommand("set log level", "set log level [level]", "Set the console logging level", HandleLogLevel);
+
+            MainConsole.Instance.Commands.AddCommand("get log level", "get log level", "Returns the current console logging level", HandleGetLogLevel);
         }
 
         public void PostInitialise()
@@ -131,6 +133,11 @@ namespace OpenSim.Services
         #endregion
 
         #region Console Commands
+
+        private void HandleGetLogLevel(string[] cmd)
+        {
+            MainConsole.Instance.Fatal(String.Format("Console log level is {0}", m_consoleAppender.Threshold));
+        }
 
         private void HandleLogLevel(string[] cmd)
         {
