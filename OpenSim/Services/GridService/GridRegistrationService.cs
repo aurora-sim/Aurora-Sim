@@ -248,6 +248,7 @@ namespace OpenSim.Services.GridService
             {
                 if(urls.HostNames == null || urls.Ports == null ||
                     urls.URLS == null || urls.SessionID != SessionID ||
+                    MainServer.Instance.HostName != urls._ParentHostName ||
                     !CheckModuleNames(urls) || urls.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
                 {
                     if (urls.VersionNumber == GridRegistrationURLs.CurrentVersionNumber)
@@ -348,7 +349,8 @@ namespace OpenSim.Services.GridService
                            SessionID = SessionID,
                            Ports = ports,
                            HostNames = hostnames,
-                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout*60)
+                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout*60),
+                           _ParentHostName = MainServer.Instance.HostName
                        };
             m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID, urls.ToOSD ());
 
@@ -473,13 +475,14 @@ namespace OpenSim.Services.GridService
 
         public class GridRegistrationURLs : IDataTransferable
         {
-            public static readonly int CurrentVersionNumber = 4;
+            public static readonly int CurrentVersionNumber = 5;
             public OSDMap URLS;
             public string SessionID;
             public DateTime Expiration;
             public OSDMap HostNames;
             public OSDMap Ports;
             public int VersionNumber;
+            public string _ParentHostName = "";
 
             public override OSDMap ToOSD()
             {
@@ -490,6 +493,7 @@ namespace OpenSim.Services.GridService
                 retVal["HostName"] = HostNames;
                 retVal["Port"] = Ports;
                 retVal["VersionNumber"] = CurrentVersionNumber;
+                retVal["_ParentHostName"] = _ParentHostName;
                 return retVal;
             }
 
@@ -505,6 +509,7 @@ namespace OpenSim.Services.GridService
                     VersionNumber = 0;
                 else
                     VersionNumber = retVal["VersionNumber"].AsInteger();
+                _ParentHostName = retVal["_ParentHostName"].AsString();
             }
         }
 
