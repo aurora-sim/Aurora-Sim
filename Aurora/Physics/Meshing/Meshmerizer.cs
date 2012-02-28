@@ -274,7 +274,7 @@ namespace OpenSim.Region.Physics.Meshing
 
             if (primShape.SculptEntry)
             {
-                if (((SculptType) primShape.SculptType) == SculptType.Mesh)
+                if (((SculptType)primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
                 {
                     if (!useMeshiesPhysicsMesh)
                         return null;
@@ -702,6 +702,7 @@ namespace OpenSim.Region.Physics.Meshing
             // For large regions with 100k+ prims and hundreds of copies of each, this can save a GB or more of memory
 
             key = GetMeshKey(primShape, size, lod);
+            ulong myKey = 17797020799438551968;
             if (m_uniqueMeshes.TryGetValue(key, out mesh))
                 return mesh;
 

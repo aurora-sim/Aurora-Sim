@@ -3747,7 +3747,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Update the shape of this part.
         /// </summary>
         /// <param name = "shapeBlock"></param>
-        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock)
+        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool needsFindAsset)
         {
             IOpenRegionSettingsModule module = ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
@@ -3786,12 +3786,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_shape.PathTwist = shapeBlock.PathTwist;
             m_shape.PathTwistBegin = shapeBlock.PathTwistBegin;
 
-            Shape = m_shape;
-
-            if (PhysActor != null)
+            if (m_shape.SculptEntry && needsFindAsset)
+                m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
+            else
             {
-                PhysActor.Shape = m_shape;
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                Shape = m_shape;
+
+                if (PhysActor != null)
+                {
+                    PhysActor.Shape = m_shape;
+                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                }
             }
 
             // This is what makes vehicle trailers work
@@ -4254,14 +4259,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
-                this.Shape.SculptType = (byte) SculptType.Mesh;
+                this.Shape.SculptType = (byte)SculptType.Mesh;
+            PrimitiveBaseShape shape = Shape.Copy();
             if ((bool) sender && this.PhysActor != null) //Update physics
             {
                 //Get physics to update in a hackish way
-                PrimitiveBaseShape shape = Shape.Copy();
                 this.PhysActor.Shape = shape;
-                this.Shape = shape;
+                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
+            this.Shape = shape;
         }
 
         public double GetDistanceTo(Vector3 a, Vector3 b)
