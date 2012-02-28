@@ -1816,8 +1816,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (forceSimplePrimMeshing)
                 return true;
             // let simple spheres use ode sphere object
+            PrimitiveBaseShape sphere = PrimitiveBaseShape.CreateSphere();
             if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
-                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
+                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == sphere.ProfileHollow && pbs.PathBegin == sphere.PathBegin && pbs.PathEnd == sphere.PathEnd &&
+                pbs.PathCurve == sphere.PathCurve && pbs.HollowShape == sphere.HollowShape && pbs.PathRadiusOffset == sphere.PathRadiusOffset && pbs.PathRevolutions == sphere.PathRevolutions &&
+                pbs.PathScaleX == pbs.PathScaleX && pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX && pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
+                pbs.PathTaperX == pbs.PathTaperX && pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist && pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
+                pbs.ProfileCurve == pbs.ProfileCurve && pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow && pbs.ProfileShape == sphere.ProfileShape)
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
