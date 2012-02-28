@@ -2080,7 +2080,12 @@ namespace Aurora.Modules.Terrain
         private void InterfaceHelp(string[] cmd)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
-                return;
+            {
+                if (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand)
+                    MainConsole.Instance.HasProcessedCurrentCommand = true;
+                else
+                    return;
+            }
 #if (!ISWIN)
             string supportedFileExtensions = "";
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)

@@ -301,7 +301,7 @@ namespace Aurora.Modules.Chat
         /// <param name = "cmdparams"></param>
         public void HandleAlertConsoleCommand(string[] cmdparams)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene == null)
                 return;
 
             if (cmdparams[1] == "general")

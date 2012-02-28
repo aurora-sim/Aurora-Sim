@@ -64,6 +64,8 @@ namespace Aurora.Framework
         /// </summary>
         IScene ConsoleScene { get; set; }
 
+        bool HasProcessedCurrentCommand { get; set; }
+
         /// <summary>
         ///   Set up this console
         /// </summary>

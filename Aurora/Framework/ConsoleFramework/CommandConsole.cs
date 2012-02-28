@@ -193,6 +193,7 @@ namespace Aurora.Framework
                             //Only one command after our path, its ours
                             if (commands.ContainsKey(com))
                             {
+                                MainConsole.Instance.HasProcessedCurrentCommand = false;
 #if (!ISWIN)
                                 foreach (CommandDelegate fn in commands[com].fn)
                                 {
@@ -764,6 +765,8 @@ namespace Aurora.Framework
             get { return m_ConsoleScene; }
             set { m_ConsoleScene = value; }
         }
+
+        public bool HasProcessedCurrentCommand { get; set; }
 
         public IScene m_ConsoleScene;
 

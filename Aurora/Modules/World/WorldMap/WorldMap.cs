@@ -717,7 +717,12 @@ namespace Aurora.Modules.WorldMap
         public void HandleExportWorldMapConsoleCommand(string[] cmdparams)
         {
             if (MainConsole.Instance.ConsoleScene != m_scene)
-                return;
+            {
+                if (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand)
+                    MainConsole.Instance.HasProcessedCurrentCommand = true;
+                else
+                    return;
+            }
 
             string exportPath = cmdparams.Length > 1 ? cmdparams[1] : DEFAULT_WORLD_MAP_EXPORT_PATH;
 

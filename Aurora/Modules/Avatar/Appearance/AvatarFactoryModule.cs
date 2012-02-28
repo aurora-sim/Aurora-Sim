@@ -941,16 +941,13 @@ textures 1
         private void HandleConsoleForceSendAppearance(string[] cmds)
         {
             //Make sure its set to the right region
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
-                if (MainConsole.Instance.ConsoleScene == null)
-                    MainConsole.Instance.Info("Choose the scene the avatar is in to run this command.");
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
                 return;
-            }
 
             if (cmds.Length != 5)
             {
-                MainConsole.Instance.Info("Wrong number of commands.");
+                if(MainConsole.Instance.ConsoleScene != null)
+                    MainConsole.Instance.Info("Wrong number of commands.");
                 return;
             }
             string firstName = cmds[3], lastName = cmds[4];
