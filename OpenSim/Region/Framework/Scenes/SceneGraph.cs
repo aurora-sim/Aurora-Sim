@@ -285,7 +285,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanEditObject(entity.UUID, remoteClient.AgentId))
                     if (((ISceneEntity)entity).OwnerID == remoteClient.AgentId)
-                        ((ISceneEntity)entity).SetGroup(GroupID, remoteClient.AgentId);
+                        ((ISceneEntity)entity).SetGroup(GroupID, remoteClient.AgentId, true);
             }
         }
 
@@ -909,7 +909,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 // Otherwise, use this default creation code;
-                sceneObject.SetGroup(groupID, ownerID);
+                sceneObject.SetGroup(groupID, ownerID, false);
                 AddPrimToScene(sceneObject);
                 sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
@@ -1065,7 +1065,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ownerID != UUID.Zero)
                 {
                     sog.SetOwnerId(ownerID);
-                    sog.SetGroup(groupID, remoteClient.AgentId);
+                    sog.SetGroup(groupID, remoteClient.AgentId, true);
                     sog.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 
                     foreach (ISceneChildEntity child in sog.ChildrenEntities())

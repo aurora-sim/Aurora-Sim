@@ -816,7 +816,7 @@ namespace Aurora.Modules.InventoryAccess
 
             List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
 
-            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId);
+            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId, false);
             item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
@@ -950,7 +950,7 @@ namespace Aurora.Modules.InventoryAccess
 
                 List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
-                group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
+                group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
                 item.Owner = remoteClient.AgentId;
                 if (rootPart.OwnerID != item.Owner)
                 {

@@ -225,7 +225,7 @@ namespace Aurora.Framework
 
         void SetRootPartOwner (ISceneChildEntity part, UUID uUID, UUID uUID_2);
 
-        void SetGroup (UUID groupID, UUID attemptingUser);
+        void SetGroup (UUID groupID, UUID attemptingUser, bool needsPropertyUpdateForuser);
 
         void ApplyNextOwnerPermissions ();
 

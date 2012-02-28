@@ -325,7 +325,7 @@ namespace Aurora.Modules.Attachments
                     foreach(SceneObjectPart part in partList)
                         part.AttachedAvatar = remoteClient.AgentId;
 
-                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
+                    objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
                     if (objatt.RootPart.OwnerID != remoteClient.AgentId)
                     {
                         //Need to kill the for sale here

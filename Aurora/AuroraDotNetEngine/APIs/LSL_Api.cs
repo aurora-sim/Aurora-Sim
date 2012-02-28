@@ -3472,7 +3472,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     rootPart.Name = item.Name;
                     rootPart.Description = item.Description;
 
-                    group.SetGroup(sourcePart.GroupID, group.OwnerID);
+                    group.SetGroup(sourcePart.GroupID, group.OwnerID, false);
 
                     if (rootPart.OwnerID != item.OwnerID)
                     {
@@ -4185,7 +4185,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     IScenePresence SP = World.GetScenePresence (m_host.OwnerID);
                     if (SP != null)
-                        group.SetGroup(m_host.GroupID, SP.UUID);
+                        group.SetGroup(m_host.GroupID, SP.UUID, false);
 
                     if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
                         group.ClearPartAttachmentData();

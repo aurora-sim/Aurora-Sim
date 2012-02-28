@@ -675,7 +675,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SceneObjectPart[] partList = group.Parts;
 
-            group.SetGroup(m_part.GroupID, group.OwnerID);
+            group.SetGroup(m_part.GroupID, group.OwnerID, false);
 
             if ((rootPart.OwnerID != item.OwnerID) || (item.CurrentPermissions & 16) != 0)
             {
@@ -892,7 +892,7 @@ namespace OpenSim.Region.Framework.Scenes
                 invString.AddNameValueLine ("creation_date", item.CreationDate.ToString ());
                 invString.AddSectionEnd ();
             }
-            m_fileData = Utils.StringToBytes(invString.BuildString.ToString());
+            m_fileData = Utils.StringToBytes(invString.GetString());
 
             //MainConsole.Instance.Debug(Utils.BytesToString(fileData));
             //MainConsole.Instance.Debug("[PRIM INVENTORY]: RequestInventoryFile fileData: " + Utils.BytesToString(fileData));
@@ -932,7 +932,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         public class InventoryStringBuilder
         {
-            public StringBuilder BuildString = new StringBuilder();
+            private StringBuilder BuildString = new StringBuilder();
+            private bool _hasAddeditems = false;
+
+            public string GetString()
+            {
+                if (_hasAddeditems)
+                    return BuildString.ToString();
+                return "";
+            }
 
             public InventoryStringBuilder(UUID folderID, UUID parentID)
             {
@@ -946,6 +954,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             public void AddItemStart()
             {
+                _hasAddeditems = true;
                 BuildString.Append("\tinv_item\t0\n");
                 AddSectionStart();
             }

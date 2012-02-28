@@ -1460,7 +1460,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name = "GroupID2"></param>
         /// <param name = "client"></param>
-        public void SetGroup(UUID GroupID2, UUID attemptingUserID)
+        public void SetGroup(UUID GroupID2, UUID attemptingUserID, bool needsUpdate)
         {
             IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();
             if (module != null)
@@ -1474,7 +1474,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             HasGroupChanged = true;
             IScenePresence sp = Scene.GetScenePresence(attemptingUserID);
-            if (sp != null)
+            if (sp != null && needsUpdate)
                 GetProperties(sp.ControllingClient);
         }
 
