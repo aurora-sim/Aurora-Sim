@@ -62,7 +62,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                                       | CollisionCategories.Character
                                                                      );
 
-        private static readonly Dictionary<IMesh, IntPtr> m_MeshToTriMeshMap = new Dictionary<IMesh, IntPtr>();
+        private static readonly Dictionary<ulong, IntPtr> m_MeshToTriMeshMap = new Dictionary<ulong, IntPtr>();
         private readonly AuroraODEPhysicsScene _parent_scene;
 
         private readonly Vector3 _torque = Vector3.Zero;
@@ -922,18 +922,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             hasOOBoffsetFromMesh = true;
 
             mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
-//            if (m_MeshToTriMeshMap.ContainsKey(mesh))
-//            {
-//                _triMeshData = m_MeshToTriMeshMap[mesh];
-//            }
-//            else
+            if (m_MeshToTriMeshMap.ContainsKey(mesh.Key))
+            {
+                _triMeshData = m_MeshToTriMeshMap[mesh.Key];
+            }
+            else
             {
                 _triMeshData = d.GeomTriMeshDataCreate();
 
                 d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
                                              triStride);
                 d.GeomTriMeshDataPreprocess(_triMeshData);
-//                m_MeshToTriMeshMap[mesh] = _triMeshData;
+                m_MeshToTriMeshMap[mesh.Key] = _triMeshData;
             }
 
             _parent_scene.waitForSpaceUnlock(m_targetSpace);

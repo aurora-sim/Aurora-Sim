@@ -7989,9 +7989,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             // retain pathcurve
             shapeBlock.PathCurve = part.Shape.PathCurve;
+            bool changedTextureID = part.Shape.SculptTexture != sculptId;
             part.Shape.SetSculptProperties((byte)type, sculptId);
             part.Shape.SculptEntry = true;
-            part.UpdateShape(shapeBlock);
+            part.UpdateShape(shapeBlock, changedTextureID);
         }
 
         public void llSetPrimitiveParams(LSL_List rules)

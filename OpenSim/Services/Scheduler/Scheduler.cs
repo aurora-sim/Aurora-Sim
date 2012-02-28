@@ -38,7 +38,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class Scheduler : IScheduleService, IService
+    public class Scheduler : ConnectorBase, IScheduleService, IService
     {
         public AuroraEventManager EventManager = new AuroraEventManager();
         private ISchedulerDataPlugin m_database;
@@ -56,6 +56,7 @@ namespace OpenSim.Services
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             registry.RegisterModuleInterface<IScheduleService>(this);
+            base.Init(registry, "Scheduler");
         }
 
         /// <summary>
@@ -73,16 +74,19 @@ namespace OpenSim.Services
         /// </summary>
         public void FinishedStartup()
         {
-            m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
-            if (m_database != null) 
-                m_enabled = true;
-
-            if (m_enabled)
+            if (!m_doRemoteCalls)
             {
-                // don't want to start to soon
-                scheduleTimer.Interval = 60000;
-                scheduleTimer.Elapsed += t_Elapsed;
-                scheduleTimer.Start();
+                m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
+                if (m_database != null)
+                    m_enabled = true;
+
+                if (m_enabled)
+                {
+                    // don't want to start to soon
+                    scheduleTimer.Interval = 60000;
+                    scheduleTimer.Elapsed += t_Elapsed;
+                    scheduleTimer.Start();
+                }
             }
         }
 
@@ -90,35 +94,54 @@ namespace OpenSim.Services
 
         #region Implementation of IScheduleService
 
+
         public bool Register(SchedulerItem I, OnGenericEventHandler handler)
         {
+            if (m_doRemoteCalls) return false;
             EventManager.RegisterEventHandler(I.FireFunction, handler);
             return true;
         }
 
+        
         public bool Register(string fName, OnGenericEventHandler handler)
         {
+            if (m_doRemoteCalls) return false;
             EventManager.RegisterEventHandler(fName, handler);
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public string Save(SchedulerItem I)
         {
+            if (m_doRemoteCalls)
+                return (string)DoRemote(I);
             return m_database.SchedulerSave(I);
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public void Remove(string id)
         {
+            if (m_doRemoteCalls)
+            {
+                DoRemote(id);
+                return;
+            }
             m_database.SchedulerRemove(id);
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public bool Exist(string scdID)
         {
+            if (m_doRemoteCalls)
+                return (bool) DoRemote(scdID);
             return m_database.SchedulerExist(scdID);
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public SchedulerItem Get(string ID)
         {
+            if (m_doRemoteCalls)
+                return (SchedulerItem)DoRemote(ID);
             return m_database.Get(ID);
         }
 

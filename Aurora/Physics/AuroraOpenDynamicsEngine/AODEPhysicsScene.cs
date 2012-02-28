@@ -1826,9 +1826,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
-            {
                 return false;
-            }
             else if (pbs.SculptType != (byte) SculptType.Mesh &&
                      pbs.SculptType != (byte) SculptType.None)
                 return true; //Sculpty, mesh it

@@ -2459,8 +2459,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A Linked Child Prim objects position in world</returns>
         public Vector3 GetWorldPosition()
         {
-            Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
-            return (GroupPosition + OffsetPosition*parentRot);
+            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.RotationOffset;
         }
 
         /// <summary>
@@ -3747,22 +3746,35 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Update the shape of this part.
         /// </summary>
         /// <param name = "shapeBlock"></param>
-        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool needsFindAsset)
+        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock)
+        {
+            UpdateShape(shapeBlock, true);
+        }
+
+        /// <summary>
+        ///   Having this function because I found when scripts updated the shape.. over and over, it would fill up the memory
+        ///   Having the extra paramater updatePhysics can prevent physics updates on the changes
+        ///   The onlyplace this effects is if a script changes the shape
+        ///   If the LocklessQueue gets updated this can be removed
+        /// </summary>
+        /// <param name = "shapeBlock"></param>
+        /// <param name="UpdatePhysics"></param>
+        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool UpdatePhysics)
         {
             IOpenRegionSettingsModule module = ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
             {
-                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize*500) &&
+                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize * 500) &&
                     module.MaximumHollowSize != -1)
-                    //This is so that it works correctly, since the packet sends (N * 500)
+                //This is so that it works correctly, since the packet sends (N * 500)
                 {
-                    shapeBlock.ProfileHollow = (ushort) (module.MaximumHollowSize*500);
+                    shapeBlock.ProfileHollow = (ushort)(module.MaximumHollowSize * 500);
                 }
-                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize*100)) &&
+                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize * 100)) &&
                     module.MinimumHoleSize != -1 && shapeBlock.PathCurve == 32)
-                    //This is how the packet is set up... so this is how we check for it...
+                //This is how the packet is set up... so this is how we check for it...
                 {
-                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize*100)));
+                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize * 100)));
                 }
             }
 
@@ -3786,13 +3798,13 @@ namespace OpenSim.Region.Framework.Scenes
             m_shape.PathTwist = shapeBlock.PathTwist;
             m_shape.PathTwistBegin = shapeBlock.PathTwistBegin;
 
-            if (m_shape.SculptEntry && needsFindAsset)
+            if (m_shape.SculptEntry && UpdatePhysics)
                 m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
             else
             {
                 Shape = m_shape;
 
-                if (PhysActor != null)
+                if ((UpdatePhysics) && (PhysActor != null))
                 {
                     PhysActor.Shape = m_shape;
                     m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);

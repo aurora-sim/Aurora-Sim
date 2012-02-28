@@ -60,6 +60,25 @@ namespace OpenSim.Services
         private ulong m_HitRateDisplay = 1; // How often to display hit statistics, given in requests
 
         private static ulong m_Requests;
+        private Dictionary<string, AssetRequest> m_assetRequests = new Dictionary<string, AssetRequest>();
+        private class AssetRequest
+        {
+            private int _amt = 1;
+            public int Amt
+            {
+                get { return _amt; }
+                set
+                {
+                    _amt = value;
+                    LastAccessedTimeSpan = DateTime.Now - LastAccessed;
+                    if (LastAccessedTimeSpan.Seconds > 10)
+                        _amt = 0;
+                    LastAccessed = DateTime.Now;
+                }
+            }
+            public TimeSpan LastAccessedTimeSpan = TimeSpan.FromDays(1000);
+            public DateTime LastAccessed = DateTime.Now;
+        }
         private static ulong m_RequestsForInprogress;
         private static ulong m_DiskHits;
         private static ulong m_MemoryHits;
@@ -94,6 +113,8 @@ namespace OpenSim.Services
         private ISimulationBase m_simulationBase;
 
         private bool m_DeepScanBeforePurge;
+
+        private static int _forceMemoryCacheAmount = 5;
 
         public FlotsamAssetCache()
         {
@@ -225,7 +246,12 @@ namespace OpenSim.Services
 
         private void UpdateMemoryCache(string key, AssetBase asset)
         {
-            if (m_MemoryCacheEnabled)
+            UpdateMemoryCache(key, asset, false);
+        }
+
+        private void UpdateMemoryCache(string key, AssetBase asset, bool forceMemCache)
+        {
+            if (m_MemoryCacheEnabled || forceMemCache)
             {
                 if (m_MemoryExpiration > TimeSpan.Zero)
                 {
@@ -295,11 +321,16 @@ namespace OpenSim.Services
 
         public AssetBase Get(string id)
         {
+            if (m_assetRequests.ContainsKey(id))
+                m_assetRequests[id].Amt++;
+            else
+                m_assetRequests[id] = new AssetRequest();
             m_Requests++;
 
             AssetBase asset = null;
 
-            if (m_MemoryCacheEnabled && m_MemoryCache.TryGetValue(id, out asset))
+            bool forceMemCache = m_assetRequests[id].Amt > _forceMemoryCacheAmount;
+            if ((m_MemoryCacheEnabled || forceMemCache)&& m_MemoryCache.TryGetValue(id, out asset))
             {
                 m_MemoryHits++;
             }
@@ -310,7 +341,7 @@ namespace OpenSim.Services
                 {
                     try
                     {
-                        asset = ExtractAsset(id, asset, filename);
+                        asset = ExtractAsset(id, asset, filename, forceMemCache);
                     }
                     catch (Exception e)
                     {
@@ -377,7 +408,7 @@ namespace OpenSim.Services
             return asset;
         }
 
-        private AssetBase ExtractAsset(string id, AssetBase asset, string filename)
+        private AssetBase ExtractAsset(string id, AssetBase asset, string filename, bool forceMemCache)
         {
             /*string file = File.ReadAllText(filename);
             asset = new AssetBase();
@@ -391,7 +422,7 @@ namespace OpenSim.Services
             catch
             {
             }
-            UpdateMemoryCache(id, asset);
+            UpdateMemoryCache(id, asset, forceMemCache);
 
             m_DiskHits++;
             return asset;
