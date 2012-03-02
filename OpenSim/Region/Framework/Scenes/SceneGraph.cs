@@ -1308,7 +1308,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanEditObject(((SceneObjectGroup)entity).UUID, remoteClient.AgentId))
                 {
-                    ((SceneObjectGroup)entity).UpdateTextureEntry(LocalID, texture);
+                    ((SceneObjectGroup)entity).UpdateTextureEntry(LocalID, texture, true);
                 }
             }
         }

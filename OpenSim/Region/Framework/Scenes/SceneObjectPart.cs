@@ -2901,7 +2901,7 @@ namespace OpenSim.Region.Framework.Scenes
                       tex.FaceTextures[face].RGBA.B == texcolor.B))
                 {
                     tex.FaceTextures[face].RGBA = texcolor;
-                    UpdateTexture(tex);
+                    UpdateTexture(tex, true);
                 }
                 //WRONG.... fixed with updateTexture
                 //TriggerScriptChangedEvent(Changed.COLOR);
@@ -2935,9 +2935,7 @@ namespace OpenSim.Region.Framework.Scenes
                     tex.DefaultTexture.RGBA = texcolor;
                 }
                 if (changed)
-                    UpdateTexture(tex);
-                //WRONG.... fixed with updateTexture
-                //TriggerScriptChangedEvent(Changed.COLOR);
+                    UpdateTexture(tex, true);
                 return;
             }
         }
@@ -3830,7 +3828,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// not handling RGBA properly. Cycles through, and "fixes" the color
         /// info
         /// <param name = "tex"></param>
-        public void UpdateTexture(Primitive.TextureEntry tex)
+        public void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent)
         {
             //Color4 tmpcolor;
             //for (uint i = 0; i < 32; i++)
@@ -3851,7 +3849,7 @@ namespace OpenSim.Region.Framework.Scenes
             //tmpcolor.G = tmpcolor.G*255;
             //tmpcolor.B = tmpcolor.B*255;
             //tex.DefaultTexture.RGBA = tmpcolor;
-            UpdateTextureEntry(tex.GetBytes());
+            UpdateTextureEntry(tex.GetBytes(), sendChangedEvent);
         }
 
         public void aggregateScriptEvents()
@@ -5232,7 +5230,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Update the texture entry for this part.
         /// </summary>
         /// <param name = "textureEntry"></param>
-        public void UpdateTextureEntry(byte[] textureEntry)
+        public void UpdateTextureEntry(byte[] textureEntry, bool sendChangedEvent)
         {
             bool same = true;
             byte[] old = m_shape.TextureEntry;
@@ -5294,8 +5292,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (colorChanged) TriggerScriptChangedEvent(Changed.COLOR);
-            if (textureChanged) TriggerScriptChangedEvent(Changed.TEXTURE);
+            if (colorChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.COLOR);
+            if (textureChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }

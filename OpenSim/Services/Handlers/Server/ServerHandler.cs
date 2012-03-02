@@ -216,7 +216,7 @@ namespace OpenSim.Services
                     else if (!urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
                         return new byte[0];
 
-                    MainConsole.Instance.Info("[Server]: Method Called: " + method);
+                    MainConsole.Instance.Debug("[Server]: Method Called: " + method);
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                     object[] parameters = new object[paramInfo.Length];

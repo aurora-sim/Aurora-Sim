@@ -1603,7 +1603,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].TexMapType = textype;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1616,7 +1616,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     tex.DefaultTexture.TexMapType = textype;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1627,7 +1627,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].Glow = glow;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1640,7 +1640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     tex.DefaultTexture.Glow = glow;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1674,7 +1674,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].Shiny = sval;
                 tex.FaceTextures[face].Bump = bump;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1689,7 +1689,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     tex.DefaultTexture.Shiny = sval;
                     tex.DefaultTexture.Bump = bump;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1700,7 +1700,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
              {
                  tex.CreateFace((uint) face);
                  tex.FaceTextures[face].Fullbright = bright;
-                 part.UpdateTexture(tex);
+                 part.UpdateTexture(tex, false);
                  return;
              }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1713,7 +1713,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.Fullbright = bright;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1775,7 +1775,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
                 if(changed)
-                    part.UpdateTexture(tex);
+                    part.UpdateTexture(tex, false);
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1796,7 +1796,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.DefaultTexture.RGBA = texcolor;
                 if(changed)
-                    part.UpdateTexture(tex);
+                    part.UpdateTexture(tex, false);
             }
             part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
@@ -1950,7 +1950,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
 
-            SetTexture(m_host, texture, face);
+            bool found = SetTexture(m_host, texture, face);
+            if (!found)
+                ShoutError("Could not find texture '" + texture + "'");
             return PScriptSleep(200);
         }
 
@@ -1967,7 +1969,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(100);
         }
 
-        protected void SetTexture (ISceneChildEntity part, string texture, int face)
+        protected bool SetTexture (ISceneChildEntity part, string texture, int face)
         {
             UUID textureID=new UUID();
             int ns = GetNumberOfSides(part);
@@ -1976,7 +1978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
              if (textureID == UUID.Zero)
              {
                  if (!UUID.TryParse(texture, out textureID))
-                     return;
+                     return false;
              }
 
             Primitive.TextureEntry tex = part.Shape.Textures;
@@ -1986,8 +1988,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.TextureID = textureID;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
-                return;
+                part.UpdateTexture(tex, false);
             }
             if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1999,8 +2000,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.TextureID = textureID;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
+            return true;
         }
 
         public DateTime llScaleTexture(double u, double v, int face)
@@ -2022,7 +2024,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texface.RepeatU = (float)u;
                 texface.RepeatV = (float)v;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2037,7 +2039,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.RepeatU = (float)u;
                 tex.DefaultTexture.RepeatV = (float)v;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -2059,7 +2061,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texface.OffsetU = (float)u;
                 texface.OffsetV = (float)v;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2074,7 +2076,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.OffsetU = (float)u;
                 tex.DefaultTexture.OffsetV = (float)v;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -2095,7 +2097,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.Rotation = (float)rotation;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2108,7 +2110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.Rotation = (float)rotation;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
         }

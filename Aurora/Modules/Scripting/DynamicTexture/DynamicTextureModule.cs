@@ -400,7 +400,7 @@ namespace Aurora.Modules.Scripting
                     // I'm pretty sure noone whats to set fullbright true if it wasn't true before.
                     // tmptex.DefaultTexture.Fullbright = true;
 
-                    part.UpdateTexture(tmptex);
+                    part.UpdateTexture(tmptex, true);
                 }
 
                 if (oldID != UUID.Zero && ((Disp & DISP_EXPIRE) != 0))
