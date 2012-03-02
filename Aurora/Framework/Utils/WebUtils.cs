@@ -700,6 +700,11 @@ namespace Aurora.Simulation.Base
 
         public static OSDMap GetOSDMap(string data)
         {
+            return GetOSDMap(data, true);
+        }
+
+        public static OSDMap GetOSDMap(string data, bool doLogMessages)
+        {
             if (data == "")
                 return null;
             try
@@ -712,13 +717,17 @@ namespace Aurora.Simulation.Base
                     return args;
                 }
                 // uh?
-                MainConsole.Instance.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
+                if(doLogMessages)
+                    MainConsole.Instance.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
                 return null;
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[WebUtils]: exception on parse of REST message " + ex);
-                MainConsole.Instance.Warn("[WebUtils]: bad data: " + data);
+                if (doLogMessages)
+                {
+                    MainConsole.Instance.Warn("[WebUtils]: exception on parse of REST message " + ex);
+                    MainConsole.Instance.Warn("[WebUtils]: bad data: " + data);
+                }
                 return null;
             }
         }

@@ -189,7 +189,7 @@ namespace OpenSim.Services
 
             try
             {
-                OSDMap args = WebUtils.GetOSDMap(body);
+                OSDMap args = WebUtils.GetOSDMap(body, false);
                 if (args != null)
                     return HandleMap(args);
             }
