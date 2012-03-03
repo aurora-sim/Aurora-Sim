@@ -280,6 +280,11 @@ namespace Aurora.Modules.Groups
             return GroupsConnector.GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
         }
 
+        public GroupNoticeData GetGroupNoticeData(UUID requestingAgentID, UUID noticeID)
+        {
+            return GroupsConnector.GetGroupNoticeData(requestingAgentID, noticeID);
+        }
+
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
             return GroupsConnector.GetGroupNotice(requestingAgentID, noticeID);
