@@ -102,11 +102,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        AssetBase asset;
                         UUID cacheID = UUID.Combine(TERRAIN_CACHE_MAGIC, textureIDs[i]);
-
-                        // The asset service does this check as well, so I don't think we need to do this.
-                        asset = assetService.GetCached(cacheID.ToString());
+                        AssetBase asset = assetService.Get(cacheID.ToString());
                         if ((asset != null) && (asset.Data != null) && (asset.Data.Length != 0))
                         {
                             try
@@ -159,7 +156,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                                              Data = data,
                                                              Description = "PNG",
                                                              Flags =
-                                                                 AssetFlags.Collectable | AssetFlags.Temperary |
+                                                                 AssetFlags.Collectable | AssetFlags.Temporary |
                                                                  AssetFlags.Local,
                                                              ID = cacheID,
                                                              Name = String.Empty,
@@ -196,16 +193,16 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 
             #region Layer Map
 
-            int diff = heightmap.Height/Constants.RegionSize;
+            float diff = (float)heightmap.Height / (float)Constants.RegionSize;
             float[] layermap = new float[Constants.RegionSize*Constants.RegionSize];
 
-            for (int y = 0; y < heightmap.Height; y += diff)
+            for (float y = 0; y < heightmap.Height; y += diff)
             {
-                for (int x = 0; x < heightmap.Height; x += diff)
+                for (float x = 0; x < heightmap.Height; x += diff)
                 {
-                    int newX = x/diff;
-                    int newY = y/diff;
-                    float height = heightmap[newX, newY];
+                    float newX = x / diff;
+                    float newY = y / diff;
+                    float height = heightmap[(int)newX, (int)newY];
 
                     float pctX = newX/255f;
                     float pctY = newY/255f;
@@ -245,7 +242,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     float layer = ((height + noise - startHeight)/heightRange)*4f;
                     if (Single.IsNaN(layer))
                         layer = 0f;
-                    layermap[newY*Constants.RegionSize + newX] = Utils.Clamp(layer, 0f, 3f);
+                    layermap[(int)(newY * Constants.RegionSize + newX)] = Utils.Clamp(layer, 0f, 3f);
                 }
             }
 

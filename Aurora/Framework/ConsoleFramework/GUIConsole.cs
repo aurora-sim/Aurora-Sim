@@ -50,6 +50,7 @@ namespace Aurora.Framework
         public bool m_isPrompting;
         public int m_lastSetPromptOption;
         public List<string> m_promptOptions = new List<string>();
+        public bool HasProcessedCurrentCommand { get; set; }
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {

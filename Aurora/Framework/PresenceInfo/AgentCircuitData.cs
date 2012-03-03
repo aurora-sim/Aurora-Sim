@@ -108,6 +108,11 @@ namespace Aurora.Framework
         public bool child;
 
         /// <summary>
+        ///   The region handle of the region the root agent is in
+        /// </summary>
+        public ulong roothandle;
+
+        /// <summary>
         ///   Number given to the client when they log-in that they provide 
         ///   as credentials to the UDP server
         /// </summary>
@@ -172,6 +177,7 @@ namespace Aurora.Framework
             args["agent_id"] = OSD.FromUUID(AgentID);
             args["caps_path"] = OSD.FromString(CapsPath);
             args["child"] = OSD.FromBoolean(child);
+            args["roothandle"] = OSD.FromULong(roothandle);
             args["reallyischild"] = OSD.FromBoolean(reallyischild);
             args["circuit_code"] = OSD.FromString(circuitcode.ToString());
             args["secure_session_id"] = OSD.FromUUID(SecureSessionID);
@@ -251,6 +257,8 @@ namespace Aurora.Framework
                 reallyischild = args["reallyischild"].AsBoolean();
             if (args["child"] != null)
                 child = args["child"].AsBoolean();
+            if (args["roothandle"] != null)
+                roothandle = args["roothandle"].AsULong();
             if (args["circuit_code"] != null)
                 UInt32.TryParse(args["circuit_code"].AsString(), out circuitcode);
             if (args["secure_session_id"] != null)

@@ -49,8 +49,8 @@ namespace OpenSim.Region.Framework.Scenes
         public event RemovePhysics OnRemovePhysics;
         public event AddPhysics OnSignificantClientMovement;
 
-        private static readonly Array DIR_CONTROL_FLAGS = Enum.GetValues(typeof(Dir_ControlFlags));
-        private static readonly Vector3 HEAD_ADJUSTMENT = new Vector3(0f, 0f, 0.3f);
+        protected static readonly Array DIR_CONTROL_FLAGS = Enum.GetValues(typeof(Dir_ControlFlags));
+        protected static readonly Vector3 HEAD_ADJUSTMENT = new Vector3(0f, 0f, 0.3f);
         
         /// <summary>
         /// Experimentally determined "fudge factor" to make sit-target positions
@@ -60,7 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// rotation, prim cut, prim twist, prim taper, and prim shear. See mantis
         /// issue #1716
         /// </summary>
-        private static readonly Vector3 SIT_TARGET_ADJUSTMENT = new Vector3(0.1f, 0.0f, 0.3f);
+        protected static readonly Vector3 SIT_TARGET_ADJUSTMENT = new Vector3(0.1f, 0.0f, 0.3f);
 
         private UUID m_currentParcelUUID = UUID.Zero;
 
@@ -78,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ILandObject CurrentParcel { get; set; }
 
-        private ISceneViewer m_sceneViewer;
+        protected ISceneViewer m_sceneViewer;
 
         /// <value>
         /// The animator for this avatar
@@ -89,10 +89,10 @@ namespace OpenSim.Region.Framework.Scenes
         }
         protected Animator m_animator;
 
-        private SceneObjectGroup proxyObjectGroup;
+        protected SceneObjectGroup proxyObjectGroup;
         public Vector3 LastKnownAllowedPosition { get; set; }
 
-        private Vector4 m_CollisionPlane = Vector4.UnitW;
+        protected Vector4 m_CollisionPlane = Vector4.UnitW;
         public Vector4 CollisionPlane
         {
             get
@@ -105,9 +105,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private uint m_movementflag;
-        private UUID m_requestedSitTargetUUID;
-        private bool m_sitting;
+        protected uint m_movementflag;
+        protected UUID m_requestedSitTargetUUID;
+        protected bool m_sitting;
+
         public UUID SittingOnUUID
         {
             get { return m_requestedSitTargetUUID; }
@@ -117,44 +118,44 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sitting; }
         }
 
-        private bool m_enqueueSendChildAgentUpdate = false;
-        private DateTime m_enqueueSendChildAgentUpdateTime = new DateTime();
+        protected bool m_enqueueSendChildAgentUpdate = false;
+        protected DateTime m_enqueueSendChildAgentUpdateTime = new DateTime();
 
         public bool SitGround { get; set; }
 
-        private SendCourseLocationsMethod m_sendCourseLocationsMethod;
+        protected SendCourseLocationsMethod m_sendCourseLocationsMethod;
 
-        private float m_sitAvatarHeight = 2.0f;
+        protected float m_sitAvatarHeight = 2.0f;
 
-        private int m_godLevel;
-        private readonly int m_userLevel;
+        protected int m_godLevel;
+        protected readonly int m_userLevel;
 
         public bool m_invulnerable = true;
 
-        private Vector3 m_lastChildAgentUpdatePosition;
-        private Vector3 m_lastChildAgentUpdateCamPosition;
+        protected Vector3 m_lastChildAgentUpdatePosition;
+        protected Vector3 m_lastChildAgentUpdateCamPosition;
 
-        private int m_perfMonMS;
+        protected int m_perfMonMS;
 
-        private bool m_setAlwaysRun;
-        
-        private bool m_forceFly;
-        private bool m_flyDisabled;
-        private volatile bool m_creatingPhysicalRepresentation = false;
+        protected bool m_setAlwaysRun;
 
-        private const float SIGNIFICANT_MOVEMENT = 2.0f;
-        private const float TERSE_UPDATE_MOVEMENT = 0.5f;
+        protected bool m_forceFly;
+        protected bool m_flyDisabled;
+        protected volatile bool m_creatingPhysicalRepresentation = false;
 
-        private Quaternion m_bodyRot= Quaternion.Identity;
+        protected const float SIGNIFICANT_MOVEMENT = 2.0f;
+        protected const float TERSE_UPDATE_MOVEMENT = 0.5f;
 
-        private const int LAND_VELOCITYMAG_MAX = 20;
+        protected Quaternion m_bodyRot = Quaternion.Identity;
+
+        protected const int LAND_VELOCITYMAG_MAX = 20;
 
         // Default AV Height
-        private float m_avHeight = 1.56f;
+        protected float m_avHeight = 1.56f;
 
         protected ulong crossingFromRegion;
 
-        private readonly Vector3[] Dir_Vectors = new Vector3[12];
+        protected readonly Vector3[] Dir_Vectors = new Vector3[12];
 
         /// <summary>
         /// Position of agent's camera in world (region cordinates)
@@ -170,30 +171,30 @@ namespace OpenSim.Region.Framework.Scenes
         protected Vector3 m_CameraAtAxis;
         protected Vector3 m_CameraLeftAxis;
         protected Vector3 m_CameraUpAxis;
-        private AgentManager.ControlFlags m_AgentControlFlags;
-        private Quaternion m_headrotation = Quaternion.Identity;
-        private byte m_state;
+        protected AgentManager.ControlFlags m_AgentControlFlags;
+        protected Quaternion m_headrotation = Quaternion.Identity;
+        protected byte m_state;
 
-        private bool m_autopilotMoving;
-        private Vector3 m_autoPilotTarget;
-        private bool m_sitAtAutoTarget;
+        protected bool m_autopilotMoving;
+        protected Vector3 m_autoPilotTarget;
+        protected bool m_sitAtAutoTarget;
 
-        private string m_nextSitAnimation = String.Empty;
+        protected string m_nextSitAnimation = String.Empty;
 
         //PauPaw:Proper PID Controler for autopilot************
-        private bool m_moveToPositionInProgress;
-        private Vector3 m_moveToPositionTarget;
+        protected bool m_moveToPositionInProgress;
+        protected Vector3 m_moveToPositionTarget;
 
-        private bool m_followCamAuto;
+        protected bool m_followCamAuto;
 
-        private int m_movementUpdateCount;
+        protected int m_movementUpdateCount;
 
-        private const int NumMovementsBetweenRayCast = 5;
+        protected const int NumMovementsBetweenRayCast = 5;
 
         /// <summary>
         /// ONLY HERE FOR OPENSIM COMPATIBILITY
         /// </summary>
-        private string m_callbackURI = null;
+        protected string m_callbackURI = null;
         public string CallbackURI
         {
             get { return m_callbackURI; }
@@ -203,7 +204,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private bool CameraConstraintActive;
+        protected bool CameraConstraintActive;
         //private int m_moveToPositionStateStatus;
         //*****************************************************
 
@@ -530,7 +531,7 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_pos = value; }
         }
 
-        private Vector3 m_savedVelocity;
+        protected Vector3 m_savedVelocity;
 
         /// <summary>
         /// Current velocity of the avatar.
@@ -585,7 +586,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///
         /// if False, this agent has a representation in this scene
         /// </summary>
-        private bool m_isChildAgent = true;
+        protected bool m_isChildAgent = true;
 
         public bool IsChildAgent
         {
@@ -596,7 +597,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private UUID m_parentID;
+        public ulong RootAgentHandle { get; set; }
+
+        protected UUID m_parentID;
 
         public UUID ParentID
         {
@@ -609,11 +612,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sceneViewer; }
         }
 
-        private bool m_inTransit;
-        private bool m_mouseLook;
-        private bool m_leftButtonDown;
-        private bool m_isAway = false;
-        private bool m_isBusy = false;
+        protected bool m_inTransit;
+        protected bool m_mouseLook;
+        protected bool m_leftButtonDown;
+        protected bool m_isAway = false;
+        protected bool m_isBusy = false;
 
         public bool IsInTransit
         {
@@ -782,6 +785,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 look = new Vector3 (0.99f * xmult, 0.99f * ymult, 0);
 
             IsChildAgent = false;
+            RootAgentHandle = Scene.RegionInfo.RegionHandle;
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion (Scene.RegionInfo, AbsolutePosition, look);
@@ -813,8 +817,6 @@ namespace OpenSim.Region.Framework.Scenes
             // avatar to return to the standing position in mid-air.  On login it looks like this is being sent
             // elsewhere anyway
             // Animator.SendAnimPack();
-
-            IsChildAgent = false;
 
             SendScriptEventToAllAttachments(Changed.TELEPORT);
 
@@ -851,7 +853,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// It doesn't get called for a teleport.  Reason being, an agent that
         /// teleports out may not end up anywhere near this region
         /// </summary>
-        public virtual void MakeChildAgent (GridRegion destindation)
+        public virtual void MakeChildAgent(GridRegion destination)
         {
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
@@ -866,11 +868,12 @@ namespace OpenSim.Region.Framework.Scenes
                  Name, UUID, m_scene.RegionInfo.RegionName);
 
             IsChildAgent = true;
+            RootAgentHandle = destination.RegionHandle;
             RemoveFromPhysicalScene ();
             m_sceneViewer.Reset ();
 
             SendScriptEventToAllAttachments(Changed.TELEPORT);
-            m_scene.EventManager.TriggerOnMakeChildAgent(this, destindation);
+            m_scene.EventManager.TriggerOnMakeChildAgent(this, destination);
 
             Reset();
         }
@@ -1021,6 +1024,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool m_flying = ((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
             MakeRootAgent(pos, m_flying, m_objectToSitOn == null);
+            Animator.NeedsAnimationResent = true;
 
             if(m_objectToSitOn != null)
             {
@@ -1426,7 +1430,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (update_movementflag &&
                 (m_parentID == UUID.Zero) && !SitGround && flags == AgentManager.ControlFlags.NONE)
-                Animator.UpdateMovementAnimations(true);
+                 Animator.UpdateMovementAnimations(true);
             
 
             IAgentUpdateMonitor reporter = (IAgentUpdateMonitor)m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor(m_scene.RegionInfo.RegionID.ToString(), MonitorModuleHelper.AgentUpdateCount);
@@ -1953,7 +1957,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!IsChildAgent && m_parentID != UUID.Zero)
             {
-                SceneObjectPart part = (SceneObjectPart)Scene.GetSceneObjectPart (m_parentID);
+                SceneObjectPart part = Scene.GetSceneObjectPart(m_parentID) as SceneObjectPart;
                 if (part != null)
                 {
                     part.SetPhysActorCameraPos((m_AgentControlFlags & AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) ==
@@ -2201,8 +2205,11 @@ namespace OpenSim.Region.Framework.Scenes
                             m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -128)
                         {
                             m_lastSigInfiniteRegionPos = AbsolutePosition;
-                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int)(TargetX - 256), (int)(TargetX + 256),
-                                (int)(TargetY - 256), (int)(TargetY + 256));
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero,
+                                (int)(TargetX - Scene.GridService.GetMaxRegionSize()),
+                                (int)(TargetX + 256),
+                                (int)(TargetY - Scene.GridService.GetMaxRegionSize()),
+                                (int)(TargetY + 256));
                         }
 #if (!ISWIN)
                         GridRegion neighborRegion = null;
@@ -2674,13 +2681,16 @@ namespace OpenSim.Region.Framework.Scenes
             m_avHeight = height;
         }
 
-        private void OutOfBoundsCall(Vector3 pos)
+        protected void OutOfBoundsCall(Vector3 pos)
         {
             m_pos = new Vector3(m_scene.RegionInfo.RegionSizeX / 2, m_scene.RegionInfo.RegionSizeY / 2,
                     128);
-            PhysicsActor.ForceSetPosition(m_pos);
-            PhysicsActor.ForceSetVelocity(Vector3.Zero);
-            RemoveFromPhysicalScene();
+            if (PhysicsActor != null)
+            {
+                PhysicsActor.ForceSetPosition(m_pos);
+                PhysicsActor.ForceSetVelocity(Vector3.Zero);
+                RemoveFromPhysicalScene();
+            }
             MainConsole.Instance.Error("[AVATAR]: NonFinite Avatar position detected... Reset Position, the client may be messed up now.");
 
             //Make them fly so that they don't just fall
@@ -2694,7 +2704,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SendAgentAlertMessage("Physics is having a problem with your avatar.  You may not be able to move until you relog.", true);
         }
 
-        private void PhysicsUpdatePosAndVelocity()
+        protected void PhysicsUpdatePosAndVelocity()
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             //Scene.SceneGraph.TaintPresenceForUpdate (this, PresenceTaint.Movement);
@@ -2702,7 +2712,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Animator.UpdateMovementAnimations(true);
         }
 
-        private void UpdatePosAndVelocity ()
+        protected void UpdatePosAndVelocity()
         {
             //Whenever the physics engine updates its positions, we get this update and make sure the animator has the newest info
             if (Animator != null && m_parentID == UUID.Zero)

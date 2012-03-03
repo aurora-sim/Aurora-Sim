@@ -35,16 +35,54 @@ using log4net.Core;
 
 namespace OpenSim.Services.AvatarService
 {
-    public class AvatarService : IAvatarService, IService
+    public class AvatarService : ConnectorBase, IAvatarService, IService
     {
+        #region Declares
+
         protected IAvatarData m_Database;
         protected bool m_enableCacheBakedTextures = true;
-        protected IRegistryCore m_registry;
+
+        #endregion
+
+        #region IService Members
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+
+            IConfig avatarConfig = config.Configs["AvatarService"];
+            if (avatarConfig != null)
+                m_enableCacheBakedTextures = avatarConfig.GetBoolean("EnableBakedTextureCaching",
+                                                                     m_enableCacheBakedTextures);
+
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AvatarHandler", "") != Name)
+                return;
+
+            registry.RegisterModuleInterface<IAvatarService>(this);
+
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
+                                                         "Resets the given avatar's appearance to the default",
+                                                         ResetAvatarAppearance);
+            Init(registry, Name);
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+            m_Database = DataManager.RequestPlugin<IAvatarData>();
+        }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
 
         #region IAvatarService Members
 
@@ -53,6 +91,7 @@ namespace OpenSim.Services.AvatarService
             get { return this; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID principalID)
         {
             AvatarData avatar = GetAvatar(principalID);
@@ -61,19 +100,30 @@ namespace OpenSim.Services.AvatarService
             return avatar.ToAvatarAppearance(principalID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
         {
             AvatarData avatar = new AvatarData(appearance);
             return SetAvatar(principalID, avatar);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarData GetAvatar(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (AvatarData)remoteValue;
+
             return m_Database.Get("PrincipalID", principalID.ToString());
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
+            object remoteValue = DoRemote(principalID, avatar);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("SetAppearance",
                                                                                                       new object[2]
                                                                                                           {
@@ -83,13 +133,23 @@ namespace OpenSim.Services.AvatarService
             return m_Database.Store(principalID, avatar);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool ResetAvatar(UUID principalID)
         {
+            object remoteValue = DoRemote(principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             return m_Database.Delete("PrincipalID", principalID.ToString());
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void CacheWearableData(UUID principalID, AvatarWearable wearable)
         {
+            object remoteValue = DoRemote(principalID, wearable);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             if (!m_enableCacheBakedTextures)
             {
                 IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
@@ -146,39 +206,7 @@ namespace OpenSim.Services.AvatarService
 
         #endregion
 
-        #region IService Members
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-
-            IConfig avatarConfig = config.Configs["AvatarService"];
-            if (avatarConfig != null)
-                m_enableCacheBakedTextures = avatarConfig.GetBoolean("EnableBakedTextureCaching",
-                                                                     m_enableCacheBakedTextures);
-
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AvatarHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAvatarService>(this);
-
-            if(MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
-                                                         "Resets the given avatar's appearance to the default",
-                                                         ResetAvatarAppearance);
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            m_Database = DataManager.RequestPlugin<IAvatarData>();
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        #endregion
+        #region Console Commands
 
         public void ResetAvatarAppearance(string[] cmd)
         {
@@ -193,5 +221,7 @@ namespace OpenSim.Services.AvatarService
             ResetAvatar(acc.PrincipalID);
             MainConsole.Instance.Output("Reset avatar's appearance successfully.");
         }
+
+        #endregion
     }
 }

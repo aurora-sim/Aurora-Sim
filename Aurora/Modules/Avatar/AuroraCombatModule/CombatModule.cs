@@ -235,6 +235,10 @@ namespace Aurora.Modules.Combat
 #endif
         }
 
+        public void AddDamageToPrim(ISceneEntity entity)
+        {
+        }
+
         private void AvatarEnteringParcel(IScenePresence avatar, ILandObject oldParcel)
         {
             ILandObject obj = null;
@@ -271,11 +275,11 @@ namespace Aurora.Modules.Combat
             private readonly float MaximumDamageToInflict;
             private readonly float MaximumHealth;
             private readonly AuroraCombatModule m_combatModule;
-            private readonly SceneObjectPart m_part;
+            private readonly ISceneEntity m_part;
             private string m_Team;
             private float m_health = 100f;
 
-            public CombatObject(AuroraCombatModule module, SceneObjectPart part, IConfig m_config)
+            public CombatObject(AuroraCombatModule module, ISceneEntity part, IConfig m_config)
             {
                 m_part = part;
                 m_combatModule = module;
@@ -286,8 +290,8 @@ namespace Aurora.Modules.Combat
 
                 m_Team = "No Team";
 
-                m_part.OnAddPhysics += AddPhysics;
-                m_part.OnRemovePhysics += RemovePhysics;
+                m_part.RootChild.OnAddPhysics += AddPhysics;
+                m_part.RootChild.OnRemovePhysics += RemovePhysics;
             }
 
             public string Team
@@ -315,31 +319,31 @@ namespace Aurora.Modules.Combat
 
             public void RemovePhysics()
             {
-                if (m_part.PhysActor != null)
-                    m_part.PhysActor.OnCollisionUpdate -= PhysicsActor_OnCollisionUpdate;
+                if (m_part.RootChild.PhysActor != null)
+                    m_part.RootChild.PhysActor.OnCollisionUpdate -= PhysicsActor_OnCollisionUpdate;
             }
 
             public void AddPhysics()
             {
-                if (m_part.PhysActor != null)
-                    m_part.PhysActor.OnCollisionUpdate += PhysicsActor_OnCollisionUpdate;
+                if (m_part.RootChild.PhysActor != null)
+                    m_part.RootChild.PhysActor.OnCollisionUpdate += PhysicsActor_OnCollisionUpdate;
             }
 
             public void PhysicsActor_OnCollisionUpdate(EventArgs e)
             {
-                if (HasLeftCombat)
+                /*if (HasLeftCombat)
                     return;
-
+                */
                 if (e == null)
                     return;
-
+                
                 CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
-                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+                /*Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 UUID killerObj = UUID.Zero;
                 foreach (uint localid in coldata.Keys)
                 {
-                    ISceneChildEntity part = m_part.ParentGroup.Scene.GetSceneObjectPart(localid);
+                    ISceneChildEntity part = m_part.Scene.GetSceneObjectPart(localid);
                     if (part != null && part.ParentEntity.Damage != -1.0f)
                     {
                         if (part.ParentEntity.Damage > MaximumDamageToInflict)
@@ -366,7 +370,7 @@ namespace Aurora.Modules.Combat
                 if (Health <= 0)
                 {
                     Die(killerObj);
-                }
+                }*/
             }
 
             public void LeaveCombat()
@@ -424,7 +428,7 @@ namespace Aurora.Modules.Combat
 
             private void Die(UUID OwnerID)
             {
-                foreach (IScriptModule m in m_part.ParentGroup.Scene.RequestModuleInterfaces<IScriptModule>())
+                foreach (IScriptModule m in m_part.Scene.RequestModuleInterfaces<IScriptModule>())
                 {
                     m.PostObjectEvent(m_part.UUID, "dead_object", new object[] {OwnerID});
                 }

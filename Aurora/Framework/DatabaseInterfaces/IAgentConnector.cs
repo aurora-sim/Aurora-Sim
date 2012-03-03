@@ -53,6 +53,12 @@ namespace Aurora.Framework
         void CreateNewAgent(UUID agentID);
 
         /// <summary>
+        /// Cache a given agent info
+        /// </summary>
+        /// <param name="agent"></param>
+        void CacheAgent(IAgentInfo agent);
+
+        /// <summary>
         ///   Checks whether the mac address and viewer are allowed to connect to this grid.
         ///   Note: we only allow for this on the grid side
         /// </summary>

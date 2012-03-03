@@ -309,7 +309,7 @@ namespace Aurora.Framework
         /// </summary>
         public uint Flags
         {
-            get { return _flags; }
+            get { return _flags | (uint) ParcelFlags.AllowVoiceChat; }//Force add allow voice chat
             set { _flags = value; }
         }
 
@@ -728,6 +728,8 @@ namespace Aurora.Framework
             Private = map["Private"].AsBoolean();
             GenericData = map.ContainsKey("GenericDataMap") && map["GenericDataMap"].Type == OSDType.Map ? 
                 (OSDMap)map["GenericDataMap"] : new OSDMap();
+				
+			if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)

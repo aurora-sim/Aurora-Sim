@@ -28,6 +28,8 @@ namespace Aurora.Addon.Hypergrid
             }
         }
 
+        public bool DoMultiplePorts { get { return false; } }
+
         public string GetUrlForRegisteringClient (string SessionID, uint port)
         {
             //We only return the gatekeeper URL so that regions know what it is

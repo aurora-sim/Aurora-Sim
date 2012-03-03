@@ -369,41 +369,48 @@ namespace Aurora.Modules.Ban
             if (!CheckThreatLevel(info, out message))
                 return false;
 
-            if (!CheckViewer(info))
-            {
-                message = "This viewer has been blocked from connecting, please connect with a different viewer.";
-                return false;
-            }
-
-            return true;
+            return CheckViewer(info, out message);
         }
 
-        private bool CheckViewer(PresenceInfo info)
+        private bool CheckViewer(PresenceInfo info, out string reason)
         {
             //Check for banned viewers
             if (IsViewerBanned(info.LastKnownViewer))
+            {
+                reason = "Viewer is banned";
                 return false;
-            foreach (string mac in info.KnownMacs)
+            }
+            //Overkill, and perm-bans people who only log in with a bad viewer once
+            //foreach (string mac in info.KnownMacs)
             {
-                if (mac.Contains("000"))
+                if (info.LastKnownMac.Contains("000"))
                 {
                     //Ban this asshole
+                    reason = "Viewer is blocked (MAC)";
                     return false;
                 }
-                //if (mac.Length != 32)
-                //    return false; //Valid length!
+                if (info.LastKnownMac.Length != 32)
+                {
+                    reason = "Viewer is blocked (MAC)";
+                    return false; //Not a valid length!
+                }
             }
-            foreach (string id0 in info.KnownID0s)
+            //foreach (string id0 in info.KnownID0s)
             {
-                if (id0.Contains("000"))
+                if (info.LastKnownID0.Contains("000"))
                 {
                     //Ban this asshole
+                    reason = "Viewer is blocked (IO)";
                     return false;
                 }
-                //if (id0.Length != 32)
-                //    return false; //Valid length!
+                if (info.LastKnownID0.Length != 32)
+                {
+                    reason = "Viewer is blocked (IO)";
+                    return false; //Valid length!
+                }
             }
-            
+
+            reason = "";
             return true;
         }
 

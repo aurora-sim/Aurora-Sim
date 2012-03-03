@@ -40,7 +40,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.RobustCompat
 {
-    public class RobustAssetServicesConnector : AssetServicesConnector
+    /*public class RobustAssetServicesConnector : AssetServicesConnector
     {
         public override string Name
         {
@@ -534,5 +534,5 @@ namespace OpenSim.Services.RobustCompat
         }
 
         #endregion
-    }
+    }*/
 }

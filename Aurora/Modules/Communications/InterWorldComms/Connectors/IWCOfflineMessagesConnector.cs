@@ -34,12 +34,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class IWCOfflineMessagesConnector : IOfflineMessagesConnector
+    public class IWCOfflineMessagesConnector : ConnectorBase, IOfflineMessagesConnector
     {
         protected LocalOfflineMessagesConnector m_localService;
-
-        private IRegistryCore m_registry;
-        protected RemoteOfflineMessagesConnector m_remoteService;
 
         #region IOfflineMessagesConnector Members
 
@@ -51,10 +48,9 @@ namespace Aurora.Modules
             {
                 m_localService = new LocalOfflineMessagesConnector();
                 m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
-                m_remoteService = new RemoteOfflineMessagesConnector();
-                m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(this);
+                Init(simBase, Name);
             }
         }
 
@@ -63,13 +59,13 @@ namespace Aurora.Modules
             get { return "IOfflineMessagesConnector"; }
         }
 
-        public GridInstantMessage[] GetOfflineMessages(UUID agentID)
+        public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(agentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.GetOfflineMessages(agentID);
+                return (List<GridInstantMessage>)DoRemote(agentID);
             return m_localService.GetOfflineMessages(agentID);
         }
 
@@ -79,7 +75,7 @@ namespace Aurora.Modules
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(message.toAgentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.AddOfflineMessage(message);
+                return (bool)DoRemote(message);
             return m_localService.AddOfflineMessage(message);
         }
 

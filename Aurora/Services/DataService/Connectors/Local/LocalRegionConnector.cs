@@ -32,7 +32,7 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalRegionConnector : IRegionConnector
+    public class LocalRegionConnector : ConnectorBase, IRegionConnector
     {
         private IGenericData GD;
 
@@ -55,6 +55,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -66,55 +67,50 @@ namespace Aurora.Services.DataService
         ///   Adds a new telehub in the region. Replaces an old one automatically.
         /// </summary>
         /// <param name = "telehub"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddTelehub(Telehub telehub, ulong regionhandle)
         {
+            object remoteValue = DoRemote(telehub, regionhandle);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             //Look for a telehub first.
             if (FindTelehub(new UUID(telehub.RegionID), 0) != null)
             {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["TelehubLocX"] = telehub.TelehubLocX;
+                values["TelehubLocY"] = telehub.TelehubLocY;
+                values["TelehubLocZ"] = telehub.TelehubLocZ;
+                values["TelehubRotX"] = telehub.TelehubRotX;
+                values["TelehubRotY"] = telehub.TelehubRotY;
+                values["TelehubRotZ"] = telehub.TelehubRotZ;
+                values["Spawns"] = telehub.BuildFromList(telehub.SpawnPos);
+                values["ObjectUUID"] = telehub.ObjectUUID;
+                values["Name"] = telehub.Name.MySqlEscape(50);
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["RegionID"] = telehub.RegionID;
+
                 //Found one, time to update it.
-                GD.Update("telehubs", new object[]
-                                          {
-                                              telehub.TelehubLocX,
-                                              telehub.TelehubLocY,
-                                              telehub.TelehubLocZ,
-                                              telehub.TelehubRotX,
-                                              telehub.TelehubRotY,
-                                              telehub.TelehubRotZ,
-                                              telehub.BuildFromList(telehub.SpawnPos),
-                                              telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape(50)
-                                          }, new[]
-                                                 {
-                                                     "TelehubLocX",
-                                                     "TelehubLocY",
-                                                     "TelehubLocZ",
-                                                     "TelehubRotX",
-                                                     "TelehubRotY",
-                                                     "TelehubRotZ",
-                                                     "Spawns",
-                                                     "ObjectUUID",
-                                                     "Name"
-                                                 }, new[] {"RegionID"}, new object[] {telehub.RegionID});
+                GD.Update("telehubs", values, null, filter, null, null);
             }
             else
             {
                 //Make a new one
-                List<object> values = new List<object>
-                                          {
-                                              telehub.RegionID,
-                                              telehub.RegionLocX,
-                                              telehub.RegionLocY,
-                                              telehub.TelehubLocX,
-                                              telehub.TelehubLocY,
-                                              telehub.TelehubLocZ,
-                                              telehub.TelehubRotX,
-                                              telehub.TelehubRotY,
-                                              telehub.TelehubRotZ,
-                                              telehub.BuildFromList(telehub.SpawnPos),
-                                              telehub.ObjectUUID,
-                                              telehub.Name.MySqlEscape(50)
-                                          };
-                GD.Insert("telehubs", values.ToArray());
+                GD.Insert("telehubs", new object[]{
+                    telehub.RegionID,
+                    telehub.RegionLocX,
+                    telehub.RegionLocY,
+                    telehub.TelehubLocX,
+                    telehub.TelehubLocY,
+                    telehub.TelehubLocZ,
+                    telehub.TelehubRotX,
+                    telehub.TelehubRotY,
+                    telehub.TelehubRotZ,
+                    telehub.BuildFromList(telehub.SpawnPos),
+                    telehub.ObjectUUID,
+                    telehub.Name.MySqlEscape(50)
+                });
             }
         }
 
@@ -122,12 +118,20 @@ namespace Aurora.Services.DataService
         ///   Removes the telehub if it exists.
         /// </summary>
         /// <param name = "regionID"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveTelehub(UUID regionID, ulong regionHandle)
         {
+            object remoteValue = DoRemote(regionID, regionHandle);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             //Look for a telehub first.
+            // Why? ~ SignpostMarv
             if (FindTelehub(regionID, 0) != null)
             {
-                GD.Delete("telehubs", new[] {"RegionID"}, new object[] {regionID});
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["RegionID"] = regionID;
+                GD.Delete("telehubs", filter);
             }
         }
 
@@ -137,8 +141,13 @@ namespace Aurora.Services.DataService
         /// <param name = "regionID">Region ID</param>
         /// <param name = "position">The position of the telehub</param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public Telehub FindTelehub(UUID regionID, ulong regionHandle)
         {
+            object remoteValue = DoRemote(regionID, regionHandle);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (Telehub)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
             List<string> telehubposition = GD.Query(new string[11]{

@@ -143,9 +143,9 @@ namespace Aurora.Modules.Gods
                 if (client.Scene.Permissions.IsGod(client.AgentId))
                 {
                     //Rebuild the map tile
-                    IWorldMapModule mapModule;
-                    mapModule = client.Scene.RequestModuleInterface<IWorldMapModule>();
-                    mapModule.CreateTerrainTexture();
+                    IMapImageGenerator mapModule = client.Scene.RequestModuleInterface<IMapImageGenerator>();
+                    if(mapModule != null)
+                        mapModule.CreateTerrainTexture();
                 }
             }
         }

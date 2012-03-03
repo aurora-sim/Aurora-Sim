@@ -500,41 +500,34 @@ namespace OpenSim.Services.CapsService
 
         public static OSD PlacesQuery(PlacesReplyPacket PlacesReply, string[] regionType)
         {
+            OpenMetaverse.Messages.Linden.PlacesReplyMessage message = new PlacesReplyMessage();
+            message.AgentID = PlacesReply.AgentData.AgentID;
+            message.QueryID = PlacesReply.AgentData.QueryID;
+            message.TransactionID = PlacesReply.TransactionData.TransactionID;
+            message.QueryDataBlocks = new PlacesReplyMessage.QueryData[PlacesReply.QueryData.Length];
             OSDMap placesReply = new OSDMap {{"message", OSD.FromString("PlacesReplyMessage")}};
-
-            OSDMap body = new OSDMap();
-            OSDArray agentData = new OSDArray();
-            OSDMap agentDataMap = new OSDMap
-                                      {
-                                          {"AgentID", OSD.FromUUID(PlacesReply.AgentData.AgentID)},
-                                          {"QueryID", OSD.FromUUID(PlacesReply.AgentData.QueryID)},
-                                          {"TransactionID", OSD.FromUUID(PlacesReply.TransactionData.TransactionID)}
-                                      };
-            agentData.Add(agentDataMap);
-            body.Add("AgentData", agentData);
 
             OSDArray QueryData = new OSDArray();
 #if(!ISWIN)
             int i = 0;
             foreach (PlacesReplyPacket.QueryDataBlock groupDataBlock in PlacesReply.QueryData)
             {
-                OSDMap QueryDataMap = new OSDMap();
-                QueryDataMap.Add("ActualArea", OSD.FromInteger(groupDataBlock.ActualArea));
-                QueryDataMap.Add("BillableArea", OSD.FromInteger(groupDataBlock.BillableArea));
-                QueryDataMap.Add("Description", OSD.FromBinary(groupDataBlock.Desc));
-                QueryDataMap.Add("Dwell", OSD.FromInteger((int)groupDataBlock.Dwell));
-                QueryDataMap.Add("Flags", OSD.FromString(Convert.ToString(groupDataBlock.Flags)));
-                QueryDataMap.Add("GlobalX", OSD.FromInteger((int)groupDataBlock.GlobalX));
-                QueryDataMap.Add("GlobalY", OSD.FromInteger((int)groupDataBlock.GlobalY));
-                QueryDataMap.Add("GlobalZ", OSD.FromInteger((int)groupDataBlock.GlobalZ));
-                QueryDataMap.Add("Name", OSD.FromBinary(groupDataBlock.Name));
-                QueryDataMap.Add("OwnerID", OSD.FromUUID(groupDataBlock.OwnerID));
-                QueryDataMap.Add("SimName", OSD.FromBinary(groupDataBlock.SimName));
-                QueryDataMap.Add("SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID));
-                QueryDataMap.Add("ProductSku", OSD.FromString(regionType[i]));
-                QueryDataMap.Add("Price", OSD.FromInteger(groupDataBlock.Price));
-                
-                QueryData.Add(QueryDataMap);
+                message.QueryDataBlocks[i] = new PlacesReplyMessage.QueryData();
+                message.QueryDataBlocks[i].ActualArea = groupDataBlock.ActualArea;
+                message.QueryDataBlocks[i].BillableArea = groupDataBlock.BillableArea;
+                message.QueryDataBlocks[i].Description = Utils.BytesToString(groupDataBlock.Desc);
+                message.QueryDataBlocks[i].Dwell = groupDataBlock.Dwell;
+                message.QueryDataBlocks[i].Flags = groupDataBlock.Flags;
+                message.QueryDataBlocks[i].GlobalX = groupDataBlock.GlobalX;
+                message.QueryDataBlocks[i].GlobalY = groupDataBlock.GlobalY;
+                message.QueryDataBlocks[i].GlobalZ = groupDataBlock.GlobalZ;
+                message.QueryDataBlocks[i].Name = Utils.BytesToString(groupDataBlock.Name);
+                message.QueryDataBlocks[i].OwnerID = groupDataBlock.OwnerID;
+                message.QueryDataBlocks[i].SimName = Utils.BytesToString(groupDataBlock.SimName);
+                message.QueryDataBlocks[i].SnapShotID = groupDataBlock.SnapshotID;
+                message.QueryDataBlocks[i].ProductSku = regionType[i];
+                message.QueryDataBlocks[i].Price = groupDataBlock.Price;
+
                 i++;
             }
 #else
@@ -561,11 +554,8 @@ namespace OpenSim.Services.CapsService
                 i[0]++;
             }
 #endif
-            body.Add("QueryData", QueryData);
-            placesReply.Add("QueryData[]", body);
-
-            placesReply.Add("body", body);
-
+            OSDMap map = message.Serialize();
+            placesReply["body"] = map;
             return placesReply;
         }
 

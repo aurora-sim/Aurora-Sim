@@ -54,6 +54,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         private int m_timesBeforeSlowFlyIsOff;
         protected bool m_useSplatAnimation = true;
 
+        public bool NeedsAnimationResent { get; set; }
+
         public Animator(IScenePresence sp)
         {
             m_scenePresence = sp;
@@ -502,8 +504,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             string oldanimation = m_movementAnimation;
             m_movementAnimation = GetMovementAnimation();
-            if (oldanimation != m_movementAnimation)
+            if (NeedsAnimationResent || oldanimation != m_movementAnimation)
+            {
+                NeedsAnimationResent = false;
                 TrySetMovementAnimation(m_movementAnimation);
+            }
             else if (sendTerseUpdate)
                 m_scenePresence.SendTerseUpdateToAllClients(); //Send the terse update alone then
         }

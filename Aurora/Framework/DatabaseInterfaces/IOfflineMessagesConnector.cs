@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
 
@@ -37,7 +38,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        GridInstantMessage[] GetOfflineMessages(UUID agentID);
+        List<GridInstantMessage> GetOfflineMessages(UUID agentID);
 
         /// <summary>
         ///   Adds a new offline message for the user.

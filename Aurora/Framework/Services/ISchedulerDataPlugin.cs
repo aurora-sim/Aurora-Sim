@@ -48,6 +48,8 @@ namespace OpenSim.Services.Interfaces
 
         void HistoryDeleteOld(SchedulerItem I);
 
+        SchedulerItem Get(string id);
+
     }
 
     public interface IScheduleService
@@ -59,5 +61,9 @@ namespace OpenSim.Services.Interfaces
         string Save(SchedulerItem I);
 
         void Remove(string scdID);
+
+        bool Exist(string scdID);
+
+        SchedulerItem Get(string ID);
     }
 }

@@ -313,30 +313,33 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.Info("[INVENTORY ARCHIVER]: PLEASE NOTE THAT THIS FACILITY IS EXPERIMENTAL.  BUG REPORTS WELCOME.");
 
                 Dictionary<string, object> options = new Dictionary<string, object>();
+                List<string> newParams = new List<string>(cmdparams);
                 foreach (string param in cmdparams)
                 {
                     if (param.StartsWith("--skip-assets", StringComparison.CurrentCultureIgnoreCase))
                     {
                         options["skip-assets"] = true;
+                        newParams.Remove(param);
                     }
                     if (param.StartsWith("--merge", StringComparison.CurrentCultureIgnoreCase))
                     {
                         options["merge"] = true;
+                        newParams.Remove(param);
                     }
                 }
 
-                if (cmdparams.Length < 6)
+                if (newParams.Count < 6)
                 {
                     MainConsole.Instance.Error(
                         "[INVENTORY ARCHIVER]: usage is load iar [--merge] <first name> <last name> <inventory path> <user password> [<load file path>]");
                     return;
                 }
 
-                string firstName = cmdparams[2];
-                string lastName = cmdparams[3];
-                string invPath = cmdparams[4];
-                string pass = cmdparams[5];
-                string loadPath = (cmdparams.Length > 6 ? cmdparams[6] : DEFAULT_INV_BACKUP_FILENAME);
+                string firstName = newParams[2];
+                string lastName = newParams[3];
+                string invPath = newParams[4];
+                string pass = newParams[5];
+                string loadPath = (newParams.Count > 6 ? newParams[6] : DEFAULT_INV_BACKUP_FILENAME);
 
                 MainConsole.Instance.InfoFormat(
                     "[INVENTORY ARCHIVER]: Loading archive {0} to inventory path {1} for {2} {3}",

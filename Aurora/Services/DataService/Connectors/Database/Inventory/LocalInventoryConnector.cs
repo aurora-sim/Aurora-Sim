@@ -43,6 +43,7 @@ namespace Aurora.Services.DataService
     public class LocalInventoryConnector : IInventoryData
     {
         protected IGenericData GD;
+        protected IRegistryCore m_registry;
         protected string m_foldersrealm = "inventoryfolders";
         protected string m_itemsrealm = "inventoryitems";
 
@@ -64,6 +65,7 @@ namespace Aurora.Services.DataService
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            m_registry = simBase;
         }
 
         public string Name
@@ -173,7 +175,7 @@ namespace Aurora.Services.DataService
             return (q != null && q.Count > 0) ? q[0] :  "";
         }
 
-        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
+        public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -203,8 +205,8 @@ namespace Aurora.Services.DataService
                 List<UUID> moreLinkedItems = new List<UUID>();
                 int count = 0;
                 bool addToCount = true;
-                string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
-                                             "avatarID", AgentID);
+                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
+                                             "avatarID", AgentID, "avatarID", libraryOwnerID);
                 redoQuery:
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))
                 {
@@ -401,63 +403,97 @@ namespace Aurora.Services.DataService
 
         public virtual bool StoreFolder(InventoryFolderBase folder)
         {
-            GD.Delete(m_foldersrealm, new string[1] {"folderID"}, new object[1] {folder.ID});
-            return GD.Insert(m_foldersrealm,
-                             new string[6] {"folderName", "type", "version", "folderID", "agentID", "parentFolderID"},
-                             new object[6]
-                                 {
-                                     folder.Name.MySqlEscape(64), folder.Type, folder.Version, folder.ID, folder.Owner,
-                                     folder.ParentID
-                                 });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["folderID"] = folder.ID;
+            GD.Delete(m_foldersrealm, filter);
+            Dictionary<string, object> row = new Dictionary<string, object>(6);
+            row["folderName"] = folder.Name.MySqlEscape(64);
+            row["type"] = folder.Type;
+            row["version"] = folder.Version;
+            row["folderID"] = folder.ID;
+            row["agentID"] = folder.Owner;
+            row["parentFolderID"] = folder.ParentID;
+            return GD.Insert(m_foldersrealm, row);
         }
 
         public virtual bool StoreItem(InventoryItemBase item)
         {
-            GD.Delete(m_itemsrealm, new string[1] {"inventoryID"}, new object[1] {item.ID});
-            return GD.Insert(m_itemsrealm, new string[20]
-                                               {
-                                                   "assetID", "assetType", "inventoryName", "inventoryDescription",
-                                                   "inventoryNextPermissions", "inventoryCurrentPermissions", "invType",
-                                                   "creatorID", "inventoryBasePermissions",
-                                                   "inventoryEveryOnePermissions", "salePrice", "saleType",
-                                                   "creationDate", "groupID", "groupOwned",
-                                                   "flags", "inventoryID", "avatarID", "parentFolderID",
-                                                   "inventoryGroupPermissions"
-                                               }, new object[20]
-                                                      {
-                                                          item.AssetID, item.AssetType, item.Name.MySqlEscape(64),
-                                                          item.Description.MySqlEscape(128), item.NextPermissions,
-                                                          item.CurrentPermissions,
-                                                          item.InvType, item.CreatorIdentification, item.BasePermissions
-                                                          , item.EveryOnePermissions, item.SalePrice, item.SaleType,
-                                                          item.CreationDate, item.GroupID, item.GroupOwned ? "1" : "0",
-                                                          item.Flags, item.ID, item.Owner,
-                                                          item.Folder, item.GroupPermissions
-                                                      });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = item.ID;
+            GD.Delete(m_itemsrealm, filter);
+            Dictionary<string, object> row = new Dictionary<string, object>(20);
+            row["assetID"] = item.AssetID;
+            row["assetType"] = item.AssetType;
+            row["inventoryName"] = item.Name.MySqlEscape(64);
+            row["inventoryDescription"] = item.Description.MySqlEscape(128);
+            row["inventoryNextPermissions"] = item.NextPermissions;
+            row["inventoryCurrentPermissions"] = item.CurrentPermissions;
+            row["invType"] = item.InvType;
+            row["creatorID"] = item.CreatorIdentification;
+            row["inventoryBasePermissions"] = item.BasePermissions;
+            row["inventoryEveryOnePermissions"] = item.EveryOnePermissions;
+            row["salePrice"] = item.SalePrice;
+            row["saleType"] = item.SaleType;
+            row["creationDate"] = item.CreationDate;
+            row["groupID"] = item.GroupID;
+            row["groupOwned"] = item.GroupOwned ? "1" : "0";
+            row["flags"] = item.Flags;
+            row["inventoryID"] = item.ID;
+            row["avatarID"] = item.Owner;
+            row["parentFolderID"] = item.Folder;
+            row["inventoryGroupPermissions"] = item.GroupPermissions;
+            return GD.Insert(m_itemsrealm, row);
+        }
+
+        public virtual bool UpdateAssetIDForItem(UUID itemID, UUID assetID)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["assetID"] = assetID;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = itemID;
+
+            return GD.Update(m_itemsrealm, values, null, filter, null, null);
         }
 
         public virtual bool DeleteFolders(string field, string val, bool safe)
         {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
             if (safe)
-                return GD.Delete(m_foldersrealm, new string[2] {field, "type"}, new object[2] {val, "-1"});
-            return GD.Delete(m_foldersrealm, new string[1] {field}, new object[1] {val});
+            {
+                filter.andFilters["type"] = "-1";
+            }
+            return GD.Delete(m_foldersrealm, filter);
         }
 
         public virtual bool DeleteItems(string field, string val)
         {
-            return GD.Delete(m_itemsrealm, new string[1] {field}, new object[1] {val});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[field] = val;
+            return GD.Delete(m_itemsrealm, filter);
         }
 
         public virtual bool MoveItem(string id, string newParent)
         {
-            return GD.Update(m_itemsrealm, new object[1] {newParent}, new string[1] {"parentFolderID"},
-                             new string[1] {"inventoryID"}, new object[1] {id});
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["parentFolderID"] = newParent;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["inventoryID"] = id;
+
+            return GD.Update(m_itemsrealm, values, null, filter, null, null);
         }
 
         public virtual void IncrementFolder(UUID folderID)
         {
-            GD.DirectUpdate(m_foldersrealm, new object[1] {"version + 1"}, new string[1] {"version"},
-                            new string[1] {"folderID"}, new object[1] {folderID.ToString()});
+            Dictionary<string, int> incrementValues = new Dictionary<string, int>(1);
+            incrementValues["version"] = 1;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["folderID"] = folderID.ToString();
+
+            GD.Update(m_foldersrealm, new Dictionary<string, object>(0), incrementValues, filter, null, null);
         }
 
         public virtual void IncrementFolderByItem(UUID itemID)

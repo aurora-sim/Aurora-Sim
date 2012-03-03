@@ -37,7 +37,7 @@ namespace Aurora.Framework
     /// <summary>
     ///   Contains the Avatar's Appearance and methods to manipulate the appearance.
     /// </summary>
-    public sealed class AvatarAppearance
+    public sealed class AvatarAppearance : IDataTransferable
     {
         public static readonly int VISUALPARAM_COUNT = 218;
 
@@ -58,7 +58,6 @@ namespace Aurora.Framework
 
         public AvatarAppearance(UUID owner)
         {
-            MainConsole.Instance.Info("[AvatarAppearence] Initilizing-" + owner);
             // MainConsole.Instance.WarnFormat("[AVATAR APPEARANCE]: create empty appearance for {0}",owner);
 
             m_serial = 1;
@@ -561,6 +560,11 @@ namespace Aurora.Framework
         }
 
         #region Packing Functions
+        
+        public override OSDMap ToOSD()
+        {
+            return Pack();
+        }
 
         /// <summary>
         ///   Create an OSDMap from the appearance data
@@ -599,6 +603,11 @@ namespace Aurora.Framework
             data["attachments"] = attachs;
 
             return data;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack(map);
         }
 
         /// <summary>

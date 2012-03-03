@@ -171,6 +171,7 @@ namespace Aurora.Framework
     public interface IAnimator
     {
         AnimationSet Animations { get; }
+        bool NeedsAnimationResent { get; set; }
         string CurrentMovementAnimation { get; }
         string GetMovementAnimation();
         void UpdateMovementAnimations(bool sendTerseUpdate);

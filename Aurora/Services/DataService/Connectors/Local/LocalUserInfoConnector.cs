@@ -93,48 +93,43 @@ namespace Aurora.Services.DataService
             values[10] = info.HomeRegionID.ToString();
             values[11] = info.HomePosition.ToString();
             values[12] = info.HomeLookAt.ToString();
-            GD.Delete(m_realm, new string[1] {"UserID"}, new object[1] {info.UserID});
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UserID"] = info.UserID;
+            GD.Delete(m_realm, filter);
             return GD.Insert(m_realm, values);
         }
 
-        public void Update(string userID, string[] keys, object[] values)
+        public void Update(string userID, Dictionary<string, object> values)
         {
-            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["UserID"] = userID;
+
+            GD.Update(m_realm, values, null, filter, null, null);
         }
 
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
-            string[] keys = new string[5];
-            keys[0] = "CurrentRegionID";
-            keys[1] = "CurrentPosition";
-            keys[2] = "CurrentLookat";
-            keys[3] = "LastSeen";
+            Dictionary<string, object> values = new Dictionary<string, object>(5);
+            values["CurrentRegionID"] = regionID;
+            values["CurrentPosition"] = lastPosition;
+            values["CurrentLookat"] = lastLookAt;
+            values["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
                 //Set the last seen and is online since if the user is moving, they are sending updates
-            keys[4] = "IsOnline";
-            object[] values = new object[5];
-            values[0] = regionID;
-            values[1] = lastPosition;
-            values[2] = lastLookAt;
-            values[3] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Convert to binary so that it can be converted easily
-            values[4] = 1;
-            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
+            values["IsOnline"] = 1;
+
+            Update(userID, values);
         }
 
         public void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt)
         {
-            string[] keys = new string[4];
-            keys[0] = "HomeRegionID";
-            keys[1] = "LastSeen";
-            keys[2] = "HomePosition";
-            keys[3] = "HomeLookat";
-            object[] values = new object[4];
-            values[0] = regionID;
-            values[1] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Convert to binary so that it can be converted easily
-            values[2] = Position;
-            values[3] = LookAt;
-            GD.Update(m_realm, values, keys, new string[1] {"UserID"}, new object[1] {userID});
+            Dictionary<string, object> values = new Dictionary<string, object>(4);
+            values["HomeRegionID"] = regionID;
+            values["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+            values["HomePosition"] = Position;
+            values["HomeLookat"] = LookAt;
+
+            Update(userID, values);
         }
 
         public UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged)

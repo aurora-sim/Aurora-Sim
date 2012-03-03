@@ -128,7 +128,7 @@ namespace OpenSim.Services.CapsService
                                                                             top*Constants.RegionSize);
                     foreach (GridRegion r in regions)
                     {
-                        m_mapLayer.Add(flags == 0 ? MapBlockFromGridRegion(r) : TerrainBlockFromGridRegion(r));
+                        m_mapLayer.Add(MapBlockFromGridRegion(r, flags));
                     }
                 }
             }
@@ -142,7 +142,7 @@ namespace OpenSim.Services.CapsService
             return resp;
         }
 
-        protected MapBlockData MapBlockFromGridRegion(GridRegion r)
+        protected MapBlockData MapBlockFromGridRegion(GridRegion r, int flag)
         {
             MapBlockData block = new MapBlockData();
             if (r == null)
@@ -152,29 +152,17 @@ namespace OpenSim.Services.CapsService
                 return block;
             }
             block.Access = r.Access;
-            block.MapImageID = r.TerrainImage;
+            if ((flag & 0xffff) == 0)
+                block.MapImageID = r.TerrainImage;
+            if ((flag & 0xffff) == 1)
+                block.MapImageID = r.TerrainMapImage;
+            if ((flag & 0xffff) == 2)
+                block.MapImageID = r.ParcelMapImage;
             block.Name = r.RegionName;
             block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
             block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
             block.SizeX = (ushort) (r.RegionSizeX);
             block.SizeY = (ushort) (r.RegionSizeY);
-            return block;
-        }
-
-        protected MapBlockData TerrainBlockFromGridRegion(GridRegion r)
-        {
-            MapBlockData block = new MapBlockData();
-            if (r == null)
-            {
-                block.Access = (byte) SimAccess.Down;
-                block.MapImageID = UUID.Zero;
-                return block;
-            }
-            block.Access = r.Access;
-            block.MapImageID = r.TerrainMapImage;
-            block.Name = r.RegionName;
-            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
-            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
             return block;
         }
 

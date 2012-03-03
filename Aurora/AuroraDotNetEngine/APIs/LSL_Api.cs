@@ -1603,7 +1603,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].TexMapType = textype;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1616,7 +1616,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     tex.DefaultTexture.TexMapType = textype;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1627,7 +1627,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].Glow = glow;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1640,7 +1640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     tex.DefaultTexture.Glow = glow;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1674,7 +1674,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 tex.CreateFace((uint) face);
                 tex.FaceTextures[face].Shiny = sval;
                 tex.FaceTextures[face].Bump = bump;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1689,7 +1689,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     tex.DefaultTexture.Shiny = sval;
                     tex.DefaultTexture.Bump = bump;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1700,7 +1700,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
              {
                  tex.CreateFace((uint) face);
                  tex.FaceTextures[face].Fullbright = bright;
-                 part.UpdateTexture(tex);
+                 part.UpdateTexture(tex, false);
                  return;
              }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -1713,7 +1713,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.Fullbright = bright;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -1775,7 +1775,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
                 if(changed)
-                    part.UpdateTexture(tex);
+                    part.UpdateTexture(tex, false);
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1796,7 +1796,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.DefaultTexture.RGBA = texcolor;
                 if(changed)
-                    part.UpdateTexture(tex);
+                    part.UpdateTexture(tex, false);
             }
             part.ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }
@@ -1950,7 +1950,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
 
-            SetTexture(m_host, texture, face);
+            bool found = SetTexture(m_host, texture, face);
+            if (!found)
+                ShoutError("Could not find texture '" + texture + "'");
             return PScriptSleep(200);
         }
 
@@ -1967,7 +1969,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return PScriptSleep(100);
         }
 
-        protected void SetTexture (ISceneChildEntity part, string texture, int face)
+        protected bool SetTexture (ISceneChildEntity part, string texture, int face)
         {
             UUID textureID=new UUID();
             int ns = GetNumberOfSides(part);
@@ -1976,7 +1978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
              if (textureID == UUID.Zero)
              {
                  if (!UUID.TryParse(texture, out textureID))
-                     return;
+                     return false;
              }
 
             Primitive.TextureEntry tex = part.Shape.Textures;
@@ -1986,8 +1988,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.TextureID = textureID;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
-                return;
+                part.UpdateTexture(tex, false);
             }
             if (face == ScriptBaseClass.ALL_SIDES)
             {
@@ -1999,8 +2000,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.TextureID = textureID;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
+            return true;
         }
 
         public DateTime llScaleTexture(double u, double v, int face)
@@ -2022,7 +2024,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texface.RepeatU = (float)u;
                 texface.RepeatV = (float)v;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2037,7 +2039,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.RepeatU = (float)u;
                 tex.DefaultTexture.RepeatV = (float)v;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -2059,7 +2061,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 texface.OffsetU = (float)u;
                 texface.OffsetV = (float)v;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2074,7 +2076,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
                 tex.DefaultTexture.OffsetU = (float)u;
                 tex.DefaultTexture.OffsetV = (float)v;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
             }
         }
 
@@ -2095,7 +2097,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Primitive.TextureEntryFace texface = tex.CreateFace((uint)face);
                 texface.Rotation = (float)rotation;
                 tex.FaceTextures[face] = texface;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
             if (face == ScriptBaseClass.ALL_SIDES)
@@ -2108,7 +2110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
                 tex.DefaultTexture.Rotation = (float)rotation;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, false);
                 return;
             }
         }
@@ -3362,7 +3364,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         float velmag = (float)Util.GetMagnitude(llvel);
 
                         ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
+                        new_group.OnFinishedPhysicalRepresentationBuilding += delegate()
+                        {
+                            //Do this after the physics engine has built the prim
+                            float groupmass = new_group.GetMass();
 
+                            //Recoil to the av
+                            if (m_host.IsAttachment && doRecoil && (new_group.RootChild.Flags & PrimFlags.Physics) == PrimFlags.Physics)
+                            {
+                                IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
+                                if (SP != null)
+                                {
+                                    //Push the av backwards (For every action, there is an equal, but opposite reaction)
+                                    Vector3 impulse = llvel * groupmass;
+                                    impulse.X = impulse.X < 1 ? impulse.X : impulse.X > -1 ? impulse.X : -1;
+                                    impulse.Y = impulse.Y < 1 ? impulse.Y : impulse.Y > -1 ? impulse.Y : -1;
+                                    impulse.Z = impulse.Z < 1 ? impulse.Z : impulse.Z > -1 ? impulse.Z : -1;
+                                    SP.PushForce(impulse);
+                                }
+                            }
+                        };
                         // If either of these are null, then there was an unknown error.
                         if(new_group == null || new_group.RootChild == null)
                             continue;
@@ -3370,21 +3391,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         // objects rezzed with this method are die_at_edge by default.
                         if(SetDieAtEdge)
                             new_group.RootChild.SetDieAtEdge(true);
-
-                        //Object_rez should be dealt with by the script engine, especially in an async script engine...
-
-                        float groupmass = new_group.GetMass();
-
-                        //Recoil to the av
-                        if (m_host.IsAttachment && doRecoil)
-                        {
-                            IScenePresence SP = m_host.ParentEntity.Scene.GetScenePresence(m_host.OwnerID);
-                            if (SP != null)
-                            {
-                                //Push the av backwards (For every action, there is an equal, but opposite reaction)
-                                SP.PushForce(llvel * groupmass);
-                            }
-                        }
 
                         // Variable script delay? (see (http://wiki.secondlife.com/wiki/LSL_Delay)
                         return PScriptSleep(100);
@@ -3468,7 +3474,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     rootPart.Name = item.Name;
                     rootPart.Description = item.Description;
 
-                    group.SetGroup(sourcePart.GroupID, group.OwnerID);
+                    group.SetGroup(sourcePart.GroupID, group.OwnerID, false);
 
                     if (rootPart.OwnerID != item.OwnerID)
                     {
@@ -3885,7 +3891,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public DateTime llEmail(string address, string subject, string message)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "llEmail", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
             IEmailModule emailModule = World.RequestModuleInterface<IEmailModule>();
             if (emailModule == null)
             {
@@ -3893,7 +3898,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return DateTime.Now;
             }
 
-            emailModule.SendEmail(m_host.UUID, address, subject, message);
+            emailModule.SendEmail(m_host.UUID, address, subject, message, World);
             return PScriptSleep(20000);
         }
 
@@ -3921,7 +3926,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         new LSL_String(email.message),
                         new LSL_Integer(email.numLeft)}
                         );
-            });
+            }, World);
         }
 
         public LSL_String llGetKey()
@@ -4182,7 +4187,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     IScenePresence SP = World.GetScenePresence (m_host.OwnerID);
                     if (SP != null)
-                        group.SetGroup(m_host.GroupID, SP.UUID);
+                        group.SetGroup(m_host.GroupID, SP.UUID, false);
 
                     if (group.RootPart.Shape.PCode == (byte)PCode.Prim)
                         group.ClearPartAttachmentData();
@@ -4958,6 +4963,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             m_host.ParentEntity.Damage = (float)damage;
+
+            ICombatModule combatModule = World.RequestModuleInterface<ICombatModule>();
+            if (combatModule != null)
+                combatModule.AddDamageToPrim(m_host.ParentEntity);
         }
 
         public DateTime llTeleportAgentHome(LSL_Key _agent)
@@ -5430,16 +5439,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return Math.Asin(val);
         }
 
-        // Xantor 30/apr/2008
         public LSL_Float llAngleBetween(LSL_Rotation a, LSL_Rotation b)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Float();
             
 
-            double angle = Math.Acos(a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s) * 2;
-            if (angle < 0) angle = -angle;
-            if (angle > Math.PI) return (Math.PI * 2 - angle);
-            return angle;
+            double aa = (a.x * a.x + a.y * a.y + a.z * a.z + a.s * a.s);
+            double bb = (b.x * b.x + b.y * b.y + b.z * b.z + b.s * b.s);
+            double aa_bb = aa * bb;
+            if (aa_bb == 0) return 0.0;
+            double ab = (a.x * b.x + a.y * b.y + a.z * b.z + a.s * b.s);
+            double quotient = (ab * ab) / aa_bb;
+            if (quotient >= 1.0) return 0.0;
+            return Math.Acos(2 * quotient - 1);
         }
 
         public LSL_String llGetInventoryKey(string name)
@@ -7979,9 +7991,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             // retain pathcurve
             shapeBlock.PathCurve = part.Shape.PathCurve;
+            bool changedTextureID = part.Shape.SculptTexture != sculptId;
             part.Shape.SetSculptProperties((byte)type, sculptId);
             part.Shape.SculptEntry = true;
-            part.UpdateShape(shapeBlock);
+            part.UpdateShape(shapeBlock, changedTextureID);
         }
 
         public void llSetPrimitiveParams(LSL_List rules)

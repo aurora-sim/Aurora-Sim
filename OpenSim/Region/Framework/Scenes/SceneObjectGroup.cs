@@ -1460,7 +1460,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name = "GroupID2"></param>
         /// <param name = "client"></param>
-        public void SetGroup(UUID GroupID2, UUID attemptingUserID)
+        public void SetGroup(UUID GroupID2, UUID attemptingUserID, bool needsUpdate)
         {
             IGroupsModule module = Scene.RequestModuleInterface<IGroupsModule>();
             if (module != null)
@@ -1474,7 +1474,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             HasGroupChanged = true;
             IScenePresence sp = Scene.GetScenePresence(attemptingUserID);
-            if (sp != null)
+            if (sp != null && needsUpdate)
                 GetProperties(sp.ControllingClient);
         }
 
@@ -3774,12 +3774,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name = "localID"></param>
         /// <param name = "textureEntry"></param>
-        public void UpdateTextureEntry(uint localID, byte[] textureEntry)
+        public void UpdateTextureEntry(uint localID, byte[] textureEntry, bool sendChangedEvent)
         {
             SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);
             if (part != null)
             {
-                part.UpdateTextureEntry(textureEntry);
+                part.UpdateTextureEntry(textureEntry, sendChangedEvent);
             }
         }
 
@@ -4074,10 +4074,11 @@ namespace OpenSim.Region.Framework.Scenes
                             m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -256)
                         {
                             m_lastSigInfiniteRegionPos = AbsolutePosition;
-                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero, (int) (TargetX - 256),
-                                                                                       (int) (TargetX + 256),
-                                                                                       (int) (TargetY - 256),
-                                                                                       (int) (TargetY + 256));
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero,
+                                (int)(TargetX - Scene.GridService.GetMaxRegionSize()),
+                                (int)(TargetX + 256),
+                                (int)(TargetY - Scene.GridService.GetMaxRegionSize()),
+                                (int)(TargetY + 256));
                         }
 #if (!ISWIN)
                         GridRegion neighborRegion = null;

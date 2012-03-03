@@ -47,6 +47,8 @@ namespace OpenSim.Services.MessagingService
             get { return GetType().Name; }
         }
 
+        public bool DoMultiplePorts { get { return false; } }
+
         #region IAsyncMessageRecievedService Members
 
         public event MessageReceived OnMessageReceived;

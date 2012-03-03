@@ -35,12 +35,14 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalGroupsServiceConnector : IGroupsServiceConnector
+    public class LocalGroupsServiceConnector : ConnectorBase, IGroupsServiceConnector
     {
+        #region Declares
+
         private IGenericData data;
         List<UUID> agentsCanBypassGroupNoticePermsCheck = new List<UUID>();
 
-        #region IGroupsServiceConnector Members
+        #endregion
 
         #region IAuroraDataPlugin members
 
@@ -55,7 +57,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["Groups"] != null)
             {
                 agentsCanBypassGroupNoticePermsCheck = Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", "")).ConvertAll(x => new UUID(x));
-            }   
+            }
 
             data.ConnectToDatabase(defaultConnectionString, "Groups",
                                    source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
@@ -66,6 +68,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -75,148 +78,135 @@ namespace Aurora.Services.DataService
 
         #endregion
 
+        #region IGroupsServiceConnector Members
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
         {
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "Name",
-                                        "Charter",
-                                        "InsigniaID",
-                                        "FounderID",
-                                        "MembershipFee",
-                                        "OpenEnrollment",
-                                        "ShowInList",
-                                        "AllowPublish",
-                                        "MaturePublish",
-                                        "OwnerRoleID"
-                                    };
-            List<Object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          name.MySqlEscape(50),
-                                          charter.MySqlEscape(50),
-                                          insigniaID,
-                                          founderID,
-                                          membershipFee,
-                                          openEnrollment ? 1 : 0,
-                                          showInList ? 1 : 0,
-                                          allowPublish ? 1 : 0,
-                                          maturePublish ? 1 : 0,
-                                          OwnerRoleID
-                                      };
-            data.Insert("osgroup", Keys.ToArray(), Values.ToArray());
+            object remoteValue = DoRemote(groupID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, EveryonePowers, OwnerRoleID, OwnerPowers);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            row["GroupID"] = groupID;
+            row["Name"] = name.MySqlEscape(50);
+            row["Charter"] = charter.MySqlEscape(50);
+            row["InsigniaID"] = insigniaID;
+            row["FounderID"] = founderID;
+            row["MembershipFee"] = membershipFee;
+            row["OpenEnrollment"] = openEnrollment ? 1 : 0;
+            row["ShowInList"] = showInList ? 1 : 0;
+            row["AllowPublish"] = allowPublish ? 1 : 0;
+            row["MaturePublish"] = maturePublish ? 1 : 0;
+            row["OwnerRoleID"] = OwnerRoleID;
+
+            data.Insert("osgroup", row);
 
             //Add everyone role to group
-            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.",
-                           "Member of " + name, EveryonePowers);
+            AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
 
             ulong groupPowers = 296868139497678;
 
             UUID officersRole = UUID.Random();
             //Add officers role to group
-            AddRoleToGroup(founderID, groupID, officersRole, "Officers",
-                           "The officers of the group, with more powers than regular members.", "Officer of " + name,
-                           groupPowers);
+            AddRoleToGroup(founderID, groupID, officersRole, "Officers", "The officers of the group, with more powers than regular members.", "Officer of " + name, groupPowers);
 
             //Add owner role to group
-            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name,
-                           OwnerPowers);
+            AddRoleToGroup(founderID, groupID, OwnerRoleID, "Owners", "Owners of " + name, "Owner of " + name, OwnerPowers);
 
             //Add owner to the group as owner
             AddAgentToGroup(founderID, founderID, groupID, OwnerRoleID);
+            AddAgentToRole(founderID, founderID, groupID, officersRole);
 
             SetAgentGroupSelectedRole(founderID, groupID, OwnerRoleID);
 
             SetAgentActiveGroup(founderID, groupID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
         {
-            if (
-                !CheckGroupPermissions(requestingAgentID, groupID,
-                                       (ulong) (GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
+            object remoteValue = DoRemote(requestingAgentID, groupID, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            data.Update("osgroup", new object[]
-                                       {
-                                           charter.MySqlEscape(50),
-                                           insigniaID,
-                                           membershipFee,
-                                           openEnrollment,
-                                           showInList,
-                                           allowPublish,
-                                           maturePublish
-                                       }, new[]
-                                              {
-                                                  "Charter",
-                                                  "InsigniaID",
-                                                  "MembershipFee",
-                                                  "OpenEnrollment",
-                                                  "ShowInList",
-                                                  "AllowPublish",
-                                                  "MaturePublish"
-                                              }, new[] {"GroupID"}, new object[] {groupID});
+
+            if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)(GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(6);
+                values["Charter"] = charter.MySqlEscape(50);
+                values["InsigniaID"] = insigniaID;
+                values["MembershipFee"] = membershipFee;
+                values["OpenEnrollment"] = openEnrollment;
+                values["ShowInList"] = showInList;
+                values["AllowPublish"] = allowPublish;
+                values["MaturePublish"] = maturePublish;
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["GroupID"] = groupID;
+
+                data.Update("osgroup", values, null, filter, null, null);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName)
         {
-            if (!CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, fromName, subject, message, ItemID, AssetType, ItemName);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            List<string> Keys = new List<string>
-                                    {
-                                        "GroupID",
-                                        "NoticeID",
-                                        "Timestamp",
-                                        "FromName",
-                                        "Subject",
-                                        "Message",
-                                        "HasAttachment",
-                                        "ItemID",
-                                        "AssetType",
-                                        "ItemName"
-                                    };
 
-            List<object> Values = new List<object>
-                                      {
-                                          groupID,
-                                          noticeID,
-                                          ((uint) Util.UnixTimeSinceEpoch()),
-                                          fromName.MySqlEscape(50),
-                                          subject.MySqlEscape(50),
-                                          message.MySqlEscape(1024),
-                                          (ItemID != UUID.Zero) ? 1 : 0,
-                                          ItemID,
-                                          AssetType,
-                                          ItemName.MySqlEscape(50)
-                                      };
+            if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(10);
+                row["GroupID"] = groupID;
+                row["NoticeID"] = noticeID;
+                row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
+                row["FromName"] = fromName.MySqlEscape(50);
+                row["Subject"] = subject.MySqlEscape(50);
+                row["Message"] = message.MySqlEscape(1024);
+                row["HasAttachment"] = (ItemID != UUID.Zero) ? 1 : 0;
+                row["ItemID"] = ItemID;
+                row["AssetType"] = AssetType;
+                row["ItemName"] = ItemName.MySqlEscape(50);
 
-            data.Insert("osgroupnotice", Keys.ToArray(), Values.ToArray());
+                data.Insert("osgroupnotice", row);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
+            object remoteValue = DoRemote(AgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
             if (data.Query(new string[1] { "*" }, "osagent", filter, null, null, null).Count != 0)
             {
-                data.Update("osagent", new object[] { GroupID }, new[] { "ActiveGroupID" }, new[] { "AgentID" }, new object[] { AgentID });
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["ActiveGroupID"] = GroupID;
+
+                data.Update("osagent", values, null, filter, null, null);
             }
             else
             {
-                data.Insert("osagent", new[]{
-                    "AgentID",
-                    "ActiveGroupID"
-                }, new object[]{
-                    AgentID,
-                    GroupID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(2);
+                row["AgentID"] = AgentID;
+                row["ActiveGroupID"] = GroupID;
+                data.Insert("osagent", row);
             }
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID)
         {
+            object remoteValue = DoRemote(RequestingAgentID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (UUID)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
             List<string> groups = data.Query(new string[1] { "ActiveGroupID" }, "osagent", filter, null, null, null);
@@ -224,23 +214,33 @@ namespace Aurora.Services.DataService
             return (groups.Count != 0) ? UUID.Parse(groups[0]) : UUID.Zero;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public string SetAgentGroupSelectedRole(UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            data.Update("osgroupmembership", new object[] {RoleID}, new[] {"SelectedRoleID"}, new[]
-                                                                                                  {
-                                                                                                      "AgentID",
-                                                                                                      "GroupID"
-                                                                                                  }, new object[]
-                                                                                                         {
-                                                                                                             AgentID,
-                                                                                                             GroupID
-                                                                                                         });
+            object remoteValue = DoRemote(AgentID, GroupID, RoleID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
+
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["SelectedRoleID"] = RoleID;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = AgentID;
+            filter.andFilters["GroupID"] = GroupID;
+
+            data.Update("osgroupmembership", values, null, filter, null, null);
+
             GroupMembersData gdata = GetAgentGroupMemberData(AgentID, GroupID, AgentID);
             return gdata == null ? "" : gdata.Title;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddAgentToGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             Dictionary<string, object> where = new Dictionary<string, object>(2);
             where["AgentID"] = AgentID;
             where["GroupID"] = GroupID;
@@ -255,16 +255,14 @@ namespace Aurora.Services.DataService
             }
             else
             {
-                List<string> Keys = new List<string>{
-                    "GroupID",
-                    "AgentID",
-                    "SelectedRoleID",
-                    "Contribution",
-                    "ListInProfile",
-                    "AcceptNotices"
-                };
-                List<Object> Values = new List<object> {GroupID, AgentID, RoleID, 0, 1, 1};
-                data.Insert("osgroupmembership", Keys.ToArray(), Values.ToArray());
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["AgentID"] = AgentID;
+                row["SelectedRoleID"] = RoleID;
+                row["Contribution"] = 0;
+                row["ListInProfile"] = 1;
+                row["AcceptNotices"] = 1;
+                data.Insert("osgroupmembership", row);
             }
 
             // Make sure they're in the Everyone role
@@ -277,126 +275,126 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(AgentID, GroupID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool RemoveAgentFromGroup(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
-            if ((!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RemoveMember)) &&
-                (requestingAgentID != AgentID)) //Allow kicking yourself
-                return false;
-            // 1. If group is agent's active group, change active group to uuidZero
-            // 2. Remove Agent from group (osgroupmembership)
-            // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
-            data.Update("osagent", new object[] {UUID.Zero}, new[] {"ActiveGroupID"}, new[]
-                                                                                          {
-                                                                                              "AgentID",
-                                                                                              "ActiveGroupID"
-                                                                                          }, new object[]
-                                                                                                 {
-                                                                                                     AgentID,
-                                                                                                     GroupID
-                                                                                                 });
+            //Allow kicking yourself
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
 
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID
-                                                            });
-            data.Delete("osgroupmembership", new[]
-                                                 {
-                                                     "AgentID",
-                                                     "GroupID"
-                                                 }, new object[]
-                                                        {
-                                                            AgentID,
-                                                            GroupID
-                                                        });
+            if ((CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RemoveMember)) && (requestingAgentID != AgentID))
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["ActiveGroupID"] = GroupID;
 
-            return true;
+                Dictionary<string, object> values = new Dictionary<string,object>(1);
+                values["ActiveGroupID"] = UUID.Zero;
+
+                // 1. If group is agent's active group, change active group to uuidZero
+                data.Update("osagent", values, null, filter, null, null);
+
+                filter.andFilters.Remove("ActiveGroupID");
+                filter.andFilters["GroupID"] = GroupID;
+
+                // 2. Remove Agent from group (osgroupmembership)
+                data.Delete("osgrouprolemembership", filter);
+
+                // 3. Remove Agent from all of the groups roles (osgrouprolemembership)
+                data.Delete("osgroupmembership", filter);
+
+                return true;
+            }
+            return false;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.CreateRole))
+            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Description, Title, Powers);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            List<string> Keys = new List<string> {"GroupID", "RoleID", "Name", "Description", "Title", "Powers"};
-            List<Object> Values = new List<object>
-                                      {GroupID, RoleID, Name.MySqlEscape(50), Description.MySqlEscape(50), Title, Powers};
-            data.Insert("osrole", Keys.ToArray(), Values.ToArray());
+
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.CreateRole))
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["Name"] = Name.MySqlEscape(50);
+                row["Description"] = Description.MySqlEscape(50);
+                row["Title"] = Title;
+                row["Powers"] = Powers;
+                data.Insert("osrole", row);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.RoleProperties))
+            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Desc, Title, Powers);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            List<string> Keys = new List<string> {"RoleID"};
-            if (Name != null)
-                Keys.Add("Name");
-            if (Desc != null)
-                Keys.Add("Description");
-            if (Title != null)
-                Keys.Add("Title");
 
-            Keys.Add("Powers");
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RoleProperties))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>();
+                values["RoleID"] = RoleID;
+                if (Name != null)
+                {
+                    values["Name"] = Name.MySqlEscape(512);
+                }
+                if (Desc != null)
+                {
+                    values["Description"] = Desc.MySqlEscape(512);
+                }
+                if (Title != null)
+                {
+                    values["Title"] = Title.MySqlEscape(512);
+                }
+                values["Powers"] = Powers;
 
-            List<object> Values = new List<object> {RoleID};
-            if (Name != null)
-                Values.Add(Name.MySqlEscape(512));
-            if (Desc != null)
-                Values.Add(Desc.MySqlEscape(512));
-            if (Title != null)
-                Values.Add(Title.MySqlEscape(512));
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["GroupID"] = GroupID;
+                filter.andFilters["RoleID"] = RoleID;
 
-            Values.Add(Powers);
-
-            data.Update("osrole", Values.ToArray(), Keys.ToArray(), new[]
-                                                                        {
-                                                                            "GroupID",
-                                                                            "RoleID"
-                                                                        }, new object[]
-                                                                               {
-                                                                                   GroupID,
-                                                                                   RoleID
-                                                                               });
+                data.Update("osrole", values, null, filter, null, null);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveRoleFromGroup(UUID requestingAgentID, UUID RoleID, UUID GroupID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.DeleteRole))
+            object remoteValue = DoRemote(requestingAgentID, RoleID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "GroupID",
-                                                         "RoleID"
-                                                     }, new object[]
-                                                            {
-                                                                GroupID,
-                                                                RoleID
-                                                            });
-            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
-                                                                                                     {
-                                                                                                         "GroupID",
-                                                                                                         "SelectedRoleID"
-                                                                                                     }, new object[]
-                                                                                                            {
-                                                                                                                GroupID,
-                                                                                                                RoleID
-                                                                                                            });
-            data.Delete("osrole", new[]
-                                      {
-                                          "GroupID",
-                                          "RoleID"
-                                      }, new object[]
-                                             {
-                                                 GroupID,
-                                                 RoleID
-                                             });
+
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.DeleteRole))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["SelectedRoleID"] = UUID.Zero;
+
+                QueryFilter ufilter = new QueryFilter();
+                ufilter.andFilters["GroupID"] = GroupID;
+                ufilter.andFilters["SelectedRoleID"] = RoleID;
+
+                QueryFilter dfilter = new QueryFilter();
+                dfilter.andFilters["GroupID"] = GroupID;
+                dfilter.andFilters["RoleID"] = RoleID;
+
+                data.Delete("osgrouprolemembership", dfilter);
+                data.Update("osgroupmembership", values, null, ufilter, null, null);
+                data.Delete("osrole", dfilter);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddAgentToRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
             {
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
@@ -415,123 +413,215 @@ namespace Aurora.Services.DataService
             //Make sure they arn't already in this role
             if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
             {
-                data.Insert("osgrouprolemembership", new[]{
-                    "GroupID",
-                    "RoleID",
-                    "AgentID"
-                }, new object[]{
-                    GroupID,
-                    RoleID,
-                    AgentID
-                });
+                Dictionary<string, object> row = new Dictionary<string, object>(3);
+                row["GroupID"] = GroupID;
+                row["RoleID"] = RoleID;
+                row["AgentID"] = AgentID;
+                data.Insert("osgrouprolemembership", row);
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveAgentFromRole(UUID requestingAgentID, UUID AgentID, UUID GroupID, UUID RoleID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, RoleID);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            data.Update("osgroupmembership", new object[] {UUID.Zero}, new[] {"SelectedRoleID"}, new[]
-                                                                                                     {
-                                                                                                         "AgentID",
-                                                                                                         "GroupID",
-                                                                                                         "SelectedRoleID"
-                                                                                                     }, new object[]
-                                                                                                            {
-                                                                                                                AgentID,
-                                                                                                                GroupID,
-                                                                                                                RoleID
-                                                                                                            });
-            data.Delete("osgrouprolemembership", new[]
-                                                     {
-                                                         "AgentID",
-                                                         "GroupID",
-                                                         "RoleID"
-                                                     }, new object[]
-                                                            {
-                                                                AgentID,
-                                                                GroupID,
-                                                                RoleID
-                                                            });
+
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMember))
+            {
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
+                values["SelectedRoleID"] = UUID.Zero;
+
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["GroupID"] = GroupID;
+                filter.andFilters["SelectedRoleID"] = RoleID;
+
+                data.Update("osgroupmembership", values, null, filter, null, null);
+
+                filter.andFilters.Remove("SelectedRoleID");
+                filter.andFilters["RoleID"] = RoleID;
+                data.Delete("osgrouprolemembership", filter);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void SetAgentGroupInfo(UUID requestingAgentID, UUID AgentID, UUID GroupID, int AcceptNotices, int ListInProfile)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ChangeIdentity))
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID, AcceptNotices, ListInProfile);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            data.Update("osgroupmembership", new object[]
-                                                 {
-                                                     AgentID,
-                                                     AcceptNotices,
-                                                     ListInProfile
-                                                 }, new[]
-                                                        {
-                                                            "AgentID",
-                                                            "AcceptNotices",
-                                                            "ListInProfile"
-                                                        }, new[]
-                                                               {
-                                                                   "GroupID",
-                                                                   "AgentID"
-                                                               }, new object[]
-                                                                      {
-                                                                          AgentID,
-                                                                          GroupID
-                                                                      });
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ChangeIdentity))
+            {
+                return;
+            }
+
+            Dictionary<string, object> values = new Dictionary<string, object>(3);
+            values["AgentID"] = AgentID;
+            values["AcceptNotices"] = AcceptNotices;
+            values["ListInProfile"] = ListInProfile;
+
+            QueryFilter filter = new QueryFilter();
+            // these look the wrong way around ~ SignpostMarv
+            filter.andFilters["GroupID"] = AgentID;
+            filter.andFilters["AgentID"] = GroupID;
+
+            data.Update("osgroupmembership", values, null, filter, null, null);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddAgentGroupInvite(UUID requestingAgentID, UUID inviteID, UUID GroupID, UUID roleID, UUID AgentID, string FromAgentName)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.Invite))
+            object remoteValue = DoRemote(requestingAgentID, inviteID, GroupID, roleID, AgentID, FromAgentName);
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
-            data.Delete("osgroupinvite", new[]
-                                             {
-                                                 "AgentID",
-                                                 "GroupID"
-                                             }, new object[]
-                                                    {
-                                                        AgentID,
-                                                        GroupID
-                                                    });
-            data.Insert("osgroupinvite", new[]
-                                             {
-                                                 "InviteID",
-                                                 "GroupID",
-                                                 "RoleID",
-                                                 "AgentID",
-                                                 "TMStamp",
-                                                 "FromAgentName"
-                                             }, new object[]
-                                                    {
-                                                        inviteID,
-                                                        GroupID,
-                                                        roleID,
-                                                        AgentID,
-                                                        Util.UnixTimeSinceEpoch(),
-                                                        FromAgentName.MySqlEscape(50)
-                                                    });
+
+            if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.Invite))
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["AgentID"] = AgentID;
+                filter.andFilters["GroupID"] = GroupID;
+                data.Delete("osgroupinvite", filter);
+
+                Dictionary<string, object> row = new Dictionary<string, object>(6);
+                row["InviteID"] = inviteID;
+                row["GroupID"] = GroupID;
+                row["RoleID"] = roleID;
+                row["AgentID"] = AgentID;
+                row["TMStamp"] = Util.UnixTimeSinceEpoch();
+                row["FromAgentName"] = FromAgentName.MySqlEscape(50);
+                data.Insert("osgroupinvite", row);
+            }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveAgentInvite(UUID requestingAgentID, UUID inviteID)
         {
-            data.Delete("osgroupinvite", new[] {"InviteID"}, new object[] {inviteID});
+            object remoteValue = DoRemote(requestingAgentID, inviteID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["InviteID"] = inviteID;
+            data.Delete("osgroupinvite", filter);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddGroupProposal(UUID agentID, GroupProposalInfo info)
         {
-            GenericUtils.AddGeneric(agentID, "Proposal", info.GroupID.ToString(), info.ToOSD(), data);
+            object remoteValue = DoRemote(agentID, info);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            if (CheckGroupPermissions(agentID, info.GroupID, (ulong)GroupPowers.StartProposal))
+                GenericUtils.AddGeneric(info.GroupID, "Proposal", info.VoteID.ToString(), info.ToOSD(), data);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GroupProposalInfo> GetActiveProposals(UUID agentID, UUID groupID)
+        {
+            object remoteValue = DoRemote(agentID, groupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupProposalInfo>)remoteValue;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return new List<GroupProposalInfo>();
+
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            proposals = (from p in proposals where p.Ending > DateTime.Now select p).ToList();
+            foreach (GroupProposalInfo p in proposals)
+                p.VoteCast = GetHasVoted(agentID, p);
+
+            return proposals;//Return only ones that are still running
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GroupProposalInfo> GetInactiveProposals(UUID agentID, UUID groupID)
+        {
+            object remoteValue = DoRemote(agentID, groupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupProposalInfo>)remoteValue;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return new List<GroupProposalInfo>();
+
+            List<GroupProposalInfo> proposals = GenericUtils.GetGenerics<GroupProposalInfo>(groupID, "Proposal", data);
+            proposals = (from p in proposals where p.Ending < DateTime.Now select p).ToList();
+            List<GroupProposalInfo> proposalsNeedingResults = (from p in proposals where !p.HasCalculatedResult select p).ToList();
+            foreach (GroupProposalInfo p in proposalsNeedingResults)
+            {
+                List<OpenMetaverse.StructuredData.OSDMap> maps = GenericUtils.GetGenerics(p.GroupID, p.VoteID.ToString(), data);
+                int yes = 0;
+                int no = 0;
+                foreach (OpenMetaverse.StructuredData.OSDMap vote in maps)
+                {
+                    if (vote["Vote"].AsString().ToLower() == "yes")
+                        yes++;
+                    else if (vote["Vote"].AsString().ToLower() == "no")
+                        no++;
+                }
+                if (yes + no < p.Quorum)
+                    p.Result = false;
+                /*if (yes > no)
+                    p.Result = true;
+                else
+                    p.Result = false;*/
+                p.HasCalculatedResult = true;
+                GenericUtils.AddGeneric(p.GroupID, "Proposal", p.VoteID.ToString(), p.ToOSD(), data);
+            }
+            foreach (GroupProposalInfo p in proposals)
+                p.VoteCast = GetHasVoted(agentID, p);
+
+            return proposals;//Return only ones that are still running
+        }
+
+        private string GetHasVoted(UUID agentID, GroupProposalInfo p)
+        {
+            OpenMetaverse.StructuredData.OSDMap map = GenericUtils.GetGeneric(p.GroupID, p.VoteID.ToString(), agentID.ToString(), data);
+            if (map != null)
+                return map["Vote"];
+            else
+                return "";
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void VoteOnActiveProposals(UUID agentID, UUID groupID, UUID proposalID, string vote)
+        {
+            object remoteValue = DoRemote(agentID, groupID, proposalID, vote);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            if (!CheckGroupPermissions(agentID, groupID, (ulong)GroupPowers.VoteOnProposal))
+                return;
+
+            OpenMetaverse.StructuredData.OSDMap map = new OpenMetaverse.StructuredData.OSDMap();
+            map["Vote"] = vote;
+            GenericUtils.AddGeneric(groupID, proposalID.ToString(), agentID.ToString(), map, data);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, UUID GroupID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
             List<UUID> GroupIDs = new List<UUID>();
             GroupIDs.Add(GroupID);
             return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint GetNumberOfGroupNotices(UUID requestingAgentID, List<UUID> GroupIDs)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
+            bool had = GroupIDs.Count > 0;
+
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
@@ -548,18 +638,32 @@ namespace Aurora.Services.DataService
                 groupIDs = GroupIDs;
             }
 
+            if (had && groupIDs.Count == 0)
+            {
+                return 0;
+            }
+
             QueryFilter filter = new QueryFilter();
-            filter.orMultiFilters["GroupID"] = new List<object>(groupIDs.Count);
+            List<object> filterGroupIDs = new List<object>(groupIDs.Count);
             foreach (UUID GroupID in groupIDs)
             {
-                filter.orMultiFilters["GroupID"].Add(GroupID);
+                filterGroupIDs.Add(GroupID);
+            }
+            if (filterGroupIDs.Count > 0)
+            {
+                filter.orMultiFilters["GroupID"] = filterGroupIDs;
             }
 
             return uint.Parse(data.Query(new string[1] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint GetNumberOfGroups(UUID requestingAgentID, Dictionary<string, bool> boolFields)
         {
+            object remoteValue = DoRemote(requestingAgentID, boolFields);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
             QueryFilter filter = new QueryFilter();
 
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
@@ -590,8 +694,13 @@ namespace Aurora.Services.DataService
             };
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupRecord GetGroupRecord(UUID requestingAgentID, UUID GroupID, string GroupName)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID, GroupName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupRecord)remoteValue;
+
             GroupRecord record = new GroupRecord();
 
             QueryFilter filter = new QueryFilter();
@@ -626,9 +735,14 @@ namespace Aurora.Services.DataService
             return (osgroupsData.Count == 0) ? null : GroupRecordQueryResult2GroupRecord(osgroupsData);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
 //            List<string> filter = new List<string>();
+
+            object remoteValue = DoRemote(requestingAgentID, start, count, boolFields);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupRecord>)remoteValue;
 
             string[] sortAndBool = { "OpenEnrollment", "MaturePublish" };
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
@@ -679,8 +793,13 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, List<UUID> GroupIDs)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupRecord>)remoteValue;
+
             List<GroupRecord> Reply = new List<GroupRecord>(0);
             if (GroupIDs.Count <= 0)
             {
@@ -719,8 +838,13 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupProfileData GetMemberGroupProfile(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupProfileData)remoteValue;
+
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.MemberVisible))
                 return new GroupProfileData();
 
@@ -772,14 +896,20 @@ namespace Aurora.Services.DataService
             return GPD;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupMembershipData GetGroupMembershipData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupMembershipData)remoteValue;
+
             GroupMembershipData GMD = new GroupMembershipData();
             if (GroupID == UUID.Zero)
-            {
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
-            }
+
             GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
+            if (record == null)
+                return null;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
@@ -831,8 +961,55 @@ namespace Aurora.Services.DataService
             return GMD;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GroupTitlesData> GetGroupTitles(UUID requestingAgentID, UUID GroupID)
+        {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupTitlesData>)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["AgentID"] = requestingAgentID;
+            filter.andFilters["GroupID"] = GroupID;
+
+            List<string> Membership = data.Query(new string[1] { 
+                "SelectedRoleID"
+            }, "osgroupmembership", filter, null, null, null);
+
+            UUID selectedRoleID = UUID.Zero;
+            if (Membership.Count > 0)
+                selectedRoleID = UUID.Parse(Membership[0]);
+
+            filter = new QueryFilter();
+            filter.andFilters["AgentID"] = requestingAgentID;
+            filter.andFilters["GroupID"] = GroupID;
+
+            List<string> RoleIDs = data.Query(new string[1] { "RoleID" }, "osgrouprolemembership", filter, null, null, null);
+
+            List<string> Role;
+            List<GroupTitlesData> titles = new List<GroupTitlesData>();
+
+            foreach (string RoleID in RoleIDs)
+            {
+                UUID roleID = UUID.Parse(RoleID);
+                filter = new QueryFilter();
+                filter.andFilters["RoleID"] = RoleID;
+                filter.andFilters["GroupID"] = GroupID;
+                Role = data.Query(new string[1]{
+                    "Name"
+                }, "osrole", filter, null, null, null);
+                titles.Add(new GroupTitlesData { Name = Role[0], UUID = roleID, Selected = selectedRoleID == roleID });
+            }
+            return titles;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupMembershipData> GetAgentGroupMemberships(UUID requestingAgentID, UUID AgentID)
         {
+            object remoteValue = DoRemote(requestingAgentID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupMembershipData>)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
 
@@ -851,8 +1028,13 @@ namespace Aurora.Services.DataService
 #endif
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupInviteInfo GetAgentToGroupInvite(UUID requestingAgentID, UUID inviteID)
         {
+            object remoteValue = DoRemote(requestingAgentID, inviteID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupInviteInfo)remoteValue;
+
             GroupInviteInfo invite = new GroupInviteInfo();
 
             Dictionary<string, object> where = new Dictionary<string, object>(2);
@@ -876,10 +1058,15 @@ namespace Aurora.Services.DataService
             return invite;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupInviteInfo> GetGroupInvites(UUID requestingAgentID)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = requestingAgentID;
+
+            object remoteValue = DoRemote(requestingAgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupInviteInfo>)remoteValue;
 
             List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", filter, null, null, null);
 
@@ -900,8 +1087,14 @@ namespace Aurora.Services.DataService
             return invites;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupMembersData)remoteValue;
+
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
             filter.andFilters["AgentID"] = requestingAgentID;
@@ -974,8 +1167,13 @@ namespace Aurora.Services.DataService
             return GMD;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupMembersData>)remoteValue;
+
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
             {
                 return new List<GroupMembersData>(0);
@@ -987,15 +1185,35 @@ namespace Aurora.Services.DataService
 #if (!ISWIN)
             List<GroupMembersData> list = new List<GroupMembersData>();
             foreach (string agent in Agents)
-                list.Add(GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent)));
+            {
+                GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
+                if (d != null)
+                {
+                    OpenSim.Services.Interfaces.UserInfo info =
+                        m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
+                            d.AgentID.ToString());
+                    if (info != null && !info.IsOnline)
+                        d.OnlineStatus = info.LastLogin.ToShortDateString();
+                    else if (info == null)
+                        d.OnlineStatus = "Unknown";
+                    else
+                        d.OnlineStatus = "Online";
+                    list.Add(d);
+                }
+            }
             return list;
 #else
             return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
 #endif
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
         {
+            object remoteValue = DoRemote(requestingAgentID, search, StartQuery, queryflags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirGroupsReplyData>)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andLikeFilters["Name"] = "%" + search.MySqlEscape(50) + "%";
 
@@ -1039,20 +1257,20 @@ namespace Aurora.Services.DataService
             return Reply;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID)
         {
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
-            {
-                return new List<GroupRolesData>(0);
-            }
+            object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupRolesData>)remoteValue;
+
+            //No permissions check necessary, we are checking only roles that they are in, so if they arn't in the group, that isn't a problem
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
             filter.andFilters["GroupID"] = GroupID;
 
             List<string> RoleIDs = data.Query(new string[1] { "RoleID" }, "osgrouprolemembership", filter, null, null, null);
-
-
 
             filter = new QueryFilter();
 
@@ -1062,6 +1280,7 @@ namespace Aurora.Services.DataService
             foreach (string RoleID in RoleIDs)
             {
                 filter.andFilters["RoleID"] = RoleID;
+                filter.andFilters["GroupID"] = GroupID;
                 Role = data.Query(new string[4]{
                     "Name",
                     "Description",
@@ -1081,8 +1300,13 @@ namespace Aurora.Services.DataService
             return RolesData;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupRolesData>)remoteValue;
+
             if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
             {
                 return new List<GroupRolesData>(0);
@@ -1121,8 +1345,13 @@ namespace Aurora.Services.DataService
             return GroupRoles;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID)
         {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupRoleMembersData>)remoteValue;
+
             List<GroupRoleMembersData> RoleMembers = new List<GroupRoleMembersData>();
 
             QueryFilter filter = new QueryFilter();
@@ -1156,8 +1385,13 @@ namespace Aurora.Services.DataService
             return RoleMembers;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
+            object remoteValue = DoRemote(requestingAgentID, noticeID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupNoticeInfo)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
             List<string> notice = data.Query(new string[9]{
@@ -1218,15 +1452,23 @@ namespace Aurora.Services.DataService
             return GND;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID)
         {
-            List<UUID> GroupIDs = new List<UUID>();
-            GroupIDs.Add(GroupID);
-            return GetGroupNotices(requestingAgentID, start, count, GroupIDs);
+            object remoteValue = DoRemote(requestingAgentID, start, count, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupNoticeData>)remoteValue;
+
+            return GetGroupNotices(requestingAgentID, start, count, new List<UUID>(new UUID[1] { GroupID }));
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, List<UUID> GroupIDs)
         {
+            object remoteValue = DoRemote(requestingAgentID, start, count, GroupIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GroupNoticeData>)remoteValue;
+
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
@@ -1256,6 +1498,13 @@ namespace Aurora.Services.DataService
 
                 Dictionary<string, bool> sort = new Dictionary<string,bool>(1);
                 sort["Timestamp"] = false;
+                
+                uint? s = null;
+                if(start != 0)
+                    s = start;
+                uint? c = null;
+                if(count != 0)
+                    c = count;
 
                 List<string> notice = data.Query(new string[]{
                     "GroupID",
@@ -1268,7 +1517,7 @@ namespace Aurora.Services.DataService
                     "Message",
                     "AssetType",
                     "ItemName"
-                }, "osgroupnotice", filter, sort, start, count);
+                }, "osgroupnotice", filter, sort, s, c);
 
                 for (int i = 0; i < notice.Count; i += 10)
                 {
@@ -1276,6 +1525,47 @@ namespace Aurora.Services.DataService
                 }
             }
             return AllNotices;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID)
+        {
+            object remoteValue = DoRemote(requestingAgentID, GroupID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GroupProfileData)remoteValue;
+
+            GroupProfileData profile = new GroupProfileData();
+
+            GroupRecord groupInfo = GetGroupRecord(requestingAgentID, GroupID, null);
+            if (groupInfo != null)
+            {
+                profile.AllowPublish = groupInfo.AllowPublish;
+                profile.Charter = groupInfo.Charter;
+                profile.FounderID = groupInfo.FounderID;
+                profile.GroupID = GroupID;
+                profile.GroupMembershipCount =
+                    GetGroupMembers(requestingAgentID, GroupID).Count;
+                profile.GroupRolesCount = GetGroupRoles(requestingAgentID, GroupID).Count;
+                profile.InsigniaID = groupInfo.GroupPicture;
+                profile.MaturePublish = groupInfo.MaturePublish;
+                profile.MembershipFee = groupInfo.MembershipFee;
+                profile.Money = 0; // TODO: Get this from the currency server?
+                profile.Name = groupInfo.GroupName;
+                profile.OpenEnrollment = groupInfo.OpenEnrollment;
+                profile.OwnerRole = groupInfo.OwnerRoleID;
+                profile.ShowInList = groupInfo.ShowInList;
+            }
+
+            GroupMembershipData memberInfo = GetGroupMembershipData(requestingAgentID,
+                                                                                 GroupID,
+                                                                                 requestingAgentID);
+            if (memberInfo != null)
+            {
+                profile.MemberTitle = memberInfo.GroupTitle;
+                profile.PowersMask = memberInfo.GroupPowers;
+            }
+
+            return profile;
         }
 
         #endregion

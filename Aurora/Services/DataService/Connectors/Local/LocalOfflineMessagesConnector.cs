@@ -32,7 +32,7 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalOfflineMessagesConnector : IOfflineMessagesConnector
+    public class LocalOfflineMessagesConnector : ConnectorBase, IOfflineMessagesConnector
     {
         private IGenericData GD;
         private int m_maxGroupOfflineMessages = 50;
@@ -64,6 +64,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -76,23 +77,33 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        public GridInstantMessage[] GetOfflineMessages(UUID agentID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
+            object remoteValue = DoRemote(agentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridInstantMessage>)remoteValue;
+
             //Get all the messages
             List<GridInstantMessage> Messages = GenericUtils.GetGenerics<GridInstantMessage>(agentID, "OfflineMessages", GD);
             Messages.AddRange(GenericUtils.GetGenerics<GridInstantMessage>(agentID, "GroupOfflineMessages", GD));
             //Clear them out now that we have them
-            GenericUtils.RemoveGeneric(agentID, "OfflineMessages", GD);
-            GenericUtils.RemoveGeneric(agentID, "GroupOfflineMessages", GD);
-            return Messages.ToArray();
+            GenericUtils.RemoveGenericByType(agentID, "OfflineMessages", GD);
+            GenericUtils.RemoveGenericByType(agentID, "GroupOfflineMessages", GD);
+            return Messages;
         }
 
         /// <summary>
         ///   Adds a new offline message for the user.
         /// </summary>
         /// <param name = "message"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddOfflineMessage(GridInstantMessage message)
         {
+            object remoteValue = DoRemote(message);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             if (message.fromGroup)
             {
                 if (!m_saveGroupOfflineMessages)

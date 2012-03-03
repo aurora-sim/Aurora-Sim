@@ -37,11 +37,9 @@ using OpenSim.Services.UserAccountService;
 
 namespace Aurora.Modules
 {
-    public class IWCUserAccountConnector : IUserAccountService, IService
+    public class IWCUserAccountConnector : ConnectorBase, IUserAccountService, IService
     {
         protected UserAccountService m_localService;
-        protected IRegistryCore m_registry;
-        protected UserAccountServicesConnector m_remoteService;
 
         public string Name
         {
@@ -58,8 +56,7 @@ namespace Aurora.Modules
 
             m_localService = new UserAccountService();
             m_localService.Configure(config, registry);
-            m_remoteService = new UserAccountServicesConnector();
-            m_remoteService.Initialize(config, registry);
+            Init(registry, Name);
             registry.RegisterModuleInterface<IUserAccountService>(this);
             m_registry = registry;
         }
@@ -97,7 +94,7 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, userID);
             if (account == null)
-                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, userID));
+                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, userID));
             return account;
         }
 
@@ -105,7 +102,7 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, FirstName, LastName);
             if (account == null)
-                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, FirstName, LastName));
+                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, FirstName, LastName));
             return account;
         }
 
@@ -113,14 +110,14 @@ namespace Aurora.Modules
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, Name);
             if (account == null)
-                account = FixRemoteAccount(m_remoteService.GetUserAccount(scopeID, Name));
+                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, Name));
             return account;
         }
 
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
             List<UserAccount> accounts = m_localService.GetUserAccounts(scopeID, query);
-            accounts.AddRange(FixRemoteAccounts(m_remoteService.GetUserAccounts(scopeID, query)));
+            accounts.AddRange(FixRemoteAccounts((List<UserAccount>)DoRemoteForced(scopeID, query)));
             return accounts;
         }
 
@@ -137,6 +134,11 @@ namespace Aurora.Modules
         public void CreateUser(UUID userID, string name, string md5password, string email)
         {
             m_localService.CreateUser(userID, name, md5password, email);
+        }
+
+        public void CacheAccount(UserAccount account)
+        {
+            m_localService.CacheAccount(account);
         }
 
         #endregion

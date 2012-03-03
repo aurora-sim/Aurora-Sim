@@ -729,42 +729,43 @@ namespace Aurora.Modules.Inventory
             if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                 return;
 
-            AssetBase asset = m_scene.AssetService.Get(item.AssetID.ToString());
-
-            if (asset != null)
-            {
-                if (newName != String.Empty)
+            m_scene.AssetService.Get(item.AssetID.ToString(), null, (id, sender, asset) =>
                 {
-                    asset.Name = newName;
-                }
-                else
-                {
-                    newName = item.Name;
-                }
-
-                if (remoteClient.AgentId == oldAgentID)
-                {
-                    CreateNewInventoryItem(
-                        remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
-                        item.BasePermissions, item.CurrentPermissions, item.EveryOnePermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
-                }
-                else
-                {
-                    // If item is transfer or permissions are off or calling agent is allowed to copy item owner's inventory item.
-                    if (((item.CurrentPermissions & (uint)PermissionMask.Transfer) != 0) && (m_scene.Permissions.BypassPermissions() || m_scene.Permissions.CanCopyUserInventory(remoteClient.AgentId, oldItemID)))
+                    if (asset != null)
                     {
-                        CreateNewInventoryItem(
-                            remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
-                            item.NextPermissions, item.NextPermissions, item.EveryOnePermissions & item.NextPermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
+                        if (newName != String.Empty)
+                        {
+                            asset.Name = newName;
+                        }
+                        else
+                        {
+                            newName = item.Name;
+                        }
+
+                        if (remoteClient.AgentId == oldAgentID)
+                        {
+                            CreateNewInventoryItem(
+                                remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
+                                item.BasePermissions, item.CurrentPermissions, item.EveryOnePermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
+                        }
+                        else
+                        {
+                            // If item is transfer or permissions are off or calling agent is allowed to copy item owner's inventory item.
+                            if (((item.CurrentPermissions & (uint)PermissionMask.Transfer) != 0) && (m_scene.Permissions.BypassPermissions() || m_scene.Permissions.CanCopyUserInventory(remoteClient.AgentId, oldItemID)))
+                            {
+                                CreateNewInventoryItem(
+                                    remoteClient, item.CreatorId, item.CreatorData, newFolderID, newName, item.Flags, callbackID, asset, (sbyte)item.InvType,
+                                    item.NextPermissions, item.NextPermissions, item.EveryOnePermissions & item.NextPermissions, item.NextPermissions, item.GroupPermissions, Util.UnixTimeSinceEpoch());
+                            }
+                        }
                     }
-                }
-            }
-            else
-            {
-                MainConsole.Instance.ErrorFormat(
-                    "[AGENT INVENTORY]: Could not copy item {0} since asset {1} could not be found",
-                    item.Name, item.AssetID);
-            }
+                    else
+                    {
+                        MainConsole.Instance.ErrorFormat(
+                            "[AGENT INVENTORY]: Could not copy item {0} since asset {1} could not be found",
+                            item.Name, item.AssetID);
+                    }
+                });
         }
 
         /// <summary>
@@ -941,8 +942,7 @@ namespace Aurora.Modules.Inventory
                 return;
             }
 
-            TaskInventoryItem item = part.Inventory.GetInventoryItem(itemId);
-            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
             {
                 // If the item to be moved is no copy, we need to be able to
                 // edit the prim.
@@ -977,7 +977,6 @@ namespace Aurora.Modules.Inventory
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
             if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
             {
-
                 if (agentItem == null)
                     return null;
 
@@ -2286,7 +2285,7 @@ namespace Aurora.Modules.Inventory
                 // Trigger rerunning of script (use TriggerRezScript event, see RezScript)
 
                 // Update item with new asset
-                if (!m_scene.AssetService.UpdateContent(item.AssetID, data, out newID) || newID == UUID.Zero)
+                if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) == UUID.Zero)
                 {
                     errors.Add("Failed to save script to asset storage. Please try again later.");
                 }
@@ -2300,7 +2299,7 @@ namespace Aurora.Modules.Inventory
                     {
                         // Needs to determine which engine was running it and use that
                         //
-                        part.Inventory.UpdateScriptInstance(item.ItemID, 0, false, StateSource.NewRez);
+                        part.Inventory.UpdateScriptInstance(item.ItemID, data, 0, false, StateSource.NewRez);
                         errors = part.Inventory.GetScriptErrors(item.ItemID);
                     }
                     else

@@ -149,7 +149,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "userID"></param>
         /// <param name = "regionID"></param>
         /// <returns></returns>
-        UserInfo[] GetUserInfos(string[] userIDs);
+        List<UserInfo> GetUserInfos(List<string> userIDs);
 
         /// <summary>
         ///   Get the HTTP URLs for all root agents of the given users
@@ -157,7 +157,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "requestor"></param>
         /// <param name = "userIDs"></param>
         /// <returns></returns>
-        string[] GetAgentsLocations(string requestor, string[] userIDs);
+        List<string> GetAgentsLocations(string requestor, List<string> userIDs);
 
         /// <summary>
         ///   Set the home position of the given user
@@ -204,7 +204,7 @@ namespace OpenSim.Services.Interfaces
     public interface IAgentInfoConnector : IAuroraDataPlugin
     {
         bool Set(UserInfo info);
-        void Update(string userID, string[] keys, object[] values);
+        void Update(string userID, Dictionary<string, object> values);
         void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);

@@ -11,7 +11,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.RobustCompat
 {
-    public class RobustAvatarServicesConnector : AvatarServicesConnector
+    /*public class RobustAvatarServicesConnector : AvatarServicesConnector
     {
         public override string Name
         {
@@ -83,5 +83,5 @@ namespace OpenSim.Services.RobustCompat
 
             return false;
         }
-    }
+    }*/
 }

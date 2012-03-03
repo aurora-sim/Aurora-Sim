@@ -55,7 +55,7 @@ namespace Aurora.Modules.WorldMap
         private IRendering m_primMesher;
         private IScene m_scene;
         private bool m_texturePrims;
-        private bool m_useAntiAliasing = true; // TODO: Make this a config option
+        private bool m_useAntiAliasing = false; // TODO: Make this a config option
 
         #region IMapTileTerrainRenderer Members
 
@@ -239,37 +239,36 @@ namespace Aurora.Modules.WorldMap
         {
             ITerrainChannel terrain = m_scene.RequestModuleInterface<ITerrainChannel>();
 
-            int diff = m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
+            float diff = (float)m_scene.RegionInfo.RegionSizeY / (float)Constants.RegionSize;
             warp_Object obj =
-                new warp_Object((m_scene.RegionInfo.RegionSizeX/diff)*(m_scene.RegionInfo.RegionSizeY/diff),
-                                ((m_scene.RegionInfo.RegionSizeX/diff) - 1)*((m_scene.RegionInfo.RegionSizeY/diff) - 1)*
-                                2);
+                new warp_Object(Constants.RegionSize * Constants.RegionSize,
+                                ((Constants.RegionSize - 1) * (Constants.RegionSize - 1) *2));
 
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
+            for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
+                for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    warp_Vector pos = ConvertVector(x, y, terrain[x, y]);
-                    obj.addVertex(new warp_Vertex(pos, (float) x/(m_scene.RegionInfo.RegionSizeX),
-                                                  (float) ((m_scene.RegionInfo.RegionSizeX) - y)/
+                    warp_Vector pos = ConvertVector(x, y, terrain[(int)x, (int)y]);
+                    obj.addVertex(new warp_Vertex(pos, x / (float)(m_scene.RegionInfo.RegionSizeX),
+                                                  (((float)m_scene.RegionInfo.RegionSizeX) - y) /
                                                   (m_scene.RegionInfo.RegionSizeX)));
                 }
             }
 
-            for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
+            for (float y = 0; y < m_scene.RegionInfo.RegionSizeY; y += diff)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
+                for (float x = 0; x < m_scene.RegionInfo.RegionSizeX; x += diff)
                 {
-                    int newX = x/diff;
-                    int newY = y/diff;
+                    float newX = x / diff;
+                    float newY = y / diff;
                     if (newX < Constants.RegionSize - 1 && newY < Constants.RegionSize - 1)
                     {
-                        int v = newY*Constants.RegionSize + newX;
+                        int v = (int)(newY*Constants.RegionSize + newX);
 
                         // Normal
-                        Vector3 v1 = new Vector3(newX, newY, (terrain[x, y])/Constants.TerrainCompression);
-                        Vector3 v2 = new Vector3(newX + 1, newY, (terrain[x + 1, y])/Constants.TerrainCompression);
-                        Vector3 v3 = new Vector3(newX, newY + 1, (terrain[x, (y + 1)])/Constants.TerrainCompression);
+                        Vector3 v1 = new Vector3(newX, newY, (terrain[(int)x, (int)y]) / Constants.TerrainCompression);
+                        Vector3 v2 = new Vector3(newX + 1, newY, (terrain[(int)x + 1, (int)y]) / Constants.TerrainCompression);
+                        Vector3 v3 = new Vector3(newX, newY + 1, (terrain[(int)x, (int)(y + 1)]) / Constants.TerrainCompression);
                         warp_Vector norm = ConvertVector(SurfaceNormal(v1, v2, v3));
                         norm = norm.reverse();
                         obj.vertex(v).n = norm;
@@ -471,7 +470,7 @@ namespace Aurora.Modules.WorldMap
 
                 // Attempt to fetch the texture metadata
                 UUID metadataID = UUID.Combine(face.TextureID, TEXTURE_METADATA_MAGIC);
-                AssetBase metadata = m_scene.AssetService.GetCached(metadataID.ToString());
+                AssetBase metadata = m_scene.AssetService.Get(metadataID.ToString());
                 if (metadata != null)
                 {
                     OSDMap map = null;
@@ -511,7 +510,7 @@ namespace Aurora.Modules.WorldMap
                                            {
                                                Data = Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data)),
                                                Description = "Avg Color-JPEG2000 texture " + face.TextureID.ToString(),
-                                               Flags = AssetFlags.Collectable | AssetFlags.Temperary | AssetFlags.Local,
+                                               Flags = AssetFlags.Collectable | AssetFlags.Temporary | AssetFlags.Local,
                                                ID = metadataID,
                                                Name = String.Empty,
                                                TypeAsset = AssetType.Simstate

@@ -144,12 +144,12 @@ namespace OpenSim.Services.RobustCompat
             if (friendsModule != null)
             {
                 Interfaces.FriendInfo[] friends = friendsModule.GetFriends(presence.UUID);
-                string[] s = new string[friends.Length];
+                List<string> s = new List<string>();
                 for (int i = 0; i < friends.Length; i++)
                 {
-                    s[i] = friends[i].Friend;
+                    s.Add(friends[i].Friend);
                 }
-                UserInfo[] infos = aservice.GetUserInfos(s);
+                List<UserInfo> infos = aservice.GetUserInfos(s);
                 foreach (UserInfo u in infos)
                 {
                     if (u != null && u.IsOnline)

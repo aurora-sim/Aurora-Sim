@@ -417,6 +417,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Moderate = 4,
         High = 5,
         VeryHigh = 6,
-        Severe = 7
+        Severe = 7,
+        NoAccess = 8
     }
 }

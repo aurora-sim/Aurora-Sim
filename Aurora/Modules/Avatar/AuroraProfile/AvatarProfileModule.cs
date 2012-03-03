@@ -232,7 +232,7 @@ namespace Aurora.Modules.Profiles
                                          byte queryclassifiedFlags,
                                          int queryclassifiedPrice, IClientAPI remoteClient)
         {
-            IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
+            IScenePresence p = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
 
             if (p == null)
                 return; //Just fail
@@ -262,7 +262,7 @@ namespace Aurora.Modules.Profiles
             UUID parceluuid = p.CurrentParcelUUID;
             string parcelname = "Unknown";
             IParcelManagementModule parcelManagement =
-                GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
+                remoteClient.Scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 ILandObject parcel = parcelManagement.GetLandObject(p.AbsolutePosition.X, p.AbsolutePosition.Y);
@@ -306,7 +306,7 @@ namespace Aurora.Modules.Profiles
 
         public void GodClassifiedDelete(UUID queryClassifiedID, IClientAPI remoteClient)
         {
-            if (GetRegionUserIsIn(remoteClient.AgentId).Permissions.IsGod(remoteClient.AgentId))
+            if (remoteClient.Scene.Permissions.IsGod(remoteClient.AgentId))
             {
                 ProfileFrontend.RemoveClassified(queryClassifiedID);
             }
@@ -353,7 +353,7 @@ namespace Aurora.Modules.Profiles
         public void PickInfoUpdate(IClientAPI remoteClient, UUID pickID, UUID creatorID, bool topPick, string name,
                                    string desc, UUID snapshotID, int sortOrder, bool enabled, Vector3d globalPos)
         {
-            IScenePresence p = GetRegionUserIsIn(remoteClient.AgentId).GetScenePresence(remoteClient.AgentId);
+            IScenePresence p = remoteClient.Scene.GetScenePresence(remoteClient.AgentId);
 
             UUID parceluuid = p.CurrentParcelUUID;
             string user = "(unknown)";
@@ -362,7 +362,7 @@ namespace Aurora.Modules.Profiles
             Vector3 pos_global = new Vector3(globalPos);
 
             IParcelManagementModule parcelManagement =
-                GetRegionUserIsIn(remoteClient.AgentId).RequestModuleInterface<IParcelManagementModule>();
+                remoteClient.Scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
                 ILandObject targetlandObj = parcelManagement.GetLandObject(pos_global.X/Constants.RegionSize,
@@ -371,7 +371,7 @@ namespace Aurora.Modules.Profiles
                 if (targetlandObj != null)
                 {
                     UserAccount parcelOwner =
-                        GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
+                        remoteClient.Scene.UserAccountService.GetUserAccount(UUID.Zero,
                                                                                                   targetlandObj.LandData
                                                                                                       .OwnerID);
                     if (parcelOwner != null)
@@ -405,7 +405,7 @@ namespace Aurora.Modules.Profiles
 
         public void GodPickDelete(IClientAPI remoteClient, UUID AgentID, UUID queryPickID, UUID queryID)
         {
-            if (GetRegionUserIsIn(remoteClient.AgentId).Permissions.IsGod(remoteClient.AgentId))
+            if (remoteClient.Scene.Permissions.IsGod(remoteClient.AgentId))
             {
                 ProfileFrontend.RemovePick(queryPickID);
             }
@@ -496,27 +496,18 @@ namespace Aurora.Modules.Profiles
             }
             UserInfo TargetPI =
                 remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
-            bool isFriend = IsFriendOfUser(remoteClient.AgentId, target);
-            if (isFriend)
-            {
-                uint agentOnline = 0;
-                if (TargetPI != null && TargetPI.IsOnline)
-                {
-                    agentOnline = 16;
-                }
-                SendProfile(remoteClient, UPI, target, agentOnline);
-            }
+            //See if all can see this person
+            uint agentOnline = 0;
+            if (TargetPI != null && TargetPI.IsOnline && UPI.Visible)
+                agentOnline = 16;
+            UserAccount TargetAccount =
+                remoteClient.Scene.UserAccountService.GetUserAccount(UUID.Zero, target);
+
+            if (IsFriendOfUser(remoteClient.AgentId, target))
+                SendProfile(remoteClient, UPI, TargetAccount, agentOnline);
             else
             {
-                UserAccount TargetAccount =
-                    GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero, target);
-                //See if all can see this person
                 //Not a friend, so send the first page only and if they are online
-                uint agentOnline = 0;
-                if (TargetPI != null && TargetPI.IsOnline && UPI.Visible)
-                {
-                    agentOnline = 16;
-                }
 
                 Byte[] charterMember;
                 if (UPI.MembershipGroup == "")
@@ -562,15 +553,11 @@ namespace Aurora.Modules.Profiles
                 UPI.MaturePublish = maturepublish;
                 ProfileFrontend.UpdateUserProfile(UPI);
             }
-            SendProfile(remoteClient, UPI, remoteClient.AgentId, 16);
+            SendProfile(remoteClient, UPI, remoteClient.Scene.UserAccountService.GetUserAccount(UUID.Zero, remoteClient.AgentId), 16);
         }
 
-        private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UUID target, uint agentOnline)
+        private void SendProfile(IClientAPI remoteClient, IUserProfileInfo Profile, UserAccount account, uint agentOnline)
         {
-            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
-                                                                                                            target);
-            if (Profile == null || account == null)
-                return;
             Byte[] charterMember;
             if (Profile.MembershipGroup == "")
             {
@@ -578,16 +565,15 @@ namespace Aurora.Modules.Profiles
                 charterMember[0] = (Byte) ((account.UserFlags & 0xf00) >> 8);
             }
             else
-            {
                 charterMember = Utils.StringToBytes(Profile.MembershipGroup);
-            }
+
             uint membershipGroupINT = 0;
             if (Profile.MembershipGroup != "")
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) +
                          membershipGroupINT + agentOnline + (uint) account.UserFlags;
-            remoteClient.SendAvatarInterestsReply(target, Convert.ToUInt32(Profile.Interests.WantToMask),
+            remoteClient.SendAvatarInterestsReply(account.PrincipalID, Convert.ToUInt32(Profile.Interests.WantToMask),
                                                   Profile.Interests.WantToText,
                                                   Convert.ToUInt32(Profile.Interests.CanDoMask),
                                                   Profile.Interests.CanDoText, Profile.Interests.Languages);
@@ -608,7 +594,7 @@ namespace Aurora.Modules.Profiles
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
-            UserAccount account = GetRegionUserIsIn(remoteClient.AgentId).UserAccountService.GetUserAccount(UUID.Zero,
+            UserAccount account = remoteClient.Scene.UserAccountService.GetUserAccount(UUID.Zero,
                                                                                                             remoteClient
                                                                                                                 .AgentId);
             remoteClient.SendUserInfoReply(UPI.Visible, UPI.IMViaEmail, account.Email);

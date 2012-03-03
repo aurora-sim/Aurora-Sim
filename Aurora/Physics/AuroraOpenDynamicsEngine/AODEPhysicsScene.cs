@@ -58,6 +58,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             Add = 0, // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
             Remove,
+            Delete,
             Link,
             // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
             //  or removes from a object if arg is null
@@ -307,7 +308,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private AuroraODERayCastRequestManager m_rayCastManager;
         private bool IsLocked;
-        private List<PhysicsActor> RemoveQueue;
+        private List<PhysicsObject> RemoveQueue;
+        private List<PhysicsObject> DeleteQueue;
         private readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
         private readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
@@ -454,7 +456,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void PostInitialise(IConfigSource config)
         {
             m_rayCastManager = new AuroraODERayCastRequestManager(this);
-            RemoveQueue = new List<PhysicsActor>();
+            RemoveQueue = new List<PhysicsObject>();
+            DeleteQueue = new List<PhysicsObject>();
             m_config = config;
             // Defaults
 /*
@@ -730,6 +733,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             catch (Exception e)
             {
                 MainConsole.Instance.WarnFormat("[PHYSICS]:  ode Collide failed: {0} ", e);
+
+                PhysicsActor badObj;
+                if (actor_name_map.TryGetValue(g1, out badObj))
+                    if (badObj is AuroraODEPrim)
+                        RemovePrim((AuroraODEPrim)badObj);
+                    else if (badObj is AuroraODECharacter)
+                        RemoveAvatar((AuroraODECharacter)badObj);
+                if (actor_name_map.TryGetValue(g2, out badObj))
+                    if (badObj is AuroraODEPrim)
+                        RemovePrim((AuroraODEPrim)badObj);
+                    else if (badObj is AuroraODECharacter)
+                        RemoveAvatar((AuroraODECharacter)badObj);
                 return;
             }
 
@@ -789,17 +804,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
                 }
 
-                bool p2col = false;
+                bool p2col = true;
 
                 // We only need to test p2 for 'jump crouch purposes'
                 if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int) ActorTypes.Prim)
                 {
                     // Testing if the collision is at the feet of the avatar
-                    if ((p2.Position.Z - maxDepthContact.Position.Z) > (p2.Size.Z*0.6f))
-                        p2col = true;
+                    if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z*0.6f))
+                        p2col = false;
                 }
-                else
-                    p2col = true;
 
                 p2.IsColliding = p2col;
 
@@ -837,7 +850,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
-                            ((AuroraODEPrim)p2).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p2).GetContactParam(p2, ref newGlobalcontact);
 
                             joint = CreateContacJoint(ref curContact);
                         }
@@ -858,7 +871,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         if (p2.PhysicsActorType == (int) ActorTypes.Agent)
                         {
-                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
                             if (m_filterCollisions)
                                 _perloopContact.Add(curContact);
 
@@ -870,7 +883,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 _perloopContact.Add(curContact);
 
                             //Add restitution and friction changes
-                            ((AuroraODEPrim) p1).GetContactParam((ActorTypes)p2.PhysicsActorType, ref newGlobalcontact);
+                            ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
 
                             joint = CreateContacJoint(ref curContact);
                         }
@@ -1471,6 +1484,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override void DeletePrim(PhysicsObject prim)
+        {
+            if (prim is AuroraODEPrim)
+            {
+                if (!IsLocked) //Fix a deadlock situation.. have we been locked by Simulate?
+                {
+                    lock (OdeLock)
+                    {
+                        AuroraODEPrim p = (AuroraODEPrim)prim;
+
+                        p.setPrimForDeletion();
+                        AddPhysicsActorTaint(prim);
+                        //RemovePrimThreadLocked(p);
+                    }
+                }
+                else
+                {
+                    //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
+                    DeleteQueue.Add(prim);
+                }
+            }
+        }
+
         ///<summary>
         ///  This is called from within simulate but outside the locked portion
         ///  We need to do our own locking here
@@ -1780,14 +1816,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (forceSimplePrimMeshing)
                 return true;
             // let simple spheres use ode sphere object
+            PrimitiveBaseShape sphere = PrimitiveBaseShape.CreateSphere();
             if (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
-                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == 0)
+                && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.X == pbs.Scale.Z && pbs.ProfileHollow == sphere.ProfileHollow && pbs.PathBegin == sphere.PathBegin && pbs.PathEnd == sphere.PathEnd &&
+                pbs.PathCurve == sphere.PathCurve && pbs.HollowShape == sphere.HollowShape && pbs.PathRadiusOffset == sphere.PathRadiusOffset && pbs.PathRevolutions == sphere.PathRevolutions &&
+                pbs.PathScaleX == pbs.PathScaleX && pbs.PathScaleY == sphere.PathScaleY && pbs.PathShearX == sphere.PathShearX && pbs.PathShearY == sphere.PathShearY && pbs.PathSkew == sphere.PathSkew &&
+                pbs.PathTaperX == pbs.PathTaperX && pbs.PathTaperY == sphere.PathTaperY && pbs.PathTwist == sphere.PathTwist && pbs.PathTwistBegin == sphere.PathTwistBegin && pbs.ProfileBegin == sphere.ProfileBegin &&
+                pbs.ProfileCurve == pbs.ProfileCurve && pbs.ProfileEnd == sphere.ProfileEnd && pbs.ProfileHollow == sphere.ProfileHollow && pbs.ProfileShape == sphere.ProfileShape)
                 return false;
 
             if (pbs.SculptEntry && !meshSculptedPrim)
-            {
                 return false;
-            }
             else if (pbs.SculptType != (byte) SculptType.Mesh &&
                      pbs.SculptType != (byte) SculptType.None)
                 return true; //Sculpty, mesh it
@@ -2176,21 +2215,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             int UnlockedArea = Util.EnvironmentTickCount();
-
+            
             if (RemoveQueue.Count > 0)
             {
                 while (RemoveQueue.Count != 0)
                 {
                     if (RemoveQueue[0] != null)
-                    {
-                        AuroraODEPrim p = (AuroraODEPrim) RemoveQueue[0];
-
-                        p.setPrimForRemoval();
-                        AddPhysicsActorTaint(p);
-                    }
+                        RemovePrim(RemoveQueue[0]);
                     RemoveQueue.RemoveAt(0);
                 }
             }
+            if (DeleteQueue.Count > 0)
+            {
+                while (DeleteQueue.Count != 0)
+                {
+                    if (DeleteQueue[0] != null)
+                        DeletePrim(DeleteQueue[0]);
+
+                    DeleteQueue.RemoveAt(0);
+                }
+            }
+            
             if (ActiveAddCollisionQueue.Count > 0)
             {
                 lock (_collisionEventListLock)

@@ -130,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (string function in m_scriptApis.Keys)
                 m_functionRegex += function + "|";
             m_functionRegex = m_functionRegex.Remove(m_functionRegex.Length - 1);
-            bool success = RunTest1();
+            //bool success = RunTest1();
         }
 
         #region Tests 
@@ -581,6 +581,15 @@ state testing
             {
                 if (vectorMatches.Value != "")
                     Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
+            }
+            
+            RegexContains(Script, "^(?=.*?\\.\b).*$", out vectorMatches);
+            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            {
+                if (vectorMatches.Value != "")
+                {
+                    //TODO: check for C# syntax
+                }
             }
             RegexContains(Script, m_functionRegex, out vectorMatches);
             List<string> replacedFunctions = new List<string>();

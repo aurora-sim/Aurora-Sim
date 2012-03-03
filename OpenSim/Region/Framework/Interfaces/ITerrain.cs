@@ -75,6 +75,11 @@ namespace OpenSim.Region.Framework.Interfaces
 
     public interface IMapImageGenerator
     {
+        /// <summary>
+        ///   Build a terrain tile for the current region
+        /// </summary>
+        void CreateTerrainTexture();
+
         void CreateMapTile(out Bitmap terrainBMP, out Bitmap mapBMP);
         void CreateMapTile(out byte[] terrain, out byte[] map);
 

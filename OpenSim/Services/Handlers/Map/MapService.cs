@@ -130,23 +130,23 @@ namespace OpenSim.Services.Handlers.Map
                 List<GridRegion> badRegions = new List<GridRegion> ();
                 foreach (GridRegion r in regions)
                 {
-                    AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService> ().Get (r.TerrainImage.ToString ());
+                    AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService> ().Get (r.TerrainMapImage.ToString ());
 
                     if (texAsset != null)
-                        textures.Add (texAsset);
+                    {
+                        textures.Add(texAsset);
+                        Image image;
+                        ManagedImage mImage;
+                        if ((OpenJPEG.DecodeToImage(texAsset.Data, out mImage, out image)) && image != null)
+                            bitImages.Add(image);
+                        else
+                            badRegions.Add(r);
+                    }
                     else
-                        badRegions.Add (r);
+                        badRegions.Add(r);
                 }
                 foreach (GridRegion r in badRegions)
                     regions.Remove (r);
-
-                foreach (AssetBase asset in textures)
-                {
-                    Image image;
-                    ManagedImage mImage;
-                    if ((OpenJPEG.DecodeToImage (asset.Data, out mImage, out image)) && image != null)
-                        bitImages.Add (image);
-                }
 
                 const int SizeOfImage = 256;
 

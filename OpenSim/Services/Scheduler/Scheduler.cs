@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 using Aurora.DataManager;
 using Aurora.Framework;
@@ -37,7 +38,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class Scheduler : IScheduleService, IService
+    public class Scheduler : ConnectorBase, IScheduleService, IService
     {
         public AuroraEventManager EventManager = new AuroraEventManager();
         private ISchedulerDataPlugin m_database;
@@ -54,6 +55,8 @@ namespace OpenSim.Services
         /// <param name = "registry">Place to register the modules into</param>
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            registry.RegisterModuleInterface<IScheduleService>(this);
+            base.Init(registry, "Scheduler");
         }
 
         /// <summary>
@@ -71,16 +74,19 @@ namespace OpenSim.Services
         /// </summary>
         public void FinishedStartup()
         {
-            m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
-            if (m_database != null) 
-                m_enabled = true;
-
-            if (m_enabled)
+            if (!m_doRemoteCalls)
             {
-                // don't want to start to soon
-                scheduleTimer.Interval = 60000;
-                scheduleTimer.Elapsed += t_Elapsed;
-                scheduleTimer.Start();
+                m_database = DataManager.RequestPlugin<ISchedulerDataPlugin>();
+                if (m_database != null)
+                    m_enabled = true;
+
+                if (m_enabled)
+                {
+                    // don't want to start to soon
+                    scheduleTimer.Interval = 60000;
+                    scheduleTimer.Elapsed += t_Elapsed;
+                    scheduleTimer.Start();
+                }
             }
         }
 
@@ -88,26 +94,55 @@ namespace OpenSim.Services
 
         #region Implementation of IScheduleService
 
+
         public bool Register(SchedulerItem I, OnGenericEventHandler handler)
         {
+            if (m_doRemoteCalls) return false;
             EventManager.RegisterEventHandler(I.FireFunction, handler);
             return true;
         }
 
+        
         public bool Register(string fName, OnGenericEventHandler handler)
         {
+            if (m_doRemoteCalls) return false;
             EventManager.RegisterEventHandler(fName, handler);
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public string Save(SchedulerItem I)
         {
+            if (m_doRemoteCalls)
+                return (string)DoRemote(I);
             return m_database.SchedulerSave(I);
         }
 
+        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
         public void Remove(string id)
         {
+            if (m_doRemoteCalls)
+            {
+                DoRemote(id);
+                return;
+            }
             m_database.SchedulerRemove(id);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public bool Exist(string scdID)
+        {
+            if (m_doRemoteCalls)
+                return (bool) DoRemote(scdID);
+            return m_database.SchedulerExist(scdID);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public SchedulerItem Get(string ID)
+        {
+            if (m_doRemoteCalls)
+                return (SchedulerItem)DoRemote(ID);
+            return m_database.Get(ID);
         }
 
         #endregion
@@ -138,12 +173,23 @@ namespace OpenSim.Services
         {
             try
             {
+                // save chagnes before it fires in case its chagned during the fire
                 I = m_database.SaveHistory(I);
+
+                if (I.RunOnce) I.Enabled = false;
+                if (I.Enabled) I.CalculateNextRunTime(I.TimeToRun);
+
+                if (!I.HisotryKeep)
+                    m_database.HistoryDeleteOld(I);
+                m_database.SchedulerSave(I);
+
+                // now fire
                 List<Object> reciept = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
                 if (!I.HistoryReciept)
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
+#if (!ISWIN)
                     foreach (Object o in reciept)
                     {
                         string results = (string)o;
@@ -152,15 +198,15 @@ namespace OpenSim.Services
                             m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
                         }
                     }
+#else
+                    foreach (string results in reciept.Cast<string>().Where(results => results != ""))
+                    {
+                        m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                    }
+#endif
                 }
             
-                if (I.RunOnce) I.Enabled = false;
-                if (I.Enabled) I.TimeToRun = I.TimeToRun.AddSeconds(I.RunEvery);
-
-                if (!I.HisotryKeep)
-                    m_database.HistoryDeleteOld(I);
-
-                m_database.SchedulerSave(I);
+                
             }
             catch (Exception e)
             {

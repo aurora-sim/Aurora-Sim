@@ -43,8 +43,9 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "scene"></param>
         /// <param name = "returnResultImmediately">If false, it will walk the user through how to fix potential issues</param>
+        /// <param name = "continueTrying">Continue trying to register until it succeeds</param>
         /// <returns>Success</returns>
-        bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately);
+        bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately, bool continueTrying);
 
         /// <summary>
         ///   Add this generic info to all registering regions

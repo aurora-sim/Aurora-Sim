@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name = "updateinventoryStatus">
         ///   <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
         ISceneEntity RezSingleAttachmentFromInventory(
-            IClientAPI remoteClient, UUID itemID, int AttachmentPt);
+            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt);
 
         /// <summary>
         ///   Detach the given item to the ground.

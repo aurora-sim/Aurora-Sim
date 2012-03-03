@@ -140,7 +140,8 @@ namespace Aurora.Modules.WindlightSettings
 
             public override void FromOSD(OSDMap map)
             {
-                Info = map["Info"];
+                if(map != null)
+                    Info = map["Info"];
             }
 
             public override OSDMap ToOSD()

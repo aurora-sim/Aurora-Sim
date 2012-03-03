@@ -112,8 +112,8 @@ namespace Aurora.Modules.Search
                                       int queryStart)
         {
             List<DirPlacesReplyData> ReturnValues =
-                new List<DirPlacesReplyData>(directoryService.FindLand(queryText, category.ToString(), queryStart,
-                                                                       (uint) queryFlags));
+                directoryService.FindLand(queryText, category.ToString(), queryStart,
+                                                                       (uint) queryFlags);
 
 #if (!ISWIN)
             SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
@@ -409,7 +409,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
 
                 int locX = 0;
                 int locY = 0;
@@ -477,7 +477,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                DirLandReplyData[] Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
 
                 int locX = 0;
                 int locY = 0;
@@ -555,7 +555,7 @@ namespace Aurora.Modules.Search
                                          : (int) DirectoryManager.EventFlags.Adult;
 
                 //Gets all the events occuring in the given region by maturity level
-                DirEventsReplyData[] Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
+                List<DirEventsReplyData> Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
 
                 foreach (DirEventsReplyData eventData in Eventdata)
                 {
@@ -595,7 +595,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Get all the classifieds in this region
-                Classified[] Classifieds = directoryService.GetClassifiedsInRegion(GR.RegionName);
+                List<Classified> Classifieds = directoryService.GetClassifiedsInRegion(GR.RegionName);
                 foreach (Classified classified in Classifieds)
                 {
                     //Get the region so we have its position
@@ -636,28 +636,13 @@ namespace Aurora.Modules.Search
             if (QueryFlags == 64) //Agent Owned
             {
                 //Get all the parcels
-                LandData[] LandData = directoryService.GetParcelByOwner(client.AgentId);
-
-                client.SendPlacesQuery((from land in LandData
-                                        let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
-                                        where region != null
-                                        select new ExtendedLandData
-                                                   {
-                                                       LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
-                                                   }).ToArray(), QueryID, TransactionID);
+                client.SendPlacesQuery(directoryService.GetParcelByOwner(client.AgentId).ToArray(), QueryID, TransactionID);
             }
             if (QueryFlags == 256) //Group Owned
             {
                 //Find all the group owned land
-                LandData[] LandData = directoryService.GetParcelByOwner(QueryID);
+                List<ExtendedLandData> parcels = directoryService.GetParcelByOwner(QueryID);
 
-                List<ExtendedLandData> parcels = (from land in LandData
-                                                  let region = m_Scenes[0].GridService.GetRegionByUUID(UUID.Zero, land.RegionID)
-                                                  where region != null
-                                                  select new ExtendedLandData
-                                                             {
-                                                                 LandData = land, RegionType = region.RegionType, RegionName = region.RegionName, GlobalPosX = region.RegionLocX + land.UserLocation.X, GlobalPosY = region.RegionLocY + land.UserLocation.Y
-                                                             }).ToList();
                 //Send if we have any parcels
                 if (parcels.Count != 0)
                     client.SendPlacesQuery(parcels.ToArray(), QueryID, TransactionID);

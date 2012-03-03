@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Simulation.Base;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework;
@@ -32,10 +33,10 @@ using Aurora.Framework;
 namespace OpenSim.Region.Framework.Interfaces
 {
     public delegate void NextEmail(Email email);
-    public interface IEmailModule : ISharedRegionModule
+    public interface IEmailModule : IService
     {
-        void SendEmail(UUID objectID, string address, string subject, string body);
-        Email GetNextEmail(UUID objectID, string sender, string subject);
-        void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail eventHandler);
+        void SendEmail(UUID objectID, string address, string subject, string body, IScene scene);
+        Email GetNextEmail(UUID objectID, string sender, string subject, IScene scene);
+        void GetNextEmailAsync(UUID objectID, string sender, string subject, NextEmail eventHandler, IScene scene);
     }
 }

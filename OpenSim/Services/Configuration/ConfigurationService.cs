@@ -110,21 +110,31 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual void AddNewUrls(string key, OSDMap urls)
         {
+            m_autoConfig.Remove("ServerURI");
             foreach (KeyValuePair<string, OSD> kvp in urls)
             {
-                if (kvp.Value == "")
+                if (kvp.Value == "" && kvp.Value.Type != OSDType.Array)
                     continue;
                 if (!m_autoConfig.ContainsKey(kvp.Key))
-                    m_autoConfig[kvp.Key] = kvp.Value;
+                {
+                    if (kvp.Value.Type == OSDType.String)
+                        m_autoConfig[kvp.Key] = kvp.Value;
+                    else
+                        m_autoConfig[kvp.Key] = string.Join(",", ((OSDArray)kvp.Value).ConvertAll<string>((osd) => osd).ToArray());
+                }
                 else
                 {
-                    string url = kvp.Value.AsString();
-                    //Check to see whether the base URLs are the same (removes the UUID at the end)
-                    if (url.Length < 36)
-                        continue; //Not a URL
-                    url = url.Remove(url.Length - 36, 36);
-                    if (!m_autoConfig[kvp.Key].AsString().Contains(url))
-                        m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key] + "," + kvp.Value;
+                    List<string> keys = kvp.Value.Type == OSDType.Array ? ((OSDArray)kvp.Value).ConvertAll<string>((osd) => osd) : new List<string>(new string[1] { kvp.Value.AsString() });
+
+                    foreach (string url in keys)
+                    {
+                        //Check to see whether the base URLs are the same (removes the UUID at the end)
+                        if (url.Length < 36)
+                            continue; //Not a URL
+                        string u = url.Remove(url.Length - 36, 36);
+                        if (!m_autoConfig[kvp.Key].AsString().Contains(u))
+                            m_autoConfig[kvp.Key] = m_autoConfig[kvp.Key] + "," + kvp.Value;
+                    }
                 }
             }
             m_allConfigs[key] = urls;
@@ -338,10 +348,17 @@ namespace OpenSim.Services.ConfigurationService
         public virtual List<string> FindValueOfFromOSDMap(string key, OSDMap urls)
         {
             List<string> keys = new List<string>();
-
+            int next = urls["Next" + key].AsInteger();
             string[] configKeys = urls[key].AsString().Split(',');
-            keys.AddRange(configKeys);
-
+            if (configKeys.Length == 1)
+                return new List<string>(configKeys);
+            if (next >= configKeys.Length - 1)
+                next = 0;
+            for (int i = next; i < configKeys.Length - 1; i++)
+                keys.Add(configKeys[i]);
+            for (int i = 0; i < next; i++)
+                keys.Add(configKeys[i]);
+            urls["Next" + key] = ++next;
             return keys;
         }
 

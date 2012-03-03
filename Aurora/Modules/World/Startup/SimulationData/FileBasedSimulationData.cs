@@ -86,6 +86,12 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         #region ISimulationDataStore Members
 
+        public bool MapTileNeedsGenerated
+        {
+            get;
+            set;
+        }
+
         public virtual string Name
         {
             get { return "FileBasedDatabase"; }
@@ -581,10 +587,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     {
                         try
                         {
-                            AssetBase asset = m_scene.AssetService.GetCached(assetID.ToString());
-                            if (asset == null)
-                                asset = m_scene.AssetService.Get(assetID.ToString());
-                            WriteAsset(assetID.ToString(), asset, writer);
+                            WriteAsset(assetID.ToString(), m_scene.AssetService.Get(assetID.ToString()), writer);
                         }
                         catch (Exception ex)
                         {
@@ -668,6 +671,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
             //Now make it the full file again
             File.Move(fileName + ".tmp", fileName);
+            MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
         }
 
@@ -676,7 +680,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             if (asset != null)
                 writer.WriteFile("assets/" + asset.ID, OSDParser.SerializeJsonString(asset.ToOSD()));
             else
-                MainConsole.Instance.WarnFormat("Could not find asset {0}", id);
+                MainConsole.Instance.WarnFormat("[FileBasedSimulationData]: Could not find asset {0} to save.", id);
         }
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
