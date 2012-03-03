@@ -39,7 +39,8 @@ namespace Aurora.Framework
     {
         GridRegion Get(UUID regionID, UUID ScopeID);
         List<GridRegion> Get(string regionName, UUID ScopeID);
-        GridRegion Get(int x, int y, UUID ScopeID);
+        GridRegion GetZero(int x, int y, UUID ScopeID);
+        List<GridRegion> Get(int x, int y, UUID ScopeID);
         List<GridRegion> Get(RegionFlags regionFlags);
         List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
