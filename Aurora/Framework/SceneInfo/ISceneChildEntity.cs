@@ -345,7 +345,7 @@ namespace Aurora.Framework
 
         void SetFloatOnWater(int floatYN);
 
-        void UpdateTexture(Primitive.TextureEntry tex);
+        void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent);
 
         void SetText(string text, Vector3 av3, double p);
 

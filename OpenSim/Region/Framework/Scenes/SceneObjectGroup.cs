@@ -3774,12 +3774,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name = "localID"></param>
         /// <param name = "textureEntry"></param>
-        public void UpdateTextureEntry(uint localID, byte[] textureEntry)
+        public void UpdateTextureEntry(uint localID, byte[] textureEntry, bool sendChangedEvent)
         {
             SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);
             if (part != null)
             {
-                part.UpdateTextureEntry(textureEntry);
+                part.UpdateTextureEntry(textureEntry, sendChangedEvent);
             }
         }
 
