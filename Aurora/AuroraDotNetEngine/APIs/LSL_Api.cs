@@ -4810,7 +4810,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Vector3 av3 = new Vector3(Util.Clip((float)color.x, 0.0f, 1.0f),
                                       Util.Clip((float)color.y, 0.0f, 1.0f),
                                       Util.Clip((float)color.z, 0.0f, 1.0f));
-            m_host.SetText(text, av3, Util.Clip((float)alpha, 0.0f, 1.0f));
+            m_host.SetText(text.Length > 254 ? text.Remove(254) : text, av3, Util.Clip((float)alpha, 0.0f, 1.0f));
             //m_host.ParentGroup.HasGroupChanged = true;
             //m_host.ParentGroup.ScheduleGroupForFullUpdate();
         }
@@ -7978,7 +7978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             shapeBlock.PathScaleX = 100;
             shapeBlock.PathScaleY = 150;
 
-            int onlytype = (type & 7);//Removes the sculpt flags according to libOMV
+            int onlytype = (type & (ScriptBaseClass.PRIM_SCULPT_FLAG_INVERT | ScriptBaseClass.PRIM_SCULPT_FLAG_MIRROR));//Removes the sculpt flags according to libOMV
             if (onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_CYLINDER &&
                 onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_PLANE &&
                 onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE &&
