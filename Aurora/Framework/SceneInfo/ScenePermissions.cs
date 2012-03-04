@@ -95,6 +95,8 @@ namespace Aurora.Framework
 
     public delegate bool IsGodHandler(UUID user, IScene requestFromScene);
 
+    public delegate bool CanGodTpHandler(UUID user, UUID target);
+
     public delegate bool IsAdministratorHandler(UUID user);
 
     public delegate bool EditParcelPropertiesHandler(UUID user, ILandObject parcel, GroupPowers p, IScene scene);
@@ -178,6 +180,7 @@ namespace Aurora.Framework
         public event ObjectEntryHandler OnObjectEntry;
         public event ReturnObjectsHandler OnReturnObjects;
         public event InstantMessageHandler OnInstantMessage;
+        public event CanGodTpHandler OnCanGodTp;
         public event InventoryTransferHandler OnInventoryTransfer;
         public event ViewScriptHandler OnViewScript;
         public event ViewNotecardHandler OnViewNotecard;
@@ -681,6 +684,30 @@ namespace Aurora.Framework
                 return true;
 #else
                 return list.Cast<InstantMessageHandler>().All(h => h(user, target, m_scene) != false);
+#endif
+            }
+            return true;
+        }
+
+        /// <summary>
+        ///   Checks whether the user is in god mode
+        /// </summary>
+        /// <param name = "user"></param>
+        /// <returns></returns>
+        public bool CanGodTeleport(UUID user, UUID target)
+        {
+            CanGodTpHandler handler = OnCanGodTp;
+            if (handler != null)
+            {
+                Delegate[] list = handler.GetInvocationList();
+#if (!ISWIN)
+                foreach (CanGodTpHandler h in list)
+                {
+                    if (h(user, target) == false) return false;
+                }
+                return true;
+#else
+                return list.Cast<IsGodHandler>().All(h => h(user, m_scene) != false);
 #endif
             }
             return true;

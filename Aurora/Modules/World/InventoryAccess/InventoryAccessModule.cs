@@ -160,10 +160,8 @@ namespace Aurora.Modules.InventoryAccess
                     }
 
                     UUID newID;
-                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
-                    {
+                    if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
                         item.AssetID = newID;
-                    }
                     else
                         remoteClient.SendAlertMessage("Failed to update notecard asset");
 
@@ -177,7 +175,7 @@ namespace Aurora.Modules.InventoryAccess
                         return FailedPermissionsScriptCAPSUpdate(UUID.Zero, itemID);
 
                     UUID newID;
-                    if ((m_scene.AssetService.UpdateContent(item.AssetID, data, out newID)) && (newID != UUID.Zero))
+                    if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
                         item.AssetID = newID;
                     else
                         remoteClient.SendAlertMessage("Failed to update script asset");
@@ -431,7 +429,7 @@ namespace Aurora.Modules.InventoryAccess
                     }
                     else
                     {
-                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Unknown, AssetType.Object);
+                        folder = m_scene.InventoryService.GetFolderForType (userID, InventoryType.Object, AssetType.Object);
                     }
                 }
 
@@ -559,79 +557,101 @@ namespace Aurora.Modules.InventoryAccess
             return assetID;
         }
 
-        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID)
+        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item)
         {
             XmlDocument doc;
-            InventoryItemBase item = new InventoryItemBase(itemID, remoteClient.AgentId);
-            item = m_scene.InventoryService.GetItem(item);
-            return CreateObjectFromInventory(item, remoteClient, itemID, out doc);
+            item = m_scene.InventoryService.GetItem(new InventoryItemBase(itemID, remoteClient.AgentId));
+            UUID itemId = UUID.Zero;
+
+            // If we have permission to copy then link the rezzed object back to the user inventory
+            // item that it came from.  This allows us to enable 'save object to inventory'
+            if (!m_scene.Permissions.BypassPermissions())
+            {
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+                {
+                    itemId = item.ID;
+                }
+            }
+            else
+            {
+                // Brave new fullperm world
+                //
+                itemId = item.ID;
+            }
+            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
+        }
+
+        public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID)
+        {
+            XmlDocument doc;
+            return CreateObjectFromInventory(remoteClient, itemID, assetID, out doc);
         }
 
         protected virtual SceneObjectGroup CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient, UUID itemID, out XmlDocument doc)
         {
-            if (item != null)
+            UUID itemId = UUID.Zero;
+
+            // If we have permission to copy then link the rezzed object back to the user inventory
+            // item that it came from.  This allows us to enable 'save object to inventory'
+            if (!m_scene.Permissions.BypassPermissions())
             {
-                item.Owner = remoteClient.AgentId;
-                AssetBase rezAsset = m_scene.AssetService.Get(item.AssetID.ToString());
-
-                if (rezAsset != null)
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
                 {
-                    UUID itemId = UUID.Zero;
-
-                    // If we have permission to copy then link the rezzed object back to the user inventory
-                    // item that it came from.  This allows us to enable 'save object to inventory'
-                    if (!m_scene.Permissions.BypassPermissions())
-                    {
-                        if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
-                        {
-                            itemId = item.ID;
-                        }
-                    }
-                    else
-                    {
-                        // Brave new fullperm world
-                        //
-                        itemId = item.ID;
-                    }
-
-                    string xmlData = Utils.BytesToString(rezAsset.Data);
-                    doc = new XmlDocument();
-                    try
-                    {
-                        doc.LoadXml(xmlData);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-
-                    if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
-                        (doc.FirstChild.NextSibling != null &&
-                        doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>")))
-                    {
-                        //We don't do multiple objects here
-                        return null;
-                    }
-                    string xml = "";
-                    if (doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration)
-                    {
-                        if (doc.FirstChild.NextSibling != null) xml = doc.FirstChild.NextSibling.OuterXml;
-                    }
-                    else
-                        xml = doc.FirstChild.OuterXml;
-                    SceneObjectGroup group
-                                = SceneObjectSerializer.FromOriginalXmlFormat(itemId, xml, m_scene);
-                    if (group == null)
-                        return null;
-
-                    group.IsDeleted = false;
-                    group.m_isLoaded = true;
-                    foreach (SceneObjectPart part in group.ChildrenList)
-                    {
-                        part.IsLoading = false;
-                    }
-                    return group;
+                    itemId = item.ID;
                 }
+            }
+            else
+            {
+                // Brave new fullperm world
+                //
+                itemId = item.ID;
+            }
+            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
+        }
+
+        protected virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID, out XmlDocument doc)
+        {
+            AssetBase rezAsset = m_scene.AssetService.Get(assetID.ToString());
+
+            if (rezAsset != null)
+            {
+                string xmlData = Utils.BytesToString(rezAsset.Data);
+                doc = new XmlDocument();
+                try
+                {
+                    doc.LoadXml(xmlData);
+                }
+                catch
+                {
+                    return null;
+                }
+
+                if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+                    (doc.FirstChild.NextSibling != null &&
+                    doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
+                {
+                    //We don't do multiple objects here
+                    return null;
+                }
+                string xml = "";
+                if (doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration)
+                {
+                    if (doc.FirstChild.NextSibling != null) xml = doc.FirstChild.NextSibling.OuterXml;
+                }
+                else
+                    xml = doc.FirstChild.OuterXml;
+                SceneObjectGroup group
+                            = SceneObjectSerializer.FromOriginalXmlFormat(itemID, xml, m_scene);
+                if (group == null)
+                    return null;
+
+                group.IsDeleted = false;
+                group.m_isLoaded = true;
+                foreach (SceneObjectPart part in group.ChildrenList)
+                {
+                    part.IsLoading = false;
+                }
+                return group;
             }
             doc = null;
             return null;
@@ -796,7 +816,7 @@ namespace Aurora.Modules.InventoryAccess
 
             List<SceneObjectPart> partList = new List<SceneObjectPart> (group.ChildrenList);
 
-            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId);
+            group.SetGroup (remoteClient.ActiveGroupId, remoteClient.AgentId, false);
             item.Owner = remoteClient.AgentId;
             if (rootPart.OwnerID != item.Owner)
             {
@@ -930,7 +950,7 @@ namespace Aurora.Modules.InventoryAccess
 
                 List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
-                group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId);
+                group.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
                 item.Owner = remoteClient.AgentId;
                 if (rootPart.OwnerID != item.Owner)
                 {

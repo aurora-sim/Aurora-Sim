@@ -154,10 +154,51 @@ namespace Aurora.Framework
         Unknown
     }
 
+    public enum ColumnType
+    {
+        Blob,
+        LongBlob,
+        Char,
+        Date,
+        DateTime,
+        Double,
+        Integer,
+        String,
+        Text,
+        MediumText,
+        LongText,
+        TinyInt,
+        Float,
+        Boolean,
+        UUID,
+        Unknown
+    }
+
+    public class ColumnTypeDef
+    {
+        public ColumnType Type { get; set; }
+        public uint Size { get; set; }
+        public string defaultValue { get; set; }
+        public bool isNull { get; set; }
+        public bool unsigned { get; set; }
+        public bool auto_increment { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            ColumnTypeDef foo = obj as ColumnTypeDef;
+            return (foo != null && foo.Type.ToString() == Type.ToString() && foo.Size == Size && foo.defaultValue == defaultValue && foo.isNull == isNull && foo.unsigned == unsigned && foo.auto_increment == auto_increment);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+    }
+
     public class ColumnDefinition
     {
         public string Name { get; set; }
-        public ColumnTypes Type { get; set; }
+        public ColumnTypeDef Type { get; set; }
 
         public override bool Equals(object obj)
         {

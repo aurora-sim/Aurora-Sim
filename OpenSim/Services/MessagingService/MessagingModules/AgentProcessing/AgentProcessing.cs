@@ -363,6 +363,7 @@ namespace OpenSim.Services.MessagingService
 
                     AgentCircuitData regionCircuitData = regionClientCaps.CircuitData.Copy();
                     regionCircuitData.child = true; //Fix child agent status
+                    regionCircuitData.roothandle = requestingRegion.RegionHandle;
                     regionCircuitData.reallyischild = true;
                     string reason; //Tell the region about it
                     bool useCallbacks = false;
@@ -411,6 +412,7 @@ namespace OpenSim.Services.MessagingService
                                                    clientCaps.GetRootCapsService().CircuitData.Copy();
                                                GridRegion nCopy = neighbor;
                                                regionCircuitData.child = true; //Fix child agent status
+                                               regionCircuitData.roothandle = requestingRegion;
                                                regionCircuitData.reallyischild = true;
                                                regionCircuitData.DrawDistance = DrawDistance;
                                                bool useCallbacks = false;
@@ -429,9 +431,10 @@ namespace OpenSim.Services.MessagingService
             Util.FireAndForget(delegate
                                    {
                                        int count = 0;
-                                       int xMin = (caps.Region.RegionLocX) + (int) (position.X) - 256;
+                                       IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
+                                       int xMin = (caps.Region.RegionLocX) + (int)(position.X) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeX);
                                        int xMax = (caps.Region.RegionLocX) + (int) (position.X) + 256;
-                                       int yMin = (caps.Region.RegionLocY) + (int) (position.Y) - 256;
+                                       int yMin = (caps.Region.RegionLocY) + (int)(position.Y) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeY);
                                        int yMax = (caps.Region.RegionLocY) + (int) (position.Y) + 256;
 
                                        //Ask the grid service about the range
@@ -451,6 +454,7 @@ namespace OpenSim.Services.MessagingService
                                                AgentCircuitData regionCircuitData = caps.CircuitData.Copy();
                                                GridRegion nCopy = neighbor;
                                                regionCircuitData.child = true; //Fix child agent status
+                                               regionCircuitData.roothandle = caps.RegionHandle;
                                                regionCircuitData.reallyischild = true;
                                                bool useCallbacks = false;
                                                InformClientOfNeighbor(caps.AgentID, caps.RegionHandle, regionCircuitData,
@@ -553,9 +557,7 @@ namespace OpenSim.Services.MessagingService
                 int requestedPort = 0;
                 if (circuitData.child)
                     circuitData.reallyischild = true;
-                bool regionAccepted = SimulationService.CreateAgent(neighbor, ref circuitData,
-                                                                    TeleportFlags, agentData, out requestedPort,
-                                                                    out reason);
+                bool regionAccepted = CreateAgent(neighbor, otherRegionService, ref circuitData, SimulationService, ref requestedPort, out reason);
                 if (regionAccepted)
                 {
                     IPAddress ipAddress = neighbor.ExternalEndPoint.Address;
@@ -680,6 +682,7 @@ namespace OpenSim.Services.MessagingService
                             destination = oldRegion;
                         //Inform the client of the neighbor if needed
                         circuit.child = false; //Force child status to the correct type
+                        circuit.roothandle = destination.RegionHandle;
                         if (!InformClientOfNeighbor(AgentID, requestingRegion, circuit, ref destination, TeleportFlags,
                                                     agentData, out reason, out useCallbacks))
                         {
@@ -942,14 +945,14 @@ namespace OpenSim.Services.MessagingService
             {
                 if (
                     !(Math.Abs(oldr - newr + newSize) <=
-                      m_registry.RequestModuleInterface<IGridService>().RegionViewSize))
+                      m_registry.RequestModuleInterface<IGridService>().GetRegionViewSize()))
                     return false;
             }
             else
             {
                 if (
                     !(Math.Abs(newr - oldr + oldSize) <=
-                      m_registry.RequestModuleInterface<IGridService>().RegionViewSize))
+                      m_registry.RequestModuleInterface<IGridService>().GetRegionViewSize()))
                     return false;
             }
             return true;
@@ -967,8 +970,8 @@ namespace OpenSim.Services.MessagingService
                 //Query how many regions fit in this size
                 int xMin = (region.RegionLocX) - (userDrawDistance);
                 int xMax = (region.RegionLocX) + (userDrawDistance);
-                int yMin = (region.RegionLocX) - (userDrawDistance);
-                int yMax = (region.RegionLocX) + (userDrawDistance);
+                int yMin = (region.RegionLocY) - (userDrawDistance);
+                int yMax = (region.RegionLocY) + (userDrawDistance);
 
                 //Ask the grid service about the range
                 neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(region.ScopeID,
@@ -1188,8 +1191,7 @@ namespace OpenSim.Services.MessagingService
 
                 int requestedUDPPort = 0;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
-                success = SimulationService.CreateAgent(region, ref aCircuit, aCircuit.teleportFlags, null,
-                                                        out requestedUDPPort, out reason);
+                success = CreateAgent(region, regionClientCaps, ref aCircuit, SimulationService, ref requestedUDPPort, out reason);
                 if (requestedUDPPort == 0)
                     requestedUDPPort = region.ExternalEndPoint.Port;
                 aCircuit.RegionUDPPort = requestedUDPPort;
@@ -1251,6 +1253,26 @@ namespace OpenSim.Services.MessagingService
                 }
             }
             return success;
+        }
+
+        private bool CreateAgent(GridRegion region, IRegionClientCapsService regionCaps, ref AgentCircuitData aCircuit,
+            ISimulationService SimulationService, ref int requestedUDPPort, out string reason)
+        {
+            CachedUserInfo info = new CachedUserInfo();
+            IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            if (con != null)
+                info.AgentInfo = con.GetAgent(aCircuit.AgentID);
+            info.UserAccount = regionCaps.ClientCaps.AccountInfo;
+
+            IGroupsServiceConnector groupsConn = Aurora.DataManager.DataManager.RequestPlugin<IGroupsServiceConnector>();
+            if (groupsConn != null)
+            {
+                info.ActiveGroup = groupsConn.GetGroupMembershipData(aCircuit.AgentID, UUID.Zero, aCircuit.AgentID);
+                info.GroupMemberships = groupsConn.GetAgentGroupMemberships(aCircuit.AgentID, aCircuit.AgentID);
+            }
+            aCircuit.OtherInformation["CachedUserInfo"] = info.ToOSD();
+            return SimulationService.CreateAgent(region, ref aCircuit, aCircuit.teleportFlags, null,
+                                                    out requestedUDPPort, out reason);
         }
 
         #endregion

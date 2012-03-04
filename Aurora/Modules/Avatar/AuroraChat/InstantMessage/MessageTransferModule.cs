@@ -499,11 +499,11 @@ namespace Aurora.Modules.Chat
                 return; //All done
 
             //Ask for the user new style first
-            string[] AgentLocations =
+            List<string> AgentLocations =
                 m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.fromAgentID.ToString(),
-                                                                                           Queries.ToArray());
+                                                                                           Queries);
             //If this is false, this doesn't exist on the presence server and we use the legacy way
-            if (AgentLocations.Length != 0)
+            if (AgentLocations.Count != 0)
             {
                 for (int i = 0; i < users.Count; i++)
                 {
@@ -631,8 +631,8 @@ namespace Aurora.Modules.Chat
 
             //Now query the grid server for the agent
             IAgentInfoService ais = m_Scenes[0].RequestModuleInterface<IAgentInfoService>();
-            string[] AgentLocations = ais.GetAgentsLocations(im.fromAgentID.ToString(), new[] {toAgentID.ToString()});
-            if (AgentLocations.Length > 0)
+            List<string> AgentLocations = ais.GetAgentsLocations(im.fromAgentID.ToString(), new List<string>(new[] { toAgentID.ToString() }));
+            if (AgentLocations.Count > 0)
             {
                 //No agents, so this user is offline
                 if (AgentLocations[0] == "NotOnline")

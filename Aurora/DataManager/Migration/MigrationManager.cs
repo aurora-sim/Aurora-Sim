@@ -184,18 +184,23 @@ namespace Aurora.DataManager.Migration
                     {
                         Rec<string, ColumnDefinition[], IndexDefinition[]> rec;
                         currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
-                        MainConsole.Instance.Fatal(
-                            string.Format(
-                                "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
-                                currentMigrator.MigrationName, currentMigrator.Version, rec.X1 + "_broken"));
+                        MainConsole.Instance.Fatal(string.Format(
+                            "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
+                            currentMigrator.MigrationName,
+                            currentMigrator.Version,
+                            rec.X1 + "_broken"
+                        ));
                         genericData.RenameTable(rec.X1, rec.X1 + "_broken");
                         currentMigrator.Migrate(genericData);
                         validated = currentMigrator.Validate(genericData);
                         if (!validated)
-                            throw new MigrationOperationException(
-                                string.Format(
-                                    "Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.",
-                                    currentMigrator.MigrationName, currentMigrator.Version));
+                        {
+                            throw new MigrationOperationException(string.Format(
+                                "Current version {0}-{1} did not validate. Stopping here so we don't cause any trouble. No changes were made.",
+                                currentMigrator.MigrationName,
+                                currentMigrator.Version
+                            ));
+                        }
                     }
                 }
                 //else

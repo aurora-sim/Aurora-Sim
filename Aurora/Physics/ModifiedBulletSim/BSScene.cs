@@ -397,6 +397,11 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
         }
 
+        public override void DeletePrim(PhysicsObject prim)
+        {
+            RemovePrim(prim);
+        }
+
         public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
             bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);

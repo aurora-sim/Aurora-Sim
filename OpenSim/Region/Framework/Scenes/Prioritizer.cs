@@ -175,21 +175,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
                 {
-                    IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
-                    if (agentInfoService != null)
-                    {
-                        UserInfo info = agentInfoService.GetUserInfo(client.UUID.ToString());
-                        if (info != null)
-                        {
-                            GridRegion r = scene.GridService.GetRegionByUUID(scene.RegionInfo.ScopeID,
-                                                                             info.CurrentRegionID);
-                            if (r != null)
-                            {
-                                m_cachedXOffset = scene.RegionInfo.RegionLocX - r.RegionLocX;
-                                m_cachedYOffset = scene.RegionInfo.RegionLocY - r.RegionLocY;
-                            }
-                        }
-                    }
+                    int RegionLocX, RegionLocY;
+                    Util.UlongToInts(client.RootAgentHandle, out RegionLocX, out RegionLocY);
+                    m_cachedXOffset = scene.RegionInfo.RegionLocX - RegionLocX;
+                    m_cachedYOffset = scene.RegionInfo.RegionLocY - RegionLocY;
                 }
                 //We need to add the offset so that we can check from the right place in child regions
                 if (m_cachedXOffset < 0)

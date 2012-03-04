@@ -41,6 +41,8 @@ namespace Aurora.Services.DataService
         private IGenericData GD;
         private string m_realm = "useraccounts";
 
+        public string Realm { get { return "useraccounts"; } }
+
         #region IUserAccountData Members
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
@@ -95,18 +97,20 @@ namespace Aurora.Services.DataService
 
             string serviceUrls = string.Join(" ", (from kvp in data.ServiceURLs let key = HttpUtility.UrlEncode(kvp.Key) let val = HttpUtility.UrlEncode(kvp.Value.ToString()) select key + "=" + val).ToArray());
 
-            return GD.Replace(m_realm, new[]
-                                           {
-                                               "PrincipalID", "ScopeID", "FirstName",
-                                               "LastName", "Email", "ServiceURLs", "Created", "UserLevel", "UserFlags",
-                                               "UserTitle", "Name"
-                                           }, new object[]
-                                                  {
-                                                      data.PrincipalID, data.ScopeID, data.FirstName, data.LastName,
-                                                      data.Email,
-                                                      serviceUrls, data.Created, data.UserLevel, data.UserFlags,
-                                                      data.UserTitle, data.Name
-                                                  });
+            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            row["PrincipalID"] = data.PrincipalID;
+            row["ScopeID"] = data.ScopeID;
+            row["FirstName"] = data.FirstName;
+            row["LastName"] = data.LastName;
+            row["Email"] = data.Email;
+            row["ServiceURLs"] = data.ServiceURLs;
+            row["Created"] = data.Created;
+            row["UserLevel"] = data.UserLevel;
+            row["UserFlags"] = data.UserFlags;
+            row["UserTitle"] = data.UserTitle;
+            row["Name"] = data.Name;
+
+            return GD.Replace(m_realm, row);
         }
 
         public bool Delete(string field, string val)
@@ -166,7 +170,7 @@ namespace Aurora.Services.DataService
                 "UserLevel",
                 "UserFlags",
                 "UserTitle",
-                GD.IsNull("Name", GD.ConCat(new[] {"FirstName", "' '", "LastName"})) + " as Name "
+                "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
             }, m_realm, filter, null, null, null);
 
             ParseQuery(retVal, ref data);

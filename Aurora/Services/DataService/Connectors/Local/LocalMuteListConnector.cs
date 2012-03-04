@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalMuteListConnector : IMuteListConnector
+    public class LocalMuteListConnector : ConnectorBase, IMuteListConnector
     {
         private IGenericData GD;
 
@@ -54,6 +56,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -66,9 +69,14 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <returns></returns>
-        public MuteList[] GetMuteList(UUID AgentID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<MuteList> GetMuteList(UUID AgentID)
         {
-            return GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD).ToArray();
+            object remoteValue = DoRemote(AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<MuteList>)remoteValue;
+
+            return GenericUtils.GetGenerics<MuteList>(AgentID, "MuteList", GD);
         }
 
         /// <summary>
@@ -76,8 +84,13 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "mute"></param>
         /// <param name = "AgentID"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateMute(MuteList mute, UUID AgentID)
         {
+            object remoteValue = DoRemote(mute, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             GenericUtils.AddGeneric(AgentID, "MuteList", mute.MuteID.ToString(), mute.ToOSD(), GD);
         }
 
@@ -86,9 +99,14 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "muteID"></param>
         /// <param name = "AgentID"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void DeleteMute(UUID muteID, UUID AgentID)
         {
-            GenericUtils.RemoveGeneric(AgentID, "MuteList", muteID.ToString(), GD);
+            object remoteValue = DoRemote(muteID, AgentID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            GenericUtils.RemoveGenericByKeyAndType(AgentID, "MuteList", muteID.ToString(), GD);
         }
 
         /// <summary>
@@ -97,8 +115,13 @@ namespace Aurora.Services.DataService
         /// <param name = "AgentID"></param>
         /// <param name = "PossibleMuteID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
+            object remoteValue = DoRemote(AgentID, PossibleMuteID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             return GenericUtils.GetGeneric<MuteList>(AgentID, "MuteList", PossibleMuteID.ToString(), GD) != null;
         }
 

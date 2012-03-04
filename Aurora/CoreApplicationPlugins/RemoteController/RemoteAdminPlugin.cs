@@ -1853,7 +1853,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                ? AssetFlags.Local
                                                                : AssetFlags.Normal) |
                                                           ((Boolean.Parse(GetStringAttribute(assetNode, "temporary", "")))
-                                                               ? AssetFlags.Temperary
+                                                               ? AssetFlags.Temporary
                                                                : AssetFlags.Normal)
                                               };
 

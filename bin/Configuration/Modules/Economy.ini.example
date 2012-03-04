@@ -28,3 +28,8 @@
     PriceObjectRent = 1
     PriceObjectScaleFactor = 10
     PriceParcelRent = 1
+    
+[GroupMoney]
+    ;;Enables getting and sending back the group money information if the money module exists
+    ;; Does not do anything if the money module that is enabled does not support group currency
+    Enabled = true

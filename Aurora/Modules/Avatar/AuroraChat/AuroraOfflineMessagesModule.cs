@@ -170,7 +170,7 @@ namespace Aurora.Modules.Chat
                 return;
             MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
-            GridInstantMessage[] msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
+            List<GridInstantMessage> msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
 
             foreach (GridInstantMessage IM in msglist)
             {
@@ -229,7 +229,7 @@ namespace Aurora.Modules.Chat
                             emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),
                                 string.Format ("Time: {0}\n", Util.ToDateTime (im.timestamp).ToShortDateString ()) +
                                 string.Format ("From: {0}\n", im.fromAgentName) +
-                                string.Format ("Message: {0}\n", im.message));
+                                string.Format("Message: {0}\n", im.message), m_SceneList[0]);
                         }
                     }
                 }

@@ -38,11 +38,9 @@ using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 
 namespace Aurora.Modules
 {
-    public class IWCFriendsConnector : IFriendsService, IService
+    public class IWCFriendsConnector : ConnectorBase, IFriendsService, IService
     {
         protected IFriendsService m_localService;
-        protected IRegistryCore m_registry;
-        protected FriendsServicesConnector m_remoteService;
 
         public string Name
         {
@@ -85,8 +83,7 @@ namespace Aurora.Modules
             if (m_localService == null)
                 m_localService = new FriendsService();
             m_localService.Initialize(config, registry);
-            m_remoteService = new FriendsServicesConnector();
-            m_remoteService.Initialize(config, registry);
+            Init(registry, Name);
             registry.RegisterModuleInterface<IFriendsService>(this);
             m_registry = registry;
         }
@@ -103,11 +100,11 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
-        public FriendInfo[] GetFriends(UUID PrincipalID)
+        public List<FriendInfo> GetFriends(UUID PrincipalID)
         {
-            FriendInfo[] friends = m_localService.GetFriends(PrincipalID);
-            if (friends == null || friends.Length == 0)
-                friends = m_remoteService.GetFriends(PrincipalID);
+            List<FriendInfo> friends = m_localService.GetFriends(PrincipalID);
+            if (friends == null || friends.Count == 0)
+                friends = (List<FriendInfo>)DoRemoteForced(PrincipalID);
             return friends;
         }
 
@@ -118,13 +115,10 @@ namespace Aurora.Modules
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
             {
-                if (m_remoteService.StoreFriend(PrincipalID, Friend, flags))
+                if ((bool)DoRemoteForced(PrincipalID, Friend, flags))
                     return true;
             }
-            bool success = m_localService.StoreFriend(PrincipalID, Friend, flags);
-            if (!success)
-                success = m_remoteService.StoreFriend(PrincipalID, Friend, flags);
-            return success;
+            return m_localService.StoreFriend(PrincipalID, Friend, flags);
         }
 
         public bool Delete(UUID PrincipalID, string Friend)
@@ -134,13 +128,10 @@ namespace Aurora.Modules
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
             {
-                if (m_remoteService.Delete(PrincipalID, Friend))
+                if ((bool)DoRemoteForced(PrincipalID, Friend))
                     return true;
             }
-            bool success = m_localService.Delete(PrincipalID, Friend);
-            if (!success)
-                success = m_remoteService.Delete(PrincipalID, Friend);
-            return success;
+            return m_localService.Delete(PrincipalID, Friend);
         }
 
         #endregion

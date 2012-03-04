@@ -534,13 +534,13 @@ namespace Aurora.Framework
 
     public delegate void SaveStateHandler(IClientAPI client, UUID agentID);
 
-    public delegate void GroupAccountSummaryRequest(IClientAPI client, UUID agentID, UUID groupID);
+    public delegate void GroupAccountSummaryRequest(IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, int currentInterval, int intervalDays);
 
     public delegate void GroupAccountDetailsRequest(
-        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval, int intervalDays);
 
     public delegate void GroupAccountTransactionsRequest(
-        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID);
+        IClientAPI client, UUID agentID, UUID groupID, UUID transactionID, UUID sessionID, int currentInterval, int intervalDays);
 
     public delegate void ParcelBuyPass(IClientAPI client, UUID agentID, int ParcelLocalID);
 
@@ -578,6 +578,39 @@ namespace Aurora.Framework
         public bool Online;
         public UUID OwnerID = UUID.Zero;
         public DateTime TimeLastRezzed;
+    }
+
+    public class GroupAccountHistory : IDataTransferable
+    {
+        public int Amount;
+        public string Description;
+        public string TimeString;
+        public string UserCausingCharge;
+        private bool _ispayment = true;
+        public bool Payment { get { return _ispayment; } set { _ispayment = value; } }
+        public bool Stipend { get { return !_ispayment; } set { _ispayment = !value; } }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["Amount"] = Amount;
+            map["Description"] = Description;
+            map["TimeString"] = TimeString;
+            map["UserCausingCharge"] = UserCausingCharge;
+            map["Payment"] = Payment;
+
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Amount = map["Amount"];
+            Description = map["Description"];
+            TimeString = map["TimeString"];
+            Payment = map["Payment"];
+            UserCausingCharge = map["UserCausingCharge"];
+        }
     }
 
     public class DirPlacesReplyData : IDataTransferable
@@ -1654,12 +1687,12 @@ namespace Aurora.Framework
         void SendAvatarInterestsReply(UUID avatarID, uint wantMask, string wantText, uint skillsMask, string skillsText,
                                       string languages);
 
-        void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt);
+        void SendGroupAccountingDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID, int amt, int currentInterval, int interval, string startDate, GroupAccountHistory[] history);
 
-        void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, uint moneyAmt, int totalTier, int usedTier);
+        void SendGroupAccountingSummary(IClientAPI sender, UUID groupID, UUID requestID, int moneyAmt, int totalTier, int usedTier, string startDate, int currentInterval, int intervalLength, string taxDate, string lastTaxDate, int parcelDirectoryFee, int landTaxFee, int groupTaxFee, int objectTaxFee);
 
-        void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID, UUID sessionID,
-                                                 int amt);
+        void SendGroupTransactionsSummaryDetails(IClientAPI sender, UUID groupID, UUID transactionID,
+                                                        UUID sessionID, int currentInterval, int intervalDays, string startingDate, GroupAccountHistory[] history);
 
         void SendChangeUserRights(UUID agentID, UUID friendID, int rights);
 

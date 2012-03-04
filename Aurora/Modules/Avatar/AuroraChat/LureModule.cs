@@ -148,41 +148,28 @@ namespace Aurora.Modules.Chat
 
 			GridInstantMessage m;
 
-            if (m_allowGodTeleports && client.Scene.Permissions.IsGod (client.AgentId) && presence.GodLevel > 0)//if we are an admin and are in god mode
-			{
-                if (client.Scene.Permissions.IsGod (targetid)) //if they are an admin
-				{
-                    //Gods do not tp other gods
-                    m = new GridInstantMessage (client.Scene, client.AgentId,
-					                           client.FirstName+" "+client.LastName, targetid,
-					                           (byte)InstantMessageDialog.RequestTeleport, false,
-					                           message, dest, false, presence.AbsolutePosition,
-					                           new Byte[0]);
-				}
-				else
-				{
-                    //God tp them
-                    m = new GridInstantMessage (client.Scene, client.AgentId,
-					                           client.FirstName+" "+client.LastName, targetid,
-					                           (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
-					                           "", dest, false, presence.AbsolutePosition,
-					                           new Byte[0]);
-				}
-			}
-			else
-			{
+            if (m_allowGodTeleports && client.Scene.Permissions.CanGodTeleport(client.AgentId, targetid))//if we are an admin and are in god mode
+            {
+                //God tp them
+                m = new GridInstantMessage(client.Scene, client.AgentId,
+                                           client.FirstName + " " + client.LastName, targetid,
+                                           (byte)InstantMessageDialog.GodLikeRequestTeleport, false,
+                                           "", dest, false, presence.AbsolutePosition,
+                                           new Byte[0]);
+            }
+            else
+            {
                 //Not a god, so no god tp
-                m = new GridInstantMessage (client.Scene, client.AgentId,
-				                           client.FirstName+" "+client.LastName, targetid,
-				                           (byte)InstantMessageDialog.RequestTeleport, false,
-				                           message, dest, false, presence.AbsolutePosition,
-				                           new Byte[0]);
-			}
+                m = new GridInstantMessage(client.Scene, client.AgentId,
+                                           client.FirstName + " " + client.LastName, targetid,
+                                           (byte)InstantMessageDialog.RequestTeleport, false,
+                                           message, dest, false, presence.AbsolutePosition,
+                                           new Byte[0]);
+            }
             m_PendingLures.Add (m.imSessionID, m, 7200); // 2 hours
+
 			if (m_TransferModule != null)
-			{
 				m_TransferModule.SendInstantMessage(m);
-			}
 		}
 
         public void OnTeleportLureRequest(UUID lureID, uint teleportFlags, IClientAPI client)

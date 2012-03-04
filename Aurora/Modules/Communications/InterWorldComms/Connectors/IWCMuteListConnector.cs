@@ -34,12 +34,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class IWCMuteListConnector : IMuteListConnector
+    public class IWCMuteListConnector : ConnectorBase, IMuteListConnector
     {
         protected LocalMuteListConnector m_localService;
-
-        private IRegistryCore m_registry;
-        protected RemoteMuteListConnector m_remoteService;
 
         #region IMuteListConnector Members
 
@@ -50,10 +47,9 @@ namespace Aurora.Modules
             {
                 m_localService = new LocalMuteListConnector();
                 m_localService.Initialize(unneeded, source, simBase, defaultConnectionString);
-                m_remoteService = new RemoteMuteListConnector();
-                m_remoteService.Initialize(unneeded, source, simBase, defaultConnectionString);
                 m_registry = simBase;
                 DataManager.DataManager.RegisterPlugin(this);
+                Init(simBase, Name);
             }
         }
 
@@ -62,14 +58,13 @@ namespace Aurora.Modules
             get { return "IMuteListConnector"; }
         }
 
-        public MuteList[] GetMuteList(UUID AgentID)
+        public List<MuteList> GetMuteList(UUID AgentID)
         {
-            List<MuteList> list = new List<MuteList>();
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                return m_remoteService.GetMuteList(AgentID);
+                return (List<MuteList>)DoRemote(AgentID);
             return m_localService.GetMuteList(AgentID);
         }
 
@@ -79,7 +74,7 @@ namespace Aurora.Modules
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                m_remoteService.UpdateMute(mute, AgentID);
+                DoRemote(mute, AgentID);
             else
                 m_localService.UpdateMute(mute, AgentID);
         }
@@ -90,7 +85,7 @@ namespace Aurora.Modules
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                m_remoteService.DeleteMute(muteID, AgentID);
+                DoRemote(muteID, AgentID);
             else
                 m_localService.DeleteMute(muteID, AgentID);
         }
@@ -101,7 +96,7 @@ namespace Aurora.Modules
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(AgentID.ToString(),
                                                                                        "FriendsServerURI");
             if (serverURIs.Count > 0) //Remote user... or should be
-                if (!m_remoteService.IsMuted(AgentID, PossibleMuteID))
+                if (!(bool)DoRemote(AgentID, PossibleMuteID))
                     return false;
                 else
                     return true;

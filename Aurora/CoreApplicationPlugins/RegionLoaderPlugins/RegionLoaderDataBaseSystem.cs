@@ -302,7 +302,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 //Open the region manager for them
                 MessageBox.Show (reason, "Startup failed, regions did not validate!");
-                StartRegionManagerThread ();
+                OpenRegionManager(new string[0]);
             }
             catch
             {

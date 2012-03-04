@@ -153,35 +153,8 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
-            IAsyncMessageRecievedService service = m_registry.RequestModuleInterface<IAsyncMessageRecievedService> ();
-            if(service != null)
-                service.OnMessageReceived += OnMessageReceived;
             m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
             LoadFromDatabase ();
-        }
-        
-        /// <summary>
-        /// We do handle the RegisterHandlers message here, as we deal with all of the handlers in this module
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        private OSDMap OnMessageReceived(OSDMap message)
-        {
-            if (!m_useRegistrationService)
-                return null;
-
-            if (message.ContainsKey("Method") && message["Method"].AsString() == "RegisterHandlers")
-            {
-                string SessionID = message["SessionID"];
-                if (CheckThreatLevel (SessionID, "RegisterHandlers", ThreatLevel.None))
-                {
-                    UpdateUrlsForClient (SessionID);
-                    OSDMap resp = new OSDMap ();
-                    resp["Reregistered"] = true;//It was successful
-                    return resp;
-                }
-            }
-            return null;
         }
 
         protected void ReadConfiguration(IConfig config)
@@ -233,7 +206,9 @@ namespace OpenSim.Services.GridService
                     //Don't load links (yet)
                     continue;
                 }
-                if(url.HostNames == null || url.Ports == null || url.URLS == null)
+                if (url.HostNames == null || url.Ports == null ||
+                    url.URLS == null ||
+                    !CheckModuleNames(url) || url.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
                 {
                     RemoveUrlsForClient(url.SessionID);
                 }
@@ -241,8 +216,15 @@ namespace OpenSim.Services.GridService
                 {
                     foreach (IGridRegistrationUrlModule module in m_modules.Values)
                     {
-                        if(url.URLS.ContainsKey(module.UrlName))//Make sure it exists
-                            module.AddExistingUrlForClient (url.SessionID, url.URLS[module.UrlName], url.Ports[module.UrlName]);
+                        if (url.URLS.ContainsKey(module.UrlName))//Make sure it exists
+                        {
+                            int i = 0;
+                            if (url.HostNames[module.UrlName].Type == OSDType.Array)
+                                foreach (OSD o in (OSDArray)url.URLS[module.UrlName])
+                                    module.AddExistingUrlForClient(url.SessionID, ((OSDArray)url.URLS[module.UrlName])[i], ((OSDArray)url.Ports[module.UrlName])[i++]);
+                            else
+                                module.AddExistingUrlForClient(url.SessionID, url.URLS[module.UrlName], url.Ports[module.UrlName]);
+                        }
                     }
                     if (m_useSessionTime && (url.Expiration.AddMinutes((m_timeBeforeTimeout * 60) * 0.9)) < DateTime.UtcNow) //Check to see whether the expiration is soon before updating
                     {
@@ -266,6 +248,7 @@ namespace OpenSim.Services.GridService
             {
                 if(urls.HostNames == null || urls.Ports == null ||
                     urls.URLS == null || urls.SessionID != SessionID ||
+                    MainServer.Instance.HostName != urls._ParentHostName ||
                     !CheckModuleNames(urls) || urls.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
                 {
                     if (urls.VersionNumber == GridRegistrationURLs.CurrentVersionNumber)
@@ -286,8 +269,31 @@ namespace OpenSim.Services.GridService
                     InnerUpdateUrlsForClient (urls);
                     foreach (KeyValuePair<string, OSD> module in urls.URLS)
                     {
-                        //Build the URL
-                        retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString ();
+                        if (module.Value.Type == OSDType.Array)
+                        {
+                            OSDArray array = new OSDArray();
+                            int i = 0;
+                            foreach (OSD o in (OSDArray)module.Value)
+                            {
+                                //Build the URL
+                                if (o.AsString().StartsWith("http://") || o.AsString().StartsWith("https://"))
+                                    array.Add(o.AsString());
+                                else
+                                    array.Add(((OSDArray)urls.HostNames[module.Key])[i] + ":" +
+                                        (int)((OSDArray)urls.Ports[module.Key])[i].AsUInteger() +
+                                        o.AsString());
+                                i++;
+                            }
+                            retVal[module.Key] = array;
+                        }
+                        else
+                        {
+                            //Build the URL
+                            if (module.Value.AsString().StartsWith("http://") || module.Value.AsString().StartsWith("https://"))
+                                retVal[module.Key] = module.Value.AsString();
+                            else
+                                retVal[module.Key] = urls.HostNames[module.Key] + ":" + urls.Ports[module.Key] + module.Value.AsString();
+                        }
                     }
                     return retVal;
                 }
@@ -298,23 +304,42 @@ namespace OpenSim.Services.GridService
             //Get the URLs from all the modules that have registered with us
             foreach (IGridRegistrationUrlModule module in m_modules.Values)
             {
-                uint port;
-                string hostName;
-                string innerURL;
+                List<uint> port;
+                List<string> hostName;
+                List<string> innerURL;
 
                 m_loadBalancer.GetHost (module.UrlName, module, SessionID, out port, out hostName, out innerURL);
-                
-                ports[module.UrlName] = port;
-                hostnames[module.UrlName] = hostName;
-                databaseSave[module.UrlName] = innerURL;
+                ports[module.UrlName] = port.Count == 1 ? (OSD)port[0] : (OSD)port.ToOSDArray();
+                hostnames[module.UrlName] = hostName.Count == 1 ? (OSD)hostName[0] : (OSD)hostName.ToOSDArray();
+                databaseSave[module.UrlName] = innerURL.Count == 1 ? (OSD)innerURL[0] : (OSD)innerURL.ToOSDArray();
             }
             foreach (KeyValuePair<string, OSD> module in databaseSave)
             {
-                //Build the URL
-                if (module.Value.AsString().StartsWith("http://") || module.Value.AsString().StartsWith("https://"))
-                    retVal[module.Key] = module.Value.AsString();
+                if (module.Value.Type == OSDType.Array)
+                {
+                    OSDArray array = new OSDArray();
+                    int i = 0;
+                    foreach (OSD o in (OSDArray)module.Value)
+                    {
+                        //Build the URL
+                        if (o.AsString().StartsWith("http://") || o.AsString().StartsWith("https://"))
+                            array.Add(o.AsString());
+                        else
+                            array.Add(((OSDArray)hostnames[module.Key])[i] + ":" +
+                                (int)((OSDArray)ports[module.Key])[i].AsUInteger() +
+                                o.AsString());
+                        i++;
+                    }
+                    retVal[module.Key] = array;
+                }
                 else
-                    retVal[module.Key] = hostnames[module.Key] + ":" + ports[module.Key] + module.Value.AsString ();
+                {
+                    //Build the URL
+                    if (module.Value.AsString().StartsWith("http://") || module.Value.AsString().StartsWith("https://"))
+                        retVal[module.Key] = module.Value.AsString();
+                    else
+                        retVal[module.Key] = hostnames[module.Key] + ":" + ports[module.Key] + module.Value.AsString();
+                }
             }
 
             //Save into the database so that we can rebuild later if the server goes offline
@@ -324,7 +349,8 @@ namespace OpenSim.Services.GridService
                            SessionID = SessionID,
                            Ports = ports,
                            HostNames = hostnames,
-                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout*60)
+                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout*60),
+                           _ParentHostName = MainServer.Instance.HostName
                        };
             m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID, urls.ToOSD ());
 
@@ -380,9 +406,9 @@ namespace OpenSim.Services.GridService
                     {
                     }
                 }
-                //Remove from the database so that they don't pop up later
-                m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", SessionID);
             }
+            //Remove from the database so that they don't pop up later
+            m_genericsConnector.RemoveGeneric(UUID.Zero, "GridRegistrationUrls", SessionID);
         }
 
         public void UpdateUrlsForClient(string SessionID)
@@ -400,9 +426,7 @@ namespace OpenSim.Services.GridService
             if (urls != null)
             {
                 urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
-                //Remove it first just to make sure it is replaced
-                m_genericsConnector.RemoveGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID);
-                m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD ());
+                m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD());
                 MainConsole.Instance.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
             else
@@ -451,13 +475,14 @@ namespace OpenSim.Services.GridService
 
         public class GridRegistrationURLs : IDataTransferable
         {
-            public static readonly int CurrentVersionNumber = 1;
+            public static readonly int CurrentVersionNumber = 5;
             public OSDMap URLS;
             public string SessionID;
             public DateTime Expiration;
             public OSDMap HostNames;
             public OSDMap Ports;
             public int VersionNumber;
+            public string _ParentHostName = "";
 
             public override OSDMap ToOSD()
             {
@@ -468,6 +493,7 @@ namespace OpenSim.Services.GridService
                 retVal["HostName"] = HostNames;
                 retVal["Port"] = Ports;
                 retVal["VersionNumber"] = CurrentVersionNumber;
+                retVal["_ParentHostName"] = _ParentHostName;
                 return retVal;
             }
 
@@ -483,6 +509,7 @@ namespace OpenSim.Services.GridService
                     VersionNumber = 0;
                 else
                     VersionNumber = retVal["VersionNumber"].AsInteger();
+                _ParentHostName = retVal["_ParentHostName"].AsString();
             }
         }
 
@@ -563,7 +590,15 @@ namespace OpenSim.Services.GridService
                 {
                     if (ports[i].StartsWith (" "))
                         ports[i] = ports[i].Remove (0, 1);
-                    uPorts.Add (uint.Parse (ports[i]));
+                    if (ports[i].Contains("-"))
+                    {
+                        uint first = (uint.Parse(ports[i].Split('-')[0]));
+                        uint second = (uint.Parse(ports[i].Split('-')[1]));
+                        for (uint port = first; port <= second; port++)
+                            uPorts.Add(port);
+                    }
+                    else
+                        uPorts.Add (uint.Parse (ports[i]));
                 }
                 if (!m_ports.ContainsKey (name))
                     m_ports[name] = new List<uint> ();
@@ -584,7 +619,7 @@ namespace OpenSim.Services.GridService
             /// <param name="module"></param>
             /// <param name="innerUrl"></param>
             /// <returns>Whether we need to create a handler or whether it is an external URL</returns>
-            public void GetHost (string name, IGridRegistrationUrlModule module, string SessionID, out uint port, out string hostName, out string innerUrl)
+            public void GetHost (string name, IGridRegistrationUrlModule module, string SessionID, out List<uint> ports, out List<string> hostNames, out List<string> innerUrls)
             {
                 if (!m_urls.ContainsKey (name))
                 {
@@ -595,26 +630,48 @@ namespace OpenSim.Services.GridService
                 if (!lastSet.ContainsKey (name))
                     lastSet.Add (name, 0);
 
+                ports = new List<uint>();
+                innerUrls = new List<string>();
+                hostNames = new List<string>();
                 //Add both internal and external hosts together for now
                 List<string> urls = m_urls[name];
+
+                if (module.DoMultiplePorts)
+                {
+                    ports = m_ports[name];
+                    foreach(var port in ports)
+                        hostNames.Add(urls[lastSet[name]]);
+                    foreach(uint port in ports)
+                        innerUrls.Add(module.GetUrlForRegisteringClient(SessionID, port));
+                    return;
+                }
 
                 if (lastSet[name] < urls.Count + m_externalUrlCountTotal)
                 {
                     if (lastSet[name] < urls.Count)
                     {
                         //Internal, just pull it from the lists
-                        hostName = urls[lastSet[name]];
-                        port = m_ports[name][lastSet[name]];
-                        innerUrl = module.GetUrlForRegisteringClient (SessionID, port);
+                        hostNames.Add(urls[lastSet[name]]);
+                        ports.Add(m_ports[name][lastSet[name]]);
+                        innerUrls.Add(module.GetUrlForRegisteringClient (SessionID, ports[0]));
                     }
                     else
                     {
+                        uint port;
+                        string hostName;
+                        string innerUrl;
                         //Get the external Info
-                        if (!GetExternalInfo (lastSet[name], name, SessionID, out port, out hostName, out innerUrl))
+                        if (!GetExternalInfo(lastSet[name], name, SessionID, out port, out hostName, out innerUrl))
                         {
                             lastSet[name] = 0;//It went through all external, give up on them
-                            GetHost (name, module, SessionID, out port, out hostName, out innerUrl);
+                            GetHost(name, module, SessionID, out ports, out hostNames, out innerUrls);
                             return;
+                        }
+                        else
+                        {
+                            ports.Add(port);
+                            hostNames.Add(hostName);
+                            innerUrls.Add(innerUrl);
                         }
                     }
                     lastSet[name]++;
@@ -626,19 +683,19 @@ namespace OpenSim.Services.GridService
                     //We don't have any urls for this name, return defaults
                     if (m_ports[name].Count > 0)
                     {
-                        port = m_ports[name][lastSet[name]];
+                        ports.Add(m_ports[name][lastSet[name]]);
                         lastSet[name]++;
                         if (lastSet[name] == urls.Count)
                             lastSet[name] = 0;
 
-                        hostName = m_defaultHostname;
+                        hostNames.Add(m_defaultHostname);
                     }
                     else
                     {
-                        port = m_defaultPort;
-                        hostName = m_defaultHostname;
+                        ports.Add(m_defaultPort);
+                        hostNames.Add(m_defaultHostname);
                     }
-                    innerUrl = module.GetUrlForRegisteringClient (SessionID, port);
+                    innerUrls.Add(module.GetUrlForRegisteringClient (SessionID, ports[0]));
                 }
             }
 
@@ -742,13 +799,13 @@ namespace OpenSim.Services.GridService
                             string SessionID = request["Param2"];
                             if (m_service.m_modules.ContainsKey (moduleName))
                             {
-                                uint port;
-                                string hostName;
-                                string innerUrl;
+                                List<uint> port;
+                                List<string> hostName;
+                                List<string> innerUrl;
                                 m_service.m_loadBalancer.GetHost (moduleName, m_service.m_modules[moduleName], SessionID, out port, out hostName, out innerUrl);
-                                response["HostName"] = hostName;
-                                response["InnerUrl"] = innerUrl;
-                                response["Port"] = port;
+                                response["HostName"] = hostName[0];
+                                response["InnerUrl"] = innerUrl[0];
+                                response["Port"] = port[0];
                             }
                             break;
                     }

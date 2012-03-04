@@ -2116,14 +2116,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Public Methods
 
-        #region Delegates
-
-        public delegate void AddPhysics();
-
-        public delegate void RemovePhysics();
-
-        #endregion
-
         internal bool m_hasSubscribedToCollisionEvent;
 
         public void FixOffsetPosition(Vector3 value, bool single)
@@ -2467,8 +2459,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>A Linked Child Prim objects position in world</returns>
         public Vector3 GetWorldPosition()
         {
-            Quaternion parentRot = ParentGroup.RootPart.RotationOffset;
-            return (GroupPosition + OffsetPosition*parentRot);
+            return IsRoot ? GroupPosition : GroupPosition + OffsetPosition * ParentGroup.RootPart.RotationOffset;
         }
 
         /// <summary>
@@ -2910,7 +2901,7 @@ namespace OpenSim.Region.Framework.Scenes
                       tex.FaceTextures[face].RGBA.B == texcolor.B))
                 {
                     tex.FaceTextures[face].RGBA = texcolor;
-                    UpdateTexture(tex);
+                    UpdateTexture(tex, true);
                 }
                 //WRONG.... fixed with updateTexture
                 //TriggerScriptChangedEvent(Changed.COLOR);
@@ -2944,9 +2935,7 @@ namespace OpenSim.Region.Framework.Scenes
                     tex.DefaultTexture.RGBA = texcolor;
                 }
                 if (changed)
-                    UpdateTexture(tex);
-                //WRONG.... fixed with updateTexture
-                //TriggerScriptChangedEvent(Changed.COLOR);
+                    UpdateTexture(tex, true);
                 return;
             }
         }
@@ -3757,20 +3746,33 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "shapeBlock"></param>
         public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock)
         {
+            UpdateShape(shapeBlock, true);
+        }
+
+        /// <summary>
+        ///   Having this function because I found when scripts updated the shape.. over and over, it would fill up the memory
+        ///   Having the extra paramater updatePhysics can prevent physics updates on the changes
+        ///   The onlyplace this effects is if a script changes the shape
+        ///   If the LocklessQueue gets updated this can be removed
+        /// </summary>
+        /// <param name = "shapeBlock"></param>
+        /// <param name="UpdatePhysics"></param>
+        public void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool UpdatePhysics)
+        {
             IOpenRegionSettingsModule module = ParentGroup.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
             if (module != null)
             {
-                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize*500) &&
+                if (shapeBlock.ProfileHollow > (module.MaximumHollowSize * 500) &&
                     module.MaximumHollowSize != -1)
-                    //This is so that it works correctly, since the packet sends (N * 500)
+                //This is so that it works correctly, since the packet sends (N * 500)
                 {
-                    shapeBlock.ProfileHollow = (ushort) (module.MaximumHollowSize*500);
+                    shapeBlock.ProfileHollow = (ushort)(module.MaximumHollowSize * 500);
                 }
-                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize*100)) &&
+                if (shapeBlock.PathScaleY > (200 - (module.MinimumHoleSize * 100)) &&
                     module.MinimumHoleSize != -1 && shapeBlock.PathCurve == 32)
-                    //This is how the packet is set up... so this is how we check for it...
+                //This is how the packet is set up... so this is how we check for it...
                 {
-                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize*100)));
+                    shapeBlock.PathScaleY = Convert.ToByte((200 - (module.MinimumHoleSize * 100)));
                 }
             }
 
@@ -3794,12 +3796,17 @@ namespace OpenSim.Region.Framework.Scenes
             m_shape.PathTwist = shapeBlock.PathTwist;
             m_shape.PathTwistBegin = shapeBlock.PathTwistBegin;
 
-            Shape = m_shape;
-
-            if (PhysActor != null)
+            if (m_shape.SculptEntry && UpdatePhysics)
+                m_parentGroup.Scene.AssetService.Get(m_shape.SculptTexture.ToString(), true, AssetReceived);
+            else
             {
-                PhysActor.Shape = m_shape;
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                Shape = m_shape;
+
+                if ((UpdatePhysics) && (PhysActor != null))
+                {
+                    PhysActor.Shape = m_shape;
+                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
+                }
             }
 
             // This is what makes vehicle trailers work
@@ -3821,7 +3828,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// not handling RGBA properly. Cycles through, and "fixes" the color
         /// info
         /// <param name = "tex"></param>
-        public void UpdateTexture(Primitive.TextureEntry tex)
+        public void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent)
         {
             //Color4 tmpcolor;
             //for (uint i = 0; i < 32; i++)
@@ -3842,7 +3849,7 @@ namespace OpenSim.Region.Framework.Scenes
             //tmpcolor.G = tmpcolor.G*255;
             //tmpcolor.B = tmpcolor.B*255;
             //tex.DefaultTexture.RGBA = tmpcolor;
-            UpdateTextureEntry(tex.GetBytes());
+            UpdateTextureEntry(tex.GetBytes(), sendChangedEvent);
         }
 
         public void aggregateScriptEvents()
@@ -4262,14 +4269,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
-                this.Shape.SculptType = (byte) SculptType.Mesh;
+                this.Shape.SculptType = (byte)SculptType.Mesh;
+            PrimitiveBaseShape shape = Shape.Copy();
             if ((bool) sender && this.PhysActor != null) //Update physics
             {
                 //Get physics to update in a hackish way
-                PrimitiveBaseShape shape = Shape.Copy();
                 this.PhysActor.Shape = shape;
-                this.Shape = shape;
+                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
+            this.Shape = shape;
         }
 
         public double GetDistanceTo(Vector3 a, Vector3 b)
@@ -5222,7 +5230,7 @@ namespace OpenSim.Region.Framework.Scenes
         ///   Update the texture entry for this part.
         /// </summary>
         /// <param name = "textureEntry"></param>
-        public void UpdateTextureEntry(byte[] textureEntry)
+        public void UpdateTextureEntry(byte[] textureEntry, bool sendChangedEvent)
         {
             bool same = true;
             byte[] old = m_shape.TextureEntry;
@@ -5284,8 +5292,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (colorChanged) TriggerScriptChangedEvent(Changed.COLOR);
-            if (textureChanged) TriggerScriptChangedEvent(Changed.TEXTURE);
+            if (colorChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.COLOR);
+            if (textureChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }

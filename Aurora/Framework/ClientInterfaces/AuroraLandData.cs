@@ -25,14 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse.StructuredData;
+
 namespace Aurora.Framework
 {
-    public class ExtendedLandData
+    public class ExtendedLandData : IDataTransferable
     {
         public float GlobalPosX;
         public float GlobalPosY;
         public LandData LandData;
         public string RegionName;
         public string RegionType;
+
+        public override void FromOSD(OpenMetaverse.StructuredData.OSDMap map)
+        {
+            GlobalPosX = map["GlobalPosX"];
+            GlobalPosY = map["GlobalPosY"];
+            LandData = new LandData();
+            LandData.FromOSD((OSDMap)map["LandData"]);
+            RegionName = map["RegionName"];
+            RegionType = map["RegionType"];
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["GlobalPosX"] = GlobalPosX;
+            map["GlobalPosY"] = GlobalPosY;
+            map["LandData"] = LandData.ToOSD();
+            map["RegionName"] = RegionName;
+            map["RegionType"] = RegionType;
+            return map;
+        }
     }
 }

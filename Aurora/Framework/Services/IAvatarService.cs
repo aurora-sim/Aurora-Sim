@@ -155,6 +155,7 @@ namespace OpenSim.Services.Interfaces
             foreach (AvatarAttachment attach in attachments)
             {
                 Data["_ap_" + attach.AttachPoint] = attach.ItemID.ToString();
+                Data["_apa_" + attach.AttachPoint] = attach.AssetID.ToString();
             }
         }
 
@@ -369,10 +370,12 @@ namespace OpenSim.Services.Interfaces
 
                 // Attachments
                 Dictionary<string, string> attchs = new Dictionary<string, string>();
+                Dictionary<string, string> attchsAssets = new Dictionary<string, string>();
 #if (!ISWIN)
                 foreach (KeyValuePair<string, string> _kvp in Data)
                 {
                     if (_kvp.Key.StartsWith("_ap_")) attchs[_kvp.Key] = _kvp.Value;
+                    if (_kvp.Key.StartsWith("_apa_")) attchsAssets[_kvp.Key] = _kvp.Value;
                 }
 #else
                 foreach (KeyValuePair<string, string> _kvp in Data.Where(_kvp => _kvp.Key.StartsWith("_ap_")))
@@ -388,8 +391,11 @@ namespace OpenSim.Services.Interfaces
 
                     UUID uuid = UUID.Zero;
                     UUID.TryParse(_kvp.Value, out uuid);
+                    UUID assetuuid = UUID.Zero;
+                    if(attchsAssets.ContainsKey(_kvp.Key))
+                        UUID.TryParse(attchsAssets[_kvp.Key], out uuid);
 
-                    appearance.SetAttachment(point, uuid, UUID.Zero);
+                    appearance.SetAttachment(point, uuid, assetuuid);
                 }
 
                 if (appearance.Wearables[AvatarWearable.BODY].Count == 0)

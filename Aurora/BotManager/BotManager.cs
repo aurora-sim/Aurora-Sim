@@ -144,7 +144,7 @@ namespace Aurora.BotManager
             IAttachmentsModule attModule = SP.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
                 foreach (AvatarAttachment att in attachments)
-                    attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, 0);
+                    attModule.RezSingleAttachmentFromInventory(SP.ControllingClient, att.ItemID, att.AssetID, 0);
 
             IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
             appearance.InitialHasWearablesBeenSent = true;

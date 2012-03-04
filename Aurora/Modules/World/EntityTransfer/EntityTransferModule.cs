@@ -148,7 +148,10 @@ namespace Aurora.Modules.EntityTransfer
             
             if (reg == null)
             {
-                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange (sp.Scene.RegionInfo.ScopeID, x - 8192, x + 8192, y - 8192, y + 8192);
+                List<GridRegion> regions = sp.Scene.GridService.GetRegionRange(sp.Scene.RegionInfo.ScopeID, x - (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeX),
+                    x + (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeX),
+                    y - (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeY),
+                    y + (sp.Scene.GridService.GetRegionViewSize() * sp.Scene.RegionInfo.RegionSizeY));
                 foreach (GridRegion r in regions)
                 {
                     if (r.RegionLocX <= x && r.RegionLocX + r.RegionSizeX > x &&
@@ -269,6 +272,7 @@ namespace Aurora.Modules.EntityTransfer
                 finalDestination.ServerURI, finalDestination.RegionName, position);
 
             sp.ControllingClient.SendTeleportProgress(teleportFlags, "arriving");
+            sp.SetAgentLeaving(finalDestination);
 
             // Fixing a bug where teleporting while sitting results in the avatar ending up removed from
             // both regions
@@ -288,7 +292,6 @@ namespace Aurora.Modules.EntityTransfer
                 ISyncMessagePosterService syncPoster = sp.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                 if (syncPoster != null)
                 {
-                    sp.SetAgentLeaving(finalDestination);
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
                     OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
@@ -598,18 +601,8 @@ namespace Aurora.Modules.EntityTransfer
             {
                 if (!positionIsAlreadyFixed)
                 {
-                    int xOffset = crossingRegion.RegionLocX - m_scene.RegionInfo.RegionLocX;
-                    int yOffset = crossingRegion.RegionLocY - m_scene.RegionInfo.RegionLocY;
-
-                    if (xOffset < 0)
-                        pos.X += m_scene.RegionInfo.RegionSizeX;
-                    else if (xOffset > 0)
-                        pos.X -= m_scene.RegionInfo.RegionSizeX;
-
-                    if (yOffset < 0)
-                        pos.Y += m_scene.RegionInfo.RegionSizeY;
-                    else if (yOffset > 0)
-                        pos.Y -= m_scene.RegionInfo.RegionSizeY;
+                    pos.X = (m_scene.RegionInfo.RegionLocX + pos.X) - crossingRegion.RegionLocX;
+                    pos.Y = (m_scene.RegionInfo.RegionLocY + pos.Y) - crossingRegion.RegionLocY;
 
                     //Make sure that they are within bounds (velocity can push it out of bounds)
                     if (pos.X < 0)
@@ -623,16 +616,16 @@ namespace Aurora.Modules.EntityTransfer
                         pos.Y = crossingRegion.RegionSizeY - 1;
                 }
 
+                agent.SetAgentLeaving(crossingRegion);
+
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
                 cAgent.Position = pos;
                 if (isFlying)
-                    cAgent.ControlFlags |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+                    cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
                 AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, pos);
-                agentCircuit.teleportFlags = (uint) TeleportFlags.ViaRegionID;
-
-                agent.SetAgentLeaving(crossingRegion);
+                agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
                 if (eq != null)
@@ -1027,6 +1020,8 @@ namespace Aurora.Modules.EntityTransfer
             reason = String.Empty;
             UDPPort = GetUDPPort (scene);
 
+            CacheUserInfo(scene, agent.OtherInformation);
+
             // Don't disable this log message - it's too helpful
             MainConsole.Instance.TraceFormat (
                 "[ConnectionBegin]: Region {0} told of incoming {1} agent {2} (circuit code {3}, teleportflags {4})",
@@ -1082,6 +1077,20 @@ namespace Aurora.Modules.EntityTransfer
             responseMap["Success"] = true;
             reason = OSDParser.SerializeJsonString (responseMap);
             return true;
+        }
+
+        private void CacheUserInfo(IScene scene, OSDMap map)
+        {
+            CachedUserInfo cache = new CachedUserInfo();
+            cache.FromOSD((OSDMap)map["CachedUserInfo"]);
+            IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            if (conn != null)
+                conn.CacheAgent(cache.AgentInfo);
+            scene.UserAccountService.CacheAccount(cache.UserAccount);
+
+            IGroupsModule groupsMod = scene.RequestModuleInterface<IGroupsModule>();
+            if (groupsMod != null)
+                groupsMod.UpdateCachedData(cache.UserAccount.PrincipalID, cache);
         }
 
         private readonly Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();

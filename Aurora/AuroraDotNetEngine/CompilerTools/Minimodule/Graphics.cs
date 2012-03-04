@@ -56,7 +56,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                                   {
                                       Data = OpenJPEG.EncodeFromImage(data, lossless),
                                       Description = "MRM Image",
-                                      Flags = (temporary) ? AssetFlags.Temperary : 0
+                                      Flags = (temporary) ? AssetFlags.Temporary : 0
                                   };
             asset.FillHash();
             asset.ID = m_scene.AssetService.Store(asset);

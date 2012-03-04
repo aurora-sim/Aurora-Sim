@@ -41,7 +41,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly IAssetService m_assetCache; //Asset Cache
         private readonly LLClientView m_client; //Client we're assigned to
         private readonly IJ2KDecoder m_j2kDecodeModule; //Our J2K module
-        private readonly AssetBase m_missingImage;
+        private static AssetBase m_missingImage;
         private readonly PriorityQueue<J2KImage, float> m_queue = new PriorityQueue<J2KImage, float>();
         private readonly object m_syncRoot = new object();
         private bool m_shuttingdown;
@@ -51,7 +51,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_client = client;
             m_assetCache = pAssetCache;
 
-            if (pAssetCache != null)
+            if (pAssetCache != null && m_missingImage == null)
                 m_missingImage = pAssetCache.Get("5748decc-f629-461c-9a36-a35a221fe21f");
 
             if (m_missingImage == null)

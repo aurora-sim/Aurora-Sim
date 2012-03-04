@@ -91,8 +91,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "id">The asset id</param>
         /// <param name = "sender">Represents the requester.  Passed back via the handler</param>
         /// <param name = "handler">The handler to call back once the asset has been retrieved</param>
-        /// <returns>True if the id was parseable, false otherwise</returns>
-        bool Get(string id, Object sender, AssetRetrieved handler);
+        void Get(string id, Object sender, AssetRetrieved handler);
 
         /// <summary>
         ///   Creates a new asset
@@ -109,7 +108,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "id"> </param>
         /// <param name = "data"></param>
         /// <returns></returns>
-        bool UpdateContent(UUID id, byte[] data, out UUID newID);
+        UUID UpdateContent(UUID id, byte[] data);
 
         /// <summary>
         ///   Delete an asset
@@ -134,5 +133,6 @@ namespace OpenSim.Services.Interfaces
         void UpdateContent(UUID id, byte[] asset, out UUID newID);
         bool ExistsAsset(UUID uuid);
         bool Delete(UUID id);
+        bool Delete(UUID id, bool ignoreFlags);
     }
 }

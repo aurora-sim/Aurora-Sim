@@ -43,6 +43,7 @@
     UserAccountServerURIInternalPorts = "8003"
     MurmurServiceURIInternalPorts = "8007"
     StarDustURIInternalPorts = "8007"
+	ServerURIInternalPorts = "8002-8007"
     
 	;;
 	;; Remote load balancing

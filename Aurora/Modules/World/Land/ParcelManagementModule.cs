@@ -141,6 +141,10 @@ namespace Aurora.Modules.Land
             }
         }
 
+        public void PostInitialise()
+        {
+        }
+
         public void AddRegion(IScene scene)
         {
             m_scene = scene;
@@ -2105,6 +2109,8 @@ namespace Aurora.Modules.Land
 
         #endregion
 
+        #region Finding parcel point information
+
         private Vector3? GetNearestPointInParcelAlongDirectionFromPoint(Vector3 pos, Vector3 direction,
                                                                         ILandObject parcel)
         {
@@ -2182,6 +2188,10 @@ namespace Aurora.Modules.Land
             return new Vector3(x, y, heightmap.GetNormalizedGroundHeight((int) x, (int) y));
         }
 
+        #endregion
+
+        #region Search Updates
+
         private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             UpdateDirectoryTimerElapsed(null, null);
@@ -2207,6 +2217,10 @@ namespace Aurora.Modules.Land
                                                               return d;
                                                           }));
         }
+
+        #endregion
+
+        #region Client Packets
 
         private void EventManagerOnNewClient(IClientAPI client)
         {
@@ -2313,10 +2327,6 @@ namespace Aurora.Modules.Land
             client.OnParcelBuy -= ProcessParcelBuy;
 
             m_hasSentParcelOverLay.Remove(client.AgentId);
-        }
-
-        public void PostInitialise()
-        {
         }
 
         private void ClientOnParcelDwellRequest(int localID, IClientAPI remoteClient)
@@ -2467,5 +2477,7 @@ namespace Aurora.Modules.Land
             targetAvatar.ControllingClient.SendAlertMessage("You have been ejected by " + parcelOwner.Name);
             parcelOwner.ControllingClient.SendAlertMessage("Avatar Ejected.");
         }
+
+        #endregion
     }
 }

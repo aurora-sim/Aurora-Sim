@@ -31,6 +31,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace Aurora.Framework
 {
@@ -43,7 +44,7 @@ namespace Aurora.Framework
         Collectable = 4, // Can be GC'ed after some time
         Deletable = 8, // The asset can be deleted
         Local = 16, // Region-only asset, never stored in the database
-        Temperary = 32,
+        Temporary = 32,
         // Is this asset going to exist permanently in the database, or can it be purged after a set amount of time?
         RemotelyAccessable = 64 // Regions outside of this grid can access this asset
     }
@@ -51,7 +52,7 @@ namespace Aurora.Framework
     /// <summary>
     ///   Asset class.   All Assets are reference by this class or a class derived from this class
     /// </summary>
-    [Serializable]
+    [Serializable, ProtoContract(UseProtoMembersOnly = false)]
     public class AssetBase : IDataTransferable, IDisposable
     {
         private static readonly SHA256Managed SHA256Managed = new SHA256Managed();
@@ -185,6 +186,7 @@ namespace Aurora.Framework
             set { TypeAsset = (AssetType) SLUtil.ContentTypeToSLAssetType(value); }
         }
 
+        [ProtoMember(1)]
         public virtual byte[] Data
         {
             get { return myData; }
@@ -204,6 +206,7 @@ namespace Aurora.Framework
 
         public UUID ID { get; set; }
         // This is only used for cache
+        [ProtoMember(2)]
         public string IDString
         {
             get { return idString.Length > 0 ? idString : ID.ToString(); }
@@ -221,6 +224,7 @@ namespace Aurora.Framework
             }
         }
 
+        [ProtoMember(3)]
         public string HashCode
         {
             get { return myHashCode; }
@@ -234,10 +238,14 @@ namespace Aurora.Framework
             }
         }
 
+        [ProtoMember(4)]
         public string LastHashCode { get; set; }
 
+        [ProtoMember(5)]
         public string Name { get; set; }
+        [ProtoMember(6)]
         public string Description { get; set; }
+        [ProtoMember(7)]
         public AssetType TypeAsset { get; set; }
 
         public int Type
@@ -246,13 +254,23 @@ namespace Aurora.Framework
             set { TypeAsset = (AssetType) value; }
         }
 
+        [ProtoMember(8)]
         public AssetFlags Flags { get; set; }
+        [ProtoMember(9)]
         public string DatabaseTable { get; set; }
+        [ProtoMember(10)]
         public string HostUri { get; set; }
+        [ProtoMember(11)]
         public DateTime LastAccessed { get; set; }
+        [ProtoMember(12)]
         public DateTime CreationDate { get; set; }
         public UUID CreatorID { get; set; }
+        [ProtoMember(13)]
+        public string SerializedCreatorID { get { return CreatorID.ToString(); } set { CreatorID = UUID.Parse(value); } }
         public UUID ParentID { get; set; }
+        [ProtoMember(14)]
+        public string SerializedParentID { get { return ParentID.ToString(); } set { ParentID = UUID.Parse(value); } }
+        [ProtoMember(15)]
         public bool MetaOnly { get; set; }
 
         // should run this if your filling out a new asset

@@ -63,6 +63,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public ThreatLevelDefinition m_threatLevelNone;
         public ThreatLevelDefinition m_threatLevelNuisance;
         public ThreatLevelDefinition m_threatLevelSevere;
+        public ThreatLevelDefinition m_threatLevelNoAccess;
         public ThreatLevelDefinition m_threatLevelVeryHigh;
         public ThreatLevelDefinition m_threatLevelVeryLow;
 
@@ -263,6 +264,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                                             UserSetHelpers.ParseUserSetConfigSetting(config,
                                                                                                      "SevereUserSet",
                                                                                                      UserSet.None), this);
+            m_threatLevelNoAccess = new ThreatLevelDefinition(ThreatLevel.NoAccess,
+                                                            UserSetHelpers.ParseUserSetConfigSetting(config,
+                                                                                                     "NoAccessUserSet",
+                                                                                                     UserSet.None), this);
         }
 
         #endregion
@@ -276,6 +281,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             string risk = m_config.GetString("FunctionThreatLevel", "VeryLow");
             switch (risk)
             {
+                case "NoAccess":
+                    m_MaxThreatLevel = ThreatLevel.NoAccess;
+                    break;
                 case "None":
                     m_MaxThreatLevel = ThreatLevel.None;
                     break;
@@ -337,6 +345,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return m_threatLevelVeryHigh;
                 case ThreatLevel.Severe:
                     return m_threatLevelSevere;
+                case ThreatLevel.NoAccess:
+                    return m_threatLevelNoAccess;
             }
             return null;
         }

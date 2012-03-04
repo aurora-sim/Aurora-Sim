@@ -227,6 +227,10 @@ namespace Aurora.Modules.Estate
         {
         }
 
+        public void DeleteRegion(IScene scene)
+        {
+        }
+
         protected void ChangeEstate(string[] cmd)
         {
             IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();

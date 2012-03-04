@@ -214,7 +214,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// <param name = "sender">Represents the requester.  Passed back via the handler</param>
         /// <param name = "handler">The handler to call back once the asset has been retrieved</param>
         /// <returns>True if the id was parseable, false otherwise</returns>
-        public bool Get(string id, Object sender, AssetRetrieved handler)
+        public void Get(string id, Object sender, AssetRetrieved handler)
         {
             if (String.IsNullOrEmpty(m_serverUrl))
             {
@@ -229,7 +229,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                 if (asset != null)
                 {
                     handler(id, sender, asset);
-                    return true;
+                    return;
                 }
             }
 
@@ -241,7 +241,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
                     }
                 );
 
-            return true;
+            return;
         }
 
         /// <summary>
@@ -309,8 +309,8 @@ namespace OpenSim.Services.Connectors.SimianGrid
                                                                                              asset.CreatorID.ToString()),
                                                                  new MultipartForm.Parameter("Temporary",
                                                                                              ((asset.Flags &
-                                                                                               AssetFlags.Temperary) ==
-                                                                                              AssetFlags.Temperary)
+                                                                                               AssetFlags.Temporary) ==
+                                                                                              AssetFlags.Temporary)
                                                                                                  ? "1"
                                                                                                  : "0"),
                                                                  new MultipartForm.Parameter("Public",
@@ -372,21 +372,20 @@ namespace OpenSim.Services.Connectors.SimianGrid
         /// <param name = "id"> </param>
         /// <param name = "data"></param>
         /// <returns></returns>
-        public bool UpdateContent(UUID id, byte[] data, out UUID newID)
+        public UUID UpdateContent(UUID id, byte[] data)
         {
-            newID = UUID.Zero;
             AssetBase asset = Get(id.ToString());
 
             if (asset == null)
             {
                 MainConsole.Instance.Warn("[SIMIAN ASSET CONNECTOR]: Failed to fetch asset " + id + " for updating");
-                return false;
+                return UUID.Zero;
             }
 
             asset.Data = data;
 
             UUID result = Store(asset);
-            return result != UUID.Zero;
+            return result;
         }
 
         /// <summary>

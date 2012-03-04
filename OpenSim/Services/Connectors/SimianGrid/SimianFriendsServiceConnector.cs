@@ -156,10 +156,10 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         #region IFriendsService
 
-        public FriendInfo[] GetFriends(UUID principalID)
+        public List<FriendInfo> GetFriends(UUID principalID)
         {
             if (String.IsNullOrEmpty(m_serverUrl))
-                return new FriendInfo[0];
+                return new List<FriendInfo>();
 
             Dictionary<UUID, FriendInfo> friends = new Dictionary<UUID, FriendInfo>();
 
@@ -201,10 +201,9 @@ namespace OpenSim.Services.Connectors.SimianGrid
             }
 
             // Convert the dictionary of friends to an array and return it
-            FriendInfo[] array = new FriendInfo[friends.Count];
-            int j = 0;
+            List<FriendInfo> array = new List<FriendInfo>();
             foreach (FriendInfo friend in friends.Values)
-                array[j++] = friend;
+                array.Add(friend);
 
             return array;
         }

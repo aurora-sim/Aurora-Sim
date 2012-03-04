@@ -137,18 +137,20 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
+            List<string> storeNames = new List<string>();
             foreach (ISimulationDataStore store in stores)
             {
-                if (store.Name == name)
+                if (store.Name.ToLower() == name.ToLower())
                 {
                     m_simulationDataService = store;
                     break;
                 }
+                storeNames.Add(store.Name);
             }
 
             if (m_simulationDataService == null)
             {
-                MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', QUITING...", name);
+                MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', ONLY OPTIONS ARE {1}, QUITING...", name, string.Join(", ", storeNames.ToArray()));
                 Console.Read ();//Wait till they see
                 Environment.Exit(0);
             }
@@ -607,11 +609,13 @@ namespace OpenSim.Region.Framework.Scenes
                     region.GridSecureSessionID = scene.RegionInfo.GridSecureSessionID;
                     scene.RegionInfo = region;
                     if(needsRegistration)
-                        scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false);
+                        scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false, false);
                     else if(needsGridUpdate)
                         scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
                     //Tell clients about the changes
-                    scene.RequestModuleInterface<IEstateModule>().sendRegionHandshakeToAll();
+                    IEstateModule es = scene.RequestModuleInterface<IEstateModule>();
+                    if(es != null)
+                        es.sendRegionHandshakeToAll();
                 }
             }
         }
@@ -668,11 +672,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected void CloseModules (IScene scene)
+        protected void CloseModules(IScene scene)
         {
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
-                controller.RemoveRegionFromModules (scene);
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
+                controller.RemoveRegionFromModules(scene);
 
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
@@ -680,6 +684,21 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (OnCloseScene != null)
                 OnCloseScene(scene);
+        }
+
+        public void DeleteRegion(RegionInfo region)
+        {
+            IScene scene;
+            if (TryGetScene(region.RegionID, out scene))
+                DeleteSceneFromModules(scene);
+        }
+
+        protected void DeleteSceneFromModules(IScene scene)
+        {
+            foreach (ISharedRegionStartupModule module in m_startupPlugins)
+            {
+                module.DeleteRegion(scene);
+            }
         }
 
         #endregion

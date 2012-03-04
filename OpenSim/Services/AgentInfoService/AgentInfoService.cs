@@ -37,20 +37,43 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class AgentInfoService : IService, IAgentInfoService
+    public class AgentInfoService : ConnectorBase, IService, IAgentInfoService
     {
         #region Declares
 
         protected IAgentInfoConnector m_agentInfoConnector;
         protected List<string> m_lockedUsers = new List<string>();
-        protected IRegistryCore m_registry;
 
         #endregion
+
+        #region IService Members
 
         public string Name
         {
             get { return GetType().Name; }
         }
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
+                return;
+
+            registry.RegisterModuleInterface<IAgentInfoService>(this);
+            Init(registry, Name);
+        }
+
+        public virtual void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public virtual void FinishedStartup()
+        {
+            m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
+        }
+
+        #endregion
 
         #region IAgentInfoService Members
 
@@ -59,25 +82,36 @@ namespace OpenSim.Services
             get { return this; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual UserInfo GetUserInfo(string userID)
         {
+            object remoteValue = DoRemote(userID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (UserInfo)remoteValue;
+
             return GetUserInfo(userID, true);
         }
 
-        public virtual UserInfo[] GetUserInfos(string[] userIDs)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual List<UserInfo> GetUserInfos(List<string> userIDs)
         {
-            UserInfo[] infos = new UserInfo[userIDs.Length];
-            for (int i = 0; i < userIDs.Length; i++)
+            object remoteValue = DoRemote(userIDs);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserInfo>)remoteValue;
+
+            List<UserInfo> infos = new List<UserInfo>();
+            for (int i = 0; i < userIDs.Count; i++)
             {
-                infos[i] = GetUserInfo(userIDs[i]);
+                infos.Add(GetUserInfo(userIDs[i]));
             }
             return infos;
         }
 
-        public virtual string[] GetAgentsLocations(string requestor, string[] userIDs)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
-            string[] infos = new string[userIDs.Length];
-            for (int i = 0; i < userIDs.Length; i++)
+            string[] infos = new string[userIDs.Count];
+            for (int i = 0; i < userIDs.Count; i++)
             {
                 UserInfo user = GetUserInfo(userIDs[i]);
                 if (user != null && user.IsOnline)
@@ -95,30 +129,50 @@ namespace OpenSim.Services
                 else
                     infos[i] = "NotOnline";
             }
-            return infos;
+            return new List<string>(infos);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
+            object remoteValue = DoRemote(userID, homeID, homePosition, homeLookAt);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             m_agentInfoConnector.SetHomePosition(userID, homeID, homePosition, homeLookAt);
             return true;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
+            object remoteValue = DoRemote(userID, regionID, lastPosition, lastLookAt);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             m_agentInfoConnector.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void LockLoggedInStatus(string userID, bool locked)
         {
+            object remoteValue = DoRemote(userID, locked);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             if (locked && !m_lockedUsers.Contains(userID))
                 m_lockedUsers.Add(userID);
             else
                 m_lockedUsers.Remove(userID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
+            object remoteValue = DoRemote(userID, loggingIn, fireLoggedInEvent, enteringRegion);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             UserInfo userInfo = GetUserInfo(userID, false); //We are changing the status, so don't look
             if (userInfo == null)
             {
@@ -137,31 +191,26 @@ namespace OpenSim.Services
                              LastLogout = DateTime.Now.ToUniversalTime(),
                          });
             }
-            if (m_lockedUsers.Contains(userID))
+            if (m_lockedUsers.Contains(userID)){
                 return; //User is locked, leave them alone
+            }
+
+            Dictionary<string, object> agentUpdateValues = new Dictionary<string, object>();
+            agentUpdateValues["IsOnline"] = loggingIn ? 1 : 0;
             if (loggingIn)
-                if (enteringRegion == UUID.Zero)
-                    m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogin", "LastSeen"},
-                                                new object[]
-                                                    {
-                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                        Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                    });
-                else
-                    m_agentInfoConnector.Update(userID,
-                                                new[] {"IsOnline", "LastLogin", "CurrentRegionID", "LastSeen"},
-                                                new object[]
-                                                    {
-                                                        loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                        enteringRegion, Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                    });
+            {
+                agentUpdateValues["LastLogin"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+                if (enteringRegion != UUID.Zero)
+                {
+                    agentUpdateValues["CurrentRegionID"] = enteringRegion;
+                }
+            }
             else
-                m_agentInfoConnector.Update(userID, new[] {"IsOnline", "LastLogout", "LastSeen"},
-                                            new object[]
-                                                {
-                                                    loggingIn ? 1 : 0, Util.ToUnixTime(DateTime.Now.ToUniversalTime()),
-                                                    Util.ToUnixTime(DateTime.Now.ToUniversalTime())
-                                                });
+            {
+                agentUpdateValues["LastLogout"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+            }
+            agentUpdateValues["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
+            m_agentInfoConnector.Update(userID, agentUpdateValues);
 
             if (fireLoggedInEvent)
             {
@@ -173,28 +222,7 @@ namespace OpenSim.Services
 
         #endregion
 
-        #region IService Members
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            m_registry = registry;
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("AgentInfoHandler", "") != Name)
-                return;
-
-            registry.RegisterModuleInterface<IAgentInfoService>(this);
-        }
-
-        public virtual void Start(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public virtual void FinishedStartup()
-        {
-            m_agentInfoConnector = DataManager.RequestPlugin<IAgentInfoConnector>();
-        }
-
-        #endregion
+        #region Helpers
 
         private UserInfo GetUserInfo(string userID, bool checkForOfflineStatus)
         {
@@ -211,5 +239,7 @@ namespace OpenSim.Services
         {
             m_agentInfoConnector.Set(userInfo);
         }
+
+        #endregion
     }
 }

@@ -633,8 +633,7 @@ namespace Aurora.Modules.Estate
             if (agentInfo != null)
             {
                 //Can only enter prelude regions once!
-                int flags = scene.GridService.GetRegionFlags(scene.RegionInfo.ScopeID, scene.RegionInfo.RegionID);
-                if (flags != -1 && ((flags & (int) RegionFlags.Prelude) == (int) RegionFlags.Prelude) &&
+                if (scene.RegionInfo.RegionFlags != -1 && ((scene.RegionInfo.RegionFlags & (int)RegionFlags.Prelude) == (int)RegionFlags.Prelude) &&
                     agentInfo != null)
                 {
                     if (agentInfo.OtherAgentInformation.ContainsKey("Prelude" + scene.RegionInfo.RegionID))
@@ -647,6 +646,15 @@ namespace Aurora.Modules.Estate
                         agentInfo.OtherAgentInformation.Add("Prelude" + scene.RegionInfo.RegionID,
                                                             OSD.FromInteger((int) IAgentFlags.PastPrelude));
                         AgentConnector.UpdateAgent(agentInfo);
+                    }
+                }
+                if (agentInfo.OtherAgentInformation.ContainsKey("LimitedToEstate"))
+                {
+                    int LimitedToEstate = agentInfo.OtherAgentInformation["LimitedToEstate"];
+                    if (scene.RegionInfo.EstateSettings.EstateID != LimitedToEstate)
+                    {
+                        reason = "You may not enter this reason, as it is outside of the estate you are limited to.";
+                        return false;
                     }
                 }
             }
@@ -1104,6 +1112,10 @@ namespace Aurora.Modules.Estate
             scene.Permissions.OnAllowIncomingAgent -= OnAllowedIncomingAgent;
             scene.Permissions.OnAllowedIncomingTeleport -= OnAllowedIncomingTeleport;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+        }
+
+        public void DeleteRegion(IScene scene)
+        {
         }
 
         public void StartupComplete()

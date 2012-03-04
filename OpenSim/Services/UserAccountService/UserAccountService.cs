@@ -38,20 +38,24 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.UserAccountService
 {
-    public class UserAccountService : IUserAccountService, IService
+    public class UserAccountService : ConnectorBase, IUserAccountService, IService
     {
+        #region Declares
+
         protected IAuthenticationService m_AuthenticationService;
         protected IUserAccountData m_Database;
         protected IGridService m_GridService;
         protected IInventoryService m_InventoryService;
-        protected UserAccountCache m_cache = new UserAccountCache();
+        protected GenericAccountCache<UserAccount> m_cache = new GenericAccountCache<UserAccount>();
+
+        #endregion
+
+        #region IService Members
 
         public virtual string Name
         {
             get { return GetType().Name; }
         }
-
-        #region IService Members
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -59,6 +63,38 @@ namespace OpenSim.Services.UserAccountService
             if (handlerConfig.GetString("UserAccountHandler", "") != Name)
                 return;
             Configure(config, registry);
+            Init(registry, Name);
+        }
+
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
+            if (MainConsole.Instance != null)
+            {
+                MainConsole.Instance.Commands.AddCommand(
+                    "create user",
+                    "create user [<first> [<last> [<pass> [<email>]]]]",
+                    "Create a new user", HandleCreateUser);
+                MainConsole.Instance.Commands.AddCommand("reset user password",
+                                                         "reset user password [<first> [<last> [<password>]]]",
+                                                         "Reset a user password", HandleResetUserPassword);
+                MainConsole.Instance.Commands.AddCommand(
+                    "show account",
+                    "show account <first> <last>",
+                    "Show account details for the given user", HandleShowAccount);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set user level",
+                    "set user level [<first> [<last> [<level>]]]",
+                    "Set user level. If the user's level is > 0, "
+                    + "this account will be treated as god-moded. "
+                    + "It will also affect the 'login level' command. ",
+                    HandleSetUserLevel);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set user profile title",
+                    "set user profile title [<first> [<last> [<Title>]]]",
+                    "Sets the title (Normally resident) in a user's title to some custom value.",
+                    HandleSetTitle);
+            }
+            registry.RegisterModuleInterface<IUserAccountService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -77,20 +113,32 @@ namespace OpenSim.Services.UserAccountService
 
         #endregion
 
-        #region IUserAccountService
+        #region IUserAccountService Members
 
+        public virtual IUserAccountService InnerService
+        {
+            get { return this; }
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, string firstName,
                                           string lastName)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[USER ACCOUNT SERVICE]: Retrieving account by username for {0} {1}, scope {2}",
-//                firstName, lastName, scopeID);
-
-            UserAccount[] d;
-
             UserAccount account;
             if (m_cache.Get(firstName + " " + lastName, out account))
                 return account;
+
+            object remoteValue = DoRemote(scopeID, firstName, lastName);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(acc.PrincipalID, acc);
+
+                return acc;
+            }
+
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -114,17 +162,35 @@ namespace OpenSim.Services.UserAccountService
             if (d.Length < 1)
                 return null;
 
-            m_cache.Cache(d[0].PrincipalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
         }
 
+        public void CacheAccount(UserAccount account)
+        {
+            if ((account != null) && (account.UserLevel <= -1))
+                return;
+            m_cache.Cache(account.PrincipalID, account);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, string name)
         {
-            UserAccount[] d;
-
             UserAccount account;
             if (m_cache.Get(name, out account))
                 return account;
+
+            object remoteValue = DoRemote(scopeID, name);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(acc.PrincipalID, acc);
+
+                return acc;
+            }
+
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -148,17 +214,28 @@ namespace OpenSim.Services.UserAccountService
                 return null;
             }
 
-            m_cache.Cache(d[0].PrincipalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
         public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
-            UserAccount[] d;
-
             UserAccount account;
             if (m_cache.Get(principalID, out account))
                 return account;
+
+            object remoteValue = DoRemote(scopeID, principalID);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                UserAccount acc = (UserAccount)remoteValue;
+                if (remoteValue != null)
+                    m_cache.Cache(principalID, acc);
+
+                return acc;
+            }
+
+            UserAccount[] d;
 
             if (scopeID != UUID.Zero)
             {
@@ -185,15 +262,16 @@ namespace OpenSim.Services.UserAccountService
                 return null;
             }
 
-            m_cache.Cache(principalID, d[0]);
+            CacheAccount(d[0]);
             return d[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public bool StoreUserAccount(UserAccount data)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[USER ACCOUNT SERVICE]: Storing user account for {0} {1} {2}, scope {3}",
-//                data.FirstName, data.LastName, data.PrincipalID, data.ScopeID);
+            object remoteValue = DoRemote(data);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
 
             if (data.UserTitle == null)
                 data.UserTitle = "";
@@ -201,8 +279,13 @@ namespace OpenSim.Services.UserAccountService
             return m_Database.Store(data);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
+            object remoteValue = DoRemote(scopeID, query);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserAccount>)remoteValue;
+
             UserAccount[] d = m_Database.GetUsers(scopeID, query);
 
             if (d == null)
@@ -210,6 +293,57 @@ namespace OpenSim.Services.UserAccountService
 
             List<UserAccount> ret = new List<UserAccount>(d);
             return ret;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        public void CreateUser(string name, string password, string email)
+        {
+            CreateUser(UUID.Random(), name, password, email);
+        }
+
+        /// <summary>
+        ///   Create a user
+        /// </summary>
+        /// <param name = "firstName"></param>
+        /// <param name = "lastName"></param>
+        /// <param name = "password"></param>
+        /// <param name = "email"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        public void CreateUser(UUID userID, string name, string password, string email)
+        {
+            object remoteValue = DoRemote(userID, name, password, email);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            UserAccount account = GetUserAccount(UUID.Zero, userID);
+            UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
+            if (null == account && nameaccount == null)
+            {
+                account = new UserAccount(UUID.Zero, userID, name, email);
+                if (StoreUserAccount(account))
+                {
+                    bool success;
+                    if (m_AuthenticationService != null && password != "")
+                    {
+                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
+                        if (!success)
+                            MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
+                                             name);
+                    }
+
+                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
+                    //Cache it as well
+                    CacheAccount(account);
+                }
+                else
+                {
+                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
+                }
+            }
+            else
+            {
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
+            }
         }
 
         #endregion
@@ -327,7 +461,7 @@ namespace OpenSim.Services.UserAccountService
             email = MainConsole.Instance.Prompt("Email", "");
 
             uuid = MainConsole.Instance.Prompt("UUID", UUID.Random().ToString());
-            
+
             CreateUser(UUID.Parse(uuid), name, Util.Md5Hash(password), email);
         }
 
@@ -355,90 +489,5 @@ namespace OpenSim.Services.UserAccountService
         }
 
         #endregion
-
-        #region IUserAccountService Members
-
-        public virtual IUserAccountService InnerService
-        {
-            get { return this; }
-        }
-
-        public void CreateUser(string name, string password, string email)
-        {
-            CreateUser(UUID.Random(), name, password, email);
-        }
-
-        /// <summary>
-        ///   Create a user
-        /// </summary>
-        /// <param name = "firstName"></param>
-        /// <param name = "lastName"></param>
-        /// <param name = "password"></param>
-        /// <param name = "email"></param>
-        public void CreateUser(UUID userID, string name, string password, string email)
-        {
-            UserAccount account = GetUserAccount(UUID.Zero, userID);
-            UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
-            if (null == account && nameaccount == null)
-            {
-                account = new UserAccount(UUID.Zero, userID, name, email);
-                if (StoreUserAccount(account))
-                {
-                    bool success;
-                    if (m_AuthenticationService != null && password != "")
-                    {
-                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
-                        if (!success)
-                            MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
-                                             name);
-                    }
-
-                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
-                    //Cache it as well
-                    m_cache.Cache(account.PrincipalID, account);
-                }
-                else
-                {
-                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
-                }
-            }
-            else
-            {
-                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
-            }
-        }
-
-        #endregion
-
-        public void Configure(IConfigSource config, IRegistryCore registry)
-        {
-            if (MainConsole.Instance != null)
-            {
-                MainConsole.Instance.Commands.AddCommand(
-                    "create user",
-                    "create user [<first> [<last> [<pass> [<email>]]]]",
-                    "Create a new user", HandleCreateUser);
-                MainConsole.Instance.Commands.AddCommand("reset user password",
-                                                         "reset user password [<first> [<last> [<password>]]]",
-                                                         "Reset a user password", HandleResetUserPassword);
-                MainConsole.Instance.Commands.AddCommand(
-                    "show account",
-                    "show account <first> <last>",
-                    "Show account details for the given user", HandleShowAccount);
-                MainConsole.Instance.Commands.AddCommand(
-                    "set user level",
-                    "set user level [<first> [<last> [<level>]]]",
-                    "Set user level. If the user's level is > 0, "
-                    + "this account will be treated as god-moded. "
-                    + "It will also affect the 'login level' command. ",
-                    HandleSetUserLevel);
-                MainConsole.Instance.Commands.AddCommand(
-                    "set user profile title",
-                    "set user profile title [<first> [<last> [<Title>]]]",
-                    "Sets the title (Normally resident) in a user's title to some custom value.",
-                    HandleSetTitle);
-            }
-            registry.RegisterModuleInterface<IUserAccountService>(this);
-        }
     }
 }

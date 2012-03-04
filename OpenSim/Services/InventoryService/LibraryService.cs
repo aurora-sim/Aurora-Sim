@@ -45,6 +45,8 @@ namespace OpenSim.Services.InventoryService
     {
         private readonly UUID libOwner = new UUID("11111111-1111-0000-0000-000100bba000");
 
+        public UUID LibraryRootFolderID { get { return new UUID("00000112-000f-0000-0000-000100bba000"); } }
+
         private string libOwnerName = "Library Owner";
         private bool m_enabled;
         private IRegistryCore m_registry;
@@ -134,6 +136,11 @@ namespace OpenSim.Services.InventoryService
             string sure = MainConsole.Instance.Prompt("Are you sure you want to delete the default inventory?", "yes");
             if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
                 return;
+            ClearDefaultInventory();
+        }
+
+        public void ClearDefaultInventory()
+        {
             IInventoryService InventoryService = m_registry.RequestModuleInterface<IInventoryService>();
             //Delete the root folders
             InventoryFolderBase root = InventoryService.GetRootFolder(LibraryOwner);

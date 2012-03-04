@@ -96,6 +96,8 @@ namespace Aurora.Framework
 
     public interface ISceneChildEntity : IEntity
     {
+        event AddPhysics OnAddPhysics;
+        event RemovePhysics OnRemovePhysics;
         ISceneEntity ParentEntity { get; }
         IEntityInventory Inventory { get; }
         void ResetEntityIDs();
@@ -343,7 +345,7 @@ namespace Aurora.Framework
 
         void SetFloatOnWater(int floatYN);
 
-        void UpdateTexture(Primitive.TextureEntry tex);
+        void UpdateTexture(Primitive.TextureEntry tex, bool sendChangedEvent);
 
         void SetText(string text, Vector3 av3, double p);
 
@@ -482,5 +484,6 @@ namespace Aurora.Framework
         void ScriptSetTemporaryStatus(bool tempOnRez);
 
         uint InventorySerial { get; set; }
+		void UpdateShape(ObjectShapePacket.ObjectDataBlock shapeBlock, bool b);
     }
 }

@@ -10,12 +10,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         protected readonly object m_changeLock = new object();
         protected volatile bool m_isChanging;
-        protected AsyncScene m_scene;
-
-        public AsyncEntityManager(AsyncScene scene)
-        {
-            m_scene = scene;
-        }
 
         public override bool Add(IEntity entity)
         {

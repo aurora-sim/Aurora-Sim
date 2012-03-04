@@ -305,7 +305,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
                 AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
                                                            UUID.Zero)
-                                                 {Flags = AssetFlags.Local | AssetFlags.Temperary};
+                                                 {Flags = AssetFlags.Local | AssetFlags.Temporary};
 
                 #region Serialize Layer Data
 

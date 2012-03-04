@@ -32,7 +32,7 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalEmailMessagesConnector : IEmailConnector
+    public class LocalEmailMessagesConnector : ConnectorBase, IEmailConnector
     {
         private IGenericData GD;
 
@@ -51,11 +51,12 @@ namespace Aurora.Services.DataService
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
 
-           if (source.Configs["AuroraConnectors"].GetString("EmailConnector", "LocalConnector") ==
-                "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("EmailConnector", "LocalConnector") ==
+                 "LocalConnector")
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -68,11 +69,16 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<Email> GetEmails(UUID objectID)
         {
+            object remoteValue = DoRemote(objectID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<Email>)remoteValue;
+
             //Get all the messages
             List<Email> emails = GenericUtils.GetGenerics<Email>(objectID, "Emails", GD);
-            GenericUtils.RemoveGeneric(objectID, "Emails", GD);
+            GenericUtils.RemoveGenericByType(objectID, "Emails", GD);
             return emails;
         }
 
@@ -80,8 +86,13 @@ namespace Aurora.Services.DataService
         ///   Adds a new offline message for the user.
         /// </summary>
         /// <param name = "message"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void InsertEmail(Email email)
         {
+            object remoteValue = DoRemote(email);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             GenericUtils.AddGeneric(email.toPrimID, "Emails", UUID.Random().ToString(),
                                             email.ToOSD(), GD);
         }

@@ -65,15 +65,24 @@ namespace Aurora.Services.DataService
 
         public bool Store(UUID PrincipalID, string Friend, int Flags, int Offered)
         {
-            GD.Delete(m_realm, new string[2] {"PrincipalID", "Friend"}, new object[2] {PrincipalID, Friend});
-            return GD.Insert(m_realm, new[] {"PrincipalID", "Friend", "Flags", "Offered"},
-                             new object[] {PrincipalID, Friend.MySqlEscape(), Flags, Offered});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = PrincipalID;
+            filter.andFilters["Friend"] = Friend;
+            GD.Delete(m_realm, filter);
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["PrincipalID"] = PrincipalID;
+            row["Friend"] = Friend.MySqlEscape();
+            row["Flags"] = Flags;
+            row["Offered"] = Offered;
+            return GD.Insert(m_realm, row);
         }
 
         public bool Delete(UUID ownerID, string friend)
         {
-            return GD.Delete(m_realm, new[] {"PrincipalID", "Friend"},
-                             new object[] {ownerID, friend.MySqlEscape()});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["PrincipalID"] = ownerID;
+            filter.andFilters["Friend"] = friend.MySqlEscape();
+            return GD.Delete(m_realm, filter);
         }
 
         public FriendInfo[] GetFriends(UUID principalID)

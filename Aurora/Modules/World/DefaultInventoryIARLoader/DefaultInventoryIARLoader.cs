@@ -44,6 +44,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         protected Dictionary<string, AssetType> m_assetTypes = new Dictionary<string, AssetType>();
         protected IRegistryCore m_registry;
         protected ILibraryService m_service;
+        protected IInventoryData m_Database;
 
         #region IDefaultLibraryLoader Members
 
@@ -51,12 +52,19 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             m_service = service;
             m_registry = registry;
+            m_Database = Aurora.DataManager.DataManager.RequestPlugin<IInventoryData>();
 
             IConfig libConfig = source.Configs["InventoryIARLoader"];
             const string pLibrariesLocation = "DefaultInventory/";
             AddDefaultAssetTypes();
             if (libConfig != null)
             {
+                if (libConfig.GetBoolean("WipeLibrariesOnNextLoad", false))
+                {
+                    service.ClearDefaultInventory();//Nuke it
+                    libConfig.Set("WipeLibrariesOnNextLoad", false);
+                    source.Save();
+                }
                 if (libConfig.GetBoolean("PreviouslyLoaded", false))
                     return; //If it is loaded, don't reload
                 foreach (string iarFileName in Directory.GetFiles(pLibrariesLocation, "*.iar"))
@@ -158,17 +166,20 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
 
             try
             {
+                archread.ReplaceAssets = true;//Replace any old assets
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
                 if (nodes.Count == 0)
                     return;
                 InventoryFolderBase f = (InventoryFolderBase) nodes[0];
+                UUID IARRootID = f.ID;
 
-                TraverseFolders(nodes[0].ID, m_MockScene);
-                //This is our loaded folder
-                //Fix the name for later
+                TraverseFolders(IARRootID, m_MockScene);
+                FixParent(IARRootID, m_MockScene, m_service.LibraryRootFolderID);
                 f.Name = iarFileName;
                 f.ParentID = UUID.Zero;
-                //f.Type = (int)AssetType.RootFolder;
+                f.ID = m_service.LibraryRootFolderID;
+                f.Type = (int)AssetType.RootFolder;
+                f.Version = 1;
                 m_MockScene.InventoryService.UpdateFolder(f);
             }
             catch (Exception e)
@@ -207,7 +218,24 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                     break;
                 }
 #endif
+                if (folder.Type == -1)
+                {
+                    folder.Type = (int)AssetType.Folder;
+                    m_MockScene.InventoryService.UpdateFolder(folder);
+                }
                 TraverseFolders(folder.ID, m_MockScene);
+            }
+        }
+
+        private void FixParent(UUID ID, IScene m_MockScene, UUID LibraryRootID)
+        {
+            List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
+            foreach (InventoryFolderBase folder in folders)
+            {
+                if(folder.ParentID == ID) {
+                    folder.ParentID = LibraryRootID;
+                    m_Database.StoreFolder(folder);
+                }
             }
         }
 

@@ -40,42 +40,37 @@ using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace OpenSim.Services.GridService
 {
-    public class GridService : IGridService, IService
+    public class GridService : ConnectorBase, IGridService, IService
     {
-        private static GridService m_RootInstance;
+        #region Declares
+
         protected bool m_AllowDuplicateNames;
         protected bool m_AllowNewRegistrations = true;
         protected IAuthenticationService m_AuthenticationService;
         protected IRegionData m_Database;
         private bool m_DeleteOnUnregister = true;
         protected bool m_DisableRegistrations;
-        protected int m_RegionViewSize = 256;
         protected bool m_UseSessionID = true;
         protected IConfigSource m_config;
-        protected int m_maxRegionSize;
+        protected int m_maxRegionSize = 8192;
+        protected int m_cachedMaxRegionSize = 0;
+        protected int m_cachedRegionViewSize = 0;
         protected IRegistryCore m_registryCore;
         protected ISimulationBase m_simulationBase;
+        private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
-        public virtual string Name
+        #endregion
+
+        #region IService Members
+
+        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            get { return GetType().Name; }
-        }
+            IConfig handlerConfig = config.Configs["Handlers"];
+            if (handlerConfig.GetString("GridHandler", "") != Name)
+                return;
 
-        #region IGridService Members
-
-        public int MaxRegionSize
-        {
-            get { return m_maxRegionSize; }
-        }
-
-        public int RegionViewSize
-        {
-            get { return m_RegionViewSize; }
-        }
-
-        public virtual IGridService InnerService
-        {
-            get { return this; }
+            //MainConsole.Instance.DebugFormat("[GRID SERVICE]: Starting...");
+            Configure(config, registry);
         }
 
         public virtual void Configure(IConfigSource config, IRegistryCore registry)
@@ -86,48 +81,41 @@ namespace OpenSim.Services.GridService
             {
                 m_DisableRegistrations = gridConfig.GetBoolean("DisableRegistrations", m_DisableRegistrations);
                 m_AllowNewRegistrations = gridConfig.GetBoolean("AllowNewRegistrations", m_AllowNewRegistrations);
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
                 m_maxRegionSize = gridConfig.GetInt("MaxRegionSize", m_maxRegionSize);
-                m_RegionViewSize = gridConfig.GetInt("RegionViewSize", m_RegionViewSize/Constants.RegionSize)*
-                                   Constants.RegionSize;
-                m_DeleteOnUnregister = gridConfig.GetBoolean("DeleteOnUnregister", m_DeleteOnUnregister);
+                m_cachedRegionViewSize = gridConfig.GetInt("RegionSightSize", m_cachedRegionViewSize);
                 m_UseSessionID = !gridConfig.GetBoolean("DisableSessionID", !m_UseSessionID);
                 m_AllowDuplicateNames = gridConfig.GetBoolean("AllowDuplicateNames", m_AllowDuplicateNames);
             }
 
-            if (m_RootInstance == null)
+            if (MainConsole.Instance != null)
             {
-                m_RootInstance = this;
+                MainConsole.Instance.Commands.AddCommand("show region",
+                                                         "show region [Region name]",
+                                                         "Show details on a region",
+                                                         HandleShowRegion);
 
-                if (MainConsole.Instance != null)
-                {
-                    MainConsole.Instance.Commands.AddCommand("show region",
-                                                             "show region [Region name]",
-                                                             "Show details on a region",
-                                                             HandleShowRegion);
+                MainConsole.Instance.Commands.AddCommand("set region flags",
+                                                         "set region flags [Region name] [flags]",
+                                                         "Set database flags for region",
+                                                         HandleSetFlags);
 
-                    MainConsole.Instance.Commands.AddCommand("set region flags",
-                                                             "set region flags [Region name] [flags]",
-                                                             "Set database flags for region",
-                                                             HandleSetFlags);
+                MainConsole.Instance.Commands.AddCommand("grid clear regions",
+                                                         "grid clear regions",
+                                                         "Clears all regions from the database",
+                                                         HandleClearAllRegions);
 
-                    MainConsole.Instance.Commands.AddCommand("grid clear regions",
-                                                             "grid clear regions",
-                                                             "Clears all regions from the database",
-                                                             HandleClearAllRegions);
+                MainConsole.Instance.Commands.AddCommand("grid clear down regions",
+                                                         "grid clear down regions",
+                                                         "Clears all regions that are offline from the database",
+                                                         HandleClearAllDownRegions);
 
-                    MainConsole.Instance.Commands.AddCommand("grid clear down regions",
-                                                             "grid clear down regions",
-                                                             "Clears all regions that are offline from the database",
-                                                             HandleClearAllDownRegions);
-
-                    MainConsole.Instance.Commands.AddCommand("grid clear region",
-                                                             "grid clear region [RegionName]",
-                                                             "Clears the regions with the given name from the database",
-                                                             HandleClearRegion);
-                }
+                MainConsole.Instance.Commands.AddCommand("grid clear region",
+                                                         "grid clear region [RegionName]",
+                                                         "Clears the regions with the given name from the database",
+                                                         HandleClearRegion);
             }
             registry.RegisterModuleInterface<IGridService>(this);
+            Init(registry, Name);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -145,8 +133,61 @@ namespace OpenSim.Services.GridService
         {
         }
 
+        public virtual string Name
+        {
+            get { return GetType().Name; }
+        }
+
+        #endregion
+
+        #region IGridService Members
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual int GetMaxRegionSize()
+        {
+            if (m_cachedMaxRegionSize != 0)
+                return m_cachedMaxRegionSize;
+            object remoteValue = DoRemote();
+            if (remoteValue != null || m_doRemoteOnly) {
+                m_cachedMaxRegionSize = (int)remoteValue == 0 ? 8192 : (int)remoteValue;
+                if ((int)remoteValue == 0) return 8192;
+                return (int)remoteValue;
+             }
+            if (m_maxRegionSize == 0) return 8192;
+            return m_maxRegionSize;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual int GetRegionViewSize()
+        {
+            if (m_cachedRegionViewSize != 0)
+                return m_cachedRegionViewSize;
+            object remoteValue = DoRemote();
+            if (remoteValue != null && m_doRemoteOnly)
+            {
+                m_cachedRegionViewSize = (int)remoteValue;
+            }
+            else m_cachedRegionViewSize = 1;
+            return m_cachedRegionViewSize;
+        }
+
+        public virtual IGridService InnerService
+        {
+            get { return this; }
+        }
+
+        /// <summary>
+        /// Gets the default regions that people land in if they have no other region to enter
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
+            object remoteValue = DoRemote(scopeID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
+
             List<GridRegion> regions = m_Database.GetDefaultRegions(scopeID);
 
 #if (!ISWIN)
@@ -170,8 +211,13 @@ namespace OpenSim.Services.GridService
         /// <param name = "x"></param>
         /// <param name = "y"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
+            object remoteValue = DoRemote(scopeID, x, y);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
+
             return m_Database.GetSafeRegions(scopeID, x, y);
         }
 
@@ -181,8 +227,13 @@ namespace OpenSim.Services.GridService
         ///   Only called by LLLoginService
         /// </summary>
         /// <param name = "r"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void SetRegionUnsafe(UUID ID)
         {
+            object remoteValue = DoRemote(ID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             GridRegion data = m_Database.Get(ID, UUID.Zero);
             if (data == null)
                 return;
@@ -199,8 +250,13 @@ namespace OpenSim.Services.GridService
         ///   Only called by LLLoginService
         /// </summary>
         /// <param name = "r"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual void SetRegionSafe(UUID ID)
         {
+            object remoteValue = DoRemote(ID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             GridRegion data = m_Database.Get(ID, UUID.Zero);
             if (data == null)
                 return;
@@ -211,8 +267,13 @@ namespace OpenSim.Services.GridService
             m_Database.Store(data);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
         {
+            object remoteValue = DoRemote(scopeID, x, y);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
+
             List<GridRegion> regions = m_Database.GetFallbackRegions(scopeID, x, y);
 
 #if (!ISWIN)
@@ -229,8 +290,13 @@ namespace OpenSim.Services.GridService
             return ret;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual int GetRegionFlags(UUID scopeID, UUID regionID)
         {
+            object remoteValue = DoRemote(scopeID, regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (int)remoteValue;
+
             GridRegion region = m_Database.Get(regionID, scopeID);
 
             if (region != null)
@@ -242,8 +308,13 @@ namespace OpenSim.Services.GridService
                 return -1;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
+            object remoteValue = DoRemote(regionHandle, gridItemType);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (multipleMapItemReply)remoteValue;
+
             multipleMapItemReply allItems = new multipleMapItemReply();
             if (gridItemType == GridItemType.AgentLocations) //Grid server only cares about agent locations
             {
@@ -255,17 +326,24 @@ namespace OpenSim.Services.GridService
             return allItems;
         }
 
-        #endregion
-
-        #region IGridService
-
-        public virtual string RegisterRegion(GridRegion regionInfos, UUID oldSessionID, out UUID SessionID,
-                                             out List<GridRegion> neighbors)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None)]
+        public virtual RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
         {
-            SessionID = UUID.Zero;
-            neighbors = new List<GridRegion>();
+            RegisterRegion rr = new RegisterRegion();
+            object remoteValue = DoRemoteByURL("RegistrationURI", regionInfos, oldSessionID);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                rr = (RegisterRegion)remoteValue;
+                if (rr != null)
+                    m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(regionInfos.RegionHandle.ToString(), rr.Urls);
+                else
+                    rr = new RegisterRegion() { Error = "Could not reach grid service." };
+                return rr;
+            }
+
+
             if (m_DisableRegistrations)
-                return "Registrations are disabled.";
+                return new RegisterRegion() { Error = "Registrations are disabled." };
 
             UUID NeedToDeletePreviousRegion = UUID.Zero;
 
@@ -283,16 +361,28 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.WarnFormat(
                     "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
                     regionInfos.RegionID, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
-                return "Region overlaps another region";
+                return new RegisterRegion() { Error = "Region overlaps another region" };
             }
 
             GridRegion region = regions.Count > 0 ? regions[0] : null;
+
+            if (region != null)
+            {
+                //If we already have a session, we need to check it
+                if (!VerifyRegionSessionID(region, oldSessionID))
+                {
+                    MainConsole.Instance.WarnFormat(
+                        "[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!",
+                        region.RegionName);
+                    return new RegisterRegion() { Error = "Wrong Session ID" };
+                }
+            }
 
             if (!m_AllowNewRegistrations && region == null)
             {
                 MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register but registrations are disabled.",
                                  regionInfos.RegionName);
-                return "Registrations are disabled.";
+                return new RegisterRegion() { Error = "Registrations are disabled." };
             }
 
             if (m_maxRegionSize != 0 &&
@@ -301,7 +391,7 @@ namespace OpenSim.Services.GridService
                 //Too big... kick it out
                 MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
                                  regionInfos.RegionName, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
-                return "Region overlaps another region";
+                return new RegisterRegion() { Error = "Region overlaps another region" };
             }
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
@@ -309,14 +399,14 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.WarnFormat(
                     "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use in scope {3}.",
                     regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY, regionInfos.ScopeID);
-                return "Region overlaps another region";
+                return new RegisterRegion() { Error = "Region overlaps another region" };
             }
 
             if ((region != null) && (region.RegionID == regionInfos.RegionID) &&
                 ((region.RegionLocX != regionInfos.RegionLocX) || (region.RegionLocY != regionInfos.RegionLocY)))
             {
                 if ((region.Flags & (int) RegionFlags.NoMove) != 0)
-                    return "Can't move this region," + region.RegionLocX + "," + region.RegionLocY;
+                    return new RegisterRegion() { Error = "Can't move this region," + region.RegionLocX + "," + region.RegionLocY };
 
                 // Region reregistering in other coordinates. Delete the old entry
                 MainConsole.Instance.DebugFormat(
@@ -340,7 +430,7 @@ namespace OpenSim.Services.GridService
                 {
                     // Regions reserved for the null key cannot be taken.
                     if (region.SessionID == UUID.Zero)
-                        return "Region location is reserved";
+                        return new RegisterRegion() { Error = "Region location is reserved" };
 
                     // Treat it as an auth request
                     //
@@ -355,13 +445,13 @@ namespace OpenSim.Services.GridService
                     // Can we authenticate at all?
                     //
                     if (m_AuthenticationService == null)
-                        return "No authentication possible";
+                        return new RegisterRegion() { Error = "No authentication possible" };
                     //Make sure the key exists
                     if (!m_AuthenticationService.CheckExists(regionInfos.SessionID, "SessionID"))
-                        return "Bad authentication";
+                        return new RegisterRegion() { Error = "Bad authentication" };
                     //Now verify the key
                     if (!m_AuthenticationService.Verify(regionInfos.SessionID, "SessionID", regionInfos.AuthToken, 30))
-                        return "Bad authentication";
+                        return new RegisterRegion() { Error = "Bad authentication" };
                 }
             }
 
@@ -376,7 +466,7 @@ namespace OpenSim.Services.GridService
                         if (d.RegionID != regionInfos.RegionID)
                         {
                             MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.", regionInfos.RegionName, regionInfos.RegionID);
-                            return "Duplicate region name";
+                            return new RegisterRegion() { Error = "Duplicate region name" };
                         }
                     }
 #else
@@ -384,7 +474,7 @@ namespace OpenSim.Services.GridService
                     {
                         MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register duplicate name with ID {1}.",
                                          regionInfos.RegionName, regionInfos.RegionID);
-                        return "Duplicate region name";
+                        return new RegisterRegion() { Error = "Duplicate region name" };
                     }
 #endif
                 }
@@ -394,7 +484,7 @@ namespace OpenSim.Services.GridService
             {
                 //If we are locked out, we can't come in
                 if ((region.Flags & (int) RegionFlags.LockedOut) != 0)
-                    return "Region locked out";
+                    return new RegisterRegion() { Error = "Region locked out" };
 
                 //Remove the reservation if we are there now
                 region.Flags &= ~(int) RegionFlags.Reservation;
@@ -413,7 +503,7 @@ namespace OpenSim.Services.GridService
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("DefaultRegionFlags", String.Empty));
                     newFlags = ParseFlags(newFlags, gridConfig.GetString("Region_" + regionName, String.Empty));
                     newFlags = ParseFlags(newFlags,
-                                          gridConfig.GetString("Region_" + regionInfos.RegionID.ToString(), String.Empty));
+                                          gridConfig.GetString("Region_" + regionInfos.RegionHandle.ToString(), String.Empty));
                     regionInfos.Flags = newFlags;
                 }
             }
@@ -423,20 +513,8 @@ namespace OpenSim.Services.GridService
             regionInfos.Flags |= (int) RegionFlags.Safe;
             regionInfos.LastSeen = Util.UnixTimeSinceEpoch();
 
-            if (region != null)
-            {
-                //If we already have a session, we need to check it
-                if (!VerifyRegionSessionID(region, oldSessionID))
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!",
-                        region.RegionName);
-                    return "Wrong Session ID";
-                }
-            }
-
             //Update the sessionID, use the old so that we don't generate a bunch of these
-            SessionID = oldSessionID == UUID.Zero ? UUID.Random() : oldSessionID;
+            UUID SessionID = oldSessionID == UUID.Zero ? UUID.Random() : oldSessionID;
             regionInfos.SessionID = SessionID;
 
             // Everything is ok, let's register
@@ -451,12 +529,13 @@ namespace OpenSim.Services.GridService
                     m_simulationBase.EventManager.FireGenericEventHandler("RegionRegistered", regionInfos);
 
                     //Get the neighbors for them
-                    neighbors = GetNeighbors(regionInfos);
+                    List<GridRegion> neighbors = GetNeighbors(regionInfos);
                     FixNeighbors(regionInfos, neighbors, false);
 
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                       regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
-                    return String.Empty;
+                    return new RegisterRegion() { Error = "", Neighbors = neighbors, RegionFlags = regionInfos.Flags, SessionID = SessionID, Urls = 
+                    m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString())};
                 }
             }
             catch (Exception e)
@@ -464,22 +543,20 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.WarnFormat("[GRID SERVICE]: Database exception: {0}", e);
             }
 
-            return "Failed to save region into the database.";
+            return new RegisterRegion() { Error = "Failed to save region into the database." };
         }
 
-        public virtual bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual string UpdateMap(GridRegion gregion)
         {
-            if (m_UseSessionID && r.SessionID != SessionID)
-                return false;
-            return true;
-        }
+            object remoteValue = DoRemote(gregion);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
 
-        public virtual string UpdateMap(GridRegion gregion, UUID sessionID)
-        {
             GridRegion region = m_Database.Get(gregion.RegionID, gregion.ScopeID);
             if (region != null)
             {
-                if (!VerifyRegionSessionID(region, sessionID))
+                if (!VerifyRegionSessionID(region, gregion.SessionID))
                 {
                     MainConsole.Instance.Warn(
                         "[GRID SERVICE]: Region called UpdateMap, but provided incorrect SessionID! Possible attempt to disable a region!!");
@@ -494,7 +571,7 @@ namespace OpenSim.Services.GridService
 
                 region.TerrainImage = gregion.TerrainImage;
                 region.TerrainMapImage = gregion.TerrainMapImage;
-                region.SessionID = sessionID;
+                region.SessionID = gregion.SessionID;
                 //Update all of these as well, as they are able to be set by the region owner
                 region.EstateOwner = gregion.EstateOwner;
                 region.Access = gregion.Access;
@@ -513,60 +590,67 @@ namespace OpenSim.Services.GridService
                 {
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
                 }
+
+                IGridRegistrationService gridRegModule = m_registry.RequestModuleInterface<IGridRegistrationService>();
+                if (gridRegModule != null)
+                    gridRegModule.UpdateUrlsForClient(region.RegionHandle.ToString());
             }
 
             return "";
         }
 
-        public virtual bool DeregisterRegion(ulong regionHandle, UUID regionID, UUID SessionID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual bool DeregisterRegion(GridRegion gregion)
         {
-            GridRegion region = m_Database.Get(regionID, UUID.Zero);
+            object remoteValue = DoRemote(gregion);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
+            GridRegion region = m_Database.Get(gregion.RegionID, UUID.Zero);
             if (region == null)
                 return false;
 
-            if (!VerifyRegionSessionID(region, SessionID))
+            if (!VerifyRegionSessionID(region, gregion.SessionID))
             {
                 MainConsole.Instance.Warn(
                     "[GRID SERVICE]: Region called deregister, but provided incorrect SessionID! Possible attempt to disable a region!!");
                 return false;
             }
 
-            MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} deregistered", regionID);
-
-            if (!m_DeleteOnUnregister || (region.Flags & (int) RegionFlags.Persistent) != 0 || !m_AllowNewRegistrations)
-            {
-                region.Flags &= ~(int) RegionFlags.RegionOnline;
-                region.LastSeen = Util.UnixTimeSinceEpoch();
-                try
-                {
-                    m_Database.Store(region);
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.DebugFormat("[GRID SERVICE]: Database exception: {0}", e);
-                }
-
-                FixNeighbors(region, GetNeighbors(region), true);
-                return true;
-            }
+            MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} deregistered", region.RegionID);
 
             FixNeighbors(region, GetNeighbors(region), true);
 
-            return m_Database.Delete(regionID);
+            return m_Database.Delete(region.RegionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
+            object remoteValue = DoRemote(scopeID, regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GridRegion)remoteValue;
+
             return m_Database.Get(regionID, scopeID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
+            object remoteValue = DoRemote(scopeID, x, y);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GridRegion)remoteValue;
+
             return m_Database.Get(x, y, scopeID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual GridRegion GetRegionByName(UUID scopeID, string regionName)
         {
+            object remoteValue = DoRemote(scopeID, regionName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (GridRegion)remoteValue;
+
             List<GridRegion> rdatas = m_Database.Get(regionName + "%", scopeID);
             if ((rdatas != null) && (rdatas.Count > 0))
             {
@@ -580,9 +664,12 @@ namespace OpenSim.Services.GridService
             return null;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
-            MainConsole.Instance.DebugFormat("[GRID SERVICE]: GetRegionsByName {0}", name);
+            object remoteValue = DoRemote(scopeID, name, maxNumber);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
 
             int count = 0;
             List<GridRegion> rinfos = new List<GridRegion>();
@@ -610,48 +697,28 @@ namespace OpenSim.Services.GridService
             return rinfos;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
+            object remoteValue = DoRemote(scopeID, xmin,xmax, ymin, ymax);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
+
             return m_Database.Get(xmin, ymin, xmax, ymax, scopeID);
         }
-
-        public class RegionDataComparison : IComparer<GridRegion>
-        {
-            private readonly string RegionName;
-
-            public RegionDataComparison(string regionName)
-            {
-                RegionName = regionName;
-            }
-
-            #region IComparer<GridRegion> Members
-
-            int IComparer<GridRegion>.Compare(GridRegion x, GridRegion y)
-            {
-                if (x.RegionName == RegionName)
-                    return 1;
-                else if (y.RegionName == RegionName)
-                    return -1;
-                else
-                    return 0;
-            }
-
-            #endregion
-        }
-
-        #endregion
-
-        #region Neighbor code
-
-        private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
 
         /// <summary>
         ///   Get the cached list of neighbors or a new list
         /// </summary>
         /// <param name = "region"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual List<GridRegion> GetNeighbors(GridRegion region)
         {
+            object remoteValue = DoRemote(region);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<GridRegion>)remoteValue;
+
             List<GridRegion> neighbors = new List<GridRegion>();
             if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
             {
@@ -663,85 +730,9 @@ namespace OpenSim.Services.GridService
             return new List<GridRegion>(regions);
         }
 
-        private void FixNeighbors(GridRegion regionInfos, List<GridRegion> neighbors, bool down)
-        {
-            IAsyncMessagePostService postService = m_registryCore.RequestModuleInterface<IAsyncMessagePostService>();
-            foreach (GridRegion r in neighbors)
-            {
-                if (m_KnownNeighbors.ContainsKey(r.RegionID))
-                {
-                    //Add/Remove them to/from the list
-                    if (down)
-                        m_KnownNeighbors[r.RegionID].Remove(regionInfos);
-                    else if (m_KnownNeighbors[r.RegionID].Find(delegate(GridRegion rr)
-                                                                   {
-                                                                       if (rr.RegionID == regionInfos.RegionID)
-                                                                           return true;
-                                                                       return false;
-                                                                   }) == null)
-                        m_KnownNeighbors[r.RegionID].Add(regionInfos);
-                }
-
-                if (postService != null)
-                    postService.Post(r.RegionHandle,
-                                     SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
-            }
-
-            if (down)
-                m_KnownNeighbors.Remove(regionInfos.RegionID);
-        }
-
-        /// <summary>
-        ///   Get all the neighboring regions of the given region
-        /// </summary>
-        /// <param name = "region"></param>
-        /// <returns></returns>
-        protected virtual List<GridRegion> FindNewNeighbors(GridRegion region)
-        {
-            int startX = (region.RegionLocX - 8192); //Give 8196 by default so that we pick up neighbors next to us
-            int startY = (region.RegionLocY - 8192);
-            if (MaxRegionSize != 0)
-            {
-                startX = (region.RegionLocX - MaxRegionSize);
-                startY = (region.RegionLocY - MaxRegionSize);
-            }
-
-            //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
-            int endX = (region.RegionLocX + RegionViewSize + region.RegionSizeX - 1);
-            int endY = (region.RegionLocY + RegionViewSize + region.RegionSizeY - 1);
-
-            List<GridRegion> neighbors = GetRegionRange(region.ScopeID, startX, endX, startY, endY);
-
-            neighbors.RemoveAll(delegate(GridRegion r)
-                                    {
-                                        if (r.RegionID == region.RegionID)
-                                            return true;
-
-                                        if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - RegionViewSize) ||
-                                            r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - RegionViewSize))
-                                            //Check for regions outside of the boundry (created above when checking for large regions next to us)
-                                            return true;
-
-                                        return false;
-                                    });
-            return neighbors;
-        }
-
         #endregion
 
-        #region IService Members
-
-        public virtual void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridHandler", "") != Name)
-                return;
-
-            //MainConsole.Instance.DebugFormat("[GRID SERVICE]: Starting...");
-            Configure(config, registry);
-        }
-
-        #endregion
+        #region Console Members
 
         private void HandleClearAllRegions(string[] cmd)
         {
@@ -850,7 +841,15 @@ namespace OpenSim.Services.GridService
                 return;
             }
 
-            List<GridRegion> regions = m_Database.Get(cmd[3], UUID.Zero);
+            string regionname = cmd[3];
+            if (cmd.Length > 5)
+            {
+                for (int ii = 4; ii < cmd.Length - 1; ii++)
+                {
+                    regionname += " " + cmd[ii];
+                }
+            }
+            List<GridRegion> regions = m_Database.Get(regionname, UUID.Zero);
             if (regions == null || regions.Count < 1)
             {
                 MainConsole.Instance.Info("Region not found");
@@ -860,7 +859,7 @@ namespace OpenSim.Services.GridService
             foreach (GridRegion r in regions)
             {
                 int flags = r.Flags;
-                flags = ParseFlags(flags, cmd[4]);
+                flags = ParseFlags(flags, cmd[cmd.Length - 1]);
                 r.Flags = flags;
                 RegionFlags f = (RegionFlags) flags;
 
@@ -868,6 +867,10 @@ namespace OpenSim.Services.GridService
                 m_Database.Store(r);
             }
         }
+
+        #endregion
+
+        #region Helpers
 
         /// <summary>
         ///   Normalize the current float to the nearest block of 5 meters
@@ -1013,5 +1016,102 @@ namespace OpenSim.Services.GridService
             }
             return mapItems;
         }
+
+        private void FixNeighbors(GridRegion regionInfos, List<GridRegion> neighbors, bool down)
+        {
+            IAsyncMessagePostService postService = m_registryCore.RequestModuleInterface<IAsyncMessagePostService>();
+            foreach (GridRegion r in neighbors)
+            {
+                if (m_KnownNeighbors.ContainsKey(r.RegionID))
+                {
+                    //Add/Remove them to/from the list
+                    if (down)
+                        m_KnownNeighbors[r.RegionID].Remove(regionInfos);
+                    else if (m_KnownNeighbors[r.RegionID].Find(delegate(GridRegion rr)
+                    {
+                        if (rr.RegionID == regionInfos.RegionID)
+                            return true;
+                        return false;
+                    }) == null)
+                        m_KnownNeighbors[r.RegionID].Add(regionInfos);
+                }
+
+                if (postService != null)
+                    postService.Post(r.RegionHandle,
+                                     SyncMessageHelper.NeighborChange(r.RegionID, regionInfos.RegionID, down));
+            }
+
+            if (down)
+                m_KnownNeighbors.Remove(regionInfos.RegionID);
+        }
+
+        /// <summary>
+        ///   Get all the neighboring regions of the given region
+        /// </summary>
+        /// <param name = "region"></param>
+        /// <returns></returns>
+        protected virtual List<GridRegion> FindNewNeighbors(GridRegion region)
+        {
+            int startX = (region.RegionLocX - 8192); //Give 8196 by default so that we pick up neighbors next to us
+            int startY = (region.RegionLocY - 8192);
+            if (GetMaxRegionSize() != 0)
+            {
+                startX = (region.RegionLocX - GetMaxRegionSize());
+                startY = (region.RegionLocY - GetMaxRegionSize());
+            }
+
+            //-1 so that we don't get size (256) + viewsize (256) and get a region two 256 blocks over
+            int endX = (region.RegionLocX + GetRegionViewSize() + region.RegionSizeX - 1);
+            int endY = (region.RegionLocY + GetRegionViewSize() + region.RegionSizeY - 1);
+
+            List<GridRegion> neighbors = GetRegionRange(region.ScopeID, startX, endX, startY, endY);
+
+            neighbors.RemoveAll(delegate(GridRegion r)
+            {
+                if (r.RegionID == region.RegionID)
+                    return true;
+
+                if (r.RegionLocX + r.RegionSizeX - 1 < (region.RegionLocX - GetRegionViewSize()) ||
+                    r.RegionLocY + r.RegionSizeY - 1 < (region.RegionLocY - GetRegionViewSize()))
+                    //Check for regions outside of the boundry (created above when checking for large regions next to us)
+                    return true;
+
+                return false;
+            });
+            return neighbors;
+        }
+
+        public virtual bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
+        {
+            if (m_UseSessionID && r.SessionID != SessionID)
+                return false;
+            return true;
+        }
+
+        public class RegionDataComparison : IComparer<GridRegion>
+        {
+            private readonly string RegionName;
+
+            public RegionDataComparison(string regionName)
+            {
+                RegionName = regionName;
+            }
+
+            #region IComparer<GridRegion> Members
+
+            int IComparer<GridRegion>.Compare(GridRegion x, GridRegion y)
+            {
+                if (x.RegionName == RegionName)
+                    return 1;
+                else if (y.RegionName == RegionName)
+                    return -1;
+                else
+                    return 0;
+            }
+
+            #endregion
+        }
+
+        #endregion
     }
 }

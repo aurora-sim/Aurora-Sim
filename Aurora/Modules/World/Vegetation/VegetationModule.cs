@@ -123,7 +123,7 @@ namespace Aurora.Modules.Vegetation
                 AdaptTree(ref shape);
 
             m_scene.SceneGraph.AddPrimToScene(sceneObject);
-            sceneObject.SetGroup(groupID, ownerID);
+            sceneObject.SetGroup(groupID, ownerID, true);
             sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             return sceneObject;

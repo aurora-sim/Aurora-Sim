@@ -83,6 +83,11 @@ namespace Aurora.Framework
         /// </summary>
         public int RegionSizeZ = 4096;
 
+        /// <summary>
+        /// The region flags (as set on the Grid Server in the database), cached on RegisterRegion call
+        /// </summary>
+        public int RegionFlags = -1;
+
         public EstateSettings EstateSettings { get; set; }
 
         public RegionSettings RegionSettings

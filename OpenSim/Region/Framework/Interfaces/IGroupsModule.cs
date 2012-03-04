@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -36,6 +37,13 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IGroupsModule
     {
         event NewGroupNotice OnNewGroupNotice;
+
+        /// <summary>
+        /// Update any cached info for the given client
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="cachedInfo"></param>
+        void UpdateCachedData(UUID agentID, CachedUserInfo cachedInfo);
 
         /// <summary>
         ///   Create a group
@@ -92,7 +100,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void GroupRoleChanges(IClientAPI remoteClient, UUID GroupID, UUID RoleID, UUID MemberID, uint changes);
         void GroupNoticeRequest(IClientAPI remoteClient, UUID groupNoticeID);
-        GridInstantMessage CreateGroupNoticeIM(UUID agentID, UUID groupNoticeID, byte dialog);
+        GridInstantMessage CreateGroupNoticeIM(UUID agentID, GroupNoticeInfo info, byte dialog);
         void SendAgentGroupDataUpdate(IClientAPI remoteClient);
         void JoinGroupRequest(IClientAPI remoteClient, UUID GroupID);
         void LeaveGroupRequest(IClientAPI remoteClient, UUID GroupID);

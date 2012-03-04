@@ -49,6 +49,8 @@ namespace OpenSim.Services
             get { return GetType().Name; }
         }
 
+        public bool DoMultiplePorts { get { return false; } }
+
         #region IGridRegistrationUrlModule Members
 
         public string UrlName

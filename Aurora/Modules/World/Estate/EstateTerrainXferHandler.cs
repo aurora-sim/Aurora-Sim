@@ -49,7 +49,7 @@ namespace Aurora.Modules.Estate
         public EstateTerrainXferHandler(IClientAPI pRemoteClient, string pClientFilename)
         {
             m_asset = new AssetBase(UUID.Zero, pClientFilename, AssetType.Texture, pRemoteClient.AgentId)
-                          {Data = new byte[0], Description = "empty", Flags = AssetFlags.Temperary | AssetFlags.Local};
+                          {Data = new byte[0], Description = "empty", Flags = AssetFlags.Temporary | AssetFlags.Local};
         }
 
         public ulong XferID

@@ -40,6 +40,7 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD;
         private string m_estateTable = "estatesettings";
+        private string m_estateRegionsTable = "estateregions";
 
         #region IEstateConnector Members
 
@@ -73,9 +74,8 @@ namespace Aurora.Services.DataService
         public EstateSettings GetEstateSettings(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (EstateSettings)remoteValue;
-
 
             EstateSettings settings = new EstateSettings() { EstateID = 0 };
             int estateID = GetEstateID(regionID);
@@ -103,7 +103,7 @@ namespace Aurora.Services.DataService
         public int CreateNewEstate(EstateSettings es, UUID RegionID)
         {
             object remoteValue = DoRemote(es.ToOSD(), RegionID);
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return (int)remoteValue;
 
 
@@ -124,7 +124,7 @@ namespace Aurora.Services.DataService
         public void SaveEstateSettings(EstateSettings es)
         {
             object remoteValue = DoRemote(es.ToOSD());
-            if (remoteValue != null)
+            if (remoteValue != null || m_doRemoteOnly)
                 return;
 
             SaveEstateSettings(es, false);
@@ -134,15 +134,13 @@ namespace Aurora.Services.DataService
         public bool LinkRegion(UUID regionID, int estateID)
         {
             object remoteValue = DoRemote(regionID, estateID);
-            if (remoteValue != null)
-                return (bool)remoteValue;
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
 
-            GD.Replace("estateregions", new[] { "RegionID", "EstateID" },
-                       new object[]
-                           {
-                               regionID,
-                               estateID
-                           });
+            Dictionary<string, object> row = new Dictionary<string, object>(2);
+            row["RegionID"] = regionID;
+            row["EstateID"] = estateID;
+            GD.Replace(m_estateRegionsTable, row);
 
             return true;
         }
@@ -151,14 +149,12 @@ namespace Aurora.Services.DataService
         public bool DelinkRegion(UUID regionID)
         {
             object remoteValue = DoRemote(regionID);
-            if (remoteValue != null)
-                return (bool)remoteValue;
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
 
-            GD.Delete("estateregions", new[] {"RegionID"},
-                      new object[]
-                          {
-                              regionID
-                          });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete(m_estateRegionsTable, filter);
 
             return true;
         }
@@ -167,12 +163,13 @@ namespace Aurora.Services.DataService
         public bool DeleteEstate(int estateID)
         {
             object remoteValue = DoRemote(estateID);
-            if (remoteValue != null)
-                return (bool)remoteValue;
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
 
-
-            GD.Delete("estateregions", new[] { "EstateID" }, new object[] { estateID });
-            GD.Delete(m_estateTable, new[] { "EstateID" }, new object[] { estateID });
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["EstateID"] = estateID;
+            GD.Delete(m_estateRegionsTable, filter);
+            GD.Delete(m_estateTable, filter);
 
             return true;
         }
@@ -181,10 +178,8 @@ namespace Aurora.Services.DataService
         public int GetEstate(UUID ownerID, string name)
         {
             object remoteValue = DoRemote(ownerID, name);
-            if (remoteValue != null)
-            {
+            if (remoteValue != null || m_doRemoteOnly)
                 return (int)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
@@ -201,14 +196,12 @@ namespace Aurora.Services.DataService
         public List<UUID> GetRegions(int estateID)
         {
             object remoteValue = DoRemote(estateID);
-            if (remoteValue != null)
-            {
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<UUID>)remoteValue;
-            }
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
-            return GD.Query(new string[1] { "RegionID" }, "estateregions", filter, null, null, null).ConvertAll(x => UUID.Parse(x));
+            return GD.Query(new string[1] { "RegionID" }, m_estateRegionsTable, filter, null, null, null).ConvertAll(x => UUID.Parse(x));
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -221,10 +214,8 @@ namespace Aurora.Services.DataService
         public List<EstateSettings> GetEstates(UUID OwnerID, Dictionary<string, bool> boolFields)
         {
             object remoteValue = DoRemote(OwnerID, boolFields);
-            if (remoteValue != null)
-            {
+            if (remoteValue != null || m_doRemoteOnly)
                 return (List<EstateSettings>)remoteValue;
-            }
 
             List<EstateSettings> settings = new List<EstateSettings>();
 
@@ -267,7 +258,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = regionID;
 
-            List<string> retVal = GD.Query(new string[1] { "EstateID" }, "estateregions", filter, null, null, null);
+            List<string> retVal = GD.Query(new string[1] { "EstateID" }, m_estateRegionsTable, filter, null, null, null);
 
             return (retVal.Count > 0) ? int.Parse(retVal[0]) : 0;
         }
@@ -298,26 +289,23 @@ namespace Aurora.Services.DataService
 
         protected void SaveEstateSettings(EstateSettings es, bool doInsert)
         {
-            string[] keys = new string[5]
-            {
-                "EstateID",
-                "EstateName",
-                "EstateOwner",
-                "ParentEstateID",
-                "Settings"
-            };
-            object[] values = new object[5]
-            {
-                es.EstateID,
-                es.EstateName,
-                es.EstateOwner,
-                es.ParentEstateID,
-                OSDParser.SerializeJsonString(es.ToOSD())
-            };
+            Dictionary<string, object> values = new Dictionary<string, object>(5);
+            values["EstateID"] = es.EstateID;
+            values["EstateName"] = es.EstateName;
+            values["EstateOwner"] = es.EstateOwner;
+            values["ParentEstateID"] = es.ParentEstateID;
+            values["Settings"] = OSDParser.SerializeJsonString(es.ToOSD());
+
             if (!doInsert)
-                GD.Update(m_estateTable, values, keys, new string[1] { "EstateID" }, new object[1] { es.EstateID });
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["EstateID"] = es.EstateID;
+                GD.Update(m_estateTable, values, null, filter, null, null);
+            }
             else
-                GD.Insert(m_estateTable, keys, values);
+            {
+                GD.Insert(m_estateTable, values);
+            }
         }
 
         #endregion

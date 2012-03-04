@@ -342,6 +342,7 @@ namespace Aurora.Modules.Permissions
             m_scene.Permissions.OnSubdivideParcel += CanSubdivideParcel;
             m_scene.Permissions.OnEditParcelProperties += CanEditParcelProperties; //MAYBE FULLY IMPLEMENTED
             m_scene.Permissions.OnInstantMessage += CanInstantMessage;
+            m_scene.Permissions.OnCanGodTp += CanGodTp;
             m_scene.Permissions.OnInventoryTransfer += CanInventoryTransfer; //NOT YET IMPLEMENTED
             m_scene.Permissions.OnIssueEstateCommand += CanIssueEstateCommand;
             m_scene.Permissions.OnMoveObject += CanMoveObject;
@@ -551,10 +552,8 @@ namespace Aurora.Modules.Permissions
 
         public void HandleBypassPermissions(string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
                 return;
-            }
 
             if (args.Length > 2)
             {
@@ -565,18 +564,20 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissions = val;
 
-                MainConsole.Instance.InfoFormat(
-                    "[PERMISSIONS]: Set permissions bypass to {0} for {1}",
-                    m_bypassPermissions, m_scene.RegionInfo.RegionName);
+                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                {
+                    MainConsole.Instance.HasProcessedCurrentCommand = true;
+                    MainConsole.Instance.InfoFormat(
+                        "[PERMISSIONS]: Set permissions bypass to {0} for {1}",
+                        m_bypassPermissions, m_scene.RegionInfo.RegionName);
+                }
             }
         }
 
         public void HandleForcePermissions(string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
                 return;
-            }
 
             if (!m_bypassPermissions)
             {
@@ -593,17 +594,19 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissionsValue = val;
 
-                MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}", m_bypassPermissionsValue,
+                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                {
+                    MainConsole.Instance.HasProcessedCurrentCommand = true;
+                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}", m_bypassPermissionsValue,
                                  m_scene.RegionInfo.RegionName);
+                }
             }
         }
 
         public void HandleDebugPermissions(string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
+            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
                 return;
-            }
 
             if (args.Length > 2)
             {
@@ -614,8 +617,12 @@ namespace Aurora.Modules.Permissions
 
                 m_debugPermissions = val;
 
-                MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}", m_debugPermissions,
+                if (MainConsole.Instance.ConsoleScene != null || (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                {
+                    MainConsole.Instance.HasProcessedCurrentCommand = true;
+                    MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}", m_debugPermissions,
                                  m_scene.RegionInfo.RegionName);
+                }
             }
         }
 
@@ -1527,6 +1534,21 @@ namespace Aurora.Modules.Permissions
                 user = part.OwnerID;
 
             return GenericCommunicationPermission(user, target);
+        }
+
+        private bool CanGodTp(UUID user, UUID target)
+        {
+            DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
+            if (m_bypassPermissions) return m_bypassPermissionsValue;
+
+            if(IsGod(user, m_scene))
+            {
+                if (IsGod(target, m_scene)) //if they are an admin
+                    return false;
+
+                return true;
+            }
+            return false;
         }
 
         private bool CanInventoryTransfer(UUID user, UUID target, IScene startScene)

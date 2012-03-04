@@ -37,11 +37,9 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules
 {
-    public class IWCAgentInfoConnector : IAgentInfoService, IService
+    public class IWCAgentInfoConnector : ConnectorBase, IAgentInfoService, IService
     {
         protected IAgentInfoService m_localService;
-        protected IRegistryCore m_registry;
-        protected AgentInfoConnector m_remoteService;
 
         public string Name
         {
@@ -83,10 +81,9 @@ namespace Aurora.Modules
             if (m_localService == null)
                 m_localService = new AgentInfoService();
             m_localService.Initialize(config, registry);
-            m_remoteService = new AgentInfoConnector();
-            m_remoteService.Initialize(config, registry);
             registry.RegisterModuleInterface<IAgentInfoService>(this);
             m_registry = registry;
+            Init(registry, Name);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -105,29 +102,29 @@ namespace Aurora.Modules
         {
             UserInfo info = m_localService.GetUserInfo(userID);
             if (info == null)
-                info = m_remoteService.GetUserInfo(userID);
+                info = (UserInfo)DoRemoteForced(userID);
             return info;
         }
 
-        public UserInfo[] GetUserInfos(string[] userIDs)
+        public List<UserInfo> GetUserInfos(List<string> userIDs)
         {
-            UserInfo[] info = m_localService.GetUserInfos(userIDs);
+            List<UserInfo> info = m_localService.GetUserInfos(userIDs);
             if (info == null)
-                info = m_remoteService.GetUserInfos(userIDs);
+                info = (List<UserInfo>)DoRemoteForced(userIDs);
             return info;
         }
 
-        public string[] GetAgentsLocations(string requestor, string[] userIDs)
+        public List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
-            string[] info = m_localService.GetAgentsLocations(requestor, userIDs);
-            string[] info2 = m_remoteService.GetAgentsLocations(requestor, userIDs);
-            if (info == null)
+            List<string> info = m_localService.GetAgentsLocations(requestor, userIDs);
+            List<string> info2 = (List<string>)DoRemoteForced(userIDs);
+            if (info == null || info.Count == 0)
                 info = info2;
             else
             {
-                for (int i = 0; i < userIDs.Length; i++)
+                for (int i = 0; i < userIDs.Count; i++)
                 {
-                    if (info[i] == "NotOnline" && info2.Length < i)
+                    if (info[i] == "NotOnline" && info2.Count < i)
                         info[i] = info2[i];
                 }
             }

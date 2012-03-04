@@ -272,7 +272,6 @@ namespace OpenSim.Services.LLLoginService
                 InventoryLibrary = GetInventoryLibrary(libService, invService);
                 Hashtable InventoryLibRootHash = new Hashtable();
                 InventoryLibRootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
-                ;
                 InventoryLibRoot.Add(InventoryLibRootHash);
             }
         }
@@ -744,8 +743,8 @@ namespace OpenSim.Services.LLLoginService
             RootHash["name"] = library.LibraryName;
             RootHash["parent_id"] = UUID.Zero.ToString();
             RootHash["version"] = 1;
-            RootHash["type_default"] = 9;
-            RootHash["folder_id"] = "00000112-000f-0000-0000-000100bba000";
+            RootHash["type_default"] = 8;
+            RootHash["folder_id"] = library.LibraryRootFolderID.ToString();
             AgentInventoryArray.Add(RootHash);
 
             List<UUID> rootFolderUUIDs = (from rootFolder in rootFolders where rootFolder.Name != "My Inventory" select rootFolder.ID).ToList();
@@ -754,13 +753,13 @@ namespace OpenSim.Services.LLLoginService
             {
                 foreach (UUID rootfolderID in rootFolderUUIDs)
                 {
-                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, true, ref AgentInventoryArray);
+                    TraverseFolder(library.LibraryOwner, rootfolderID, inventoryService, library, true, ref AgentInventoryArray);
                 }
             }
             return AgentInventoryArray;
         }
 
-        private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, bool rootFolder,
+        private void TraverseFolder(UUID agentID, UUID folderID, IInventoryService invService, ILibraryService library, bool rootFolder,
                                     ref ArrayList table)
         {
             List<InventoryFolderBase> folders = invService.GetFolderFolders(agentID, folderID);
@@ -769,14 +768,16 @@ namespace OpenSim.Services.LLLoginService
                 Hashtable TempHash = new Hashtable();
                 TempHash["name"] = folder.Name;
                 if (rootFolder)
-                    TempHash["parent_id"] = "00000112-000f-0000-0000-000100bba000";
+                    TempHash["parent_id"] = library.LibraryRootFolderID.ToString();
                 else
                     TempHash["parent_id"] = folder.ParentID.ToString();
-                TempHash["version"] = (Int32) folder.Version;
-                TempHash["type_default"] = (Int32) folder.Type;
+                //TempHash["version"] = (Int32)folder.Version;
+                TempHash["version"] = 1;
+                //TempHash["type_default"] = (Int32) folder.Type;
+                TempHash["type_default"] = 9;
                 TempHash["folder_id"] = folder.ID.ToString();
                 table.Add(TempHash);
-                TraverseFolder(agentID, folder.ID, invService, false, ref table);
+                TraverseFolder(agentID, folder.ID, invService, library, false, ref table);
             }
         }
 

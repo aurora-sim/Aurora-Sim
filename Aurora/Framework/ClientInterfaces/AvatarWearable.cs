@@ -44,7 +44,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class AvatarWearable
+    public class AvatarWearable : IDataTransferable
     {
         // these are guessed at by the list here -
         // http://wiki.secondlife.com/wiki/Avatar_Appearance.  We'll
@@ -78,7 +78,7 @@ namespace Aurora.Framework
         public static readonly UUID DEFAULT_SKIN_ASSET = new UUID("77c41e39-38f9-f75a-024e-585989bbabbb");
 
         public static readonly UUID DEFAULT_EYES_ITEM = new UUID("4d3af499-976b-400a-a04a-f13df0babc0b");
-        public static readonly UUID DEFAULT_EYES_ASSET = new UUID("6522e74d-1660-4e7f-b601-6f48c1659a77");
+        public static readonly UUID DEFAULT_EYES_ASSET = new UUID("4bb6fa4d-1cd2-498a-a84c-95c1a0e745a7");
 
         public static readonly UUID DEFAULT_SHIRT_ITEM = new UUID("77c41e39-38f9-f75a-0000-585989bf0000");
         public static readonly UUID DEFAULT_SHIRT_ASSET = new UUID("00000000-38f9-1111-024e-222222111110");
@@ -179,6 +179,13 @@ namespace Aurora.Framework
 #endif
         }
 
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Value"] = Pack();
+            return map;
+        }
+
         public OSD Pack()
         {
             OSDArray wearlist = new OSDArray();
@@ -192,6 +199,11 @@ namespace Aurora.Framework
             }
 
             return wearlist;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Unpack((OSDArray)map["Value"]);
         }
 
         public void Unpack(OSDArray args)

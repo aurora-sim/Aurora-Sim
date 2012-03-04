@@ -255,7 +255,7 @@ namespace Aurora.Modules.AbuseReports
                                                                               report.AbuseLocation + " in your region " +
                                                                               report.RegionName +
                                                                               ". Summary: " + report.AbuseSummary +
-                                                                              ". Details: " + report.AbuseDetails + ".");
+                                                                              ". Details: " + report.AbuseDetails + ".", client.Scene);
             }
             //Tell the DB about it
             IAbuseReports conn = m_SceneList[0].RequestModuleInterface<IAbuseReports>();

@@ -44,10 +44,9 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalDirectoryServiceConnector : IDirectoryServiceConnector
+    public class LocalDirectoryServiceConnector : ConnectorBase, IDirectoryServiceConnector
     {
         private IGenericData GD;
-        private IRegistryCore m_registry;
 
         #region IDirectoryServiceConnector Members
 
@@ -69,6 +68,7 @@ namespace Aurora.Services.DataService
             {
                 DataManager.DataManager.RegisterPlugin(this);
             }
+            Init(simBase, Name);
         }
 
         public string Name
@@ -90,8 +90,13 @@ namespace Aurora.Services.DataService
         /// <param name = "forSale"></param>
         /// <param name = "EstateID"></param>
         /// <param name = "showInSearch"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void AddRegion(List<LandData> parcels)
         {
+            object remoteValue = DoRemote(parcels);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
             if (parcels.Count == 0)
                 return;
 
@@ -176,9 +181,16 @@ namespace Aurora.Services.DataService
             GD.InsertMultiple("searchparcel", insertValues);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void ClearRegion(UUID regionID)
         {
-            GD.Delete("searchparcel", new string[1] {"RegionID"}, new object[1] {regionID});
+            object remoteValue = DoRemote(regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["RegionID"] = regionID;
+            GD.Delete("searchparcel", filter);
         }
 
         #endregion
@@ -217,7 +229,7 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (Query[i + 22] == string.Empty) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = (string.IsNullOrEmpty(Query[i + 22] )) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
 
                 Lands.Add(LandData);
             }
@@ -229,8 +241,13 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "ParcelID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public LandData GetParcelInfo(UUID InfoUUID)
         {
+            object remoteValue = DoRemote(InfoUUID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (LandData)remoteValue;
+
             //Split the InfoUUID so that we get the regions, we'll check for positions in a bit
             int RegionX, RegionY;
             uint X, Y;
@@ -290,8 +307,13 @@ namespace Aurora.Services.DataService
             return LandData;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName)
         {
+            object remoteValue = DoRemote(RegionID, ScopeID, ParcelName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (LandData)remoteValue;
+
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
@@ -320,14 +342,33 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "OwnerID"></param>
         /// <returns></returns>
-        public LandData[] GetParcelByOwner(UUID OwnerID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<ExtendedLandData> GetParcelByOwner(UUID OwnerID)
         {
             //NOTE: this does check for group deeded land as well, so this can check for that as well
+            object remoteValue = DoRemote(OwnerID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<ExtendedLandData>)remoteValue;
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             List<string> Query = GD.Query(new string[] { "*" }, "searchparcel", filter, null, null, null);
 
-            return (Query.Count == 0) ? new LandData[0] { } : Query2LandData(Query).ToArray();
+            return (Query.Count == 0) ? new List<ExtendedLandData>() : LandDataToExtendedLandData(Query2LandData(Query));
+        }
+
+        public List<ExtendedLandData> LandDataToExtendedLandData(List<LandData> data)
+        {
+           return (from land in data
+                                              let region = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, land.RegionID)
+                                              where region != null
+                                              select new ExtendedLandData
+                                              {
+                                                  LandData = land,
+                                                  RegionType = region.RegionType,
+                                                  RegionName = region.RegionName,
+                                                  GlobalPosX = region.RegionLocX + land.UserLocation.X,
+                                                  GlobalPosY = region.RegionLocY + land.UserLocation.Y
+                                              }).ToList();
         }
 
         private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
@@ -352,9 +393,14 @@ namespace Aurora.Services.DataService
 
             return filter;
         }
-        
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
+            object remoteValue = DoRemote(start, count, RegionID, scopeID, owner, flags, category);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<LandData>)remoteValue;
+
             List<LandData> resp = new List<LandData>(0);
             if (count == 0)
             {
@@ -376,8 +422,13 @@ namespace Aurora.Services.DataService
             return resp;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
+            object remoteValue = DoRemote(RegionID, scopeID, owner, flags, category);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
@@ -391,8 +442,13 @@ namespace Aurora.Services.DataService
             return 0;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name)
         {
+            object remoteValue = DoRemote(start, count, RegionID, ScopeID, name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<LandData>)remoteValue;
+
             List<LandData> resp = new List<LandData>(0);
             if (count == 0)
             {
@@ -419,8 +475,13 @@ namespace Aurora.Services.DataService
             return resp;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name)
         {
+            object remoteValue = DoRemote(RegionID, ScopeID, name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
@@ -444,8 +505,13 @@ namespace Aurora.Services.DataService
         /// <param name = "category"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirPlacesReplyData[] FindLand(string queryText, string category, int StartQuery, uint Flags)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags)
         {
+            object remoteValue = DoRemote(queryText, category, StartQuery, Flags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirPlacesReplyData>)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             Dictionary<string, bool> sort = new Dictionary<string, bool>();
 
@@ -474,7 +540,7 @@ namespace Aurora.Services.DataService
 
             if (retVal.Count == 0)
             {
-                return new DirPlacesReplyData[0] { };
+                return new List<DirPlacesReplyData>();
             }
 
             List<DirPlacesReplyData> Data = new List<DirPlacesReplyData>();
@@ -495,7 +561,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return Data.ToArray();
+            return Data;
         }
 
         /// <summary>
@@ -506,8 +572,12 @@ namespace Aurora.Services.DataService
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirLandReplyData[] FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
         {
+            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirLandReplyData>)remoteValue;
 
             QueryFilter filter = new QueryFilter();
 
@@ -538,7 +608,7 @@ namespace Aurora.Services.DataService
             //if there are none, return
             if (retVal.Count == 0)
             {
-                return new DirLandReplyData[0] { };
+                return new List<DirLandReplyData>();
             }
 
             List<DirLandReplyData> Data = new List<DirLandReplyData>();
@@ -569,7 +639,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return Data.ToArray();
+            return Data;
         }
 
         private void ConvertBytesToLandBitmap(ref bool[,] tempConvertMap, byte[] Bitmap, int sizeX)
@@ -612,8 +682,12 @@ namespace Aurora.Services.DataService
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirClassifiedReplyData[] FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
         {
+            object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirClassifiedReplyData>)remoteValue;
 
             QueryFilter filter = new QueryFilter();
 
@@ -626,7 +700,7 @@ namespace Aurora.Services.DataService
             List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
             {
-                return new DirClassifiedReplyData[0] { };
+                return new List<DirClassifiedReplyData>();
             }
 
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
@@ -659,7 +733,7 @@ namespace Aurora.Services.DataService
                     Data.Add(replyData);
                 }
             }
-            return Data.ToArray();
+            return Data;
         }
 
         /// <summary>
@@ -667,15 +741,20 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "regionName"></param>
         /// <returns></returns>
-        public Classified[] GetClassifiedsInRegion(string regionName)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<Classified> GetClassifiedsInRegion(string regionName)
         {
+            object remoteValue = DoRemote(regionName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<Classified>)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["SimName"] = regionName;
             List<string> retVal = GD.Query(new string[] { "*" }, "userclassifieds", filter, null, null, null);
 
             if (retVal.Count == 0)
             {
-                return new Classified[0] { };
+                return new List<Classified>();
             }
 
             List<Classified> Classifieds = new List<Classified>();
@@ -687,7 +766,30 @@ namespace Aurora.Services.DataService
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
                 Classifieds.Add(classified);
             }
-            return Classifieds.ToArray();
+            return Classifieds;
+        }
+
+        /// <summary>
+        ///   Get a classified by its UUID
+        /// </summary>
+        /// <param name = "regionName"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public Classified GetClassifiedByID(UUID id)
+        {
+            object remoteValue = DoRemote(id);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (Classified)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+            Dictionary<string, object> where = new Dictionary<string, object>(1);
+            where.Add("ClassifiedUUID", id);
+            filter.andFilters = where;
+            List<string> retVal = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
+            if ((retVal == null) || (retVal.Count == 0)) return null;
+            Classified classified = new Classified();
+            classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[5]));
+            return classified;
         }
 
         #endregion
@@ -701,8 +803,13 @@ namespace Aurora.Services.DataService
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        public DirEventsReplyData[] FindEvents(string queryText, uint eventFlags, int StartQuery)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirEventsReplyData> FindEvents(string queryText, uint eventFlags, int StartQuery)
         {
+            object remoteValue = DoRemote(queryText, eventFlags, StartQuery);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirEventsReplyData>)remoteValue;
+
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 
             QueryFilter filter = new QueryFilter();
@@ -770,7 +877,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return Data.ToArray();
+            return Data;
         }
 
         /// <summary>
@@ -779,8 +886,13 @@ namespace Aurora.Services.DataService
         /// <param name = "regionName"></param>
         /// <param name = "maturity">Uses DirectoryManager.EventFlags to determine the maturity requested</param>
         /// <returns></returns>
-        public DirEventsReplyData[] FindAllEventsInRegion(string regionName, int maturity)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirEventsReplyData> FindAllEventsInRegion(string regionName, int maturity)
         {
+            object remoteValue = DoRemote(regionName, maturity);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirEventsReplyData>)remoteValue;
+
             List<DirEventsReplyData> Data = new List<DirEventsReplyData>();
 
             IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
@@ -824,7 +936,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return Data.ToArray();
+            return Data;
         }
         
         private static List<EventData> Query2EventData(List<string> RetVal){
@@ -883,16 +995,26 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "EventID"></param>
         /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public EventData GetEventInfo(uint EventID)
         {
+            object remoteValue = DoRemote(EventID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (EventData)remoteValue;
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EID"] = EventID;
             List<string> RetVal = GD.Query(new string[] { "*" }, "asevents", filter, null, null, null);
             return (RetVal.Count == 0) ? null : Query2EventData(RetVal)[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public EventData CreateEvent(UUID creator, UUID regionID, UUID parcelID, DateTime date, uint cover, EventFlags maturity, uint flags, uint duration, Vector3 localPos, string name, string description, string category)
         {
+            object remoteValue = DoRemote(creator, regionID, parcelID, date, cover, maturity, flags, duration, localPos, name, description, category);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (EventData)remoteValue;
+
             IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
             IParcelServiceConnector parceldata = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
             if(regiondata == null || parceldata == null){
@@ -932,39 +1054,24 @@ namespace Aurora.Services.DataService
             eventData.description = description;
             eventData.category = category;
 
-            GD.Insert("asevents", new string[]{
-                "EID",
-                "creator",
-                "region",
-                "parcel", 
-                "date", 
-                "cover", 
-                "maturity", 
-                "flags", 
-                "duration", 
-                "localPosX", 
-                "localPosY", 
-                "localPosZ", 
-                "name",
-                "description",
-                "category"
-            }, new object[]{
-                eventData.eventID,
-                creator.ToString(),
-                regionID.ToString(),
-                parcelID.ToString(),
-                date.ToString("s"),
-                eventData.cover,
-                (uint)maturity,
-                flags,
-                duration,
-                localPos.X,
-                localPos.Y,
-                localPos.Z,
-                name,
-                description,
-                category
-            });
+            Dictionary<string, object> row = new Dictionary<string, object>(15);
+            row["EID"] = eventData.eventID;
+            row["creator"] = creator.ToString();
+            row["region"] = regionID.ToString();
+            row["parcel"] = parcelID.ToString();
+            row["date"] = date.ToString("s");
+            row["cover"] = eventData.cover;
+            row["maturity"] = (uint)maturity;
+            row["flags"] = flags;
+            row["duration"] = duration;
+            row["localPosX"] = localPos.X;
+            row["localPosY"] = localPos.Y;
+            row["localPosZ"] = localPos.Z;
+            row["name"] = name;
+            row["description"] = description;
+            row["category"] = category;
+
+            GD.Insert("asevents", row);
 
             return eventData;
         }

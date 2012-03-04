@@ -61,18 +61,40 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static List<T> GetGenerics<T>(UUID OwnerID, string Type, IGenericData GD) where T : IDataTransferable
         {
+            List<OSDMap> retVal = GetGenerics(OwnerID, Type, GD);
+
+            List<T> Values = new List<T>();
+            foreach (OSDMap map in retVal)
+            {
+                T data = (T)System.Activator.CreateInstance(typeof(T));
+                data.FromOSD(map);
+                Values.Add(data);
+            }
+
+            return Values;
+        }
+
+        /// <summary>
+        ///   Gets a list of OSDMaps from the database
+        /// </summary>
+        /// <param name = "OwnerID"></param>
+        /// <param name = "Type"></param>
+        /// <param name = "GD"></param>
+        /// <param name = "data">a default T</param>
+        /// <returns></returns>
+        public static List<OSDMap> GetGenerics(UUID OwnerID, string Type, IGenericData GD)
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
             List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", filter, null, null, null);
 
-            List<T> Values = new List<T>();
+            List<OSDMap> Values = new List<OSDMap>();
             foreach (string ret in retVal)
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
-                T data = (T)System.Activator.CreateInstance(typeof(T));
-                data.FromOSD(map);
-                Values.Add(data);
+                if(map != null)
+                    Values.Add(map);
             }
 
             return Values;
@@ -90,6 +112,25 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD) where T : IDataTransferable
         {
+            OSDMap map = GetGeneric(OwnerID, Type, Key, GD);
+			if (map == null) return null;
+            T data = (T)System.Activator.CreateInstance(typeof(T));
+            data.FromOSD(map);
+            return data;
+        }
+
+        /// <summary>
+        ///   Gets a Generic type as set by T
+        /// </summary>
+        /// <typeparam name = "T"></typeparam>
+        /// <param name = "OwnerID"></param>
+        /// <param name = "Type"></param>
+        /// <param name = "Key"></param>
+        /// <param name = "GD"></param>
+        /// <param name = "data">a default T to copy all data into</param>
+        /// <returns></returns>
+        public static OSDMap GetGeneric(UUID OwnerID, string Type, string Key, IGenericData GD)
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerID"] = OwnerID;
             filter.andFilters["Type"] = Type;
@@ -97,14 +138,9 @@ namespace Aurora.Services.DataService
             List<string> retVal = GD.Query(new string[1] { "`value`" }, "generics", filter, null, null, null);
 
             if (retVal.Count == 0)
-            {
                 return null;
-            }
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeJson(retVal[0]);
-            T data = (T)System.Activator.CreateInstance(typeof(T));
-            data.FromOSD(map);
-            return data;
+            return (OSDMap)OSDParser.DeserializeJson(retVal[0]);
         }
 
         /// <summary>
@@ -163,60 +199,63 @@ namespace Aurora.Services.DataService
         /// <summary>
         ///   Adds a generic into the database
         /// </summary>
-        /// <param name = "AgentID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Type"></param>
         /// <param name = "Key"></param>
         /// <param name = "Value"></param>
         /// <param name = "GD"></param>
-        public static void AddGeneric(UUID AgentID, string Type, string Key, OSDMap Value, IGenericData GD)
+        public static void AddGeneric(UUID OwnerID, string Type, string Key, OSDMap Value, IGenericData GD)
         {
-            GD.Replace("generics", new[] {"OwnerID", "Type", "`Key`", "`Value`"},
-                       new object[] {AgentID, Type, Key, OSDParser.SerializeJsonString(Value)});
+            Dictionary<string, object> row = new Dictionary<string, object>(4);
+            row["OwnerID"] = OwnerID;
+            row["Type"] = Type;
+            row["`Key`"] = Key;
+            row["`Value`"] = OSDParser.SerializeJsonString(Value);
+            GD.Replace("generics", row);
+        }
+
+        /// <summary>
+        /// Remove generic data for the specified owner by type and key
+        /// </summary>
+        /// <param name="OwnerID">ID of the entity that owns the generic data</param>
+        /// <param name="Type"></param>
+        /// <param name="Key"></param>
+        /// <param name="GD"></param>
+        public static void RemoveGenericByKeyAndType(UUID OwnerID, string Type, string Key, IGenericData GD)
+        {
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["Type"] = Type;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
         ///   Removes a generic from the database
         /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "Key"></param>
-        /// <param name = "GD"></param>
-        public static void RemoveGeneric(UUID AgentID, string Type, string Key, IGenericData GD)
-        {
-            GD.Delete("generics", new[] {"OwnerID", "Type", "`Key`"}, new object[] {AgentID, Type, Key});
-        }
-
-        /// <summary>
-        ///   Removes a generic from the database
-        /// </summary>
-        /// <param name = "OwnerID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Key"></param>
         /// <param name = "GD"></param>
         public static void RemoveGenericByKey(UUID OwnerID, string Key, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "`Key`"}, new object[] {OwnerID, Key});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["`Key`"] = Key;
+            GD.Delete("generics", filter);
         }
 
         /// <summary>
         ///   Removes a generic from the database
         /// </summary>
-        /// <param name = "OwnerID"></param>
+        /// <param name = "OwnerID">ID of the entity that owns the generic data</param>
         /// <param name = "Type"></param>
         /// <param name = "GD"></param>
         public static void RemoveGenericByType(UUID OwnerID, string Type, IGenericData GD)
         {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {OwnerID, Type});
-        }
-
-        /// <summary>
-        ///   Removes a generic from the database
-        /// </summary>
-        /// <param name = "AgentID"></param>
-        /// <param name = "Type"></param>
-        /// <param name = "GD"></param>
-        public static void RemoveGeneric(UUID AgentID, string Type, IGenericData GD)
-        {
-            GD.Delete("generics", new[] {"OwnerID", "Type"}, new object[] {AgentID, Type});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerID"] = OwnerID;
+            filter.andFilters["Type"] = Type;
+            GD.Delete("generics", filter);
         }
 
         public static List<UUID> GetOwnersByGeneric(IGenericData GD, string Type, string Key)

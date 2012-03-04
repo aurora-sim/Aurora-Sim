@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Aurora.Framework;
 
 namespace Aurora.DataManager
@@ -53,11 +54,11 @@ namespace Aurora.DataManager
                 CreateTable(VERSION_TABLE_NAME, new[]{
                     new ColumnDefinition{
                         Name = COLUMN_VERSION,
-                        Type = ColumnTypes.String
+                        Type = new ColumnTypeDef{ Type= ColumnType.Text }
                     },
                     new ColumnDefinition{
                         Name = COLUMN_NAME,
-                        Type = ColumnTypes.String
+                        Type = new ColumnTypeDef{ Type= ColumnType.Text }
                     }
                 }, new IndexDefinition[0]);
             }
@@ -101,11 +102,13 @@ namespace Aurora.DataManager
             {
                 CreateTable(VERSION_TABLE_NAME, new[]{new ColumnDefinition{
                     Name = COLUMN_VERSION,
-                    Type = ColumnTypes.String100
+                    Type = new ColumnTypeDef{ Type= ColumnType.String, Size = 100 }
                 }}, new IndexDefinition[0]);
             }
             //Remove previous versions
-            Delete(VERSION_TABLE_NAME, new string[1] {COLUMN_NAME}, new object[1] {MigrationName});
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters[COLUMN_NAME] = MigrationName;
+            Delete(VERSION_TABLE_NAME, filter);
             //Add the new version
             Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
         }
@@ -147,7 +150,6 @@ namespace Aurora.DataManager
             {
                 if (!extractedColumns.Contains(columnDefinition))
                 {
-#if (!ISWIN)
                     ColumnDefinition thisDef = null;
                     foreach (ColumnDefinition extractedDefinition in extractedColumns)
                     {
@@ -157,15 +159,16 @@ namespace Aurora.DataManager
                             break;
                         }
                     }
-#else
-                    ColumnDefinition thisDef = extractedColumns.FirstOrDefault(extractedDefinition => extractedDefinition.Name.ToLower() == columnDefinition.Name.ToLower());
-#endif
                     //Check to see whether the two tables have the same type, but under different names
                     if (thisDef != null)
                     {
                         if (GetColumnTypeStringSymbol(thisDef.Type) == GetColumnTypeStringSymbol(columnDefinition.Type))
                         {
                             continue; //They are the same type, let them go on through
+                        }
+                        else
+                        {
+                            MainConsole.Instance.Warn("Mismatched Column Type on " + tableName + "." + thisDef.Name + ": " + GetColumnTypeStringSymbol(thisDef.Type) + ", " + GetColumnTypeStringSymbol(columnDefinition.Type));
                         }
                     }
                     MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with new column definitions");
@@ -197,7 +200,7 @@ namespace Aurora.DataManager
                             continue; //They are the same type, let them go on through
                         }
                     }
-                    MainConsole.Instance.Debug("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with old column definitions");
+                    MainConsole.Instance.Warn("[DataMigrator]: Issue verifing table " + tableName + " column " + columnDefinition.Name + " when verifing tables exist, problem with old column definitions");
                     return false;
                 }
             }
@@ -284,9 +287,7 @@ namespace Aurora.DataManager
 
         #region UPDATE
 
-        public abstract bool Update(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
-
-        public abstract bool DirectUpdate(string table, object[] setValues, string[] setRows, string[] keyRows, object[] keyValues);
+        public abstract bool Update(string table, Dictionary<string, object> values, Dictionary<string, int> incrementValue, QueryFilter queryFilter, uint? start, uint? count);
 
         #endregion
 
@@ -305,24 +306,23 @@ namespace Aurora.DataManager
         #region INSERT
 
         public abstract bool Insert(string table, object[] values);
-        public abstract bool Insert(string table, string[] keys, object[] values);
+        public abstract bool Insert(string table, Dictionary<string, object> row);
         public abstract bool Insert(string table, object[] values, string updateKey, object updateValue);
         public abstract bool InsertMultiple(string table, List<object[]> values);
+        public abstract bool InsertSelect(string tableA, string[] fieldsA, string tableB, string[] valuesB);
 
         #endregion
 
         #region REPLACE INTO
 
-        public abstract bool Replace(string table, string[] keys, object[] values);
-        public abstract bool DirectReplace(string table, string[] keys, object[] values);
+        public abstract bool Replace(string table, Dictionary<string, object> row);
 
         #endregion
 
         #region DELETE
 
-        public abstract bool Delete(string table, string[] keys, object[] values);
-        public abstract bool Delete(string table, string whereclause);
         public abstract bool DeleteByTime(string table, string key);
+        public abstract bool Delete(string table, QueryFilter queryFilter);
 
         #endregion
 
@@ -331,8 +331,6 @@ namespace Aurora.DataManager
         public abstract void CloseDatabase();
 
         public abstract IGenericData Copy();
-        public abstract string FormatDateTimeString(int time);
-        public abstract string IsNull(string Field, string defaultValue);
         public abstract string ConCat(string[] toConcat);
 
         #endregion
@@ -340,6 +338,86 @@ namespace Aurora.DataManager
         public abstract void UpdateTable(string table, ColumnDefinition[] columns, IndexDefinition[] indexDefinitions, Dictionary<string, string> renameColumns);
 
         public abstract string GetColumnTypeStringSymbol(ColumnTypes type);
+        public abstract string GetColumnTypeStringSymbol(ColumnTypeDef coldef);
+        public ColumnTypeDef ConvertTypeToColumnType(string typeString)
+        {
+            string tStr = typeString.ToLower();
+
+            ColumnTypeDef typeDef = new ColumnTypeDef();
+
+            switch (tStr)
+            {
+                case "blob":
+                    typeDef.Type = ColumnType.Blob;
+                    break;
+                case "longblob":
+                    typeDef.Type = ColumnType.LongBlob;
+                    break;
+                case "date":
+                    typeDef.Type = ColumnType.Date;
+                    break;
+                case "datetime":
+                    typeDef.Type = ColumnType.DateTime;
+                    break;
+                case "double":
+                    typeDef.Type = ColumnType.Double;
+                    break;
+                case "float":
+                    typeDef.Type = ColumnType.Float;
+                    break;
+                case "text":
+                    typeDef.Type = ColumnType.Text;
+                    break;
+                case "mediumtext":
+                    typeDef.Type = ColumnType.MediumText;
+                    break;
+                case "longtext":
+                    typeDef.Type = ColumnType.LongText;
+                    break;
+                case "uuid":
+                    typeDef.Type = ColumnType.UUID;
+                    break;
+                case "integer":
+                    typeDef.Type = ColumnType.Integer;
+                    typeDef.Size = 11;
+                    break;
+                default:
+                    string regexInt = "^int\\((\\d+)\\)( unsigned)?$";
+                    string regexTinyint = "^tinyint\\((\\d+)\\)( unsigned)?$";
+                    string regexChar = "^char\\((\\d+)\\)$";
+                    string regexString = "^varchar\\((\\d+)\\)$";
+
+                    Dictionary<string, ColumnType> regexChecks = new Dictionary<string, ColumnType>(4);
+                    regexChecks[regexInt] = ColumnType.Integer;
+                    regexChecks[regexTinyint] = ColumnType.TinyInt;
+                    regexChecks[regexChar] = ColumnType.Char;
+                    regexChecks[regexString] = ColumnType.String;
+
+                    Match type = Regex.Match("foo", "^bar$");
+                    foreach (KeyValuePair<string, ColumnType> regexCheck in regexChecks)
+                    {
+                        type = Regex.Match(tStr, regexCheck.Key);
+                        if (type.Success)
+                        {
+                            typeDef.Type = regexCheck.Value;
+                            break;
+                        }
+                    }
+
+                    if (type.Success)
+                    {
+                        typeDef.Size = uint.Parse(type.Groups[1].Value);
+                        typeDef.unsigned = (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt) ? (type.Groups.Count == 3 && type.Groups[2].Value == " unsigned") : false;
+                        break;
+                    }
+                    else
+                    {
+                        throw new Exception("You've discovered some type that's not reconized by Aurora, please place the correct conversion in ConvertTypeToColumnType. Type: " + tStr);
+                    }
+            }
+
+            return typeDef;
+        }
         public abstract void ForceRenameTable(string oldTableName, string newTableName);
 
         protected abstract void CopyAllDataBetweenMatchingTables(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions);
