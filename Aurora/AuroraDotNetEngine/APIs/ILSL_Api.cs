@@ -143,6 +143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Vector llGetLocalPos();
         LSL_Rotation llGetLocalRot();
         LSL_Float llGetMass();
+        LSL_Float llGetMassMKS();
         void llGetNextEmail(string address, string subject);
         LSL_Key llGetNotecardLine(string name, int line);
         LSL_Key llGetNumberOfNotecardLines(string name);
@@ -362,6 +363,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void llSetLinkCamera(LSL_Integer link, LSL_Vector eye, LSL_Vector at);
         void llSetLinkPrimitiveParamsFast(int linknum, LSL_List rules);
         DateTime llSetPrimURL(string url);
+        LSL_Integer llSetRegionPos(LSL_Vector pos);
         void llSetRemoteScriptAccessPin(int pin);
         DateTime llSetRot(LSL_Rotation rot);
         void llSetScale(LSL_Vector scale);
@@ -442,5 +444,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Key llRequestDisplayName(LSL_Key uuid);
         LSL_Key llRequestUsername(LSL_Key uuid);
         LSL_List llCastRay(LSL_Vector start, LSL_Vector end, LSL_List options);
+
+
+        void llCreateCharacter(LSL_List options);
+        void llUpdateCharacter(LSL_List options);
+        void llDeleteCharacter();
+        void llPursue(LSL_Key target, LSL_List options);
+        void llEvade(LSL_Key target, LSL_List options);
+        void llFleeFrom(LSL_Vector source, LSL_Float distance, LSL_List options);
+        void llPatrolPoints(LSL_List patrolPoints, LSL_List options);
+        void llWanderWithin(LSL_Vector origin, LSL_Float distance, LSL_List options);
     }
 }

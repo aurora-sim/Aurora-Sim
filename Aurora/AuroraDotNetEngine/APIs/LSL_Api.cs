@@ -2144,12 +2144,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime llSetPos(LSL_Vector pos)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
 
-            SetPos(m_host, pos);
+
+            SetPos(m_host, pos, true);
 
             return PScriptSleep(200);
+        }
+
+        public LSL_Integer llSetRegionPos(LSL_Vector pos)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return ScriptBaseClass.FALSE;
+
+
+            SetPos(m_host, pos, false);
+
+            return ScriptBaseClass.TRUE;
         }
 
         // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
@@ -2161,7 +2171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return end;
         }
 
-        protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos)
+        protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos, bool checkPos)
         {
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
             LSL_Vector currentPos = GetPartLocalPos(part);
@@ -2181,12 +2191,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (ground != 0 && (targetPos.z < ground) && disable_underground_movement)
                         targetPos.z = ground;
                 }
-                LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
+                LSL_Vector real_vec = checkPos ? SetPosAdjust(currentPos, targetPos) : targetPos;
                 parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z), true);
             }
             else
             {
-                LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
+                LSL_Vector rel_vec = checkPos ? SetPosAdjust(currentPos, targetPos) : targetPos;
                 part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)), true);
             }
         }
@@ -3652,7 +3662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Float llGetMassMKS()
         {
-            return llGetMass();
+            return llGetMass() * 100;
         }
 
         public LSL_Float llGetMass()
@@ -8085,7 +8095,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     v = rules.GetVector3Item(idx++);
                     if(part is ISceneChildEntity)
-                        SetPos(part as ISceneChildEntity, v);
+                        SetPos(part as ISceneChildEntity, v, true);
                     else if(part is IScenePresence)
                     {
                         (part as IScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
