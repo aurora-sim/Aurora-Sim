@@ -454,5 +454,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void llFleeFrom(LSL_Vector source, LSL_Float distance, LSL_List options);
         void llPatrolPoints(LSL_List patrolPoints, LSL_List options);
         void llWanderWithin(LSL_Vector origin, LSL_Float distance, LSL_List options);
+        void llGetClosestNavPoint(LSL_Vector point, LSL_List options);
+        void llExecCharacterCmd(LSL_Integer command, LSL_List options);
     }
 }

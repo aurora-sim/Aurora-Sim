@@ -12249,6 +12249,57 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             return transferID;
         }
+
+
+        public void llCreateCharacter(LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llUpdateCharacter(LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llDeleteCharacter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llPursue(LSL_String target, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llEvade(LSL_String target, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llFleeFrom(LSL_Vector source, LSL_Float distance, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llPatrolPoints(LSL_List patrolPoints, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llWanderWithin(LSL_Vector origin, LSL_Float distance, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llGetClosestNavPoint(LSL_Vector point, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void llExecCharacterCmd(LSL_Integer command, LSL_List options)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class NotecardCache
