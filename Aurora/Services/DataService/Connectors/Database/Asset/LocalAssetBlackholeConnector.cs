@@ -270,10 +270,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     while (dr.Read())
                     {
-                        return new AssetBase(UUID.Parse(dr["id"].ToString()), dr["name"].ToString(),
-                                             (AssetType)int.Parse(dr["asset_type"].ToString()),
-                                             UUID.Parse(dr["creator_id"].ToString()))
+                        return new AssetBase()
                         {
+                            ID = UUID.Parse(dr["id"].ToString()),
+                            Name = dr["name"].ToString(),
+                            TypeAsset = (AssetType)int.Parse(dr["asset_type"].ToString()),
+                            CreatorID = UUID.Parse(dr["creator_id"].ToString()),
                             CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
                             DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
                             Description = dr["description"].ToString(),
@@ -478,6 +480,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 row["access_time"] = Util.ToUnixTime(DateTime.UtcNow);
                 row["asset_flags"] = (int)asset.Flags;
                 row["host_uri"] = asset.HostUri;
+                row["owner_id"] = "";
                 m_Gd.Insert(database, row);
                 if (lastNotFound.Contains(asset.ID.ToString()))
                 {
@@ -871,10 +874,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     while (dr != null && dr.Read())
                     {
-                        asset = new AssetBase(dr["id"].ToString(), dr["name"].ToString(),
-                                              (AssetType)int.Parse(dr["assetType"].ToString()),
-                                              UUID.Parse(dr["CreatorID"].ToString()))
+                        asset = new AssetBase()
                         {
+                            ID = UUID.Parse(dr["id"].ToString()),
+                            Name = dr["name"].ToString(),
+                            TypeAsset = (AssetType)int.Parse(dr["assetType"].ToString()),
                             CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
                             Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
                             Data = (Byte[])dr["data"],
