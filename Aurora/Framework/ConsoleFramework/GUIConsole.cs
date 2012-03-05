@@ -54,19 +54,15 @@ namespace Aurora.Framework
 
         public virtual void Initialize(IConfigSource source, ISimulationBase baseOpenSim)
         {
-            if (source.Configs["Console"] != null)
+            if (source.Configs["Console"] == null || source.Configs["Console"].GetString("Console", String.Empty) != Name)
             {
-                if (source.Configs["Console"].GetString("Console", String.Empty) != Name)
-                    return;
-            }
-            else
                 return;
+            }
 
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             MainConsole.Instance = this;
 
-            m_Commands.AddCommand("help", "help",
-                                  "Get a general command list", Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
 
             MainConsole.Instance.Info("[GUIConsole] initialised.");
         }

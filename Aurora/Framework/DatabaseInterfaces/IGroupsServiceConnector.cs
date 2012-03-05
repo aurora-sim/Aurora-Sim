@@ -86,6 +86,7 @@ namespace Aurora.Framework
 
         List<GroupRoleMembersData> GetGroupRoleMembers(UUID requestingAgentID, UUID GroupID);
 
+        GroupNoticeData GetGroupNoticeData(UUID requestingAgentID, UUID noticeID);
         GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID);
 
         List<GroupNoticeData> GetGroupNotices(UUID requestingAgentID, uint start, uint count, UUID GroupID);
