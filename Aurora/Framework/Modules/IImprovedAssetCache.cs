@@ -31,6 +31,7 @@ namespace Aurora.Framework
     {
         void Cache(AssetBase asset);
         AssetBase Get(string id);
+        AssetBase Get(string id, out bool found);
         void Expire(string id);
         void Clear();
         bool Contains(string id);

@@ -435,7 +435,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
 
-            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " + m_scene.RegionInfo.RegionName);
             string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
             if (File.Exists(fileName))
             {

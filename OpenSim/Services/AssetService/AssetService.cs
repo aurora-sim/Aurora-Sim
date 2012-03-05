@@ -109,11 +109,11 @@ namespace OpenSim.Services.AssetService
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
-                AssetBase cachedAsset = cache.Get(id);
-                if (cachedAsset != null && cachedAsset.Data.Length != 0)
+                bool found;
+                AssetBase cachedAsset = cache.Get(id, out found);
+                if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
                     return cachedAsset;
             }
-
             object remoteValue = DoRemote(id);
             if (remoteValue != null || m_doRemoteOnly)
             {
@@ -143,8 +143,9 @@ namespace OpenSim.Services.AssetService
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (cache != null)
             {
-                AssetBase cachedAsset = cache.Get(id);
-                if (cachedAsset != null && cachedAsset.Data.Length != 0)
+                bool found;
+                AssetBase cachedAsset = cache.Get(id, out found);
+                if (found && (cachedAsset == null || cachedAsset.Data.Length != 0))
                     return cachedAsset.Data;
             }
 
