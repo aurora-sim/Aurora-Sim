@@ -15,12 +15,12 @@
 	;; Directory to load the backups from
 	;; Normally is the bin directory, but you can change this to anywhere on your hard drive
 	;; Default is ""
-	LoadBackupDirectory = "/"
+	LoadBackupDirectory = "Backups/"
 	
 	;; Directory to save new backups into
 	;; Normally this is the bin directory, but this can be changed to any place on your HD
 	;; Default is ""
-	SaveBackupDirectory = "/"
+	SaveBackupDirectory = "Backups/"
 	
 	;; Should we save any changes that occur in the sim? (This is useful for sandboxes as you can 
 	;;  decide not to persist any changes and just restart the sim to clear it)
@@ -48,14 +48,14 @@
 	;; "<Region Name Here><This config option setting>.abackup"
 	;; which allows for a bit of flexibility when loading.
 	;; Default is ""
-    ApendedLoadFileName = "";
+    AppendedLoadFileName = "";
 	
 	;; The normal file name to save for each region is "<Region Name Here>.abackup"
 	;; If you wish to change that, you can add this so that it becomes
 	;; "<Region Name Here><This config option setting>.abackup"
 	;; which allows for a bit of flexibility when saving the backups.
 	;; Default is ""
-    ApendedSaveFileName = "";
+    AppendedSaveFileName = "";
 	
 	;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
 	;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so

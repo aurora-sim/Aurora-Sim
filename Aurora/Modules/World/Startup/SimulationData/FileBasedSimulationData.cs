@@ -289,8 +289,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             scene.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
             if (config != null)
             {
-                m_loadAppenedFileName = config.GetString("ApendedLoadFileName", m_loadAppenedFileName);
-                m_saveAppenedFileName = config.GetString("ApendedSaveFileName", m_saveAppenedFileName);
+                m_loadAppenedFileName = config.GetString("AppendedLoadFileName", m_loadAppenedFileName);
+                m_saveAppenedFileName = config.GetString("AppendedSaveFileName", m_saveAppenedFileName);
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
