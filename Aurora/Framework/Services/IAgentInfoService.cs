@@ -208,5 +208,7 @@ namespace OpenSim.Services.Interfaces
         void SetLastPosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         void SetHomePosition(string userID, UUID regionID, Vector3 Position, Vector3 LookAt);
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);
+
+        uint RecentlyOnline(uint secondsAgo, bool stillOnline);
     }
 }

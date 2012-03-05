@@ -191,6 +191,20 @@ namespace Aurora.Services.DataService
             return user;
         }
 
+        public uint RecentlyOnline(uint secondsAgo, bool stillOnline){
+
+            int now = (int)Utils.DateTimeToUnixTime(DateTime.Now) - (int)secondsAgo;
+
+            QueryFilter filter = new QueryFilter();
+            filter.andGreaterThanFilters["LastLogin"] = now;
+            if(stillOnline){
+                filter.andGreaterThanFilters["LastLogout"] = now;
+                filter.andFilters["IsOnline"] = "1";
+            }
+
+            return uint.Parse(GD.Query(new string[1] { "COUNT(UserID)" }, m_realm, filter, null, null, null)[0]);
+        }
+
         #endregion
 
         public void Dispose()

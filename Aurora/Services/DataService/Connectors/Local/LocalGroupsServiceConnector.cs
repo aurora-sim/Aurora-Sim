@@ -1386,6 +1386,47 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public GroupNoticeData GetGroupNoticeData(UUID requestingAgentID, UUID noticeID)
+        {
+            object remoteValue = DoRemote(requestingAgentID, noticeID);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                return (GroupNoticeData)remoteValue;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["NoticeID"] = noticeID;
+            List<string> notice = data.Query(new string[9]{
+                "GroupID",
+                "Timestamp",
+                "FromName",
+                "Subject",
+                "ItemID",
+                "HasAttachment",
+                "Message",
+                "AssetType",
+                "ItemName"
+            }, "osgroupnotice", filter, null, null, null);
+
+            GroupNoticeData GND = new GroupNoticeData
+            {
+                NoticeID = noticeID,
+                Timestamp = uint.Parse(notice[1]),
+                FromName = notice[2],
+                Subject = notice[3],
+                HasAttachment = int.Parse(notice[5]) == 1
+            };
+            if (GND.HasAttachment)
+            {
+                GND.ItemID = UUID.Parse(notice[4]);
+                GND.AssetType = (byte)int.Parse(notice[7]);
+                GND.ItemName = notice[8];
+            }
+
+            return GND;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GroupNoticeInfo GetGroupNotice(UUID requestingAgentID, UUID noticeID)
         {
             object remoteValue = DoRemote(requestingAgentID, noticeID);
