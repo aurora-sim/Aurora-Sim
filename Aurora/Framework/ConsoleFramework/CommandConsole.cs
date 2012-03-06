@@ -205,7 +205,7 @@ namespace Aurora.Framework
                     int i;
                     for (i = commandPath.Length - 1; i >= 0; --i)
                     {
-                        if (commandPath[i].Substring(0, 2) == "--")
+                        if (commandPath[i].Length > 1 && commandPath[i].Substring(0, 2) == "--")
                         {
                             commandOptions.Add(commandPath[i]);
                             commandPathList.RemoveAt(i);
@@ -217,7 +217,8 @@ namespace Aurora.Framework
                     }
                     commandOptions.Reverse();
                     commandPath = commandPathList.ToArray();
-                    MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
+                    if(commandOptions.Count > 0)
+                        MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
                     List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {

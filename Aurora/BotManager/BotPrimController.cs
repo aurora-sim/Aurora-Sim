@@ -14,6 +14,7 @@ namespace Aurora.BotManager
         private Bot m_bot;
         private bool m_run;
         private float m_speed = 1;
+        private bool m_hasStoppedMoving = false;
 
         public BotPrimController(ISceneEntity obj, Bot bot)
         {
@@ -89,8 +90,15 @@ namespace Aurora.BotManager
         {
         }
 
-        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, OpenMetaverse.Quaternion bodyRotation)
+        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation)
         {
+            OnBotAgentUpdate(toward, controlFlag, bodyRotation, true);
+        }
+
+        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation, bool isMoving)
+        {
+            if(isMoving)
+                m_hasStoppedMoving = false;
             m_object.AbsolutePosition += toward * (m_speed * (1f / 45f));
             m_object.ScheduleGroupTerseUpdate();
         }
@@ -113,6 +121,9 @@ namespace Aurora.BotManager
 
         public void StopMoving(bool fly, bool clearPath)
         {
+            if (m_hasStoppedMoving)
+                return;
+            m_hasStoppedMoving = true;
             m_bot.State = BotState.Idle;
             //Clear out any nodes
             if (clearPath)
@@ -121,7 +132,7 @@ namespace Aurora.BotManager
             m_bot.m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
             if (fly)
                 m_bot.m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-            OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection);
+            OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection, false);
 
             if (m_object.RootChild.PhysActor != null)
                 m_object.RootChild.PhysActor.ForceSetVelocity(Vector3.Zero);

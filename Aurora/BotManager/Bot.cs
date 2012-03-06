@@ -64,6 +64,7 @@ namespace Aurora.BotManager
     {
         private IScenePresence m_scenePresence;
         private Bot m_bot;
+        private bool m_hasStoppedMoving = false;
 
         public BotAvatarController(IScenePresence presence, Bot bot)
         {
@@ -90,6 +91,9 @@ namespace Aurora.BotManager
         // Makes the bot fly to the specified destination
         public void StopMoving(bool fly, bool clearPath)
         {
+            if (m_hasStoppedMoving)
+                return;
+            m_hasStoppedMoving = true;
             m_bot.State = BotState.Idle;
             //Clear out any nodes
             if (clearPath)
@@ -98,7 +102,7 @@ namespace Aurora.BotManager
             m_bot.m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
             if (fly)
                 m_bot.m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-            OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection);
+            OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection, false);
             m_scenePresence.CollisionPlane = Vector4.UnitW;
             if (m_scenePresence.PhysicsActor != null)
                 m_scenePresence.PhysicsActor.ForceSetVelocity(Vector3.Zero);
@@ -134,6 +138,13 @@ namespace Aurora.BotManager
 
         public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation)
         {
+            OnBotAgentUpdate(toward, controlFlag, bodyRotation, true);
+        }
+
+        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation, bool isMoving)
+        {
+            if (isMoving)
+                m_hasStoppedMoving = false;
             AgentUpdateArgs pack = new AgentUpdateArgs { ControlFlags = controlFlag, BodyRotation = bodyRotation };
             m_scenePresence.ControllingClient.ForceSendOnAgentUpdate(m_scenePresence.ControllingClient, pack);
         }
