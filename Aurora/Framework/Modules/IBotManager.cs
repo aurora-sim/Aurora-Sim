@@ -29,8 +29,19 @@ using System.Collections.Generic;
 using OpenMetaverse;
 using Aurora.Framework;
 
-namespace Aurora.BotManager
+namespace Aurora.Framework
 {
+    public enum TravelMode
+    {
+        Walk,
+        Run,
+        Fly,
+        Teleport,
+        Wait,
+        TriggerHereEvent,
+        None
+    };
+
     public interface IBotManager
     {
         #region Create/Remove bot
@@ -63,7 +74,7 @@ namespace Aurora.BotManager
         #region FollowAvatar
 
         void FollowAvatar(UUID botID, string avatarName, float startFollowDistance, float endFollowDistance,
-                          UUID userAttempting);
+                          bool requireLOS, Vector3 offsetFromAvatar, UUID userAttempting);
 
         void StopFollowAvatar(UUID botID, UUID userAttempting);
 
@@ -74,6 +85,14 @@ namespace Aurora.BotManager
         void SendChatMessage(UUID botID, string message, int sayType, int channel, UUID userAttempting);
 
         void SendIM(UUID botID, UUID toUser, string message, UUID userAttempting);
+
+        #endregion
+
+        #region Characters
+
+        void CreateCharacter(UUID primID, IScene scene);
+        void RemoveCharacter(UUID primID);
+        IBotController GetCharacterManager(UUID primID);
 
         #endregion
     }

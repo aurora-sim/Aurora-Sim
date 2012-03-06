@@ -108,7 +108,7 @@ namespace Aurora.BotManager
                 m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
             }
             //Create the new bot data
-            Bot m_character = new Bot(scene, m_aCircuitData, creatorID) {FirstName = FirstName, LastName = LastName};
+            BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData) { FirstName = FirstName, LastName = LastName };
 
             m_aCircuitData.AgentID = m_character.AgentId;
             m_aCircuitData.Appearance.Owner = m_character.AgentId;
@@ -136,7 +136,8 @@ namespace Aurora.BotManager
             IScenePresence SP = scene.GetScenePresence(m_character.AgentId);
             if (SP == null)
                 return UUID.Zero; //Failed!
-            m_character.Initialize(SP);
+            Bot bot = new Bot();
+            bot.Initialize(SP, creatorID);
             SP.MakeRootAgent(m_character.StartPos, false, true);
             //Move them
             SP.Teleport(startPos);
@@ -150,15 +151,15 @@ namespace Aurora.BotManager
             appearance.InitialHasWearablesBeenSent = true;
 
             //Save them in the bots list
-            m_bots.Add(m_character.AgentId, m_character);
-            AddTagToBot(m_character.AgentId, "AllBots", m_character.AvatarCreatorID);
+            m_bots.Add(m_character.AgentId, bot);
+            AddTagToBot(m_character.AgentId, "AllBots", bot.AvatarCreatorID);
 
             MainConsole.Instance.Info("[RexBotManager]: Added bot " + m_character.Name + " to scene.");
             //Return their UUID
             return m_character.AgentId;
         }
 
-        private static void AddAndWaitUntilAgentIsAdded(IScene scene, Bot m_character)
+        private static void AddAndWaitUntilAgentIsAdded(IScene scene, BotClientAPI m_character)
         {
             bool done = false;
             scene.AddNewClient(m_character, delegate { done = true; });
@@ -168,13 +169,18 @@ namespace Aurora.BotManager
 
         public void RemoveAvatar(UUID avatarID, IScene scene, UUID userAttempting)
         {
-            IScenePresence sp = scene.GetScenePresence(avatarID);
+            IEntity sp = scene.GetScenePresence(avatarID);
             if (sp == null)
-                return;
+            {
+                sp = scene.GetSceneObjectPart(avatarID);
+                if (sp == null)
+                    return;
+                sp = ((ISceneChildEntity)sp).ParentEntity;
+            }
             if (!CheckPermission(sp, userAttempting))
                 return;
 
-            RemoveTagFromBot(avatarID, "AllBots", userAttempting);
+            RemoveAllTagsFromBot(avatarID, userAttempting);
             if (!m_bots.Remove(avatarID))
                 return;
             //Kill the agent
@@ -289,7 +295,7 @@ namespace Aurora.BotManager
                     if (!CheckPermission(Bot, userAttempting))
                         continue;
                     RemoveTagFromBot(bot, tag, userAttempting);
-                    RemoveAvatar(bot, Bot.Scene, userAttempting);
+                    RemoveAvatar(bot, Bot.Controller.GetScene(), userAttempting);
                 }
             }
         }
@@ -303,6 +309,24 @@ namespace Aurora.BotManager
                     return;
             }
             if (m_botTags.ContainsKey(tag))
+                m_botTags[tag].Remove(Bot);
+        }
+
+        public void RemoveAllTagsFromBot(UUID Bot, UUID userAttempting)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue(Bot, out bot))
+            {
+                if (!CheckPermission(bot, userAttempting))
+                    return;
+            }
+            List<string> tagsToRemove = new List<string>();
+            foreach(KeyValuePair<string, List<UUID>> kvp in m_botTags)
+            {
+                if (kvp.Value.Contains(Bot))
+                    tagsToRemove.Add(kvp.Key);
+            }
+            foreach(string tag in tagsToRemove)
                 m_botTags[tag].Remove(Bot);
         }
 
@@ -326,10 +350,13 @@ namespace Aurora.BotManager
             return scene.AvatarService.GetAppearance(target);
         }
 
-        private bool CheckPermission(IScenePresence sp, UUID userAttempting)
+        private bool CheckPermission(IEntity sp, UUID userAttempting)
         {
-            if (sp.ControllingClient is Bot)
-                return ((Bot) sp.ControllingClient).AvatarCreatorID == userAttempting;
+            foreach (Bot bot in m_bots.Values)
+            {
+                if (bot.Controller.UUID == sp.UUID)
+                    return bot.AvatarCreatorID == userAttempting;
+            }
             return false;
         }
 
@@ -352,14 +379,14 @@ namespace Aurora.BotManager
         /// <param name = "Bot"></param>
         /// <param name = "modifier"></param>
         public void FollowAvatar(UUID botID, string avatarName, float startFollowDistance, float endFollowDistance,
-                                 UUID userAttempting)
+                                 bool requireLOS, Vector3 offsetFromAvatar, UUID userAttempting)
         {
             Bot bot;
             if (m_bots.TryGetValue(botID, out bot))
             {
                 if (!CheckPermission(bot, userAttempting))
                     return;
-                bot.FollowAvatar(avatarName, startFollowDistance, endFollowDistance);
+                bot.FollowAvatar(avatarName, startFollowDistance, endFollowDistance, offsetFromAvatar, requireLOS);
             }
         }
 
@@ -413,15 +440,51 @@ namespace Aurora.BotManager
                     dialog = (byte)InstantMessageDialog.MessageFromAgent,
                     message = message,
                     fromAgentID = botID,
-                    fromAgentName = bot.Name,
+                    fromAgentName = bot.Controller.Name,
                     fromGroup = false,
                     imSessionID = UUID.Random(), 
                     offline = 0,
                     ParentEstateID = 0,
-                    RegionID = bot.Scene.RegionInfo.RegionID,
+                    RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
                     timestamp = (uint)Util.UnixTimeSinceEpoch(),
                     toAgentID = toUser
                 });
+            }
+        }
+
+        #endregion
+
+        #region Character Management
+
+        public void CreateCharacter(UUID primID, IScene scene)
+        {
+            RemoveCharacter(primID);
+            ISceneEntity entity = scene.GetSceneObjectPart(primID).ParentEntity;
+            Bot bot = new Bot();
+            bot.Initialize(entity);
+
+            m_bots.Add(primID, bot);
+            AddTagToBot(primID, "AllBots", bot.AvatarCreatorID);
+        }
+
+        public IBotController GetCharacterManager(UUID primID)
+        {
+            foreach (Bot bot in m_bots.Values)
+            {
+                if (bot.Controller.UUID == primID)
+                    return bot.Controller;
+            }
+            return null;
+        }
+
+        public void RemoveCharacter(UUID primID)
+        {
+            if (m_bots.ContainsKey(primID))
+            {
+                Bot b = m_bots[primID];
+                b.Close(true);
+                RemoveAllTagsFromBot(primID, UUID.Zero);
+                m_bots.Remove(primID);
             }
         }
 

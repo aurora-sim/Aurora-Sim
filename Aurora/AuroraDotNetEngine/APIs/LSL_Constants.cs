@@ -716,5 +716,57 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger KFM_CMD_PLAY = 1024;
         public static readonly LSL_Types.LSLInteger KFM_CMD_PAUSE = 2048;
         public static readonly LSL_Types.LSLInteger KFM_DATA = 4096;
+
+
+        public static readonly LSL_Types.LSLInteger CHARACTER_DESIRED_SPEED = 1;
+        public static readonly LSL_Types.LSLInteger CHARACTER_RADIUS = 2;
+        public static readonly LSL_Types.LSLInteger CHARACTER_LENGTH = 3;
+        public static readonly LSL_Types.LSLInteger CHARACTER_ORIENTATION = 4;
+        public static readonly LSL_Types.LSLInteger TRAVERSAL_TYPE = 7;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE = 8;
+        public static readonly LSL_Types.LSLInteger CHARACTER_AVOIDANCE_MODE = 9;
+        public static readonly LSL_Types.LSLInteger CHARACTER_MAX_ACCEL = 10;
+        public static readonly LSL_Types.LSLInteger CHARACTER_MAX_DECEL = 11;
+        public static readonly LSL_Types.LSLInteger CHARACTER_MAX_ANGULAR_SPEED = 12;
+        public static readonly LSL_Types.LSLInteger CHARACTER_MAX_ANGULAR_ACCEL = 13;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TURN_SPEED_MULTIPLIER = 14;
+
+        public static readonly LSL_Types.LSLInteger PURSUIT_OFFSET = 1;
+        public static readonly LSL_Types.LSLInteger REQUIRE_LINE_OF_SIGHT = 2;
+        public static readonly LSL_Types.LSLInteger PURSUIT_INTERCEPT = 4;
+        public static readonly LSL_Types.LSLInteger PURSUIT_FUZZ_FACTOR = 8;
+
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE_NONE = 0;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE_A = 1;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE_B = 2;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE_C = 3;
+        public static readonly LSL_Types.LSLInteger CHARACTER_TYPE_D = 4;
+
+        public static readonly LSL_Types.LSLInteger AVOID_CHARACTERS = 1;
+        public static readonly LSL_Types.LSLInteger AVOID_DYNAMIC_OBSTACLES = 2;
+
+        public static readonly LSL_Types.LSLInteger HORIZONTAL = 0;
+        public static readonly LSL_Types.LSLInteger VERTICAL = 1;
+
+        public static readonly LSL_Types.LSLInteger TRAVERSAL_TYPE_NONE = 1;
+        public static readonly LSL_Types.LSLInteger TRAVERSAL_TYPE_FAST = 2;
+        public static readonly LSL_Types.LSLInteger TRAVERSAL_TYPE_SLOW = 4;
+
+        public static readonly LSL_Types.LSLInteger PU_SLOWDOWN_DISTANCE_REACHED = 0x00;
+        public static readonly LSL_Types.LSLInteger PU_GOAL_REACHED = 0x01;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_INVALID_START = 0x02;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_INVALID_GOAL = 0x03;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_UNREACHABLE = 0x04;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_TARGET_GONE = 0x05;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_NO_VALID_DESTINATION = 0x06;
+        public static readonly LSL_Types.LSLInteger PU_EVADE_HIDDEN = 0x07;
+        public static readonly LSL_Types.LSLInteger PU_EVADE_SPOTTED = 0x08;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_NO_NAVMESH = 0x09;
+        public static readonly LSL_Types.LSLInteger PU_FAILURE_OTHER = 0xF4240;
+
+        public static readonly LSL_Types.LSLInteger FORCE_DIRECT_PATH = 1;
+
+        public static readonly LSL_Types.LSLInteger CHARACTER_CMD_STOP = 0x0;
+        public static readonly LSL_Types.LSLInteger CHARACTER_CMD_JUMP = 0x1;
     }
 }

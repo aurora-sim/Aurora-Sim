@@ -641,7 +641,7 @@ namespace OpenSim.Services.GridService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
-            return m_Database.Get(x, y, scopeID);
+            return m_Database.GetZero(x, y, scopeID);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

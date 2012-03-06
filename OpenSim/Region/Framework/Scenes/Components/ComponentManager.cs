@@ -264,7 +264,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if (o != null && o.Type != OSDType.Unknown)
                     ComponentsBody.Add(component.Name, o);
             }
-            string result = OSDParser.SerializeJsonString(ComponentsBody);
+            string result = OSDParser.SerializeJsonString(ComponentsBody,  true);
             ComponentsBody.Clear();
 
             return result;

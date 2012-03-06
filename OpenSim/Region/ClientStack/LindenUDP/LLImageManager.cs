@@ -118,7 +118,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                             //Update the requested priority
                             imgrequest.Priority = newRequest.Priority;
-                            m_queue.Remove(imgrequest);
+                            lock(m_syncRoot)
+                                m_queue.Remove(imgrequest);
                             AddImageToQueue(imgrequest);
 
                             //Run an update
@@ -239,7 +240,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 monitor.AddImageTime(EndTime);
             }
 
-            return m_queue.Count > 0;
+            lock (m_syncRoot)
+                return m_queue.Count > 0;
         }
 
         /// <summary>

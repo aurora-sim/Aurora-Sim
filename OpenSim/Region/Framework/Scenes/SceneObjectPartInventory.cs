@@ -892,7 +892,9 @@ namespace OpenSim.Region.Framework.Scenes
                 invString.AddNameValueLine ("creation_date", item.CreationDate.ToString ());
                 invString.AddSectionEnd ();
             }
-            m_fileData = Utils.StringToBytes(invString.GetString());
+            string str = invString.GetString();
+            str = str.Substring(0, str.Length - 1);
+            m_fileData = Utils.StringToBytes(str);
 
             //MainConsole.Instance.Debug(Utils.BytesToString(fileData));
             //MainConsole.Instance.Debug("[PRIM INVENTORY]: RequestInventoryFile fileData: " + Utils.BytesToString(fileData));

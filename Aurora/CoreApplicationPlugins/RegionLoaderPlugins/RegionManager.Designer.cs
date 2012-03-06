@@ -96,7 +96,7 @@ namespace Aurora.Modules.RegionLoader
             this.LocX = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.Maturity = new System.Windows.Forms.TextBox();
+            this.Maturity = new System.Windows.Forms.ListBox();
             this.LocY = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -626,7 +626,11 @@ namespace Aurora.Modules.RegionLoader
             this.Maturity.Name = "Maturity";
             this.Maturity.Size = new System.Drawing.Size(100, 20);
             this.Maturity.TabIndex = 21;
-            this.Maturity.Text = "PG";
+            this.Maturity.Items.AddRange(new object[] {
+                "PG",
+                "Mature",
+                "Adult"
+            });
             // 
             // LocY
             // 
@@ -1505,7 +1509,7 @@ namespace Aurora.Modules.RegionLoader
         private System.Windows.Forms.TextBox LocX;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox Maturity;
+        private System.Windows.Forms.ListBox Maturity;
         private System.Windows.Forms.TextBox LocY;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label3;

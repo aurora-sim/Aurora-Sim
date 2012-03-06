@@ -56,7 +56,17 @@ namespace Aurora.DataManager.MySQL
             int subStrB = connectionstring.IndexOf(";", subStrA);
             string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB+1);
 
-            ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>());
+            retry:
+            try
+            {
+                ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>(), false);
+            }
+            catch
+            {
+                MainConsole.Instance.Error("[MySQLDatabase]: We cannot connect to the MySQL instance you have provided. Please make sure it is online, and then press enter to try again.");
+                Console.ReadKey();
+                goto retry;
+            }
 
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
@@ -108,6 +118,11 @@ namespace Aurora.DataManager.MySQL
 
         public void ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters)
         {
+            ExecuteNonQuery(connStr, sql, parameters, true);
+        }
+
+        public void ExecuteNonQuery(string connStr, string sql, Dictionary<string, object> parameters, bool spamConsole)
+        {
             try
             {
                 MySqlParameter[] param = new MySqlParameter[parameters.Count];
@@ -121,7 +136,10 @@ namespace Aurora.DataManager.MySQL
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e);
+                if (spamConsole)
+                    MainConsole.Instance.Error("[MySQLDataLoader] ExecuteNonQuery(" + sql + "), " + e);
+                else
+                    throw e;
             }
         }
 

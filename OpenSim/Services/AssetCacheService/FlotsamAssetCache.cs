@@ -115,6 +115,7 @@ namespace OpenSim.Services
         private bool m_DeepScanBeforePurge;
 
         private static int _forceMemoryCacheAmount = 5;
+        private IAssetMonitor _assetMonitor;
 
         public FlotsamAssetCache()
         {
@@ -234,6 +235,9 @@ namespace OpenSim.Services
 
         public void FinishedStartup()
         {
+            IMonitorModule monitor = m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>();
+            if(monitor != null)
+                _assetMonitor = (IAssetMonitor)monitor.GetMonitor("", MonitorModuleHelper.AssetMonitor);
         }
 
         #endregion
@@ -321,6 +325,12 @@ namespace OpenSim.Services
 
         public AssetBase Get(string id)
         {
+            bool found;
+            return Get(id, out found);
+        }
+
+        public AssetBase Get(string id, out bool found)
+        {
             if (m_assetRequests.ContainsKey(id))
                 m_assetRequests[id].Amt++;
             else
@@ -328,10 +338,12 @@ namespace OpenSim.Services
             m_Requests++;
 
             AssetBase asset = null;
+            found = false;
 
             bool forceMemCache = m_assetRequests[id].Amt > _forceMemoryCacheAmount;
             if ((m_MemoryCacheEnabled || forceMemCache)&& m_MemoryCache.TryGetValue(id, out asset))
             {
+                found = true;
                 m_MemoryHits++;
             }
             else
@@ -342,6 +354,7 @@ namespace OpenSim.Services
                     try
                     {
                         asset = ExtractAsset(id, asset, filename, forceMemCache);
+                        found = true;
                     }
                     catch (Exception e)
                     {
@@ -399,11 +412,8 @@ namespace OpenSim.Services
                     "[FLOTSAM ASSET CACHE]: {0} unnessesary requests due to requests for assets that are currently downloading.",
                     m_RequestsForInprogress);
             }
-            IAssetMonitor monitor =
-                (IAssetMonitor)
-                m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.AssetMonitor);
-            if (monitor != null)
-                monitor.AddAsset(asset);
+            if (_assetMonitor != null)
+                _assetMonitor.AddAsset(asset);
 
             return asset;
         }

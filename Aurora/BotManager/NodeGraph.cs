@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using Aurora.Framework;
 using OpenMetaverse;
 
 namespace Aurora.BotManager

@@ -102,12 +102,18 @@ namespace OpenSim.Services
 
         public AssetBase Get(string id)
         {
+            bool found;
+            return Get(id, out found);
+        }
+
+        public AssetBase Get(string id, out bool found)
+        {
             Object asset = null;
             m_Cache.TryGet(id, out asset);
-
+            found = asset != null;
             Debug(asset);
 
-            return (AssetBase) asset;
+            return (AssetBase)asset;
         }
 
         public void Expire(string id)
