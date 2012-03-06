@@ -1374,6 +1374,8 @@ namespace Aurora.Framework
         /// <param name = "map"></param>
         void SendLayerData(short[] map);
 
+        void ForceSendOnAgentUpdate(IClientAPI client, AgentUpdateArgs args);
+        void OnForceChatFromViewer(IClientAPI sender, OSChatMessage e);
 
         /// <summary>
         ///   Send one patch to the client
