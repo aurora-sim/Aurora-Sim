@@ -179,6 +179,9 @@ namespace Aurora.Framework
         #endregion
 
         #region properties
+		
+		// used by archive loaders to track with assets have been saved
+        public bool HasBeenSaved { get; set; }
 
         public string TypeString
         {
