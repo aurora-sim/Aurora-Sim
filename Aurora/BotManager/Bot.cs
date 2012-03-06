@@ -62,8 +62,8 @@ namespace Aurora.BotManager
 
     public class BotAvatarController : IBotController
     {
-        private IScenePresence m_scenePresence;
-        private Bot m_bot;
+        private readonly IScenePresence m_scenePresence;
+        private readonly Bot m_bot;
         private bool m_hasStoppedMoving = false;
 
         public BotAvatarController(IScenePresence presence, Bot bot)
@@ -521,10 +521,10 @@ namespace Aurora.BotManager
                     if (entity.Scale.Z > m_controller.PhysicsActor.Size.Z) return true;
                 }
             }
-            return false;
 #else
-            return entities.Where(entity => !entity.IsAttachment).Any(entity => entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z);
+            return entities.Where(entity => !entity.IsAttachment).Any(entity => entity.Scale.Z > m_controller.PhysicsActor.Size.Z);
 #endif
+            return false;
         }
 
         public List<ISceneChildEntity> llCastRay(Vector3 start, Vector3 end)
@@ -540,7 +540,6 @@ namespace Aurora.BotManager
             double distance = Util.GetDistanceTo(startvector, endvector);
             if (distance == 0)
                 distance = 0.001;
-            Vector3 posToCheck = startvector;
 #if (!ISWIN)
             foreach (ContactResult result in results)
             {
@@ -551,7 +550,7 @@ namespace Aurora.BotManager
                 }
             }
 #else
-            foreach (ISceneChildEntity child in results.Select(result => m_scenePresence.Scene.GetSceneObjectPart(result.ConsumerID)).Where(child => !entities.Contains(child)))
+            foreach (ISceneChildEntity child in results.Select(result => m_controller.GetScene().GetSceneObjectPart(result.ConsumerID)).Where(child => !entities.Contains(child)))
             {
                 entities.Add(child);
             }
@@ -570,7 +569,6 @@ namespace Aurora.BotManager
         /// <summary>
         ///   Blocks walking and sets to only flying
         /// </summary>
-        /// <param name = "pos"></param>
         public void DisableWalk()
         {
             ShouldFly = true;
@@ -689,11 +687,11 @@ namespace Aurora.BotManager
 
         #region FindPath
 
-        public List<Vector3> InnerFindPath(int[,] map, int startX, int startY, int finishX, int finishY)
+        public List<Vector3> InnerFindPath(int[,] map2, int startX, int startY, int finishX, int finishY)
         {
-            StartPath.Map = map;
-            StartPath.xLimit = (int) Math.Sqrt(map.Length);
-            StartPath.yLimit = (int) Math.Sqrt(map.Length);
+            StartPath.Map = map2;
+            StartPath.xLimit = (int) Math.Sqrt(map2.Length);
+            StartPath.yLimit = (int) Math.Sqrt(map2.Length);
             //ShowMap ("", null);
             List<string> points = StartPath.Path(startX, startY, finishX, finishY, 0, 0, 0);
 
@@ -1235,11 +1233,11 @@ namespace Aurora.BotManager
             }
         }
 
-        private void FindTargets(Vector3 currentPos, Vector3 targetPos, ref int targetX, ref int targetY)
+        private void FindTargets(Vector3 currentPos2, Vector3 targetPos, ref int targetX, ref int targetY)
         {
             //we're at pos 11, 11, so we have to add/subtract from there
-            float xDiff = (targetPos.X - currentPos.X);
-            float yDiff = (targetPos.Y - currentPos.Y);
+            float xDiff = (targetPos.X - currentPos2.X);
+            float yDiff = (targetPos.Y - currentPos2.Y);
 
             targetX += (int) (xDiff*resolution);
             targetY += (int) (yDiff*resolution);
