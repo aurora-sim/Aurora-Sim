@@ -4872,7 +4872,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ColliderArgs LandCollidingMessage = new ColliderArgs();
                         List<DetectedObject> colliding = new List<DetectedObject>();
-                        foreach (uint localId in startedColliders)
+                        foreach (uint localId in m_lastColliders)
                         {
                             if (localId == 0)
                             {
