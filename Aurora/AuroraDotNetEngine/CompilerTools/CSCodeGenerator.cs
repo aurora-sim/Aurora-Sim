@@ -416,7 +416,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //Is there a cleaner way of doing this?
             returnstring = returnstring.Replace("\r", "");
 
-            CheckEventCasts(returnstring);
+            try
+            {
+                CheckEventCasts(returnstring);
+            }
+            catch (InvalidOperationException ex)
+            {
+                m_compiler.AddError(ex.Message);
+                return ex.Message;
+            }
             return CreateCompilerScript(m_compiler, MethodsToAdd, returnstring);
         }
 
@@ -604,9 +612,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 charNum = splitScript.IndexOf('\n');
                 splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("state_entry", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("state_entry", 0, 1);
             }
             if (script.Contains(state + "_event_touch_start("))
             {
@@ -632,9 +638,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("touch_start", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("touch_start", 1, i);
             }
             if (script.Contains(state + "_event_at_rot_target("))
             {
@@ -661,9 +665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 3)
-                {
-                    FindLineNumbers("at_rot_target", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("at_rot_target", 3, i);
             }
             if (script.Contains(state + "_event_at_target("))
             {
@@ -690,9 +692,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 3)
-                {
-                    FindLineNumbers("at_target", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("at_target", 3, i);
             }
             if (script.Contains(state + "_event_not_at_target("))
             {
@@ -703,9 +703,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_not_at_target()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("not_at_target", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("not_at_target", 0, 1);
             }
             if (script.Contains(state + "_event_attach("))
             {
@@ -730,9 +728,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("attach", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("attach", 1, i);
             }
             if (script.Contains(state + "_event_changed("))
             {
@@ -757,9 +753,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("changed", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("changed", 1, i);
             }
             if (script.Contains(state + "_event_collision("))
             {
@@ -784,9 +778,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("collision", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("collision", 1, i);
             }
             if (script.Contains(state + "_event_collision_end("))
             {
@@ -811,9 +803,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("collision_end", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("collision_end", 1, i);
             }
             if (script.Contains(state + "_event_collision_start("))
             {
@@ -838,9 +828,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("collision_start", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("collision_start", 1, i);
             }
             if (script.Contains(state + "_event_run_time_permissions("))
             {
@@ -865,9 +853,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("run_time_permissions", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("run_time_permissions", 1, i);
             }
             if (script.Contains(state + "_event_control("))
             {
@@ -893,9 +879,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 3)
-                {
-                    FindLineNumbers("control", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("control", 3, i);
             }
             if (script.Contains(state + "_event_dataserver("))
             {
@@ -918,9 +902,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 2)
-                {
-                    FindLineNumbers("dataserver", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("dataserver", 2, i);
             }
             if (script.Contains(state + "_event_timer("))
             {
@@ -934,9 +916,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_timer()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("timer", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("timer", 0, 1);
             }
             if (script.Contains(state + "_event_email("))
             {
@@ -962,9 +942,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 5)
-                {
-                    FindLineNumbers("email", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("email", 5, i);
             }
             if (script.Contains(state + "_event_http_request("))
             {
@@ -987,9 +965,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 3)
-                {
-                    FindLineNumbers("http_request", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("http_request", 3, i);
             }
             if (script.Contains(state + "_event_http_response("))
             {
@@ -1018,9 +994,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 4)
-                {
-                    FindLineNumbers("http_response", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("http_response", 4, i);
             }
             if (script.Contains(state + "_event_land_collision_end("))
             {
@@ -1043,9 +1017,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
+                    FindWrongParameterCountLineNumbers("land_collision_end", 1, i);
+            }
+            if (script.Contains(state + "_event_land_collision("))
+            {
+                int charNum = script.IndexOf(state + "_event_land_collision(");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
                 {
-                    FindLineNumbers("land_collision_end", "Too many arguments");
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.Vector3"))
+                            FindLineNumbers("land_collision", "Invalid argument");
+                    i++;
                 }
+                if (i != 1)
+                    FindWrongParameterCountLineNumbers("land_collision", 1, i);
             }
             if (script.Contains(state + "_event_land_collision_start("))
             {
@@ -1068,9 +1063,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("land_collision_start", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("land_collision_start", 1, i);
             }
             if (script.Contains(state + "_event_link_message("))
             {
@@ -1096,9 +1089,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 4)
-                {
-                    FindLineNumbers("link_message", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("link_message", 4, i);
             }
             if (script.Contains(state + "_event_listen("))
             {
@@ -1124,9 +1115,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 4)
-                {
-                    FindLineNumbers("listen", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("listen", 4, i);
             }
             if (script.Contains(state + "_event_on_rez("))
             {
@@ -1149,9 +1138,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("on_rez", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("on_rez", 1, i);
             }
             if (script.Contains(state + "_event_money("))
             {
@@ -1177,9 +1164,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 2)
-                {
-                    FindLineNumbers("money", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("money", 2, i);
             }
             if (script.Contains(state + "_event_moving_end("))
             {
@@ -1190,9 +1175,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_moving_end()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("moving_end", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("moving_end", 0, 1);
             }
             if (script.Contains(state + "_event_moving_start("))
             {
@@ -1203,9 +1186,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_moving_start()";
                 if (splitScript != Valid)
-                {
                     FindLineNumbers("moving_start", "Too many arguments");
-                }
             }
             if (script.Contains(state + "_event_no_sensor("))
             {
@@ -1216,9 +1197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_no_sensor()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("no_sensor", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("no_sensor", 0, 1);
             }
             if (script.Contains(state + "_event_not_at_rot_target("))
             {
@@ -1229,9 +1208,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_not_at_rot_target()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("not_at_rot_target", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("not_at_rot_target", 0, 1);
             }
             if (script.Contains(state + "_event_object_rez("))
             {
@@ -1254,9 +1231,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("object_rez", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("object_rez", 1, i);
             }
             if (script.Contains(state + "_event_on_error("))
             {
@@ -1279,9 +1254,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("on_error", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("on_error", 1, i);
             }
             if (script.Contains(state + "_event_remote_data("))
             {
@@ -1307,9 +1280,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 6)
-                {
-                    FindLineNumbers("remote_data", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("remote_data", 6, i);
             }
             if (script.Contains(state + "_event_sensor("))
             {
@@ -1332,9 +1303,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("sensor", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("sensor", 1, i);
             }
             if (script.Contains(state + "_event_state_exit("))
             {
@@ -1345,9 +1314,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                 string Valid = state + "_event_state_exit()";
                 if (splitScript != Valid)
-                {
-                    FindLineNumbers("state_exit", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("state_exit", 0, 1);
             }
             if (script.Contains(state + "_event_touch("))
             {
@@ -1370,9 +1337,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     i++;
                 }
                 if (i != 1)
-                {
-                    FindLineNumbers("touch", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("touch", 1, i);
             }
             if (script.Contains(state + "_event_touch_end("))
             {
@@ -1394,11 +1359,72 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             FindLineNumbers("touch_end", "Invalid argument");
                     i++;
                 }
+
                 if (i != 1)
-                {
-                    FindLineNumbers("touch_end", "Too many arguments");
-                }
+                    FindWrongParameterCountLineNumbers("touch_end", 1, i);
             }
+            if (script.Contains(state + "_event_transaction_result("))
+            {
+                int charNum = script.IndexOf(state + "_event_transaction_result(");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0 || i == 2)
+                        if (!argument.Contains("LSL_Types.LSLString"))
+                            FindLineNumbers("transaction_result", "Invalid argument");
+                    if (i == 1)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("transaction_result", "Invalid argument");
+                    i++;
+                }
+
+                if (i != 3)
+                    FindWrongParameterCountLineNumbers("transaction_result", 3, i);
+            }
+            if (script.Contains(state + "_event_path_update("))
+            {
+                int charNum = script.IndexOf(state + "_event_path_update(");
+                string splitScript = script.Remove(0, charNum);
+                charNum = splitScript.IndexOf('\n');
+                splitScript = splitScript.Remove(charNum, splitScript.Length - charNum);
+
+                string arguments = splitScript.Split('(')[1];
+                arguments = arguments.Split(')')[0];
+
+                string[] AllArguments = arguments.Split(',');
+
+                int i = 0;
+                foreach (string argument in AllArguments)
+                {
+                    if (i == 0)
+                        if (!argument.Contains("LSL_Types.LSLInteger"))
+                            FindLineNumbers("path_update", "Invalid argument");
+                    if (i == 1)
+                        if (!argument.Contains("LSL_Types.list"))
+                            FindLineNumbers("path_update", "Invalid argument");
+                    i++;
+                }
+
+                if (i != 2)
+                    FindWrongParameterCountLineNumbers("path_update", 2, i);
+            }
+        }
+
+        private void FindWrongParameterCountLineNumbers(string EventName, int correct, int i)
+        {
+            if (i > correct)
+                FindLineNumbers(EventName, "Too many arguments, " + i + " arguments given, " + correct + " expected");
+            else
+                FindLineNumbers(EventName, "Too few arguments, " + i + " arguments given, " + correct + " expected");
         }
 
         private void FindLineNumbers(string EventName, string Problem)
@@ -1417,7 +1443,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 }
                 i++;
             }
-            throw new Exception(String.Format("({0},{1}) {2}",
+            throw new InvalidOperationException(String.Format("({0},{1}) {2}",
                                               lineNumber,
                                               charNumber, Problem + " in '" + EventName + "'\n"));
         }
