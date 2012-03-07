@@ -382,8 +382,8 @@ namespace OpenSim.Services.CapsService
                     asset_type == "object")
                 {
                     OSDMap meshMap = (OSDMap)map["asset_resources"];
-                    OSDArray instance_list = (OSDArray)meshMap["instance_list"];
-                    OSDArray mesh_list = (OSDArray)meshMap["mesh_list"];
+                    //OSDArray instance_list = (OSDArray)meshMap["instance_list"];
+                    //OSDArray mesh_list = (OSDArray)meshMap["mesh_list"];
                     OSDArray texture_list = (OSDArray)meshMap["texture_list"];
                     charge = texture_list.Count * mm.UploadCharge +
                         meshMap.Count * mm.UploadCharge;
