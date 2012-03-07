@@ -89,6 +89,7 @@ namespace Aurora.Framework
     {
         int UploadCharge { get; }
         int GroupCreationCharge { get; }
+        int ClientPort { get; }
 
         bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID,
                              int amount);
