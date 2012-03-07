@@ -389,11 +389,6 @@ namespace Aurora.Modules.Ban
                     reason = "Viewer is blocked (MAC)";
                     return false;
                 }
-                if (info.LastKnownMac.Length != 32)
-                {
-                    reason = "Viewer is blocked (MAC)";
-                    return false; //Not a valid length!
-                }
             }
             //foreach (string id0 in info.KnownID0s)
             {
@@ -402,11 +397,6 @@ namespace Aurora.Modules.Ban
                     //Ban this asshole
                     reason = "Viewer is blocked (IO)";
                     return false;
-                }
-                if (info.LastKnownID0.Length != 32)
-                {
-                    reason = "Viewer is blocked (IO)";
-                    return false; //Valid length!
                 }
             }
 
