@@ -26,22 +26,20 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
-using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using OpenMetaverse;
 using Aurora.Framework;
 using Aurora.Framework.Serialization;
 using Aurora.Framework.Serialization.External;
-using Aurora.Modules.Terrain;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
+using System.Linq;
 
 namespace Aurora.Modules.Archivers
 {
@@ -65,7 +63,7 @@ namespace Aurora.Modules.Archivers
         /// </value>
         protected bool m_merge;
 
-        protected Aurora.Framework.AuroraThreadPool m_threadpool;
+        protected AuroraThreadPool m_threadpool;
 
         /// <value>
         /// Should we ignore any assets when reloading the archive?
@@ -75,7 +73,8 @@ namespace Aurora.Modules.Archivers
         /// <summary>
         /// Used to cache lookups for valid uuids.
         /// </summary>
-        private IDictionary<UUID, UUID> m_validUserUuids = new Dictionary<UUID, UUID>();
+        private readonly IDictionary<UUID, UUID> m_validUserUuids = new Dictionary<UUID, UUID>();
+
 
         private int m_offsetX = 0;
         private int m_offsetY = 0;
@@ -85,7 +84,10 @@ namespace Aurora.Modules.Archivers
         private bool m_useParcelOwnership = false;
         private bool m_checkOwnership = false;
 
-        public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets,
+        const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
+        readonly Dictionary<UUID, AssetBase> assetNonBinaryCollection = new Dictionary<UUID, AssetBase>();
+
+        public ArchiveReadRequest(IScene scene, string loadPath, bool merge, bool skipAssets,
             int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
             try
@@ -142,15 +144,13 @@ namespace Aurora.Modules.Archivers
             DateTime start = DateTime.Now;
 
             TarArchiveReader archive = new TarArchiveReader(m_loadStream);
-            byte[] data;
-            TarArchiveReader.TarEntryType entryType;
 
             if (!m_skipAssets)
                 m_threadpool = new Aurora.Framework.AuroraThreadPool(new Aurora.Framework.AuroraThreadPoolStartInfo()
-                    {
-                        Threads = 1,
-                        priority = System.Threading.ThreadPriority.BelowNormal
-                    });
+                {
+                    Threads = 1,
+                    priority = System.Threading.ThreadPriority.BelowNormal
+                });
 
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (!m_merge)
@@ -179,8 +179,16 @@ namespace Aurora.Modules.Archivers
             List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
             List<LandData> landData = new List<LandData>();
             IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement>();
+
+            // must save off some stuff until after assets have been saved and recieved new uuids
+            // keeping these collection local because I am sure they will get large and garbage collection is better that way
+            List<byte[]> seneObjectGroups = new List<byte[]>();
+            Dictionary<UUID, UUID> assetBinaryChangeRecord = new Dictionary<UUID, UUID>();
+            Queue<UUID> assets2Save = new Queue<UUID>();
             try
             {
+                byte[] data;
+                TarArchiveReader.TarEntryType entryType;
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                 {
                     //MainConsole.Instance.DebugFormat(
@@ -191,87 +199,32 @@ namespace Aurora.Modules.Archivers
 
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
-                        /*
-                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Loading xml with raw size {0}", serialisedSceneObject.Length);
-
-                        // Really large xml files (multi megabyte) appear to cause
-                        // memory problems
-                        // when loading the xml.  But don't enable this check yet
-                
-                        if (serialisedSceneObject.Length > 5000000)
-                        {
-                            MainConsole.Instance.Error("[ARCHIVER]: Ignoring xml since size > 5000000);");
-                            continue;
-                        }
-                        */
-
-                        SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(data, m_scene);
-
-                        if (sceneObject == null)
-                        {
-                            //! big error!
-                            MainConsole.Instance.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data));
-                            continue;
-                        }
-
-                        foreach (SceneObjectPart part in sceneObject.ChildrenList)
-                        {
-                            if (part.CreatorData == null || part.CreatorData == string.Empty)
-                                part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
-
-                            if (UserManager != null)
-                                UserManager.AddUser(part.CreatorID, part.CreatorData);
-
-                            part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
-
-                            part.LastOwnerID = ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
-
-                            // And zap any troublesome sit target information
-                            part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
-                            part.SitTargetPosition = new Vector3(0, 0, 0);
-
-                            // Fix ownership/creator of inventory items
-                            // Not doing so results in inventory items
-                            // being no copy/no mod for everyone
-                            lock (part.TaskInventory)
-                            {
-                                TaskInventoryDictionary inv = part.TaskInventory;
-                                foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
-                                {
-                                    kvp.Value.OwnerID = ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
-                                    if (kvp.Value.CreatorData == null || kvp.Value.CreatorData == string.Empty)
-                                        kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
-                                    if (UserManager != null)
-                                        UserManager.AddUser(kvp.Value.CreatorID, kvp.Value.CreatorData);
-                                }
-                            }
-                        }
-
-                        //Add the offsets of the region
-                        Vector3 newPos = new Vector3(sceneObject.AbsolutePosition.X + m_offsetX,
-                            sceneObject.AbsolutePosition.Y + m_offsetY,
-                            sceneObject.AbsolutePosition.Z + m_offsetZ);
-                        if (m_flipX)
-                            newPos.X = m_scene.RegionInfo.RegionSizeX - newPos.X;
-                        if (m_flipY)
-                            newPos.Y = m_scene.RegionInfo.RegionSizeY - newPos.Y;
-                        sceneObject.SetAbsolutePosition(false, newPos);
-
-                        if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
-                        {
-                            groupsToBackup.Add(sceneObject);
-                            sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
-                            sceneObjectsLoadedCount++;
-                            sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
-                        }
-                        sceneObjectsLoadedCount++;
-                        if (sceneObjectsLoadedCount % 250 == 0)
-                            MainConsole.Instance.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
+                        seneObjectGroups.Add(data);
                     }
                     else if (!m_skipAssets && filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
-                        if (LoadAsset(filePath, data))
+                        AssetBase asset;
+                        if (LoadAsset(filePath, data, out asset))
+                        {
                             successfulAssetRestores++;
+                            if (m_useAsync)
+                                lock (AssetsToAdd) AssetsToAdd.Add(asset);
+                            else
+                            {
+                                if (asset.IsBinaryAsset)
+                                {
+                                    UUID aid = asset.ID;
+                                    asset.ID = m_scene.AssetService.Store(asset);
+                                    if (asset.ID != aid) assetBinaryChangeRecord.Add(aid, asset.ID);
+                                }
+                                else
+                                {
+                                    assetNonBinaryCollection.Add(asset.ID, asset);
+                                    // I need something I can safely loop through
+                                    assets2Save.Enqueue(asset.ID);
+                                }
+                            }
+                        }
                         else
                             failedAssetRestores++;
 
@@ -294,11 +247,111 @@ namespace Aurora.Modules.Archivers
                     }
                     else if (filePath == ArchiveConstants.CONTROL_FILE_PATH)
                     {
-                        LoadControlFile(filePath, data);
+                        LoadControlFile(data);
                     }
                 }
+                // Save Assets
+                int savingAssetsCount = 0;
+                do
+                {
+                    UUID assetid = assets2Save.Dequeue();
+                    SaveNonBinaryAssets(assetid, assetNonBinaryCollection[assetid], assetBinaryChangeRecord);
+                    savingAssetsCount++;
+                    if ((savingAssetsCount) % 250 == 0)
+                        MainConsole.Instance.Info("[ARCHIVER]: Saving " + savingAssetsCount + " assets...");
+                } while (assets2Save.Count != 0);
 
-                //MainConsole.Instance.Debug("[ARCHIVER]: Reached end of archive");
+                foreach (byte[] data2 in seneObjectGroups)
+                {
+                    byte[] data3 = data2;
+
+                    string stringData = Utils.BytesToString(data3);
+                    MatchCollection mc = Regex.Matches(stringData, sPattern);
+                    bool didChange = false;
+                    if (mc.Count >= 1)
+                    {
+                        foreach (Match match in mc)
+                        {
+                            UUID thematch = new UUID(match.Value);
+                            UUID newvalue = thematch;
+                            if (assetNonBinaryCollection.ContainsKey(thematch))
+                                newvalue = assetNonBinaryCollection[thematch].ID;
+                            else if (assetBinaryChangeRecord.ContainsKey(thematch))
+                                newvalue = assetBinaryChangeRecord[thematch];
+                            if (thematch == newvalue) continue;
+                            stringData = stringData.Replace(thematch.ToString().Trim(), newvalue.ToString().Trim());
+                            didChange = true;
+                        }
+                    }
+                    if (didChange)
+                        data3 = Utils.StringToBytes(stringData);
+
+                    SceneObjectGroup sceneObject = (SceneObjectGroup)serialiser.DeserializeGroupFromXml2(data3, m_scene);
+
+                    if (sceneObject == null)
+                    {
+                        //! big error!
+                        MainConsole.Instance.Error("Error reading SOP XML (Please mantis this!): " + m_asciiEncoding.GetString(data3));
+                        continue;
+                    }
+
+                    foreach (SceneObjectPart part in sceneObject.ChildrenList)
+                    {
+                        if (string.IsNullOrEmpty(part.CreatorData))
+                            part.CreatorID = ResolveUserUuid(part.CreatorID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
+
+                        if (UserManager != null)
+                            UserManager.AddUser(part.CreatorID, part.CreatorData);
+
+                        part.OwnerID = ResolveUserUuid(part.OwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
+
+                        part.LastOwnerID = ResolveUserUuid(part.LastOwnerID, part.CreatorID, part.CreatorData, part.AbsolutePosition, landData);
+
+                        // And zap any troublesome sit target information
+                        part.SitTargetOrientation = new Quaternion(0, 0, 0, 1);
+                        part.SitTargetPosition = new Vector3(0, 0, 0);
+
+                        // Fix ownership/creator of inventory items
+                        // Not doing so results in inventory items
+                        // being no copy/no mod for everyone
+                        lock (part.TaskInventory)
+                        {
+                            TaskInventoryDictionary inv = part.TaskInventory;
+                            foreach (KeyValuePair<UUID, TaskInventoryItem> kvp in inv)
+                            {
+                                kvp.Value.OwnerID = ResolveUserUuid(kvp.Value.OwnerID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
+                                if (string.IsNullOrEmpty(kvp.Value.CreatorData))
+                                    kvp.Value.CreatorID = ResolveUserUuid(kvp.Value.CreatorID, kvp.Value.CreatorID, kvp.Value.CreatorData, part.AbsolutePosition, landData);
+                                if (UserManager != null)
+                                    UserManager.AddUser(kvp.Value.CreatorID, kvp.Value.CreatorData);
+                            }
+                        }
+                    }
+
+                    //Add the offsets of the region
+                    Vector3 newPos = new Vector3(sceneObject.AbsolutePosition.X + m_offsetX,
+                        sceneObject.AbsolutePosition.Y + m_offsetY,
+                        sceneObject.AbsolutePosition.Z + m_offsetZ);
+                    if (m_flipX)
+                        newPos.X = m_scene.RegionInfo.RegionSizeX - newPos.X;
+                    if (m_flipY)
+                        newPos.Y = m_scene.RegionInfo.RegionSizeY - newPos.Y;
+                    sceneObject.SetAbsolutePosition(false, newPos);
+
+                    if (m_scene.SceneGraph.AddPrimToScene(sceneObject))
+                    {
+                        groupsToBackup.Add(sceneObject);
+                        sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+                        sceneObjectsLoadedCount++;
+                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                    }
+                    sceneObjectsLoadedCount++;
+                    if (sceneObjectsLoadedCount % 250 == 0)
+                        MainConsole.Instance.Info("[ARCHIVER]: Loaded " + sceneObjectsLoadedCount + " objects...");
+                }
+                assetNonBinaryCollection.Clear();
+                assetBinaryChangeRecord.Clear();
+                seneObjectGroups.Clear();
             }
             catch (Exception e)
             {
@@ -332,7 +385,7 @@ namespace Aurora.Modules.Archivers
             }
 
             if (!m_skipAssets && m_useAsync && !AssetSaverIsRunning)
-                    m_threadpool.QueueEvent(SaveAssets, 0);
+                m_threadpool.QueueEvent(SaveAssets, 0);
 
             if (!m_skipAssets)
             {
@@ -380,6 +433,49 @@ namespace Aurora.Modules.Archivers
             m_scene.EventManager.TriggerOarFileLoaded(UUID.Zero.Guid, m_errorMessage);
         }
 
+        private AssetBase SaveNonBinaryAssets(UUID key, AssetBase asset, Dictionary<UUID, UUID> assetBinaryChangeRecord)
+        {
+            if (!asset.HasBeenSaved)
+            {
+                string stringData = Utils.BytesToString(asset.Data);
+                MatchCollection mc = Regex.Matches(stringData, sPattern);
+                bool didChange = false;
+                if (mc.Count >= 1)
+                {
+                    foreach (Match match in mc)
+                    {
+                        UUID thematch = new UUID(match.Value);
+                        UUID newvalue = thematch;
+                        if ((thematch == UUID.Zero) || (thematch == key)) continue;
+                        if (assetNonBinaryCollection.ContainsKey(thematch))
+                        {
+                            AssetBase subasset = assetNonBinaryCollection[thematch];
+                            if (!subasset.HasBeenSaved)
+                                subasset = SaveNonBinaryAssets(thematch, subasset, assetBinaryChangeRecord);
+                            newvalue = subasset.ID;
+                        }
+                        else if (assetBinaryChangeRecord.ContainsKey(thematch))
+                            newvalue = assetBinaryChangeRecord[thematch];
+
+                        if (thematch == newvalue) continue;
+                        stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
+                        didChange = true;
+                    }
+                    if (didChange)
+                    {
+                        asset.Data = Utils.StringToBytes(stringData);
+                        // so it doesn't try to find the old file
+                        asset.LastHashCode = asset.HashCode;
+                    }
+                }
+                asset.ID = m_scene.AssetService.Store(asset);
+                asset.HasBeenSaved = true;
+            }
+            if (assetNonBinaryCollection.ContainsKey(key))
+                assetNonBinaryCollection[key] = asset;
+            return asset;
+        }
+
         /// <summary>
         /// Look up the given user id to check whether it's one that is valid for this grid.
         /// </summary>
@@ -389,7 +485,7 @@ namespace Aurora.Modules.Archivers
         /// <param name="location"></param>
         /// <param name="parcels"></param>
         /// <returns></returns>
-        private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location, List<LandData> parcels)
+        private UUID ResolveUserUuid(UUID uuid, UUID creatorID, string creatorData, Vector3 location, IEnumerable<LandData> parcels)
         {
             UUID u;
             if (!m_validUserUuids.TryGetValue(uuid, out u))
@@ -400,40 +496,40 @@ namespace Aurora.Modules.Archivers
                     m_validUserUuids.Add(uuid, uuid);
                     return uuid;
                 }
-                if(uuid == creatorID)
+                if (uuid == creatorID)
                 {
                     UUID hid;
                     string first, last, url, secret;
-                    if(HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
+                    if (HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
                     {
                         account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
-                        if(account != null)
+                        if (account != null)
                         {
                             m_validUserUuids.Add(uuid, account.PrincipalID);
                             return account.PrincipalID;//Fix the UUID
                         }
                     }
                 }
-                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
+                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement>();
                 if (uf != null)
-                    if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
+                    if (uf.GetUserExists(uuid))//Foreign user, don't remove their info
                     {
                         m_validUserUuids.Add(uuid, uuid);
                         return uuid;
                     }
                 UUID id = UUID.Zero;
-                if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
+                if (m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
                 {
-                    tryAgain:
+                tryAgain:
                     string ownerName = MainConsole.Instance.Prompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
                     account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
-                    if(account != null)
+                    if (account != null)
                         id = account.PrincipalID;
-                    else if(ownerName != "")
-                        if((ownerName = MainConsole.Instance.Prompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
+                    else if (ownerName != "")
+                        if ((ownerName = MainConsole.Instance.Prompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
                             goto tryAgain;
                 }
-                if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
+                if (m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
                 {
                     foreach (LandData data in parcels)
                     {
@@ -442,7 +538,7 @@ namespace Aurora.Modules.Archivers
                                 id = data.OwnerID;
                     }
                 }
-                if(id == UUID.Zero)
+                if (id == UUID.Zero)
                     id = m_scene.RegionInfo.EstateSettings.EstateOwner;
                 m_validUserUuids.Add(uuid, id);
 
@@ -484,10 +580,10 @@ namespace Aurora.Modules.Archivers
         /// </summary>
         /// <param name="assetPath"></param>
         /// <param name="data"></param>
+        /// <param name="asset"> </param>
         /// <returns>true if asset was successfully loaded, false otherwise</returns>
-        private bool LoadAsset(string assetPath, byte[] data)
+        private bool LoadAsset(string assetPath, byte[] data, out AssetBase asset)
         {
-            // Right now we're nastily obtaining the UUID from the filename
             string filename = assetPath.Remove(0, ArchiveConstants.ASSETS_PATH.Length);
             int i = filename.LastIndexOf(ArchiveConstants.ASSET_EXTENSION_SEPARATOR);
 
@@ -496,7 +592,7 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Could not find extension information in asset path {0} since it's missing the separator {1}.  Skipping",
                     assetPath, ArchiveConstants.ASSET_EXTENSION_SEPARATOR);
-
+                asset = null;
                 return false;
             }
 
@@ -509,36 +605,13 @@ namespace Aurora.Modules.Archivers
 
                 if (assetType == AssetType.Unknown)
                     MainConsole.Instance.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
-
-                //MainConsole.Instance.DebugFormat("[ARCHIVER]: Importing asset {0}, type {1}", uuid, assetType);
-                AssetBase asset = new AssetBase(UUID.Parse(uuid), String.Empty, assetType, UUID.Zero)
-                                      {Data = data};
-
-                // We're relying on the asset service to do the sensible thing and not store the asset if it already
-                // exists.
-                if (m_useAsync)
-                    lock (AssetsToAdd)
-                        AssetsToAdd.Add(asset);
-                else
-                    asset.ID = m_scene.AssetService.Store(asset);
-
-                /**
-                 * Create layers on decode for image assets.  This is likely to significantly increase the time to load archives so
-                 * it might be best done when dearchive takes place on a separate thread
-                if (asset.Type=AssetType.Texture)
-                {
-                    IJ2KDecoder cacheLayerDecode = scene.RequestModuleInterface<IJ2KDecoder>();
-                    if (cacheLayerDecode != null)
-                        cacheLayerDecode.syncdecode(asset.FullID, asset.Data);
-                }
-                */
-
+                asset = new AssetBase(UUID.Parse(uuid), String.Empty, assetType, UUID.Zero) { Data = data };
                 return true;
             }
             MainConsole.Instance.ErrorFormat(
-                "[ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
-                assetPath, extension);
-
+            "[ARCHIVER]: Tried to dearchive data with path {0} with an unknown type extension {1}",
+            assetPath, extension);
+            asset = null;
             return false;
         }
 
@@ -564,7 +637,7 @@ namespace Aurora.Modules.Archivers
         /// <returns>
         /// true if settings were loaded successfully, false otherwise
         /// </returns>
-        private bool LoadRegionSettings(string settingsPath, byte[] data)
+        private void LoadRegionSettings(string settingsPath, byte[] data)
         {
             RegionSettings loadedRegionSettings;
 
@@ -577,7 +650,7 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.ErrorFormat(
                     "[ARCHIVER]: Could not parse region settings file {0}.  Ignoring.  Exception was {1}",
                     settingsPath, e);
-                return false;
+                return;
             }
 
             RegionSettings currentRegionSettings = m_scene.RegionInfo.RegionSettings;
@@ -619,7 +692,7 @@ namespace Aurora.Modules.Archivers
             if (estateModule != null)
                 estateModule.sendRegionHandshakeToAll();
 
-            return true;
+            return;
         }
 
         /// <summary>
@@ -630,7 +703,7 @@ namespace Aurora.Modules.Archivers
         /// <returns>
         /// true if terrain was resolved successfully, false otherwise.
         /// </returns>
-        private bool LoadTerrain(string terrainPath, byte[] data)
+        private void LoadTerrain(string terrainPath, byte[] data)
         {
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
 
@@ -639,16 +712,13 @@ namespace Aurora.Modules.Archivers
             ms.Close();
 
             MainConsole.Instance.DebugFormat("[ARCHIVER]: Restored terrain {0}", terrainPath);
-
-            return true;
         }
 
         /// <summary>
         /// Load oar control file
         /// </summary>
-        /// <param name="path"></param>
         /// <param name="data"></param>
-        private void LoadControlFile(string path, byte[] data)
+        private void LoadControlFile(byte[] data)
         {
             //Create the XmlNamespaceManager.
             NameTable nt = new NameTable();

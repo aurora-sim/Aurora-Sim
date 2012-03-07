@@ -207,7 +207,7 @@ namespace Aurora.BotManager
 
     #endregion
 
-    public sealed class Bot 
+    public sealed class Bot
     {
         #region Declares
 
@@ -383,10 +383,10 @@ namespace Aurora.BotManager
             }
             else
             {
-                m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+                m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
                 m_controller.OnBotAgentUpdate(Vector3.Zero, m_movementFlag, m_bodyDirection);
-                m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
+                m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
             }
         }
 
@@ -399,17 +399,17 @@ namespace Aurora.BotManager
                 Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
                 m_bodyDirection = rot_result;
             }
-            m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
             m_controller.OnBotAgentUpdate(Vector3.Zero, m_movementFlag, m_bodyDirection);
-            m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
+            m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
         #region rotation helper functions
 
         private Vector3 llRot2Fwd(Quaternion r)
         {
-            return (new Vector3(1, 0, 0)*r);
+            return (new Vector3(1, 0, 0) * r);
         }
 
         private Quaternion llRotBetween(Vector3 a, Vector3 b)
@@ -417,12 +417,12 @@ namespace Aurora.BotManager
             //A and B should both be normalized
             double dotProduct = Vector3.Dot(a, b);
             Vector3 crossProduct = Vector3.Cross(a, b);
-            double magProduct = Vector3.Distance(Vector3.Zero, a)*Vector3.Distance(Vector3.Zero, b);
-            double angle = Math.Acos(dotProduct/magProduct);
+            double magProduct = Vector3.Distance(Vector3.Zero, a) * Vector3.Distance(Vector3.Zero, b);
+            double angle = Math.Acos(dotProduct / magProduct);
             Vector3 axis = Vector3.Normalize(crossProduct);
-            float s = (float) Math.Sin(angle/2);
+            float s = (float)Math.Sin(angle / 2);
 
-            return new Quaternion(axis.X*s, axis.Y*s, axis.Z*s, (float) Math.Cos(angle/2));
+            return new Quaternion(axis.X * s, axis.Y * s, axis.Z * s, (float)Math.Cos(angle / 2));
         }
 
         #endregion
@@ -449,14 +449,14 @@ namespace Aurora.BotManager
                 {
                 }
             }
-            m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
             if (m_controller.CanMove)
                 m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
             else
                 m_controller.OnBotAgentUpdate(Vector3.Zero, (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP, Quaternion.Identity);
 
-            m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
+            m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
         }
 
         /// <summary>
@@ -479,26 +479,26 @@ namespace Aurora.BotManager
                 }
             }
 
-            m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
             Vector3 diffPos = pos - m_controller.AbsolutePosition;
             if (Math.Abs(diffPos.X) > 1.5 || Math.Abs(diffPos.Y) > 1.5)
             {
-                m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
             }
 
             if (m_controller.AbsolutePosition.Z < pos.Z - 1)
             {
-                m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
             }
             else if (m_controller.AbsolutePosition.Z > pos.Z + 1)
             {
-                m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             }
 
             if (m_controller.CanMove)
                 m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
-            m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+            m_movementFlag = (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
         }
 
         #region Jump Decision Tree
@@ -513,7 +513,6 @@ namespace Aurora.BotManager
         {
             //Cast a ray in the direction that we are going
             List<ISceneChildEntity> entities = llCastRay(start, end);
-#if (!ISWIN)
             foreach (ISceneChildEntity entity in entities)
             {
                 if (!entity.IsAttachment)
@@ -522,9 +521,6 @@ namespace Aurora.BotManager
                 }
             }
             return false;
-#else
-            return entities.Where(entity => !entity.IsAttachment).Any(entity => entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z);
-#endif
         }
 
         public List<ISceneChildEntity> llCastRay(Vector3 start, Vector3 end)
@@ -541,7 +537,6 @@ namespace Aurora.BotManager
             if (distance == 0)
                 distance = 0.001;
             Vector3 posToCheck = startvector;
-#if (!ISWIN)
             foreach (ContactResult result in results)
             {
                 ISceneChildEntity child = m_controller.GetScene().GetSceneObjectPart(result.ConsumerID);
@@ -550,12 +545,6 @@ namespace Aurora.BotManager
                     entities.Add(child);
                 }
             }
-#else
-            foreach (ISceneChildEntity child in results.Select(result => m_scenePresence.Scene.GetSceneObjectPart(result.ConsumerID)).Where(child => !entities.Contains(child)))
-            {
-                entities.Add(child);
-            }
-#endif
             return entities;
         }
 
@@ -602,7 +591,7 @@ namespace Aurora.BotManager
             m_frame++;
             GetNextDestination();
 
-            if (m_frame%10 == 0) //Only every 10 frames
+            if (m_frame % 10 == 0) //Only every 10 frames
             {
                 m_frame = 0;
                 Update();
@@ -632,7 +621,7 @@ namespace Aurora.BotManager
             Vector3 pos;
             TravelMode state;
             bool teleport;
-            if(!ForceCloseToPoint)
+            if (!ForceCloseToPoint)
                 m_closeToPoint = m_controller.PhysicsActor.Flying ? 1.5f : 1.0f;
             if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
                                             out teleport))
@@ -692,8 +681,8 @@ namespace Aurora.BotManager
         public List<Vector3> InnerFindPath(int[,] map, int startX, int startY, int finishX, int finishY)
         {
             StartPath.Map = map;
-            StartPath.xLimit = (int) Math.Sqrt(map.Length);
-            StartPath.yLimit = (int) Math.Sqrt(map.Length);
+            StartPath.xLimit = (int)Math.Sqrt(map.Length);
+            StartPath.yLimit = (int)Math.Sqrt(map.Length);
             //ShowMap ("", null);
             List<string> points = StartPath.Path(startX, startY, finishX, finishY, 0, 0, 0);
 
@@ -706,7 +695,9 @@ namespace Aurora.BotManager
 
             waypoints.AddRange(from s in points
                                select s.Split(',')
-                               into Vector where Vector.Length == 3 select new Vector3(float.Parse(Vector[0]), float.Parse(Vector[1]), float.Parse(Vector[2])));
+                                   into Vector
+                                   where Vector.Length == 3
+                                   select new Vector3(float.Parse(Vector[0]), float.Parse(Vector[1]), float.Parse(Vector[2])));
             return waypoints;
         }
 
@@ -885,7 +876,7 @@ namespace Aurora.BotManager
                 DirectFollowing();
             }
             else if (distance < closeToPoint && raycastEntities.Count == 0)
-                //If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
+            //If the raycastEntities isn't zero, there is something between us and the avatar, don't stop on the other side of walls, etc
             {
                 //We're here!
                 //If we were having to fly to here, stop flying
@@ -977,13 +968,13 @@ namespace Aurora.BotManager
 
         private void ShowMap(string mod, string[] cmd)
         {
-            int sqrt = (int) Math.Sqrt(map.Length);
+            int sqrt = (int)Math.Sqrt(map.Length);
             for (int x = sqrt - 1; x > -1; x--)
             {
                 string line = "";
                 for (int y = sqrt - 1; y > -1; y--)
                 {
-                    if (x == 11*resolution && y == 11*resolution)
+                    if (x == 11 * resolution && y == 11 * resolution)
                     {
                         line += "XX" + ",";
                     }
@@ -1021,9 +1012,9 @@ namespace Aurora.BotManager
                 ii++;
             }
 
-            map = new int[22*resolution,22*resolution]; //10 * resolution squares in each direction from our pos
+            map = new int[22 * resolution, 22 * resolution]; //10 * resolution squares in each direction from our pos
             //We are in the center (11, 11) and our target is somewhere else
-            int targetX = 11*resolution, targetY = 11*resolution;
+            int targetX = 11 * resolution, targetY = 11 * resolution;
             //Find where our target is on the map
             FindTargets(currentPos2, targetPos, ref targetX, ref targetY);
             //ISceneEntity[] entities = m_scenePresence.Scene.Entities.GetEntities (currentPos, 30);
@@ -1034,23 +1025,23 @@ namespace Aurora.BotManager
                 //if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2 &&
                 //    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - m_scenePresence.PhysicsActor.Size.Z / 2 + m_scenePresence.Velocity.Z / 2)
                 {
-                    int entitybaseX = (11*resolution);
-                    int entitybaseY = (11*resolution);
+                    int entitybaseX = (11 * resolution);
+                    int entitybaseY = (11 * resolution);
                     //Find the bottom left corner, and then build outwards from it
-                    FindTargets(currentPos2, entity.AbsolutePosition - (entity.OOBsize/2), ref entitybaseX,
+                    FindTargets(currentPos2, entity.AbsolutePosition - (entity.OOBsize / 2), ref entitybaseX,
                                 ref entitybaseY);
-                    for (int x = (int) -(0.5*resolution);
-                         x < entity.OOBsize.X*2*resolution + ((int) (0.5*resolution));
+                    for (int x = (int)-(0.5 * resolution);
+                         x < entity.OOBsize.X * 2 * resolution + ((int)(0.5 * resolution));
                          x++)
                     {
-                        for (int y = (int) -(0.5*resolution);
-                             y < entity.OOBsize.Y*2*resolution + ((int) (0.5*resolution));
+                        for (int y = (int)-(0.5 * resolution);
+                             y < entity.OOBsize.Y * 2 * resolution + ((int)(0.5 * resolution));
                              y++)
                         {
                             if (entitybaseX + x > 0 && entitybaseY + y > 0 &&
-                                entitybaseX + x < (22*resolution) && entitybaseY + y < (22*resolution))
-                                if (x < 0 || y < 0 || x > (entity.OOBsize.X*2)*resolution ||
-                                    y > (entity.OOBsize.Y*2)*resolution)
+                                entitybaseX + x < (22 * resolution) && entitybaseY + y < (22 * resolution))
+                                if (x < 0 || y < 0 || x > (entity.OOBsize.X * 2) * resolution ||
+                                    y > (entity.OOBsize.Y * 2) * resolution)
                                     map[entitybaseX + x, entitybaseY + y] = 3; //Its a side hit, lock it down a bit
                                 else
                                     map[entitybaseX + x, entitybaseY + y] = -1; //Its a hit, lock it down
@@ -1059,13 +1050,13 @@ namespace Aurora.BotManager
                 }
             }
 
-            for (int x = 0; x < (22*resolution); x++)
+            for (int x = 0; x < (22 * resolution); x++)
             {
-                for (int y = 0; y < (22*resolution); y++)
+                for (int y = 0; y < (22 * resolution); y++)
                 {
                     if (x == targetX && y == targetY)
                         map[x, y] = 1;
-                    else if (x == 11*resolution && y == 11*resolution)
+                    else if (x == 11 * resolution && y == 11 * resolution)
                     {
                         int old = map[x, y];
                         map[x, y] = 1;
@@ -1076,7 +1067,7 @@ namespace Aurora.BotManager
             }
 
             //ShowMap ("", null);
-            List<Vector3> path = InnerFindPath(map, (11*resolution), (11*resolution), targetX, targetY);
+            List<Vector3> path = InnerFindPath(map, (11 * resolution), (11 * resolution), targetX, targetY);
 
             int i = 0;
             Vector3 nextPos = ConvertPathToPos(raycastEntities.ToArray(), entities, currentPos2, path, ref i);
@@ -1147,17 +1138,17 @@ namespace Aurora.BotManager
         private Vector3 ConvertPathToPos(ISceneChildEntity[] raycastEntities, ISceneEntity[] entites,
                                          Vector3 originalPos, List<Vector3> path, ref int i)
         {
-            start:
+        start:
             if (i == path.Count)
                 return Vector3.Zero;
-            if (path[i].X == (11*resolution) && path[i].Y == (11*resolution))
+            if (path[i].X == (11 * resolution) && path[i].Y == (11 * resolution))
             {
                 i++;
                 goto start;
             }
             Vector3 pos = path[i];
             Vector3 newPos = originalPos -
-                             new Vector3(((11*resolution) - pos.X)/resolution, ((11*resolution) - pos.Y)/resolution, 0);
+                             new Vector3(((11 * resolution) - pos.X) / resolution, ((11 * resolution) - pos.Y) / resolution, 0);
 
             if (i < 2)
             {
@@ -1192,7 +1183,7 @@ namespace Aurora.BotManager
             List<ISceneChildEntity> childEntities = llCastRay(m_controller.AbsolutePosition, pos);
             childEntities.AddRange(raycastEntities); //Add all of the ones that are in between us and the avatar as well
             int restartNum = 0;
-            restart:
+        restart:
             bool needsRestart = false;
             foreach (ISceneChildEntity entity in childEntities)
             {
@@ -1200,29 +1191,29 @@ namespace Aurora.BotManager
                     entity.AbsolutePosition.Z > m_controller.AbsolutePosition.Z - 2)
                 {
                     //If this position is inside an entity + its size + avatar size, move it out!
-                    float sizeXPlus = (entity.AbsolutePosition.X + (entity.Scale.X/2) +
-                                       (m_controller.PhysicsActor.Size.X/2));
-                    float sizeXNeg = (entity.AbsolutePosition.X - (entity.Scale.X/2) -
-                                      (m_controller.PhysicsActor.Size.X/2));
-                    float sizeYPlus = (entity.AbsolutePosition.Y + (entity.Scale.Y/2) +
-                                       (m_controller.PhysicsActor.Size.Y/2));
-                    float sizeYNeg = (entity.AbsolutePosition.Y - (entity.Scale.Y/2) -
-                                      (m_controller.PhysicsActor.Size.Y/2));
+                    float sizeXPlus = (entity.AbsolutePosition.X + (entity.Scale.X / 2) +
+                                       (m_controller.PhysicsActor.Size.X / 2));
+                    float sizeXNeg = (entity.AbsolutePosition.X - (entity.Scale.X / 2) -
+                                      (m_controller.PhysicsActor.Size.X / 2));
+                    float sizeYPlus = (entity.AbsolutePosition.Y + (entity.Scale.Y / 2) +
+                                       (m_controller.PhysicsActor.Size.Y / 2));
+                    float sizeYNeg = (entity.AbsolutePosition.Y - (entity.Scale.Y / 2) -
+                                      (m_controller.PhysicsActor.Size.Y / 2));
 
                     if (pos.X < sizeXPlus && pos.X > sizeXNeg)
                     {
                         if (pos.X < entity.AbsolutePosition.X)
-                            pos.X = sizeXNeg - (m_controller.PhysicsActor.Size.X/2);
+                            pos.X = sizeXNeg - (m_controller.PhysicsActor.Size.X / 2);
                         else
-                            pos.X = sizeXPlus + (m_controller.PhysicsActor.Size.X/2);
+                            pos.X = sizeXPlus + (m_controller.PhysicsActor.Size.X / 2);
                         needsRestart = true;
                     }
                     if (pos.Y < sizeYPlus && pos.Y > sizeYNeg)
                     {
                         if (pos.Y < entity.AbsolutePosition.Y)
-                            pos.Y = sizeYNeg - (m_controller.PhysicsActor.Size.Y/2);
+                            pos.Y = sizeYNeg - (m_controller.PhysicsActor.Size.Y / 2);
                         else
-                            pos.Y = sizeYPlus + (m_controller.PhysicsActor.Size.Y/2);
+                            pos.Y = sizeYPlus + (m_controller.PhysicsActor.Size.Y / 2);
                         needsRestart = true;
                     }
                 }
@@ -1241,8 +1232,8 @@ namespace Aurora.BotManager
             float xDiff = (targetPos.X - currentPos.X);
             float yDiff = (targetPos.Y - currentPos.Y);
 
-            targetX += (int) (xDiff*resolution);
-            targetY += (int) (yDiff*resolution);
+            targetX += (int)(xDiff * resolution);
+            targetY += (int)(yDiff * resolution);
         }
 
         #endregion
@@ -1397,9 +1388,11 @@ namespace Aurora.BotManager
                                                  where sp != null
                                                  where Util.DistanceLessThan(sp.AbsolutePosition, m_controller.AbsolutePosition, kvp.Value)
                                                  select new FollowingEventHolder
-                                                            {
-                                                                Event = m_followDistanceEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
-                                                            }).ToList();
+                                                 {
+                                                     Event = m_followDistanceEvents[kvp.Key],
+                                                     AvID = kvp.Key,
+                                                     BotID = m_controller.UUID
+                                                 }).ToList();
             foreach (FollowingEventHolder h in events)
             {
                 h.Event(h.AvID, h.BotID);
@@ -1436,9 +1429,11 @@ namespace Aurora.BotManager
                                                  where entities.Count == 0
                                                  where m_controller.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key])
                                                  select new FollowingEventHolder
-                                                            {
-                                                                Event = m_LineOfSightEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
-                                                            }).ToList();
+                                                 {
+                                                     Event = m_LineOfSightEvents[kvp.Key],
+                                                     AvID = kvp.Key,
+                                                     BotID = m_controller.UUID
+                                                 }).ToList();
             foreach (FollowingEventHolder h in events)
             {
                 h.Event(h.AvID, h.BotID);
@@ -1943,7 +1938,7 @@ namespace Aurora.BotManager
             //raiseevent on the packet server to Shutdown the circuit
             if (OnLogout != null)
                 OnLogout(this);
-            if(OnConnectionClosed != null)
+            if (OnConnectionClosed != null)
                 OnConnectionClosed(this);
         }
 

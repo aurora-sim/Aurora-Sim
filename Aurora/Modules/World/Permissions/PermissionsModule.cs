@@ -1137,7 +1137,6 @@ namespace Aurora.Modules.Permissions
         protected bool GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked)
         {
             // Default: deny
-            bool permission = false;
             bool locked = false;
 
             SceneObjectGroup group;
@@ -1145,18 +1144,16 @@ namespace Aurora.Modules.Permissions
             if (!m_scene.Entities.TryGetValue(objId, out entity))
             {
                 if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
-                {
                     return false;
-                }
+                    
                 group = (SceneObjectGroup) entity;
             }
             else
             {
                 // If it's not an object, we cant edit it.
                 if (!(entity is SceneObjectGroup))
-                {
                     return false;
-                }
+                    
                 group = (SceneObjectGroup) entity;
             }
 
@@ -1171,23 +1168,15 @@ namespace Aurora.Modules.Permissions
             //
 
             if (locked && (!IsAdministrator(currentUser)) && denyOnLocked)
-            {
                 return false;
-            }
-
+                
             // Object owners should be able to edit their own content
             if (currentUser == objectOwner)
-            {
-                permission = true;
-            }
-            else if (group.IsAttachment)
-            {
-                permission = false;
-            }
+                return true;
 
             //Check friend perms
             if (IsFriendWithPerms(currentUser, objectOwner))
-                permission = true;
+                return true;
 
             // Group members should be able to edit group objects
             ISceneChildEntity part = m_scene.GetSceneObjectPart(objId);
@@ -1200,33 +1189,30 @@ namespace Aurora.Modules.Permissions
             }
 
             // Users should be able to edit what is over their land.
-            if (m_parcelManagement == null)
-                return true;
-            ILandObject parcel = m_parcelManagement.GetLandObject(group.AbsolutePosition.X, group.AbsolutePosition.Y);
-            if ((parcel != null) && (parcel.LandData.OwnerID == currentUser))
+            if (m_parcelManagement != null)
             {
-                permission = true;
+                ILandObject parcel = m_parcelManagement.GetLandObject(group.AbsolutePosition.X, group.AbsolutePosition.Y);
+                if ((parcel != null) && (parcel.LandData.OwnerID == currentUser))
+                    return true;
             }
 
             // Estate users should be able to edit anything in the sim
             if (IsEstateManager(currentUser))
-            {
-                permission = true;
-            }
+                return true;
 
             // Admin objects should not be editable by the above
             if (IsAdministrator(objectOwner))
             {
-                permission = (IsFriendWithPerms(currentUser, objectOwner) && m_allowAdminFriendEditRights);
+                bool permission = (IsFriendWithPerms(currentUser, objectOwner) && m_allowAdminFriendEditRights);
+                if(permission)
+                    return true;
             }
 
             // Admin should be able to edit anything in the sim (including admin objects)
             if (IsAdministrator(currentUser))
-            {
-                permission = true;
-            }
+                return true;
 
-            return permission;
+            return false;
         }
 
         #endregion
@@ -1236,8 +1222,8 @@ namespace Aurora.Modules.Permissions
         protected bool GenericCommunicationPermission(UUID user, UUID target)
         {
             //TODO:FEATURE: Setting this to true so that cool stuff can happen until we define what determines Generic Communication Permission
-            bool permission = true;
-            return permission;
+            //bool permission = false;
+            return true;
             /*string reason = "Only registered users may communicate with another account.";
 
             // Uhh, we need to finish this before we enable it..   because it's blocking all sorts of goodies and features
@@ -1256,39 +1242,30 @@ namespace Aurora.Modules.Permissions
         public bool GenericEstatePermission(UUID user)
         {
             // Default: deny
-            bool permission = false;
 
             // Estate admins should be able to use estate tools
             if (IsEstateManager(user))
-                permission = true;
+                return true;
 
             // Administrators always have permission
             if (IsAdministrator(user))
-                permission = true;
+                return true;
 
-            return permission;
+            return false;
         }
 
         protected bool GenericParcelPermission(UUID user, ILandObject parcel, ulong groupPowers)
         {
-            bool permission = false;
-
             if (parcel.LandData.OwnerID == user)
-            {
-                permission = true;
-            }
+                return true;
 
             if ((parcel.LandData.GroupID != UUID.Zero) && IsGroupMember(parcel.LandData.GroupID, user, groupPowers))
-            {
-                permission = true;
-            }
+                return true;
 
             if (GenericEstatePermission(user))
-            {
-                permission = true;
-            }
+                return true;
 
-            return permission;
+            return false;
         }
 
         public bool SetHomePoint(UUID userID)

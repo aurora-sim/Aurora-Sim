@@ -27,14 +27,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Text;
 using Aurora.Framework;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
-using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
 
@@ -46,8 +42,6 @@ namespace Aurora.Modules.Ban
     {
         #region Declares
 
-        ILoginService m_service;
-        IConfigSource m_source;
         BanCheck m_module;
 
         #endregion
@@ -56,28 +50,16 @@ namespace Aurora.Modules.Ban
 
         public void Initialize(ILoginService service, IConfigSource source, IUserAccountService UASerivce)
         {
-            m_source = source;
-            m_service = service;
             m_module = new BanCheck(source, UASerivce);
         }
 
         public bool Login(Hashtable request, UUID User, out string message)
         {
-            string ip = (string)request["ip"];
-            if (ip == null)
-                ip = "";
-            string version = (string)request["version"];
-            if (version == null)
-                version = "";
-            string platform = (string)request["platform"];
-            if (platform == null)
-                platform = "";
-            string mac = (string)request["mac"];
-            if (mac == null)
-                mac = "";
-            string id0 = (string)request["id0"];
-            if (id0 == null)
-                id0 = "";
+            string ip = (string)request["ip"] ?? "";
+            string version = (string)request["version"] ?? "";
+            string platform = (string)request["platform"] ?? "";
+            string mac = (string)request["mac"] ?? "";
+            string id0 = (string)request["id0"] ?? "";
             return m_module.CheckUser(User, ip,
                 version,
                 platform,
@@ -96,18 +78,18 @@ namespace Aurora.Modules.Ban
     {
         #region Declares
 
-        private IPresenceInfo presenceInfo = null;
+        private readonly IPresenceInfo presenceInfo = null;
 
-        private AllowLevel GrieferAllowLevel = AllowLevel.AllowCleanOnly;
-        private IUserAccountService m_accountService = null;
-        private List<string> m_bannedViewers = new List<string>();
-        private List<string> m_allowedViewers = new List<string>();
-        private bool m_useIncludeList = false;
-        private bool m_debug = false;
-        private bool m_checkOnLogin = false;
-        private bool m_checkOnTimer = true;
-        private int TimerMinutes = 60;
-        private bool m_enabled = false;
+        private readonly AllowLevel GrieferAllowLevel = AllowLevel.AllowCleanOnly;
+        private readonly IUserAccountService m_accountService = null;
+        private readonly List<string> m_bannedViewers = new List<string>();
+        private readonly List<string> m_allowedViewers = new List<string>();
+        private readonly bool m_useIncludeList = false;
+        private const bool m_debug = false;
+        private readonly bool m_checkOnLogin = false;
+        private readonly bool m_checkOnTimer = true;
+        private readonly int TimerMinutes = 60;
+        private readonly bool m_enabled = false;
 
         #endregion
 
@@ -148,13 +130,13 @@ namespace Aurora.Modules.Ban
             if (m_checkOnTimer)
             {
                 System.Timers.Timer timer = new System.Timers.Timer (TimerMinutes * 1000 * 60);
-                timer.Elapsed += new System.Timers.ElapsedEventHandler (CheckOnTimer);
+                timer.Elapsed += CheckOnTimer;
                 timer.Start ();
             }
 
             GrieferAllowLevel = (AllowLevel)Enum.Parse (typeof (AllowLevel), config.GetString ("GrieferAllowLevel", "AllowKnown"));
 
-            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo> ();
+            presenceInfo = DataManager.DataManager.RequestPlugin<IPresenceInfo> ();
             m_accountService = UserAccountService;
 
             if (MainConsole.Instance != null)
@@ -186,13 +168,15 @@ namespace Aurora.Modules.Ban
 
         private PresenceInfo UpdatePresenceInfo(UUID AgentID, PresenceInfo oldInfo, string ip, string version, string platform, string mac, string id0)
         {
-            PresenceInfo info = new PresenceInfo();
-            info.AgentID = AgentID;
-            info.LastKnownIP = ip;
-            info.LastKnownViewer = version;
-            info.Platform = platform;
-            info.LastKnownMac = mac;
-            info.LastKnownID0 = id0;
+            PresenceInfo info = new PresenceInfo
+                                    {
+                                        AgentID = AgentID,
+                                        LastKnownIP = ip,
+                                        LastKnownViewer = version,
+                                        Platform = platform,
+                                        LastKnownMac = mac,
+                                        LastKnownID0 = id0
+                                    };
 
             if (!oldInfo.KnownID0s.Contains(info.LastKnownID0))
                 oldInfo.KnownID0s.Add(info.LastKnownID0);
@@ -221,9 +205,7 @@ namespace Aurora.Modules.Ban
             PresenceInfo oldInfo = presenceInfo.GetPresenceInfo(AgentID);
             if (oldInfo == null)
             {
-                PresenceInfo info = new PresenceInfo();
-                info.AgentID = AgentID;
-                info.Flags = PresenceInfo.PresenceInfoFlags.Clean;
+                PresenceInfo info = new PresenceInfo {AgentID = AgentID, Flags = PresenceInfo.PresenceInfoFlags.Clean};
                 presenceInfo.UpdatePresenceInfo(info);
                 oldInfo = presenceInfo.GetPresenceInfo(AgentID);
             }
@@ -234,7 +216,6 @@ namespace Aurora.Modules.Ban
         protected void UserInfo(string[] cmdparams)
         {
             UUID AgentID;
-            PresenceInfo info;
             if (!UUID.TryParse(cmdparams[1], out AgentID))
             {
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, cmdparams[1], cmdparams[2]);
@@ -245,7 +226,7 @@ namespace Aurora.Modules.Ban
                 }
                 AgentID = account.PrincipalID;
             }
-            info = GetInformation(AgentID);
+            PresenceInfo info = GetInformation(AgentID);
             if (info == null)
             {
                 MainConsole.Instance.Warn("Cannot find user.");
@@ -257,7 +238,6 @@ namespace Aurora.Modules.Ban
         protected void BlockUser(string[] cmdparams)
         {
             UUID AgentID;
-            PresenceInfo info;
             if (!UUID.TryParse(cmdparams[2], out AgentID))
             {
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 2));
@@ -268,7 +248,7 @@ namespace Aurora.Modules.Ban
                 }
                 AgentID = account.PrincipalID;
             }
-            info = GetInformation(AgentID);
+            PresenceInfo info = GetInformation(AgentID);
             if (info == null)
             {
                 MainConsole.Instance.Warn("Cannot find user.");
@@ -282,7 +262,6 @@ namespace Aurora.Modules.Ban
         protected void UnBlockUser(string[] cmdparams)
         {
             UUID AgentID;
-            PresenceInfo info;
             if (!UUID.TryParse(cmdparams[2], out AgentID))
             {
                 UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 2));
@@ -293,7 +272,7 @@ namespace Aurora.Modules.Ban
                 }
                 AgentID = account.PrincipalID;
             }
-            info = GetInformation(AgentID);
+            PresenceInfo info = GetInformation(AgentID);
             if (info == null)
             {
                 MainConsole.Instance.Warn("Cannot find user.");
@@ -307,7 +286,6 @@ namespace Aurora.Modules.Ban
         protected void SetUserInfo(string[] cmdparams)
         {
             UUID AgentID;
-            PresenceInfo info;
             int Num = 2;
             if (!UUID.TryParse(cmdparams[1], out AgentID))
             {
@@ -320,7 +298,7 @@ namespace Aurora.Modules.Ban
                 AgentID = account.PrincipalID;
                 Num += 1;
             }
-            info = GetInformation(AgentID);
+            PresenceInfo info = GetInformation(AgentID);
             if (info == null)
             {
                 MainConsole.Instance.Warn("Cannot find user.");
@@ -389,11 +367,6 @@ namespace Aurora.Modules.Ban
                     reason = "Viewer is blocked (MAC)";
                     return false;
                 }
-                if (info.LastKnownMac.Length != 32)
-                {
-                    reason = "Viewer is blocked (MAC)";
-                    return false; //Not a valid length!
-                }
             }
             //foreach (string id0 in info.KnownID0s)
             {
@@ -402,11 +375,6 @@ namespace Aurora.Modules.Ban
                     //Ban this asshole
                     reason = "Viewer is blocked (IO)";
                     return false;
-                }
-                if (info.LastKnownID0.Length != 32)
-                {
-                    reason = "Viewer is blocked (IO)";
-                    return false; //Valid length!
                 }
             }
 
@@ -439,18 +407,15 @@ namespace Aurora.Modules.Ban
             }
             if (GrieferAllowLevel == AllowLevel.AllowKnown)
                 return true; //Allow all
-            else if (GrieferAllowLevel == AllowLevel.AllowCleanOnly)
+            if (GrieferAllowLevel == AllowLevel.AllowCleanOnly)
             { 
                 //Allow people with only clean flag or suspected alt
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
                     return true;
-                else
-                {
-                    message = "Not a Clean agent and have been denied access.";
-                    return false;
-                }
+                message = "Not a Clean agent and have been denied access.";
+                return false;
             }
-            else if (GrieferAllowLevel == AllowLevel.AllowSuspected)
+            if (GrieferAllowLevel == AllowLevel.AllowSuspected)
             {
                 //Block all alts of knowns, and suspected alts of knowns
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
@@ -460,8 +425,7 @@ namespace Aurora.Modules.Ban
                     message = "Not a Clean agent and have been denied access.";
                     return false;
                 }
-                else
-                    return true;
+                return true;
             }
 
             return true;
@@ -508,9 +472,7 @@ namespace Aurora.Modules.Ban
     {
         #region Declares
 
-        private ILoginService m_service;
-        private IConfigSource m_source;
-        private List<IPAddress> IPBans = new List<IPAddress>();
+        private readonly List<IPAddress> IPBans = new List<IPAddress>();
         private List<string> IPRangeBans = new List<string>();
 
         #endregion
@@ -519,8 +481,6 @@ namespace Aurora.Modules.Ban
 
         public void Initialize(ILoginService service, IConfigSource source, IUserAccountService UASerivce)
         {
-            m_source = source;
-            m_service = service;
 
             IConfig config = source.Configs["GrieferProtection"];
             if (config != null)
@@ -539,13 +499,12 @@ namespace Aurora.Modules.Ban
         public bool Login(Hashtable request, UUID User, out string message)
         {
             message = "";
-            string ip = (string)request["ip"];
-            if (ip == null)
-                ip = "";
+            string ip = (string)request["ip"] ?? "";
             ip = ip.Split(':')[0];//Remove the port
             IPAddress userIP = IPAddress.Parse(ip);
             if (IPBans.Contains(userIP))
                 return false;
+#if (!ISWIN)
             foreach (string ipRange in IPRangeBans)
             {
                 string[] split = ipRange.Split('-');
@@ -557,6 +516,9 @@ namespace Aurora.Modules.Ban
                 if (range.IsInRange(userIP))
                     return false;
             }
+#else
+            return (from ipRange in IPRangeBans select ipRange.Split('-') into split where split.Length == 2 select IPAddress.Parse(ip) into low let high = IPAddress.Parse(ip) select new NetworkUtils.IPAddressRange(low, high)).All(range => !range.IsInRange(userIP));
+#endif
             return true;
         }
 

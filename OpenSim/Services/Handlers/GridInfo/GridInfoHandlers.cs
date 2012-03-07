@@ -52,49 +52,52 @@ namespace OpenSim.Services
         ///   anything else requires a general redesign of the config
         ///   system.
         /// </remarks>
-        public GridInfoHandlers(IConfigSource configSource)
+        public GridInfoHandlers(IConfigSource configSource, IRegistryCore registry)
         {
-            loadGridInfo(configSource);
+            loadGridInfo(configSource, registry);
         }
 
-        private void loadGridInfo(IConfigSource configSource)
+        private void loadGridInfo(IConfigSource configSource, IRegistryCore registry)
         {
             _info["platform"] = "Aurora";
             try
             {
-                IConfig startupCfg = configSource.Configs["Startup"];
                 IConfig gridCfg = configSource.Configs["GridInfoService"];
-                IConfig netCfg = configSource.Configs["Network"];
+                IConfig configCfg = configSource.Configs["Handlers"];
 
-                bool grid = startupCfg.GetBoolean("gridmode", false);
-
-                if (null != gridCfg)
+                if (gridCfg != null)
                 {
                     foreach (string k in gridCfg.GetKeys())
                     {
-                        _info[k] = gridCfg.GetString(k);
+                        if (k == "currency")
+                            _info["helperuri"] = gridCfg.GetString(k);
+                        else
+                            _info[k] = gridCfg.GetString(k);
                     }
                 }
-                else if (null != netCfg)
+                if (!_info.ContainsKey("login"))
                 {
-                    if (grid)
-                        _info["login"]
-                            = netCfg.GetString(
-                                "user_server_url", "http://127.0.0.1:" + 8002.ToString());
+                    if (configCfg != null && configCfg.GetString("LLLoginHandlerPort", "") != "")
+                    {
+                        _info["login"] = MainServer.Instance.FullHostName + ":" + configCfg.GetString("LLLoginHandlerPort", "") + "/";
+                    }
                     else
-                        _info["login"]
-                            = String.Format(
-                                "http://127.0.0.1:{0}/",
-                                netCfg.GetString(
-                                    "http_listener_port", 9000.ToString()));
-
-                    IssueWarning();
+                    {
+                        _info["login"] = MainServer.Instance.ServerURI + "/";
+                    }
                 }
-                else
+                if (!_info["login"].ToString().EndsWith("/"))
+                    _info["login"] = _info["login"] + "/";
+                if (!_info.ContainsKey("helperuri"))
                 {
-                    _info["login"] = "http://127.0.0.1:9000/";
-                    IssueWarning();
+                    IMoneyModule moneyModule = registry.RequestModuleInterface<IMoneyModule>();
+                    if (moneyModule != null)
+                        _info["helperuri"] = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
+                    else
+                        _info["helperuri"] = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
                 }
+                if (!_info["helperuri"].ToString().EndsWith("/"))
+                    _info["helperuri"] = _info["helperuri"] + "/";
             }
             catch (Exception)
             {
