@@ -4428,7 +4428,8 @@ namespace OpenSim.Region.Framework.Scenes
                 (CollisionSound != UUID.Zero) ||
                 PassCollisions != 2)
             {
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0)
+                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision_start) != 0 ||
+                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.collision) != 0)
                 {
                     // do event notification
                     if (startedColliders.Count > 0)
@@ -4815,7 +4816,8 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                     }
                 }
-                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_start) != 0)
+                if ((m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision_start) != 0 ||
+                    (m_parentGroup.RootPart.ScriptEvents & scriptEvents.land_collision) != 0)
                 {
                     if (startedColliders.Count > 0)
                     {
@@ -4912,14 +4914,14 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
                                 if (this.PassCollisions == PASS_ALWAYS)
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptColliding(this.ParentGroup.RootPart,
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandColliding(this.ParentGroup.RootPart,
                                                                                             LandCollidingMessage);
                                 }
                                 else if (((this.ScriptEvents & scriptEvents.land_collision) == 0) &&
                                          this.PassCollisions == PASS_IF_NOT_HANDLED)
                                     //If no event in this prim, pass to parent
                                 {
-                                    m_parentGroup.Scene.EventManager.TriggerScriptColliding(
+                                    m_parentGroup.Scene.EventManager.TriggerScriptLandColliding(
                                         this.ParentGroup.RootPart, LandCollidingMessage);
                                 }
                             }
