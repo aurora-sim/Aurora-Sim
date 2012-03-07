@@ -74,7 +74,7 @@ namespace Aurora.Modules.Archivers
         /// Used to cache lookups for valid uuids.
         /// </summary>
         private readonly IDictionary<UUID, UUID> m_validUserUuids = new Dictionary<UUID, UUID>();
-        
+
 
         private int m_offsetX = 0;
         private int m_offsetY = 0;
@@ -87,7 +87,7 @@ namespace Aurora.Modules.Archivers
         const string sPattern = @"(\{{0,1}([0-9a-fA-F]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}\}{0,1})";
         readonly Dictionary<UUID, AssetBase> assetNonBinaryCollection = new Dictionary<UUID, AssetBase>();
 
-        public ArchiveReadRequest (IScene scene, string loadPath, bool merge, bool skipAssets,
+        public ArchiveReadRequest(IScene scene, string loadPath, bool merge, bool skipAssets,
             int offsetX, int offsetY, int offsetZ, bool flipX, bool flipY, bool useParcelOwnership, bool checkOwnership)
         {
             try
@@ -147,10 +147,10 @@ namespace Aurora.Modules.Archivers
 
             if (!m_skipAssets)
                 m_threadpool = new Aurora.Framework.AuroraThreadPool(new Aurora.Framework.AuroraThreadPoolStartInfo()
-                    {
-                        Threads = 1,
-                        priority = System.Threading.ThreadPriority.BelowNormal
-                    });
+                {
+                    Threads = 1,
+                    priority = System.Threading.ThreadPriority.BelowNormal
+                });
 
             IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
             if (!m_merge)
@@ -199,7 +199,7 @@ namespace Aurora.Modules.Archivers
 
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
-                        seneObjectGroups.Add(data);   
+                        seneObjectGroups.Add(data);
                     }
                     else if (!m_skipAssets && filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
@@ -264,7 +264,7 @@ namespace Aurora.Modules.Archivers
                 foreach (byte[] data2 in seneObjectGroups)
                 {
                     byte[] data3 = data2;
-                    
+
                     string stringData = Utils.BytesToString(data3);
                     MatchCollection mc = Regex.Matches(stringData, sPattern);
                     bool didChange = false;
@@ -385,7 +385,7 @@ namespace Aurora.Modules.Archivers
             }
 
             if (!m_skipAssets && m_useAsync && !AssetSaverIsRunning)
-                    m_threadpool.QueueEvent(SaveAssets, 0);
+                m_threadpool.QueueEvent(SaveAssets, 0);
 
             if (!m_skipAssets)
             {
@@ -458,7 +458,7 @@ namespace Aurora.Modules.Archivers
                             newvalue = assetBinaryChangeRecord[thematch];
 
                         if (thematch == newvalue) continue;
-                        stringData = stringData.Replace(thematch.ToString(),newvalue.ToString());
+                        stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
                         didChange = true;
                     }
                     if (didChange)
@@ -496,40 +496,40 @@ namespace Aurora.Modules.Archivers
                     m_validUserUuids.Add(uuid, uuid);
                     return uuid;
                 }
-                if(uuid == creatorID)
+                if (uuid == creatorID)
                 {
                     UUID hid;
                     string first, last, url, secret;
-                    if(HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
+                    if (HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
                     {
                         account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
-                        if(account != null)
+                        if (account != null)
                         {
                             m_validUserUuids.Add(uuid, account.PrincipalID);
                             return account.PrincipalID;//Fix the UUID
                         }
                     }
                 }
-                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement> ();
+                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement>();
                 if (uf != null)
-                    if (uf.GetUserExists (uuid))//Foreign user, don't remove their info
+                    if (uf.GetUserExists(uuid))//Foreign user, don't remove their info
                     {
                         m_validUserUuids.Add(uuid, uuid);
                         return uuid;
                     }
                 UUID id = UUID.Zero;
-                if(m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
+                if (m_checkOwnership || (m_useParcelOwnership && parcels == null))//parcels == null is a parcel owner, ask for it if useparcel is on
                 {
-                    tryAgain:
+                tryAgain:
                     string ownerName = MainConsole.Instance.Prompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
                     account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
-                    if(account != null)
+                    if (account != null)
                         id = account.PrincipalID;
-                    else if(ownerName != "")
-                        if((ownerName = MainConsole.Instance.Prompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
+                    else if (ownerName != "")
+                        if ((ownerName = MainConsole.Instance.Prompt("User was not found, do you want to try again?", "no", new List<string>(new[] { "no", "yes" }))) == "yes")
                             goto tryAgain;
                 }
-                if(m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
+                if (m_useParcelOwnership && id == UUID.Zero && location != Vector3.Zero && parcels != null)
                 {
                     foreach (LandData data in parcels)
                     {
@@ -538,7 +538,7 @@ namespace Aurora.Modules.Archivers
                                 id = data.OwnerID;
                     }
                 }
-                if(id == UUID.Zero)
+                if (id == UUID.Zero)
                     id = m_scene.RegionInfo.EstateSettings.EstateOwner;
                 m_validUserUuids.Add(uuid, id);
 
@@ -605,8 +605,7 @@ namespace Aurora.Modules.Archivers
 
                 if (assetType == AssetType.Unknown)
                     MainConsole.Instance.WarnFormat("[ARCHIVER]: Importing {0} byte asset {1} with unknown type", data.Length, uuid);
-                asset = new AssetBase(UUID.Parse(uuid), String.Empty, assetType, UUID.Zero)
-                                      {Data = data};
+                asset = new AssetBase(UUID.Parse(uuid), String.Empty, assetType, UUID.Zero) { Data = data };
                 return true;
             }
             MainConsole.Instance.ErrorFormat(

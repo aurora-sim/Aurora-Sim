@@ -180,7 +180,9 @@ namespace Aurora.Framework
 
         #region properties
 		
-		// used by archive loaders to track with assets have been saved
+        /// <summary>
+        /// used by archive loaders to track with assets have been saved	
+        /// </summary>
         public bool HasBeenSaved { get; set; }
 
         public string TypeString

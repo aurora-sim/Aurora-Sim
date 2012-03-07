@@ -7988,7 +7988,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             shapeBlock.PathScaleX = 100;
             shapeBlock.PathScaleY = 150;
 
-            int onlytype = (type & 7);//Removes the sculpt flags according to libOMV
+            int onlytype = (type & (ScriptBaseClass.PRIM_SCULPT_FLAG_INVERT | ScriptBaseClass.PRIM_SCULPT_FLAG_MIRROR));//Removes the sculpt flags according to libOMV
             if (onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_CYLINDER &&
                 onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_PLANE &&
                 onlytype != (int)ScriptBaseClass.PRIM_SCULPT_TYPE_SPHERE &&

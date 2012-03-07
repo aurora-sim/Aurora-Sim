@@ -63,7 +63,8 @@
     ;; See http://opensimulator.org/wiki/GridInfo
 
     ;; login uri: for grid this is the login server URI
-    login = http://127.0.0.1:9000/
+    ;; It will find the correct IP and port automatically if this is not set manually
+    ;login = http://127.0.0.1:9000/
 
     ;; long grid name: the long name of your grid
     gridname = "My Aurora Simulator"

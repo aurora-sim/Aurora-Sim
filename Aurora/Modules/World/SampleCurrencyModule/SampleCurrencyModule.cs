@@ -59,6 +59,15 @@ namespace Aurora.Modules.SampleCurrencyModule
         {
             get { return 0; }
         }
+
+        public int ClientPort
+        {
+            get
+            {
+                return (int)MainServer.Instance.Port;
+            }
+        }
+
 #pragma warning disable 67
 
         public event ObjectPaid OnObjectPaid;
@@ -331,7 +340,6 @@ namespace Aurora.Modules.SampleCurrencyModule
         }
 
         #endregion
-
 
         public List<GroupAccountHistory> GetTransactions(UUID groupID, UUID agentID, int currentInterval, int intervalDays)
         {
