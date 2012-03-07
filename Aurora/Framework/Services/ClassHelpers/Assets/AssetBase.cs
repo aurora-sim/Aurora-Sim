@@ -180,6 +180,11 @@ namespace Aurora.Framework
 
         #region properties
 
+        /// <summary>
+        /// used by archive loaders to track with assets have been saved	
+        /// </summary>
+        public bool HasBeenSaved { get; set; }
+
         public string TypeString
         {
             get { return SLUtil.SLAssetTypeToContentType((int) TypeAsset); }
