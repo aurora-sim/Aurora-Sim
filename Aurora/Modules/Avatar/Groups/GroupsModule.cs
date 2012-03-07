@@ -257,6 +257,7 @@ namespace Aurora.Modules.Groups
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
             m_cachedGroupTitles[remoteClient.AgentId] =
                 AttemptFindGroupMembershipData(remoteClient.AgentId, remoteClient.AgentId, groupID);
+            m_cachedGroupMemberships.Remove(remoteClient.AgentId);
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
 
@@ -481,6 +482,7 @@ namespace Aurora.Modules.Groups
             m_groupData.AddAgentToGroup(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID,
                                         UUID.Zero);
 
+            m_cachedGroupMemberships.Remove(remoteClient.AgentId);
             remoteClient.SendJoinGroupReply(groupID, true);
 
             // Should this send updates to everyone in the group?
@@ -496,6 +498,7 @@ namespace Aurora.Modules.Groups
                                                   groupID))
                 return;
 
+            m_cachedGroupMemberships.Remove(remoteClient.AgentId);
             remoteClient.SendLeaveGroupReply(groupID, true);
 
             remoteClient.SendAgentDropGroup(groupID);
@@ -535,6 +538,7 @@ namespace Aurora.Modules.Groups
             if (!m_groupData.RemoveAgentFromGroup(GetRequestingAgentID(remoteClient), ejecteeID, groupID))
                 return;
 
+            m_cachedGroupMemberships.Remove(ejecteeID);
             remoteClient.SendEjectGroupMemberReply(GetRequestingAgentID(remoteClient), groupID, true);
 
             GroupRecord groupInfo = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, null);
