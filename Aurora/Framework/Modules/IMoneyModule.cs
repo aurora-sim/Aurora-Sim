@@ -41,7 +41,6 @@ namespace Aurora.Framework
     public enum TransactionType
     {
         SystemGenerated = 0,
-        ObjectPay = 2,
         GroupCreate = 1002,
         UploadFee = 1101,
         AuctionFee = 1102,
@@ -49,6 +48,7 @@ namespace Aurora.Framework
         DirectoryFee = 2003,
         ClassifiedRenewFee = 2005,
         Inventory = 3000,
+        ObjectBuy = 5000,
         Gift = 5001,
         LandSale = 5002,
         LandPassFee = 5006,

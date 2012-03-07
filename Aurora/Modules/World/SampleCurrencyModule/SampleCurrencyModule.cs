@@ -77,7 +77,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         public bool Transfer(UUID toID, UUID fromID, UUID toObjectID, UUID fromObjectID, int amount, string description,
                              TransactionType type)
         {
-            if ((type == TransactionType.ObjectPay) && (OnObjectPaid != null))
+            if ((type == TransactionType.PayIntoObject) && (OnObjectPaid != null))
                 OnObjectPaid((fromObjectID == UUID.Zero) ? toObjectID : fromObjectID, fromID, amount);
             return true;
         }
