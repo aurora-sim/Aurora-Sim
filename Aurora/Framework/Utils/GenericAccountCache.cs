@@ -38,7 +38,7 @@ namespace Aurora.Framework
 
     public class GenericAccountCache<T> where T : BaseCacheAccount
     {
-        private const double CACHE_EXPIRATION_SECONDS = 6*60*1000;
+        private double CACHE_EXPIRATION_SECONDS = 6*60*1000;
                              // 6 hour cache on useraccounts, since they should not change
 
         private const bool m_allowNullCaching = true;
@@ -48,6 +48,13 @@ namespace Aurora.Framework
 
         public GenericAccountCache()
         {
+            m_UUIDCache = new ExpiringCache<UUID, T>();
+            m_NameCache = new ExpiringCache<string, UUID>();
+        }
+
+        public GenericAccountCache(double expirationTime)
+        {
+            CACHE_EXPIRATION_SECONDS = expirationTime;
             m_UUIDCache = new ExpiringCache<UUID, T>();
             m_NameCache = new ExpiringCache<string, UUID>();
         }

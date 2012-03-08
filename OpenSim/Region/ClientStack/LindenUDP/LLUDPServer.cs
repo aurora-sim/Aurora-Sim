@@ -59,7 +59,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private readonly ThreadMonitor incomingPacketMonitor = new ThreadMonitor();
         private readonly List<IClientAPI> m_currentClients = new List<IClientAPI>();
-        private readonly Dictionary<UUID, uint> m_inQueueCircuitCodes = new Dictionary<UUID, uint>();
+        private readonly ExpiringCache<UUID, uint> m_inQueueCircuitCodes = new ExpiringCache<UUID, uint>();
         private readonly ThreadMonitor outgoingPacketMonitor = new ThreadMonitor();
 
         //PacketEventDictionary packetEvents = new PacketEventDictionary();
@@ -759,14 +759,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 IPEndPoint remoteEndPoint = (IPEndPoint)buffer.RemoteEndPoint;
                 if (IsClientAuthorized(cPacket, remoteEndPoint, out sessionData))
                 {
-                    if (m_inQueueCircuitCodes.ContainsKey(sessionData.AgentID))
+                    lock (m_inQueueCircuitCodes)
                     {
-                        MainConsole.Instance.Debug("[LLUDPServer] AddNewClient - already here");
-                        m_inQueueCircuitCodes[sessionData.AgentID] = cPacket.Header.Sequence;
-                        return;
+                        bool contains = m_inQueueCircuitCodes.Contains(sessionData.AgentID);
+                        m_inQueueCircuitCodes.AddOrUpdate(sessionData.AgentID, cPacket.Header.Sequence, 5);
+                        if (contains)
+                        {
+                            MainConsole.Instance.Debug("[LLUDPServer] AddNewClient - already here");
+                            return;
+                        }
                     }
-
-                    m_inQueueCircuitCodes[sessionData.AgentID] = cPacket.Header.Sequence;
                     object[] array = new object[] { buffer, packet, sessionData };
                     if (m_asyncPacketHandling)
                         Util.FireAndForget(HandleUseCircuitCode, array);
@@ -914,11 +916,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (AddClient(packet.CircuitCode.Code, packet.CircuitCode.ID,
                 packet.CircuitCode.SessionID, remoteEndPoint, sessionInfo))
             {
+                uint ack = 0;
+                lock (m_inQueueCircuitCodes)
+                {
+                    ack = (uint)m_inQueueCircuitCodes[sessionInfo.AgentID];
+                    //And remove it
+                    m_inQueueCircuitCodes.Remove(sessionInfo.AgentID);
+                }
                 // Acknowledge the UseCircuitCode packet
                 //Make sure to acknowledge with the newest packet! So use the queue so that it knows all of the newest ones
-                SendAckImmediate(remoteEndPoint, m_inQueueCircuitCodes[sessionInfo.AgentID]);
-                //And remove it
-                m_inQueueCircuitCodes.Remove(sessionInfo.AgentID);
+                SendAckImmediate(remoteEndPoint, ack);
 
                 MainConsole.Instance.InfoFormat(
                     "[LLUDPSERVER]: Handling UseCircuitCode request from {0} took {1}ms",
