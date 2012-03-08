@@ -893,7 +893,8 @@ namespace OpenSim.Region.Framework.Scenes
                 invString.AddSectionEnd ();
             }
             string str = invString.GetString();
-            str = str.Substring(0, str.Length - 1);
+            if(str.Length > 0)
+                str = str.Substring(0, str.Length - 1);
             m_fileData = Utils.StringToBytes(str);
 
             //MainConsole.Instance.Debug(Utils.BytesToString(fileData));
