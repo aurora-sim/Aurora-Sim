@@ -45,6 +45,14 @@ namespace Aurora.Framework
         List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
+        /// <summary>
+        /// Gets the neighbouring regions, taking into account variable-sized regions
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="ScopeID"></param>
+        /// <param name="squareRangeFromCenterInMeters">because calculating circular radii would be a complex.</param>
+        /// <returns>If the return result is of zero length the region does not exist.</returns>
+        List<GridRegion> GetNeighbours(UUID regionID, UUID ScopeID, uint squareRangeFromCenterInMeters);
 
         uint Count(uint EstateID, RegionFlags flags);
 
