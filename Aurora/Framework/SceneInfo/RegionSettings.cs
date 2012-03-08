@@ -265,6 +265,11 @@ namespace Aurora.Framework
         /// </summary>
         public UUID TerrainMapImageID { get; set; }
 
+        /// <summary>
+        ///   Time that the map tile was last created
+        /// </summary>
+        public DateTime TerrainMapLastRegenerated { get; set; }
+
         public bool FixedSun { get; set; }
 
         public double SunPosition { get; set; }
@@ -377,6 +382,7 @@ namespace Aurora.Framework
             map["ParcelMapImageID"] = this.ParcelMapImageID;
             map["TerrainLowerLimit"] = this.TerrainLowerLimit;
             map["TerrainMapImageID"] = this.TerrainMapImageID;
+            map["TerrainMapLastRegenerated"] = this.TerrainMapLastRegenerated;
             map["TerrainRaiseLimit"] = this.TerrainRaiseLimit;
             map["TerrainTexture1"] = this.TerrainTexture1;
             map["TerrainTexture2"] = this.TerrainTexture2;
@@ -423,9 +429,10 @@ namespace Aurora.Framework
             this.SunPosition = map["SunPosition"];
             this.SunVector = map["SunVector"];
             this.TerrainImageID = map["TerrainImageID"];
+            this.TerrainMapImageID = map["TerrainMapImageID"];
+            this.TerrainMapLastRegenerated = map["TerrainMapLastRegenerated"];
             this.ParcelMapImageID = map["ParcelMapImageID"];
             this.TerrainLowerLimit = map["TerrainLowerLimit"];
-            this.TerrainMapImageID = map["TerrainMapImageID"];
             this.TerrainRaiseLimit = map["TerrainRaiseLimit"];
             this.TerrainTexture1 = map["TerrainTexture1"];
             this.TerrainTexture2 = map["TerrainTexture2"];

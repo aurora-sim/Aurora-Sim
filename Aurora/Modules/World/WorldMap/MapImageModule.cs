@@ -245,7 +245,8 @@ namespace Aurora.Modules.WorldMap
         public void StartupComplete(IScene scene, List<string> data)
         {
             //Startup complete, we can generate a tile now
-            CreateTerrainTexture();
+            if((DateTime.Now - m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated).TotalMinutes > minutes)
+                CreateTerrainTexture();
             //and set up timers.
             SetUpTimers();
         }
@@ -300,6 +301,8 @@ namespace Aurora.Modules.WorldMap
                 //They want a static texture, lock it in.
                 m_scene.RegionInfo.RegionSettings.TerrainMapImageID = staticMapTileUUID;
                 m_scene.RegionInfo.RegionSettings.TerrainImageID = staticMapTileUUID;
+                m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated = DateTime.Now;
+                m_scene.RegionInfo.RegionSettings.Save();
                 return;
             }
 
@@ -407,6 +410,7 @@ namespace Aurora.Modules.WorldMap
             else
                 m_scene.RegionInfo.RegionSettings.ParcelMapImageID = UUID.Zero;
 
+            m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated = DateTime.Now;
             m_scene.RegionInfo.RegionSettings.Save();
 
             //Update the grid map

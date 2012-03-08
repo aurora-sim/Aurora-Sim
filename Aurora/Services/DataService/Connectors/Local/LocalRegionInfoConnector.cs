@@ -244,6 +244,8 @@ namespace Aurora.Services.DataService
                         if (o.Type == OSDType.Map)
                             settings.Generic = (OSDMap)o;
                     }
+                    if (query["terrainmaplastregenerated"][i] != null)
+                        settings.TerrainMapLastRegenerated = Util.ToDateTime(int.Parse(query["terrainmaplastregenerated"][i]));
                 }
             }
             settings.OnSave += StoreRegionSettings;
@@ -300,7 +302,8 @@ namespace Aurora.Services.DataService
                 rs.TerrainImageID,
                 rs.MinimumAge,
                 rs.CovenantLastUpdated,
-                OSDParser.SerializeJsonString(rs.Generic)
+                OSDParser.SerializeJsonString(rs.Generic),
+                Util.ToUnixTime(rs.TerrainMapLastRegenerated)
             });
         }
 
