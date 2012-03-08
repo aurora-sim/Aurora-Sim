@@ -166,6 +166,15 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         /// </summary>
         public void TrySetMovementAnimation(string anim)
         {
+            TrySetMovementAnimation(anim, false);
+        }
+
+        /// <summary>
+        ///   The movement animation is reserved for "main" animations
+        ///   that are mutually exclusive, e.g. flying and sitting.
+        /// </summary>
+        public void TrySetMovementAnimation(string anim, bool sendTerseUpdateIfNotSending)
+        {
             //MainConsole.Instance.DebugFormat("Updating movement animation to {0}", anim);
 
             if (!m_useSplatAnimation && anim == "STANDUP")
@@ -183,6 +192,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                                                             new Object[] {(int) Changed.ANIMATION});
                     SendAnimPack();
                 }
+                else if (sendTerseUpdateIfNotSending)
+                    m_scenePresence.SendTerseUpdateToAllClients(); //Send the terse update alone then
             }
         }
 
@@ -504,13 +515,11 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             string oldanimation = m_movementAnimation;
             m_movementAnimation = GetMovementAnimation();
-            if (NeedsAnimationResent || oldanimation != m_movementAnimation)
+            if (NeedsAnimationResent || oldanimation != m_movementAnimation || sendTerseUpdate)
             {
                 NeedsAnimationResent = false;
-                TrySetMovementAnimation(m_movementAnimation);
+                TrySetMovementAnimation(m_movementAnimation, sendTerseUpdate);
             }
-            else if (sendTerseUpdate)
-                m_scenePresence.SendTerseUpdateToAllClients(); //Send the terse update alone then
         }
 
         /// <summary>
