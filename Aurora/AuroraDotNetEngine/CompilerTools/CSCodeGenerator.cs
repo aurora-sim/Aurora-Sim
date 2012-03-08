@@ -426,7 +426,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private string GenerateFireEventMethod()
         {
             StringBuilder retVal = new StringBuilder();
-            retVal.AppendLine("public override IEnumerator FireEvent (string evName, object[] parameters)");
+            retVal.AppendLine("public override System.Collections.IEnumerator FireEvent (string evName, object[] parameters)");
             retVal.AppendLine("{");
             foreach (KeyValuePair<string, List<ArgumentDeclarationList>> method in m_allMethods)
             {
@@ -1610,7 +1610,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 else
                     remainingKids.Add(kid);
 
-            retstr.Append(GenerateIndented(String.Format("public IEnumerator {0}(", CheckName(gf.Name)), gf));
+            retstr.Append(GenerateIndented(String.Format("public System.Collections.IEnumerator {0}(", CheckName(gf.Name)), gf));
 
             IsParentEnumerable = true;
 
@@ -1807,7 +1807,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // "state" (function) declaration
             retstr.Append(GenerateIndented(
-                String.Format("public IEnumerator {0}_event_{1}(", parentStateName, se.Name), se));
+                String.Format("public System.Collections.IEnumerator {0}_event_{1}(", parentStateName, se.Name), se));
 
             IsParentEnumerable = true;
 
@@ -2800,7 +2800,7 @@ default
                     newMethod += (Generate("{"));
                     newMethod += (Generate("ahwowuerogng = true;"));
                     Mname = Aurora.Framework.StringUtils.RandomString(10, true);
-                    newMethod += (Generate("IEnumerator " + Mname + " = "));
+                    newMethod += (Generate("System.Collections.IEnumerator " + Mname + " = "));
                     newMethod += (Generate(String.Format("{0}(", CheckName(fc.Id)), fc));
                     newMethod += (tempString);
                     newMethod += (Generate(");"));
@@ -2833,7 +2833,7 @@ default
                     List<string> fCalls = new List<string>
                                               {
                                                   Generate("string " + Exname + " =  \"\";"),
-                                                  Generate("IEnumerator " + Mname + " = "),
+                                                  Generate("System.Collections.IEnumerator " + Mname + " = "),
                                                   Generate(String.Format("{0}(", CheckName(fc.Id)), fc),
                                                   tempString,
                                                   Generate(");"),
