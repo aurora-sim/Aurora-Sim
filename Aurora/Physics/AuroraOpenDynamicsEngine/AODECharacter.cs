@@ -1301,9 +1301,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_UpdateTimecntr = 0;
 */
-            const float VELOCITY_TOLERANCE = 0.5f;
+            float VELOCITY_TOLERANCE = 0.025f*0.25f;
+            if (_parent_scene.TimeDilation < 0.5)
+            {
+                float percent = (1f - _parent_scene.TimeDilation) * 100;
+                VELOCITY_TOLERANCE *= percent * 2;
+            }
             //const float ANG_VELOCITY_TOLERANCE = 0.05f;
-            const float POSITION_TOLERANCE = 0.5f;
+            const float POSITION_TOLERANCE = 5.0f;
             bool needSendUpdate = false;
 
             float vlength = (_velocity - m_lastVelocity).LengthSquared();
