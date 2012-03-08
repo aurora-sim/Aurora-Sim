@@ -341,11 +341,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void AddEvent(QueueItemStruct QIS, EventPriority priority)
-        {
-            AddEventSchQIS(QIS);
-        }
-
         #endregion
 
         #region Remove
@@ -508,7 +503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void AddEventSchQIS(QueueItemStruct QIS)
+        public void AddEventSchQIS(QueueItemStruct QIS, EventPriority priority)
         {
             if (QIS.ID == null || QIS.ID.Script == null || QIS.ID.IgnoreNew)
             {
@@ -524,13 +519,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             QIS.CurrentlyAt = null;
 
-            lock (ScriptEvents)
+            if (priority == EventPriority.Suspended || priority == EventPriority.Continued)
             {
-                ScriptEvents.Enqueue(QIS);
-                ScriptEventCount++;
+                lock (SleepingScriptEvents)
+                {
+                    long time = priority == EventPriority.Suspended ? DateTime.Now.AddMilliseconds(10).Ticks : DateTime.Now.Ticks;
+                    //Let it sleep for 10ms so that other scripts can process before it, any repeating plugins ought to use this
+                    SleepingScriptEvents.Enqueue(QIS, time);
+                    SleepingScriptEventCount++;
 #if Debug
                 MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
 #endif
+                }
+            }
+            else
+            {
+                lock (ScriptEvents)
+                {
+                    ScriptEvents.Enqueue(QIS);
+                    ScriptEventCount++;
+#if Debug
+                MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
+#endif
+                }
             }
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
             if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount/2))*EventPerformance)
@@ -579,13 +590,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                             {
                                 if (SleepingScriptEvents.Count > 0)
                                     NextTime = SleepingScriptEvents.Peek().Value.EventsProcData.TimeCheck;
+                                //Now add in the next sleep time
+                                NextSleepersTest = NextTime;
+
+                                //All done
+                                Interlocked.Exchange(ref m_CheckingSleepers, 0);
                             }
 
-                            //Now add in the next sleep time
-                            NextSleepersTest = NextTime;
-
-                            //All done
-                            Interlocked.Exchange(ref m_CheckingSleepers, 0);
                             //Execute the event
                             EventSchExec(QIS);
                             lock (SleepingScriptEvents)
@@ -594,20 +605,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         }
                         else
                         {
-                            NextSleepersTest = QIS.EventsProcData.TimeCheck;
                             lock (SleepingScriptEvents)
                             {
+                                NextSleepersTest = QIS.EventsProcData.TimeCheck;
                                 SleepingScriptEvents.Enqueue(QIS, QIS.EventsProcData.TimeCheck.Ticks);
+                                //All done
+                                Interlocked.Exchange(ref m_CheckingSleepers, 0);
                             }
-                            //All done
-                            Interlocked.Exchange(ref m_CheckingSleepers, 0);
                         }
                     }
                     else //No more left, don't check again
                     {
-                        NextSleepersTest = DateTime.MaxValue;
-                        //All done
-                        Interlocked.Exchange(ref m_CheckingSleepers, 0);
+                        lock (SleepingScriptEvents)
+                        {
+                            NextSleepersTest = DateTime.MaxValue;
+                            //All done
+                            Interlocked.Exchange(ref m_CheckingSleepers, 0);
+                        }
                     }
                 }
                 QIS = null;
@@ -672,7 +686,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MainConsole.Instance.Warn ("Sleep: " + timeToSleep);
 #endif
                 Interlocked.Increment(ref scriptThreadpool.nSleepingthreads);
-                Thread.Sleep(timeToSleep);
+                  Thread.Sleep(timeToSleep);
                 Interlocked.Decrement(ref scriptThreadpool.nSleepingthreads);
             }
         }

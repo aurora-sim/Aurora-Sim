@@ -625,7 +625,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name = "FunctionName">Name of the function, will be state + "_event_" + FunctionName</param>
         /// <param name = "VersionID">Version ID of the script. Note: If it is -1, the version ID will be detected automatically</param>
         /// <param name = "param">Array of parameters to match event mask</param>
-        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, params object[] param)
+        public bool AddToObjectQueue(UUID partID, string FunctionName, DetectParams[] qParams, object[] param)
         {
             // Determine all scripts in Object and add to their queue
             ScriptData[] datas = ScriptProtection.GetScripts(partID);
@@ -651,7 +651,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name = "param"></param>
         /// <returns></returns>
         public bool AddToScriptQueue(ScriptData ID, string FunctionName, DetectParams[] qParams, EventPriority priority,
-                                     params object[] param)
+                                     object[] param)
         {
             // Create a structure and add data
             QueueItemStruct QIS = new QueueItemStruct
@@ -665,7 +665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                           State = ID.State
                                       };
 
-            MaintenanceThread.AddEvent(QIS, priority);
+            MaintenanceThread.AddEventSchQIS(QIS, priority);
             return true;
         }
 
@@ -1064,7 +1064,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     //Post the changed event though
                     AddToScriptQueue(id, "changed", new DetectParams[0], EventPriority.FirstStart,
-                                     new Object[] {new LSL_Types.LSLInteger(512)});
+                                     new Object[] { new LSL_Types.LSLInteger(512) });
                     return new LUStruct {Action = LUType.Unknown};
                 }
                 else
