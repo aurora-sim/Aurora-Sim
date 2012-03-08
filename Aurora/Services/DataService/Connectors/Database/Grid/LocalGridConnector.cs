@@ -200,6 +200,36 @@ namespace Aurora.Services.DataService
             return resp;
         }
 
+        public List<GridRegion> GetNeighbours(UUID regionID, UUID scopeID, uint squareRangeFromCenterInMeters)
+        {
+            List<GridRegion> regions = new List<GridRegion>(0);
+            GridRegion region = Get(regionID, scopeID);
+
+            if (region != null)
+            {
+                QueryFilter filter = new QueryFilter();
+
+                filter.andNotFilters["RegionUUID"] = region.RegionID; // no need to refetch the same region ID
+
+                int centerX = region.RegionLocX + (region.RegionSizeX / 2); // calculate center of region
+                int centerY = region.RegionLocY + (region.RegionSizeY / 2); // calculate center of region
+
+                filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
+                filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
+                filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
+                filter.andLessThanEqFilters["(LocY - SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
+
+                Dictionary<string, bool> sort = new Dictionary<string,bool>(3);
+                sort["LocZ"] = true;
+                sort["LocX"] = true;
+                sort["LocY"] = true;
+
+                regions = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
+            }
+
+            return regions;
+        }
+
         public uint Count(uint estateID, RegionFlags flags)
         {
             IEstateConnector estates = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
