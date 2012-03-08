@@ -496,6 +496,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                        (MaintenanceThread.scriptThreadpool == null
                             ? 0
                             : MaintenanceThread.scriptThreadpool.nSleepingthreads).ToString());
+            MaintenanceThread.Stats();
         }
 
         protected void AuroraDotNetDisable(string[] cmdparams)

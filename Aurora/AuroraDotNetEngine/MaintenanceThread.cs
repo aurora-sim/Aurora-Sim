@@ -366,6 +366,43 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             cmdThreadpool.Restart();
         }
 
+        public void Stats()
+        {
+            foreach (Thread t in scriptThreadpool.GetThreads())
+            {
+                if (t != null)
+                {
+                    t.Suspend();
+                    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(t, true);
+                    t.Resume();
+                    MainConsole.Instance.Debug("Thread " + t.Name);
+                    MainConsole.Instance.Debug(trace.GetFrames());
+                }
+            }
+            foreach (Thread t in scriptChangeThreadpool.GetThreads())
+            {
+                if (t != null)
+                {
+                    t.Suspend();
+                    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(t, true);
+                    t.Resume();
+                    MainConsole.Instance.Debug("Thread " + t.Name);
+                    MainConsole.Instance.Debug(trace.GetFrames());
+                }
+            }
+            foreach (Thread t in cmdThreadpool.GetThreads())
+            {
+                if (t != null)
+                {
+                    t.Suspend();
+                    System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace(t, true);
+                    t.Resume();
+                    MainConsole.Instance.Debug("Thread " + t.Name);
+                    MainConsole.Instance.Debug(trace.GetFrames());
+                }
+            }
+        }
+
         /// <summary>
         ///   Queue the event loop given by thread
         /// </summary>

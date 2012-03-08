@@ -214,8 +214,12 @@ namespace Aurora.Framework
         {
             lock (queue)
                 queue.Clear();
-            var threads = new Thread[Threads.Length];
-            Threads.CopyTo(threads, 0);
+            var threads = new Thread[0];
+            lock (Threads)
+            {
+                threads = new Thread[Threads.Length];
+                Threads.CopyTo(threads, 0);
+            }
             foreach (Thread t in threads)
             {
                 AbortThread(t);
@@ -226,6 +230,17 @@ namespace Aurora.Framework
         {
             lock (queue)
                 queue.Clear();
+        }
+
+        public Thread[] GetThreads()
+        {
+            var threads = new Thread[0];
+            lock (Threads)
+            {
+                threads = new Thread[Threads.Length];
+                Threads.CopyTo(threads, 0);
+            }
+            return threads;
         }
     }
 }
