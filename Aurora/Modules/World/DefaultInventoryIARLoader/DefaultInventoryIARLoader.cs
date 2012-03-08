@@ -111,7 +111,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             IScene m_MockScene = null;
             //Make the scene for the IAR loader
             if (m_registry is IScene)
-                m_MockScene = (IScene) m_registry;
+                m_MockScene = (IScene)m_registry;
             else
             {
                 m_MockScene = new Scene();
@@ -162,7 +162,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             }
 
             InventoryArchiveReadRequest archread = new InventoryArchiveReadRequest(m_MockScene, uinfo, "/", iarFileName,
-                                                                                   false);
+                                                                                   false, m_service.LibraryOwner);
 
             try
             {
@@ -170,7 +170,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 List<InventoryNodeBase> nodes = new List<InventoryNodeBase>(archread.Execute(true));
                 if (nodes.Count == 0)
                     return;
-                InventoryFolderBase f = (InventoryFolderBase) nodes[0];
+                InventoryFolderBase f = (InventoryFolderBase)nodes[0];
                 UUID IARRootID = f.ID;
 
                 TraverseFolders(IARRootID, m_MockScene);
@@ -204,8 +204,8 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 {
                     if (folder1.Name.ToLower().StartsWith(type.Key.ToLower()))
                     {
-                        if (folder.Type == (short) type.Value) break;
-                        folder.Type = (short) type.Value;
+                        if (folder.Type == (short)type.Value) break;
+                        folder.Type = (short)type.Value;
                         m_MockScene.InventoryService.UpdateFolder(folder);
                         break;
                     }
@@ -232,7 +232,8 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
             List<InventoryFolderBase> folders = m_MockScene.InventoryService.GetFolderFolders(m_service.LibraryOwner, ID);
             foreach (InventoryFolderBase folder in folders)
             {
-                if(folder.ParentID == ID) {
+                if (folder.ParentID == ID)
+                {
                     folder.ParentID = LibraryRootID;
                     m_Database.StoreFolder(folder);
                 }
@@ -243,7 +244,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
         {
             if (node is InventoryItemBase)
             {
-                InventoryItemBase item = (InventoryItemBase) node;
+                InventoryItemBase item = (InventoryItemBase)node;
                 item.BasePermissions = 0x7FFFFFFF;
                 item.EveryOnePermissions = 0x7FFFFFFF;
                 item.CurrentPermissions = 0x7FFFFFFF;
@@ -253,7 +254,7 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
 
         private string GetInventoryPathFromName(string name)
         {
-            string[] parts = name.Split(new[] {' '});
+            string[] parts = name.Split(new[] { ' ' });
             if (parts.Length == 3)
             {
                 name = string.Empty;
