@@ -319,14 +319,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (IScriptApi api in compiler.ScriptEngine.GetAPIs())
                 foreach (string nameSpace in api.NamespaceAdditions)
                     compiledScript += "using " + nameSpace + ";\n";
-            compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;\n";
-            compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine;\n";
             compiledScript += "using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;\n";
+            compiledScript += "using LSL_Types = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types;\n";
             compiledScript += "using System;\n";
-            compiledScript += "using System.Collections.Generic;\n";
-            compiledScript += "using System.Collections;\n";
-            compiledScript += "using System.Reflection;\n";
-            compiledScript += "using System.Timers;\n";
 
             compiledScript += "namespace Script\n";
             compiledScript += "{\n";

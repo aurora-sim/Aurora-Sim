@@ -91,6 +91,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 "not_at_target",
                 "object_rez",
                 "on_rez",
+                "path_update",
                 "remote_data",
                 "run_time_permissions",
                 "sensor",
@@ -143,12 +144,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 a() { llSay(0, ""a - success""); }
 string b()
 {
+    vector a = <0,0,0>;
+    float b = a.x ;
     return ""b - success"";
 }
-default { state_entry() { vector a = <0,0,0>; vector b; llSay(0, ""Script running.""); } 
+default { state_entry() { vector a = <0,0,0.04>; vector b; llSay(0, ""Script running.  ""); } 
     touch_start(integer number)
     { 
 test:
+// doing some testing.
+        llSay(0, ""doing more testing //. "");
+        /* testing. */
+        llSay(0, ""testing some shit /*.*/"");
         for(number = 0; number < 10; number++)
         {
         }
@@ -173,13 +180,16 @@ state testing
     }
     touch_start(integer a)
     {
-        llSay(0,""testing time!"");
+        llSay(0,""testing time..."");
         state default;
     }
 }";
+            m_compiler.ClearErrors();
             string compiledScript;
             object map;
             Convert(script, out compiledScript, out map);
+            if (m_compiler.GetErrors().Length > 0)
+                return false;
             CompilerParameters parameters = new CompilerParameters { IncludeDebugInformation = true };
 
 
@@ -223,6 +233,12 @@ state testing
 
             List<string> GlobalFunctions;
             string[] lineSplit = ConvertLSLTypes(Script, out GlobalFunctions);
+            if (m_compiler.GetErrors().Length > 0)
+            {
+                CompiledScript = "";
+                PositionMap = "";
+                return;
+            }
             Dictionary<string, string[]> EnumerableFunctionInfos = new Dictionary<string, string[]>();
             foreach (string function in GlobalFunctions)
             {
@@ -287,7 +303,7 @@ state testing
                         throw new ParseException("Event is not in a state");
                     else
                     {
-                        AddToClass(csClass, GenerateEvent(currentState, split, breaksplit, i, out skipUntil),
+                        AddToClass(csClass, GenerateEvent(currentState, split, breaksplit, i, out skipUntil, ref GlobalFunctions),
                             split, breaksplit, lineSplit, i, ref map);
                         inMethod = true;
                     }
@@ -356,7 +372,6 @@ state testing
                     foreach (string[] globFunc in EnumerableFunctionInfos.Values)
                         if (RegexContains(csLine, GenerateRegex(globFunc[1], int.Parse(globFunc[3])), out match))
                             csLine = GenerateNewFunction(csLine, globFunc, match);
-
 
                     AddToClass(csClass, csLine,
                             split, breaksplit, lineSplit, i, ref map);
@@ -455,7 +470,7 @@ state testing
             string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
                     
             string newLine = "string " + Exname + " =  \"\";" +
-                                                  "IEnumerator " + Mname + " = " +
+                                                  "System.Collections.IEnumerator " + Mname + " = " +
                                                   functionName + parameters +
                                                   ";" +
                                                   "while (true) {" +
@@ -489,7 +504,7 @@ state testing
         {
             string[] info = GetInfo(line);
             inMethod = true;
-            line = "public IEnumerator " + info[1] + info[2];
+            line = "public System.Collections.IEnumerator " + info[1] + info[2];
         }
 
         private string GenerateReturn(string csLine)
@@ -505,6 +520,7 @@ state testing
 
         private void AddDefaultInitializers(ref string csLine)
         {
+            csLine = RemoveComments(csLine.Trim());
             if (csLine.StartsWith("LSL_Types.LSLInteger"))
             {
                 if (csLine.IndexOf('=') == -1)
@@ -565,35 +581,106 @@ state testing
         {
             Match vectorMatches;
             RegexContains(Script, "<.*,.*,.*>", out vectorMatches);
-            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            while (vectorMatches.Success)
             {
                 if (vectorMatches.Value != "")
                     Script = Script.Replace(vectorMatches.Value, "new vector(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
+                vectorMatches = vectorMatches.NextMatch();
             }
             RegexContains(Script, "<.*,.*,.*,.*>", out vectorMatches);
-            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            while (vectorMatches.Success)
             {
                 if (vectorMatches.Value != "")
                     Script = Script.Replace(vectorMatches.Value, "new rotation(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
+                vectorMatches = vectorMatches.NextMatch();
             }
             RegexContains(Script, "[*]", out vectorMatches);
-            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            while (vectorMatches.Success)
             {
-                if (vectorMatches.Value != "")
+                if (vectorMatches.Value != "" && vectorMatches.Value != "*")
                     Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
+                vectorMatches = vectorMatches.NextMatch();
             }
             
-            RegexContains(Script, "^(?=.*?\\.\b).*$", out vectorMatches);
-            while ((vectorMatches = vectorMatches.NextMatch()).Success)
+            RegexContains(Script, ".*\\..*", out vectorMatches);
+            while (vectorMatches.Success)
             {
                 if (vectorMatches.Value != "")
                 {
                     //TODO: check for C# syntax
+                    int startValue = 0, index;
+                    while ((index = vectorMatches.Value.IndexOf(".", startValue)) != -1)
+                    {
+                        char c = vectorMatches.Value[index + 1];
+                        char d = vectorMatches.Value[index - 1];
+                        if (!char.IsNumber(c) && !char.IsNumber(d))//Eliminates float values, such as 5.05
+                        {
+                            bool mustHaveCommentOrWillFail = false;
+                            char nxtChar = c;
+                            int i = index + 1;
+                            int length = vectorMatches.Value.Length;
+                            while (char.IsWhiteSpace(nxtChar))
+                            {
+                                if (i == length)
+                                {
+                                    //Blocks things like File.
+                                    //   Delete("Testing");
+                                    mustHaveCommentOrWillFail = false;
+                                    break;
+                                }
+                                nxtChar = vectorMatches.Value[i++];//NO putting spaces before other functions
+                            }
+                            if (!(!mustHaveCommentOrWillFail && (nxtChar == 'x' || nxtChar == 'y' || nxtChar == 'z' || nxtChar == 'w') && !char.IsLetterOrDigit(vectorMatches.Value[i + 1])))//Eliminate vector.x, etc
+                            {
+                                //Check whether it is inside ""
+                                bool inside = false;
+                                bool insideComment = false;
+                                int pos = 0;
+                                foreach (char chr in vectorMatches.Value)
+                                {
+                                    if (chr == '"')
+                                        inside = !inside;
+                                    if (chr == '/' && vectorMatches.Value[pos + 1] == '*' && !inside)
+                                        insideComment = true;
+                                    if (chr == '*' && vectorMatches.Value[pos + 1] == '/')
+                                        insideComment = false;
+                                    if (chr == '/' && vectorMatches.Value[pos + 1] == '/')
+                                    {
+                                        if (!inside)
+                                            insideComment = true;//Goes for the entire line if its not inside a "" already
+                                        break;
+                                    }
+                                    if (pos++ == index)
+                                        break;
+                                }
+                                if (!inside && !insideComment)
+                                {
+                                    m_compiler.AddError("Failed to find valid expression containing .");
+                                    GlobalFunctions = new List<string>();
+                                    return new string[0];
+                                }
+                                else
+                                {
+                                    //Inside "" or comment
+                                }
+                            }
+                            else
+                            {
+                                //vector.x, vector.y, etc
+                            }
+                        }
+                        else
+                        {
+                            //Float, 0.05, valid
+                        }
+                        startValue = index+1;
+                    }
                 }
+                vectorMatches = vectorMatches.NextMatch();
             }
             RegexContains(Script, m_functionRegex, out vectorMatches);
             List<string> replacedFunctions = new List<string>();
-            while((vectorMatches = vectorMatches.NextMatch()).Success)
+            while (vectorMatches.Success)
             {
                 if (vectorMatches.Value != "" && !replacedFunctions.Contains(vectorMatches.Value))
                 {
@@ -605,6 +692,7 @@ state testing
                     Script = Script.Replace(vectorMatches.Value, formatedFunction);
                     replacedFunctions.Add(vectorMatches.Value);
                 }
+                vectorMatches = vectorMatches.NextMatch();
             }
             Script = Script.Replace("integer", "LSL_Types.LSLInteger");
             Script = Script.Replace("float", "LSL_Types.LSLFloat");
@@ -631,14 +719,44 @@ state testing
                     bracketCount--;
                 else if (beforeStates && bracketCount == 0)
                 {
-                    if (!split[i].Trim().EndsWith(";") &&
-                        !split[i].Trim().StartsWith("//") &&
-                        !split[i].Trim().StartsWith("/*") &&
-                        split[i].Trim() != "")
-                        GlobalFunctions.Add(split[i]);
+                    string splitTrim = RemoveComments(split[i].Trim());
+                    string splitTrimReplaced = splitTrim.Replace(" ", "");
+                    if (splitTrim != "" &&
+                        !splitTrim.EndsWith(";") &&
+                        !splitTrim.StartsWith("//") &&
+                        !splitTrim.StartsWith("/*") &&
+                        !splitTrimReplaced.EndsWith(";"))
+                    {
+                        if (splitTrimReplaced.EndsWith("{"))
+                            bracketCount++;
+                        else if (splitTrimReplaced.EndsWith("}"))
+                            bracketCount--;
+                        GlobalFunctions.Add(splitTrim);
+                    }
                 }
             }
             return split;
+        }
+
+        private string RemoveComments(string p)
+        {
+            string n = "";
+            bool insideComment = false;
+            int pos = 0;
+            foreach (char chr in p)
+            {
+                if (chr == '/' && (pos + 1 != p.Length) && p[pos + 1] == '*')
+                    insideComment = true;
+                if (chr == '*' && (pos + 1 != p.Length) && p[pos + 1] == '/')
+                    insideComment = false;
+                if (chr == '/' && (pos + 1 != p.Length) && p[pos + 1] == '/')
+                    insideComment = true;//Goes for the entire line if its not inside a "" already
+                if (!insideComment)
+                    n += chr;
+                if (pos++ == p.Length)
+                    break;
+            }
+            return n;
         }
 
         private bool RemoveR(string r)
@@ -646,9 +764,11 @@ state testing
             return r.Replace("\r","") == "";
         }
 
-        private string GenerateEvent(string currentState, string[] split, string[] breaksplit, int i, out int skipUntil)
+        private string GenerateEvent(string currentState, string[] split, string[] breaksplit, int i, out int skipUntil, ref List<string> GlobalFunctions)
         {
-            return "public IEnumerator " + currentState + "_event_" + GetUntil(split, ")", i, out skipUntil);
+            string eventName = GetUntil(split, ")", i, out skipUntil);
+            GlobalFunctions.Add(eventName);
+            return "public System.Collections.IEnumerator " + currentState + "_event_" + eventName;
         }
 
         private string GetNextWord(string[] split, int i)
@@ -764,9 +884,11 @@ state testing
         public void FindErrorLine(CompilerError CompErr, object PositionMap, string script, out int LineN, out int CharN)
         {
             Dictionary<int, int> PositionMapp = (Dictionary<int, int>)PositionMap;
-            LineN = CompErr.Line - CSCodeGenerator.GetHeaderCount(m_compiler);
+            LineN = CompErr.Line;
+            if(CompErr.Line > CSCodeGenerator.GetHeaderCount(m_compiler))
+                LineN = CompErr.Line - CSCodeGenerator.GetHeaderCount(m_compiler) - 1;
             CharN = 1;
-            LineN = PositionMapp[LineN - 1];//LSL is zero based, so subtract one
+            LineN = PositionMapp[LineN];//LSL is zero based, so subtract one
         }
 
         #endregion

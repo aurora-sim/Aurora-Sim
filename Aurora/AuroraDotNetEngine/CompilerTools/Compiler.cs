@@ -429,6 +429,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return m_errors.ToArray();
         }
 
+        public void ClearErrors()
+        {
+            m_errors.Clear();
+        }
+
         public void AddError(string error)
         {
             if (!m_errors.Contains(error))

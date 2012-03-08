@@ -359,6 +359,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         #region Start thread
 
+        public void Stop()
+        {
+            scriptThreadpool.Restart();
+            scriptChangeThreadpool.Restart();
+            cmdThreadpool.Restart();
+        }
+
         /// <summary>
         ///   Queue the event loop given by thread
         /// </summary>

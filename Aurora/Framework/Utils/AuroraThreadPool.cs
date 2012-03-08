@@ -136,9 +136,7 @@ namespace Aurora.Framework
             if (delegat == null)
                 return;
             lock (queue)
-            {
                 queue.Enqueue(delegat);
-            }
 
             if (nthreads == 0 || (nthreads - nSleepingthreads < queue.Count - 1 && nthreads < Threads.Length))
             {
@@ -209,6 +207,18 @@ namespace Aurora.Framework
             }
             catch
             {
+            }
+        }
+
+        public void Restart()
+        {
+            lock (queue)
+                queue.Clear();
+            var threads = new Thread[Threads.Length];
+            Threads.CopyTo(threads, 0);
+            foreach (Thread t in threads)
+            {
+                AbortThread(t);
             }
         }
 

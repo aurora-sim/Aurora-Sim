@@ -472,6 +472,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (go.Contains("yes") || go.Contains("Yes"))
             {
                 StopAllScripts();
+                MaintenanceThread.Stop();
                 MainConsole.Instance.Warn("[ADNE]: All scripts have been stopped.");
             }
             else
