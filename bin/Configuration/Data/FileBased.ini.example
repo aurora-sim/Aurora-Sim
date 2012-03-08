@@ -48,14 +48,14 @@
 	;; "<Region Name Here><This config option setting>.abackup"
 	;; which allows for a bit of flexibility when loading.
 	;; Default is ""
-    ApendedLoadFileName = "";
+    AppendedLoadFileName = "";
 	
 	;; The normal file name to save for each region is "<Region Name Here>.abackup"
 	;; If you wish to change that, you can add this so that it becomes
 	;; "<Region Name Here><This config option setting>.abackup"
 	;; which allows for a bit of flexibility when saving the backups.
 	;; Default is ""
-    ApendedSaveFileName = "";
+    AppendedSaveFileName = "";
 	
 	;; This will make a backup of the sim every X minutes and put it in the "Backup" directory
 	;; This makes sure that you have a good backup if something does go wrong (the backups are time stamped so

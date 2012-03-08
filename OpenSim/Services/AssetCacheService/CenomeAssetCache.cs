@@ -215,10 +215,20 @@ namespace OpenSim.Services
         /// </remarks>
         public AssetBase Get(string id)
         {
+            bool found;
+            return Get(id, out found);
+        }
+
+        public AssetBase Get(string id, out bool found)
+        {
             m_getCount++;
+            found = false;
             AssetBase assetBase;
             if (m_cache.TryGetValue(id, out assetBase))
+            {
+                found = true;
                 m_hitCount++;
+            }
 
             if (m_getCount == m_debugEpoch)
             {

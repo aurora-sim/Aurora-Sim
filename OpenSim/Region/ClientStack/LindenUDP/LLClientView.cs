@@ -13659,5 +13659,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //ControllingClient.SendAvatarTerseUpdate(new SendAvatarTerseData(m_rootRegionHandle, (ushort)(m_scene.TimeDilation * ushort.MaxValue), LocalId,
             //        AbsolutePosition, Velocity, Vector3.Zero, m_bodyRot, new Vector4(0,0,1,AbsolutePosition.Z - 0.5f), m_uuid, null, GetUpdatePriority(ControllingClient)));
         }
+
+        public void ForceSendOnAgentUpdate(IClientAPI client, AgentUpdateArgs args)
+        {
+            OnAgentUpdate(client, args);
+        }
+
+        public void OnForceChatFromViewer(IClientAPI sender, OSChatMessage e)
+        {
+            OnChatFromClient(sender, e);
+        }
     }
 }

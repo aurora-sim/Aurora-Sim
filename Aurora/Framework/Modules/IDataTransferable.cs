@@ -30,12 +30,22 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public class IDataTransferable
+    public interface IDataTransferableOSD
+    {
+        OSD ToOSD();
+    }
+
+    public interface IDataTransferableOSDMap
     {
         /// <summary>
         ///   Serialize the module to OSD
         /// </summary>
         /// <returns></returns>
+        OSDMap ToOSD();
+    }
+
+    public class IDataTransferable : IDataTransferableOSDMap
+    {
         public virtual OSDMap ToOSD()
         {
             return null;

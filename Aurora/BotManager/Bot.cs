@@ -50,17 +50,6 @@ namespace Aurora.BotManager
         Unknown
     }
 
-    public enum TravelMode
-    {
-        Walk,
-        Run,
-        Fly,
-        Teleport,
-        Wait,
-        TriggerHereEvent,
-        None
-    };
-
     #endregion
 
     #region Delegates
@@ -69,23 +58,173 @@ namespace Aurora.BotManager
 
     #endregion
 
-    public sealed class Bot : IClientAPI
+    #region Avatar Controller
+
+    public class BotAvatarController : IBotController
+    {
+        private IScenePresence m_scenePresence;
+        private Bot m_bot;
+        private bool m_hasStoppedMoving = false;
+
+        public BotAvatarController(IScenePresence presence, Bot bot)
+        {
+            m_scenePresence = presence;
+            m_bot = bot;
+            if (presence.ControllingClient is BotClientAPI)
+                (presence.ControllingClient as BotClientAPI).Initialize(this);
+        }
+
+        public void SetDrawDistance(float draw)
+        {
+            m_scenePresence.DrawDistance = draw;
+        }
+
+        public void SetSpeedModifier(float speed)
+        {
+            if (speed > 4)
+                speed = 4;
+            m_scenePresence.SpeedModifier = speed;
+        }
+
+        public Vector3 AbsolutePosition { get { return m_scenePresence.AbsolutePosition; } }
+
+        // Makes the bot fly to the specified destination
+        public void StopMoving(bool fly, bool clearPath)
+        {
+            if (m_hasStoppedMoving)
+                return;
+            m_hasStoppedMoving = true;
+            m_bot.State = BotState.Idle;
+            //Clear out any nodes
+            if (clearPath)
+                m_bot.m_nodeGraph.Clear();
+            //Send the stop message
+            m_bot.m_movementFlag = (uint)AgentManager.ControlFlags.NONE;
+            if (fly)
+                m_bot.m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
+            OnBotAgentUpdate(Vector3.Zero, m_bot.m_movementFlag, m_bot.m_bodyDirection, false);
+            m_scenePresence.CollisionPlane = Vector4.UnitW;
+            if (m_scenePresence.PhysicsActor != null)
+                m_scenePresence.PhysicsActor.ForceSetVelocity(Vector3.Zero);
+        }
+
+        public bool CanMove { get { return m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp; } }
+
+        public IScene GetScene()
+        {
+            return m_scenePresence.Scene;
+        }
+
+        public bool ForceFly { get { return m_scenePresence.ForceFly; } set { m_scenePresence.ForceFly = value; } }
+
+        public bool SetAlwaysRun { get { return m_scenePresence.SetAlwaysRun; } set { m_scenePresence.SetAlwaysRun = value; } }
+
+        public void Teleport(Vector3 pos)
+        {
+            m_scenePresence.Teleport(pos);
+        }
+
+        public PhysicsActor PhysicsActor { get { return m_scenePresence.PhysicsActor; } }
+
+        public void StandUp()
+        {
+            m_scenePresence.StandUp();
+        }
+
+        public void UpdateMovementAnimations(bool p)
+        {
+            m_scenePresence.Animator.UpdateMovementAnimations(p);
+        }
+
+        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation)
+        {
+            OnBotAgentUpdate(toward, controlFlag, bodyRotation, true);
+        }
+
+        public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation, bool isMoving)
+        {
+            if (isMoving)
+                m_hasStoppedMoving = false;
+            AgentUpdateArgs pack = new AgentUpdateArgs { ControlFlags = controlFlag, BodyRotation = bodyRotation };
+            m_scenePresence.ControllingClient.ForceSendOnAgentUpdate(m_scenePresence.ControllingClient, pack);
+        }
+
+        public UUID UUID { get { return m_scenePresence.UUID; } }
+
+        #region Chat interface
+
+        public void SendChatMessage(int sayType, string message, int channel)
+        {
+            if (m_scenePresence == null || m_scenePresence.Scene == null)
+                return;
+            OSChatMessage args = new OSChatMessage
+            {
+                Message = message,
+                Channel = channel,
+                From = m_scenePresence.Name,
+                Position = m_scenePresence.AbsolutePosition,
+                Sender = m_scenePresence.ControllingClient,
+                Type = (ChatTypeEnum)sayType,
+                Scene = m_scenePresence.Scene
+            };
+
+            m_scenePresence.ControllingClient.OnForceChatFromViewer(m_scenePresence.ControllingClient, args);
+        }
+
+        public void SendInstantMessage(GridInstantMessage im)
+        {
+            if (im.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport ||
+                im.dialog == (byte)InstantMessageDialog.RequestTeleport)
+            {
+                if (m_bot.AvatarCreatorID == im.fromAgentID || m_scenePresence.Scene.Permissions.IsGod(im.fromAgentID))
+                {
+                    ulong handle = 0;
+                    uint x = 128;
+                    uint y = 128;
+                    uint z = 70;
+
+                    Util.ParseFakeParcelID(im.imSessionID, out handle, out x, out y, out z);
+                    m_scenePresence.Teleport(new Vector3(x, y, z));
+                }
+            }
+        }
+
+        public void Close()
+        {
+            m_scenePresence.ControllingClient.Close(false);
+        }
+
+        #endregion
+
+        public string Name { get { return m_scenePresence.Name; } }
+
+
+        public void Jump()
+        {
+            m_bot.WalkTo(m_scenePresence.AbsolutePosition + new Vector3(0, 0, 2));
+        }
+    }
+
+    #endregion
+
+    public sealed class Bot 
     {
         #region Declares
 
-        private bool m_allowJump = true;
-        private bool m_UseJumpDecisionTree = true;
+        public bool m_allowJump = true;
+        public bool m_UseJumpDecisionTree = true;
 
-        private bool m_paused;
-        private readonly Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
+        public bool m_paused;
 
-        private uint m_movementFlag;
-        private Quaternion m_bodyDirection = Quaternion.Identity;
+        public uint m_movementFlag;
+        public Quaternion m_bodyDirection = Quaternion.Identity;
 
-        private readonly UUID m_myID = UUID.Random();
-        private readonly IScene m_scene;
-        private IScenePresence m_scenePresence;
-        private readonly AgentCircuitData m_circuitData;
+        private IBotController m_controller;
+
+        public IBotController Controller
+        {
+            get { return m_controller; }
+        }
 
         /// <summary>
         ///   There are several events added so far,
@@ -98,8 +237,8 @@ namespace Aurora.BotManager
         /// </summary>
         public AuroraEventManager EventManager = new AuroraEventManager();
 
-        private BotState m_currentState = BotState.Idle;
-        private BotState m_previousState = BotState.Idle;
+        public BotState m_currentState = BotState.Idle;
+        public BotState m_previousState = BotState.Idle;
 
         public BotState State
         {
@@ -115,7 +254,7 @@ namespace Aurora.BotManager
             }
         }
 
-        private bool lastFlying;
+        public bool lastFlying;
 
         #region Jump Settings
 
@@ -133,26 +272,23 @@ namespace Aurora.BotManager
 
         #endregion
 
-        private readonly Timer m_frames;
-        private int m_frame;
+        public Timer m_frames;
+        public int m_frame;
 
         #region IClientAPI properties
 
-        private readonly UUID m_avatarCreatorID = UUID.Zero;
+        private UUID m_avatarCreatorID = UUID.Zero;
 
         public UUID AvatarCreatorID
         {
             get { return m_avatarCreatorID; }
         }
 
-        private static UInt32 UniqueId = 1;
-
-        private string m_firstName = "";
-        private string m_lastName = "";
         public bool ShouldFly;
-        private float m_closeToPoint = 1;
+        public bool m_forceDirectFollowing = false;
+        public float m_closeToPoint = 1;
 
-        private readonly NodeGraph m_nodeGraph = new NodeGraph();
+        public readonly NodeGraph m_nodeGraph = new NodeGraph();
 
         private float m_RexCharacterSpeedMod = 1.0f;
 
@@ -162,89 +298,36 @@ namespace Aurora.BotManager
             set { m_RexCharacterSpeedMod = value; }
         }
 
-        public Vector3 StartPos
-        {
-            get { return DEFAULT_START_POSITION; }
-            set { }
-        }
-
-        public UUID AgentId
-        {
-            get { return m_myID; }
-        }
-
-        public string FirstName
-        {
-            get { return m_firstName; }
-            set { m_firstName = value; }
-        }
-
-        public string LastName
-        {
-            get { return m_lastName; }
-            set { m_lastName = value; }
-        }
-
-        private uint m_circuitCode;
-
-        public uint CircuitCode
-        {
-            get { return m_circuitCode; }
-            set { m_circuitCode = value; }
-        }
-
-        public String Name
-        {
-            get { return FirstName + " " + LastName; }
-        }
-
-        public IScene Scene
-        {
-            get { return m_scene; }
-        }
-
         #endregion
-
-        #endregion
-
-        #region Constructor
-
-        // creates new bot on the default location
-        public Bot(IScene scene, AgentCircuitData data, UUID creatorID)
-        {
-            RegisterInterfaces();
-
-            m_avatarCreatorID = creatorID;
-            m_circuitData = data;
-            m_scene = scene;
-
-            m_circuitCode = UniqueId;
-            m_frames = new Timer(10);
-            m_frames.Elapsed += (frame_Elapsed);
-
-            UniqueId++;
-        }
 
         #endregion
 
         #region Initialize/Close
 
-        public void Initialize(IScenePresence SP)
+        public void Initialize(IScenePresence SP, UUID creatorID)
         {
-            m_scenePresence = SP;
-            m_scenePresence.DrawDistance = 1024f;
+            m_controller = new BotAvatarController(SP, this);
+            m_controller.SetDrawDistance(1024f);
+            m_avatarCreatorID = creatorID;
+            m_frames = new Timer(10);
+            m_frames.Elapsed += (frame_Elapsed);
+            m_frames.Start();
+        }
+
+        public void Initialize(ISceneEntity entity)
+        {
+            m_controller = new BotPrimController(entity, this);
+            m_avatarCreatorID = entity.OwnerID;
+            m_frames = new Timer(10);
+            m_frames.Elapsed += (frame_Elapsed);
             m_frames.Start();
         }
 
         public void Close(bool forceKill)
         {
+            m_controller.Close();
             // Pull Client out of Region
-            m_scenePresence = null;
-
-            OnBotLogout();
-
-            //raiseevent on the packet server to Shutdown the circuit
-            OnBotConnectionClosed();
+            m_controller = null;
 
             m_frames.Stop();
         }
@@ -257,9 +340,10 @@ namespace Aurora.BotManager
         {
             m_nodeGraph.Clear();
             const int BOT_FOLLOW_FLAG_INDEFINITELY = 1;
+            const int BOT_FOLLOW_FLAG_FORCEDIRECTPATH = 4;
 
             m_nodeGraph.FollowIndefinitely = (flags & BOT_FOLLOW_FLAG_INDEFINITELY) == BOT_FOLLOW_FLAG_INDEFINITELY;
-
+            m_forceDirectFollowing = (flags & BOT_FOLLOW_FLAG_FORCEDIRECTPATH) == BOT_FOLLOW_FLAG_FORCEDIRECTPATH;
             m_nodeGraph.AddRange(Positions, modes);
             GetNextDestination();
         }
@@ -270,7 +354,7 @@ namespace Aurora.BotManager
 
         public void SetMovementSpeedMod(float speed)
         {
-            m_scenePresence.SpeedModifier = speed;
+            m_controller.SetSpeedModifier(speed);
         }
 
         #endregion
@@ -278,9 +362,9 @@ namespace Aurora.BotManager
         #region Move/Rotate the bot
 
         // Makes the bot walk to the specified destination
-        private void WalkTo(Vector3 destination)
+        public void WalkTo(Vector3 destination)
         {
-            if (!Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition))
+            if (!Util.IsZeroVector(destination - m_controller.AbsolutePosition))
             {
                 walkTo(destination);
                 State = BotState.Walking;
@@ -289,9 +373,9 @@ namespace Aurora.BotManager
         }
 
         // Makes the bot fly to the specified destination
-        private void FlyTo(Vector3 destination)
+        public void FlyTo(Vector3 destination)
         {
-            if (Util.IsZeroVector(destination - m_scenePresence.AbsolutePosition) == false)
+            if (Util.IsZeroVector(destination - m_controller.AbsolutePosition) == false)
             {
                 flyTo(destination);
                 State = BotState.Flying;
@@ -301,40 +385,23 @@ namespace Aurora.BotManager
             {
                 m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
-                OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+                m_controller.OnBotAgentUpdate(Vector3.Zero, m_movementFlag, m_bodyDirection);
                 m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
             }
-        }
-
-        // Makes the bot fly to the specified destination
-        private void StopMoving(bool fly, bool clearPath)
-        {
-            State = BotState.Idle;
-            //Clear out any nodes
-            if (clearPath)
-                m_nodeGraph.Clear();
-            //Send the stop message
-            m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
-            if (fly)
-                m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
-            OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
-            m_scenePresence.CollisionPlane = Vector4.UnitW;
-            if (m_scenePresence.PhysicsActor != null)
-                m_scenePresence.PhysicsActor.ForceSetVelocity(Vector3.Zero);
         }
 
         private void RotateTo(Vector3 destination)
         {
             Vector3 bot_forward = new Vector3(1, 0, 0);
-            if (destination - m_scenePresence.AbsolutePosition != Vector3.Zero)
+            if (destination - m_controller.AbsolutePosition != Vector3.Zero)
             {
-                Vector3 bot_toward = Util.GetNormalizedVector(destination - m_scenePresence.AbsolutePosition);
+                Vector3 bot_toward = Util.GetNormalizedVector(destination - m_controller.AbsolutePosition);
                 Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
                 m_bodyDirection = rot_result;
             }
             m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
-            OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+            m_controller.OnBotAgentUpdate(Vector3.Zero, m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
         }
 
@@ -369,12 +436,12 @@ namespace Aurora.BotManager
         private void walkTo(Vector3 pos)
         {
             Vector3 bot_forward = new Vector3(2, 0, 0);
-            Vector3 bot_toward;
-            if (pos - m_scenePresence.AbsolutePosition != Vector3.Zero)
+            Vector3 bot_toward = Vector3.Zero;
+            if (pos - m_controller.AbsolutePosition != Vector3.Zero)
             {
                 try
                 {
-                    bot_toward = Util.GetNormalizedVector(pos - m_scenePresence.AbsolutePosition);
+                    bot_toward = Util.GetNormalizedVector(pos - m_controller.AbsolutePosition);
                     Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
                     m_bodyDirection = rot_result;
                 }
@@ -384,10 +451,10 @@ namespace Aurora.BotManager
             }
             m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
 
-            if (m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp)
-                OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+            if (m_controller.CanMove)
+                m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
             else
-                OnBotAgentUpdate((uint) AgentManager.ControlFlags.AGENT_CONTROL_STOP, Quaternion.Identity);
+                m_controller.OnBotAgentUpdate(Vector3.Zero, (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP, Quaternion.Identity);
 
             m_movementFlag = (uint) AgentManager.ControlFlags.NONE;
         }
@@ -398,12 +465,12 @@ namespace Aurora.BotManager
         /// <param name = "pos"></param>
         private void flyTo(Vector3 pos)
         {
-            Vector3 bot_forward = new Vector3(1, 0, 0);
-            if (pos - m_scenePresence.AbsolutePosition != Vector3.Zero)
+            Vector3 bot_forward = new Vector3(1, 0, 0), bot_toward = Vector3.Zero;
+            if (pos - m_controller.AbsolutePosition != Vector3.Zero)
             {
                 try
                 {
-                    Vector3 bot_toward = Util.GetNormalizedVector(pos - m_scenePresence.AbsolutePosition);
+                    bot_toward = Util.GetNormalizedVector(pos - m_controller.AbsolutePosition);
                     Quaternion rot_result = llRotBetween(bot_forward, bot_toward);
                     m_bodyDirection = rot_result;
                 }
@@ -414,23 +481,23 @@ namespace Aurora.BotManager
 
             m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
-            Vector3 diffPos = pos - m_scenePresence.AbsolutePosition;
+            Vector3 diffPos = pos - m_controller.AbsolutePosition;
             if (Math.Abs(diffPos.X) > 1.5 || Math.Abs(diffPos.Y) > 1.5)
             {
                 m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS;
             }
 
-            if (m_scenePresence.AbsolutePosition.Z < pos.Z - 1)
+            if (m_controller.AbsolutePosition.Z < pos.Z - 1)
             {
                 m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_POS;
             }
-            else if (m_scenePresence.AbsolutePosition.Z > pos.Z + 1)
+            else if (m_controller.AbsolutePosition.Z > pos.Z + 1)
             {
                 m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
             }
 
-            if (m_scenePresence.AllowMovement && !m_scenePresence.Frozen && !m_scenePresence.FallenStandUp)
-                OnBotAgentUpdate(m_movementFlag, m_bodyDirection);
+            if (m_controller.CanMove)
+                m_controller.OnBotAgentUpdate(bot_toward, m_movementFlag, m_bodyDirection);
             m_movementFlag = (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY;
         }
 
@@ -451,7 +518,7 @@ namespace Aurora.BotManager
             {
                 if (!entity.IsAttachment)
                 {
-                    if (entity.Scale.Z > m_scenePresence.PhysicsActor.Size.Z) return true;
+                    if (entity.Scale.Z > m_controller.PhysicsActor.Size.Z) return true;
                 }
             }
             return false;
@@ -467,7 +534,7 @@ namespace Aurora.BotManager
             Vector3 endvector = new Vector3(end.X, end.Y, end.Z);
 
             List<ISceneChildEntity> entities = new List<ISceneChildEntity>();
-            List<ContactResult> results = m_scenePresence.Scene.PhysicsScene.RaycastWorld(startvector, dir, dir.Length(),
+            List<ContactResult> results = m_controller.GetScene().PhysicsScene.RaycastWorld(startvector, dir, dir.Length(),
                                                                                           5);
 
             double distance = Util.GetDistanceTo(startvector, endvector);
@@ -477,7 +544,7 @@ namespace Aurora.BotManager
 #if (!ISWIN)
             foreach (ContactResult result in results)
             {
-                ISceneChildEntity child = m_scenePresence.Scene.GetSceneObjectPart(result.ConsumerID);
+                ISceneChildEntity child = m_controller.GetScene().GetSceneObjectPart(result.ConsumerID);
                 if (!entities.Contains(child))
                 {
                     entities.Add(child);
@@ -507,7 +574,7 @@ namespace Aurora.BotManager
         public void DisableWalk()
         {
             ShouldFly = true;
-            m_scenePresence.ForceFly = true;
+            m_controller.ForceFly = true;
             m_closeToPoint = 1.5f;
         }
 
@@ -518,7 +585,7 @@ namespace Aurora.BotManager
         public void EnableWalk()
         {
             ShouldFly = false;
-            m_scenePresence.ForceFly = false;
+            m_controller.ForceFly = false;
             m_closeToPoint = 1;
         }
 
@@ -529,7 +596,7 @@ namespace Aurora.BotManager
         private void frame_Elapsed(object sender, ElapsedEventArgs e)
         {
             m_frames.Stop();
-            if (m_scenePresence == null)
+            if (m_controller == null)
                 return;
 
             m_frame++;
@@ -547,41 +614,44 @@ namespace Aurora.BotManager
 
         #region Get next destination / Pause/Resume movement
 
-        private void GetNextDestination()
+        public bool ForceCloseToPoint = false;
+
+        public void GetNextDestination()
         {
             //Fire the move event
             EventManager.FireGenericEventHandler("Move", null);
 
+            if (m_controller == null || m_controller.PhysicsActor == null)
+                return;
             if (m_paused)
             {
-                StopMoving(lastFlying, false);
+                m_controller.StopMoving(lastFlying, false);
                 return;
             }
-            if (m_scenePresence == null || m_scenePresence.PhysicsActor == null)
-                return;
 
             Vector3 pos;
             TravelMode state;
             bool teleport;
-            m_closeToPoint = m_scenePresence.PhysicsActor.Flying ? 1.5f : 1.0f;
-            if (m_nodeGraph.GetNextPosition(m_scenePresence.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
+            if(!ForceCloseToPoint)
+                m_closeToPoint = m_controller.PhysicsActor.Flying ? 1.5f : 1.0f;
+            if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
                                             out teleport))
             {
                 if (state == TravelMode.Fly)
                     FlyTo(pos);
                 else if (state == TravelMode.Run)
                 {
-                    m_scenePresence.SetAlwaysRun = true;
+                    m_controller.SetAlwaysRun = true;
                     WalkTo(pos);
                 }
                 else if (state == TravelMode.Walk)
                 {
-                    m_scenePresence.SetAlwaysRun = false;
+                    m_controller.SetAlwaysRun = false;
                     WalkTo(pos);
                 }
                 else if (state == TravelMode.Teleport)
                 {
-                    m_scenePresence.Teleport(pos);
+                    m_controller.Teleport(pos);
                     m_nodeGraph.CurrentPos++;
                 }
                 else if (state == TravelMode.TriggerHereEvent)
@@ -590,7 +660,7 @@ namespace Aurora.BotManager
                 }
             }
             else
-                StopMoving(lastFlying, true);
+                m_controller.StopMoving(lastFlying, true);
         }
 
         public void PauseMovement()
@@ -647,6 +717,8 @@ namespace Aurora.BotManager
         #region Following declares
 
         public IScenePresence FollowSP;
+        public Vector3 FollowOffset;
+        public bool FollowRequiresLOS = false;
         public UUID FollowUUID = UUID.Zero;
         private float m_StopFollowDistance = 2f;
         private float m_StartFollowDistance = 3f;
@@ -677,15 +749,15 @@ namespace Aurora.BotManager
 
         #region Interface members
 
-        public void FollowAvatar(string avatarName, float startFollowDistance, float stopFollowDistance)
+        public void FollowAvatar(string avatarName, float startFollowDistance, float stopFollowDistance, Vector3 offsetFromUser, bool requireLOS)
         {
-            m_scenePresence.Scene.TryGetAvatarByName(avatarName, out FollowSP);
+            m_controller.GetScene().TryGetAvatarByName(avatarName, out FollowSP);
             if (FollowSP == null)
             {
                 //Try by UUID then
                 try
                 {
-                    m_scenePresence.Scene.TryGetScenePresence(UUID.Parse(avatarName), out FollowSP);
+                    m_controller.GetScene().TryGetScenePresence(UUID.Parse(avatarName), out FollowSP);
                 }
                 catch
                 {
@@ -693,14 +765,16 @@ namespace Aurora.BotManager
             }
             if (FollowSP == null || FollowSP.IsChildAgent)
             {
-                MainConsole.Instance.Warn("Could not find avatar " + avatarName + " for bot " + Name + " to follow");
+                MainConsole.Instance.Warn("Could not find avatar " + avatarName + " for bot " + m_controller.Name + " to follow");
                 return;
             }
+            FollowRequiresLOS = requireLOS;
             FollowSP.PhysicsActor.OnRequestTerseUpdate += EventManager_OnClientMovement;
             FollowUUID = FollowSP.UUID;
+            FollowOffset = offsetFromUser;
             EventManager.RegisterEventHandler("Update", FollowingUpdate);
             EventManager.RegisterEventHandler("Move", FollowingMove);
-            m_scenePresence.StandUp(); //Can't follow if sitting
+            m_controller.StandUp(); //Can't follow if sitting
             StartFollowDistance = startFollowDistance;
             StopFollowDistance = stopFollowDistance;
         }
@@ -730,12 +804,12 @@ namespace Aurora.BotManager
             if (FollowSP == null)
                 return null;
             //Check to see whether we are close to our avatar, and fire the event if needed
-            Vector3 targetPos = FollowSP.AbsolutePosition;
-            Vector3 currentPos2 = m_scenePresence.AbsolutePosition;
+            Vector3 targetPos = FollowSP.AbsolutePosition + FollowOffset;
+            Vector3 currentPos2 = m_controller.AbsolutePosition;
             double distance = Util.GetDistanceTo(targetPos, currentPos2);
             float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
             //Fix how we are running
-            m_scenePresence.SetAlwaysRun = FollowSP.SetAlwaysRun;
+            m_controller.SetAlwaysRun = FollowSP.SetAlwaysRun;
             if (distance < closeToPoint)
             {
                 //Fire our event once
@@ -743,11 +817,11 @@ namespace Aurora.BotManager
                 {
                     EventManager.FireGenericEventHandler("ToAvatar", null);
                     //Fix the animation
-                    m_scenePresence.Animator.UpdateMovementAnimations(false);
+                    m_controller.UpdateMovementAnimations(false);
                 }
                 m_toAvatar = true;
                 bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
-                StopMoving(fly, true);
+                m_controller.StopMoving(fly, true);
                 return null;
             }
             if (distance > m_followLoseAvatarDistance)
@@ -757,7 +831,7 @@ namespace Aurora.BotManager
                 {
                     EventManager.FireGenericEventHandler("LostAvatar", null);
                     //We stopped, fix the animation
-                    m_scenePresence.Animator.UpdateMovementAnimations(false);
+                    m_controller.UpdateMovementAnimations(false);
                 }
                 m_lostAvatar = true;
                 m_paused = true;
@@ -779,19 +853,32 @@ namespace Aurora.BotManager
         {
             // FOLLOW an avatar - this is looking for an avatar UUID so wont follow a prim here  - yet
             //Call this each iteration so that if the av leaves, we don't get stuck following a null person
-            FollowSP = m_scenePresence.Scene.GetScenePresence(FollowUUID);
+            FollowSP = m_controller.GetScene().GetScenePresence(FollowUUID);
             //If its still null, the person doesn't exist, cancel the follow and return
             if (FollowSP == null)
                 return;
 
-            Vector3 targetPos = FollowSP.AbsolutePosition;
-            Vector3 currentPos2 = m_scenePresence.AbsolutePosition;
+            Vector3 targetPos = FollowSP.AbsolutePosition + FollowOffset;
+            Vector3 currentPos2 = m_controller.AbsolutePosition;
 
             resolution = 3;
             double distance = Util.GetDistanceTo(targetPos, currentPos2);
-            List<ISceneChildEntity> raycastEntities = llCastRay(m_scenePresence.AbsolutePosition,
+            List<ISceneChildEntity> raycastEntities = llCastRay(m_controller.AbsolutePosition,
                                                                 FollowSP.AbsolutePosition);
             float closeToPoint = m_toAvatar ? StartFollowDistance : StopFollowDistance;
+            if (FollowRequiresLOS && raycastEntities.Count > 0)
+            {
+                //Lost the avatar, fire the event
+                if (!m_lostAvatar)
+                {
+                    EventManager.FireGenericEventHandler("LostAvatar", null);
+                    //We stopped, fix the animation
+                    m_controller.UpdateMovementAnimations(false);
+                }
+                m_lostAvatar = true;
+                m_paused = true;
+                return;
+            }
             if (distance > 10) //Greater than 10 meters, give up
             {
                 //Try direct then, since it is way out of range
@@ -804,10 +891,10 @@ namespace Aurora.BotManager
                 //If we were having to fly to here, stop flying
                 if (jumpTry > 0)
                 {
-                    m_scenePresence.PhysicsActor.Flying = false;
-                    walkTo(m_scenePresence.AbsolutePosition);
+                    m_controller.PhysicsActor.Flying = false;
+                    walkTo(m_controller.AbsolutePosition);
                     //Fix the animation from flying > walking
-                    m_scenePresence.Animator.UpdateMovementAnimations(false);
+                    m_controller.UpdateMovementAnimations(false);
                 }
                 jumpTry = 0;
             }
@@ -829,11 +916,11 @@ namespace Aurora.BotManager
 
         private void DirectFollowing()
         {
-            if (m_scenePresence == null)
+            if (m_controller == null)
                 return;
-            Vector3 diffAbsPos = FollowSP.AbsolutePosition - m_scenePresence.AbsolutePosition;
-            Vector3 targetPos = FollowSP.AbsolutePosition;
-            Vector3 ourPos = m_scenePresence.AbsolutePosition;
+            Vector3 diffAbsPos = (FollowSP.AbsolutePosition + FollowOffset) - m_controller.AbsolutePosition;
+            Vector3 targetPos = FollowSP.AbsolutePosition + FollowOffset;
+            Vector3 ourPos = m_controller.AbsolutePosition;
             bool fly = FollowSP.PhysicsActor == null ? ShouldFly : FollowSP.PhysicsActor.Flying;
             if (!fly && (diffAbsPos.Z > 0.25 || jumpTry > 5))
             {
@@ -852,7 +939,7 @@ namespace Aurora.BotManager
                     }
                     else if (m_UseJumpDecisionTree)
                     {
-                        if (!JumpDecisionTree(m_scenePresence.AbsolutePosition, targetPos))
+                        if (!JumpDecisionTree(m_controller.AbsolutePosition, targetPos))
                         {
                             jumpTry--;
                             targetPos.Z = ourPos.Z + 0.15f;
@@ -923,8 +1010,8 @@ namespace Aurora.BotManager
 
         private bool BestFitPathFollowing(List<ISceneChildEntity> raycastEntities)
         {
-            Vector3 targetPos = FollowSP.AbsolutePosition;
-            Vector3 currentPos2 = m_scenePresence.AbsolutePosition;
+            Vector3 targetPos = FollowSP.AbsolutePosition + FollowOffset;
+            Vector3 currentPos2 = m_controller.AbsolutePosition;
 
             ISceneEntity[] entities = new ISceneEntity[raycastEntities.Count];
             int ii = 0;
@@ -1023,7 +1110,7 @@ namespace Aurora.BotManager
                         }
                         else if (m_UseJumpDecisionTree)
                         {
-                            if (!JumpDecisionTree(m_scenePresence.AbsolutePosition, targetPos))
+                            if (!JumpDecisionTree(m_controller.AbsolutePosition, targetPos))
                             {
                                 jumpTry--;
                                 targetPos.Z = nextPos.Z + 0.15f;
@@ -1102,40 +1189,40 @@ namespace Aurora.BotManager
 
         private void CleanUpPos(ISceneChildEntity[] raycastEntities, ISceneEntity[] entites, ref Vector3 pos)
         {
-            List<ISceneChildEntity> childEntities = llCastRay(m_scenePresence.AbsolutePosition, pos);
+            List<ISceneChildEntity> childEntities = llCastRay(m_controller.AbsolutePosition, pos);
             childEntities.AddRange(raycastEntities); //Add all of the ones that are in between us and the avatar as well
             int restartNum = 0;
             restart:
             bool needsRestart = false;
             foreach (ISceneChildEntity entity in childEntities)
             {
-                if (entity.AbsolutePosition.Z < m_scenePresence.AbsolutePosition.Z + 2 &&
-                    entity.AbsolutePosition.Z > m_scenePresence.AbsolutePosition.Z - 2)
+                if (entity.AbsolutePosition.Z < m_controller.AbsolutePosition.Z + 2 &&
+                    entity.AbsolutePosition.Z > m_controller.AbsolutePosition.Z - 2)
                 {
                     //If this position is inside an entity + its size + avatar size, move it out!
                     float sizeXPlus = (entity.AbsolutePosition.X + (entity.Scale.X/2) +
-                                       (m_scenePresence.PhysicsActor.Size.X/2));
+                                       (m_controller.PhysicsActor.Size.X/2));
                     float sizeXNeg = (entity.AbsolutePosition.X - (entity.Scale.X/2) -
-                                      (m_scenePresence.PhysicsActor.Size.X/2));
+                                      (m_controller.PhysicsActor.Size.X/2));
                     float sizeYPlus = (entity.AbsolutePosition.Y + (entity.Scale.Y/2) +
-                                       (m_scenePresence.PhysicsActor.Size.Y/2));
+                                       (m_controller.PhysicsActor.Size.Y/2));
                     float sizeYNeg = (entity.AbsolutePosition.Y - (entity.Scale.Y/2) -
-                                      (m_scenePresence.PhysicsActor.Size.Y/2));
+                                      (m_controller.PhysicsActor.Size.Y/2));
 
                     if (pos.X < sizeXPlus && pos.X > sizeXNeg)
                     {
                         if (pos.X < entity.AbsolutePosition.X)
-                            pos.X = sizeXNeg - (m_scenePresence.PhysicsActor.Size.X/2);
+                            pos.X = sizeXNeg - (m_controller.PhysicsActor.Size.X/2);
                         else
-                            pos.X = sizeXPlus + (m_scenePresence.PhysicsActor.Size.X/2);
+                            pos.X = sizeXPlus + (m_controller.PhysicsActor.Size.X/2);
                         needsRestart = true;
                     }
                     if (pos.Y < sizeYPlus && pos.Y > sizeYNeg)
                     {
                         if (pos.Y < entity.AbsolutePosition.Y)
-                            pos.Y = sizeYNeg - (m_scenePresence.PhysicsActor.Size.Y/2);
+                            pos.Y = sizeYNeg - (m_controller.PhysicsActor.Size.Y/2);
                         else
-                            pos.Y = sizeYPlus + (m_scenePresence.PhysicsActor.Size.Y/2);
+                            pos.Y = sizeYPlus + (m_controller.PhysicsActor.Size.Y/2);
                         needsRestart = true;
                     }
                 }
@@ -1185,7 +1272,7 @@ namespace Aurora.BotManager
 
             for (int i = 0; i < sigPos.Length; i++)
             {
-                double val = Util.GetDistanceTo(m_scenePresence.AbsolutePosition, sigPos[i]);
+                double val = Util.GetDistanceTo(m_controller.AbsolutePosition, sigPos[i]);
                 if (closestDistance == 0 || closestDistance > val)
                 {
                     closestDistance = val;
@@ -1222,7 +1309,7 @@ namespace Aurora.BotManager
                 m_nodeGraph.Clear();
 
                 Vector3 targetPos = m_significantAvatarPositions[currentPos + 1];
-                Vector3 diffAbsPos = targetPos - m_scenePresence.AbsolutePosition;
+                Vector3 diffAbsPos = targetPos - m_controller.AbsolutePosition;
                 if (!fly && (diffAbsPos.Z < -0.25 || jumpTry > 5))
                 {
                     if (jumpTry > 5 || diffAbsPos.Z < -3)
@@ -1236,14 +1323,14 @@ namespace Aurora.BotManager
                         if (!m_allowJump)
                         {
                             jumpTry--;
-                            targetPos.Z = m_scenePresence.AbsolutePosition.Z + 0.15f;
+                            targetPos.Z = m_controller.AbsolutePosition.Z + 0.15f;
                         }
                         else if (m_UseJumpDecisionTree)
                         {
-                            if (!JumpDecisionTree(m_scenePresence.AbsolutePosition, targetPos))
+                            if (!JumpDecisionTree(m_controller.AbsolutePosition, targetPos))
                             {
                                 jumpTry--;
-                                targetPos.Z = m_scenePresence.AbsolutePosition.Z + 0.15f;
+                                targetPos.Z = m_controller.AbsolutePosition.Z + 0.15f;
                             }
                             else
                             {
@@ -1306,12 +1393,12 @@ namespace Aurora.BotManager
         public object DistanceFollowUpdate(string funct, object param)
         {
             List<FollowingEventHolder> events = (from kvp in m_followDistance
-                                                 let sp = m_scene.GetScenePresence(kvp.Key)
+                                                 let sp = m_controller.GetScene().GetScenePresence(kvp.Key)
                                                  where sp != null
-                                                 where Util.DistanceLessThan(sp.AbsolutePosition, m_scenePresence.AbsolutePosition, kvp.Value)
+                                                 where Util.DistanceLessThan(sp.AbsolutePosition, m_controller.AbsolutePosition, kvp.Value)
                                                  select new FollowingEventHolder
                                                             {
-                                                                Event = m_followDistanceEvents[kvp.Key], AvID = kvp.Key, BotID = m_scenePresence.UUID
+                                                                Event = m_followDistanceEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
                                                             }).ToList();
             foreach (FollowingEventHolder h in events)
             {
@@ -1343,14 +1430,14 @@ namespace Aurora.BotManager
         public object LineOfSightUpdate(string funct, object param)
         {
             List<FollowingEventHolder> events = (from kvp in m_LineOfSight
-                                                 let sp = m_scene.GetScenePresence(kvp.Key)
+                                                 let sp = m_controller.GetScene().GetScenePresence(kvp.Key)
                                                  where sp != null
-                                                 let entities = llCastRay(sp.AbsolutePosition, m_scenePresence.AbsolutePosition)
+                                                 let entities = llCastRay(sp.AbsolutePosition, m_controller.AbsolutePosition)
                                                  where entities.Count == 0
-                                                 where m_scenePresence.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key])
+                                                 where m_controller.AbsolutePosition.ApproxEquals(sp.AbsolutePosition, m_LineOfSight[kvp.Key])
                                                  select new FollowingEventHolder
                                                             {
-                                                                Event = m_LineOfSightEvents[kvp.Key], AvID = kvp.Key, BotID = m_scenePresence.UUID
+                                                                Event = m_LineOfSightEvents[kvp.Key], AvID = kvp.Key, BotID = m_controller.UUID
                                                             }).ToList();
             foreach (FollowingEventHolder h in events)
             {
@@ -1361,76 +1448,90 @@ namespace Aurora.BotManager
 
         #endregion
 
-        #region Chat interface
+        #region Chat
 
         public void SendChatMessage(int sayType, string message, int channel)
         {
-            if (m_scenePresence == null || m_scene == null)
-                return;
-            OSChatMessage args = new OSChatMessage
-                                     {
-                                         Message = message,
-                                         Channel = channel,
-                                         From = FirstName + " " + LastName,
-                                         Position = m_scenePresence.AbsolutePosition,
-                                         Sender = this,
-                                         Type = (ChatTypeEnum) sayType,
-                                         Scene = m_scene
-                                     };
+            m_controller.SendChatMessage(sayType, message, channel);
+        }
 
-            OnBotChatFromViewer(this, args);
+        public void SendInstantMessage(GridInstantMessage gridInstantMessage)
+        {
+            m_controller.SendInstantMessage(gridInstantMessage);
         }
 
         #endregion
+    }
 
-        #region Useful IClientAPI members
+    public class BotClientAPI : IClientAPI
+    {
+        public readonly AgentCircuitData m_circuitData;
+        public readonly UUID m_myID = UUID.Random();
+        public readonly IScene m_scene;
+        private static UInt32 UniqueId = 1;
+        private BotAvatarController m_controller;
 
-        public void SendInstantMessage(GridInstantMessage im)
+        // creates new bot on the default location
+        public BotClientAPI(IScene scene, AgentCircuitData data)
         {
-            if (im.dialog == (byte) InstantMessageDialog.GodLikeRequestTeleport ||
-                im.dialog == (byte) InstantMessageDialog.RequestTeleport)
-            {
-                if (m_avatarCreatorID == im.fromAgentID || this.Scene.Permissions.IsGod(im.fromAgentID))
-                {
-                    ulong handle = 0;
-                    uint x = 128;
-                    uint y = 128;
-                    uint z = 70;
+            RegisterInterfaces();
 
-                    Util.ParseFakeParcelID(im.imSessionID, out handle, out x, out y, out z);
-                    m_scenePresence.Teleport(new Vector3(x, y, z));
-                }
-            }
+            m_circuitData = data;
+            m_scene = scene;
+
+            m_circuitCode = UniqueId;
+
+            UniqueId++;
         }
 
-        private void OnBotChatFromViewer(IClientAPI sender, OSChatMessage e)
+        public void Initialize(BotAvatarController controller)
         {
-            OnChatFromClient(sender, e);
+            m_controller = controller;
         }
 
-        private void OnBotAgentUpdate(uint controlFlag, Quaternion bodyRotation)
+        public string m_firstName = "";
+        public string m_lastName = "";
+        public readonly Vector3 DEFAULT_START_POSITION = new Vector3(128, 128, 128);
+        public Vector3 StartPos
         {
-            if (OnAgentUpdate != null)
-            {
-                AgentUpdateArgs pack = new AgentUpdateArgs {ControlFlags = controlFlag, BodyRotation = bodyRotation};
-                OnAgentUpdate(this, pack);
-            }
+            get { return DEFAULT_START_POSITION; }
+            set { }
         }
 
-        private void OnBotLogout()
+        public UUID AgentId
         {
-            if (OnLogout != null)
-            {
-                OnLogout(this);
-            }
+            get { return m_myID; }
         }
 
-        private void OnBotConnectionClosed()
+        public string FirstName
         {
-            OnConnectionClosed(this);
+            get { return m_firstName; }
+            set { m_firstName = value; }
         }
 
-        #endregion
+        public string LastName
+        {
+            get { return m_lastName; }
+            set { m_lastName = value; }
+        }
+
+        private uint m_circuitCode;
+
+        public uint CircuitCode
+        {
+            get { return m_circuitCode; }
+            set { m_circuitCode = value; }
+        }
+
+        public String Name
+        {
+            get { return FirstName + " " + LastName; }
+        }
+
+        public IScene Scene
+        {
+            get { return m_scene; }
+        }
 
         #region IClientAPI
 
@@ -1440,17 +1541,17 @@ namespace Aurora.BotManager
 
         public T Get<T>()
         {
-            return (T) m_clientInterfaces[typeof (T)];
+            return (T)m_clientInterfaces[typeof(T)];
         }
 
         public bool TryGet<T>(out T iface)
         {
-            if (m_clientInterfaces.ContainsKey(typeof (T)))
+            if (m_clientInterfaces.ContainsKey(typeof(T)))
             {
-                iface = (T) m_clientInterfaces[typeof (T)];
+                iface = (T)m_clientInterfaces[typeof(T)];
                 return true;
             }
-            iface = default (T);
+            iface = default(T);
             return false;
         }
 
@@ -1462,9 +1563,9 @@ namespace Aurora.BotManager
         {
             lock (m_clientInterfaces)
             {
-                if (!m_clientInterfaces.ContainsKey(typeof (T)))
+                if (!m_clientInterfaces.ContainsKey(typeof(T)))
                 {
-                    m_clientInterfaces.Add(typeof (T), iface);
+                    m_clientInterfaces.Add(typeof(T), iface);
                 }
             }
         }
@@ -1821,7 +1922,7 @@ namespace Aurora.BotManager
 
         public IPEndPoint RemoteEndPoint
         {
-            get { return new IPEndPoint(IPAddress.Loopback, (ushort) m_circuitCode); }
+            get { return new IPEndPoint(IPAddress.Loopback, (ushort)m_circuitCode); }
         }
 
         public void SetDebugPacketLevel(int newDebug)
@@ -1835,6 +1936,30 @@ namespace Aurora.BotManager
         public void Stop()
         {
             Close(true);
+        }
+
+        public void Close(bool p)
+        {
+            //raiseevent on the packet server to Shutdown the circuit
+            if (OnLogout != null)
+                OnLogout(this);
+            if(OnConnectionClosed != null)
+                OnConnectionClosed(this);
+        }
+
+        public void ForceSendOnAgentUpdate(IClientAPI client, AgentUpdateArgs args)
+        {
+            OnAgentUpdate(client, args);
+        }
+
+        public void OnForceChatFromViewer(IClientAPI sender, OSChatMessage e)
+        {
+            OnChatFromClient(sender, e);
+        }
+
+        public void SendInstantMessage(GridInstantMessage im)
+        {
+            m_controller.SendInstantMessage(im);
         }
 
         public void Kick(string message)

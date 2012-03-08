@@ -2144,12 +2144,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public DateTime llSetPos(LSL_Vector pos)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
-            
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
 
-            SetPos(m_host, pos);
+
+            SetPos(m_host, pos, true);
 
             return PScriptSleep(200);
+        }
+
+        public LSL_Integer llSetRegionPos(LSL_Vector pos)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return ScriptBaseClass.FALSE;
+
+
+            SetPos(m_host, pos, false);
+
+            return ScriptBaseClass.TRUE;
         }
 
         // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
@@ -2161,7 +2171,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return end;
         }
 
-        protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos)
+        protected void SetPos(ISceneChildEntity part, LSL_Vector targetPos, bool checkPos)
         {
             // Capped movemment if distance > 10m (http://wiki.secondlife.com/wiki/LlSetPos)
             LSL_Vector currentPos = GetPartLocalPos(part);
@@ -2181,12 +2191,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (ground != 0 && (targetPos.z < ground) && disable_underground_movement)
                         targetPos.z = ground;
                 }
-                LSL_Vector real_vec = SetPosAdjust(currentPos, targetPos);
+                LSL_Vector real_vec = checkPos ? SetPosAdjust(currentPos, targetPos) : targetPos;
                 parent.UpdateGroupPosition(new Vector3((float)real_vec.x, (float)real_vec.y, (float)real_vec.z), true);
             }
             else
             {
-                LSL_Vector rel_vec = SetPosAdjust(currentPos, targetPos);
+                LSL_Vector rel_vec = checkPos ? SetPosAdjust(currentPos, targetPos) : targetPos;
                 part.FixOffsetPosition((new Vector3((float)rel_vec.x, (float)rel_vec.y, (float)rel_vec.z)), true);
             }
         }
@@ -3652,7 +3662,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Float llGetMassMKS()
         {
-            return llGetMass();
+            return llGetMass() * 100;
         }
 
         public LSL_Float llGetMass()
@@ -4810,7 +4820,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Vector3 av3 = new Vector3(Util.Clip((float)color.x, 0.0f, 1.0f),
                                       Util.Clip((float)color.y, 0.0f, 1.0f),
                                       Util.Clip((float)color.z, 0.0f, 1.0f));
-            m_host.SetText(text, av3, Util.Clip((float)alpha, 0.0f, 1.0f));
+            m_host.SetText(text.Length > 254 ? text.Remove(254) : text, av3, Util.Clip((float)alpha, 0.0f, 1.0f));
             //m_host.ParentGroup.HasGroupChanged = true;
             //m_host.ParentGroup.ScheduleGroupForFullUpdate();
         }
@@ -8085,7 +8095,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     v = rules.GetVector3Item(idx++);
                     if(part is ISceneChildEntity)
-                        SetPos(part as ISceneChildEntity, v);
+                        SetPos(part as ISceneChildEntity, v, true);
                     else if(part is IScenePresence)
                     {
                         (part as IScenePresence).OffsetPosition = new Vector3((float)v.x, (float)v.y, (float)v.z);
@@ -12238,6 +12248,161 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     new DetectParams[0]), EventPriority.FirstStart);
 
             return transferID;
+        }
+
+
+        public void llCreateCharacter(LSL_List options)
+        {
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+            {
+                botManager.CreateCharacter(m_host.ParentEntity.UUID, World);
+                llUpdateCharacter(options);
+            }
+        }
+
+        public void llUpdateCharacter(LSL_List options)
+        {
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+            {
+                IBotController controller = botManager.GetCharacterManager(m_host.ParentEntity.UUID);
+                for(int i = 0; i < options.Length; i += 2)
+                {
+                    LSL_Types.LSLInteger opt = options.GetLSLIntegerItem(i);
+                    LSL_Types.LSLFloat value = options.GetLSLFloatItem(i+1);
+                    if (opt == ScriptBaseClass.CHARACTER_DESIRED_SPEED)
+                        controller.SetSpeedModifier((float)value.value);
+                    else if (opt == ScriptBaseClass.CHARACTER_RADIUS)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_LENGTH)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_ORIENTATION)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.TRAVERSAL_TYPE)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_TYPE)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_AVOIDANCE_MODE)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_MAX_ACCEL)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_MAX_DECEL)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_MAX_ANGULAR_SPEED)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_MAX_ANGULAR_ACCEL)
+                    {
+                    }
+                    else if (opt == ScriptBaseClass.CHARACTER_TURN_SPEED_MULTIPLIER)
+                    {
+                    }
+                }
+            }
+        }
+
+        public void llDeleteCharacter()
+        {
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+                botManager.RemoveCharacter(m_host.ParentEntity.UUID);
+        }
+
+        public void llPursue(LSL_String target, LSL_List options)
+        {
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+            {
+                float fuzz = 2;
+                Vector3 offset = Vector3.Zero;
+                bool requireLOS = false;
+                bool intercept = false;//Not implemented
+                for (int i = 0; i < options.Length; i += 2)
+                {
+                    LSL_Types.LSLInteger opt = options.GetLSLIntegerItem(i);
+                    if (opt == ScriptBaseClass.PURSUIT_FUZZ_FACTOR)
+                        fuzz = (float)options.GetLSLFloatItem(i + 1).value;
+                    if (opt == ScriptBaseClass.PURSUIT_OFFSET)
+                        offset = options.GetVector3Item(i + 1).ToVector3();
+                    if (opt == ScriptBaseClass.REQUIRE_LINE_OF_SIGHT)
+                        requireLOS = options.GetLSLIntegerItem(i + 1) == 1;
+                    if (opt == ScriptBaseClass.PURSUIT_INTERCEPT)
+                        intercept = options.GetLSLIntegerItem(i + 1) == 1;
+                }
+                botManager.FollowAvatar(m_host.ParentEntity.UUID, target.m_string, fuzz, fuzz, requireLOS, offset, m_host.ParentEntity.OwnerID);
+            }
+        }
+
+        public void llEvade(LSL_String target, LSL_List options)
+        {
+            NotImplemented("llEvade");
+        }
+
+        public void llFleeFrom(LSL_Vector source, LSL_Float distance, LSL_List options)
+        {
+            NotImplemented("llFleeFrom");
+        }
+
+        public void llPatrolPoints(LSL_List patrolPoints, LSL_List options)
+        {
+            List<Vector3> positions = new List<Vector3>();
+            List<TravelMode> travelMode = new List<TravelMode>();
+            foreach(object pos in patrolPoints.Data)
+            {
+                LSL_Vector p = (LSL_Vector)pos;
+                if(p == null)
+                    continue;
+                positions.Add(p.ToVector3());
+                travelMode.Add(TravelMode.Walk);
+            }
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+                botManager.SetBotMap(m_host.ParentEntity.UUID, positions, travelMode, 1, m_host.ParentEntity.OwnerID);
+        }
+
+        public void llNavigateTo(LSL_Vector point, LSL_List options)
+        {
+            List<Vector3> positions = new List<Vector3>() { point.ToVector3() };
+            List<TravelMode> travelMode = new List<TravelMode>() { TravelMode.Walk };
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            int flags = 0;
+            if (options.Length > 0)
+                flags |= options.GetLSLIntegerItem(0);
+            if (botManager != null)
+                botManager.SetBotMap(m_host.ParentEntity.UUID, positions, travelMode, flags, m_host.ParentEntity.OwnerID);
+        }
+
+        public void llWanderWithin(LSL_Vector origin, LSL_Float distance, LSL_List options)
+        {
+            NotImplemented("llWanderWithin");
+        }
+
+        public LSL_List llGetClosestNavPoint(LSL_Vector point, LSL_List options)
+        {
+            Vector3 diff = new Vector3(0,0,0.1f) * (Vector3.RotationBetween(m_host.ParentEntity.AbsolutePosition, point.ToVector3()));
+            return new LSL_List(new LSL_Vector((m_host.ParentEntity.AbsolutePosition + diff)));
+        }
+
+        public void llExecCharacterCmd(LSL_Integer command, LSL_List options)
+        {
+            IBotManager botManager = World.RequestModuleInterface<IBotManager>();
+            if (botManager != null)
+            {
+                IBotController controller = botManager.GetCharacterManager(m_host.ParentEntity.UUID);
+                if (command == ScriptBaseClass.CHARACTER_CMD_JUMP)
+                    controller.Jump();
+                if(command == ScriptBaseClass.CHARACTER_CMD_STOP)
+                    controller.StopMoving(false, true);
+            }
         }
     }
 

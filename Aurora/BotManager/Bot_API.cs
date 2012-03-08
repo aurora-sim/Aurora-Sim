@@ -156,7 +156,7 @@ namespace Aurora.BotManager
                 return;
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                manager.FollowAvatar(UUID.Parse(bot), avatarName, (float) startFollowDistance, (float) endFollowDistance,
+                manager.FollowAvatar(UUID.Parse(bot), avatarName, (float)startFollowDistance, (float)endFollowDistance, false, Vector3.Zero,
                                      m_host.OwnerID);
         }
 

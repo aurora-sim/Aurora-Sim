@@ -56,7 +56,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected List<ISceneEntity> m_groups = new List<ISceneEntity>();
         protected bool m_hasShownFileBasedWarning;
         protected bool m_keepOldSave = true;
-        protected string m_loadAppenedFileName = "";
+        protected string m_loadAppendedFileName = "";
         protected string m_loadDirectory = "";
         protected bool m_loaded;
         protected string m_oldSaveDirectory = "Backups";
@@ -70,7 +70,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected bool m_displayNotSavingNotice = true;
         protected byte[] m_revertTerrain;
         protected byte[] m_revertWater;
-        protected string m_saveAppenedFileName = "";
+        protected string m_saveAppendedFileName = "";
         protected bool m_saveBackupChanges = true;
         protected bool m_saveBackups;
         protected bool m_saveChanges = true;
@@ -248,9 +248,9 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         public virtual void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource)
         {
-            if (File.Exists(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup"))
-                File.Move(m_saveDirectory + oldRegionName + m_saveAppenedFileName + ".abackup",
-                          m_saveDirectory + newRegionName + m_saveAppenedFileName + ".abackup");
+            if (File.Exists(m_saveDirectory + oldRegionName + m_saveAppendedFileName + ".abackup"))
+                File.Move(m_saveDirectory + oldRegionName + m_saveAppendedFileName + ".abackup",
+                          m_saveDirectory + newRegionName + m_saveAppendedFileName + ".abackup");
         }
 
         /// <summary>
@@ -289,8 +289,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             scene.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
             if (config != null)
             {
-                m_loadAppenedFileName = config.GetString("ApendedLoadFileName", m_loadAppenedFileName);
-                m_saveAppenedFileName = config.GetString("ApendedSaveFileName", m_saveAppenedFileName);
+                m_loadAppendedFileName = config.GetString("AppendedLoadFileName", m_loadAppendedFileName);
+                m_saveAppendedFileName = config.GetString("AppendedSaveFileName", m_saveAppendedFileName);
                 m_saveChanges = config.GetBoolean("SaveChanges", m_saveChanges);
                 m_timeBetweenSaves = config.GetInt("TimeBetweenSaves", m_timeBetweenSaves);
                 m_keepOldSave = config.GetBoolean("SavePreviousBackup", m_keepOldSave);
@@ -318,7 +318,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             scene.AuroraEventManager.RegisterEventHandler("Backup", AuroraEventManager_OnGenericEvent);
 
             m_scene = scene;
-            m_fileName = scene.RegionInfo.RegionName + m_loadAppenedFileName + ".abackup";
+            m_fileName = scene.RegionInfo.RegionName + m_loadAppendedFileName + ".abackup";
         }
 
         /// <summary>
@@ -435,8 +435,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
 
-            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving Backup for region " + m_scene.RegionInfo.RegionName);
-            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppenedFileName + ".abackup";
+            MainConsole.Instance.Info("[FileBasedSimulationData]: Saving backup for region " + m_scene.RegionInfo.RegionName);
+            string fileName = appendedFilePath + m_scene.RegionInfo.RegionName + m_saveAppendedFileName + ".abackup";
             if (File.Exists(fileName))
             {
                 //Do new style saving here!
@@ -609,7 +609,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                         Directory.CreateDirectory(m_oldSaveDirectory);
                     File.Copy(fileName + ".tmp",
                               Path.Combine(m_oldSaveDirectory,
-                                           m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppenedFileName +
+                                           m_scene.RegionInfo.RegionName + SerializeDateTime() + m_saveAppendedFileName +
                                            ".abackup"));
                 }
                 //Just remove the file
@@ -641,7 +641,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                         File.Copy(fileName + ".tmp",
                                   Path.Combine(m_oldSaveDirectory,
                                                m_scene.RegionInfo.RegionName + SerializeDateTime() +
-                                               m_saveAppenedFileName + ".abackup"));
+                                               m_saveAppendedFileName + ".abackup"));
                     }
                     //Just remove the file
                     File.Delete(fileName);

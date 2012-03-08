@@ -235,7 +235,7 @@ namespace Aurora.Modules.Inventory
             if (!m_scene.InventoryService.AddFolder(folder))
             {
                 MainConsole.Instance.WarnFormat(
-                     "[AGENT INVENTORY]: Failed to move create folder for user {0} {1}",
+                     "[AGENT INVENTORY]: Failed to create folder for user {0} {1}",
                      remoteClient.Name, remoteClient.AgentId);
             }
         }
@@ -970,10 +970,6 @@ namespace Aurora.Modules.Inventory
         /// <param name="checkPermissions"></param>
         protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
-            MainConsole.Instance.DebugFormat(
-                "[PRIM INVENTORY]: Adding item {0} from {1} to folder {2} for {3}",
-                itemId, part.Name, folderId, remoteClient.Name);
-
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
             if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
             {
