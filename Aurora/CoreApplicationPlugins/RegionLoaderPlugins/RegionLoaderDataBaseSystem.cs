@@ -61,7 +61,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
             {
-                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+                m_enabled = config.GetBoolean(GetType().Name + "_Enabled", m_enabled);
                 if (!m_enabled)
                     return;
                 if (MainConsole.Instance != null)
@@ -88,7 +88,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         {
             get
             {
-                return "RegionLoaderDataBaseSystem";
+                return "Database Plugin";
             }
         }
 

@@ -66,15 +66,17 @@ namespace Aurora.Framework
             if (moduleDir == "")
                 moduleDir = Util.BasePathCombine("");
             List<T> modules = new List<T>();
-            if (!firstLoad.Contains(moduleDir))
+            lock (firstLoad)
             {
-                DirectoryInfo dir = new DirectoryInfo(moduleDir);
-
-                #region blacklist
-
-                if (dllBlackList == null || dllBlackList.Count == 0)
+                if (!firstLoad.Contains(moduleDir))
                 {
-                    dllBlackList = new List<string>
+                    DirectoryInfo dir = new DirectoryInfo(moduleDir);
+
+                    #region blacklist
+
+                    if (dllBlackList == null || dllBlackList.Count == 0)
+                    {
+                        dllBlackList = new List<string>
                                        {
                                            Path.Combine(dir.FullName, "AsyncCtpLibrary.dll"),
                                            Path.Combine(dir.FullName, "NHibernate.ByteCode.Castle.dll"),
@@ -180,47 +182,48 @@ namespace Aurora.Framework
                                            Path.Combine(dir.FullName, "Warp3D.dll"),
                                            Path.Combine(dir.FullName, "zlib.net.dll")
                                        };
-                }
+                    }
 
-                #endregion
+                    #endregion
 
-                if (ALLOW_CACHE)
-                    LoadedDlls.Add(moduleDir, new List<Type>());
-                foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
-                {
-                    modules.AddRange(LoadModulesFromDLL<T>(moduleDir, fileInfo.FullName));
-                }
-                if (ALLOW_CACHE)
-                    firstLoad.Add(moduleDir);
-            }
-            else
-            {
-                try
-                {
-                    List<Type> loadedDllModules;
-                    LoadedDlls.TryGetValue(moduleDir, out loadedDllModules);
-                    foreach (Type pluginType in loadedDllModules)
+                    if (ALLOW_CACHE)
+                        LoadedDlls.Add(moduleDir, new List<Type>());
+                    foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
                     {
-                        try
+                        modules.AddRange(LoadModulesFromDLL<T>(moduleDir, fileInfo.FullName));
+                    }
+                    if (ALLOW_CACHE)
+                        firstLoad.Add(moduleDir);
+                }
+                else
+                {
+                    try
+                    {
+                        List<Type> loadedDllModules;
+                        LoadedDlls.TryGetValue(moduleDir, out loadedDllModules);
+                        foreach (Type pluginType in loadedDllModules)
                         {
-                            if (pluginType.IsPublic)
+                            try
                             {
-                                if (!pluginType.IsAbstract)
+                                if (pluginType.IsPublic)
                                 {
-                                    if (pluginType.GetInterface(typeof (T).Name) != null)
+                                    if (!pluginType.IsAbstract)
                                     {
-                                        modules.Add((T) Activator.CreateInstance(pluginType));
+                                        if (pluginType.GetInterface(typeof(T).Name) != null)
+                                        {
+                                            modules.Add((T)Activator.CreateInstance(pluginType));
+                                        }
                                     }
                                 }
                             }
-                        }
-                        catch (Exception)
-                        {
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
-                }
-                catch (Exception)
-                {
+                    catch (Exception)
+                    {
+                    }
                 }
             }
             return modules;

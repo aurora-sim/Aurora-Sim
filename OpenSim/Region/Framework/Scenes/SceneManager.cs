@@ -235,9 +235,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_OpenSimBase.RunStartupCommands();
 
-            // For now, start at the 'root' level by default
-            ChangeConsoleRegion(Scenes.Count == 1 ? Scenes[0].RegionInfo.RegionName : "root");
-
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
             MainConsole.Instance.InfoFormat ("[SceneManager]: All regions are started. This took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);

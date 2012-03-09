@@ -13,7 +13,12 @@ namespace OdeAPI
 
     public static class d
     {
+        #region Declares
+
         public static dReal Infinity = dReal.MaxValue;
+        public static object m_odeSetupLock = new object();
+
+        #endregion
 
         #region Flags and Enumerations
 
@@ -320,6 +325,8 @@ namespace OdeAPI
         }
 
         #endregion
+
+        #region Methods
 
         [DllImport("ode", EntryPoint = "dAllocateODEDataForThread"), SuppressUnmanagedCodeSecurity]
         public static extern int AllocateODEDataForThread(uint ODEInitFlags);
@@ -1828,19 +1835,28 @@ namespace OdeAPI
         [DllImport("ode", EntryPoint = "dWorldExportDIF"), SuppressUnmanagedCodeSecurity]
         public static extern void WorldExportDIF(IntPtr world, string filename, bool append, string prefix);
 
+        #endregion
+
+        #region Setup
+
         public static void SetODEFile()
         {
             try
             {
-                if (System.IO.File.Exists("ode.dll"))
-                    System.IO.File.Delete("ode.dll");
-                string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
-                System.IO.File.Copy(fileName, "ode.dll");
+                lock (m_odeSetupLock)
+                {
+                    if (System.IO.File.Exists("ode.dll"))
+                        System.IO.File.Delete("ode.dll");
+                    string fileName = System.IntPtr.Size == 4 ? "odex86.dll" : "odex64.dll";
+                    System.IO.File.Copy(fileName, "ode.dll");
+                }
             }
             catch (Exception ex)
             {
                 Aurora.Framework.MainConsole.Instance.Output("[ODE]: Failed to copy ODE dll file, may have issues with physics! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString());
             }
         }
+
+        #endregion
     }
 }

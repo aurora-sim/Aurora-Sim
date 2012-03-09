@@ -164,8 +164,8 @@ namespace Aurora.Framework
 
                 if (iniDirName != "" && Directory.Exists(iniDirName))
                 {
-                    MainConsole.Instance.InfoFormat("Searching folder {0} for config ini files",
-                                     iniDirName);
+                    Console.WriteLine(string.Format("Searching folder {0} for config ini files",
+                                     iniDirName));
 
                     string[] fileEntries = Directory.GetFiles(iniDirName);
 #if (!ISWIN)
@@ -234,13 +234,13 @@ namespace Aurora.Framework
             IConfigSource m_config = new IniConfigSource();
             IConfigSource m_fakeconfig = new IniConfigSource();
 
-            //MainConsole.Instance.Info("[Config]: Reading configuration settings");
+            //Console.WriteLine(string.Format("[Config]: Reading configuration settings"));
 
             if (sources.Count == 0)
             {
-                MainConsole.Instance.FatalFormat("[CONFIG]: Could not load any configuration");
-                MainConsole.Instance.FatalFormat("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
-                                  "?");
+                Console.WriteLine(string.Format("[CONFIG]: Could not load any configuration"));
+                Console.WriteLine(string.Format("[CONFIG]: Did you copy the " + defaultIniFile + ".example file to " + defaultIniFile +
+                                  "?"));
                 throw new NotSupportedException();
             }
 
@@ -273,8 +273,8 @@ namespace Aurora.Framework
 
             if (!iniFileExists)
             {
-                MainConsole.Instance.FatalFormat("[CONFIG]: Could not load any configuration");
-                MainConsole.Instance.FatalFormat("[CONFIG]: Configuration exists, but there was an error loading it!");
+                Console.WriteLine(string.Format("[CONFIG]: Could not load any configuration"));
+                Console.WriteLine(string.Format("[CONFIG]: Configuration exists, but there was an error loading it!"));
                 throw new NotSupportedException();
             }
             // Make sure command line options take precedence
@@ -467,7 +467,7 @@ namespace Aurora.Framework
             if (!IsUri(iniPath))
             {
                 if (showIniLoading)
-                    MainConsole.Instance.InfoFormat("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath));
+                    Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath)));
 
                 source.Merge(new IniConfigSource(iniPath, IniFileType.AuroraStyle));
                 if (inidbg)
@@ -478,7 +478,7 @@ namespace Aurora.Framework
             }
             else
             {
-                MainConsole.Instance.InfoFormat("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath);
+                Console.WriteLine(string.Format("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath));
 
                 // The ini file path is a http URI
                 // Try to read it
@@ -492,7 +492,7 @@ namespace Aurora.Framework
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.FatalFormat("[CONFIG]: Exception reading config from URI {0}\n" + e, iniPath);
+                    Console.WriteLine(string.Format("[CONFIG]: Exception reading config from URI {0}\n" + e, iniPath));
                     Environment.Exit(1);
                 }
             }
@@ -502,7 +502,7 @@ namespace Aurora.Framework
         private void WriteConfigFile(int i, IConfigSource m_config)
         {
             string m_fileName = "ConfigFileDump" + i + ".ini";
-            MainConsole.Instance.Info("Writing config dump file to " + m_fileName);
+            Console.WriteLine(string.Format("Writing config dump file to " + m_fileName));
             try
             {
                 //Add the user

@@ -438,7 +438,7 @@ namespace Aurora.Modules.Scripting
                 IConfig SMTPConfig;
                 if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
                 {
-                    MainConsole.Instance.InfoFormat("[SMTP] SMTP server not configured");
+                    //MainConsole.Instance.InfoFormat("[SMTP] SMTP server not configured");
                     m_Enabled = false;
                     return;
                 }

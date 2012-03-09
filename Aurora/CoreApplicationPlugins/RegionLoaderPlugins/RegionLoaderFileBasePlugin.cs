@@ -62,7 +62,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
             {
-                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+                m_enabled = config.GetBoolean(GetType().Name + "_Enabled", m_enabled);
                 if (!m_enabled)
                     return;
                 m_default = config.GetString("Default") == Name;
@@ -501,7 +501,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public string Name
         {
-            get { return "RegionLoaderFileSystem"; }
+            get { return "File Based Plugin"; }
         }
 
         public void Dispose()

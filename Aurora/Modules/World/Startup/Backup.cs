@@ -253,6 +253,7 @@ namespace Aurora.Modules.Startup
             {
                 LoadingPrims = true;
 
+                MainConsole.Instance.Info("[BackupModule]: Loading objects for " + m_scene.RegionInfo.RegionName);
                 List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene);
                 foreach (ISceneEntity group in PrimsFromDB)
                 {
@@ -299,7 +300,7 @@ namespace Aurora.Modules.Startup
                     }
                 }
                 LoadingPrims = false;
-                MainConsole.Instance.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " SceneObject(s)");
+                MainConsole.Instance.Info("[BackupModule]: Loaded " + PrimsFromDB.Count.ToString() + " object(s) in " + m_scene.RegionInfo.RegionName);
                 PrimsFromDB.Clear ();
             }
 

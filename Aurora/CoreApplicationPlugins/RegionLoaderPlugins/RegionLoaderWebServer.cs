@@ -45,7 +45,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         public string Name
         {
-            get { return "RegionLoaderWebServer"; }
+            get { return "Web Server Plugin"; }
         }
 
         public bool Enabled
@@ -63,7 +63,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             m_configSource = configSource;
             IConfig config = configSource.Configs["RegionStartup"];
             if (config != null)
-                m_enabled = config.GetBoolean(Name + "_Enabled", m_enabled);
+                m_enabled = config.GetBoolean(GetType().Name + "_Enabled", m_enabled);
             if (m_enabled)
                 openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }

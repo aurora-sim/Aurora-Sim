@@ -47,6 +47,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private static bool m_initialized;
         private AuroraODEPhysicsScene _mScene;
+        private static object m_lock = new object();
 
         #region IPhysicsPlugin Members
 
@@ -57,19 +58,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public PhysicsScene GetScene(String sceneIdentifier)
         {
-            if (_mScene == null)
+            lock (m_lock)
             {
-                if (!m_initialized) //Only initialize ode once!
+                if (_mScene == null)
                 {
-                    // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
-                    // http://opensimulator.org/mantis/view.php?id=2750).
-                    d.SetODEFile();
-                    d.InitODE();
-                    m_initialized = true;
-                }
+                    if (!m_initialized) //Only initialize ode once!
+                    {
+                        // Initializing ODE only when a scene is created allows alternative ODE plugins to co-habit (according to
+                        // http://opensimulator.org/mantis/view.php?id=2750).
+                        d.SetODEFile();
+                        d.InitODE();
+                        m_initialized = true;
+                    }
 
-                _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
+                    _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
+                }
             }
+            
             return _mScene;
         }
 
