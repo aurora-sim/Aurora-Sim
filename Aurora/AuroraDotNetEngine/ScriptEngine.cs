@@ -286,6 +286,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Must come AFTER the script plugins setup! Otherwise you'll get weird errors from the plugins
             if (MaintenanceThread == null)
             {
+                //Only needs created once
+                MaintenanceThread = new MaintenanceThread(this);
+
                 //Still must come before the maintenance thread start
                 StartSharedScriptPlugins(); //This only gets called once
 
@@ -295,9 +298,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     OnScriptRemoved += m_XmlRpcRouter.ScriptRemoved;
                     OnObjectRemoved += m_XmlRpcRouter.ObjectRemoved;
                 }
-
-                //Only needs created once
-                MaintenanceThread = new MaintenanceThread(this);
 
                 StateSave = new ScriptStateSave();
                 StateSave.Initialize(this);
@@ -1545,6 +1545,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     topScripts.Add(script.Part.ParentEntity.LocalId, script.ScriptScore);
                 else
                     topScripts[script.Part.ParentEntity.LocalId] += script.ScriptScore;
+                script.ScriptScore = 0;
             }
             return topScripts;
         }
