@@ -41,8 +41,6 @@ namespace Aurora.Addon.Hypergrid
 {
     public class RobustInventoryConnector : LocalInventoryConnector
     {
-        private IRegistryCore m_registry;
-
         public override void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
                                         string defaultConnectionString)
         {
@@ -140,7 +138,7 @@ namespace Aurora.Addon.Hypergrid
             return array;
         }
 
-        public override byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID)
+        public override byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID)
         {
             LLSDSerializationDictionary contents = new LLSDSerializationDictionary();
             contents.WriteStartMap("llsd"); //Start llsd
@@ -175,8 +173,8 @@ namespace Aurora.Addon.Hypergrid
                 IDataReader fretVal = null;
                 if (isForeign)
                     fretVal = GetForeignInventory(AgentID, folder_id, invServer);
-                string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
-                                             "avatarID", AgentID);
+                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
+                                             "avatarID", AgentID, "avatarID", libraryOwnerID);
                 redoQuery:
                 using (IDataReader retVal = isForeign ? fretVal : GD.QueryData(query, m_itemsrealm, "*"))
                 {
