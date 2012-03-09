@@ -82,6 +82,8 @@ namespace Aurora.DataManager.Migration
 
         public void DetermineOperation()
         {
+            if (migratorName == "")
+                return;
             executed = false;
             Version currentVersion = genericData.GetAuroraVersion(migratorName);
 
@@ -150,6 +152,9 @@ namespace Aurora.DataManager.Migration
 
         public void ExecuteOperation()
         {
+            if (migratorName == "")
+                return;
+
             if (operationDescription != null && executed == false &&
                 operationDescription.OperationType != MigrationOperationTypes.DoNothing)
             {

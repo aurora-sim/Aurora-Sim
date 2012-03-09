@@ -406,12 +406,6 @@ namespace OpenSim.Region.Framework.Scenes.Components
             RegisterComponent(com);
             com = new DefaultComponents("APIDEnabled", null);
             RegisterComponent(com);
-            com = new DefaultComponents("APIDTarget", Vector3.Zero);
-            RegisterComponent(com);
-            com = new DefaultComponents("APIDDamp", 0);
-            RegisterComponent(com);
-            com = new DefaultComponents("APIDStrength", 0);
-            RegisterComponent(com);
         }
 
         #endregion
