@@ -125,11 +125,11 @@ namespace Aurora.Modules.Archivers
             if (userInfo != null)
             {
                 InventoryArchiveReadRequest request;
-                bool merge = (options.ContainsKey("merge") && (bool) options["merge"]);
+                bool merge = (options.ContainsKey("merge") && (bool)options["merge"]);
 
                 try
                 {
-                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadStream, merge);
+                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadStream, merge, UUID.Zero);
                 }
                 catch (EntryPointNotFoundException e)
                 {
@@ -278,11 +278,11 @@ namespace Aurora.Modules.Archivers
             if (userInfo != null)
             {
                 InventoryArchiveReadRequest request;
-                bool merge = (options.ContainsKey("merge") && (bool) options["merge"]);
+                bool merge = (options.ContainsKey("merge") && (bool)options["merge"]);
 
                 try
                 {
-                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadPath, merge);
+                    request = new InventoryArchiveReadRequest(m_registry, userInfo, invPath, loadPath, merge, UUID.Zero);
                 }
                 catch (EntryPointNotFoundException e)
                 {
@@ -382,7 +382,7 @@ namespace Aurora.Modules.Archivers
                 savePath, invPath, firstName, lastName);
 
             Guid id = Guid.NewGuid();
-            Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", false}};
+            Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", false } };
             ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
 
             lock (m_pendingConsoleSaves)
@@ -411,7 +411,7 @@ namespace Aurora.Modules.Archivers
 
                 Guid id = Guid.NewGuid();
 
-                Dictionary<string, object> options = new Dictionary<string, object> {{"Assets", true}};
+                Dictionary<string, object> options = new Dictionary<string, object> { { "Assets", true } };
                 ArchiveInventory(id, firstName, lastName, invPath, pass, savePath, options);
 
                 lock (m_pendingConsoleSaves)
