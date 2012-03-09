@@ -220,7 +220,6 @@ namespace OpenSim.Services.AssetService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
-            MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Deleting asset {0}", id);
             return m_database.Delete(id);
         }
 
