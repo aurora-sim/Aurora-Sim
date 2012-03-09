@@ -109,7 +109,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 messagePost.Post(regionClient.RegionHandle,
                                  BuildRequest("GridWideMessage", message, regionClient.AgentID.ToString()));
             }
-            MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 30 seconds.");
+            MainConsole.Instance.Info("[GridWideMessageModule]: Sent alert, will be delievered across the grid in the next 3 minutes.");
         }
 
         #endregion

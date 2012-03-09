@@ -84,7 +84,7 @@ namespace OpenSim.Services.CapsService.CAPModules
             IUserStatsDataConnector dc = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)
             {
-                MainConsole.Instance.Info(string.Format("Graphic cards: {0} users use ATI, {1} users use NVIDIA, {2} use Intel graphics",
+                MainConsole.Instance.Info(string.Format("Graphic cards: {0} logins have used ATI, {1} logins have used NVIDIA, {2} logins have used Intel graphics",
                     dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "ATI")),
                     dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "NVIDIA")),
                     dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "Intel"))));

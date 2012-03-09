@@ -117,6 +117,7 @@ namespace OpenSim.Services.LLLoginService
 
             m_DefaultRegionName = m_loginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_loginServerConfig.GetString("WelcomeMessage", "");
+            m_WelcomeMessage = m_WelcomeMessage.Replace("\\n", "\n");
             m_WelcomeMessageURL = m_loginServerConfig.GetString("CustomizedMessageURL", "");
             if (m_WelcomeMessageURL != "")
             {
