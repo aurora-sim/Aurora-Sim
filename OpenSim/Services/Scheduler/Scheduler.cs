@@ -110,7 +110,7 @@ namespace OpenSim.Services
             return true;
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High, RenamedMethod = "SchedulerSave")]
         public string Save(SchedulerItem I)
         {
             if (m_doRemoteCalls)
@@ -118,7 +118,7 @@ namespace OpenSim.Services
             return m_database.SchedulerSave(I);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.High)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.High, RenamedMethod = "SchedulerRemove")]
         public void Remove(string id)
         {
             if (m_doRemoteCalls)
@@ -129,7 +129,7 @@ namespace OpenSim.Services
             m_database.SchedulerRemove(id);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerExist")]
         public bool Exist(string scdID)
         {
             if (m_doRemoteCalls)
@@ -137,7 +137,7 @@ namespace OpenSim.Services
             return m_database.SchedulerExist(scdID);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="SchedulerGet")]
         public SchedulerItem Get(string ID)
         {
             if (m_doRemoteCalls)
