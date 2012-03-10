@@ -37,7 +37,6 @@ namespace Aurora.Framework
 {
     public interface IDirectoryServiceConnector : IAuroraDataPlugin
     {
-
         #region Regions
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace Aurora.Framework
         /// <param name = "category"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags);
+        List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags, UUID scopeID);
 
         /// <summary>
         ///   Searches for parcels for sale around the grid
@@ -143,7 +142,27 @@ namespace Aurora.Framework
         /// <param name = "area"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags);
+        List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID);
+
+        /// <summary>
+        ///   Searches for parcels for sale around the grid
+        /// </summary>
+        /// <param name = "searchType"></param>
+        /// <param name = "price"></param>
+        /// <param name = "area"></param>
+        /// <param name = "StartQuery"></param>
+        /// <returns></returns>
+        List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID regionID);
+
+        /// <summary>
+        ///   Searches for the most popular places around the grid
+        /// </summary>
+        /// <param name = "searchType"></param>
+        /// <param name = "price"></param>
+        /// <param name = "area"></param>
+        /// <param name = "StartQuery"></param>
+        /// <returns></returns>
+        List<DirPopularReplyData> FindPopularPlaces(uint queryFlags, UUID scopeID);
 
         #endregion
 
@@ -157,7 +176,7 @@ namespace Aurora.Framework
         /// <param name = "queryFlags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery);
+        List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery, UUID scopeID);
 
         /// <summary>
         ///   Gets all classifieds in the given region
@@ -179,7 +198,7 @@ namespace Aurora.Framework
         /// <param name = "flags"></param>
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
-        List<DirEventsReplyData> FindEvents(string queryText, uint flags, int StartQuery);
+        List<DirEventsReplyData> FindEvents(string queryText, uint flags, int StartQuery, UUID scopeID);
 
         /// <summary>
         ///   Retrives all events in the given region by their maturity level

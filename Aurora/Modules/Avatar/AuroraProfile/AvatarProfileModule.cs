@@ -293,7 +293,8 @@ namespace Aurora.Modules.Profiles
                                             GlobalPos = globalpos,
                                             ParcelName = parcelname,
                                             ClassifiedFlags = classifiedFlags,
-                                            PriceForListing = classifiedPrice
+                                            PriceForListing = classifiedPrice,
+                                            ScopeID = remoteClient.ScopeID
                                         };
 
             ProfileFrontend.AddClassified(classified);

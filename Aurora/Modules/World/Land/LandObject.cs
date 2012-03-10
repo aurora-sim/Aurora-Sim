@@ -104,6 +104,7 @@ namespace Aurora.Modules.Land
             LandData.IsGroupOwned = is_group_owned;
 
             LandData.RegionID = scene.RegionInfo.RegionID;
+            LandData.ScopeID = scene.RegionInfo.ScopeID;
             LandData.RegionHandle = scene.RegionInfo.RegionHandle;
 
             m_parcelManagementModule = scene.RequestModuleInterface<IParcelManagementModule>();

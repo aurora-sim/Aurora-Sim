@@ -1460,6 +1460,12 @@ namespace Aurora.BotManager
         private static UInt32 UniqueId = 1;
         private BotAvatarController m_controller;
 
+        public UUID ScopeID
+        {
+            get;
+            set;
+        }
+
         // creates new bot on the default location
         public BotClientAPI(IScene scene, AgentCircuitData data)
         {

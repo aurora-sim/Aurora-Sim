@@ -51,11 +51,6 @@ namespace Aurora.Modules.Search
 
         #endregion
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region Client
 
         public void NewClient(IClientAPI client)
@@ -113,7 +108,7 @@ namespace Aurora.Modules.Search
         {
             List<DirPlacesReplyData> ReturnValues =
                 directoryService.FindLand(queryText, category.ToString(), queryStart,
-                                                                       (uint) queryFlags);
+                                                                       (uint) queryFlags, remoteClient.ScopeID);
 
 #if (!ISWIN)
             SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
@@ -128,9 +123,10 @@ namespace Aurora.Modules.Search
 
         public void DirPopularQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags)
         {
-            /// <summary>
-            /// Deprecated as no newer client support it
-            /// </summary>
+            List<DirPopularReplyData> ReturnValues =
+                directoryService.FindPopularPlaces(queryFlags, remoteClient.ScopeID);
+
+            remoteClient.SendDirPopularReply(queryID, ReturnValues.ToArray());
         }
 
         /// <summary>
@@ -145,7 +141,7 @@ namespace Aurora.Modules.Search
         /// <param name = "queryStart"></param>
         public void DirLandQuery(IClientAPI remoteClient, UUID queryID, uint queryFlags, uint searchType, uint price, uint area, int queryStart)
         {
-            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area, queryStart, queryFlags));
+            List<DirLandReplyData> ReturnValues = new List<DirLandReplyData>(directoryService.FindLandForSale(searchType.ToString(), price, area, queryStart, queryFlags, remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirLandReplyData>(ReturnValues, delegate(DirLandReplyData[] data)
@@ -188,7 +184,7 @@ namespace Aurora.Modules.Search
                                    string queryText, uint queryFlags, int queryStart)
         {
             //Find the user accounts
-            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(m_Scenes[0].RegionInfo.ScopeID,
+            List<UserAccount> accounts = m_Scenes[0].UserAccountService.GetUserAccounts(remoteClient.ScopeID,
                                                                                         queryText);
             List<DirPeopleReplyData> ReturnValues =
                 new List<DirPeopleReplyData>();
@@ -287,7 +283,7 @@ namespace Aurora.Modules.Search
 
         public void DirEventsQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, int queryStart)
         {
-            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart));
+            List<DirEventsReplyData> ReturnValues = new List<DirEventsReplyData>(directoryService.FindEvents(queryText, queryFlags, queryStart, remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirEventsReplyData>(ReturnValues, delegate(DirEventsReplyData[] data)
@@ -301,7 +297,7 @@ namespace Aurora.Modules.Search
 
         public void DirClassifiedQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags, uint category, int queryStart)
         {
-            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags, queryStart));
+            List<DirClassifiedReplyData> ReturnValues = new List<DirClassifiedReplyData>(directoryService.FindClassifieds(queryText, category.ToString(), queryFlags, queryStart, remoteClient.ScopeID));
 
 #if (!ISWIN)
             SplitPackets<DirClassifiedReplyData>(ReturnValues, delegate(DirClassifiedReplyData[] data)
@@ -409,7 +405,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSaleInRegion("0", uint.MaxValue, 0, 0, 0, GR.RegionID);
 
                 int locX = 0;
                 int locY = 0;
@@ -477,7 +473,7 @@ namespace Aurora.Modules.Search
                 if (directoryService == null)
                     return;
                 //Find all the land, use "0" for the flags so we get all land for sale, no price or area checking
-                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0);
+                List<DirLandReplyData> Landdata = directoryService.FindLandForSale("0", uint.MaxValue, 0, 0, 0, remoteClient.ScopeID);
 
                 int locX = 0;
                 int locY = 0;
@@ -751,6 +747,11 @@ namespace Aurora.Modules.Search
         public Type ReplaceableInterface
         {
             get { return null; }
+        }
+
+        public bool IsSharedModule
+        {
+            get { return false; }
         }
 
         public void PostInitialise()

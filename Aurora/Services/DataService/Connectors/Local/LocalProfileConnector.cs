@@ -180,6 +180,7 @@ namespace Aurora.Services.DataService
                 classified.Category,
                 classified.SimName.MySqlEscape(),
                 classified.CreatorUUID,
+                classified.ScopeID,
                 classified.ClassifiedUUID,
                 OSDParser.SerializeJsonString(classified.ToOSD())
             };

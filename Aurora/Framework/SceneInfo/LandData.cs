@@ -89,6 +89,7 @@ namespace Aurora.Framework
         private bool _private;
         private ulong _regionHandle;
         private UUID _regionID;
+        private UUID _scopeID;
         private int _salePrice;
         private UUID _snapshotID = UUID.Zero;
         private ParcelStatus _status = ParcelStatus.Leased;
@@ -381,6 +382,12 @@ namespace Aurora.Framework
             set { _regionID = value; }
         }
 
+        public UUID ScopeID
+        {
+            get { return _scopeID; }
+            set { _scopeID = value; }
+        }
+
         /// <summary>
         ///   Determines if we scale the media based on the surface it's on
         /// </summary>
@@ -652,6 +659,7 @@ namespace Aurora.Framework
             map["LocalID"] = OSD.FromInteger(LocalID);
             map["GlobalID"] = OSD.FromUUID(GlobalID);
             map["RegionID"] = OSD.FromUUID(RegionID);
+            map["ScopeID"] = OSD.FromUUID(ScopeID);
             map["MediaDescription"] = OSD.FromString(MediaDescription);
             map["MediaWidth"] = OSD.FromInteger(MediaWidth);
             map["MediaHeight"] = OSD.FromInteger(MediaHeight);
@@ -685,6 +693,7 @@ namespace Aurora.Framework
         public override void FromOSD(OSDMap map)
         {
             RegionID = map["RegionID"].AsUUID();
+            ScopeID = map["ScopeID"].AsUUID();
             GlobalID = map["GlobalID"].AsUUID();
             LocalID = map["LocalID"].AsInteger();
             SalePrice = map["SalePrice"].AsInteger();

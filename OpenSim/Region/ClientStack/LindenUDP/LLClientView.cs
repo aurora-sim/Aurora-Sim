@@ -414,6 +414,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             get { return m_agentId; }
         }
 
+        public UUID ScopeID
+        {
+            get;
+            set;
+        }
+
         public UUID ActiveGroupId
         {
             get { return m_activeGroupID; }
@@ -3260,9 +3266,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 packet.QueryReplies[i] = new DirPopularReplyPacket.QueryRepliesBlock
                                              {
-                                                 ParcelID = d.parcelID,
-                                                 Name = Utils.StringToBytes(d.name),
-                                                 Dwell = d.dwell
+                                                 ParcelID = d.ParcelID,
+                                                 Name = Utils.StringToBytes(d.Name),
+                                                 Dwell = d.Dwell
                                              };
                 i++;
             }

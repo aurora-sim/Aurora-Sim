@@ -134,7 +134,8 @@ namespace Aurora.Services.DataService
                                                   : 0,
                                               args.SnapshotID,
                                               OSDParser.SerializeLLSDXmlString(args.Bitmap),
-                                              (int)args.Category
+                                              (int)args.Category,
+                                              args.ScopeID
                                           };
                 //InfoUUID is the missing 'real' Gridwide ParcelID
 
@@ -203,7 +204,7 @@ namespace Aurora.Services.DataService
 
             LandData LandData;
 
-            for (int i = 0; i < Query.Count; i += 23)
+            for (int i = 0; i < Query.Count; i += 24)
             {
                 LandData = new LandData();
                 LandData.RegionID = UUID.Parse(Query[i]);
@@ -229,7 +230,8 @@ namespace Aurora.Services.DataService
                 catch
                 {
                 }
-                LandData.Category = (string.IsNullOrEmpty(Query[i + 22] )) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.Category = (string.IsNullOrEmpty(Query[i + 22])) ? ParcelCategory.None : (ParcelCategory)int.Parse(Query[i + 22]);
+                LandData.ScopeID = UUID.Parse(Query[i + 23]);
 
                 Lands.Add(LandData);
             }
@@ -506,7 +508,7 @@ namespace Aurora.Services.DataService
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags)
+        public List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags, UUID scopeID)
         {
             object remoteValue = DoRemote(queryText, category, StartQuery, Flags);
             if (remoteValue != null || m_doRemoteOnly)
@@ -520,14 +522,18 @@ namespace Aurora.Services.DataService
             {
                 sort["Dwell"] = false;
             }
+            if (scopeID != UUID.Zero)
+                filter.andFilters["ScopeID"] = scopeID;
 
             filter.orLikeFilters["Name"] = "%" + queryText + "%";
             filter.orLikeFilters["Description"] = "%" + queryText + "%";
             filter.andFilters["ShowInSearch"] = 1;
             if (category != "-1")
-            {
                 filter.andFilters["Category"] = category;
-            }
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.AreaSort) == (uint)DirectoryManager.DirFindFlags.AreaSort)
+                sort["Area"] = false;
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.NameSort) == (uint)DirectoryManager.DirFindFlags.NameSort)
+                sort["Name"] = false;
 
             List<string> retVal = GD.Query(new string[6]{
                 "InfoUUID",
@@ -573,7 +579,7 @@ namespace Aurora.Services.DataService
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags)
+        public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID)
         {
             object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
             if (remoteValue != null || m_doRemoteOnly)
@@ -583,6 +589,8 @@ namespace Aurora.Services.DataService
 
             //Only parcels set for sale will be checked
             filter.andFilters["ForSale"] = "1";
+            if (scopeID != UUID.Zero)
+                filter.andFilters["ScopeID"] = scopeID;
 
             //They requested a sale price check
             if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByPrice) == (uint)DirectoryManager.DirFindFlags.LimitByPrice)
@@ -591,10 +599,15 @@ namespace Aurora.Services.DataService
             }
 
             //They requested a 
-            if ((Flags & (uint) DirectoryManager.DirFindFlags.LimitByArea) == (uint) DirectoryManager.DirFindFlags.LimitByArea)
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByArea) == (uint)DirectoryManager.DirFindFlags.LimitByArea)
             {
                 filter.andGreaterThanEqFilters["Area"] = (int)area;
             }
+            Dictionary<string, bool> sort = new Dictionary<string, bool>();
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.AreaSort) == (uint)DirectoryManager.DirFindFlags.AreaSort)
+                sort["Area"] = false;
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.NameSort) == (uint)DirectoryManager.DirFindFlags.NameSort)
+                sort["Name"] = false;
 
             List<string> retVal = GD.Query(new string[]{
                 "InfoUUID",
@@ -603,13 +616,11 @@ namespace Aurora.Services.DataService
                 "SalePrice",
                 "Area",
                 "Flags"
-            }, "searchparcel", filter, null, (uint)StartQuery, 50);
+            }, "searchparcel", filter, sort, (uint)StartQuery, 50);
 
             //if there are none, return
             if (retVal.Count == 0)
-            {
                 return new List<DirLandReplyData>();
-            }
 
             List<DirLandReplyData> Data = new List<DirLandReplyData>();
             DirLandReplyData replyData;
@@ -637,6 +648,151 @@ namespace Aurora.Services.DataService
                 {
                     Data.Add(replyData);
                 }
+            }
+
+            return Data;
+        }
+
+        /// <summary>
+        ///   Searches for parcels for sale around the grid
+        /// </summary>
+        /// <param name = "searchType">2 = Auction only, 8 = For Sale - Mainland, 16 = For Sale - Estate, 4294967295 = All</param>
+        /// <param name = "price"></param>
+        /// <param name = "area"></param>
+        /// <param name = "StartQuery"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID regionID)
+        {
+            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirLandReplyData>)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+
+            //Only parcels set for sale will be checked
+            filter.andFilters["ForSale"] = "1";
+            filter.andFilters["RegionID"] = regionID;
+
+            //They requested a sale price check
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByPrice) == (uint)DirectoryManager.DirFindFlags.LimitByPrice)
+            {
+                filter.andLessThanEqFilters["SalePrice"] = (int)price;
+            }
+
+            //They requested a 
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.LimitByArea) == (uint)DirectoryManager.DirFindFlags.LimitByArea)
+            {
+                filter.andGreaterThanEqFilters["Area"] = (int)area;
+            }
+            Dictionary<string, bool> sort = new Dictionary<string, bool>();
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.AreaSort) == (uint)DirectoryManager.DirFindFlags.AreaSort)
+                sort["Area"] = false;
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.NameSort) == (uint)DirectoryManager.DirFindFlags.NameSort)
+                sort["Name"] = false;
+            //if ((queryFlags & (uint)DirectoryManager.DirFindFlags.PerMeterSort) == (uint)DirectoryManager.DirFindFlags.PerMeterSort)
+            //    sort["Area"] = (queryFlags & (uint)DirectoryManager.DirFindFlags.SortAsc) == (uint)DirectoryManager.DirFindFlags.SortAsc);
+            if ((Flags & (uint)DirectoryManager.DirFindFlags.PricesSort) == (uint)DirectoryManager.DirFindFlags.PricesSort)
+                sort["SalePrice"] = (Flags & (uint)DirectoryManager.DirFindFlags.SortAsc) == (uint)DirectoryManager.DirFindFlags.SortAsc;
+
+            List<string> retVal = GD.Query(new string[]{
+                "InfoUUID",
+                "Name",
+                "Auction",
+                "SalePrice",
+                "Area",
+                "Flags"
+            }, "searchparcel", filter, sort, (uint)StartQuery, 50);
+
+            //if there are none, return
+            if (retVal.Count == 0)
+                return new List<DirLandReplyData>();
+
+            List<DirLandReplyData> Data = new List<DirLandReplyData>();
+            DirLandReplyData replyData;
+            for (int i = 0; i < retVal.Count; i += 6)
+            {
+                replyData = new DirLandReplyData
+                {
+                    forSale = true,
+                    parcelID = new UUID(retVal[i]),
+                    name = retVal[i + 1],
+                    auction = (retVal[i + 2] != "0")
+                };
+                //If its an auction and we didn't request to see auctions, skip to the next and continue
+                if ((Flags & (uint)DirectoryManager.SearchTypeFlags.Auction) == (uint)DirectoryManager.SearchTypeFlags.Auction && !replyData.auction)
+                {
+                    continue;
+                }
+
+                replyData.salePrice = Convert.ToInt32(retVal[i + 3]);
+                replyData.actualArea = Convert.ToInt32(retVal[i + 4]);
+
+                //Check maturity levels depending on what flags the user has set
+                //0 flag is an override so that we can get all lands for sale, regardless of maturity
+                if (Flags == 0 || !((int.Parse(retVal[i + 5]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish && ((Flags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0))
+                {
+                    Data.Add(replyData);
+                }
+            }
+
+            return Data;
+        }
+        
+        /// <summary>
+        ///   Searches for the most popular places around the grid
+        /// </summary>
+        /// <param name = "queryFlags"></param>
+        /// <param name = "scopeID"></param>
+        /// <returns></returns>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<DirPopularReplyData> FindPopularPlaces(uint queryFlags, UUID scopeID)
+        {
+            object remoteValue = DoRemote(queryFlags, scopeID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<DirPopularReplyData>)remoteValue;
+
+            QueryFilter filter = new QueryFilter();
+            Dictionary<string, bool> sort = new Dictionary<string, bool>();
+
+            if ((queryFlags & (uint)DirectoryManager.DirFindFlags.AreaSort) == (uint)DirectoryManager.DirFindFlags.AreaSort)
+                sort["Area"] = false;
+            else if ((queryFlags & (uint)DirectoryManager.DirFindFlags.NameSort) == (uint)DirectoryManager.DirFindFlags.NameSort)
+                sort["Name"] = false;
+            //else if ((queryFlags & (uint)DirectoryManager.DirFindFlags.PerMeterSort) == (uint)DirectoryManager.DirFindFlags.PerMeterSort)
+            //    sort["Area"] = (queryFlags & (uint)DirectoryManager.DirFindFlags.SortAsc) == (uint)DirectoryManager.DirFindFlags.SortAsc);
+            //else if ((queryFlags & (uint)DirectoryManager.DirFindFlags.PricesSort) == (uint)DirectoryManager.DirFindFlags.PricesSort)
+            //    sort["SalePrice"] = (queryFlags & (uint)DirectoryManager.DirFindFlags.SortAsc) == (uint)DirectoryManager.DirFindFlags.SortAsc;
+            else
+                sort["Dwell"] = false;
+
+            if (scopeID != UUID.Zero)
+                filter.andFilters["ScopeID"] = scopeID;
+
+
+            List<string> retVal = GD.Query(new string[]{
+                "InfoUUID",
+                "Name",
+                "Dwell",
+                "Flags"
+            }, "searchparcel", filter, null, 0, 25);
+
+            //if there are none, return
+            if (retVal.Count == 0)
+                return new List<DirPopularReplyData>();
+
+            List<DirPopularReplyData> Data = new List<DirPopularReplyData>();
+            for (int i = 0; i < retVal.Count; i += 4)
+            {
+                //Check maturity levels depending on what flags the user has set
+                //0 flag is an override so that we can get all lands for sale, regardless of maturity
+                if (queryFlags == 0 || !((int.Parse(retVal[i + 3]) & (int)ParcelFlags.MaturePublish) == (int)ParcelFlags.MaturePublish && ((queryFlags & (uint)DirectoryManager.DirFindFlags.IncludeMature)) == 0))
+                    Data.Add(new DirPopularReplyData
+                    {
+                        ParcelID = new UUID(retVal[i]),
+                        Name = retVal[i + 1],
+                        Dwell = int.Parse(retVal[i + 2])
+                    });
             }
 
             return Data;
@@ -683,7 +839,7 @@ namespace Aurora.Services.DataService
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery)
+        public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery, UUID scopeID)
         {
             object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
             if (remoteValue != null || m_doRemoteOnly)
@@ -693,15 +849,13 @@ namespace Aurora.Services.DataService
 
             filter.andLikeFilters["Name"] = "%" + queryText + "%";
             if (int.Parse(category) != (int)DirectoryManager.ClassifiedCategories.Any) //Check the category
-            {
                 filter.andFilters["Category"] = category;
-            }
+            if (scopeID != UUID.Zero)
+                filter.andFilters["ScopeID"] = scopeID;
 
             List<string> retVal = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, (uint)StartQuery, 50);
             if (retVal.Count == 0)
-            {
                 return new List<DirClassifiedReplyData>();
-            }
 
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
             DirClassifiedReplyData replyData;
@@ -721,17 +875,14 @@ namespace Aurora.Services.DataService
                     name = classified.Name
                 };
                 //Check maturity levels
-                if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) == (uint)DirectoryManager.ClassifiedFlags.Mature)
+                if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) != (uint)DirectoryManager.ClassifiedFlags.Mature)
                 {
-                    if ((queryFlags & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) == (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
-                    {
+                    if ((queryFlags & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) != (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
                         Data.Add(replyData);
-                    }
                 }
                 else
-                { //Its PG, add all
+                    //Its Mature, add all
                     Data.Add(replyData);
-                }
             }
             return Data;
         }
@@ -759,11 +910,11 @@ namespace Aurora.Services.DataService
 
             List<Classified> Classifieds = new List<Classified>();
             Classified classified;
-            for (int i = 0; i < retVal.Count; i += 6)
+            for (int i = 0; i < retVal.Count; i += 7)
             {
                 classified = new Classified();
                 //Pull the classified out of OSD
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
+                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 6]));
                 Classifieds.Add(classified);
             }
             return Classifieds;
@@ -788,7 +939,7 @@ namespace Aurora.Services.DataService
             List<string> retVal = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
             if ((retVal == null) || (retVal.Count == 0)) return null;
             Classified classified = new Classified();
-            classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[5]));
+            classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[6]));
             return classified;
         }
 
@@ -804,7 +955,7 @@ namespace Aurora.Services.DataService
         /// <param name = "StartQuery"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<DirEventsReplyData> FindEvents(string queryText, uint eventFlags, int StartQuery)
+        public List<DirEventsReplyData> FindEvents(string queryText, uint eventFlags, int StartQuery, UUID scopeID)
         {
             object remoteValue = DoRemote(queryText, eventFlags, StartQuery);
             if (remoteValue != null || m_doRemoteOnly)
@@ -838,6 +989,8 @@ namespace Aurora.Services.DataService
             {
                 filter.andLikeFilters["name"] = "%" + queryText + "%";
             }
+            if (scopeID != UUID.Zero)
+                filter.andFilters["scopeID"] = scopeID;
 
             List<string> retVal = GD.Query(new string[]{
                 "EID",
@@ -942,7 +1095,7 @@ namespace Aurora.Services.DataService
         private static List<EventData> Query2EventData(List<string> RetVal){
             List<EventData> Events = new List<EventData>();
             IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
-            if (RetVal.Count % 15 != 0 || regiondata == null)
+            if (RetVal.Count % 16 != 0 || regiondata == null)
             {
                 return Events;
             }
@@ -950,7 +1103,7 @@ namespace Aurora.Services.DataService
             GridRegion region;
             EventData data;
             
-            for (int i = 0; i < RetVal.Count; i += 15)
+            for (int i = 0; i < RetVal.Count; i += 16)
             {
                 data = new EventData();
 
@@ -1054,10 +1207,13 @@ namespace Aurora.Services.DataService
             eventData.description = description;
             eventData.category = category;
 
+            UUID scopeID = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID).ScopeID;
+
             Dictionary<string, object> row = new Dictionary<string, object>(15);
             row["EID"] = eventData.eventID;
             row["creator"] = creator.ToString();
             row["region"] = regionID.ToString();
+            row["region"] = scopeID.ToString();
             row["parcel"] = parcelID.ToString();
             row["date"] = date.ToString("s");
             row["cover"] = eventData.cover;

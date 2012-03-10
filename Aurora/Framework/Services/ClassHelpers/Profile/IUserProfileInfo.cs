@@ -375,6 +375,7 @@ namespace Aurora.Framework
         public UUID ParcelUUID;
         public uint ParentEstate;
         public int PriceForListing;
+        public UUID ScopeID;
         public string SimName;
         public UUID SnapshotUUID;
 
@@ -392,6 +393,7 @@ namespace Aurora.Framework
                                         {"ParcelUUID", OSD.FromUUID(ParcelUUID)},
                                         {"ParentEstate", OSD.FromUInteger(ParentEstate)},
                                         {"SnapshotUUID", OSD.FromUUID(SnapshotUUID)},
+                                        {"ScopeID", OSD.FromUUID(ScopeID)},
                                         {"SimName", OSD.FromString(SimName)},
                                         {"GlobalPos", OSD.FromVector3(GlobalPos)},
                                         {"ParcelName", OSD.FromString(ParcelName)},
@@ -413,6 +415,7 @@ namespace Aurora.Framework
             ParcelUUID = map["ParcelUUID"].AsUUID();
             ParentEstate = map["ParentEstate"].AsUInteger();
             SnapshotUUID = map["SnapshotUUID"].AsUUID();
+            ScopeID = map["ScopeID"].AsUUID();
             SimName = map["SimName"].AsString();
             GlobalPos = map["GlobalPos"].AsVector3();
             ParcelName = map["ParcelName"].AsString();

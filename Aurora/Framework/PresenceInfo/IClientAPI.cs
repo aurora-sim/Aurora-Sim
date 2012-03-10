@@ -940,11 +940,27 @@ namespace Aurora.Framework
         }
     }
 
-    public struct DirPopularReplyData
+    public class DirPopularReplyData : IDataTransferable
     {
-        public float dwell;
-        public string name;
-        public UUID parcelID;
+        public float Dwell;
+        public string Name;
+        public UUID ParcelID;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Dwell"] = Dwell;
+            map["ParcelID"] = ParcelID;
+            map["Name"] = Name;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Dwell = map["Dwell"];
+            ParcelID = map["ParcelID"];
+            Name = map["Name"];
+        }
     }
 
     public class EntityUpdate
@@ -1722,5 +1738,7 @@ namespace Aurora.Framework
                                    byte mediaLoop);
 
         #endregion
+
+        UUID ScopeID { get; set; }
     }
 }
