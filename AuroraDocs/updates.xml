@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!-- 
+    //[0] - Minimum supported release #
+    //[1] - Minimum supported release date
+    //[2] - Newest version #
+    //[3] - Date released
+    //[4] - Release notes
+    //[5] - Download link
+-->
+<Updater>
+	<MinSupReleaseVersion>0.2</MinSupReleaseVersion>
+	<MinSupReleaseDate>April 16, 2011</MinSupReleaseDate>
+	<NewReleaseVersion>0.3</NewReleaseVersion>
+	<NewReleaseDate>May 21, 2011</NewReleaseDate>
+	<ReleaseNotes>http://aurora-sim.org/index.php?page=news</ReleaseNotes>
+	<DownloadLink>https://github.com/downloads/aurora-sim/Aurora-Sim/Aurora0.3Release.zip</DownloadLink>
+</Updater>
