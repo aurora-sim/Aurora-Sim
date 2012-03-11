@@ -581,7 +581,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID)
         {
-            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
+            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags, scopeID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirLandReplyData>)remoteValue;
 
