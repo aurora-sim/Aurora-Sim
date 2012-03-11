@@ -316,6 +316,9 @@ namespace OpenSim.Services.LLLoginService
                 return LLFailedLoginResponse.LoginBlockedProblem;
             }
 
+            if (account.UserLevel < 0)//No allowing anyone less than 0
+                return LLFailedLoginResponse.PermanentBannedProblem;
+
             IAgentInfo agent = null;
             IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
