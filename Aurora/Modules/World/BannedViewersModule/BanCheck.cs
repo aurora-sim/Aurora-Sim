@@ -178,7 +178,11 @@ namespace Aurora.Modules.Ban
                 MainConsole.Instance.Commands.AddCommand(
                     "block user", "block [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
                 MainConsole.Instance.Commands.AddCommand(
+                    "ban user", "ban [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
+                MainConsole.Instance.Commands.AddCommand(
                     "unblock user", "unblock [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
+                MainConsole.Instance.Commands.AddCommand(
+                    "unban user", "unban [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
             }
         }
 
@@ -286,8 +290,24 @@ namespace Aurora.Modules.Ban
                 MainConsole.Instance.Warn("Cannot find user.");
                 return;
             }
-            info.Flags = PresenceInfo.PresenceInfoFlags.Banned;
-            presenceInfo.UpdatePresenceInfo(info);
+
+            if (MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?").ToLower() == "yes")
+            {
+                var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+                IAgentInfo agentInfo = conn.GetAgent(AgentID);
+                float days = float.Parse(MainConsole.Instance.Prompt("How long (in days) should this ban last?"));
+
+                agentInfo.Flags |= IAgentFlags.TempBan;
+
+                agentInfo.OtherAgentInformation["TemperaryBanInfo"] = DateTime.Now.AddDays(days);
+
+                conn.UpdateAgent(agentInfo);
+            }
+            else
+            {
+                info.Flags = PresenceInfo.PresenceInfoFlags.Banned;
+                presenceInfo.UpdatePresenceInfo(info);
+            }
             MainConsole.Instance.Fatal("User blocked from logging in");
         }
 

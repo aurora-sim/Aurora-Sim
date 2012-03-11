@@ -1067,9 +1067,9 @@ namespace Aurora.Modules.Estate
 
 
                 MainConsole.Instance.Commands.AddCommand(
-                    "ban user", "ban user", "Bans a user from the current estate", BanUser);
+                    "estate ban user", "estate ban user", "Bans a user from the current estate", BanUser);
                 MainConsole.Instance.Commands.AddCommand(
-                    "unban user", "unban user", "Bans a user from the current estate", UnBanUser);
+                    "estate unban user", "estate unban user", "Bans a user from the current estate", UnBanUser);
                 MainConsole.Instance.Commands.AddCommand(
                     "login enable",
                     "login enable",
