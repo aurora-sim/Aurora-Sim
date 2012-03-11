@@ -28,6 +28,7 @@
 using System.Collections;
 using System.Net;
 using Nini.Config;
+using Aurora.Framework;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -41,23 +42,20 @@ namespace OpenSim.Services.Interfaces
 
     public interface ILoginModule
     {
-        void Initialize(ILoginService service, IConfigSource config, IUserAccountService UAService);
-        bool Login(Hashtable request, UUID User, out string message);
+        string Name { get; }
+        void Initialize(ILoginService service, IConfigSource config, IRegistryCore registry);
+        LoginResponse Login(Hashtable request, UserAccount acc, IAgentInfo agentInfo, string authType, string password, out object data);
     }
 
     public interface ILoginService
     {
         int MinLoginLevel { get; }
 
-        LoginResponse VerifyClient(string Name, string authType, string passwd, UUID scopeID, bool tosExists,
-                                   string tosAccepted, string mac, string clientVersion, out UUID secureSession);
+        bool VerifyClient(UUID AgentID, string name, string authType, string passwd, UUID scopeID);
 
-        LoginResponse VerifyClient(UUID AgentID, string authType, string passwd, UUID scopeID, bool tosExists,
-                                   string tosAccepted, string mac, string clientVersion, out UUID secureSession);
-
-        LoginResponse Login(string Name, string passwd, string startLocation, UUID scopeID,
+        LoginResponse Login(UUID AgentID, string Name, string authType, string passwd, string startLocation, UUID scopeID,
                             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP,
-                            Hashtable requestData, UUID secureSession);
+                            Hashtable requestData);
 
         Hashtable SetLevel(string firstName, string lastName, string passwd, int level, IPEndPoint clientIP);
     }

@@ -37,6 +37,7 @@ using Nini.Config;
 using Aurora.DataManager;
 using OpenMetaverse;
 using OpenSim.Services.Interfaces;
+using OpenSim.Services.LLLoginService;
 
 namespace Aurora.Modules.Ban
 {
@@ -50,19 +51,25 @@ namespace Aurora.Modules.Ban
         IConfigSource m_source;
         BanCheck m_module;
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         #endregion
 
         #region ILoginModule Members
 
-        public void Initialize(ILoginService service, IConfigSource source, IUserAccountService UASerivce)
+        public void Initialize(ILoginService service, IConfigSource source, IRegistryCore registry)
         {
             m_source = source;
             m_service = service;
-            m_module = new BanCheck(source, UASerivce);
+            m_module = new BanCheck(source, registry.RequestModuleInterface<IUserAccountService>());
         }
 
-        public bool Login(Hashtable request, UUID User, out string message)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
         {
+            data = null;
             string ip = (string)request["ip"];
             if (ip == null)
                 ip = "";
@@ -78,11 +85,16 @@ namespace Aurora.Modules.Ban
             string id0 = (string)request["id0"];
             if (id0 == null)
                 id0 = "";
-            return m_module.CheckUser(User, ip,
+            string message;
+            if(!m_module.CheckUser(account.PrincipalID, ip,
                 version,
                 platform,
                 mac,
-                id0, out message);
+                id0, out message))
+            {
+                return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, message, false);
+            }
+            return null;
         }
 
         #endregion
@@ -503,11 +515,16 @@ namespace Aurora.Modules.Ban
         private List<IPAddress> IPBans = new List<IPAddress>();
         private List<string> IPRangeBans = new List<string>();
 
+        public string Name
+        {
+            get { return GetType().Name; }
+        }
+
         #endregion
 
         #region ILoginModule Members
 
-        public void Initialize(ILoginService service, IConfigSource source, IUserAccountService UASerivce)
+        public void Initialize(ILoginService service, IConfigSource source, IRegistryCore registry)
         {
             m_source = source;
             m_service = service;
@@ -526,16 +543,16 @@ namespace Aurora.Modules.Ban
             }
         }
 
-        public bool Login(Hashtable request, UUID User, out string message)
+        public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
         {
-            message = "";
+            data = null;
             string ip = (string)request["ip"];
             if (ip == null)
                 ip = "";
             ip = ip.Split(':')[0];//Remove the port
             IPAddress userIP = IPAddress.Parse(ip);
             if (IPBans.Contains(userIP))
-                return false;
+                return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "Your account cannot be accessed on this computer.", false);
             foreach (string ipRange in IPRangeBans)
             {
                 string[] split = ipRange.Split('-');
@@ -545,9 +562,9 @@ namespace Aurora.Modules.Ban
                 IPAddress high = IPAddress.Parse(ip);
                 NetworkUtils.IPAddressRange range = new NetworkUtils.IPAddressRange(low, high);
                 if (range.IsInRange(userIP))
-                    return false;
+                    return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "Your account cannot be accessed on this computer.", false);
             }
-            return true;
+            return null;
         }
 
         #endregion
