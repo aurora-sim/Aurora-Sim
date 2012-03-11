@@ -510,7 +510,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirPlacesReplyData> FindLand(string queryText, string category, int StartQuery, uint Flags, UUID scopeID)
         {
-            object remoteValue = DoRemote(queryText, category, StartQuery, Flags);
+            object remoteValue = DoRemote(queryText, category, StartQuery, Flags, scopeID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirPlacesReplyData>)remoteValue;
 
@@ -581,7 +581,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirLandReplyData> FindLandForSale(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID scopeID)
         {
-            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
+            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags, scopeID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirLandReplyData>)remoteValue;
 
@@ -664,7 +664,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirLandReplyData> FindLandForSaleInRegion(string searchType, uint price, uint area, int StartQuery, uint Flags, UUID regionID)
         {
-            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags);
+            object remoteValue = DoRemote(searchType, price, area, StartQuery, Flags, regionID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirLandReplyData>)remoteValue;
 
@@ -841,7 +841,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirClassifiedReplyData> FindClassifieds(string queryText, string category, uint queryFlags, int StartQuery, UUID scopeID)
         {
-            object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery);
+            object remoteValue = DoRemote(queryText, category, queryFlags, StartQuery, scopeID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirClassifiedReplyData>)remoteValue;
 
@@ -957,7 +957,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<DirEventsReplyData> FindEvents(string queryText, uint eventFlags, int StartQuery, UUID scopeID)
         {
-            object remoteValue = DoRemote(queryText, eventFlags, StartQuery);
+            object remoteValue = DoRemote(queryText, eventFlags, StartQuery, scopeID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirEventsReplyData>)remoteValue;
 
@@ -1207,13 +1207,11 @@ namespace Aurora.Services.DataService
             eventData.description = description;
             eventData.category = category;
 
-            UUID scopeID = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, regionID).ScopeID;
-
             Dictionary<string, object> row = new Dictionary<string, object>(15);
             row["EID"] = eventData.eventID;
             row["creator"] = creator.ToString();
             row["region"] = regionID.ToString();
-            row["region"] = scopeID.ToString();
+            row["region"] = region.ScopeID.ToString();
             row["parcel"] = parcelID.ToString();
             row["date"] = date.ToString("s");
             row["cover"] = eventData.cover;
