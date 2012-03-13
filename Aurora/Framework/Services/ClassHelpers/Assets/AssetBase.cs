@@ -250,9 +250,10 @@ namespace Aurora.Framework
         public string Name { get; set; }
         [ProtoMember(6)]
         public string Description { get; set; }
-        [ProtoMember(7)]
+
         public AssetType TypeAsset { get; set; }
 
+        [ProtoMember(7)]
         public int Type
         {
             get { return (int) TypeAsset; }
