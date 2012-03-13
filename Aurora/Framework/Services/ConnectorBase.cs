@@ -123,7 +123,13 @@ namespace Aurora.Framework
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
             int i = 0;
-            foreach(ParameterInfo info in method.GetParameters())
+            var parameters = method.GetParameters();
+            if (o.Length != parameters.Length)
+            {
+                MainConsole.Instance.ErrorFormat("FAILED TO GET VALID NUMBER OF PARAMETERS TO SEND REMOTELY FOR {0}, EXPECTED {1}, GOT {2}", methodName, parameters.Length, o.Length);
+                return null;
+            }
+            foreach(ParameterInfo info in parameters)
             {
                 OSD osd = o[i] == null ? null : Util.MakeOSD(o[i], o[i].GetType());
                 if(osd != null)

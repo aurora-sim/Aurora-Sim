@@ -306,6 +306,15 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "md5password">MD5 hashed password</param>
         /// <param name = "email"></param>
         void CreateUser(UUID userID, string name, string md5password, string email);
+
+        /// <summary>
+        /// Delete a user from the database permanently
+        /// </summary>
+        /// <param name="userID">The user's ID</param>
+        /// <param name="password">The user's password</param>
+        /// <param name="archiveInformation">Whether or not we should store the account's name and account information so that the user's information inworld does not go null</param>
+        /// <param name="wipeFromDatabase">Whether or not we should remove all of the user's data from other locations in the database</param>
+        void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase);
     }
 
     /// <summary>
@@ -316,7 +325,7 @@ namespace OpenSim.Services.Interfaces
         string Realm { get; }
         UserAccount[] Get(string[] fields, string[] values);
         bool Store(UserAccount data);
-        bool Delete(string field, string val);
+        bool DeleteAccount(UUID userID, bool archiveInformation);
         UserAccount[] GetUsers(UUID scopeID, string query);
     }
 }

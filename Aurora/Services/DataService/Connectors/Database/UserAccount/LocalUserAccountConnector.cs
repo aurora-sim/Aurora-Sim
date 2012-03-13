@@ -113,9 +113,20 @@ namespace Aurora.Services.DataService
             return GD.Replace(m_realm, row);
         }
 
-        public bool Delete(string field, string val)
+        public bool DeleteAccount(UUID userID, bool archiveInformation)
         {
-            return true;
+            if (archiveInformation)
+            {
+                Dictionary<string, object> row = new Dictionary<string, object>(11);
+                return GD.Update(m_realm, new Dictionary<string, object>() { { "UserLevel", -2 } }, null,
+                    new QueryFilter() { andFilters = new Dictionary<string, object>() { { "PrincipalID", userID } } }, null, null);
+            }
+            else
+            {
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters.Add("PrincipalID", userID);
+                return GD.Delete(m_realm, filter);
+            }
         }
 
         public UserAccount[] GetUsers(UUID scopeID, string query)

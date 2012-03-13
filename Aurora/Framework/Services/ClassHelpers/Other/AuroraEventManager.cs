@@ -49,49 +49,51 @@ namespace Aurora.Framework
         ///   Events so far:
         /// 
         ///   DrawDistanceChanged - Changed Draw Distance
-        ///   param is a ScenePresence
+        ///     param is a ScenePresence
         ///   BanUser - Added a new banned user to the estate bans
-        ///   param is a UUID of an agent
+        ///     param is a UUID of an agent
         ///   UnBanUser - Removed a banned user from the estate bans
-        ///   param is a UUID of an agent
+        ///     param is a UUID of an agent
         ///   SignficantCameraMovement - The Camera has moved a distance that has triggered this update
-        ///   param is a ScenePresence
+        ///     param is a ScenePresence
         ///   ObjectSelected - An object has been selected
-        ///   param is a SceneObjectPart
+        ///     param is a SceneObjectPart
         ///   ObjectDeselected - An object has been selected
-        ///   param is a SceneObjectPart
+        ///     param is a SceneObjectPart
         ///   ObjectChangedOwner - An object's owner was changed
-        ///   param is a SceneObjectGroup
+        ///     param is a SceneObjectGroup
         ///   ObjectChangedPhysicalStatus - An object's physical status has changed
-        ///   param is a SceneObjectGroup
+        ///     param is a SceneObjectGroup
         ///   ObjectEnteringNewParcel - An object has entered a new parcel
-        ///   param is an object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
+        ///     param is an object[], with o[0] a SceneObjectGroup, o[1] the new parcel UUID, and o[2] the old parcel UUID
         ///   RegionRegistered - New Region has been registered
-        ///   param is a GridRegion
+        ///     param is a GridRegion
         ///   UserStatusChange - User's status (logged in/out) has changed
-        ///   param is a object[], with o[0] the UUID of the user (as a string), o[1] whether they are logging in, o[2] the region they are entering (if logging in)
+        ///     param is a object[], with o[0] the UUID of the user (as a string), o[1] whether they are logging in, o[2] the region they are entering (if logging in)
         ///   PreRegisterRegion - A region is about to be registered
-        ///   param is a GridRegion
+        ///     param is a GridRegion
         ///   NewUserConnection - A new user has been added to the scene (child or root)
-        ///   param is an object[], with o[0] OSDMap that will be returned to the server, and o[1] the AgentCircuitData that will be added to the region
+        ///     param is an object[], with o[0] OSDMap that will be returned to the server, and o[1] the AgentCircuitData that will be added to the region
         ///   EstateUpdated - An estate has been updated
-        ///   param is the EstateSettings of the changed estate
+        ///     param is the EstateSettings of the changed estate
         ///   GridRegionRegistered - New Region has been registered with remote grid service
-        ///   param is an object[], with o[0] a GridRegion, o[1] the OSDMap response from the server
+        ///     param is an object[], with o[0] a GridRegion, o[1] the OSDMap response from the server
         ///   ObjectAddedFlag - An object in the Scene has added a prim flag
-        ///   param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
+        ///     param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
         ///   ObjectRemovedFlag - An object in the Scene has removed a prim flag
-        ///   param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
+        ///     param is an object[], with o[0] a ISceneChildEntity and o[1] the flag that was changed
         ///   SetAppearance - An avatar has updated their appearance
-        ///   param is an object[], with o[0] the UUID of the avatar and o[1] the AvatarData that is to be updated
+        ///     param is an object[], with o[0] the UUID of the avatar and o[1] the AvatarData that is to be updated
         ///   GridRegionSuccessfullyRegistered - Aurora.Server, A region has registered with the grid service
-        ///   param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
+        ///     param is an object[], with o[0] the OSDMap which will be sent to the new region, o[1] the SessionID, o[2] the GridRegion that registered
         ///   Backup - The 'backup' console command was triggered, everything should backup
-        ///   no params
+        ///     no params
         ///   AssetRequested - This is fired when the asset is requested by the client
-        ///   params are IClientAPI and TransferRequestPacket
+        ///     params are IClientAPI and TransferRequestPacket
         ///   RegionInfoChanged - The RegionInfo changed for a region (Aurora.exe only)
-        ///   params are the old RegionInfo and the new RegionInfo
+        ///     params are the old RegionInfo and the new RegionInfo
+        ///   DeleteUserInformation - The user is being deleted, remove all of their information from all databases
+        ///     params are the user's UUID
         /// </summary>
         public void RegisterEventHandler(string functionName, OnGenericEventHandler handler)
         {

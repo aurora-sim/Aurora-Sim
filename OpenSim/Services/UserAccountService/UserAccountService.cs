@@ -346,6 +346,26 @@ namespace OpenSim.Services.UserAccountService
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
+        {
+            object remoteValue = DoRemote(userID, password, archiveInformation, wipeFromDatabase);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            if (m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
+                return;//Not authed
+
+            if (!m_Database.DeleteAccount(userID, archiveInformation))
+            {
+                MainConsole.Instance.WarnFormat("Failed to remove the account for {0}, please check that the database is valid after this operation!", userID);
+                return;
+            }
+
+            if(wipeFromDatabase)
+                m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("DeleteUserInformation", userID);
+        }
+
         #endregion
 
         #region Console commands
