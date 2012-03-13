@@ -383,11 +383,13 @@ namespace OpenSim.Services.CapsService
                 {
                     OSDMap meshMap = (OSDMap)map["asset_resources"];
                     //OSDArray instance_list = (OSDArray)meshMap["instance_list"];
-                    //OSDArray mesh_list = (OSDArray)meshMap["mesh_list"];
-                    OSDArray texture_list = (OSDArray)meshMap["texture_list"];
-                    charge = texture_list.Count * mm.UploadCharge +
-                        meshMap.Count * mm.UploadCharge;
-                    resourceCost = meshMap.Count * mm.UploadCharge;
+                    int mesh_list = meshMap.ContainsKey("mesh_list") ? ((OSDArray)meshMap["mesh_list"]).Count : 1;
+                    int texture_list = meshMap.ContainsKey("texture_list") ? ((OSDArray)meshMap["texture_list"]).Count : 1;
+                    if (texture_list == 0) texture_list = 1;
+                    if (mesh_list == 0) mesh_list = 1;
+                    charge = texture_list * mm.UploadCharge +
+                        mesh_list * mm.UploadCharge;
+                    resourceCost = mesh_list * mm.UploadCharge;
                 }
                 if (charge > 0 &&
                     !mm.Charge(m_service.AgentID, mm.UploadCharge, "Upload Charge"))
