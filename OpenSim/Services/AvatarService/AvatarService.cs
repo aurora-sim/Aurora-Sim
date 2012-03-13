@@ -76,6 +76,7 @@ namespace OpenSim.Services.AvatarService
         public void Start(IConfigSource config, IRegistryCore registry)
         {
             m_Database = DataManager.RequestPlugin<IAvatarData>();
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
         }
 
         public void FinishedStartup()
@@ -202,6 +203,13 @@ namespace OpenSim.Services.AvatarService
             catch
             {
             }*/
+        }
+
+        public object DeleteUserInformation(string name, object param)
+        {
+            UUID user = (UUID)param;
+            ResetAvatar(user);
+            return null;
         }
 
         #endregion

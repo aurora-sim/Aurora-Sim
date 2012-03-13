@@ -83,6 +83,8 @@ namespace OpenSim.Services.InventoryService
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_AssetService = registry.RequestModuleInterface<IAssetService>();
+
+            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("DeleteUserInformation", DeleteUserInformation);
         }
 
         public virtual void FinishedStartup()
@@ -912,6 +914,19 @@ namespace OpenSim.Services.InventoryService
                 return (List<InventoryItemBase>)remoteValue;
 
             return new List<InventoryItemBase>(m_Database.GetActiveGestures(principalID));
+        }
+
+        public object DeleteUserInformation(string name, object param)
+        {
+            UUID user = (UUID)param;
+            var skel = GetInventorySkeleton(user);
+            foreach (var folder in skel)
+            {
+                var items = GetFolderContent(user, folder.ID);
+                DeleteItems(user, items.Items.ConvertAll<UUID>((item) => item.ID));
+                ForcePurgeFolder(folder);
+            }
+            return null;
         }
 
         #endregion
