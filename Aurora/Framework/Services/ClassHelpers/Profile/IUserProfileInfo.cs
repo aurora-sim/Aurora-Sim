@@ -38,14 +38,14 @@ namespace Aurora.Framework
     {
         Foreign = 1,
         Temperary = 2,
-        Minor = 3,
-        Locked = 4,
-        PermBan = 5,
-        TempBan = 6,
-        Blocked = 7,
-        Local = 8,
-        LocalOnly = 9,
-        PastPrelude = 10
+        Minor = 4,
+        Locked = 8,
+        PermBan = 16,
+        TempBan = 32,
+        Blocked = 64,
+        Local = 128,
+        LocalOnly = 256,
+        PastPrelude = 512
     }
 
     public class IAgentInfo : IDataTransferable, BaseCacheAccount

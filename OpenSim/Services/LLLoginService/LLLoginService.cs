@@ -312,7 +312,7 @@ namespace OpenSim.Services.LLLoginService
 
             if (account.UserLevel < m_MinLoginLevel)
             {
-                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: login is blocked for user level {0}", account.UserLevel);
+                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: login is blocked for user level {0}", account.UserLevel, account.Name);
                 return LLFailedLoginResponse.LoginBlockedProblem;
             }
 
@@ -351,7 +351,7 @@ namespace OpenSim.Services.LLLoginService
                 //
                 if (m_RequireInventory && m_InventoryService == null)
                 {
-                    MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: Login failed, reason: inventory service not set up");
+                    MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: inventory service not set up", account.Name);
                     return LLFailedLoginResponse.InventoryProblem;
                 }
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
@@ -361,7 +361,7 @@ namespace OpenSim.Services.LLLoginService
                     inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                     if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                     {
-                        MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: unable to retrieve user inventory");
+                        MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: unable to retrieve user inventory", account.Name);
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
@@ -485,7 +485,7 @@ namespace OpenSim.Services.LLLoginService
                 GridRegion destination = FindDestination (account, scopeID, guinfo, session, startLocation, home, out tpFlags, out where, out position, out lookAt);
                 if (destination == null)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: destination not found");
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: destination not found", account.Name);
                     return LLFailedLoginResponse.DeadRegionProblem;
                 }
 
@@ -562,7 +562,7 @@ namespace OpenSim.Services.LLLoginService
 
                 if (aCircuit == null)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed, reason: {0}", reason);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}", reason, account.Name);
                     return new LLFailedLoginResponse (LoginResponseEnum.InternalError, reason, false);
                 }
 

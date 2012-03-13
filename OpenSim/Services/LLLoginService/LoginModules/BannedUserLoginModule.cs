@@ -51,7 +51,7 @@ namespace OpenSim.Services.LLLoginService
             //MAC BANNING START
             string mac = (string)request["mac"];
             if (mac == "")
-                return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "Bad Viewer Connection", false);
+                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Bad Viewer Connection", false);
 
             string channel = "Unknown";
             if (request.Contains("channel") && request["channel"] != null)
@@ -62,7 +62,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 string reason = "";
                 if (!agentData.CheckMacAndViewer(mac, channel, out reason))
-                    return new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,
+                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
                         reason, false);
             }
             bool AcceptedNewTOS = false;
@@ -93,7 +93,7 @@ namespace OpenSim.Services.LLLoginService
 
             if ((agentInfo.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan)
             {
-                MainConsole.Instance.Info("[LLOGIN SERVICE]: Login failed, reason: user is permanently banned.");
+                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is permanently banned.", account.Name);
                 return LLFailedLoginResponse.PermanentBannedProblem;
             }
 
@@ -105,7 +105,7 @@ namespace OpenSim.Services.LLLoginService
                 if (agentInfo.OtherAgentInformation.ContainsKey("TemperaryBanInfo"))
                 {
                     DateTime bannedTime = agentInfo.OtherAgentInformation["TemperaryBanInfo"].AsDate();
-                    until = string.Format(" until {0}", bannedTime.ToLongTimeString());
+                    until = string.Format(" until {0} {1}", bannedTime.ToShortDateString(), bannedTime.ToLongTimeString());
 
                     //Check to make sure the time hasn't expired
                     if (bannedTime.Ticks < DateTime.Now.Ticks)
@@ -117,8 +117,8 @@ namespace OpenSim.Services.LLLoginService
 
                 if (IsBanned)
                 {
-                    MainConsole.Instance.Info(string.Format("[LLOGIN SERVICE]: Login failed, reason: user is temporarily banned {0}.", until));
-                    return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, string.Format("You are blocked from connecting to this service{0}.", until), false);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {0}.", until, account.Name);
+                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, string.Format("You are blocked from connecting to this service{0}.", until), false);
                 }
             }
             return null;

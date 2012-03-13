@@ -92,7 +92,7 @@ namespace Aurora.Modules.Ban
                 mac,
                 id0, out message))
             {
-                return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, message, false);
+                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, message, false);
             }
             return null;
         }
@@ -176,13 +176,13 @@ namespace Aurora.Modules.Ban
                 MainConsole.Instance.Commands.AddCommand(
                     "SetUserInfo", "SetUserInfo [UUID] or [First] [Last] [Flags]", "Sets the info of the given user [Flags]: Clean, Suspected, Known, Banned", SetUserInfo);
                 MainConsole.Instance.Commands.AddCommand(
-                    "block user", "block [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
+                    "block user", "block user [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
                 MainConsole.Instance.Commands.AddCommand(
-                    "ban user", "ban [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
+                    "ban user", "ban user [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
                 MainConsole.Instance.Commands.AddCommand(
-                    "unblock user", "unblock [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
+                    "unblock user", "unblock user [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
                 MainConsole.Instance.Commands.AddCommand(
-                    "unban user", "unban [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
+                    "unban user", "unban user [UUID] or [Name]", "Removes the block for logging in on a given user", UnBlockUser);
             }
         }
 
@@ -291,11 +291,11 @@ namespace Aurora.Modules.Ban
                 return;
             }
 
-            if (MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?").ToLower() == "yes")
+            if (MainConsole.Instance.Prompt("Do you want to have this only be a temporary ban?", "no", new List<string>() { "yes", "no" }).ToLower() == "yes")
             {
                 var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
                 IAgentInfo agentInfo = conn.GetAgent(AgentID);
-                float days = float.Parse(MainConsole.Instance.Prompt("How long (in days) should this ban last?"));
+                float days = float.Parse(MainConsole.Instance.Prompt("How long (in days) should this ban last?", "5.0"));
 
                 agentInfo.Flags |= IAgentFlags.TempBan;
 
@@ -305,7 +305,7 @@ namespace Aurora.Modules.Ban
             }
             else
             {
-                info.Flags = PresenceInfo.PresenceInfoFlags.Banned;
+                info.Flags |= PresenceInfo.PresenceInfoFlags.Banned;
                 presenceInfo.UpdatePresenceInfo(info);
             }
             MainConsole.Instance.Fatal("User blocked from logging in");
@@ -333,6 +333,14 @@ namespace Aurora.Modules.Ban
             }
             info.Flags = PresenceInfo.PresenceInfoFlags.Clean;
             presenceInfo.UpdatePresenceInfo(info);
+
+            var conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+            IAgentInfo agentInfo = conn.GetAgent(AgentID);
+
+            agentInfo.Flags &= IAgentFlags.TempBan;
+            agentInfo.Flags &= IAgentFlags.PermBan;
+            conn.UpdateAgent(agentInfo);
+
             MainConsole.Instance.Fatal("User block removed");
         }
 
@@ -387,12 +395,6 @@ namespace Aurora.Modules.Ban
         {
             message = "";
 
-            IAgentInfo data = DataManager.DataManager.RequestPlugin<IAgentConnector>().GetAgent(AgentID);
-            if (data != null && ((data.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (data.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan))
-            {
-                message = "User is banned from the grid.";
-                return false;
-            }
             PresenceInfo info = GetInformation(AgentID);
 
             if (m_checkOnLogin)
@@ -572,7 +574,7 @@ namespace Aurora.Modules.Ban
             ip = ip.Split(':')[0];//Remove the port
             IPAddress userIP = IPAddress.Parse(ip);
             if (IPBans.Contains(userIP))
-                return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "Your account cannot be accessed on this computer.", false);
+                return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Your account cannot be accessed on this computer.", false);
             foreach (string ipRange in IPRangeBans)
             {
                 string[] split = ipRange.Split('-');
@@ -582,7 +584,7 @@ namespace Aurora.Modules.Ban
                 IPAddress high = IPAddress.Parse(ip);
                 NetworkUtils.IPAddressRange range = new NetworkUtils.IPAddressRange(low, high);
                 if (range.IsInRange(userIP))
-                    return new LLFailedLoginResponse(LoginResponseEnum.MessagePopup, "Your account cannot be accessed on this computer.", false);
+                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Your account cannot be accessed on this computer.", false);
             }
             return null;
         }
