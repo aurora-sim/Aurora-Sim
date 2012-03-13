@@ -261,6 +261,10 @@ namespace OpenMetaverse
                 catch (ObjectDisposedException)
                 {
                 }
+                catch(Exception ex)
+                {
+                    MainConsole.Instance.Error("[UDPBase]: Hit error: " + ex.ToString());
+                }
                 finally
                 {
                     //wrappedBuffer.Dispose();
