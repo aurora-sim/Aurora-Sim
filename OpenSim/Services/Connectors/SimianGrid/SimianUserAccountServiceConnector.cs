@@ -230,7 +230,7 @@ namespace OpenSim.Services.Connectors.SimianGrid
         {
         }
 
-        public void CreateUser(UUID userID, string name, string password, string email)
+        public void CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
         }
 
@@ -342,6 +342,12 @@ namespace OpenSim.Services.Connectors.SimianGrid
 
         public void CacheAccount(UserAccount account)
         {
+        }
+
+
+        public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
+        {
+
         }
     }
 }

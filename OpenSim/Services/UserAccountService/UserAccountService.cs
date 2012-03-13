@@ -295,10 +295,9 @@ namespace OpenSim.Services.UserAccountService
             return ret;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateUser(string name, string password, string email)
         {
-            CreateUser(UUID.Random(), name, password, email);
+            CreateUser(UUID.Random(), UUID.Zero, name, password, email);
         }
 
         /// <summary>
@@ -309,9 +308,9 @@ namespace OpenSim.Services.UserAccountService
         /// <param name = "password"></param>
         /// <param name = "email"></param>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public void CreateUser(UUID userID, string name, string password, string email)
+        public void CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
-            object remoteValue = DoRemote(userID, name, password, email);
+            object remoteValue = DoRemote(userID, scopeID, name, password, email);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
@@ -319,7 +318,7 @@ namespace OpenSim.Services.UserAccountService
             UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
             if (null == account && nameaccount == null)
             {
-                account = new UserAccount(UUID.Zero, userID, name, email);
+                account = new UserAccount(scopeID, userID, name, email);
                 if (StoreUserAccount(account))
                 {
                     bool success;
@@ -472,7 +471,7 @@ namespace OpenSim.Services.UserAccountService
         /// <param name = "cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
         protected void HandleCreateUser(string[] cmdparams)
         {
-            string name, password, email, uuid;
+            string name, password, email, uuid, scopeID;
 
             name = MainConsole.Instance.Prompt("Name", "Default User");
 
@@ -480,9 +479,11 @@ namespace OpenSim.Services.UserAccountService
 
             email = MainConsole.Instance.Prompt("Email", "");
 
-            uuid = MainConsole.Instance.Prompt("UUID", UUID.Random().ToString());
+            uuid = MainConsole.Instance.Prompt("UUID (Don't change unless you have a reason)", UUID.Random().ToString());
 
-            CreateUser(UUID.Parse(uuid), name, Util.Md5Hash(password), email);
+            scopeID = MainConsole.Instance.Prompt("Scope (Don't change unless you know what this is)", UUID.Zero.ToString());
+
+            CreateUser(UUID.Parse(uuid), UUID.Parse(scopeID), name, Util.Md5Hash(password), email);
         }
 
         protected void HandleResetUserPassword(string[] cmdparams)

@@ -131,9 +131,9 @@ namespace Aurora.Modules
             m_localService.CreateUser(name, md5password, email);
         }
 
-        public void CreateUser(UUID userID, string name, string md5password, string email)
+        public void CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
         {
-            m_localService.CreateUser(userID, name, md5password, email);
+            m_localService.CreateUser(userID, scopeID, name, md5password, email);
         }
 
         public void CacheAccount(UserAccount account)
@@ -162,6 +162,11 @@ namespace Aurora.Modules
             userAccount.Name = userAccount.FirstName + " " + userAccount.LastName + "@" +
                                userAccount.GenericData["GridURL"];
             return userAccount;
+        }
+
+
+        public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
+        {
         }
     }
 }
