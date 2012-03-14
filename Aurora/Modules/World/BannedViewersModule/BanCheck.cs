@@ -70,21 +70,22 @@ namespace Aurora.Modules.Ban
         public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
         {
             data = null;
-            string ip = (string)request["ip"];
-            if (ip == null)
-                ip = "";
-            string version = (string)request["version"];
-            if (version == null)
-                version = "";
-            string platform = (string)request["platform"];
-            if (platform == null)
-                platform = "";
-            string mac = (string)request["mac"];
-            if (mac == null)
-                mac = "";
-            string id0 = (string)request["id0"];
-            if (id0 == null)
-                id0 = "";
+
+            string ip = "";
+            string version = "";
+            string platform = "";
+            string mac = "";
+            string id0 = "";
+
+            if (request != null)
+            {
+                ip = request.ContainsKey("ip") ? (string)request["ip"] : "";
+                version = request.ContainsKey("version") ? (string)request["version"] : "";
+                platform = request.ContainsKey("platform") ? (string)request["platform"] : "";
+                mac = request.ContainsKey("mac") ? (string)request["mac"] : "";
+                id0 = request.ContainsKey("id0") ? (string)request["id0"] : "";
+            }
+
             string message;
             if(!m_module.CheckUser(account.PrincipalID, ip,
                 version,
@@ -568,9 +569,7 @@ namespace Aurora.Modules.Ban
         public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
         {
             data = null;
-            string ip = (string)request["ip"];
-            if (ip == null)
-                ip = "";
+            string ip = request != null && request.ContainsKey("ip") ? (string)request["ip"] : "127.0.0.1";
             ip = ip.Split(':')[0];//Remove the port
             IPAddress userIP = IPAddress.Parse(ip);
             if (IPBans.Contains(userIP))
