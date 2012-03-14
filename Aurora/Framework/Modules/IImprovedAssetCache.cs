@@ -29,7 +29,7 @@ namespace Aurora.Framework
 {
     public interface IImprovedAssetCache
     {
-        void Cache(AssetBase asset);
+        void Cache(string assetID, AssetBase asset);
         AssetBase Get(string id);
         AssetBase Get(string id, out bool found);
         void Expire(string id);

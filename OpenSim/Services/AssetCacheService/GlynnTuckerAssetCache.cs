@@ -94,7 +94,7 @@ namespace OpenSim.Services
         // IImprovedAssetCache
         //
 
-        public void Cache(AssetBase asset)
+        public void Cache(string assetID, AssetBase asset)
         {
             if (asset != null)
                 m_Cache.AddOrUpdate(asset.IDString, asset);

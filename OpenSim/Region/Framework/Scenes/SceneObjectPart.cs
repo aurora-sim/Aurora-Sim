@@ -4262,7 +4262,7 @@ namespace OpenSim.Region.Framework.Scenes
             return dupe;
         }
 
-        protected void AssetReceived(string id, Object sender, AssetBase asset)
+        public void AssetReceived(string id, Object sender, AssetBase asset)
         {
             if (asset != null)
                 this.Shape.SculptData = asset.Data; //Set the asset data
@@ -4271,7 +4271,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (isMesh)
                 this.Shape.SculptType = (byte)SculptType.Mesh;
             PrimitiveBaseShape shape = Shape.Copy();
-            if ((bool) sender && this.PhysActor != null) //Update physics
+            if ((bool) sender && this.PhysActor != null && (asset != null || (this.Shape.SculptData != null && this.Shape.SculptData.Length != 0))) //Update physics
             {
                 //Get physics to update in a hackish way
                 this.PhysActor.Shape = shape;
