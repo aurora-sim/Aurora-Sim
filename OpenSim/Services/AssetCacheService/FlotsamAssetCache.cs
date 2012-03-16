@@ -392,11 +392,6 @@ namespace OpenSim.Services
                         File.Delete(filename);
                     }
                 }
-                else
-                {
-                    UpdateMemoryCache(id, asset, true);
-                    m_assetRequests[id].Amt = _forceMemoryCacheAmount;
-                }
 
 
 #if WAIT_ON_INPROGRESS_REQUESTS
