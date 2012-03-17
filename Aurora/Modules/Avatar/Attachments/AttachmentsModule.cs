@@ -170,7 +170,7 @@ namespace Aurora.Modules.Attachments
                 appearance.Appearance.SetAttachments(attachments);
             IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
-                backup.DeleteSceneObjects(attachments, false, true);
+                backup.DeleteSceneObjects(attachments, false, false);
         }
 
         #endregion
@@ -376,8 +376,8 @@ namespace Aurora.Modules.Attachments
                     // If a bug is caused by this, we need to figure out some other workaround.
                     //SendKillEntity(objatt.RootChild);
                     //We also have to reset the IDs so that it doesn't have the same IDs as one inworld (possibly)!
-                    m_scene.SceneGraph.PrepPrimForAdditionToScene(objatt);
-                    m_scene.Entities.Add(objatt);
+
+                    m_scene.SceneGraph.RestorePrimToScene(objatt);
 
                     //If we updated the attachment, we need to save the change
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
