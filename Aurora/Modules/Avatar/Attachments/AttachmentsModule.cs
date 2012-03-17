@@ -377,7 +377,11 @@ namespace Aurora.Modules.Attachments
                     //SendKillEntity(objatt.RootChild);
                     //We also have to reset the IDs so that it doesn't have the same IDs as one inworld (possibly)!
 
-                    m_scene.SceneGraph.RestorePrimToScene(objatt);
+                    try
+                    {
+                        m_scene.SceneGraph.RestorePrimToScene(objatt);
+                    }
+                    catch { }
 
                     //If we updated the attachment, we need to save the change
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
