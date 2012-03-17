@@ -2442,7 +2442,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // If no sculpt data exists, we need to get the data
                         m_scene.AssetService.Get(part.Shape.SculptTexture.ToString(), true, part.AssetReceived);
                         //In the mean time...
-                        part.Shape.SculptEntry = false;
+                        //part.Shape.SculptEntry = false;
                         part.Shape.SculptData = new byte[0];
                     }
                 }
