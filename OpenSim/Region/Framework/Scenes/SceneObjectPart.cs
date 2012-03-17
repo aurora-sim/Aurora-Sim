@@ -4265,7 +4265,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void AssetReceived(string id, Object sender, AssetBase asset)
         {
             if (asset != null)
+            {
+                this.Shape.SculptEntry = true;
                 this.Shape.SculptData = asset.Data; //Set the asset data
+            }
 
             bool isMesh = asset == null ? false : (asset.Type == (int) AssetType.Mesh);
             if (isMesh)
