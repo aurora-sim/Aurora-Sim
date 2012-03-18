@@ -691,7 +691,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_animator = new Animator(this);
 
             UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, m_uuid);
-            client.ScopeID = account.ScopeID;
 
             if (account != null)
             {

@@ -93,6 +93,11 @@ namespace OpenSim.Services.UserAccountService
                     "set user profile title [<first> [<last> [<Title>]]]",
                     "Sets the title (Normally resident) in a user's title to some custom value.",
                     HandleSetTitle);
+                MainConsole.Instance.Commands.AddCommand(
+                    "set partner",
+                    "set partner",
+                    "Sets the partner in a user's profile.",
+                    HandleSetPartner);
             }
             registry.RegisterModuleInterface<IUserAccountService>(this);
         }
@@ -368,6 +373,27 @@ namespace OpenSim.Services.UserAccountService
         #endregion
 
         #region Console commands
+
+        protected void HandleSetPartner(string[] cmdParams)
+        {
+            string first = MainConsole.Instance.Prompt("First User's name");
+            string second = MainConsole.Instance.Prompt("Second User's name");
+
+            IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            if (profileConnector != null)
+            {
+                IUserProfileInfo firstProfile = profileConnector.GetUserProfile(GetUserAccount(UUID.Zero, first).PrincipalID);
+                IUserProfileInfo secondProfile = profileConnector.GetUserProfile(GetUserAccount(UUID.Zero, second).PrincipalID);
+
+                firstProfile.Partner = secondProfile.PrincipalID;
+                secondProfile.Partner = firstProfile.PrincipalID;
+
+                profileConnector.UpdateUserProfile(firstProfile);
+                profileConnector.UpdateUserProfile(secondProfile);
+
+                MainConsole.Instance.Warn("Partner information updated. ");
+            }
+        }
 
         protected void HandleSetTitle(string[] cmdparams)
         {

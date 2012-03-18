@@ -66,7 +66,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     return;
                 if (MainConsole.Instance != null)
                     MainConsole.Instance.Commands.AddCommand("open region manager", "open region manager", "Opens the region manager", OpenRegionManager);
-                m_default = config.GetString("Default") == Name;
+                m_default = config.GetString("Default") == GetType().Name;
 
                 //Add the console command if it is the default
                 if (m_default)
@@ -102,50 +102,6 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (conn == null)
                 return null;
             RegionInfo[] infos = conn.GetRegionInfos(true);
-            if (infos.Length == 0 && m_default)
-            {
-                //Load up the GUI to make a new region
-                try
-                {
-                    if(m_noGUI)
-                    {
-                        RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
-                        system.Initialise (m_configSource, m_openSim);
-                        system.AddRegion (new string[0]);
-                    }
-                    else
-                    {
-                        bool done = false, errored = false;
-                        Thread t = new Thread(delegate()
-                            {
-                                try
-                                {
-                                    RegionManager manager = new RegionManager(true, true, m_openSim);
-                                    Application.Run(manager);
-                                    done = true;
-                                }
-                                catch
-                                {
-                                    errored = true;
-                                }
-                            });
-                        t.SetApartmentState(ApartmentState.STA);
-                        t.Start();
-                        while (!done)
-                            if (errored)
-                                throw new Exception();
-                            Thread.Sleep(100);
-                    }
-                }
-                catch
-                {
-                    //Probably no winforms
-                    RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
-                    system.Initialise (m_configSource, m_openSim);
-                    system.AddRegion (new string[0]);
-                }
-                return LoadRegions();
-            }
             return infos.Length == 0 ? null : infos;
         }
 
