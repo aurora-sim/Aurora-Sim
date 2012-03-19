@@ -97,7 +97,7 @@ namespace Aurora.Modules.Attachments
         protected void AgentIsLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
-            SuspendAvatar(presence);
+            SuspendAvatar(presence, destination);
         }
 
         #endregion
@@ -134,7 +134,7 @@ namespace Aurora.Modules.Attachments
             });
         }
 
-        public void SuspendAvatar(IScenePresence presence)
+        public void SuspendAvatar(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             ISceneEntity[] attachments = GetAttachmentsForAvatar(presence.UUID);
             foreach (ISceneEntity group in attachments)
@@ -170,7 +170,16 @@ namespace Aurora.Modules.Attachments
                 appearance.Appearance.SetAttachments(attachments);
             IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
-                backup.DeleteSceneObjects(attachments, false, false);
+            {
+                bool sendUpdates = destination == null;
+                if (!sendUpdates)
+                {
+                    List<OpenSim.Services.Interfaces.GridRegion> regions = presence.Scene.RequestModuleInterface<IGridRegisterModule>().GetNeighbors(presence.Scene);
+                    regions.RemoveAll((r) => r.RegionID != destination.RegionID);
+                    sendUpdates = regions.Count == 0;
+                }
+                backup.DeleteSceneObjects(attachments, false, sendUpdates);
+            }
         }
 
         #endregion
@@ -387,14 +396,6 @@ namespace Aurora.Modules.Attachments
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
                     {
-                        IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                        AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
-                        bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
-                        attPlugin.AddAttachment(objatt);
-                        appearance.Appearance.SetAttachments(attPlugin.Get());
-                        if (save)
-                            AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-
                         MainConsole.Instance.InfoFormat(
                             "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                             objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
@@ -703,6 +704,12 @@ namespace Aurora.Modules.Attachments
             {
                 attPlugin.AddAttachment (group);
                 presence.SetAttachments(attPlugin.Get());
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
+
+                bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
+                if (save)
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
             // Killing it here will cause the client to deselect it
@@ -917,8 +924,8 @@ namespace Aurora.Modules.Attachments
             {
                 lock (m_attachments)
                 {
-                    if(!m_attachments.Contains(attachment))
-                        m_attachments.Add(attachment);
+                    m_attachments.RemoveAll((a) => attachment.UUID == a.UUID);
+                    m_attachments.Add(attachment);
                 }
             }
 
@@ -926,8 +933,7 @@ namespace Aurora.Modules.Attachments
             {
                 lock (m_attachments)
                 {
-                    if (m_attachments.Contains(attachment))
-                        m_attachments.Remove(attachment);
+                    m_attachments.RemoveAll((a) => attachment.UUID == a.UUID);
                 }
             }
 
