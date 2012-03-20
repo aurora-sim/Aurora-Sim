@@ -76,6 +76,19 @@ namespace OpenSim.Services
                     LastAccessed = DateTime.Now;
                 }
             }
+            private int _savedamt = 1;
+            public int SavedAmt
+            {
+                get { return _savedamt; }
+                set
+                {
+                    _savedamt = value;
+                    LastAccessedTimeSpan = DateTime.Now - LastAccessed;
+                    if (LastAccessedTimeSpan.Seconds > 10)
+                        _savedamt = 0;
+                    LastAccessed = DateTime.Now;
+                }
+            }
             public TimeSpan LastAccessedTimeSpan = TimeSpan.FromDays(1000);
             public DateTime LastAccessed = DateTime.Now;
         }
@@ -114,7 +127,7 @@ namespace OpenSim.Services
 
         private bool m_DeepScanBeforePurge;
 
-        private static int _forceMemoryCacheAmount = 5;
+        private static int _forceMemoryCacheAmount = 2;
         private IAssetMonitor _assetMonitor;
 
         public FlotsamAssetCache()
@@ -268,7 +281,7 @@ namespace OpenSim.Services
             }
         }
 
-        public void Cache(AssetBase asset)
+        public void Cache(string assetID, AssetBase asset)
         {
             if (asset != null)
             {
@@ -321,6 +334,16 @@ namespace OpenSim.Services
                     LogException(e);
                 }
             }
+            else
+            {
+                if (m_assetRequests.ContainsKey(assetID))
+                    m_assetRequests[assetID].SavedAmt++;
+                else
+                    m_assetRequests[assetID] = new AssetRequest();
+
+                if (m_assetRequests[assetID].SavedAmt > _forceMemoryCacheAmount)
+                    UpdateMemoryCache(assetID, asset, true);
+            }
         }
 
         public AssetBase Get(string id)
@@ -341,7 +364,7 @@ namespace OpenSim.Services
             found = false;
 
             bool forceMemCache = m_assetRequests[id].Amt > _forceMemoryCacheAmount;
-            if ((m_MemoryCacheEnabled || forceMemCache)&& m_MemoryCache.TryGetValue(id, out asset))
+            if ((m_MemoryCacheEnabled || forceMemCache) && m_MemoryCache.TryGetValue(id, out asset))
             {
                 found = true;
                 m_MemoryHits++;
@@ -355,6 +378,8 @@ namespace OpenSim.Services
                     {
                         asset = ExtractAsset(id, asset, filename, forceMemCache);
                         found = true;
+                        if (asset == null)
+                            m_assetRequests[id].Amt = _forceMemoryCacheAmount;
                     }
                     catch (Exception e)
                     {
@@ -420,9 +445,6 @@ namespace OpenSim.Services
 
         private AssetBase ExtractAsset(string id, AssetBase asset, string filename, bool forceMemCache)
         {
-            /*string file = File.ReadAllText(filename);
-            asset = new AssetBase();
-            asset.Unpack(OpenMetaverse.StructuredData.OSDParser.DeserializeJson(file));*/
             try
             {
                 Stream s = File.Open(filename, FileMode.Open);
@@ -432,7 +454,7 @@ namespace OpenSim.Services
             catch
             {
             }
-            UpdateMemoryCache(id, asset, forceMemCache);
+            UpdateMemoryCache(id, asset, asset == null ? true : forceMemCache);
 
             m_DiskHits++;
             return asset;
@@ -474,9 +496,7 @@ namespace OpenSim.Services
                 lock (m_fileCacheLock)
                 {
                     if (File.Exists(filename))
-                    {
                         File.Delete(filename);
-                    }
                 }
 
                 if (m_MemoryCacheEnabled)
@@ -557,9 +577,7 @@ namespace OpenSim.Services
                 lock (m_fileCacheLock)
                 {
                     if (File.GetLastAccessTime(file) < purgeLine)
-                    {
                         File.Delete(file);
-                    }
                 }
             }
 
@@ -574,9 +592,7 @@ namespace OpenSim.Services
                 // Check if a tier directory is empty, if so, delete it
                 int dirSize = Directory.GetFiles(dir).Length + Directory.GetDirectories(dir).Length;
                 if (dirSize == 0)
-                {
                     Directory.Delete(dir);
-                }
                 else if (dirSize >= m_CacheWarnAt)
                 {
                     MainConsole.Instance.WarnFormat(
@@ -663,9 +679,7 @@ namespace OpenSim.Services
                     }
 #else
                         if (m_CurrentlyWriting.Contains(filename))
-                        {
                             m_CurrentlyWriting.Remove(filename);
-                        }
 #endif
                     }
                 }

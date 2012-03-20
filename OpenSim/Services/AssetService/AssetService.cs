@@ -107,7 +107,7 @@ namespace OpenSim.Services.AssetService
         public virtual AssetBase Get(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null)
+            if (doDatabaseCaching && cache != null)
             {
                 bool found;
                 AssetBase cachedAsset = cache.Get(id, out found);
@@ -117,14 +117,14 @@ namespace OpenSim.Services.AssetService
             object remoteValue = DoRemote(id);
             if (remoteValue != null || m_doRemoteOnly)
             {
-                if (cache != null && remoteValue != null)
-                    cache.Cache((AssetBase)remoteValue);
+                if (doDatabaseCaching && cache != null)
+                    cache.Cache(id, (AssetBase)remoteValue);
                 return (AssetBase)remoteValue;
             }
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
-            if (doDatabaseCaching && cache != null && asset != null)
-                cache.Cache(asset);
+            if (doDatabaseCaching && cache != null)
+                cache.Cache(id, asset);
             return asset;
         }
 
@@ -132,7 +132,7 @@ namespace OpenSim.Services.AssetService
         public virtual AssetBase GetCached(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null)
+            if (doDatabaseCaching && cache != null)
                 return cache.Get(id);
             return null;
         }
@@ -141,7 +141,7 @@ namespace OpenSim.Services.AssetService
         public virtual byte[] GetData(string id)
         {
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
-            if (cache != null)
+            if (doDatabaseCaching && cache != null)
             {
                 bool found;
                 AssetBase cachedAsset = cache.Get(id, out found);
@@ -154,8 +154,8 @@ namespace OpenSim.Services.AssetService
                 return (byte[])remoteValue;
 
             AssetBase asset = m_database.GetAsset(UUID.Parse(id));
-            if (doDatabaseCaching && cache != null && asset != null)
-                cache.Cache(asset);
+            if (doDatabaseCaching && cache != null)
+                cache.Cache(id, asset);
             if (asset != null) return asset.Data;
             return new byte[0];
         }
@@ -192,7 +192,7 @@ namespace OpenSim.Services.AssetService
             if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
             {
                 cache.Expire(asset.ID.ToString());
-                cache.Cache(asset);
+                cache.Cache(asset.ID.ToString(), asset);
             }
 
             return asset != null ? asset.ID : UUID.Zero;

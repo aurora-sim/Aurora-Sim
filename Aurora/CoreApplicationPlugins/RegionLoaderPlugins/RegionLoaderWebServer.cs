@@ -68,6 +68,10 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
+        public void AddRegion(string[] cmd)
+        {
+        }
+
         public RegionInfo[] LoadRegions()
         {
             IConfig RegionStartupConfig = m_configSource.Configs["RegionStartup"];

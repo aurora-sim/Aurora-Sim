@@ -81,6 +81,12 @@ namespace Aurora.Framework
         /// </summary>
         /// <returns></returns>
         bool FailedToStartRegions(string reason);
+
+        /// <summary>
+        /// Add a region with the given parameters
+        /// </summary>
+        /// <param name="p"></param>
+        void AddRegion(string[] p);
     }
 
     public interface ISceneLoader

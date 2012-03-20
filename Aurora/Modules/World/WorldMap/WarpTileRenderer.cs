@@ -171,7 +171,12 @@ namespace Aurora.Modules.WorldMap
             renderer.Render();
             Bitmap bitmap = renderer.Scene.getImage();
             bitmap = ImageUtils.ResizeImage(bitmap, Constants.RegionSize, Constants.RegionSize);
-
+            foreach (var o in renderer.Scene.objectData.Values)
+            {
+                warp_Object obj = (warp_Object)o;
+                obj.vertexData = null;
+                obj.triangleData = null;
+            }
             renderer.Scene.removeAllObjects();
             renderer = null;
             viewport = null;

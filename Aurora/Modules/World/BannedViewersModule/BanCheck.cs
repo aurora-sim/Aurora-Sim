@@ -205,11 +205,16 @@ namespace Aurora.Modules.Ban
         {
             PresenceInfo info = new PresenceInfo();
             info.AgentID = AgentID;
-            info.LastKnownIP = ip;
-            info.LastKnownViewer = version;
-            info.Platform = platform;
-            info.LastKnownMac = mac;
-            info.LastKnownID0 = id0;
+            if(!string.IsNullOrEmpty(ip))
+                info.LastKnownIP = ip;
+            if (!string.IsNullOrEmpty(version))
+                info.LastKnownViewer = version;
+            if (!string.IsNullOrEmpty(platform))
+                info.Platform = platform;
+            if (!string.IsNullOrEmpty(mac))
+                info.LastKnownMac = mac;
+            if (!string.IsNullOrEmpty(id0))
+                info.LastKnownID0 = id0;
 
             if (!oldInfo.KnownID0s.Contains(info.LastKnownID0))
                 oldInfo.KnownID0s.Add(info.LastKnownID0);

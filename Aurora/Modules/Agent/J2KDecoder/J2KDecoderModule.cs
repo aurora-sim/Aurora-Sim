@@ -324,7 +324,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
                 #endregion Serialize Layer Data
 
-                m_cache.Cache(layerDecodeAsset);
+                m_cache.Cache(assetID, layerDecodeAsset);
             }
         }
 

@@ -456,8 +456,10 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     foreach (ILandObject parcel in landObject)
                     {
                         OSDMap parcelMap = parcel.LandData.ToOSD();
+                        var binary = OSDParser.SerializeLLSDBinary(parcelMap);
                         writer.WriteFile("parcels/" + parcel.LandData.GlobalID.ToString(),
-                                         OSDParser.SerializeLLSDBinary(parcelMap));
+                                         binary);
+                        binary = null;
                         parcelMap = null;
                     }
                 }
@@ -596,6 +598,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     }
                 }
 
+                reader.Close();
                 writer.Close();
                 m_loadStream.Close();
                 m_saveStream.Close();
@@ -628,25 +631,11 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 archiver.SaveRegionBackup(writer, m_scene);
                 archiver.AllowPrompting = true;
 
-                //If we got this far, we assume that everything went well, so now we move the stuff around
-                if (File.Exists(fileName))
-                {
-                    //If keepOldSave is enabled, the user wants us to move the first backup that we originally loaded from into the oldSaveDirectory
-                    if (m_keepOldSave && !m_oldSaveHasBeenSaved)
-                    {
-                        //Havn't moved it yet, so make sure the directory exists, then move it
-                        m_oldSaveHasBeenSaved = true;
-                        if (!Directory.Exists(m_oldSaveDirectory))
-                            Directory.CreateDirectory(m_oldSaveDirectory);
-                        File.Copy(fileName + ".tmp",
-                                  Path.Combine(m_oldSaveDirectory,
-                                               m_scene.RegionInfo.RegionName + SerializeDateTime() +
-                                               m_saveAppendedFileName + ".abackup"));
-                    }
-                    //Just remove the file
-                    File.Delete(fileName);
-                }
+                m_saveStream.Close();
+                writer.Close();
+                GC.Collect();
             }
+            File.Move(fileName + ".tmp", fileName);
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
             try
             { 
@@ -670,7 +659,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 MainConsole.Instance.WarnFormat("[Backup]: Exception caught: {0}", ex);
             }
             //Now make it the full file again
-            File.Move(fileName + ".tmp", fileName);
             MapTileNeedsGenerated = true;
             MainConsole.Instance.Info("[FileBasedSimulationData]: Saved Backup for region " + m_scene.RegionInfo.RegionName);
         }

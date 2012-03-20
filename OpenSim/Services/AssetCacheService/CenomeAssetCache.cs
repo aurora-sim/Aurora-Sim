@@ -30,6 +30,7 @@ using System.Reflection;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Services
 {
@@ -162,7 +163,7 @@ namespace OpenSim.Services
         /// <param name = "asset">
         ///   The asset that is being cached.
         /// </param>
-        public void Cache(AssetBase asset)
+        public void Cache(string assetID, AssetBase asset)
         {
             if (asset != null)
             {

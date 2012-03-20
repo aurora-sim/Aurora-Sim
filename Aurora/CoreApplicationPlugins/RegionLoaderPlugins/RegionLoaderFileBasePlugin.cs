@@ -65,7 +65,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 m_enabled = config.GetBoolean(GetType().Name + "_Enabled", m_enabled);
                 if (!m_enabled)
                     return;
-                m_default = config.GetString("Default") == Name;
+                m_default = config.GetString("Default") == GetType().Name;
                 m_regionConfigPath = config.GetString("RegionsDirectory", m_regionConfigPath).Trim();
 
                 //Add the console command if it is the default
