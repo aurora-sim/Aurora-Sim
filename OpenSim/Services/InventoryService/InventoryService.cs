@@ -908,13 +908,8 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryFolderBase GetFolderByOwnerAndName(UUID FolderOwner, string FolderName)
         {
-            object remoteValue = DoRemote(FolderOwner, FolderName);
-            if (remoteValue != null || m_doRemoteOnly)
-                return (InventoryFolderBase)remoteValue;
-
             List<InventoryFolderBase> folders = m_Database.GetFolders(
                 new[] { "folderName", "agentID" },
                 new[] { FolderName, FolderOwner.ToString() });

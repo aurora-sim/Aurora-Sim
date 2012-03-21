@@ -56,6 +56,8 @@
     ;; HasProxy = true
 	
 	;; Force all users to wear (OBJECTS ONLY FOR NOW) objects in this folder. 
-	;; Value should be the folder ID, uuid found in inventoryfolders table
+	;; Value should be a unique folder name for the owner
 	;; make sure you have worn the objects at least once before you enable this
-	forceUserToWear = ""
+	;; Folder Owner Value should be the UUID of the user that owns the folder 
+	forceUserToWearFolderName = ""
+	forceUserToWearFolderOwner = ""
