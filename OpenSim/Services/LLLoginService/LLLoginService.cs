@@ -84,7 +84,7 @@ namespace OpenSim.Services.LLLoginService
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
-		private string m_forceUserToWear;
+        private string m_forceUserToWear;
 
         public int MinLoginLevel
         {
@@ -97,8 +97,8 @@ namespace OpenSim.Services.LLLoginService
             m_loginServerConfig = config.Configs["LoginService"];
             if (m_loginServerConfig == null)
                 return;
-				
-			m_forceUserToWear = m_loginServerConfig.GetString("forceUserToWear", "");
+
+            m_forceUserToWear = m_loginServerConfig.GetString("forceUserToWear", "");
             m_DefaultHomeRegion = m_loginServerConfig.GetString("DefaultHomeRegion", "");
             m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
@@ -123,7 +123,7 @@ namespace OpenSim.Services.LLLoginService
                 WebClient client = new WebClient();
                 m_WelcomeMessage = client.DownloadString(m_WelcomeMessageURL);
             }
-            LLLoginResponseRegister.RegisterValue ("Message", m_WelcomeMessage);
+            LLLoginResponseRegister.RegisterValue("Message", m_WelcomeMessage);
             m_RequireInventory = m_loginServerConfig.GetBoolean("RequireInventory", true);
             m_AllowRemoteSetLoginLevel = m_loginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_loginServerConfig.GetInt("MinLoginLevel", 0);
@@ -134,12 +134,12 @@ namespace OpenSim.Services.LLLoginService
             if (LLLoginResponseRegister.GetValue("SearchURL").ToString() == string.Empty)
             {
                 IConfig gridInfo = config.Configs["GridInfoService"];
-                LLLoginResponseRegister.RegisterValue ("SearchURL", gridInfo.GetString("search", string.Empty));
+                LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GetString("search", string.Empty));
             }
             LLLoginResponseRegister.RegisterValue("SunTexture", m_loginServerConfig.GetString("SunTexture", sunTexture));
             LLLoginResponseRegister.RegisterValue("MoonTexture", m_loginServerConfig.GetString("MoonTexture", moonTexture));
             LLLoginResponseRegister.RegisterValue("CloudTexture", m_loginServerConfig.GetString("CloudTexture", cloudTexture));
-            registry.RegisterModuleInterface<ILoginService> (this);
+            registry.RegisterModuleInterface<ILoginService>(this);
             m_registry = registry;
         }
 
@@ -153,7 +153,7 @@ namespace OpenSim.Services.LLLoginService
             m_AvatarService = registry.RequestModuleInterface<IAvatarService>().InnerService;
             m_FriendsService = registry.RequestModuleInterface<IFriendsService>();
             m_SimulationService = registry.RequestModuleInterface<ISimulationService>();
-            m_AssetService = registry.RequestModuleInterface<IAssetService> ().InnerService;
+            m_AssetService = registry.RequestModuleInterface<IAssetService>().InnerService;
             m_LibraryService = registry.RequestModuleInterface<ILibraryService>();
             m_CapsService = registry.RequestModuleInterface<ICapsService>();
             m_ArchiveService = registry.RequestModuleInterface<IAvatarAppearanceArchiver>();
@@ -270,7 +270,7 @@ namespace OpenSim.Services.LLLoginService
             return response;
         }
 
-        public bool VerifyClient (UUID AgentID, string name, string authType, string passwd, UUID scopeID)
+        public bool VerifyClient(UUID AgentID, string name, string authType, string passwd, UUID scopeID)
         {
             MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
                 AgentID);
@@ -331,7 +331,7 @@ namespace OpenSim.Services.LLLoginService
                 agentData.CreateNewAgent(account.PrincipalID);
                 agent = agentData.GetAgent(account.PrincipalID);
             }
-            
+
             requestData["ip"] = clientIP.ToString();
             foreach (ILoginModule module in LoginModules)
             {
@@ -368,9 +368,7 @@ namespace OpenSim.Services.LLLoginService
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
-                if (m_InventoryService.CreateUserRootFolder (account.PrincipalID))
-                    //Gotta refetch... since something went wrong
-                    inventorySkel = m_InventoryService.GetInventorySkeleton (account.PrincipalID);
+                m_InventoryService.CreateUserRootFolder(account.PrincipalID);
 
                 if (profileData != null)
                 {
@@ -389,7 +387,6 @@ namespace OpenSim.Services.LLLoginService
                     {
                         AvatarAppearance appearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
-                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                         AvatarData adata = new AvatarData(appearance);
                         m_AvatarService.SetAppearance(account.PrincipalID, appearance);
                     }
@@ -398,7 +395,7 @@ namespace OpenSim.Services.LLLoginService
                         UPI.IsNewUser = false;
                         profileData.UpdateUserProfile(UPI);
                     }
-                    if(UPI.DisplayName != "")
+                    if (UPI.DisplayName != "")
                         DisplayName = UPI.DisplayName;
                 }
 
@@ -407,11 +404,11 @@ namespace OpenSim.Services.LLLoginService
                 //MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: {0} active gestures", gestures.Count);
 
                 //Reset logged in to true if the user was crashed, but don't fire the logged in event yet
-                m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), true, false, UUID.Zero);
+                m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, false, UUID.Zero);
                 //Lock it as well
-                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), true);
+                m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), true);
                 //Now get the logged in status, then below make sure to kill the previous agent if we crashed before
-                UserInfo guinfo = m_agentInfoService.GetUserInfo (account.PrincipalID.ToString ());
+                UserInfo guinfo = m_agentInfoService.GetUserInfo(account.PrincipalID.ToString());
                 //
                 // Clear out any existing CAPS the user may have
                 //
@@ -445,7 +442,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     GridUserInfoFound = false;
                     // something went wrong, make something up, so that we don't have to test this anywhere else
-                    guinfo = new UserInfo {UserID = account.PrincipalID.ToString()};
+                    guinfo = new UserInfo { UserID = account.PrincipalID.ToString() };
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
                 }
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
@@ -485,7 +482,7 @@ namespace OpenSim.Services.LLLoginService
                 Vector3 position = Vector3.Zero;
                 Vector3 lookAt = Vector3.Zero;
                 TeleportFlags tpFlags = TeleportFlags.ViaLogin;
-                GridRegion destination = FindDestination (account, scopeID, guinfo, session, startLocation, home, out tpFlags, out where, out position, out lookAt);
+                GridRegion destination = FindDestination(account, scopeID, guinfo, session, startLocation, home, out tpFlags, out where, out position, out lookAt);
                 if (destination == null)
                 {
                     MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: destination not found", account.Name);
@@ -527,7 +524,7 @@ namespace OpenSim.Services.LLLoginService
                                 AssetBase asset = m_AssetService.Get(item.Value.ToString());
                                 if (asset == null)
                                 {
-                                    InventoryItemBase invItem = m_InventoryService.GetItem (new InventoryItemBase (item.Value));
+                                    InventoryItemBase invItem = m_InventoryService.GetItem(new InventoryItemBase(item.Value));
                                     if (invItem == null)
                                     {
                                         MainConsole.Instance.Warn("[LLOGIN SERVICE]: Missing avatar appearance asset for user " + account.Name + " for item " + item.Value + ", asset should be " + item.Key + "!");
@@ -555,28 +552,30 @@ namespace OpenSim.Services.LLLoginService
                 }
                 else
                     avappearance = new AvatarAppearance(account.PrincipalID);
-				
-				if (m_forceUserToWear != "")
+
+                if (m_forceUserToWear != "")
                 {
                     UUID folder2Load;
                     if (UUID.TryParse(m_forceUserToWear, out folder2Load))
                     {
-                        WearFolder(avappearance, account.PrincipalID, folder2Load);
-                        inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+                        avappearance = WearFolder(avappearance, account.PrincipalID, folder2Load);
                     }
                 }
-				
+
+                avappearance = FixCurrentOutFitFolder(account.PrincipalID, avappearance);
+                inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
+
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = string.Empty;
-                AgentCircuitData aCircuit = LaunchAgentAtGrid (destination, tpFlags, account, avappearance, session, secureSession, position, where,
+                AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, avappearance, session, secureSession, position, where,
                     clientIP, out where, out reason, out destination);
 
                 if (aCircuit == null)
                 {
                     MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}", reason, account.Name);
-                    return new LLFailedLoginResponse (LoginResponseEnum.InternalError, reason, false);
+                    return new LLFailedLoginResponse(LoginResponseEnum.InternalError, reason, false);
                 }
 
                 // Get Friends list 
@@ -588,10 +587,10 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
-                m_agentInfoService.SetLastPosition (account.PrincipalID.ToString (), destination.RegionID, position, lookAt);
-                m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
+                m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
+                m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), false); //Unlock it now
                 m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), true, true, destination.RegionID);
-                
+
                 //
                 // Finally, fill out the response and return it
                 //
@@ -616,7 +615,7 @@ namespace OpenSim.Services.LLLoginService
 
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, classifiedCategories, FillOutSeedCap (aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
+                    eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
 
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 AddLoginSuccessNotification(account);
@@ -624,16 +623,16 @@ namespace OpenSim.Services.LLLoginService
             }
             catch (Exception e)
             {
-                MainConsole.Instance.WarnFormat ("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e);
+                MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: Exception processing login for {0} : {1}", Name, e);
                 if (account != null)
                 {
                     //Revert their logged in status if we got that far
-                    m_agentInfoService.LockLoggedInStatus (account.PrincipalID.ToString (), false); //Unlock it now
-                    m_agentInfoService.SetLoggedIn (account.PrincipalID.ToString (), false, false, UUID.Zero);
+                    m_agentInfoService.LockLoggedInStatus(account.PrincipalID.ToString(), false); //Unlock it now
+                    m_agentInfoService.SetLoggedIn(account.PrincipalID.ToString(), false, false, UUID.Zero);
                 }
                 return LLFailedLoginResponse.InternalError;
             }
-            
+
         }
 
         private void AddLoginSuccessNotification(UserAccount account)
@@ -649,7 +648,7 @@ namespace OpenSim.Services.LLLoginService
 
         protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
         {
-            if(m_CapsService != null)
+            if (m_CapsService != null)
             {
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
@@ -658,7 +657,7 @@ namespace OpenSim.Services.LLLoginService
             return "";
         }
 
-        protected GridRegion FindDestination (UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out TeleportFlags tpFlags, out string where, out Vector3 position, out Vector3 lookAt)
+        protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out TeleportFlags tpFlags, out string where, out Vector3 position, out Vector3 lookAt)
         {
             where = "home";
             position = new Vector3(128, 128, 25);
@@ -738,7 +737,7 @@ namespace OpenSim.Services.LLLoginService
 
                 return region;
             }
-            if (startLocation.Equals ("last"))
+            if (startLocation.Equals("last"))
             {
                 tpFlags |= TeleportFlags.ViaLandmark;
                 // logging into last visited region
@@ -749,10 +748,10 @@ namespace OpenSim.Services.LLLoginService
 
                 GridRegion region = null;
 
-                if (pinfo.CurrentRegionID.Equals (UUID.Zero) || (region = m_GridService.GetRegionByUUID (scopeID, pinfo.CurrentRegionID)) == null)
+                if (pinfo.CurrentRegionID.Equals(UUID.Zero) || (region = m_GridService.GetRegionByUUID(scopeID, pinfo.CurrentRegionID)) == null)
                 {
                     tpFlags &= ~TeleportFlags.ViaLandmark;
-                    List<GridRegion> defaults = m_GridService.GetDefaultRegions (scopeID);
+                    List<GridRegion> defaults = m_GridService.GetDefaultRegions(scopeID);
                     if (defaults != null && defaults.Count > 0)
                     {
                         region = defaults[0];
@@ -760,7 +759,7 @@ namespace OpenSim.Services.LLLoginService
                     }
                     else
                     {
-                        defaults = m_GridService.GetFallbackRegions (scopeID, 0, 0);
+                        defaults = m_GridService.GetFallbackRegions(scopeID, 0, 0);
                         if (defaults != null && defaults.Count > 0)
                         {
                             region = defaults[0];
@@ -768,7 +767,7 @@ namespace OpenSim.Services.LLLoginService
                         }
                         else
                         {
-                            defaults = m_GridService.GetSafeRegions (scopeID, 0, 0);
+                            defaults = m_GridService.GetSafeRegions(scopeID, 0, 0);
                             if (defaults != null && defaults.Count > 0)
                             {
                                 region = defaults[0];
@@ -845,7 +844,7 @@ namespace OpenSim.Services.LLLoginService
                     return regions[0];
                 }
                 //This is so that you can login to other grids via IWC (or HG), example"RegionTest@testingserver.com:8002". All this really needs to do is inform the other grid that we have a user who wants to connect. IWC allows users to login by default to other regions (without the host names), but if one is provided and we don't have a link, we need to create one here.
-                string[] parts = regionName.Split(new char[] {'@'});
+                string[] parts = regionName.Split(new char[] { '@' });
                 if (parts.Length < 2)
                 {
                     MainConsole.Instance.InfoFormat("[LLLOGIN SERVICE]: Got Custom Login URI {0}, can't locate region {1}",
@@ -968,7 +967,7 @@ namespace OpenSim.Services.LLLoginService
             if (success)
             {
                 //Set the region to safe since we got there
-                m_GridService.SetRegionSafe (destination.RegionID);
+                m_GridService.SetRegionSafe(destination.RegionID);
                 return aCircuit;
             }
             return null;
@@ -999,18 +998,18 @@ namespace OpenSim.Services.LLLoginService
             IPEndPoint clientIP)
         {
             AgentCircuitData aCircuit = new AgentCircuitData
-                                            {
-                                                AgentID = account.PrincipalID,
-                                                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
-                                                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
-                                                child = false,
-                                                circuitcode = circuit,
-                                                SecureSessionID = secureSession,
-                                                SessionID = session,
-                                                startpos = position,
-                                                IPAddress = clientIP.Address.ToString(),
-                                                ClientIPEndPoint = clientIP
-                                            };
+            {
+                AgentID = account.PrincipalID,
+                Appearance = appearance ?? new AvatarAppearance(account.PrincipalID),
+                CapsPath = CapsUtil.GetRandomCapsObjectPath(),
+                child = false,
+                circuitcode = circuit,
+                SecureSessionID = secureSession,
+                SessionID = session,
+                startpos = position,
+                IPAddress = clientIP.Address.ToString(),
+                ClientIPEndPoint = clientIP
+            };
 
 
             // the first login agent is root
@@ -1020,7 +1019,7 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool LaunchAgentDirectly(GridRegion region, ref AgentCircuitData aCircuit, out string reason)
         {
-            return m_registry.RequestModuleInterface<IAgentProcessing> ().LoginAgent (region, ref aCircuit, out reason);
+            return m_registry.RequestModuleInterface<IAgentProcessing>().LoginAgent(region, ref aCircuit, out reason);
         }
 
         #region Console Commands
@@ -1068,10 +1067,10 @@ namespace OpenSim.Services.LLLoginService
         }
 
         #endregion
-		
-		#region Force Wear
-		
-		public void WearFolder(AvatarAppearance avappearance, UUID user, UUID folderID)
+
+        #region Force Wear
+
+        public AvatarAppearance WearFolder(AvatarAppearance avappearance, UUID user, UUID folderID)
         {
             List<InventoryItemBase> itemsInFolder = m_InventoryService.GetFolderItems(UUID.Zero, folderID);
 
@@ -1094,13 +1093,14 @@ namespace OpenSim.Services.LLLoginService
                         items2RemoveFromAppearence.Add(itemBase.ID);
                         toDelete.Add(itemBase.ID);
                     }
-                    m_InventoryService.DeleteItems(user, toDelete);
-
                     folderForAppearance = folder;
                     alreadyThere = true;
+                    m_InventoryService.DeleteItems(user, toDelete);
                     break;
                 }
             }
+
+
             if (!alreadyThere)
                 m_InventoryService.AddFolder(folderForAppearance);
             else
@@ -1185,8 +1185,101 @@ namespace OpenSim.Services.LLLoginService
                     }
                 }
             }
+            return avappearance;
         }
-		
-		#endregion
+
+        public AvatarAppearance FixCurrentOutFitFolder(UUID user, AvatarAppearance avappearance)
+        {
+            InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0, AssetType.CurrentOutfitFolder);
+            List<InventoryItemBase> ic = m_InventoryService.GetFolderItems(user, CurrentOutFitFolder.ID);
+            List<UUID> brokenLinks = new List<UUID>();
+            List<UUID> OtherStuff = new List<UUID>();
+            foreach (var i in ic)
+            {
+
+                InventoryItemBase linkedItem = null;
+                if ((linkedItem = m_InventoryService.GetItem(new InventoryItemBase(i.AssetID))) == null)
+                {
+                    brokenLinks.Add(i.ID);
+                }
+                else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_PANTS_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
+                            linkedItem.ID == AvatarWearable.DEFAULT_SKIN_ITEM)
+                    brokenLinks.Add(i.ID); //Default item link, needs removed
+                else if (!OtherStuff.Contains(i.AssetID))
+                    OtherStuff.Add(i.AssetID);
+            }
+
+            for (int i = 0; i < avappearance.Wearables.Length; i++)
+            {
+                AvatarWearable wearable = avappearance.Wearables[i];
+                for (int ii = 0; ii < wearable.Count; ii++)
+                {
+                    if (!OtherStuff.Contains(wearable[ii].ItemID))
+                    {
+                        InventoryItemBase linkedItem2 = null;
+                        if ((linkedItem2 = m_InventoryService.GetItem(new InventoryItemBase(wearable[ii].ItemID))) != null)
+                        {
+                            InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
+                            linkedItem3.AssetID = linkedItem2.ID;
+                            linkedItem3.AssetType = 24;
+                            linkedItem3.ID = UUID.Random();
+                            linkedItem3.CurrentPermissions = linkedItem2.NextPermissions;
+                            linkedItem3.EveryOnePermissions = linkedItem2.NextPermissions;
+                            linkedItem3.Folder = CurrentOutFitFolder.ID;
+                            m_InventoryService.AddItem(linkedItem3);
+                        }
+                        else
+                        {
+                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
+                        }
+                    }
+                }
+            }
+
+            List<AvatarAttachment> attachments = avappearance.GetAttachments();
+            List<UUID> items2UnAttach = new List<UUID>();
+            foreach (KeyValuePair<int, List<AvatarAttachment>> attachmentSpot in avappearance.Attachments)
+            {
+
+                foreach (AvatarAttachment attachment in attachmentSpot.Value)
+                {
+                    if (!OtherStuff.Contains(attachment.ItemID))
+                    {
+                        InventoryItemBase linkedItem2 = null;
+                        if ((linkedItem2 = m_InventoryService.GetItem(new InventoryItemBase(attachment.ItemID))) != null)
+                        {
+                            InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem2.Clone();
+                            linkedItem3.AssetID = linkedItem2.ID;
+                            linkedItem3.AssetType = 24;
+                            linkedItem3.ID = UUID.Random();
+                            linkedItem3.CurrentPermissions = linkedItem2.NextPermissions;
+                            linkedItem3.EveryOnePermissions = linkedItem2.NextPermissions;
+                            linkedItem3.Folder = CurrentOutFitFolder.ID;
+                            m_InventoryService.AddItem(linkedItem3);
+                        }
+                        else
+                            items2UnAttach.Add(attachment.ItemID);
+                    }
+                }
+            }
+
+            foreach (UUID uuid in items2UnAttach)
+            {
+                avappearance.DetachAttachment(uuid);
+            }
+
+
+            if (brokenLinks.Count != 0)
+                m_InventoryService.DeleteItems(user, brokenLinks);
+
+            return avappearance;
+
+        }
+
+        #endregion
     }
 }
