@@ -352,7 +352,7 @@ namespace Aurora.Modules.EntityTransfer
 
             //Kill the groups here, otherwise they will become ghost attachments 
             //  and stay in the sim, they'll get readded below into the new sim
-            KillAttachments(sp);
+            //KillAttachments(sp);
 
             // Well, this is it. The agent is over there.
             KillEntity(sp.Scene, sp);
@@ -673,7 +673,7 @@ namespace Aurora.Modules.EntityTransfer
 
                 //Kill the groups here, otherwise they will become ghost attachments 
                 //  and stay in the sim, they'll get readded below into the new sim
-                KillAttachments(agent);
+                //KillAttachments(agent);
             }
             catch(Exception ex)
             {

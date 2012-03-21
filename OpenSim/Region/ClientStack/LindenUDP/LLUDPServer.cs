@@ -767,7 +767,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         {
                             MainConsole.Instance.Debug("[LLUDPServer] AddNewClient - already here");
                             return;
-                        }
+                         }
                     }
                     object[] array = new object[] { buffer, packet, sessionData };
                     if (m_asyncPacketHandling)

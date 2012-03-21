@@ -139,6 +139,19 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> Get(int startX, int startY, int endX, int endY, UUID scopeID)
         {
+            int foo;
+            if (startX > endX)
+            {
+                foo = endX;
+                endX = startX;
+                startX = foo;
+            }
+            if (startY > endY)
+            {
+                foo = endY;
+                endY = startY;
+                startY = foo;
+            }
             QueryFilter filter = new QueryFilter();
             filter.andGreaterThanEqFilters["LocX"] = startX;
             filter.andLessThanEqFilters["LocX"] = endX;
