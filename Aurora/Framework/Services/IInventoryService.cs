@@ -74,6 +74,14 @@ namespace OpenSim.Services.Interfaces
         InventoryFolderBase GetRootFolder(UUID userID);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <param name="FolderName"></param>
+        /// <returns></returns>
+        InventoryFolderBase GetFolderByOwnerAndName(UUID userID, string FolderName);
+
+        /// <summary>
         ///   Retrieve the root inventory folder for the given user.
         /// </summary>
         /// <param name = "userID"></param>

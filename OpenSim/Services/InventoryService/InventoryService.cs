@@ -908,6 +908,25 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual InventoryFolderBase GetFolderByOwnerAndName(UUID FolderOwner, string FolderName)
+        {
+            object remoteValue = DoRemote(FolderOwner, FolderName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
+            List<InventoryFolderBase> folders = m_Database.GetFolders(
+                new[] { "folderName", "agentID" },
+                new[] { FolderName, FolderOwner.ToString() });
+
+            if (folders.Count == 0)
+                return null;
+
+            return folders[0];
+        }
+
+
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {

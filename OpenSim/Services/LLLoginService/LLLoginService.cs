@@ -84,7 +84,8 @@ namespace OpenSim.Services.LLLoginService
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
-        private string m_forceUserToWear;
+        private string m_forceUserToWearFolderName;
+        private string m_forceUserToWearFolderOwnerUUID;
 
         public int MinLoginLevel
         {
@@ -98,7 +99,8 @@ namespace OpenSim.Services.LLLoginService
             if (m_loginServerConfig == null)
                 return;
 
-            m_forceUserToWear = m_loginServerConfig.GetString("forceUserToWear", "");
+            m_forceUserToWearFolderName = m_loginServerConfig.GetString("forceUserToWearFolderName", "");
+            m_forceUserToWearFolderOwnerUUID = m_loginServerConfig.GetString("forceUserToWearFolderOwner", "");
             m_DefaultHomeRegion = m_loginServerConfig.GetString("DefaultHomeRegion", "");
             m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser", m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
@@ -553,12 +555,12 @@ namespace OpenSim.Services.LLLoginService
                 else
                     avappearance = new AvatarAppearance(account.PrincipalID);
 
-                if (m_forceUserToWear != "")
+                if ((m_forceUserToWearFolderName != "") && (m_forceUserToWearFolderOwnerUUID.Length == 36))
                 {
-                    UUID folder2Load;
-                    if (UUID.TryParse(m_forceUserToWear, out folder2Load))
+                    UUID userThatOwnersFolder;
+                    if (UUID.TryParse(m_forceUserToWearFolderOwnerUUID, out userThatOwnersFolder))
                     {
-                        avappearance = WearFolder(avappearance, account.PrincipalID, folder2Load);
+                        avappearance = WearFolder(avappearance, account.PrincipalID, userThatOwnersFolder);
                     }
                 }
 
@@ -1070,117 +1072,126 @@ namespace OpenSim.Services.LLLoginService
 
         #region Force Wear
 
-        public AvatarAppearance WearFolder(AvatarAppearance avappearance, UUID user, UUID folderID)
+        public AvatarAppearance WearFolder(AvatarAppearance avappearance, UUID user, UUID folderOwnerID)
         {
-            List<InventoryItemBase> itemsInFolder = m_InventoryService.GetFolderItems(UUID.Zero, folderID);
-
-            InventoryFolderBase appearanceFolder = m_InventoryService.GetFolderForType(user, InventoryType.Wearable, AssetType.Clothing);
-
-
-            InventoryFolderBase folderForAppearance = new InventoryFolderBase(UUID.Random(), "GridWear", user, -1, appearanceFolder.ID, 1);
-            List<InventoryFolderBase> userFolders = m_InventoryService.GetFolderFolders(user, appearanceFolder.ID);
-            bool alreadyThere = false;
-            List<UUID> items2RemoveFromAppearence = new List<UUID>();
-            List<UUID> toDelete = new List<UUID>();
-            foreach (InventoryFolderBase folder in userFolders)
+            InventoryFolderBase Folder2Wear = m_InventoryService.GetFolderByOwnerAndName(folderOwnerID, m_forceUserToWearFolderName);
+            if (Folder2Wear != null)
             {
-                if (folder.Name == folderForAppearance.Name)
-                {
-                    List<InventoryItemBase> itemsInCurrentFolder = m_InventoryService.GetFolderItems(UUID.Zero, folder.ID);
-                    foreach (InventoryItemBase itemBase in itemsInCurrentFolder)
-                    {
-                        items2RemoveFromAppearence.Add(itemBase.AssetID);
-                        items2RemoveFromAppearence.Add(itemBase.ID);
-                        toDelete.Add(itemBase.ID);
-                    }
-                    folderForAppearance = folder;
-                    alreadyThere = true;
-                    m_InventoryService.DeleteItems(user, toDelete);
-                    break;
-                }
-            }
+                List<InventoryItemBase> itemsInFolder = m_InventoryService.GetFolderItems(UUID.Zero, Folder2Wear.ID);
+
+                InventoryFolderBase appearanceFolder = m_InventoryService.GetFolderForType(user, InventoryType.Wearable,
+                                                                                           AssetType.Clothing);
 
 
-            if (!alreadyThere)
-                m_InventoryService.AddFolder(folderForAppearance);
-            else
-            {
-                // we have to remove all the old items if they are currently wearing them
-                for (int i = 0; i < avappearance.Wearables.Length; i++)
+                InventoryFolderBase folderForAppearance = new InventoryFolderBase(UUID.Random(), "GridWear", user, -1,
+                                                                                  appearanceFolder.ID, 1);
+                List<InventoryFolderBase> userFolders = m_InventoryService.GetFolderFolders(user, appearanceFolder.ID);
+                bool alreadyThere = false;
+                List<UUID> items2RemoveFromAppearence = new List<UUID>();
+                List<UUID> toDelete = new List<UUID>();
+                foreach (InventoryFolderBase folder in userFolders)
                 {
-                    AvatarWearable wearable = avappearance.Wearables[i];
-                    for (int ii = 0; ii < wearable.Count; ii++)
+                    if (folder.Name == folderForAppearance.Name)
                     {
-                        if (items2RemoveFromAppearence.Contains(wearable[ii].ItemID))
+                        List<InventoryItemBase> itemsInCurrentFolder = m_InventoryService.GetFolderItems(UUID.Zero,
+                                                                                                         folder.ID);
+                        foreach (InventoryItemBase itemBase in itemsInCurrentFolder)
                         {
-                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
-                            break;
+                            items2RemoveFromAppearence.Add(itemBase.AssetID);
+                            items2RemoveFromAppearence.Add(itemBase.ID);
+                            toDelete.Add(itemBase.ID);
+                        }
+                        folderForAppearance = folder;
+                        alreadyThere = true;
+                        m_InventoryService.DeleteItems(user, toDelete);
+                        break;
+                    }
+                }
+
+
+                if (!alreadyThere)
+                    m_InventoryService.AddFolder(folderForAppearance);
+                else
+                {
+                    // we have to remove all the old items if they are currently wearing them
+                    for (int i = 0; i < avappearance.Wearables.Length; i++)
+                    {
+                        AvatarWearable wearable = avappearance.Wearables[i];
+                        for (int ii = 0; ii < wearable.Count; ii++)
+                        {
+                            if (items2RemoveFromAppearence.Contains(wearable[ii].ItemID))
+                            {
+                                avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    List<AvatarAttachment> attachments = avappearance.GetAttachments();
+                    foreach (AvatarAttachment attachment in attachments)
+                    {
+                        if ((items2RemoveFromAppearence.Contains(attachment.AssetID)) ||
+                            (items2RemoveFromAppearence.Contains(attachment.ItemID)))
+                        {
+                            avappearance.DetachAttachment(attachment.ItemID);
                         }
                     }
                 }
 
-                List<AvatarAttachment> attachments = avappearance.GetAttachments();
-                foreach (AvatarAttachment attachment in attachments)
+                // ok, now we have a empty folder, lets add the items 
+                foreach (InventoryItemBase itemBase in itemsInFolder)
                 {
-                    if ((items2RemoveFromAppearence.Contains(attachment.AssetID)) || (items2RemoveFromAppearence.Contains(attachment.ItemID)))
+                    InventoryItemBase newcopy = (InventoryItemBase) itemBase.Clone();
+                    newcopy.ID = UUID.Random();
+                    newcopy.Folder = folderForAppearance.ID;
+                    newcopy.Owner = user;
+                    m_InventoryService.AddItem(newcopy);
+
+                    if (newcopy.InvType == (int) InventoryType.Object)
                     {
-                        avappearance.DetachAttachment(attachment.ItemID);
-                    }
-                }
-            }
+                        AssetBase attobj = m_AssetService.Get(newcopy.AssetID.ToString());
 
-            // ok, now we have a empty folder, lets add the items 
-            foreach (InventoryItemBase itemBase in itemsInFolder)
-            {
-                InventoryItemBase newcopy = (InventoryItemBase)itemBase.Clone();
-                newcopy.ID = UUID.Random();
-                newcopy.Folder = folderForAppearance.ID;
-                newcopy.Owner = user;
-                m_InventoryService.AddItem(newcopy);
-
-                if (newcopy.InvType == (int)InventoryType.Object)
-                {
-                    AssetBase attobj = m_AssetService.Get(newcopy.AssetID.ToString());
-
-                    if (attobj != null)
-                    {
-                        string xmlData = Utils.BytesToString(attobj.Data);
-                        XmlDocument doc = new XmlDocument();
-                        try
+                        if (attobj != null)
                         {
-                            doc.LoadXml(xmlData);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
+                            string xmlData = Utils.BytesToString(attobj.Data);
+                            XmlDocument doc = new XmlDocument();
+                            try
+                            {
+                                doc.LoadXml(xmlData);
+                            }
+                            catch
+                            {
+                                continue;
+                            }
 
-                        if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
-                            (doc.FirstChild.NextSibling != null &&
-                            doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
-                            continue;
+                            if (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+                                (doc.FirstChild.NextSibling != null &&
+                                 doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
+                                continue;
 
-                        string xml = "";
-                        if ((doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration) && (doc.FirstChild.NextSibling != null))
-                            xml = doc.FirstChild.NextSibling.OuterXml;
-                        else
-                            xml = doc.FirstChild.OuterXml;
-                        doc.LoadXml(xml);
+                            string xml = "";
+                            if ((doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration) &&
+                                (doc.FirstChild.NextSibling != null))
+                                xml = doc.FirstChild.NextSibling.OuterXml;
+                            else
+                                xml = doc.FirstChild.OuterXml;
+                            doc.LoadXml(xml);
 
-                        if (doc.DocumentElement == null) continue;
+                            if (doc.DocumentElement == null) continue;
 
-                        XmlNodeList xmlNodeList = doc.DocumentElement.SelectNodes("//State");
-                        int attchspot;
-                        if ((xmlNodeList != null) && (int.TryParse(xmlNodeList[0].InnerText, out attchspot)))
-                        {
-                            AvatarAttachment a = new AvatarAttachment(attchspot, newcopy.ID, newcopy.AssetID);
-                            Dictionary<int, List<AvatarAttachment>> ac = avappearance.Attachments;
+                            XmlNodeList xmlNodeList = doc.DocumentElement.SelectNodes("//State");
+                            int attchspot;
+                            if ((xmlNodeList != null) && (int.TryParse(xmlNodeList[0].InnerText, out attchspot)))
+                            {
+                                AvatarAttachment a = new AvatarAttachment(attchspot, newcopy.ID, newcopy.AssetID);
+                                Dictionary<int, List<AvatarAttachment>> ac = avappearance.Attachments;
 
-                            if (!ac.ContainsKey(attchspot))
-                                ac[attchspot] = new List<AvatarAttachment>();
+                                if (!ac.ContainsKey(attchspot))
+                                    ac[attchspot] = new List<AvatarAttachment>();
 
-                            ac[attchspot].Add(a);
-                            avappearance.Attachments = ac;
+                                ac[attchspot].Add(a);
+                                avappearance.Attachments = ac;
+                            }
                         }
                     }
                 }
