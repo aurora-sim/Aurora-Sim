@@ -531,11 +531,13 @@ namespace OpenSim.Services.InventoryService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<InventoryItemBase>)remoteValue;
 
-            // Since we probably don't get a valid principal here, either ...
-            //
+            if (principalID != UUID.Zero)
+                return m_Database.GetItems(
+                    new[] { "parentFolderID", "avatarID" },
+                    new[] { folderID.ToString(), principalID.ToString() });
             return m_Database.GetItems(
-                new[] { "parentFolderID", "avatarID" },
-                new[] { folderID.ToString(), principalID.ToString() });
+                new[] { "parentFolderID" },
+                new[] { folderID.ToString() });
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -905,6 +907,25 @@ namespace OpenSim.Services.InventoryService
 
             return folders[0];
         }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual InventoryFolderBase GetFolderByOwnerAndName(UUID FolderOwner, string FolderName)
+        {
+            object remoteValue = DoRemote(FolderOwner, FolderName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
+            List<InventoryFolderBase> folders = m_Database.GetFolders(
+                new[] { "folderName", "agentID" },
+                new[] { FolderName, FolderOwner.ToString() });
+
+            if (folders.Count == 0)
+                return null;
+
+            return folders[0];
+        }
+
+
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
