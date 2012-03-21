@@ -495,6 +495,35 @@ namespace OpenSim.Services.Connectors
             return null;
         }
 
+        public virtual InventoryFolderBase GetFolderByOwnerAndName(UUID ownerID, string folderName)
+        {
+            if (folderName == "") return null;
+            if (ownerID == UUID.Zero) return null;
+
+            try
+            {
+                Dictionary<string, object> ret = MakeRequest("GETFOLDERBYOWNERANDNAME",
+                                                             new Dictionary<string, object>
+                                                                 {
+                                                                     {"PRINCIPAL", ownerID.ToString()},
+                                                                     {"FOLDERNAME", folderName}
+                                                                 });
+
+                if (ret == null)
+                    return null;
+                if (ret.Count == 0)
+                    return null;
+
+                return BuildFolder((Dictionary<string, object>)ret["folder"]);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.DebugFormat("[XINVENTORY CONNECTOR STUB]: Exception in GetFolder: {0}", e.Message);
+            }
+
+            return null;
+        }
+
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
             return new List<InventoryItemBase>();
