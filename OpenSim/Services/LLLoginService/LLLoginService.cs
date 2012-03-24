@@ -1202,6 +1202,7 @@ namespace OpenSim.Services.LLLoginService
         public AvatarAppearance FixCurrentOutFitFolder(UUID user, AvatarAppearance avappearance)
         {
             InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0, AssetType.CurrentOutfitFolder);
+			if (CurrentOutFitFolder == null) return avappearance;
             List<InventoryItemBase> ic = m_InventoryService.GetFolderItems(user, CurrentOutFitFolder.ID);
             List<UUID> brokenLinks = new List<UUID>();
             List<UUID> OtherStuff = new List<UUID>();
