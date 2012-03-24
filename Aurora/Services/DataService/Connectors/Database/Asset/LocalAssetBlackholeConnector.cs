@@ -365,7 +365,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 Dictionary<string, object> row;
                 bool assetDoesExist = false;
                 // this was causing problems with convering the first asset which.. is a zero id.. 
-                if ((!justMovingDatabase) && (asset.CreatorID != new UUID("11111111-1111-0000-0000-000100bba000")))
+                if (!justMovingDatabase)
                 {
                     assetDoesExist = ExistsAsset(asset.ID);
                     if (assetDoesExist)
@@ -418,7 +418,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             row["task_values"] = asset.LastHashCode;
                             m_Gd.Insert("auroraassets_tasks", row);
                         }
-                        row = new Dictionary<string, object>(3);
                         row = new Dictionary<string, object>(3);
                         QueryFilter filter = new QueryFilter();
                         filter.andFilters["hash_code"] = asset.HashCode;
