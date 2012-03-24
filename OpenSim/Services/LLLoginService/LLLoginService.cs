@@ -274,8 +274,7 @@ namespace OpenSim.Services.LLLoginService
 
         public bool VerifyClient(UUID AgentID, string name, string authType, string passwd, UUID scopeID)
         {
-            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}",
-                AgentID);
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}", AgentID);
 
             //
             // Get the account and check that it exists
@@ -283,12 +282,16 @@ namespace OpenSim.Services.LLLoginService
             UserAccount account = m_UserAccountService.GetUserAccount(scopeID, AgentID);
 
             if (account == null)
+            {
                 return false;
+            }
 
             IAgentInfo agent = null;
             IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
             if (agentData != null)
+            {
                 agent = agentData.GetAgent(account.PrincipalID);
+            }
             if (agent == null)
             {
                 agentData.CreateNewAgent(account.PrincipalID);
@@ -299,7 +302,9 @@ namespace OpenSim.Services.LLLoginService
             {
                 object data;
                 if (module.Login(null, account, agent, authType, passwd, out data) != null)
+                {
                     return false;
+                }
             }
             return true;
         }
