@@ -567,6 +567,7 @@ namespace OpenSim.Region.Framework.Scenes
                         ();
                 if (manager != null)
                     manager.DeserializeComponents(this, value);
+                this.FinishedSerializingGenericProperties();
             }
         }
 
@@ -867,7 +868,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        protected int m_APIDIterations = 0;
+        public int APIDIterations
+        {
+            get { return GetComponentState("APIDIterations").AsInteger(); }
+            set { SetComponentState("APIDIterations", value); }
+        }
+
         public bool APIDEnabled
         {
             get { return GetComponentState("APIDEnabled").AsBoolean(); }
@@ -1933,6 +1939,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
+        public void FinishedSerializingGenericProperties()
+        {
+            if ((APIDEnabled || PIDActive) && this.ParentEntity != null)//Make sure to activate it
+                this.ParentEntity.Scene.EventManager.OnFrame += UpdateLookAt;
+        }
+
         private void UpdateOOBfromOOBs()
         {
             m_partOOBoffset = Vector3.Zero;
@@ -2608,7 +2620,7 @@ namespace OpenSim.Region.Framework.Scenes
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
-            m_APIDIterations = 1 + (int)(Math.PI * APIDStrength);
+            APIDIterations = 1 + (int)(Math.PI * APIDStrength);
         }
 
         /// <summary>
@@ -5378,17 +5390,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (APIDEnabled)
                 {
-                    if (m_APIDIterations <= 1)
+                    if (APIDIterations <= 1)
                     {
                         UpdateRotation(APIDTarget);
                         APIDTarget = Quaternion.Identity;
                         return;
                     }
 
-                    Quaternion rot = Quaternion.Slerp(RotationOffset, APIDTarget, 1.0f / (float)m_APIDIterations);
+                    Quaternion rot = Quaternion.Slerp(RotationOffset, APIDTarget, 1.0f / (float)APIDIterations);
                     UpdateRotation(rot);
 
-                    m_APIDIterations--;
+                    APIDIterations--;
 
                     // This ensures that we'll check this object on the next iteration
                     ParentGroup.ScheduleGroupTerseUpdate();

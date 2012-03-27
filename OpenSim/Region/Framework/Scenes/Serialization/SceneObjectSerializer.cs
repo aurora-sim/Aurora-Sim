@@ -241,6 +241,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 doc.Load(ms);
 
                 grp = InternalFromXml2Format(doc, scene);
+                foreach(var c in grp.ChildrenList)
+                    c.FinishedSerializingGenericProperties();
                 return grp;
             }
             catch (Exception e)
