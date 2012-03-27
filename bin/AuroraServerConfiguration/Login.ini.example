@@ -54,3 +54,10 @@
 
     ;; If you run this login server behind a proxy, set this to true
     ;; HasProxy = true
+	
+	;; Force all users to wear (OBJECTS ONLY FOR NOW) objects in this folder. 
+	;; Value should be a unique folder name for the owner
+	;; make sure you have worn the objects at least once before you enable this
+	;; Folder Owner Value should be the UUID of the user that owns the folder 
+	forceUserToWearFolderName = ""
+	forceUserToWearFolderOwner = ""

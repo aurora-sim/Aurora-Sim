@@ -56,11 +56,24 @@ namespace OpenSim.Services.AuthenticationService
         {
             //Return automatically if we do not auth users
             if (!m_authenticateUsers)
+            {
                 return GetToken(principalID, lifetime);
+            }
 
             AuthData data = m_Database.Get(principalID, authType);
 
-            if (data != null)
+            if (data == null)
+            {
+                if (!CheckExists(principalID, authType))
+                {
+                    MainConsole.Instance.DebugFormat("[AUTH SERVICE]: PrincipalID {0} not found", principalID);
+                }
+                else
+                {
+                    MainConsole.Instance.DebugFormat("[AUTH SERVICE]: PrincipalID {0} data not found", principalID);
+                }
+            }
+            else
             {
                 if (authType != "UserAccount")
                 {
@@ -68,17 +81,17 @@ namespace OpenSim.Services.AuthenticationService
                     {
                         //Really should be moved out in the future
                         if (authType == "WebLoginKey")
+                        {
                             this.Remove(principalID, authType); //Only allow it to be used once
+                        }
                         return GetToken(principalID, lifetime);
                     }
                 }
                 else
                 {
-                    string hashed = Util.Md5Hash(password + ":" +
-                                                 data.PasswordSalt);
+                    string hashed = Util.Md5Hash(password + ":" + data.PasswordSalt);
 
-                    MainConsole.Instance.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed,
-                                      data.PasswordHash);
+                    MainConsole.Instance.TraceFormat("[PASS AUTH]: got {0}; hashed = {1}; stored = {2}", password, hashed, data.PasswordHash);
 
                     if (data.PasswordHash == hashed)
                     {
@@ -87,7 +100,6 @@ namespace OpenSim.Services.AuthenticationService
                 }
             }
 
-            MainConsole.Instance.DebugFormat("[AUTH SERVICE]: PrincipalID {0} or its data not found", principalID);
             return String.Empty;
         }
 

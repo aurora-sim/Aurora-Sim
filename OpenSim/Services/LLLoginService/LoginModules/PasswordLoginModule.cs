@@ -32,9 +32,7 @@ namespace OpenSim.Services.LLLoginService
             //
             if (authType == "UserAccount")
             {
-                if (!password.StartsWith("$1$"))
-                    password = "$1$" + Util.Md5Hash(password);
-                password = password.Remove(0, 3); //remove $1$
+                password = password.StartsWith("$1$") ? password.Remove(0, 3) : Util.Md5Hash(password); //remove $1$
             }
             string token = m_AuthenticationService.Authenticate(account.PrincipalID, authType, password, 30);
             UUID secureSession = UUID.Zero;

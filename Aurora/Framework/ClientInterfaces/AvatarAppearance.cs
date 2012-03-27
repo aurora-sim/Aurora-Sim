@@ -196,6 +196,12 @@ namespace Aurora.Framework
             get { return m_avatarHeight; }
             set { m_avatarHeight = value; }
         }
+		
+		public Dictionary<int, List<AvatarAttachment>> Attachments
+        {
+            get { return m_attachments; }
+            set { m_attachments = value;  }
+        }
 
         public void GetAssetsFrom(AvatarAppearance app)
         {
