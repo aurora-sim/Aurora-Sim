@@ -867,6 +867,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        protected int m_APIDIterations = 0;
         public bool APIDEnabled
         {
             get { return GetComponentState("APIDEnabled").AsBoolean(); }
@@ -2607,6 +2608,7 @@ namespace OpenSim.Region.Framework.Scenes
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
+            m_APIDIterations = 1 + (int)(Math.PI * APIDStrength);
         }
 
         /// <summary>
@@ -5376,24 +5378,20 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (APIDEnabled)
                 {
-                    if (Single.IsNaN(APIDTarget.W))
+                    if (m_APIDIterations <= 1)
                     {
-                        APIDEnabled = false;
+                        UpdateRotation(APIDTarget);
+                        APIDTarget = Quaternion.Identity;
                         return;
                     }
-                    Quaternion rot = RotationOffset;
-                    Quaternion dir = (rot - APIDTarget);
-                    float speed = ((APIDStrength/APIDDamp)*(float) (Math.PI/180.0f));
-                    if (dir.Z > speed)
-                    {
-                        rot.Z -= speed;
-                    }
-                    if (dir.Z < -speed)
-                    {
-                        rot.Z += speed;
-                    }
-                    rot.Normalize();
+
+                    Quaternion rot = Quaternion.Slerp(RotationOffset, APIDTarget, 1.0f / (float)m_APIDIterations);
                     UpdateRotation(rot);
+
+                    m_APIDIterations--;
+
+                    // This ensures that we'll check this object on the next iteration
+                    ParentGroup.ScheduleGroupTerseUpdate();
                 }
             }
             catch (Exception ex)

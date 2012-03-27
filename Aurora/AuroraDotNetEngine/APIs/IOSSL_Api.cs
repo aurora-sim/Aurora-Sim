@@ -177,9 +177,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         DateTime osTeleportOwner(vector position, vector lookat);
 
         void osCauseDamage(string avatar, double damage, string regionName, vector position, vector lookat);
-
         void osCauseHealing(string avatar, double healing);
-
         void osCauseDamage(string avatar, double damage);
+        LSL_String osGetInventoryDesc(string item);
     }
 }

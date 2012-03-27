@@ -3591,10 +3591,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             // the angles of rotation in radians into rotation value
 
             LSL_Types.Quaternion rot = llEuler2Rot(angle);
-            Quaternion rotation = new Quaternion((float)rot.x, (float)rot.y, (float)rot.z, (float)rot.s);
-            m_host.startLookAt(rotation, (float)damping, (float)strength);
-            // Orient the object to the angle calculated
-            //llSetRot(rot);
+            //If the strength is 0, or we are non-physical, set the rotation
+            if (strength == 0 || m_host.PhysActor == null || !m_host.PhysActor.IsPhysical)
+                llSetRot(rot);
+            else
+                m_host.startLookAt(Rot2Quaternion(rot), (float)strength, (float)damping);
         }
 
         public void llRotLookAt(LSL_Rotation target, double strength, double damping)

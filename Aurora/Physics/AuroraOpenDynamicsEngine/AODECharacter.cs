@@ -77,6 +77,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                              );
 
         private bool m_hasTaintForce;
+        private bool m_hasTaintRot;
+        private bool m_hasTaintPos;
 
 //        float m_UpdateTimecntr = 0;
 //        float m_UpdateFPScntr = 0.05f;
@@ -319,6 +321,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_taintPosition.X = value.X;
                         m_taintPosition.Y = value.Y;
                         m_taintPosition.Z = value.Z;
+                        m_hasTaintPos = true;
                         _parent_scene.AddPhysicsActorTaint(this);
                     }
                     else
@@ -439,6 +442,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_taintRotation; }
             set
             {
+                m_hasTaintRot = true;
                 m_taintRotation = value;
                 //Matrix3 or = Orientation.ToRotationMatrix();
                 //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
@@ -1469,7 +1473,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (pushforce)
                 {
                     m_pidControllerActive = false;
-                    m_taintForce = force*100f;
+                    m_taintForce = force *100f;
                     m_hasTaintForce = true;
                     _parent_scene.AddPhysicsActorTaint(this);
                 }
@@ -1646,27 +1650,33 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            if (!m_taintPosition.ApproxEquals(_position, 0.05f))
+            if (m_hasTaintPos)
+            {
+                if (!m_taintPosition.ApproxEquals(_position, 0.05f))
+                {
+                    if (Body != IntPtr.Zero)
+                    {
+                        d.BodySetPosition(Body, m_taintPosition.X, m_taintPosition.Y, m_taintPosition.Z);
+
+                        _position.X = m_taintPosition.X;
+                        _position.Y = m_taintPosition.Y;
+                        _position.Z = m_taintPosition.Z;
+                    }
+                }
+            }
+            if (m_hasTaintRot)
             {
                 if (Body != IntPtr.Zero)
                 {
-                    d.BodySetPosition(Body, m_taintPosition.X, m_taintPosition.Y, m_taintPosition.Z);
-
-                    _position.X = m_taintPosition.X;
-                    _position.Y = m_taintPosition.Y;
-                    _position.Z = m_taintPosition.Z;
+                    d.Quaternion q = new d.Quaternion
+                                         {
+                                             W = m_taintRotation.W,
+                                             X = m_taintRotation.X,
+                                             Y = m_taintRotation.Y,
+                                             Z = m_taintRotation.Z
+                                         };
+                    d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
                 }
-            }
-            if (Body != IntPtr.Zero)
-            {
-                d.Quaternion q = new d.Quaternion
-                                     {
-                                         W = m_taintRotation.W,
-                                         X = m_taintRotation.X,
-                                         Y = m_taintRotation.Y,
-                                         Z = m_taintRotation.Z
-                                     };
-                d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
             }
 
             if (m_hasTaintForce)
