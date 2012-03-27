@@ -1826,7 +1826,7 @@ namespace Aurora.Modules.Inventory
             if ((part.OwnerID != destPart.OwnerID) && ((srcTaskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
                 return;
 
-            if (part.OwnerID != destPart.OwnerID && (part.GetEffectiveObjectFlags() & (uint)PrimFlags.AllowInventoryDrop) == 0)
+            if (part.OwnerID != destPart.OwnerID && (destPart.GetEffectiveObjectFlags() & (uint)PrimFlags.AllowInventoryDrop) == 0)
             {
                 // object cannot copy items to an object owned by a different owner
                 // unless llAllowInventoryDrop has been called
