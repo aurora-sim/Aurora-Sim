@@ -30,6 +30,7 @@ using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
 using Aurora.Framework;
+using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
 using log4net.Core;
 
@@ -92,6 +93,25 @@ namespace OpenSim.Services.AvatarService
             get { return this; }
         }
 
+        private void RemoveOldBaked(UUID principalID, AvatarData newdata)
+        {
+            if (!newdata.Data.ContainsKey("Textures")) return;
+            AvatarData olddata = m_Database.Get("PrincipalID", principalID.ToString());
+            if ((olddata == null) || (!olddata.Data.ContainsKey("Textures"))) return;
+
+            Primitive.TextureEntry old_textures = Primitive.TextureEntry.FromOSD(OSDParser.DeserializeJson(olddata.Data["Textures"]));
+            Primitive.TextureEntry new_textures = Primitive.TextureEntry.FromOSD(OSDParser.DeserializeJson(newdata.Data["Textures"]));
+            IAssetService service = m_registry.RequestModuleInterface<IAssetService>();
+            for (uint i = 0; i < old_textures.FaceTextures.Length; i++)
+            {
+                if ((old_textures.FaceTextures[i] == null) || ((new_textures.FaceTextures[i] != null) &&
+                    (old_textures.FaceTextures[i].TextureID == new_textures.FaceTextures[i].TextureID))) continue;
+                AssetBase ab = service.Get(old_textures.FaceTextures[i].TextureID.ToString());
+                if ((ab != null) && (ab.Name == "Baked Texture"))
+                    service.Delete(old_textures.FaceTextures[i].TextureID);
+            }
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID principalID)
         {
@@ -131,6 +151,7 @@ namespace OpenSim.Services.AvatarService
                                                                                                               principalID,
                                                                                                               avatar
                                                                                                           });
+            RemoveOldBaked(principalID, avatar);
             return m_Database.Store(principalID, avatar);
         }
 
