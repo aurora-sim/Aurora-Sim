@@ -994,7 +994,6 @@ namespace Aurora.Modules.Estate
 
         private void handleUploadTerrain(IClientAPI remote_client, string clientFileName)
         {
-
             if (TerrainUploader == null)
             {
                 remote_client.SendAlertMessage("Uploading terrain file...");

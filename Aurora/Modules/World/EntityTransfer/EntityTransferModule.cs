@@ -1018,9 +1018,8 @@ namespace Aurora.Modules.EntityTransfer
         public bool NewUserConnection (IScene scene, AgentCircuitData agent, uint teleportFlags, out int UDPPort, out string reason)
         {
             reason = String.Empty;
-            UDPPort = GetUDPPort (scene);
-
-            CacheUserInfo(scene, agent.OtherInformation);
+            UDPPort = GetUDPPort(scene);
+            IScenePresence sp = scene.GetScenePresence(agent.AgentID);
 
             // Don't disable this log message - it's too helpful
             MainConsole.Instance.TraceFormat (
@@ -1037,7 +1036,7 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
-            IScenePresence sp = scene.GetScenePresence (agent.AgentID);
+            CacheUserInfo(scene, agent.OtherInformation);
 
             if (sp != null && !sp.IsChildAgent)
             {

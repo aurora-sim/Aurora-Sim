@@ -97,7 +97,8 @@ namespace Aurora.Modules.Attachments
         protected void AgentIsLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
-            SuspendAvatar(presence, destination);
+            if(!presence.IsChildAgent)
+                SuspendAvatar(presence, destination);
         }
 
         #endregion
@@ -388,7 +389,11 @@ namespace Aurora.Modules.Attachments
 
                     try
                     {
-                        m_scene.SceneGraph.RestorePrimToScene(objatt, true);
+                        bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
+                        if (!success)
+                        {
+                            MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                        }
                     }
                     catch { }
 

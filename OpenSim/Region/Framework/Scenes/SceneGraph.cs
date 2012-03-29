@@ -2148,7 +2148,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 IBackupModule backup = m_parentScene.RequestModuleInterface<IBackupModule>();
                 backup.DeleteSceneObjects(new ISceneEntity[1] { entity }, false, true);
-                return AddEntity(entity, false);
+                return RestorePrimToScene(entity, false);
             }
             return success;
         }
@@ -2193,8 +2193,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         private bool RemoveEntity(IEntity entity)
         {
-            Entities.Remove(entity);
-            return true;
+            return Entities.Remove(entity);
         }
 
         /// <summary>
