@@ -292,7 +292,7 @@ namespace Aurora.Modules.Startup
                                               group.ChildrenEntities().Count);
                             continue;
                         }
-                        m_scene.SceneGraph.RestorePrimToScene(group);
+                        m_scene.SceneGraph.RestorePrimToScene(group, false);
                     }
                     catch(Exception ex)
                     {

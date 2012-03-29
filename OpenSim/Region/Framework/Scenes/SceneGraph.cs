@@ -2118,7 +2118,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public bool RestorePrimToScene(ISceneEntity entity)
+        public bool RestorePrimToScene(ISceneEntity entity, bool force)
         {
             List<ISceneChildEntity> children = entity.ChildrenEntities ();
             //Sort so that we rebuild in the same order and the root being first
@@ -2142,7 +2142,15 @@ namespace OpenSim.Region.Framework.Scenes
             //Tell the entity that they are being added to a scene
             entity.AttachToScene(m_parentScene);
             //Now save the entity that we have 
-            return AddEntity(entity, false);
+            bool success = AddEntity(entity, false);
+            
+            if (force && !success)
+            {
+                IBackupModule backup = m_parentScene.RequestModuleInterface<IBackupModule>();
+                backup.DeleteSceneObjects(new ISceneEntity[1] { entity }, false, true);
+                return AddEntity(entity, false);
+            }
+            return success;
         }
 
         /// <summary>

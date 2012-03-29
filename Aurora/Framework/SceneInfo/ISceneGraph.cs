@@ -26,7 +26,7 @@ namespace Aurora.Framework
         bool TryGetPart(UUID ID, out ISceneChildEntity entity);
         void PrepPrimForAdditionToScene(ISceneEntity entity);
         bool AddPrimToScene(ISceneEntity entity);
-        bool RestorePrimToScene(ISceneEntity entity);
+        bool RestorePrimToScene(ISceneEntity entity, bool force);
         void DelinkPartToScene(ISceneEntity entity);
         bool DeleteEntity(IEntity entity);
         void CheckAllocationOfLocalIds(ISceneEntity group);

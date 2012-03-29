@@ -388,7 +388,7 @@ namespace Aurora.Modules.Attachments
 
                     try
                     {
-                        m_scene.SceneGraph.RestorePrimToScene(objatt);
+                        m_scene.SceneGraph.RestorePrimToScene(objatt, true);
                     }
                     catch { }
 
@@ -396,10 +396,6 @@ namespace Aurora.Modules.Attachments
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
                     {
-                        MainConsole.Instance.InfoFormat(
-                            "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
-                            objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
-
                         FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID);
                     }
                     else
@@ -651,6 +647,11 @@ namespace Aurora.Modules.Attachments
                     changedPositionPoint = true;
                 }
             }
+
+            MainConsole.Instance.InfoFormat(
+                "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
+                group.Name, remoteClient.Name, AttachmentPt, group.LocalId);
+
 
             group.HasGroupChanged = changedPositionPoint;
 

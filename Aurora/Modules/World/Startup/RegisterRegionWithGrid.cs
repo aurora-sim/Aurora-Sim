@@ -244,7 +244,7 @@ namespace Aurora.Modules.Startup
             if (!m_knownNeighbors.ContainsKey(scene.RegionInfo.RegionID))
                 return new List<GridRegion>();
             else
-                return m_knownNeighbors[scene.RegionInfo.RegionID];
+                return new List<GridRegion>(m_knownNeighbors[scene.RegionInfo.RegionID]);
         }
 
         public void AddGenericInfo(string key, string value)
