@@ -132,6 +132,48 @@ namespace Aurora.Services.DataService
             Update(userID, values);
         }
 
+        private static List<UserInfo> ParseQuery(List<string> query)
+        {
+            List<UserInfo> users = new List<UserInfo>();
+
+            if (query.Count % 13 == 0)
+            {
+                for (int i = 0; i < query.Count; i += 13)
+                {
+
+                    UserInfo user = new UserInfo
+                    {
+                        UserID = query[i],
+                        CurrentRegionID = UUID.Parse(query[1]),
+                        IsOnline = query[3] == "1",
+                        LastLogin = Util.ToDateTime(int.Parse(query[4])),
+                        LastLogout = Util.ToDateTime(int.Parse(query[5])),
+                        Info = (OSDMap)OSDParser.DeserializeJson(query[6])
+                    };
+                    try
+                    {
+                        user.CurrentRegionID = UUID.Parse(query[7]);
+                        if (query[8] != "")
+                            user.CurrentPosition = Vector3.Parse(query[8]);
+                        if (query[9] != "")
+                            user.CurrentLookAt = Vector3.Parse(query[9]);
+                        user.HomeRegionID = UUID.Parse(query[10]);
+                        if (query[11] != "")
+                            user.HomePosition = Vector3.Parse(query[11]);
+                        if (query[12] != "")
+                            user.HomeLookAt = Vector3.Parse(query[12]);
+                    }
+                    catch
+                    {
+                    }
+
+                    users.Add(user);
+                }
+            }
+
+            return users;
+        }
+
         public UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged)
         {
             onlineStatusChanged = false;
@@ -144,31 +186,7 @@ namespace Aurora.Services.DataService
             {
                 return null;
             }
-            UserInfo user = new UserInfo
-            {
-                UserID = query[0],
-                CurrentRegionID = UUID.Parse(query[1]),
-                IsOnline = query[3] == "1",
-                LastLogin = Util.ToDateTime(int.Parse(query[4])),
-                LastLogout = Util.ToDateTime(int.Parse(query[5])),
-                Info = (OSDMap)OSDParser.DeserializeJson(query[6])
-            };
-            try
-            {
-                user.CurrentRegionID = UUID.Parse(query[7]);
-                if (query[8] != "")
-                    user.CurrentPosition = Vector3.Parse(query[8]);
-                if (query[9] != "")
-                    user.CurrentLookAt = Vector3.Parse(query[9]);
-                user.HomeRegionID = UUID.Parse(query[10]);
-                if (query[11] != "")
-                    user.HomePosition = Vector3.Parse(query[11]);
-                if (query[12] != "")
-                    user.HomeLookAt = Vector3.Parse(query[12]);
-            }
-            catch
-            {
-            }
+            UserInfo user = ParseQuery(query)[0];
 
             //Check LastSeen
             DateTime timeLastSeen = Util.ToDateTime(int.Parse(query[2]));
@@ -191,18 +209,39 @@ namespace Aurora.Services.DataService
             return user;
         }
 
-        public uint RecentlyOnline(uint secondsAgo, bool stillOnline){
-
+        public uint RecentlyOnline(uint secondsAgo, bool stillOnline)
+        {
             int now = (int)Utils.DateTimeToUnixTime(DateTime.Now) - (int)secondsAgo;
 
             QueryFilter filter = new QueryFilter();
-            filter.andGreaterThanFilters["LastLogin"] = now;
-            if(stillOnline){
-                filter.andGreaterThanFilters["LastLogout"] = now;
+            filter.orGreaterThanEqFilters["LastLogin"] = now;
+            filter.orGreaterThanEqFilters["LastSeen"] = now;
+            if (stillOnline)
+            {
+//                filter.andGreaterThanFilters["LastLogout"] = now;
                 filter.andFilters["IsOnline"] = "1";
             }
 
             return uint.Parse(GD.Query(new string[1] { "COUNT(UserID)" }, m_realm, filter, null, null, null)[0]);
+        }
+
+        public List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start, uint count)
+        {
+            int now = (int)Utils.DateTimeToUnixTime(DateTime.Now) - (int)secondsAgo;
+
+            QueryFilter filter = new QueryFilter();
+            filter.orGreaterThanEqFilters["LastLogin"] = now;
+            filter.orGreaterThanEqFilters["LastSeen"] = now;
+            if (stillOnline)
+            {
+//                filter.andGreaterThanFilters["LastLogout"] = now;
+                filter.andFilters["IsOnline"] = "1";
+            }
+
+            List<string> query = GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count);
+            MainConsole.Instance.Info(query.Count);
+
+            return ParseQuery(query);
         }
 
         #endregion
