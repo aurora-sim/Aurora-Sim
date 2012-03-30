@@ -257,6 +257,7 @@ namespace Aurora.Framework
         public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
 
         public Dictionary<string, int> andGreaterThanEqFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orGreaterThanEqFilters = new Dictionary<string, int>();
 
         public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
@@ -286,6 +287,7 @@ namespace Aurora.Framework
                     andGreaterThanFilters.Count +
                     orGreaterThanFilters.Count +
                     andGreaterThanEqFilters.Count +
+                    orGreaterThanEqFilters.Count +
                     andLessThanFilters.Count +
                     orLessThanFilters.Count +
                     andLessThanEqFilters.Count +
@@ -493,6 +495,19 @@ namespace Aurora.Framework
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in orGreaterThanEqFilters)
+                {
+                    string key = prepared.ToString() + "where_gteqOR_" + (++i) + preparedKey(where.Key);
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                     had = true;
                 }
 
