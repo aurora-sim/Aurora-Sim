@@ -176,7 +176,7 @@ namespace OpenSim.Services.CapsService
 
                 if (texture != null)
                 {
-                    if (texture.Type != (sbyte)AssetType.Texture)
+                    if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
                         return true;
@@ -205,7 +205,7 @@ namespace OpenSim.Services.CapsService
 
                     if (texture != null)
                     {
-                        if (texture.Type != (sbyte)AssetType.Texture || texture.Type == (sbyte)AssetType.Unknown)
+                        if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                         {
                             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
                             return true;
@@ -231,7 +231,7 @@ namespace OpenSim.Services.CapsService
                 }
                 else // it was on the cache
                 {
-                    if (texture.Type != (sbyte)AssetType.Texture || texture.Type == (sbyte)AssetType.Unknown)
+                    if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
                         return true;

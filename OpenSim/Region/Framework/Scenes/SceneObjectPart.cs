@@ -567,6 +567,7 @@ namespace OpenSim.Region.Framework.Scenes
                         ();
                 if (manager != null)
                     manager.DeserializeComponents(this, value);
+                this.FinishedSerializingGenericProperties();
             }
         }
 
@@ -865,6 +866,12 @@ namespace OpenSim.Region.Framework.Scenes
                 SetComponentState("APIDStrength", value);
                 m_APIDStrength = value;
             }
+        }
+
+        public int APIDIterations
+        {
+            get { return GetComponentState("APIDIterations").AsInteger(); }
+            set { SetComponentState("APIDIterations", value); }
         }
 
         public bool APIDEnabled
@@ -1932,6 +1939,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
+        public void FinishedSerializingGenericProperties()
+        {
+            if ((APIDEnabled || PIDActive) && this.ParentEntity != null)//Make sure to activate it
+                this.ParentEntity.Scene.EventManager.OnFrame += UpdateLookAt;
+        }
+
         private void UpdateOOBfromOOBs()
         {
             m_partOOBoffset = Vector3.Zero;
@@ -2607,6 +2620,7 @@ namespace OpenSim.Region.Framework.Scenes
             APIDDamp = damp;
             APIDStrength = strength;
             APIDTarget = rot;
+            APIDIterations = 1 + (int)(Math.PI * APIDStrength);
         }
 
         /// <summary>
@@ -5376,24 +5390,20 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 if (APIDEnabled)
                 {
-                    if (Single.IsNaN(APIDTarget.W))
+                    if (APIDIterations <= 1)
                     {
-                        APIDEnabled = false;
+                        UpdateRotation(APIDTarget);
+                        APIDTarget = Quaternion.Identity;
                         return;
                     }
-                    Quaternion rot = RotationOffset;
-                    Quaternion dir = (rot - APIDTarget);
-                    float speed = ((APIDStrength/APIDDamp)*(float) (Math.PI/180.0f));
-                    if (dir.Z > speed)
-                    {
-                        rot.Z -= speed;
-                    }
-                    if (dir.Z < -speed)
-                    {
-                        rot.Z += speed;
-                    }
-                    rot.Normalize();
+
+                    Quaternion rot = Quaternion.Slerp(RotationOffset, APIDTarget, 1.0f / (float)APIDIterations);
                     UpdateRotation(rot);
+
+                    APIDIterations--;
+
+                    // This ensures that we'll check this object on the next iteration
+                    ParentGroup.ScheduleGroupTerseUpdate();
                 }
             }
             catch (Exception ex)

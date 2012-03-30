@@ -717,6 +717,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public bool RemoveAgent (IScenePresence presence, bool forceClose)
         {
+            presence.SetAgentLeaving(null);
             presence.ControllingClient.Close (forceClose);
             foreach(IClientNetworkServer cns in m_clientServers)
                 cns.RemoveClient(presence.ControllingClient);

@@ -97,7 +97,8 @@ namespace Aurora.Modules.Attachments
         protected void AgentIsLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
-            SuspendAvatar(presence, destination);
+            if(!presence.IsChildAgent)
+                SuspendAvatar(presence, destination);
         }
 
         #endregion
@@ -388,7 +389,11 @@ namespace Aurora.Modules.Attachments
 
                     try
                     {
-                        m_scene.SceneGraph.RestorePrimToScene(objatt);
+                        bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
+                        if (!success)
+                        {
+                            MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                        }
                     }
                     catch { }
 
@@ -396,10 +401,6 @@ namespace Aurora.Modules.Attachments
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
                     {
-                        MainConsole.Instance.InfoFormat(
-                            "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
-                            objatt.Name, remoteClient.Name, AttachmentPt, objatt.LocalId);
-
                         FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID);
                     }
                     else
@@ -652,6 +653,11 @@ namespace Aurora.Modules.Attachments
                 }
             }
 
+            MainConsole.Instance.InfoFormat(
+                "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
+                group.Name, remoteClient.Name, AttachmentPt, group.LocalId);
+
+
             group.HasGroupChanged = changedPositionPoint;
 
             //Update where we are put
@@ -705,10 +711,13 @@ namespace Aurora.Modules.Attachments
                 attPlugin.AddAttachment (group);
                 presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                
+
                 bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
                 if (save)
+                {
+                    appearance.Appearance.SetAttachments(attPlugin.Get());
                     AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                }
             }
 
             // Killing it here will cause the client to deselect it

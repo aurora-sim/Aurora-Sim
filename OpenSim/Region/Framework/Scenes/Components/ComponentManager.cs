@@ -282,6 +282,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 try
                 {
                     DeserializeComponents(obj, components);
+                    obj.FinishedSerializingGenericProperties();
                 }
                 catch (Exception ex)
                 {
@@ -405,6 +406,8 @@ namespace OpenSim.Region.Framework.Scenes.Components
             com = new DefaultComponents("KeyframeAnimation", null);
             RegisterComponent(com);
             com = new DefaultComponents("APIDEnabled", null);
+            RegisterComponent(com);
+            com = new DefaultComponents("APIDIterations", 0);
             RegisterComponent(com);
         }
 

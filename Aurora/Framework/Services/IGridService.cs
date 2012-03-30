@@ -555,6 +555,9 @@ namespace OpenSim.Services.Interfaces
             if (map.ContainsKey("owner_uuid"))
                 EstateOwner = map["owner_uuid"].AsUUID();
 
+            if (map.ContainsKey("EstateOwner"))
+                EstateOwner = map["EstateOwner"].AsUUID();
+
             if (map.ContainsKey("AuthToken"))
                 AuthToken = map["AuthToken"].AsString();
 

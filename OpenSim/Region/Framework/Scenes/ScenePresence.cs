@@ -2240,10 +2240,13 @@ namespace OpenSim.Region.Framework.Scenes
                             if(m_failedNeighborCrossing.ContainsKey(neighborRegion.RegionID))
                             {
                                 int diff = Util.EnvironmentTickCountSubtract(m_failedNeighborCrossing[neighborRegion.RegionID]);
-                                if(diff > 10 * 1000)
+                                if (diff > 10 * 1000)
                                     m_failedNeighborCrossing.Remove(neighborRegion.RegionID); //Only allow it to retry every 10 seconds
                                 else
-                                    return true;
+                                {
+                                    MainConsole.Instance.DebugFormat("[ScenePresence]: Unable to cross to a neighboring region, because we failed to contact the other region");
+                                    return false;
+                                }
                             }
 
                             InTransit();
@@ -2293,7 +2296,10 @@ namespace OpenSim.Region.Framework.Scenes
                                     if(diff > 10 * 1000)
                                         m_failedNeighborCrossing.Remove(neighborRegion.RegionID); //Only allow it to retry every 10 seconds
                                     else
+                                    {
+                                        MainConsole.Instance.DebugFormat("[ScenePresence]: Unable to cross to a neighboring region, because we failed to contact the other region");
                                         return false;
+                                    }
                                 }
 
                                 InTransit();
@@ -2565,7 +2571,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if(sceneObject != null)
                         {
                             //We were sitting on something when we crossed
-                            if(Scene.SceneGraph.RestorePrimToScene(sceneObject))
+                            if(Scene.SceneGraph.RestorePrimToScene(sceneObject, false))
                             {
                                 if(sceneObject.RootChild.IsSelected)
                                     sceneObject.RootChild.CreateSelected = true;

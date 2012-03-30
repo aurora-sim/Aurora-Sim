@@ -2303,8 +2303,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         public LSL_String osUnixTimeToTimestamp(long time)
         {
-            if (
-                !ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL",
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL",
                                                    m_itemID)) return new LSL_String();
             long baseTicks = 621355968000000000;
             long tickResolution = 10000000;
@@ -2312,6 +2311,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             DateTime date = new DateTime(epochTicks);
 
             return date.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
+        }
+        
+        /// <summary>
+        /// Get the description from an inventory item
+        /// </summary>
+        /// <param name="inventoryName"></param>
+        /// <returns>Item description</returns>
+        public LSL_String osGetInventoryDesc(string item)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osGetInventoryDesc", m_host, "OSSL",
+                                                   m_itemID)) return new LSL_String();
+
+            lock (m_host.TaskInventory)
+            {
+                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                {
+                    if (inv.Value.Name == item)
+                    {
+                        return inv.Value.Description.ToString();
+                    }
+                }
+            }
+
+            return new LSL_String();
         }
 
         public void osCauseDamage(string avatar, double damage)

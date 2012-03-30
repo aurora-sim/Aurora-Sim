@@ -585,6 +585,7 @@ namespace OpenSim.Services.GridService
                 {
                     region.LastSeen = Util.UnixTimeSinceEpoch();
                     m_Database.Store(region);
+                    FixNeighbors(region, GetNeighbors(region), false);
                 }
                 catch (Exception e)
                 {
