@@ -711,11 +711,13 @@ namespace Aurora.Modules.Attachments
                 attPlugin.AddAttachment (group);
                 presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                appearance.Appearance.SetAttachments(attPlugin.Get());
 
                 bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
                 if (save)
+                {
+                    appearance.Appearance.SetAttachments(attPlugin.Get());
                     AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+                }
             }
 
             // Killing it here will cause the client to deselect it
