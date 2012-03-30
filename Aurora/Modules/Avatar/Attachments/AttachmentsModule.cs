@@ -711,7 +711,8 @@ namespace Aurora.Modules.Attachments
                 attPlugin.AddAttachment (group);
                 presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                
+                appearance.Appearance.SetAttachments(attPlugin.Get());
+
                 bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
                 if (save)
                     AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
