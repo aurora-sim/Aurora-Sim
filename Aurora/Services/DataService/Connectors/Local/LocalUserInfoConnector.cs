@@ -239,7 +239,6 @@ namespace Aurora.Services.DataService
             }
 
             List<string> query = GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count);
-            MainConsole.Instance.Info(query.Count);
 
             return ParseQuery(query);
         }
