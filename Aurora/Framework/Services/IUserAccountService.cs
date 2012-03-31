@@ -279,6 +279,24 @@ namespace OpenSim.Services.Interfaces
         List<UserAccount> GetUserAccounts(UUID scopeID, string query);
 
         /// <summary>
+        /// Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="query"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count);
+
+        /// <summary>
+        /// Returns the number of avatars that match both the search criterion and the scope ID passed
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        uint NumberOfUserAccounts(UUID scopeID, string query);
+
+        /// <summary>
         ///   Store the data given, wich replaces the stored data, therefore must be complete.
         /// </summary>
         /// <param name = "data"></param>
@@ -327,5 +345,7 @@ namespace OpenSim.Services.Interfaces
         bool Store(UserAccount data);
         bool DeleteAccount(UUID userID, bool archiveInformation);
         UserAccount[] GetUsers(UUID scopeID, string query);
+        UserAccount[] GetUsers(UUID scopeID, string query, uint? start, uint? count);
+        uint NumberOfUsers(UUID scopeID, string query);
     }
 }

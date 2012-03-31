@@ -116,9 +116,19 @@ namespace Aurora.Modules
 
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
+            return GetUserAccounts(scopeID, query, null, null);
+        }
+
+        public List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count)
+        {
             List<UserAccount> accounts = m_localService.GetUserAccounts(scopeID, query);
-            accounts.AddRange(FixRemoteAccounts((List<UserAccount>)DoRemoteForced(scopeID, query)));
+            accounts.AddRange(FixRemoteAccounts((List<UserAccount>)DoRemoteForced(scopeID, query, start, count)));
             return accounts;
+        }
+
+        public uint NumberOfUserAccounts(UUID scopeID, string query)
+        {
+            return m_localService.NumberOfUserAccounts(scopeID, query);
         }
 
         public bool StoreUserAccount(UserAccount data)
