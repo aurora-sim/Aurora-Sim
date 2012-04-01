@@ -238,7 +238,8 @@ namespace Aurora.Modules
             List<GridRegion> neighbors = m_localService.GetNeighbors(r);
             List<GridRegion> remoteNeighbors = (List<GridRegion>)DoRemoteForced(r);
             UpdateGridRegionsForIWC(ref remoteNeighbors);
-            neighbors.AddRange(remoteNeighbors);
+            if(remoteNeighbors != null)
+                neighbors.AddRange(remoteNeighbors);
             return neighbors;
         }
 
@@ -276,11 +277,14 @@ namespace Aurora.Modules
 
         private void UpdateGridRegionsForIWC(ref List<GridRegion> rs)
         {
-            for (int i = 0; i < rs.Count; i++)
+            if (rs != null)
             {
-                GridRegion r = rs[i];
-                UpdateGridRegionForIWC(ref r);
-                rs[i] = r;
+                for (int i = 0; i < rs.Count; i++)
+                {
+                    GridRegion r = rs[i];
+                    UpdateGridRegionForIWC(ref r);
+                    rs[i] = r;
+                }
             }
         }
 

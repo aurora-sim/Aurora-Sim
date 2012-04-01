@@ -90,7 +90,7 @@ namespace Aurora.Modules
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod = "GetUserAccountUUID")]
         public UserAccount GetUserAccount(UUID scopeID, UUID userID)
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, userID);

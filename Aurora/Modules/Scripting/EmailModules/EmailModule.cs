@@ -468,12 +468,10 @@ namespace Aurora.Modules.Scripting
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            throw new NotImplementedException();
         }
 
         public void FinishedStartup()
         {
-            throw new NotImplementedException();
         }
 
         #endregion
