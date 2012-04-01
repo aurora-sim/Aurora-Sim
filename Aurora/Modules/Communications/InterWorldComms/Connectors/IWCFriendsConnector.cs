@@ -100,6 +100,7 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<FriendInfo> GetFriends(UUID PrincipalID)
         {
             List<FriendInfo> friends = m_localService.GetFriends(PrincipalID);
@@ -108,6 +109,7 @@ namespace Aurora.Modules
             return friends;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
             List<string> serverURIs =
@@ -121,6 +123,7 @@ namespace Aurora.Modules
             return m_localService.StoreFriend(PrincipalID, Friend, flags);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool Delete(UUID PrincipalID, string Friend)
         {
             List<string> serverURIs =

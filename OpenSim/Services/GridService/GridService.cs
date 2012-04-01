@@ -1082,6 +1082,7 @@ namespace OpenSim.Services.GridService
             return neighbors;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
         {
             if (m_UseSessionID && r.SessionID != SessionID)

@@ -90,6 +90,7 @@ namespace Aurora.Modules
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, UUID userID)
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, userID);
@@ -98,6 +99,7 @@ namespace Aurora.Modules
             return account;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, string FirstName, string LastName)
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, FirstName, LastName);
@@ -106,6 +108,7 @@ namespace Aurora.Modules
             return account;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, string Name)
         {
             UserAccount account = m_localService.GetUserAccount(scopeID, Name);
@@ -114,6 +117,7 @@ namespace Aurora.Modules
             return account;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
             List<UserAccount> accounts = m_localService.GetUserAccounts(scopeID, query);
@@ -121,16 +125,19 @@ namespace Aurora.Modules
             return accounts;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public bool StoreUserAccount(UserAccount data)
         {
             return m_localService.StoreUserAccount(data);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateUser(string name, string md5password, string email)
         {
             m_localService.CreateUser(name, md5password, email);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
         {
             m_localService.CreateUser(userID, scopeID, name, md5password, email);

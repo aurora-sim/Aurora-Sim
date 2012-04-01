@@ -59,6 +59,7 @@ namespace Aurora.Modules
             get { return "IOfflineMessagesConnector"; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridInstantMessage> GetOfflineMessages(UUID agentID)
         {
             List<string> serverURIs =
@@ -69,6 +70,7 @@ namespace Aurora.Modules
             return m_localService.GetOfflineMessages(agentID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddOfflineMessage(GridInstantMessage message)
         {
             List<string> serverURIs =
