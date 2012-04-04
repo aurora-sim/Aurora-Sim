@@ -253,6 +253,8 @@ namespace Aurora.Framework
         public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
         public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
 
+        public Dictionary<string, uint> andBitfieldNandFilters = new Dictionary<string, uint>();
+
         public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
 
@@ -284,6 +286,7 @@ namespace Aurora.Framework
                     orLikeMultiFilters.Count +
                     andBitfieldAndFilters.Count +
                     orBitfieldAndFilters.Count +
+                    andBitfieldNandFilters.Count +
                     andGreaterThanFilters.Count +
                     orGreaterThanFilters.Count +
                     andGreaterThanEqFilters.Count +
@@ -452,6 +455,19 @@ namespace Aurora.Framework
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in andBitfieldNandFilters)
+                {
+                    string key = prepared.ToString() + "where_bNAND_" + (++i) + preparedKey(where.Key);
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("({0} & {1}) = 0", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
                     had = true;
                 }
 
