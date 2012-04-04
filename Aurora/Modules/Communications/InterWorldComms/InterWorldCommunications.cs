@@ -399,7 +399,7 @@ namespace Aurora.Modules
             UUID userID = args["UserID"];
             ulong regionhandle = args["RegionHandle"];
             string ident = userID + "|" + regionhandle;
-            IWC.AddNewConnectionFromRequest(ident, args);
+            IWC.AddNewConnectionFromRequest(userID.ToString(), args);
             OSDMap result = new OSDMap();
             result["Success"] = true;
             string json = OSDParser.SerializeJsonString(result);

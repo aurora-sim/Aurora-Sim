@@ -125,7 +125,7 @@ namespace Aurora.Modules.Attachments
                 {
                     try
                     {
-                        RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, attach.AssetID, 0);
+                        RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, attach.AssetID, 0, false);
                     }
                     catch (Exception e)
                     {
@@ -214,7 +214,7 @@ namespace Aurora.Modules.Attachments
         protected UUID ClientRezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
-            ISceneEntity att = RezSingleAttachmentFromInventory (remoteClient, itemID, UUID.Zero, AttachmentPt);
+            ISceneEntity att = RezSingleAttachmentFromInventory (remoteClient, itemID, UUID.Zero, AttachmentPt, true);
 
             if (null == att)
                 return UUID.Zero;
@@ -300,7 +300,7 @@ namespace Aurora.Modules.Attachments
         }
 
         public ISceneEntity RezSingleAttachmentFromInventory (
-            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt)
+            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt, bool updateUUIDs)
         {
             MainConsole.Instance.DebugFormat(
                 "[ATTACHMENTS MODULE]: Rezzing attachment to point {0} from item {1} for {2}",
@@ -389,10 +389,15 @@ namespace Aurora.Modules.Attachments
 
                     try
                     {
-                        bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
-                        if (!success)
+                        if (updateUUIDs)
                         {
-                            MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                            m_scene.SceneGraph.AddPrimToScene(objatt);
+                        }
+                        else
+                        {
+                            bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
+                            if (!success)
+                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
                         }
                     }
                     catch { }

@@ -52,9 +52,10 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name = "itemID"></param>
         /// <param name = "AttachmentPt"></param>
         /// <param name = "updateinventoryStatus">
+        /// <param name = "updateUUIDs">ONLY make this true if you know that the user will not be crossing or teleporting when this call will be happening</param>
         ///   <returns>The scene object that was attached.  Null if the scene object could not be found</returns>
         ISceneEntity RezSingleAttachmentFromInventory(
-            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt);
+            IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt, bool updateUUIDs);
 
         /// <summary>
         ///   Detach the given item to the ground.
