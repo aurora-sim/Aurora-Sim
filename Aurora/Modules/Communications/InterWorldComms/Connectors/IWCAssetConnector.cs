@@ -77,6 +77,7 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AssetBase Get(string id)
         {
             AssetBase asset = m_localService.Get(id);
@@ -85,6 +86,7 @@ namespace Aurora.Modules
             return asset;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool GetExists(string id)
         {
             bool exists = m_localService.GetExists(id);
@@ -93,6 +95,7 @@ namespace Aurora.Modules
             return exists;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public byte[] GetData(string id)
         {
             byte[] asset = m_localService.GetData(id);
@@ -101,6 +104,7 @@ namespace Aurora.Modules
             return asset;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AssetBase GetCached(string id)
         {
             AssetBase asset = m_localService.GetCached(id);
@@ -109,6 +113,7 @@ namespace Aurora.Modules
             return asset;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void Get(string id, object sender, AssetRetrieved handler)
         {
             m_localService.Get(id, sender, delegate(string idd, object senderr, AssetBase asset)
@@ -120,12 +125,14 @@ namespace Aurora.Modules
             });
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UUID Store(AssetBase asset)
         {
             UUID retVal = m_localService.Store(asset);
             return retVal;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UUID UpdateContent(UUID id, byte[] data)
         {
             UUID asset = m_localService.UpdateContent(id, data);
@@ -134,6 +141,7 @@ namespace Aurora.Modules
             return asset;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool Delete(UUID id)
         {
             return m_localService.Delete(id);

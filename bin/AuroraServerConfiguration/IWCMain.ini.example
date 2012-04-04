@@ -64,7 +64,19 @@
     MuteListConnector = IWCConnector
     OfflineMessagesConnector = IWCConnector
     ProfileConnector = IWCConnector
+    EmailConnector = LocalConnector
 
+    ;; Max non-group chat messages that the server will store per user
+    MaxOfflineMessages = 20
+
+    ;; Whether we should save any group chat messages for users
+    SaveOfflineGroupChatMessages = true
+
+    ;; The maximum number of group chat messages that the server will store per user
+    MaxGroupOfflineMessages = 50
+
+    DoRemoteCalls = False
+    AllowRemoteCalls = True
 [ApplicationPlugins]
     ServicesLoader = ServicesLoader
     StatsHandler = StatsHandler
@@ -85,11 +97,23 @@
 [RegionPermissions]
     ;; The time before handlers will need to reregister so that they do not get killed (in hours)
     DefaultTimeout = 24
-    DefaultRegionThreatLevel = Full
+    ;; The default threat level for regions, can be None, Low, Medium, High (the default), or Full (not recommended, unless you are in a secure environment)
+    DefaultRegionThreatLevel = High
 
     ;; Definitions for threat levels
-    Threat_Level_None = "register,deregister,GetUserInfo,EQM_Post,getaccount,getaccounts,getprofile,RegisterHandlers";
-    Threat_Level_Low = "get_region_by_uuid,get_region_by_position,get_region_by_name,get_regions_by_name,get_region_range,get_region_flags,getmapitems,GetUserInfos,GetAgentsLocations,Asset_Get,getavatar,getfriends,updatelsldata,findlsldata,loadestatesettings,saveestatesettings,linkregionestate,delinkregionestate,createestate,deleteestate,getestates,getestatesowner,getmutelist,ismuted,addofflinemessage,addlandobject,getparcelinfo,getparcelbyowner,findland,findlandforsale,findevents,findeventsinregion,findclassifieds,geteventinfo,findclassifiedsinregion,SetAgentActiveGroup,SetAgentGroupSelectedRole,GetGroupRecord,GetMemberGroupProfile,GetGroupMembershipData,GetAgentActiveGroup,GetAgentToGroupInvite,GetAgentGroupMemberData,GetGroupNotice,GetAgentGroupMemberships,FindGroups,GetAgentGroupRoles,GetGroupRoles,GetGroupMembers,GetGroupRoleMembers,GetGroupNotices,GetGroupInvites";
-    Threat_Level_Medium = "get_default_regions,get_fallback_regions,get_safe_regions,removetelehub,addtelehub,findtelehub,setitems,removeitems,cachewearabledata,GETINVENTORYSKELETON,GETFOLDERFORTYPE,GETFOLDERCONTENT,GETFOLDERITEMS,ADDFOLDER,MOVEFOLDER,ADDITEM,MOVEITEMS,GETITEM,GETFOLDER,GETACTIVEGESTURES,GETASSETPERMISSIONS,getagent,updatemute,deletemute,getofflinemessages,CreateGroup,AddGroupNotice,AddAgentToGroup,AddRoleToGroup,UpdateGroup,RemoveRoleFromGroup,UpdateRole,SetAgentGroupInfo,AddAgentGroupInvite,RemoveAgentInvite,AddAgentToRole,RemoveAgentFromRole,RemoveAgentFromGroup";
-    Threat_Level_High = "setavatar,resetavatar,storefriend,deletefriend,UPDATEFOLDER,DELETEFOLDERS,PURGEFOLDER,UPDATEITEM,DELETEITEMS,updateprofile";
-    Threat_Level_Full = "Asset_Delete,Asset_Update,CREATEUSERINVENTORY,GETROOTFOLDER,setaccount";
+    ;Threat_Level_None =""
+    ;Threat_Level_Low = ""
+    ;Threat_Level_Medium = ""
+    ;Threat_Level_High = ""
+    ;Threat_Level_Full = ""
+
+    Threat_Level_None = 
+    Threat_Level_Low = 
+    Threat_Level_Medium = 
+    Threat_Level_High = 
+    Threat_Level_Full = 
+[BlackHole]
+    CacheDirector = "C:\aurora\admin\BHAssets\"
+    BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
+    AssetsAreOldAfterHowManyDays = 30
+    PointInventoryToParentAssets = true

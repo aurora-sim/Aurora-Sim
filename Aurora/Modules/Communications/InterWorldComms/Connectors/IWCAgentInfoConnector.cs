@@ -98,6 +98,7 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserInfo GetUserInfo(string userID)
         {
             UserInfo info = m_localService.GetUserInfo(userID);
@@ -106,6 +107,7 @@ namespace Aurora.Modules
             return info;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<UserInfo> GetUserInfos(List<string> userIDs)
         {
             List<UserInfo> info = m_localService.GetUserInfos(userIDs);
@@ -114,6 +116,7 @@ namespace Aurora.Modules
             return info;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<string> GetAgentsLocations(string requestor, List<string> userIDs)
         {
             List<string> info = m_localService.GetAgentsLocations(requestor, userIDs);
@@ -131,21 +134,25 @@ namespace Aurora.Modules
             return info;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetHomePosition(string userID, UUID homeID, Vector3 homePosition, Vector3 homeLookAt)
         {
             return m_localService.SetHomePosition(userID, homeID, homePosition, homeLookAt);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void SetLastPosition(string userID, UUID regionID, Vector3 lastPosition, Vector3 lastLookAt)
         {
             m_localService.SetLastPosition(userID, regionID, lastPosition, lastLookAt);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void SetLoggedIn(string userID, bool loggingIn, bool fireLoggedInEvent, UUID enteringRegion)
         {
             m_localService.SetLoggedIn(userID, loggingIn, fireLoggedInEvent, enteringRegion);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void LockLoggedInStatus(string userID, bool locked)
         {
             m_localService.LockLoggedInStatus(userID, locked);

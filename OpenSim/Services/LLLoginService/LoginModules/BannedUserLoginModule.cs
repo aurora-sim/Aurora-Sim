@@ -27,8 +27,11 @@ namespace OpenSim.Services.LLLoginService
         public void Initialize(ILoginService service, IConfigSource config, IRegistryCore registry)
         {
             IConfig loginServerConfig = config.Configs["LoginService"];
-            m_UseTOS = loginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
-            m_TOSLocation = loginServerConfig.GetString("FileNameOfTOS", "");
+            if (loginServerConfig != null)
+            {
+                m_UseTOS = loginServerConfig.GetBoolean("UseTermsOfServiceOnFirstLogin", false);
+                m_TOSLocation = loginServerConfig.GetString("FileNameOfTOS", "");
+            }
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_LoginService = service;
         }

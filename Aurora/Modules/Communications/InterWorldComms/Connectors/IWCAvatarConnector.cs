@@ -59,6 +59,7 @@ namespace Aurora.Modules
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarAppearance GetAppearance(UUID userID)
         {
             AvatarAppearance app = m_localService.GetAppearance(userID);
@@ -67,6 +68,7 @@ namespace Aurora.Modules
             return app;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAppearance(UUID userID, AvatarAppearance appearance)
         {
             bool success = m_localService.SetAppearance(userID, appearance);
@@ -75,6 +77,7 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public AvatarData GetAvatar(UUID userID)
         {
             AvatarData app = m_localService.GetAvatar(userID);
@@ -83,6 +86,7 @@ namespace Aurora.Modules
             return app;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool SetAvatar(UUID userID, AvatarData avatar)
         {
             bool success = m_localService.SetAvatar(userID, avatar);
@@ -91,6 +95,7 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool ResetAvatar(UUID userID)
         {
             bool success = m_localService.ResetAvatar(userID);
@@ -99,6 +104,7 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void CacheWearableData(UUID principalID, AvatarWearable cachedWearable)
         {
             //NOT DONE

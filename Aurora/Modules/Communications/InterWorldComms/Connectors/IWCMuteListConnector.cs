@@ -58,6 +58,7 @@ namespace Aurora.Modules
             get { return "IMuteListConnector"; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<MuteList> GetMuteList(UUID AgentID)
         {
             List<string> serverURIs =
@@ -68,6 +69,7 @@ namespace Aurora.Modules
             return m_localService.GetMuteList(AgentID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateMute(MuteList mute, UUID AgentID)
         {
             List<string> serverURIs =
@@ -79,6 +81,7 @@ namespace Aurora.Modules
                 m_localService.UpdateMute(mute, AgentID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void DeleteMute(UUID muteID, UUID AgentID)
         {
             List<string> serverURIs =
@@ -90,6 +93,7 @@ namespace Aurora.Modules
                 m_localService.DeleteMute(muteID, AgentID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool IsMuted(UUID AgentID, UUID PossibleMuteID)
         {
             List<string> serverURIs =

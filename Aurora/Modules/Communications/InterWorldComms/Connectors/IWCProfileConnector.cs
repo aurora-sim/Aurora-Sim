@@ -57,6 +57,7 @@ namespace Aurora.Modules
             get { return "IProfileConnector"; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IUserProfileInfo GetUserProfile(UUID agentID)
         {
             IUserProfileInfo profile = m_localService.GetUserProfile(agentID);
@@ -65,6 +66,7 @@ namespace Aurora.Modules
             return profile;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool UpdateUserProfile(IUserProfileInfo Profile)
         {
             bool success = m_localService.UpdateUserProfile(Profile);
@@ -73,11 +75,13 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void CreateNewProfile(UUID UUID)
         {
             m_localService.CreateNewProfile(UUID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddClassified(Classified classified)
         {
             bool success = m_localService.AddClassified(classified);
@@ -86,6 +90,7 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public Classified GetClassified(UUID queryClassifiedID)
         {
             Classified Classified = m_localService.GetClassified(queryClassifiedID);
@@ -94,6 +99,7 @@ namespace Aurora.Modules
             return Classified;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<Classified> GetClassifieds(UUID ownerID)
         {
             List<Classified> Classifieds = m_localService.GetClassifieds(ownerID);
@@ -102,12 +108,14 @@ namespace Aurora.Modules
             return Classifieds;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemoveClassified(UUID queryClassifiedID)
         {
             m_localService.RemoveClassified(queryClassifiedID);
             DoRemoteForced(queryClassifiedID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool AddPick(ProfilePickInfo pick)
         {
             bool success = m_localService.AddPick(pick);
@@ -116,6 +124,7 @@ namespace Aurora.Modules
             return success;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public ProfilePickInfo GetPick(UUID queryPickID)
         {
             ProfilePickInfo pick = m_localService.GetPick(queryPickID);
@@ -124,6 +133,7 @@ namespace Aurora.Modules
             return pick;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<ProfilePickInfo> GetPicks(UUID ownerID)
         {
             List<ProfilePickInfo> picks = m_localService.GetPicks(ownerID);
@@ -132,6 +142,7 @@ namespace Aurora.Modules
             return picks;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void RemovePick(UUID queryPickID)
         {
             m_localService.RemovePick(queryPickID);

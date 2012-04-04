@@ -79,26 +79,31 @@ namespace Aurora.Modules
                 m_localService.FinishedStartup();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual int GetMaxRegionSize()
         {
             return m_localService.GetMaxRegionSize();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual int GetRegionViewSize()
         {
             return m_localService.GetRegionViewSize();
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None)]
         public RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
         {
             return m_localService.RegisterRegion(regionInfos, oldSessionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool DeregisterRegion(GridRegion region)
         {
             return m_localService.DeregisterRegion(region);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
         {
             GridRegion r = m_localService.GetRegionByUUID(scopeID, regionID);
@@ -111,6 +116,7 @@ namespace Aurora.Modules
             return r;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
         {
             GridRegion r = m_localService.GetRegionByPosition(scopeID, x, y);
@@ -122,6 +128,7 @@ namespace Aurora.Modules
             return r;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public GridRegion GetRegionByName(UUID scopeID, string regionName)
         {
             GridRegion r = m_localService.GetRegionByName(scopeID, regionName);
@@ -133,6 +140,7 @@ namespace Aurora.Modules
             return r;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
         {
             List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
@@ -149,6 +157,7 @@ namespace Aurora.Modules
             return r;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
         {
             List<GridRegion> r = m_localService.GetRegionRange(scopeID, xmin, xmax, ymin, ymax);
@@ -161,21 +170,25 @@ namespace Aurora.Modules
             return r;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
             return m_localService.GetDefaultRegions(scopeID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
         {
             return m_localService.GetFallbackRegions(scopeID, x, y);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
             return m_localService.GetSafeRegions(scopeID, x, y);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public int GetRegionFlags(UUID scopeID, UUID regionID)
         {
             int flags = m_localService.GetRegionFlags(scopeID, regionID);
@@ -185,11 +198,13 @@ namespace Aurora.Modules
             return flags;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public string UpdateMap(GridRegion region)
         {
             return m_localService.UpdateMap(region);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
         {
             multipleMapItemReply reply = m_localService.GetMapItems(regionHandle, gridItemType);
@@ -199,27 +214,32 @@ namespace Aurora.Modules
             return reply;
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void SetRegionUnsafe(UUID RegionID)
         {
             m_localService.SetRegionUnsafe(RegionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public void SetRegionSafe(UUID RegionID)
         {
             m_localService.SetRegionUnsafe(RegionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public bool VerifyRegionSessionID(GridRegion r, UUID SessionID)
         {
             return m_localService.VerifyRegionSessionID(r, SessionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetNeighbors(GridRegion r)
         {
             List<GridRegion> neighbors = m_localService.GetNeighbors(r);
             List<GridRegion> remoteNeighbors = (List<GridRegion>)DoRemoteForced(r);
             UpdateGridRegionsForIWC(ref remoteNeighbors);
-            neighbors.AddRange(remoteNeighbors);
+            if(remoteNeighbors != null)
+                neighbors.AddRange(remoteNeighbors);
             return neighbors;
         }
 
@@ -257,11 +277,14 @@ namespace Aurora.Modules
 
         private void UpdateGridRegionsForIWC(ref List<GridRegion> rs)
         {
-            for (int i = 0; i < rs.Count; i++)
+            if (rs != null)
             {
-                GridRegion r = rs[i];
-                UpdateGridRegionForIWC(ref r);
-                rs[i] = r;
+                for (int i = 0; i < rs.Count; i++)
+                {
+                    GridRegion r = rs[i];
+                    UpdateGridRegionForIWC(ref r);
+                    rs[i] = r;
+                }
             }
         }
 
