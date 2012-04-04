@@ -2272,7 +2272,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             _primAllocateMutex.WaitOne();
             if (LocalID > m_lastAllocatedLocalId)
-                m_lastAllocatedLocalId = LocalID;
+                m_lastAllocatedLocalId = LocalID + 1;
             _primAllocateMutex.ReleaseMutex();
         }
 
