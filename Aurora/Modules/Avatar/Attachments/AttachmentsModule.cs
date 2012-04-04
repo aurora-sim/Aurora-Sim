@@ -214,11 +214,16 @@ namespace Aurora.Modules.Attachments
         protected UUID ClientRezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, int AttachmentPt)
         {
-            ISceneEntity att = RezSingleAttachmentFromInventory (remoteClient, itemID, UUID.Zero, AttachmentPt, true);
+            IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
+            if (presence != null && presence.SuccessfullyMadeRootAgent)
+            {
+                ISceneEntity att = RezSingleAttachmentFromInventory(remoteClient, itemID, UUID.Zero, AttachmentPt, true);
 
-            if (null == att)
-                return UUID.Zero;
-            return att.UUID;
+                if (null == att)
+                    return UUID.Zero;
+                return att.UUID;
+            }
+            return UUID.Zero;
         }
 
         protected void ClientDetachObject(uint objectLocalID, IClientAPI remoteClient)
@@ -287,7 +292,7 @@ namespace Aurora.Modules.Attachments
             ISceneEntity group, int AttachmentPt)
         {
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
-                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero);
+                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero, true);
             else
             {
                 remoteClient.SendAgentAlertMessage(
@@ -386,12 +391,17 @@ namespace Aurora.Modules.Attachments
                     // If a bug is caused by this, we need to figure out some other workaround.
                     //SendKillEntity(objatt.RootChild);
                     //We also have to reset the IDs so that it doesn't have the same IDs as one inworld (possibly)!
-
+                    ISceneEntity[] atts = GetAttachmentsForAvatar(remoteClient.AgentId);
+                    foreach (var obj in atts)
+                        if (obj.UUID == objatt.UUID)
+                            updateUUIDs = false;
+                    bool forceUpdateOnNextDeattach = false;
                     try
                     {
                         if (updateUUIDs)
                         {
                             m_scene.SceneGraph.AddPrimToScene(objatt);
+                            forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                         }
                         else
                         {
@@ -406,7 +416,7 @@ namespace Aurora.Modules.Attachments
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
                     {
-                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID);
+                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID, forceUpdateOnNextDeattach);
                     }
                     else
                         objatt = null;//Presence left, kill the attachment
@@ -597,8 +607,10 @@ namespace Aurora.Modules.Attachments
         /// <param name="AttachmentPt">The point to where the attachment will go</param>
         /// <param name="item">If this is not null, it saves a query in this method to the InventoryService
         /// This is the Item that the object is in (if it is in one yet)</param>
+        /// <param name="assetID"/>
+        /// <param name="forceUpdatePrim">Force updating of the prim the next time the user attempts to deattach it</param>
         protected void FindAttachmentPoint (IClientAPI remoteClient, uint localID, ISceneEntity group,
-            int AttachmentPt, UUID assetID)
+            int AttachmentPt, UUID assetID, bool forceUpdatePrim)
         {
             //Make sure that we arn't over the limit of attachments
             ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
@@ -661,9 +673,6 @@ namespace Aurora.Modules.Attachments
             MainConsole.Instance.InfoFormat(
                 "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                 group.Name, remoteClient.Name, AttachmentPt, group.LocalId);
-
-
-            group.HasGroupChanged = changedPositionPoint;
 
             //Update where we are put
             group.SetAttachmentPoint((byte)AttachmentPt);
@@ -787,7 +796,7 @@ namespace Aurora.Modules.Attachments
             // In case it is later dropped again, don't let
             // it get cleaned up
             group.RootChild.RemFlag(PrimFlags.TemporaryOnRez);
-            group.HasGroupChanged = false;
+            group.HasGroupChanged = changedPositionPoint || forceUpdatePrim;
             //Now recreate it so that it is selected
             group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 

@@ -403,5 +403,10 @@ namespace Aurora.Framework
         /// The agent failed to make it to the region they were attempting to go (resets SetAgentLeaving)
         /// </summary>
         void AgentFailedToLeave();
+
+        /// <summary>
+        /// Whether the agent has fully been moved into the region as a root agent (is cleared if they leave or become a child agent)
+        /// </summary>
+        bool SuccessfullyMadeRootAgent { get; }
     }
 }

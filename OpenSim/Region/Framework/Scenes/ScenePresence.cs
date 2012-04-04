@@ -243,6 +243,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
+        public bool SuccessfullyMadeRootAgent
+        {
+            get;
+            private set;
+        }
+
         /// <summary>
         /// Physical scene representation of this Avatar.
         /// </summary>
@@ -827,6 +833,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scene.EventManager.TriggerOnMakeRootAgent(this);
 
+            SuccessfullyMadeRootAgent = true;
+
             //Tell the grid that we successfully got here
 
             AgentCircuitData agent = ControllingClient.RequestClientInfo ();
@@ -860,6 +868,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public virtual void MakeChildAgent(GridRegion destination)
         {
+            SuccessfullyMadeRootAgent = false;
             SuccessfulTransit ();
             // It looks like m_animator is set to null somewhere, and MakeChild
             // is called after that. Probably in aborted teleports.
