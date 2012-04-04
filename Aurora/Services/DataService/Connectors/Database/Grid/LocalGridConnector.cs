@@ -225,6 +225,21 @@ namespace Aurora.Services.DataService
             return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, sort, start, count));
         }
 
+        public uint Count(RegionFlags includeFlags, RegionFlags excludeFlags)
+        {
+            QueryFilter filter = new QueryFilter();
+            if (includeFlags > 0)
+            {
+                filter.andBitfieldAndFilters["Flags"] = (uint)includeFlags;
+            }
+            if (excludeFlags > 0)
+            {
+                filter.andBitfieldNandFilters["Flags"] = (uint)excludeFlags;
+            }
+
+            return uint.Parse(GD.Query(new string[1] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
+        }
+
         public List<GridRegion> GetNeighbours(UUID regionID, UUID scopeID, uint squareRangeFromCenterInMeters)
         {
             List<GridRegion> regions = new List<GridRegion>(0);

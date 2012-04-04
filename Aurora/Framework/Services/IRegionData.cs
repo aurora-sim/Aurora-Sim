@@ -47,6 +47,13 @@ namespace Aurora.Framework
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort);
         /// <summary>
+        /// Gets the number of regions matching the specified flags
+        /// </summary>
+        /// <param name="includeFlags"></param>
+        /// <param name="excludeFlags"></param>
+        /// <returns></returns>
+        uint Count(RegionFlags includeFlags, RegionFlags excludeFlags);
+        /// <summary>
         /// Gets the neighbouring regions, taking into account variable-sized regions
         /// </summary>
         /// <param name="regionID"></param>
