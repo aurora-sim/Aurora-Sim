@@ -131,9 +131,19 @@ namespace Aurora.Services.DataService
 
         public UserAccount[] GetUsers(UUID scopeID, string query)
         {
-            List<UserAccount> data = new List<UserAccount>();
+            return GetUsers(scopeID, query, null, null);
+        }
 
-            string[] words = query.MySqlEscape().Split(new[] {' '});
+        private static QueryFilter GetUsersFilter(UUID scopeID, string query){
+            QueryFilter filter = new QueryFilter();
+
+            filter.orMultiFilters["ScopeID"] = new List<object>
+            {
+                scopeID,
+                UUID.Zero
+            };
+
+            string[] words = query.MySqlEscape().Split(new[] { ' ' });
 
             for (int i = 0; i < words.Length; i++)
             {
@@ -146,14 +156,6 @@ namespace Aurora.Services.DataService
                     Array.Resize(ref words, words.Length - 1);
                 }
             }
-
-            QueryFilter filter = new QueryFilter();
-
-            filter.orMultiFilters["ScopeID"] = new List<object>(2);
-            filter.orMultiFilters["ScopeID"].Add(scopeID);
-            filter.orMultiFilters["ScopeID"].Add(UUID.Zero);
-
-            List<string> retVal;
             if (words.Length > 0)
             {
                 filter.orLikeFilters["Name"] = "%" + query + "%";
@@ -170,6 +172,20 @@ namespace Aurora.Services.DataService
                 }
             }
 
+            return filter;
+        }
+
+        public UserAccount[] GetUsers(UUID scopeID, string query, uint? start, uint? count)
+        {
+            List<UserAccount> data = new List<UserAccount>();
+
+            QueryFilter filter = GetUsersFilter(scopeID, query);
+
+            List<string> retVal;
+            Dictionary<string, bool> sort = new Dictionary<string, bool>(2);
+            sort["LastName"] = true;
+            sort["FirstName"] = true; // these are in this order so results should be ordered by last name first, then first name
+
             retVal = GD.Query(new string[]{
                 "PrincipalID",
                 "ScopeID",
@@ -182,11 +198,16 @@ namespace Aurora.Services.DataService
                 "UserFlags",
                 "UserTitle",
                 "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
-            }, m_realm, filter, null, null, null);
+            }, m_realm, filter, sort, start, count);
 
             ParseQuery(retVal, ref data);
 
             return data.ToArray();
+        }
+
+        public uint NumberOfUsers(UUID scopeID, string query)
+        {
+            return uint.Parse(GD.Query(new string[1] { "COUNT(*)" }, m_realm, GetUsersFilter(scopeID, query), null, null, null)[0]);
         }
 
         #endregion

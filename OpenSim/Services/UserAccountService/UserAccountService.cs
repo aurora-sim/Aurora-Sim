@@ -126,8 +126,7 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public UserAccount GetUserAccount(UUID scopeID, string firstName,
-                                          string lastName)
+        public UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
             UserAccount account;
             if (m_cache.Get(firstName + " " + lastName, out account))
@@ -298,6 +297,32 @@ namespace OpenSim.Services.UserAccountService
 
             List<UserAccount> ret = new List<UserAccount>(d);
             return ret;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count)
+        {
+            object remoteValue = DoRemote(scopeID, query);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserAccount>)remoteValue;
+
+            UserAccount[] d = m_Database.GetUsers(scopeID, query, start, count);
+
+            if (d == null)
+                return new List<UserAccount>();
+
+            List<UserAccount> ret = new List<UserAccount>(d);
+            return ret;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public uint NumberOfUserAccounts(UUID scopeID, string query)
+        {
+            object remoteValue = DoRemote(scopeID, query);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
+            return m_Database.NumberOfUsers(scopeID, query);
         }
 
         public void CreateUser(string name, string password, string email)
