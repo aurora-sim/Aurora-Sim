@@ -253,10 +253,13 @@ namespace Aurora.Framework
         public Dictionary<string, uint> andBitfieldAndFilters = new Dictionary<string, uint>();
         public Dictionary<string, uint> orBitfieldAndFilters = new Dictionary<string, uint>();
 
+        public Dictionary<string, uint> andBitfieldNandFilters = new Dictionary<string, uint>();
+
         public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
 
         public Dictionary<string, int> andGreaterThanEqFilters = new Dictionary<string, int>();
+        public Dictionary<string, int> orGreaterThanEqFilters = new Dictionary<string, int>();
 
         public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
         public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
@@ -268,7 +271,7 @@ namespace Aurora.Framework
         public List<string> andIsNullFilters = new List<string>();
         public List<string> andIsNotNullFilters = new List<string>();
 
-        public List<QueryFilter> subFilters = new List<QueryFilter>();
+//        public List<QueryFilter> subFilters = new List<QueryFilter>();
 
         public uint Count
         {
@@ -283,9 +286,11 @@ namespace Aurora.Framework
                     orLikeMultiFilters.Count +
                     andBitfieldAndFilters.Count +
                     orBitfieldAndFilters.Count +
+                    andBitfieldNandFilters.Count +
                     andGreaterThanFilters.Count +
                     orGreaterThanFilters.Count +
                     andGreaterThanEqFilters.Count +
+                    orGreaterThanEqFilters.Count +
                     andLessThanFilters.Count +
                     orLessThanFilters.Count +
                     andLessThanEqFilters.Count +
@@ -294,10 +299,10 @@ namespace Aurora.Framework
                     andIsNotNullFilters.Count
                 );
 
-                subFilters.ForEach(delegate(QueryFilter filter)
-                {
-                    total += filter.Count;
-                });
+//                subFilters.ForEach(delegate(QueryFilter filter)
+//                {
+//                    total += filter.Count;
+//                });
 
                 return total;
             }
@@ -453,6 +458,19 @@ namespace Aurora.Framework
                     had = true;
                 }
 
+                parts = new List<string>();
+                foreach (KeyValuePair<string, uint> where in andBitfieldNandFilters)
+                {
+                    string key = prepared.ToString() + "where_bNAND_" + (++i) + preparedKey(where.Key);
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("({0} & {1}) = 0", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
                 #endregion
 
                 #region greater than
@@ -493,6 +511,19 @@ namespace Aurora.Framework
                 if (parts.Count > 0)
                 {
                     query += (had ? " AND" : string.Empty) + " (" + string.Join(" AND ", parts.ToArray()) + ")";
+                    had = true;
+                }
+
+                parts = new List<string>();
+                foreach (KeyValuePair<string, int> where in orGreaterThanEqFilters)
+                {
+                    string key = prepared.ToString() + "where_gteqOR_" + (++i) + preparedKey(where.Key);
+                    ps[key] = where.Value;
+                    parts.Add(string.Format("{0} >= {1}", where.Key, key));
+                }
+                if (parts.Count > 0)
+                {
+                    query += (had ? " AND" : string.Empty) + " (" + string.Join(" OR ", parts.ToArray()) + ")";
                     had = true;
                 }
 
@@ -567,16 +598,17 @@ namespace Aurora.Framework
 
                 #endregion
 
-                foreach (QueryFilter subFilter in subFilters)
-                {
-                    Dictionary<string, object> sps;
-                    query += (had ? " AND" : string.Empty) + subFilter.ToSQL(prepared, out sps, ref i);
-                    pss[pss.Length] = sps;
-                    if (subFilter.Count > 0)
-                    {
-                        had = true;
-                    }
-                }
+//                foreach (QueryFilter subFilter in subFilters)
+//                {
+//                    Dictionary<string, object> sps;
+//                    query += (had ? " AND" : string.Empty) + subFilter.ToSQL(prepared, out sps, ref i);
+//                    pss[pss.Length] = sps;
+//                    if (subFilter.Count > 0)
+//                    {
+//                        had = true;
+//                    }
+//                }
+
                 query += ")";
             }
             pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());

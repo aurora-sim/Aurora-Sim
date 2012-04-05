@@ -210,5 +210,6 @@ namespace OpenSim.Services.Interfaces
         UserInfo Get(string userID, bool checkOnlineStatus, out bool onlineStatusChanged);
 
         uint RecentlyOnline(uint secondsAgo, bool stillOnline);
+        List<UserInfo> RecentlyOnline(uint secondsAgo, bool stillOnline, Dictionary<string, bool> sort, uint start, uint count);
     }
 }
