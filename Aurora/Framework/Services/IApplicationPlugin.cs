@@ -313,13 +313,13 @@ namespace Aurora.Framework
             return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "");
         }
 
-        public string ToSQL(char prepared, out Dictionary<string, object> ps, ref uint j)
+        public string ToSQL(char prepared, out Dictionary<string, object> ps)
         {
             ps = new Dictionary<string, object>();
             Dictionary<string, object>[] pss = { ps };
             string query = "";
             List<string> parts;
-            uint i = j;
+            uint i = 0;
             bool had = false;
             if (Count > 0)
             {
