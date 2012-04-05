@@ -271,7 +271,7 @@ namespace Aurora.Framework
         public List<string> andIsNullFilters = new List<string>();
         public List<string> andIsNotNullFilters = new List<string>();
 
-        public List<QueryFilter> subFilters = new List<QueryFilter>();
+//        public List<QueryFilter> subFilters = new List<QueryFilter>();
 
         public uint Count
         {
@@ -299,10 +299,10 @@ namespace Aurora.Framework
                     andIsNotNullFilters.Count
                 );
 
-                subFilters.ForEach(delegate(QueryFilter filter)
-                {
-                    total += filter.Count;
-                });
+//                subFilters.ForEach(delegate(QueryFilter filter)
+//                {
+//                    total += filter.Count;
+//                });
 
                 return total;
             }
@@ -598,16 +598,17 @@ namespace Aurora.Framework
 
                 #endregion
 
-                foreach (QueryFilter subFilter in subFilters)
-                {
-                    Dictionary<string, object> sps;
-                    query += (had ? " AND" : string.Empty) + subFilter.ToSQL(prepared, out sps, ref i);
-                    pss[pss.Length] = sps;
-                    if (subFilter.Count > 0)
-                    {
-                        had = true;
-                    }
-                }
+//                foreach (QueryFilter subFilter in subFilters)
+//                {
+//                    Dictionary<string, object> sps;
+//                    query += (had ? " AND" : string.Empty) + subFilter.ToSQL(prepared, out sps, ref i);
+//                    pss[pss.Length] = sps;
+//                    if (subFilter.Count > 0)
+//                    {
+//                        had = true;
+//                    }
+//                }
+
                 query += ")";
             }
             pss.SelectMany(x => x).ToLookup(x => x.Key, x => x.Value).ToDictionary(x => x.Key, x => x.First());
