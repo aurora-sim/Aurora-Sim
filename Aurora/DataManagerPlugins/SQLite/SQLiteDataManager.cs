@@ -286,8 +286,7 @@ namespace Aurora.DataManager.SQLite
 
             if (queryFilter != null && queryFilter.Count > 0)
             {
-                uint j = 0;
-                query += " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
+                query += " WHERE " + queryFilter.ToSQL(':', out ps);
             }
 
             if (sort != null && sort.Count > 0)
@@ -393,8 +392,7 @@ namespace Aurora.DataManager.SQLite
             string filter = "";
             if (queryFilter != null && queryFilter.Count > 0)
             {
-                uint j = 0;
-                filter = " WHERE " + queryFilter.ToSQL(':', out ps, ref j);
+                filter = " WHERE " + queryFilter.ToSQL(':', out ps);
             }
 
             List<string> parts = new List<string>();
@@ -601,8 +599,7 @@ namespace Aurora.DataManager.SQLite
         public override bool Delete(string table, QueryFilter queryFilter)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
-            uint j = 0;
-            string query = "DELETE FROM " + table + (queryFilter != null ? (" WHERE " + queryFilter.ToSQL(':', out ps, ref j)) : "");
+            string query = "DELETE FROM " + table + (queryFilter != null ? (" WHERE " + queryFilter.ToSQL(':', out ps)) : "");
 
             SQLiteCommand cmd = new SQLiteCommand(query);
             AddParams(ref cmd, ps);
