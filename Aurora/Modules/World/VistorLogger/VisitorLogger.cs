@@ -132,7 +132,7 @@ namespace Aurora.Modules.VisitorLogger
                 StreamWriter m_streamWriter = new StreamWriter(stream);
                 m_streamWriter.BaseStream.Position += m_streamWriter.BaseStream.Length;
 
-                string LineToWrite = DateTime.Now.ToLongTimeString() + " - " + presence.Name + " entered " +
+                string LineToWrite = DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + " - " + presence.Name + " entered " +
                                      presence.Scene.RegionInfo.RegionName + ".";
                 m_timesOfUsers[presence.UUID] = DateTime.Now;
 
