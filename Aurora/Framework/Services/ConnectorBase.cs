@@ -178,7 +178,7 @@ namespace Aurora.Framework
             response = null;
             string resp = ServiceOSDRequest(url, map, "POST", 10000);
             
-            if (resp == "")
+            if (resp == "" || resp.StartsWith("<"))
                 return false;
             try
             {

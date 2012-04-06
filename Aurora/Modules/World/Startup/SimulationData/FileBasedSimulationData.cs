@@ -819,7 +819,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     IConfig startupConfig = m_scene.Config.Configs["Startup"];
                     if (startupConfig == null || startupConfig.GetBoolean("NoGUI", false))
                         DoNoGUIWarning();
-                    else
+                    else if(!m_scene.RegionInfo.NewRegion)
                         MessageBox.Show(
                             @"Your sim has been updated to use the FileBased Simulation Service.
 Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.

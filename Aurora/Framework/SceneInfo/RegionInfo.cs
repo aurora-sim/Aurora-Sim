@@ -64,6 +64,7 @@ namespace Aurora.Framework
         public int NumberStartup = 0;
         public StartupType Startup = StartupType.Normal;
         public bool InfiniteRegion = false;
+        public bool NewRegion = false;
 
         /// <summary>
         /// The X length (in meters) that the region is

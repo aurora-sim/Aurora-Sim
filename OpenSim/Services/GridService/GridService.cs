@@ -364,7 +364,7 @@ namespace OpenSim.Services.GridService
                 return new RegisterRegion() { Error = "Region overlaps another region" };
             }
 
-            GridRegion region = regions.Count > 0 ? regions[0] : null;
+            GridRegion region = m_Database.Get(regionInfos.RegionID, UUID.Zero);
 
             if (region != null)
             {
@@ -375,6 +375,13 @@ namespace OpenSim.Services.GridService
                         "[GRID SERVICE]: Region {0} called register, but the sessionID they provided is wrong!",
                         region.RegionName);
                     return new RegisterRegion() { Error = "Wrong Session ID" };
+                }
+                if (regions.Count > 0 && region.RegionID != regions[0].RegionID)
+                {
+                    MainConsole.Instance.WarnFormat(
+                        "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use by {3}.",
+                        regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY, region.RegionName);
+                    return new RegisterRegion() { Error = "Region overlaps another region" };
                 }
             }
 

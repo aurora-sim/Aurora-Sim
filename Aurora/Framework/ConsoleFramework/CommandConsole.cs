@@ -31,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using Nini.Config;
 using log4net.Core;
+using System.Threading;
 #if NET_4_0
 using System.Threading.Tasks;
 #endif
@@ -874,8 +875,18 @@ namespace Aurora.Framework
         private PromptEvent action;
         private readonly Object m_consoleLock = new Object();
         private bool m_calledEndInvoke;
-        private bool m_reading;
+        protected static bool m_reading;
+        private Thread m_consoleReadingThread;
 #endif
+        private Thread StartReadingThread()
+        {
+            Thread t = new Thread(delegate()
+            {
+                Prompt();
+            });
+            t.Start();
+            return t;
+        }
 
         /// <summary>
         ///   Starts the prompt for the console. This will never stop until the region is closed.
@@ -884,34 +895,31 @@ namespace Aurora.Framework
         {
             while (true)
             {
-#if !NET_4_0
                 if (!Processing)
                 {
                     throw new Exception("Restart");
                 }
                 lock (m_consoleLock)
                 {
-                    if (action == null)
-                    {
-                        action = Prompt;
-                        result = action.BeginInvoke(null, null);
-                        m_calledEndInvoke = false;
-                    }
+#if !NET_4_0
+                    if(m_consoleReadingThread == null)
+                        m_consoleReadingThread = StartReadingThread();
                     try
                     {
                         if (m_reading)
                         {
-                            System.Threading.Thread.Sleep(1000);
+                            if (m_consoleReadingThread.ThreadState == ThreadState.Running)
+                                m_consoleReadingThread.Suspend();
+                            continue;
                         }
-                        else
+                        else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped)
                         {
-                            if (!((!result.IsCompleted) && (!result.AsyncWaitHandle.WaitOne(1000, false) || !result.IsCompleted)) && action != null && !result.CompletedSynchronously && !m_calledEndInvoke)
-                            {
-                                m_calledEndInvoke = true;
-                                action.EndInvoke(result);
-                                action = null;
-                                result = null;
-                            }
+                            m_consoleReadingThread = null;
+                            continue;
+                        }
+                        if (m_consoleReadingThread.Join(1000))
+                        {
+                            continue;
                         }
                     }
                     catch (Exception ex)
@@ -921,21 +929,17 @@ namespace Aurora.Framework
                         action = null;
                         result = null;
                     }
-                }
 #else
-                Task prompt = TaskEx.Run(() => { Prompt(); });
-                if (!Processing)
-                {
-                    throw new Exception("Restart");
-                }
-                while (!Task.WaitAll(new Task[1] { prompt }, 1000))
-                {
-                    if (!Processing)
+                    Task prompt = TaskEx.Run(() => { Prompt(); });
+                    while (!Task.WaitAll(new Task[1] { prompt }, 1000))
                     {
-                        throw new Exception("Restart");
+                        if (!Processing)
+                        {
+                            throw new Exception("Restart");
+                        }
                     }
-                }
 #endif
+                }
             }
         }
     }

@@ -164,7 +164,12 @@ namespace Aurora.Modules.RegionLoader
             MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             manager.AllRegions++;
-            manager.StartNewRegion(region);
+            region.NewRegion = true;
+            Util.FireAndForget(delegate(object o)
+            {
+                manager.StartNewRegion(region);
+            });
+            region.NewRegion = false;
             RefreshCurrentRegions();
         }
 
@@ -549,14 +554,17 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void takeOffline_Click (object sender, EventArgs e)
         {
             IScene scene;
-            SetStoppingStatus ();
+            SetStoppingStatus();
             Util.FireAndForget (delegate
                                     {
                 m_sceneManager.AllRegions--;
                 m_sceneManager.TryGetScene (CurrentRegionID, out scene);
-                m_sceneManager.CloseRegion (scene, ShutdownType.Immediate, 0);
-                if(CurrentRegionID == scene.RegionInfo.RegionID)
-                    SetOfflineStatus ();
+                if (scene != null)
+                {
+                    m_sceneManager.CloseRegion(scene, ShutdownType.Immediate, 0);
+                }
+                if (scene == null || CurrentRegionID == scene.RegionInfo.RegionID || CurrentRegionID ==  UUID.Zero)
+                    SetOfflineStatus();
             });
         }
 
@@ -564,9 +572,14 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             IScene scene;
             m_sceneManager.TryGetScene (CurrentRegionID, out scene);
-            DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to reset this region (deletes all prims and reverts terrain)?");
-            if (r == DialogResult.OK)
-                m_sceneManager.ResetRegion (scene);
+            if (scene != null)
+            {
+                DialogResult r = Utilities.InputBox("Are you sure?", "Are you sure you want to reset this region (deletes all prims and reverts terrain)?");
+                if (r == DialogResult.OK)
+                    m_sceneManager.ResetRegion(scene);
+            }
+            else
+                MessageBox.Show("The region is not online, please turn it online before doing this command.");
         }
 
         private void deleteregion_Click (object sender, EventArgs e)

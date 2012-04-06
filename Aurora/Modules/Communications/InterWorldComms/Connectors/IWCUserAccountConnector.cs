@@ -91,11 +91,11 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod = "GetUserAccountUUID")]
-        public UserAccount GetUserAccount(UUID scopeID, UUID userID)
+        public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
-            UserAccount account = m_localService.GetUserAccount(scopeID, userID);
+            UserAccount account = m_localService.GetUserAccount(scopeID, principalID);
             if (account == null)
-                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, userID));
+                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, principalID));
             return account;
         }
 
@@ -109,11 +109,11 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public UserAccount GetUserAccount(UUID scopeID, string Name)
+        public UserAccount GetUserAccount(UUID scopeID, string name)
         {
-            UserAccount account = m_localService.GetUserAccount(scopeID, Name);
+            UserAccount account = m_localService.GetUserAccount(scopeID, name);
             if (account == null)
-                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, Name));
+                account = FixRemoteAccount((UserAccount)DoRemoteForced(scopeID, name));
             return account;
         }
 
