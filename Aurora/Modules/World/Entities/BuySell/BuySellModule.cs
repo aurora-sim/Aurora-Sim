@@ -343,7 +343,7 @@ namespace Aurora.Modules.Entities.BuySell
             {
                 if (
                     !moneyMod.Transfer(part.OwnerID, remoteClient.AgentId, part.ParentUUID, UUID.Zero, part.SalePrice,
-                                       "Object Purchase", TransactionType.ObjectPay))
+                                       "Object Purchase", TransactionType.ObjectBuy))
                 {
                     remoteClient.SendAgentAlertMessage("You do not have enough money to buy this object.", false);
                     return;

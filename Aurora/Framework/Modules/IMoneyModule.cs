@@ -41,11 +41,22 @@ namespace Aurora.Framework
     public enum TransactionType
     {
         SystemGenerated = 0,
-        RegionMoneyRequest = 1,
-        Gift = 2,
-        Purchase = 3,
-        Upload = 4,
-        ObjectPay = 5008
+        GroupCreate = 1002,
+        UploadFee = 1101,
+        AuctionFee = 1102,
+        ClassifiedFee = 1103,
+        DirectoryFee = 2003,
+        ClassifiedRenewFee = 2005,
+        Inventory = 3000,
+        ObjectBuy = 5000,
+        Gift = 5001,
+        LandSale = 5002,
+        LandPassFee = 5006,
+        PayIntoObject = 5008,
+        ObjectPaysAvatar = 5009,
+        GroupLiability = 6003,
+        GroupDividend = 6004,
+        StipendPayment = 10000
     }
 
     public class GroupBalance : IDataTransferable
