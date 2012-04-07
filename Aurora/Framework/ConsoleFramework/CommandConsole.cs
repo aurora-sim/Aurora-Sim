@@ -728,7 +728,7 @@ namespace Aurora.Framework
 
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
-            m_reading = true;
+            m_reading = Thread.CurrentThread != m_consoleReadingThread;
             string ret = ReadLine(String.Format("{0}{2} [{1}]: ",
                 prompt,
                 defaultresponse,
