@@ -212,7 +212,7 @@ namespace Aurora.Services.DataService
             update["Subject"] = subject.Trim();
             update["Message"] = message.Trim();
 
-            return data.Update("osgroupnotice", update, null, filter, 0, 1);
+            return data.Update("osgroupnotice", update, null, filter, null, null);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
