@@ -173,6 +173,48 @@ namespace Aurora.Services.DataService
             }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        public bool EditGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string subject, string message)
+        {
+            object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, subject, message);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                return (bool)remoteValue;
+            }
+
+            if(!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices)){
+                MainConsole.Instance.TraceFormat("Permission check failed when trying to edit group notice {0}.", noticeID);
+                return false;
+            }
+
+            GroupNoticeInfo GNI = GetGroupNotice(requestingAgentID, noticeID);
+            if (GNI == null)
+            {
+                MainConsole.Instance.TraceFormat("Could not find group notice {0}", noticeID);
+                return false;
+            }
+            else if (GNI.GroupID != groupID)
+            {
+                MainConsole.Instance.TraceFormat("Group notice {0} group ID {1} does not match supplied group ID {2}", noticeID, GNI.GroupID, groupID);
+                return false;
+            }
+            else if(subject.Trim() == string.Empty || message.Trim() == string.Empty)
+            {
+                MainConsole.Instance.TraceFormat("Could not edit group notice {0}, message or subject was empty", noticeID);
+                return false;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = groupID;
+            filter.andFilters["NoticeID"] = noticeID;
+
+            Dictionary<string, object> update = new Dictionary<string,object>(2);
+            update["Subject"] = subject.Trim();
+            update["Message"] = message.Trim();
+
+            return data.Update("osgroupnotice", update, null, filter, 0, 1);
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
