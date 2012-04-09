@@ -159,7 +159,7 @@ namespace Aurora.Services.DataService
             {
                 Dictionary<string, object> row = new Dictionary<string, object>(10);
                 row["GroupID"] = groupID;
-                row["NoticeID"] = noticeID;
+                row["NoticeID"] = noticeID == UUID.Zero ? UUID.Random() : noticeID;
                 row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
                 row["FromName"] = fromName.MySqlEscape(50);
                 row["Subject"] = subject.MySqlEscape(50);
