@@ -1486,6 +1486,7 @@ namespace Aurora.Services.DataService
 
             GroupNoticeData GND = new GroupNoticeData
             {
+                GroupID = UUID.Parse(notice[0]),
                 NoticeID = noticeID,
                 Timestamp = uint.Parse(notice[1]),
                 FromName = notice[2],
