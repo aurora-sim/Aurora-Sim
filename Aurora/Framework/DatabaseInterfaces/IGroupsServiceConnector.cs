@@ -39,6 +39,7 @@ namespace Aurora.Framework
 
         void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
         bool EditGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string subject, string message);
+        bool RemoveGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID);
 
         string SetAgentActiveGroup(UUID AgentID, UUID GroupID);
         UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID);

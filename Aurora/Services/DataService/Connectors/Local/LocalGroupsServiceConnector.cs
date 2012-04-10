@@ -215,6 +215,40 @@ namespace Aurora.Services.DataService
             return data.Update("osgroupnotice", update, null, filter, null, null);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        public bool RemoveGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID)
+        {
+            object remoteValue = DoRemote(requestingAgentID, groupID, noticeID);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                return (bool)remoteValue;
+            }
+
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
+                MainConsole.Instance.TraceFormat("Permission check failed when trying to edit group notice {0}.", noticeID);
+                return false;
+            }
+
+            GroupNoticeInfo GNI = GetGroupNotice(requestingAgentID, noticeID);
+            if (GNI == null)
+            {
+                MainConsole.Instance.TraceFormat("Could not find group notice {0}", noticeID);
+                return false;
+            }
+            else if (GNI.GroupID != groupID)
+            {
+                MainConsole.Instance.TraceFormat("Group notice {0} group ID {1} does not match supplied group ID {2}", noticeID, GNI.GroupID, groupID);
+                return false;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = groupID;
+            filter.andFilters["NoticeID"] = noticeID;
+
+            return data.Delete("osgroupnotice", filter);
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public string SetAgentActiveGroup(UUID AgentID, UUID GroupID)
         {
