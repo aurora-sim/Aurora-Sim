@@ -30,9 +30,7 @@
     NotifyOnNewRelease = true
 
     ;; Version that blocks updates until the update has past this.
-    LatestRelease = 0.2
-    ;; URL to ask whether there is an update. Comment to use the default Aurora URL.
-    ; URLToCheckForUpdates =
+    LatestRelease = 0.5.1
 
 [ErrorReporting]
 

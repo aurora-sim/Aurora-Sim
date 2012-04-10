@@ -25,38 +25,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Linq;
 using System;
 using System.Reflection;
 using System.Xml;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 using Nini.Config;
 using Aurora.Framework;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.CoreApplicationPlugins
 {
     public class UpdaterPlugin : IApplicationPlugin
     {
-        /*
-         * Example Update File
-<?xml version="1.0"?>
-<!-- 
-    //[0] - Minimum supported release #
-    //[1] - Minimum supported release date
-    //[2] - Newest version #
-    //[3] - Date released
-    //[4] - Release notes
-    //[5] - Download link
--->
-<Updater>
-	<MinSupReleaseVersion>0.2</MinSupReleaseVersion>
-	<MinSupReleaseDate>April 16, 2011</MinSupReleaseDate>
-	<NewReleaseVersion>0.3</NewReleaseVersion>
-	<NewReleaseDate>May 21, 2011</NewReleaseDate>
-	<ReleaseNotes>http://aurora-sim.org/index.php?page=news</ReleaseNotes>
-	<DownloadLink>https://github.com/downloads/aurora-sim/Aurora-Sim/Aurora0.3Release.zip</DownloadLink>
-</Updater>
-         */
-        private const string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
+        private const string m_urlToCheckForUpdates = "https://api.github.com/repos/aurora-sim/aurora-sim/downloads";
+        private const string m_regexRelease = "^Aurora(\\d+|\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+\\.\\d+)Release\\.zip$";
+
+        private void ErrorMsg(string msg){
+            MainConsole.Instance.Error("[UpdaterPlugin] " + msg);
+        }
+        private void InfoMsg(string msg)
+        {
+            MainConsole.Instance.Info("[UpdaterPlugin] " + msg);
+        }
+        private void TraceMsg(string msg)
+        {
+            MainConsole.Instance.Trace("[UpdaterPlugin] " + msg);
+        }
 
         public void PreStartup(ISimulationBase simBase)
         {
@@ -75,55 +72,76 @@ namespace OpenSim.CoreApplicationPlugins
                     return;
                 
                 MainConsole.Instance.Info("[AuroraUpdator]: Checking for updates...");
-                const string CurrentVersion = VersionInfo.VERSION_NUMBER;
-                string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", VersionInfo.VERSION_NUMBER);
 
-                string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
-                //Pull the xml from the website
-                string XmlData = Utilities.ReadExternalWebsite(WebSite);
-                if (string.IsNullOrEmpty (XmlData))
+//                string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
+                string WebSite = m_urlToCheckForUpdates;
+
+                // Call the github API
+                OSD data = OSDParser.DeserializeJson(Utilities.ReadExternalWebsite(WebSite));
+                if (data.Type != OSDType.Array)
+                {
+                    ErrorMsg("Failed to get downloads from github API.");
                     return;
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(XmlData);
+                }
+                OSDArray JsonData = (OSDArray)data;
 
-                XmlNodeList parts = doc.GetElementsByTagName("Updater");
-                XmlNode UpdaterNode = parts[0];
-
-                //[0] - Minimum supported release #
-                //[1] - Minimum supported release date
-                //[2] - Newest version #
-                //[3] - Date released
-                //[4] - Release notes
-                //[5] - Download link
-
-                //Read the newest version [2] and see if it is higher than the current version and less than the version the user last told us to block
-                if (Compare (UpdaterNode.ChildNodes[2].InnerText, CurrentVersion) && Compare (UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
+                if (JsonData.Count == 0)
                 {
-                    //Ask if they would like to update
-                    DialogResult result = MessageBox.Show("A new version of Aurora has been released, version " +
-                        UpdaterNode.ChildNodes[2].InnerText +
-                        " released " + UpdaterNode.ChildNodes[3].InnerText +
-                        ". Release notes: " + UpdaterNode.ChildNodes[4].InnerText +
-                        ", do you want to download the update?", "Aurora Update",
-                        MessageBoxButtons.YesNo);
+                    ErrorMsg("No downloads found.");
+                    return;
+                }
+                else
+                {
+                    TraceMsg(JsonData.Count + " downloads found, parsing.");
+                }
 
-                    //If so, download the new version
-                    if (result == DialogResult.Yes)
+                SortedDictionary<Version, OSDMap> releases = new SortedDictionary<Version, OSDMap>();
+                foreach (OSD map in JsonData)
+                {
+                    if (map.Type == OSDType.Map)
                     {
-                        Utilities.DownloadFile(UpdaterNode.ChildNodes[5].InnerText,
-                            "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip");
-                        MessageBox.Show (string.Format("Downloaded to {0}, exiting for user to upgrade.", "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip"), "Aurora Update");
-                        Environment.Exit (0);
+                        OSDMap download = (OSDMap)map;
+                        if (
+                            download.ContainsKey("download_count") &&
+                            download.ContainsKey("created_at") &&
+                            download.ContainsKey("description") &&
+                            download.ContainsKey("url") &&
+                            download.ContainsKey("html_url") &&
+                            download.ContainsKey("size") &&
+                            download.ContainsKey("name") &&
+                            download.ContainsKey("content_type") &&
+                            download.ContainsKey("id") &&
+                            download["content_type"].AsString() == ".zip" &&
+                            Regex.IsMatch(download["name"].ToString(), m_regexRelease)
+                        )
+                        {
+                            Match matches = Regex.Match(download["name"].ToString(), m_regexRelease);
+                            releases[new Version(matches.Groups[1].ToString())] = download;
+                        }
                     }
-                    //Update the config so that we do not ask again
-                    updateConfig.Set("LatestRelease", UpdaterNode.ChildNodes[2].InnerText);
-                    updateConfig.ConfigSource.Save();
                 }
-                else if (Compare (UpdaterNode.ChildNodes[0].InnerText, CurrentVersion) && Compare (UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
+
+                if (releases.Count < 1)
                 {
-                    //This version is not supported anymore
-                    MessageBox.Show("Your version of Aurora (" + CurrentVersion + ", Released " + UpdaterNode.ChildNodes[1].InnerText + ") is not supported anymore.", "Aurora Update");
+                    ErrorMsg("No releases found");
+                    return;
                 }
+
+                KeyValuePair<Version, OSDMap> latest = releases.OrderByDescending(kvp => kvp.Key).First();
+                if (latest.Key <= new Version(VersionInfo.VERSION_NUMBER))
+                {
+                    InfoMsg("You are already using a newer version, no updated is necessary.");
+                    return;
+                }
+                DialogResult result = MessageBox.Show("A new version of Aurora has been released, version " + latest.Key.ToString() + " (" + latest.Value["description"] + ")" + ", do you want to download the update?", "Aurora Update", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
+                {
+                    Utilities.DownloadFile(latest.Value["html_url"], "Updates" + System.IO.Path.DirectorySeparatorChar + "AuroraVersion" + latest.Key.ToString() + ".zip");
+                    MessageBox.Show(string.Format("Downloaded to {0}, exiting for user to upgrade.", "Updates" + System.IO.Path.DirectorySeparatorChar + "AuroraVersion" + latest.Key.ToString() + ".zip"), "Aurora Update");
+                    Environment.Exit(0);
+                }
+                updateConfig.Set("LatestRelease", latest.Key.ToString());
+                updateConfig.ConfigSource.Save();
             }
             catch
             {
