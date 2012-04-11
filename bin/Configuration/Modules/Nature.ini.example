@@ -1,7 +1,7 @@
 [Sun]
     ;; The following to control the progression of daytime in the Sim.
     ;; The defaults are what is shown below
-    ;; number of wall clock hours for an opensim day.  24.0 would mean realtime
+    ;; number of wall clock hours for an opensim day.  24.0 would mean real time
     day_length = 4
     ;; Year length in days
     year_length = 60
@@ -46,10 +46,10 @@
     ;; default is disabled - turn it on here
     enabled = false
 
-    ;; Density of cloud cover 0.0 to 1.0 Defult 0.5
+    ;; Density of cloud cover 0.0 to 1.0 Default 0.5
     density = 0.5
 
-    ;; update interval for the cloud cover data returned by llCloud() in milliseconds (take the ammount you want times 1000)
+    ;; update interval for the cloud cover data returned by llCloud() in milliseconds (take the amount you want times 1000)
     ;; default is 1000
     cloud_update_rate = 1000
 

@@ -44,7 +44,7 @@
 
     ;; Sets the tutorial URL for new users which will be displayed on first login.
     ;; This is a website that appears in the client telling the user how to move, fly, etc.
-    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for English language.
     TutorialURL = ""
     
     ;; If you want to change the default texture UUIDs, change them here
