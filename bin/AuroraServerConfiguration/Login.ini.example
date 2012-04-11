@@ -28,7 +28,7 @@
     AllowFirstLifeInProfile = true
     ;; Allow the 'export' permission in the Imprudence viewer.
     ;; This allows people to set whether they would like to allow others to export objects that are theirs.
-    AllowUseageOfExportPermissions = true
+    AllowUsageOfExportPermissions = true
     ;; If a user does not have a home location set, what region should it be set to for them?
     DefaultHomeRegion = ""
 

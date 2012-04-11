@@ -114,7 +114,7 @@ namespace OpenSim.Services.LLLoginService
             LLLoginResponseRegister.RegisterValue("VoiceServerType", m_loginServerConfig.GetString("VoiceServerType", "vivox"));
             ReadEventValues(m_loginServerConfig);
             ReadClassifiedValues(m_loginServerConfig);
-            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_loginServerConfig.GetBoolean("AllowUseageOfExportPermissions", true));
+            LLLoginResponseRegister.RegisterValue("AllowExportPermission", m_loginServerConfig.GetBoolean("AllowUsageOfExportPermissions", true));
 
             m_DefaultRegionName = m_loginServerConfig.GetString("DefaultRegion", String.Empty);
             m_WelcomeMessage = m_loginServerConfig.GetString("WelcomeMessage", "");
