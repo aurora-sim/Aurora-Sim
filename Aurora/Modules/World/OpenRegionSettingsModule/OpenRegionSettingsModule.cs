@@ -507,8 +507,8 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             body.Add("LSLFunctions", m_settings.LSLCommands);
 
             body.Add("WhisperDistance", OSD.FromReal(m_settings.WhisperDistance));
-            body.Add("SayDistance", OSD.FromReal(m_settings.WhisperDistance));
-            body.Add("ShoutDistance", OSD.FromReal(m_settings.WhisperDistance));
+            body.Add("SayDistance", OSD.FromReal(m_settings.SayDistance));
+            body.Add("ShoutDistance", OSD.FromReal(m_settings.ShoutDistance));
 
             body.Add("RenderWater", OSD.FromInteger(m_settings.RenderWater ? 1 : 0));
 
