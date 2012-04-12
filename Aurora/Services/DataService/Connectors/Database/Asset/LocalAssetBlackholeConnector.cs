@@ -863,12 +863,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private AssetBase Convert2BH(UUID uuid)
         {
             AssetBase asset = null;
-            if (m_convertingAssets.TryGetValue(uuid, out asset))
-                return asset;
-            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets",
-                                            "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
+            IDataReader dr = null;
             try
             {
+                if (m_convertingAssets.TryGetValue(uuid, out asset))
+                    return asset;
+                dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets",
+                                                "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
                 if (dr != null)
                 {
                     while (dr != null && dr.Read())
