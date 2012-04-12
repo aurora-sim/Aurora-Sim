@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 DataManager.DataManager.RegisterPlugin(this);
                 try
                 {
-                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, null, 1).Count >= 1);
+                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, 0, 1).Count >= 1);
                 }
                 catch
                 {
