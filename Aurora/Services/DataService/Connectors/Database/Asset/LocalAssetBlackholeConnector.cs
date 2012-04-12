@@ -988,11 +988,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                                 bool wassuccessful;
                                 StoreAsset(asset1, out wassuccessful, true);
+                                WriteFile(asset1.ID, asset1.Data, 0);
                                 if (wassuccessful)
                                 {
                                     filter = new QueryFilter();
                                     filter.andFilters["id"] = asset1.ID;
                                     m_Gd.Delete("assets", filter);
+
                                 }
 
                                 try
