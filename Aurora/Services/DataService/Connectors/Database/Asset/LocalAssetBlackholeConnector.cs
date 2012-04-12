@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 DataManager.DataManager.RegisterPlugin(this);
                 try
                 {
-                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, 0, 1).Count >= 1);
+                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, null, 1).Count >= 1);
                 }
                 catch
                 {
@@ -988,11 +988,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                                 bool wassuccessful;
                                 StoreAsset(asset1, out wassuccessful, true);
+                                WriteFile(asset1.ID, asset1.Data, 0);
                                 if (wassuccessful)
                                 {
                                     filter = new QueryFilter();
                                     filter.andFilters["id"] = asset1.ID;
                                     m_Gd.Delete("assets", filter);
+
                                 }
 
                                 try
