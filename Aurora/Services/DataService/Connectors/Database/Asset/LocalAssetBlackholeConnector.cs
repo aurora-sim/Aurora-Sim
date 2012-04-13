@@ -1208,7 +1208,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                             if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count == 0)
                             {
-                                row = new Dictionary<string, object>(11);
+                                row = new Dictionary<string, object>(12);
                                 row["id"] = findOld[0];
                                 row["hash_code"] = findOld[1];
                                 row["name"] = findOld[2];
@@ -1220,6 +1220,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 row["creator_id"] = findOld[8];
                                 row["host_uri"] = findOld[9];
                                 row["parent_id"] = findOld[10];
+                                row["owner_id"] = "";
                                 m_Gd.Insert("auroraassets_old", row);
                             }
                             if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count > 0)
