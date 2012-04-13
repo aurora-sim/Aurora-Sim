@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 DataManager.DataManager.RegisterPlugin(this);
                 try
                 {
-                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, null, null).Count >= 1);
+                    needsConversion = (m_Gd.Query(new string[1] { "id" }, "assets", null, null, 0, 1).Count >= 1);
                 }
                 catch
                 {
@@ -863,12 +863,13 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private AssetBase Convert2BH(UUID uuid)
         {
             AssetBase asset = null;
-            if (m_convertingAssets.TryGetValue(uuid, out asset))
-                return asset;
-            IDataReader dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets",
-                                            "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
+            IDataReader dr = null;
             try
             {
+                if (m_convertingAssets.TryGetValue(uuid, out asset))
+                    return asset;
+                dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", "assets",
+                                                "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
                 if (dr != null)
                 {
                     while (dr != null && dr.Read())
@@ -987,6 +988,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 }
 
                                 bool wassuccessful;
+                                asset1.HashCode = WriteFile(asset1.ID, asset1.Data, 0);
                                 StoreAsset(asset1, out wassuccessful, true);
                                 if (wassuccessful)
                                 {
@@ -1206,7 +1208,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
                             if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count == 0)
                             {
-                                row = new Dictionary<string, object>(11);
+                                row = new Dictionary<string, object>(12);
                                 row["id"] = findOld[0];
                                 row["hash_code"] = findOld[1];
                                 row["name"] = findOld[2];
@@ -1218,6 +1220,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 row["creator_id"] = findOld[8];
                                 row["host_uri"] = findOld[9];
                                 row["parent_id"] = findOld[10];
+                                row["owner_id"] = "";
                                 m_Gd.Insert("auroraassets_old", row);
                             }
                             if (m_Gd.Query(new string[] { "id" }, "auroraassets_old", filter, null, null, null).Count > 0)
