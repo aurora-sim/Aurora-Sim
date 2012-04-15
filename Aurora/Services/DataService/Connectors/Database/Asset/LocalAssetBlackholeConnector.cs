@@ -77,11 +77,21 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region Implementation of IAuroraDataPlugin
 
+        /// <summary>
+        /// Gets interface name
+        /// </summary>
         public string Name
         {
             get { return "IAssetDataPlugin"; }
         }
 
+        /// <summary>
+        /// Part of the Iservice
+        /// </summary>
+        /// <param name="genericData"></param>
+        /// <param name="source"></param>
+        /// <param name="simBase"></param>
+        /// <param name="defaultConnectionString"></param>
         public void Initialize(IGenericData genericData, IConfigSource source, IRegistryCore simBase,
                                string defaultConnectionString)
         {
@@ -249,7 +259,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return asset;
         }
 
-        public void updateAccessTime(string databaseTable, UUID assetID)
+
+        private void updateAccessTime(string databaseTable, UUID assetID)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(1);
             values["access_time"] = Util.ToUnixTime(DateTime.UtcNow);
@@ -308,6 +319,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         #region Store Asset
 
+        /// <summary>
+        ///   Stores the Asset in the database
+        /// </summary>
+        /// <param name = "asset">Asset you wish to store</param>
+        /// <returns></returns>
         public UUID Store(AssetBase asset)
         {
             bool successful;
@@ -327,6 +343,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return successful;
         }
 
+        /// <summary>
+        /// Update just the content of the asset, will return a UUID.Zero if the asset does not exist. So check that afterwards
+        /// </summary>
+        /// <param name="id">UUID of asset you want to change</param>
+        /// <param name="assetdata"></param>
+        /// <param name="newID"></param>
         public void UpdateContent(UUID id, byte[] assetdata, out UUID newID)
         {
             try
@@ -560,6 +582,11 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return Delete(id, true, false);
         }
 
+        /// <summary>
+        ///   Delete the asset from the database and file system and ignores the asset flags
+        /// </summary>
+        /// <param name = "id">UUID of the asset you wish to delete</param>
+        /// <returns></returns>
         public bool Delete(UUID id, bool ignoreFlags)
         {
             return Delete(id, true, ignoreFlags);
@@ -740,7 +767,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             return results;
         }
 
-        public void FileCheck(string hashCode, byte[] results, bool waserror)
+        private void FileCheck(string hashCode, byte[] results, bool waserror)
         {
             // check the files results with hash.. see if they match
             if (hashCode != Convert.ToBase64String(new SHA256Managed().ComputeHash(results)) + results.Length)
@@ -1140,7 +1167,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                             QueryFilter filter = new QueryFilter();
                             filter.andFilters["parent_id"] = uuid1;
 
-                            string[] tables = new string[16]{
+                            string[] tables = new string[17]{
                                 "auroraassets_a",
                                 "auroraassets_b",
                                 "auroraassets_c",
@@ -1156,7 +1183,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                 "auroraassets_6",
                                 "auroraassets_7",
                                 "auroraassets_8",
-                                "auroraassets_9"
+                                "auroraassets_9",
+                                "auroraassets_old"
                             };
                             foreach (string table in tables)
                             {
@@ -1265,6 +1293,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 "auroraassets_d",
                 "auroraassets_e",
                 "auroraassets_f",
+                "auroraassets_old"
             };
 
             try
