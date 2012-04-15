@@ -252,14 +252,21 @@ namespace Aurora.Modules.Archivers
                 }
                 // Save Assets
                 int savingAssetsCount = 0;
-                do
+                while (assets2Save.Count > 0)
                 {
-                    UUID assetid = assets2Save.Dequeue();
-                    SaveNonBinaryAssets(assetid, assetNonBinaryCollection[assetid], assetBinaryChangeRecord);
-                    savingAssetsCount++;
-                    if ((savingAssetsCount) % 250 == 0)
-                        MainConsole.Instance.Info("[ARCHIVER]: Saving " + savingAssetsCount + " assets...");
-                } while (assets2Save.Count != 0);
+                    try
+                    {
+                        UUID assetid = assets2Save.Dequeue();
+                        SaveNonBinaryAssets(assetid, assetNonBinaryCollection[assetid], assetBinaryChangeRecord);
+                        savingAssetsCount++;
+                        if ((savingAssetsCount) % 250 == 0)
+                            MainConsole.Instance.Info("[ARCHIVER]: Saving " + savingAssetsCount + " assets...");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainConsole.Instance.Info("[ARCHIVER]: Exception in saving an asset: " + ex.ToString());
+                    }
+                }
 
                 foreach (byte[] data2 in seneObjectGroups)
                 {
