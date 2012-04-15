@@ -52,7 +52,6 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private const int m_CacheDirectoryTiers = 3;
         private const int m_CacheDirectoryTierLen = 1;
         private const bool disableTimer = false;
-        private static readonly SHA256Managed SHA256HashGenerator = new SHA256Managed();
         private readonly List<char> m_InvalidChars = new List<char>();
         private readonly List<Blank> m_genericTasks = new List<Blank>();
         private readonly Stopwatch sw = new Stopwatch();
@@ -744,7 +743,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         public void FileCheck(string hashCode, byte[] results, bool waserror)
         {
             // check the files results with hash.. see if they match
-            if (hashCode != Convert.ToBase64String(SHA256HashGenerator.ComputeHash(results)) + results.Length)
+            if (hashCode != Convert.ToBase64String(new SHA256Managed().ComputeHash(results)) + results.Length)
             {
                 // seen this happen a couple times.. recovery seems to work good..
                 if (!waserror)
@@ -955,7 +954,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                     File.Exists(
                                         GetFileName(
                                             Convert.ToBase64String(
-                                                SHA256HashGenerator.ComputeHash(asset1.Data)) +
+                                                new SHA256Managed().ComputeHash(asset1.Data)) +
                                             asset1.Data.Length, false)))
                                 {
                                     convertCountDupe++;
