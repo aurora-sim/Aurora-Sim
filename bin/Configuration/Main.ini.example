@@ -1,6 +1,6 @@
 [Architecture]
-	;; Don't touch this, look down below
-	Include-Includes = Configuration/Includes.ini
+    ;; Don't touch this, look down below
+    Include-Includes = Configuration/Includes.ini
 	
     ;;
     ;; Note: you may ONLY select one of these!

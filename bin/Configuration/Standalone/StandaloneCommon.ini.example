@@ -10,7 +10,7 @@
 
 [GridService]
     ;; Next, we can specify properties of regions, including default and fallback regions
-    ;; The syntax is: Region_<RegioName> = <flags>
+    ;; The syntax is: Region_<RegionName> = <flags>
     ;; where <flags> can be DefaultRegion, FallbackRegion, NoDirectLogin, Persistent, LockedOut
     ;; For example:
     Region_Aurora = DefaultRegion, FallbackRegion
@@ -113,7 +113,7 @@
     AllowAnonymousLogin = false
     ;; Allow users to login multiple times, but the previous agent will not be able to access his inventory or teleport again
     AllowDuplicateLogin = false
-    ;; This allows for a default avatar to be created so the user does not login as ruth. Save an Avatar Archive (in the console) then put the name of it here.
+    ;; This allows for a default avatar to be created so the user does not login as Ruth. Save an Avatar Archive (in the console) then put the name of it here.
     ;; To set this, create a user and set them up as you wish them to look.
     ;;  Then save an Avatar Archive into the database by the command in the console "save avatar archive", "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>", "Saves appearance to an avatar archive archive (Note: put \"\" around the FolderName if you need more than one word)"
     ;;   Where <First> <Last> is the user name, FileName (can end with .database to save into the database) which is used to identify which archive you wish to use, and the default folder name to create in the new user's inventory.
@@ -123,7 +123,7 @@
     AllowFirstLifeInProfile = true
     ;; Allow the 'export' permission in the Imprudence viewer.
     ;; This allows people to set whether they would like to allow others to export objects that are theirs.
-    AllowUseageOfExportPermissions = true
+    AllowUsageOfExportPermissions = true
     ;; If a user does not have a home location set, what region should it be set to for them?
     DefaultHomeRegion = ""
     
@@ -139,7 +139,7 @@
 
     ;; Sets the tutorial URL for new users which will be displayed on first login.
     ;; This is a website that appears in the client telling the user how to move, fly, etc.
-    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for english language.
+    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for English language.
     TutorialURL = ""
     
     ;; If you want to change the default texture UUIDs, change them here

@@ -38,7 +38,7 @@
     ;XmlRpcServiceWriteKey = 1234
 
     ;; Disables HTTP Keep-Alive for XmlRpcGroupsServicesConnector HTTP Requests,
-    ;; this is a work around fora problem discovered on some Windows based region servers.
+    ;; this is a work around for a problem discovered on some Windows based region servers.
     ;; Only disable keep alive if you see a large number (dozens) of the following Exceptions:
     ;; System.Net.WebException: The request was aborted: The request was canceled.
     ;XmlRpcDisableKeepAlive = true

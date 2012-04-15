@@ -2,7 +2,7 @@
     ;; Select your preferred caching module
     ;;
     ;; This is the flotsam cache, it is the most developed cache and includes memory and disk caching support.
-    ;; This is the recommened asset cache
+    ;; This is the recommended asset cache
     Include-FlotsamCache = AuroraServerConfiguration/AssetCache/FlotsamCache.ini
 
     ;; The Cenome asset cache is a memory cache, and is configurable for how long and the maximum amount of memory usage.

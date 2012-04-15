@@ -44,7 +44,7 @@
     ;HttpProxyExceptions = .mydomain.com;localhost'
 
 [RegionReady]
-    ;; This Functionality can be used in Conjunctuion with "StartDisabled = true" to enable logins after scripts and all loaded
+    ;; This Functionality can be used in Conjunction with "StartDisabled = true" to enable logins after scripts and all loaded
     ;; Reference: http://forums.osgrid.org/viewtopic.php?f=5&t=2863&start=0
     ;;
     ;; Enable this module to get notified once all items and scripts in the region have been completely loaded and compiled

@@ -42,7 +42,7 @@
     ;; There are 5 threat levels for this
     ;; None, Low, Medium, High, Full
     ;; None blocks all connections except being able to see into the neighbor
-    ;; Low allows for chat to be transfered across regions
+    ;; Low allows for chat to be transferred across regions
     ;; Medium - TODO
     ;; High - TODO
     ;; Full allows for any verified incoming connections to be allowed.

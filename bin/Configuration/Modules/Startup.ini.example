@@ -16,7 +16,7 @@
     ;; Default: "Primitive"
     DefaultObjectName = "Object"
 
-    ;; How many objects should be allowed in all regions? (Will be overriden by settings per region)
+    ;; How many objects should be allowed in all regions? (Will be overridden by settings per region)
     ObjectCapacity = 80000
 
 [Update]
@@ -44,14 +44,14 @@
     ; ErrorReportingURL =
 
 [Persistance]
-    ;; Persistence of changed objects happens during regular sweeps. The following control that behaviour to prevent frequently changing objects from heavily loading the region data store.
+    ;; Persistence of changed objects happens during regular sweeps. The following control that behavior to prevent frequently changing objects from heavily loading the region data store.
     ;; If both of these values are set to zero then persistence of all changed objects will happen on every sweep.
     ;;
-    ;; Objects will be considered for persistance in the next sweep when they have not changed for this number of minutes
+    ;; Objects will be considered for persistence in the next sweep when they have not changed for this number of minutes
 
     MinimumTimeBeforePersistenceConsidered = 30
 
-    ;; Objects will always be considered for persistance in the next sweep if the first change occurred this number of minutes ago
+    ;; Objects will always be considered for persistence in the next sweep if the first change occurred this number of minutes ago
     MaximumTimeBeforePersistenceConsidered = 90
 
 [Animations]
@@ -96,6 +96,6 @@
     RegionModulesControllerPlugin = RegionModulesControllerPlugin
     RemoteAdminPlugin = RemoteAdminPlugin
     SceneManager = SceneManager
-    ;; Aurora.Server uses these as well, so seperate them out
+    ;; Aurora.Server uses these as well, so separate them out
     StatsHandler = StatsHandler
     ServicesLoader = ServicesLoader

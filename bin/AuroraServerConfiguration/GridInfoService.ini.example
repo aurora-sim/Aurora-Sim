@@ -5,7 +5,7 @@
     
     ;; These settings are used to return information on a get_grid_info call.
     ;; Client launcher scripts and third-party clients make use of this to
-    ;; autoconfigure the client and to provide a nice user experience. If you
+    ;; auto configure the client and to provide a nice user experience. If you
     ;; want to facilitate that, you should configure the settings here according
     ;; to your grid or standalone setup.
     ;;
@@ -42,7 +42,7 @@
     ;; password help: optional: page providing password assistance for users of your grid
     ;;password = http://127.0.0.1/index.php?page=forgotpass
 
-	;; web search: optinal: page that responds to web search queries
+	;; web search: optional: page that responds to web search queries
 	;; search = http://127.0.0.1/search.php?
 	
     ;; Send Grid Info to Viewer on Login: optional: should we push these values to the viewer during login?

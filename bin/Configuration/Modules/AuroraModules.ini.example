@@ -58,14 +58,14 @@
     ;SendOfflineMessagesToEmail = false
 
 [MapModule]
-    ;; Set to false to not generate any maptiles
+    ;; Set to false to not generate any map tiles
 	;; Default is true
     ;GenerateMaptiles = true
 
     ;; This are the default Aurora map modules
     WorldMapModule = AuroraWorldMapModule
 
-    ;; Draw objects on maptile.  This step might take a long time if you've got a large number of
+    ;; Draw objects on map tile.  This step might take a long time if you've got a large number of
     ;; objects, so you can turn it off here if you'd like.
     ;; Default is true
     DrawPrimOnMapTile = true
@@ -86,7 +86,7 @@
     ;; Default is 1440 minutes (24 hours)
     TimeBeforeMapTileRegeneration = 1440
 
-    ;; If not generating maptiles, use this static texture asset ID to override all regions
+    ;; If not generating map tiles, use this static texture asset ID to override all regions
     ;; MaptileStaticUUID = "00000000-0000-0000-0000-000000000000"
     ;; Alternately, you can also set this per region by adding the region name before MaptileStaticUUID and replacing all spaces in the region name with _
     ;; ex. for a region called "Test Region"
@@ -213,7 +213,7 @@
     ;; This controls what users can access the console
     ;; To add a new user, type their user name, then put a "|" and put either
     ;;    Read, Write, ReadWrite, None
-    ;; This tells the module what permission they have to be able to use the console and should be self explainitory.
+    ;; This tells the module what permission they have to be able to use the console and should be self explanatory.
     ;; To add another user, just add another "|" after the last ReadWrite permission and repeat.
     ;Users = "Test User|ReadWrite"
 

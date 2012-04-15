@@ -3,7 +3,7 @@
 
     ;;The Base FPS for the calculation of the TimeDilation. To find the best value for you, do the following:
     ;; Log into your sim,
-    ;; Bring up the stats popup box in your viewer (cntr shift 1)
+    ;; Bring up the stats popup box in your viewer (control shift 1)
     ;; Look at the Physics FPS stat and find the average value of it (can be rough) and place it here
     ;;Normally, this value is around 45
     BasePhysicsFPS = 45
@@ -56,7 +56,7 @@
     ; If 'true', force simple prims (box and sphere) to be meshed
     ForceSimplePrimMeshing = false
 
-    ; number^2 non-physical level of detail of the sculpt texture.  32x32 - 1024 verticies
+    ; number^2 non-physical level of detail of the sculpt texture.  32x32 - 1024 vertices
     MeshLevelOfDetail = 32
 
     ; Bullet step parameters
