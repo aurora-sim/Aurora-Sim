@@ -3,7 +3,7 @@
 
     ;;The Base FPS for the calculation of the TimeDilation. To find the best value for you, do the following:
     ;; Log into your sim,
-    ;; Bring up the stats popup box in your viewer (cntr shift 1)
+    ;; Bring up the stats popup box in your viewer (control shift 1)
     ;; Look at the Physics FPS stat and find the average value of it (can be rough) and place it here
     ;;Normally, this value is around 22.5
     BasePhysicsFPS = 45
@@ -30,7 +30,7 @@
     ;; The amount to decay the avatar's movement each step in the physics engine
     ;; Lower is faster
     avDecayTime = 0.97
-    ;; The velocity at which to stop the av from decaying and stop their movement (in m/s2)
+    ;; The velocity at which to stop the avatar from decaying and stop their movement (in m/s2)
     ;; Lower is slower
     avStopDecaying = 0.5
     
@@ -56,7 +56,7 @@
     ;; ## Gravity Settings
     ;; ##
 
-    ;; Normal Gravity.  Feel like falling up?  change world_gravityz to 9.8 instead of -9.8.  m/s
+    ;; Normal Gravity.  Feel like falling up?  change world_gravity to 9.8 instead of -9.8.  m/s
     world_gravityx = 0
     world_gravityy = 0
     world_gravityz = -9.8
@@ -78,13 +78,13 @@
     ;; ## Avatar Gravity Settings
     ;; ##
 
-    ;; Makes avies have gravity effect them as well once they reach a certain height
+    ;; Makes avatars have gravity effect them as well once they reach a certain height
     useAvGravity = true
 
     ;; Height to start applying gravity
     avGravityHeight = 4096
 
-    ;; Allow avies to escape gravity by flying up
+    ;; Allow avatars to escape gravity by flying up
     aviesCanEscapeGravity = true
     
     ;; How many times faster the avatar will fly than a walking avatar
@@ -204,11 +204,11 @@
     ;; Do we want to mesh sculpted prim to collide like they look?
     mesh_sculpted_prim = true
 
-    ;; number^2 non-physical level of detail of the sculpt texture.  32x32 - 1024 verticies
+    ;; number^2 non-physical level of detail of the sculpt texture.  32x32 - 1024 vertices
     ;; This controls how detailed the sculpt looks
     mesh_lod = 32
 
-    ;; number^2 physical level of detail of the sculpt texture.  16x16 - 256 verticies
+    ;; number^2 physical level of detail of the sculpt texture.  16x16 - 256 vertices
     ;; This controls the detail of the physical sculpt
     mesh_physical_lod = 16
 

@@ -10,7 +10,7 @@
     murmur_ice_cb = tcp -h 127.0.0.1 -p 6503
     
     ;; If you want all regions connected to this to all be in the same voice chat, 
-    ;; enable this option, and then set the name in the option below, otherwise, all regions will have seperate voice channels (will not be able to hear each other)
+    ;; enable this option, and then set the name in the option below, otherwise, all regions will have separate voice channels (will not be able to hear each other)
     use_one_channel = false
     
     ;; Channel name to use (if use_one_channel is enabled only)

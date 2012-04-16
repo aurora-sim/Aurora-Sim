@@ -36,7 +36,7 @@
     UseDistanceBasedCulling = true;
 
 [ObjectCache]
-    ;; This helps reduce bandwith by sending cached updates to the client
+    ;; This helps reduce bandwidth by sending cached updates to the client
     ;; EXTREMELY NOT RECOMMENDED to disable!
     ;; Default: ObjectCacheModule
     Module = ObjectCacheModule
@@ -46,7 +46,7 @@
 	;; Really should be false... but some viewers don't allow for CAPS only
 	AllowUDPInventory = true
 	
-    ;; Set this to true to process incoming packets asyncronously. This can speed up the queue, but can also cause deadlocks, so watch out.
+    ;; Set this to true to process incoming packets asynchronously. This can speed up the queue, but can also cause deadlocks, so watch out.
     ;; Default is true
     async_packet_handling = true
 
@@ -81,7 +81,7 @@
     ;client_throttle_max_bps = 196608
 
     ;; Per-client bytes per second rates for the various throttle categories.
-    ;; These are default values that will be overriden by clients
+    ;; These are default values that will be overridden by clients
     ;;
     ;resend_min = 1500
     ;land_min = 400
@@ -95,7 +95,7 @@
     ;avatar_info_min = 250
 
     ;; Per-client maximum burst rates in bytes per second for the various
-    ;; throttle categories. These are default values that will be overriden by
+    ;; throttle categories. These are default values that will be overridden by
     ;; clients
     ;;
     ;resend_limit = 18750
@@ -158,7 +158,7 @@
 
 [SSLConfig]
     ;; ssl config: Experimental!
-    ;; The auto https config only really works definately on windows XP now.
+    ;; The auto https config only really works definitely on windows XP now.
     ;;You need a Cert Request/Signed pair installed in the MY store with the CN specified below.
     ;;You can use https on other platforms, but you'll need to configure the httpapi yourself for now.
     http_listener_ssl = false ; Also create a SSL server

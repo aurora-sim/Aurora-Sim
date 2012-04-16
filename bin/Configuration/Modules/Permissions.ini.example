@@ -5,7 +5,7 @@
 
     ;; If set to false, then, in theory, the server never carries out permission checks (allowing anybody to copy any item, etc).
     ;; If set to true, then all permissions checks are carried out
-    ;; Warning! This may not yet be implemented uniformally.
+    ;; Warning! This may not yet be implemented uniformly.
     ;; Default is true
     serverside_object_permissions = true
 
@@ -19,7 +19,7 @@
     region_manager_is_god = false
     parcel_owner_is_god = false
 	
-	;; This makes admins that are inworld normal users until they turn on god mode if enabled
+	;; This makes admins that are in world normal users until they turn on god mode if enabled
 	;; Default is true
 	admin_has_to_be_in_god_mode = true
 	
