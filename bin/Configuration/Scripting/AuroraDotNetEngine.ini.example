@@ -81,7 +81,7 @@
     ;; Default is 1.0.
     ScriptDelayFactor = 1.0
 
-    ;; The factor the 10 m distances llimits are multiplied by.
+    ;; The factor the 10 m distances limits are multiplied by.
     ;; Default is 1.0.
     ScriptDistanceLimitFactor = 1.0
 
@@ -146,7 +146,7 @@
     FunctionThreatLevel = Moderate
 	
 	;; Allow groups to be added as well as Avatar UUIDs in the allowing of functions and function groups
-	;; Default is false (as it will make scripts slightly slower (will not be noticable in normal execution))
+	;; Default is false (as it will make scripts slightly slower (will not be noticeable in normal execution))
 	AllowGroupThreatPermissionCheck = false
 	
 	;; Users to allow to use the given Threat Level
@@ -227,10 +227,10 @@
     ;Allow_aaSetCloudDensity = true
     ;Allow_aaThawAvatar = true
     ;Allow_aaUpdateDatabase = true
-    ;; *** Threat-Level=High    Recomended to use UUID for those set as false
+    ;; *** Threat-Level=High    Recommended to use UUID for those set as false
     ;Allow_aaSetCenterOfGravity = false
-    ;; *** Threat-Level=VeryHigh    Recomended to use UUID for those set as false
-    ;; *** Threat-Level=Severe    Recomended to use UUID for those set as false
+    ;; *** Threat-Level=VeryHigh    Recommended to use UUID for those set as false
+    ;; *** Threat-Level=Severe    Recommended to use UUID for those set as false
     ;;
     ;; ### BOT Functions ###
     ;; *** Threat-Level=Moderate
@@ -311,7 +311,7 @@
     ;Allow_osReturnObject = true
     ;Allow_osReturnObjects = true
     ;Allow_osSetSpeed = true
-    ;; *** Threat-Level=High    Recomended to use UUID for those set as false
+    ;; *** Threat-Level=High    Recommended to use UUID for those set as false
     ;Allow_osCauseDamage = false
     ;Allow_osCauseHealing = false
     ;Allow_osGetAgentIP = false
@@ -337,7 +337,7 @@
     ;Allow_osTeleportAgent = false
     ;Allow_osTerrainSetHeight = false
     ;Allow_osGetSimulatorVersion = true
-    ;; *** Threat-Level=VeryHigh    Recomended to use UUID for those set as false
+    ;; *** Threat-Level=VeryHigh    Recommended to use UUID for those set as false
     ;Allow_osAvatarPlayAnimation = false
     ;Allow_osAvatarStopAnimation = false
     ;Allow_osGetNotecard = false
@@ -345,7 +345,7 @@
     ;Allow_osGetNumberOfNotecardLines = false
     ;Allow_osRegionNotice = false
     ;Allow_osSetRot = false
-    ;; *** Threat-Level=Severe    Recomended to use UUID for those set as false
+    ;; *** Threat-Level=Severe    Recommended to use UUID for those set as false
     ;Allow_osKickAvatar = false
 
     ;;
@@ -376,7 +376,7 @@
     ;; What to do with events when they are going to be limited
     ;;  None - Does nothing, just fires the alert
     ;;  Drop - Doesn't allow the function to run, and allows the event to continue executing
-    ;;  TerminateScript - Terminates the script and stops it from Running any scripts (can be reenabled by checking Running in the script editor GUI in the viewer)
+    ;;  TerminateScript - Terminates the script and stops it from Running any scripts (can be re-enabled by checking Running in the script editor GUI in the viewer)
     ;;  TerminateEvent - Terminates (stops) the event that called the function, but still allows for other events to be called
     ;llRezObject_LimitAction = Drop
     ;; How many times a given function can be called before it is limited

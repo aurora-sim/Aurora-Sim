@@ -6,14 +6,14 @@
 	;; IP Bans
 	;;
 	
-	;; Add any valid IPs that you wish to ban here seperated by commas
+	;; Add any valid IPs that you wish to ban here separated by commas
 	IPBans = ""
 	
-	;; Add any valid range bans that you want banned here (in the format of "126.0.0.0-128.0.0.0") seperated by commas
+	;; Add any valid range bans that you want banned here (in the format of "126.0.0.0-128.0.0.0") separated by commas
     IPRangeBans = ""
 	
     ;; Similarity checking
-    ;; This is a setting that runs through all of the users and corrolates the different parts of each other to each other.
+    ;; This is a setting that runs through all of the users and correlates the different parts of each other to each other.
     ;; This is how agents are found to be similar to one another and is the basis behind the banning system
     ;; There are two ways it is done, on login, or on a timer
     ;; On login checks every time, but it can slow down logins, but it will update the settings every time
@@ -54,7 +54,7 @@
 
     ;; If UseAllowListInsteadOfBanList is not used, add all banned viewers here
     ;; Other viewers to ban from your sims.
-    ;; Note: Seperate banned viewers by ','
+    ;; Note: Separate banned viewers by ','
     ;; Ex.  ViewersToBan = "Phoenix,LGG Proxy"
     ;; See http://viewertags.com/client_list.php for a full list of clients
     ;; Default is ""
@@ -87,7 +87,7 @@
     ;; Default: 50
     PercentToBeginShutDownOfServices = 50
 
-    ;; How much time (in seconds) should physics be reenabled after it is disabled?
+    ;; How much time (in seconds) should physics be re-enabled after it is disabled?
     ;; Default: 20
     TimeAfterToReenablePhysics = 20
 
@@ -130,7 +130,7 @@
     BlockTeleportsTime = 1
 
     ;; More ways to ban users!
-    ;; Add people (or IPs) to a list in any order seperated by commas.
+    ;; Add people (or IPs) to a list in any order separated by commas.
     ;; Note: this works for blocking first and last names as well on their own!
     ;; Ex. "Test User, 0.0.0.0, User" blocks user "Test User", all people connecting via IP 0.0.0.0 and all users with the First or last name of "User"
     ;; Default is ""

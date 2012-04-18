@@ -77,7 +77,7 @@ namespace OpenSim.Region.Physics.Meshing
         private bool cacheSculptAlphaMaps = true;
 
         private readonly string decodedSculptMapPath;
-        private readonly bool useMeshiesPhysicsMesh;
+        private readonly bool UseMeshesPhysicsMesh;
 
         private float minSizeForComplexMesh = 0.2f;
                       // prims with all dimensions smaller than this will have a bounding box mesh
@@ -90,7 +90,7 @@ namespace OpenSim.Region.Physics.Meshing
 
             decodedSculptMapPath = start_config.GetString("DecodedSculptMapPath", "j2kDecodeCache");
             cacheSculptMaps = start_config.GetBoolean("CacheSculptMaps", cacheSculptMaps);
-            useMeshiesPhysicsMesh = start_config.GetBoolean("UseMeshiesPhysicsMesh", useMeshiesPhysicsMesh);
+            UseMeshesPhysicsMesh = start_config.GetBoolean("UseMeshesPhysicsMesh", UseMeshesPhysicsMesh);
 
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
@@ -276,7 +276,7 @@ namespace OpenSim.Region.Physics.Meshing
             {
                 if (((SculptType)primShape.SculptType & SculptType.Mesh) == SculptType.Mesh)
                 {
-                    if (!useMeshiesPhysicsMesh)
+                    if (!UseMeshesPhysicsMesh)
                         return null;
 
                     MainConsole.Instance.Debug("[MESH]: experimental mesh proxy generation");

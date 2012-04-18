@@ -6,14 +6,14 @@
 	;; IP Bans
 	;;
 	
-	;; Add any valid IPs that you wish to ban here seperated by commas
+	;; Add any valid IPs that you wish to ban here separated by commas
 	IPBans = ""
 	
-	;; Add any valid range bans that you want banned here (in the format of "126.0.0.0-128.0.0.0") seperated by commas
+	;; Add any valid range bans that you want banned here (in the format of "126.0.0.0-128.0.0.0") separated by commas
     IPRangeBans = ""
 	
     ;; Similarity checking
-    ;; This is a setting that runs through all of the users and corrolates the different parts of each other to each other.
+    ;; This is a setting that runs through all of the users and correlates the different parts of each other to each other.
     ;; This is how agents are found to be similar to one another and is the basis behind the banning system
     ;; There are two ways it is done, on login, or on a timer
     ;; On login checks every time, but it can slow down logins, but it will update the settings every time
