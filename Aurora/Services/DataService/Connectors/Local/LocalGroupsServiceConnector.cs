@@ -908,7 +908,7 @@ namespace Aurora.Services.DataService
 
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroup", "osg");
-            tables.AddTable("osgroupmembership", "osgm", JoinType.Left, new[,] { { "osg.GroupID", "osgm.GroupID" } });
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osg.GroupID", "osgm.GroupID" } });
             tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
       
             QueryFilter filter = new QueryFilter();
@@ -1001,7 +1001,7 @@ namespace Aurora.Services.DataService
 
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroup", "osg");
-            tables.AddTable("osgroupmembership", "osgm", JoinType.Left, new[,] { { "osg.GroupID", "osgm.GroupID" } });
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osg.GroupID", "osgm.GroupID" } });
             tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
 
             QueryFilter filter = new QueryFilter();
@@ -1032,24 +1032,24 @@ namespace Aurora.Services.DataService
             {
                 results.Add(new GroupMembershipData
                                 {
-                                    AcceptNotices = int.Parse(Membership[0]) == 1,
+                                    AcceptNotices = int.Parse(Membership[loop + 0]) == 1,
                                     Active = true,
                                     //TODO: Figure out what this is and its effects if false
-                                    ActiveRole = UUID.Parse(Membership[3]),
-                                    AllowPublish = int.Parse(Membership[6]) == 1,
-                                    Charter = Membership[7],
-                                    Contribution = int.Parse(Membership[1]),
-                                    FounderID = UUID.Parse(Membership[8]),
-                                    GroupID = UUID.Parse(Membership[15]),
-                                    GroupName = Membership[9],
-                                    GroupPicture = UUID.Parse(Membership[10]),
-                                    GroupPowers = ulong.Parse(Membership[5]),
-                                    GroupTitle = Membership[4],
-                                    ListInProfile = int.Parse(Membership[2]) == 1,
-                                    MaturePublish = int.Parse(Membership[11]) == 1,
-                                    MembershipFee = int.Parse(Membership[12]),
-                                    OpenEnrollment = int.Parse(Membership[13]) == 1,
-                                    ShowInList = int.Parse(Membership[14]) == 1
+                                    ActiveRole = UUID.Parse(Membership[loop + 3]),
+                                    AllowPublish = int.Parse(Membership[loop + 6]) == 1,
+                                    Charter = Membership[loop + 7],
+                                    Contribution = int.Parse(Membership[loop + 1]),
+                                    FounderID = UUID.Parse(Membership[loop + 8]),
+                                    GroupID = UUID.Parse(Membership[loop + 15]),
+                                    GroupName = Membership[loop + 9],
+                                    GroupPicture = UUID.Parse(Membership[loop + 10]),
+                                    GroupPowers = ulong.Parse(Membership[loop + 5]),
+                                    GroupTitle = Membership[loop + 4],
+                                    ListInProfile = int.Parse(Membership[loop + 2]) == 1,
+                                    MaturePublish = int.Parse(Membership[loop + 11]) == 1,
+                                    MembershipFee = int.Parse(Membership[loop + 12]),
+                                    OpenEnrollment = int.Parse(Membership[loop + 13]) == 1,
+                                    ShowInList = int.Parse(Membership[loop + 14]) == 1
                                 });
             }
             return results;
@@ -1124,7 +1124,7 @@ namespace Aurora.Services.DataService
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroupmembership", "osgmPerm");
             tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osgmPerm.GroupID", "osgm.GroupID" } });
-            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" }, { "osr.GroupID", "osgmPerm.GroupID" } });
             tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] { { "osg.GroupID", "osgmPerm.GroupID" } });
             // left join means it doesn't have to exist
             tables.AddTable("osgrouprolemembership", "osgmOwn", JoinType.Left, new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "'" + AgentID + "'", "osgmOwn.AgentID" } });
@@ -1151,7 +1151,7 @@ namespace Aurora.Services.DataService
                 AcceptNotices = (Membership[0]) == "1",
                 AgentID = AgentID,
                 Contribution = int.Parse(Membership[1]),
-                IsOwner = Membership[6] != "",
+                IsOwner = Membership[6] != null,
                 ListInProfile = (Membership[2]) == "1",
                 AgentPowers = ulong.Parse(Membership[5]),
                 Title = Membership[4],
