@@ -901,62 +901,61 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GroupMembershipData)remoteValue;
+                return (GroupMembershipData) remoteValue;
 
-            GroupMembershipData GMD = new GroupMembershipData();
             if (GroupID == UUID.Zero)
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
 
-            GroupRecord record = GetGroupRecord(requestingAgentID, GroupID, null);
-            if (record == null)
-                return null;
-
+            QueryTables tables = new QueryTables();
+            tables.AddTable("osgroup", "osg");
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Left, new[,] { { "osg.GroupID", "osgm.GroupID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
+      
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["GroupID"] = GroupID;
-            filter.andFilters["AgentID"] = AgentID;
+            filter.andFilters["osg.GroupID"] = GroupID;
+            filter.andFilters["osgm.AgentID"] = AgentID;
 
-            List<string> Membership = data.Query(new string[]{
-                "AcceptNotices",
-                "Contribution",
-                "ListInProfile",
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
-
-            if (Membership.Count != 4)
-            {
-                return null;
-            }
-            filter.andFilters.Remove("AgentID");
-            filter.andFilters["RoleID"] = Membership[3];
-
-            List<string> GroupRole = data.Query(new string[]{
-                "Title",
-                "Powers"
-            }, "osrole", filter, null, null, null);
-
-            if (GroupRole.Count != 2)
-            {
-                return null;
-            }
-
-            GMD.AcceptNotices = int.Parse(Membership[0]) == 1;
-            //TODO: Figure out what this is and its effects if false
-            GMD.Active = true;
-            GMD.ActiveRole = UUID.Parse(Membership[3]);
-            GMD.AllowPublish = record.AllowPublish;
-            GMD.Charter = record.Charter;
-            GMD.Contribution = int.Parse(Membership[1]);
-            GMD.FounderID = record.FounderID;
-            GMD.GroupID = record.GroupID;
-            GMD.GroupName = record.GroupName;
-            GMD.GroupPicture = record.GroupPicture;
-            GMD.GroupPowers = ulong.Parse(GroupRole[1]);
-            GMD.GroupTitle = GroupRole[0];
-            GMD.ListInProfile = int.Parse(Membership[2]) == 1;
-            GMD.MaturePublish = record.MaturePublish;
-            GMD.MembershipFee = record.MembershipFee;
-            GMD.OpenEnrollment = record.OpenEnrollment;
-            GMD.ShowInList = record.ShowInList;
+            string[] fields = new[]
+                {
+                    "osgm.AcceptNotices",
+                    "osgm.Contribution",
+                    "osgm.ListInProfile",
+                    "osgm.SelectedRoleID",
+                    "osr.Title",
+                    "osr.Powers",
+                    "osg.AllowPublish",
+                    "osg.Charter",
+                    "osg.FounderID",
+                    "osg.Name",
+                    "osg.InsigniaID",
+                    "osg.MaturePublish",
+                    "osg.MembershipFee",
+                    "osg.OpenEnrollment",
+                    "osg.ShowInList"
+                };
+            List<string> Membership = data.Query(fields, tables, filter, null, null, null);
+            
+            GroupMembershipData GMD = new GroupMembershipData
+                {
+                    AcceptNotices = int.Parse(Membership[0]) == 1,
+                    Active = true, //TODO: Figure out what this is and its effects if false
+                    ActiveRole = UUID.Parse(Membership[3]),
+                    AllowPublish = int.Parse(Membership[6]) == 1,
+                    Charter = Membership[7],
+                    Contribution = int.Parse(Membership[1]),
+                    FounderID = UUID.Parse(Membership[8]),
+                    GroupID = GroupID,
+                    GroupName = Membership[9],
+                    GroupPicture = UUID.Parse(Membership[10]),
+                    GroupPowers = ulong.Parse(Membership[5]),
+                    GroupTitle = Membership[4],
+                    ListInProfile = int.Parse(Membership[2]) == 1,
+                    MaturePublish = int.Parse(Membership[11]) == 1,
+                    MembershipFee = int.Parse(Membership[12]),
+                    OpenEnrollment = int.Parse(Membership[13]) == 1,
+                    ShowInList = int.Parse(Membership[14]) == 1
+                };
+            
 
             return GMD;
         }
@@ -968,37 +967,27 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupTitlesData>)remoteValue;
 
+            QueryTables tables = new QueryTables();
+            tables.AddTable("osgroupmembership", "osgm");
+            tables.AddTable("osgrouprolemembership", "osgrm", JoinType.Inner, new[,] { { "osgm.AgentID", "osgrm.AgentID" }, { "osgm.GroupID", "osgrm.GroupID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgrm.RoleID", "osr.RoleID" }, { "osgm.GroupID", "osr.GroupID" } });
+
+
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["AgentID"] = requestingAgentID;
-            filter.andFilters["GroupID"] = GroupID;
+            filter.andFilters["osgm.AgentID"] = requestingAgentID;
+            filter.andFilters["osgm.GroupID"] = GroupID;
 
-            List<string> Membership = data.Query(new string[1] { 
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
+            List<string> Membership = data.Query(new[] { 
+                "osgm.SelectedRoleID",
+                "osgrm.RoleID",
+                "osr.Name"
+            }, tables, filter, null, null, null);
 
-            UUID selectedRoleID = UUID.Zero;
-            if (Membership.Count > 0)
-                selectedRoleID = UUID.Parse(Membership[0]);
-
-            filter = new QueryFilter();
-            filter.andFilters["AgentID"] = requestingAgentID;
-            filter.andFilters["GroupID"] = GroupID;
-
-            List<string> RoleIDs = data.Query(new string[1] { "RoleID" }, "osgrouprolemembership", filter, null, null, null);
-
-            List<string> Role;
+            
             List<GroupTitlesData> titles = new List<GroupTitlesData>();
-
-            foreach (string RoleID in RoleIDs)
+            for (int loop = 0; loop < Membership.Count(); loop+=3)
             {
-                UUID roleID = UUID.Parse(RoleID);
-                filter = new QueryFilter();
-                filter.andFilters["RoleID"] = RoleID;
-                filter.andFilters["GroupID"] = GroupID;
-                Role = data.Query(new string[1]{
-                    "Name"
-                }, "osrole", filter, null, null, null);
-                titles.Add(new GroupTitlesData { Name = Role[0], UUID = roleID, Selected = selectedRoleID == roleID });
+                titles.Add(new GroupTitlesData { Name = Membership[loop + 2], UUID = UUID.Parse(Membership[loop + 1]), Selected = Membership[loop + 0] == Membership[loop + 1] });
             }
             return titles;
         }
@@ -1010,22 +999,60 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupMembershipData>)remoteValue;
 
+            QueryTables tables = new QueryTables();
+            tables.AddTable("osgroup", "osg");
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Left, new[,] { { "osg.GroupID", "osgm.GroupID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
+
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["AgentID"] = AgentID;
+            filter.andFilters["osgm.AgentID"] = AgentID;
 
-            List<string> Groups = data.Query(new string[1] { "GroupID" }, "osgroupmembership", filter, null, null, null);
-
-#if (!ISWIN)
-            List<GroupMembershipData> list = new List<GroupMembershipData>();
-            foreach (string groupId in Groups)
+            string[] fields = new[]
+                {
+                    "osgm.AcceptNotices",
+                    "osgm.Contribution",
+                    "osgm.ListInProfile",
+                    "osgm.SelectedRoleID",
+                    "osr.Title",
+                    "osr.Powers",
+                    "osg.AllowPublish",
+                    "osg.Charter",
+                    "osg.FounderID",
+                    "osg.Name",
+                    "osg.InsigniaID",
+                    "osg.MaturePublish",
+                    "osg.MembershipFee",
+                    "osg.OpenEnrollment",
+                    "osg.ShowInList",
+                    "osg.GroupID"
+                };
+            List<string> Membership = data.Query(fields, tables, filter, null, null, null);
+            List<GroupMembershipData> results = new List<GroupMembershipData>();
+            for (int loop = 0; loop < Membership.Count; loop += fields.Length)
             {
-                GroupMembershipData temp = GetGroupMembershipData(requestingAgentID, UUID.Parse(groupId), AgentID);
-                if (temp != null) list.Add(temp);
+                results.Add(new GroupMembershipData
+                                {
+                                    AcceptNotices = int.Parse(Membership[0]) == 1,
+                                    Active = true,
+                                    //TODO: Figure out what this is and its effects if false
+                                    ActiveRole = UUID.Parse(Membership[3]),
+                                    AllowPublish = int.Parse(Membership[6]) == 1,
+                                    Charter = Membership[7],
+                                    Contribution = int.Parse(Membership[1]),
+                                    FounderID = UUID.Parse(Membership[8]),
+                                    GroupID = UUID.Parse(Membership[15]),
+                                    GroupName = Membership[9],
+                                    GroupPicture = UUID.Parse(Membership[10]),
+                                    GroupPowers = ulong.Parse(Membership[5]),
+                                    GroupTitle = Membership[4],
+                                    ListInProfile = int.Parse(Membership[2]) == 1,
+                                    MaturePublish = int.Parse(Membership[11]) == 1,
+                                    MembershipFee = int.Parse(Membership[12]),
+                                    OpenEnrollment = int.Parse(Membership[13]) == 1,
+                                    ShowInList = int.Parse(Membership[14]) == 1
+                                });
             }
-            return list;
-#else
-            return Groups.Select(GroupID => GetGroupMembershipData(requestingAgentID, UUID.Parse(GroupID), AgentID)).Where(temp => temp != null).ToList();
-#endif
+            return results;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -1094,73 +1121,40 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GroupMembersData)remoteValue;
 
+            QueryTables tables = new QueryTables();
+            tables.AddTable("osgroupmembership", "osgmPerm");
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osgmPerm.GroupID", "osgm.GroupID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
+            tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] { { "osg.GroupID", "osgmPerm.GroupID" } });
+            // left join means it doesn't have to exist
+            tables.AddTable("osgrouprolemembership", "osgmOwn", JoinType.Left, new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "'" + AgentID + "'", "osgmOwn.AgentID" } });
 
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["GroupID"] = GroupID;
-            filter.andFilters["AgentID"] = requestingAgentID;
+            filter.andFilters["osgmPerm.GroupID"] = GroupID;
+            filter.andFilters["osgmPerm.AgentID"] = requestingAgentID;
+            filter.andFilters["osgm.AgentID"] = AgentID;
 
-            //Permissions
-            List<string> OtherPermiss = data.Query(new string[4] { 
-                "AcceptNotices",
-                "Contribution",
-                "ListInProfile", 
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
+            List<string> Membership = data.Query(new[] { 
+                "osgm.AcceptNotices",
+                "osgm.Contribution",
+                "osgm.ListInProfile", 
+                "osgm.SelectedRoleID",
+                "osr.Title",
+                "osr.Powers",
+                "osgmOwn.RoleID"
+            }, tables, filter, null, null, null);
 
-            if (OtherPermiss.Count == 0)
-            {
-                return null;
-            }
-
-            filter.andFilters["AgentID"] = AgentID;
-
-            List<string> Membership = data.Query(new string[4] { 
-                "AcceptNotices",
-                "Contribution",
-                "ListInProfile", 
-                "SelectedRoleID"
-            }, "osgroupmembership", filter, null, null, null);
-
-            if (Membership.Count != 4)
-            {
-                return null;
-            }
-
-            filter.andFilters.Remove("AgentID");
-            filter.andFilters["RoleID"] = Membership[3];
-
-            List<string> GroupRole = data.Query(new string[2] { 
-                "Title",
-                "Powers"
-            }, "osrole", filter, null, null, null);
-
-            if (GroupRole.Count != 2)
-            {
-                return null;
-            }
-
-            filter.andFilters.Remove("RoleID");
-
-            List<string> OwnerRoleID = data.Query(new string[1] { 
-                "OwnerRoleID"
-            }, "osgroup", filter, null, null, null);
-
-            filter.andFilters["RoleID"] = OwnerRoleID[0];
-            filter.andFilters["AgentID"] = AgentID;
-
-            bool IsOwner = uint.Parse(data.Query(new string[1] { 
-                "COUNT(AgentID)"
-            }, "osgrouprolemembership", filter, null, null, null)[0]) == 1;
+            if (Membership.Count == 0) return null;
 
             GroupMembersData GMD = new GroupMembersData
             {
                 AcceptNotices = (Membership[0]) == "1",
                 AgentID = AgentID,
                 Contribution = int.Parse(Membership[1]),
-                IsOwner = IsOwner,
+                IsOwner = Membership[6] != "",
                 ListInProfile = (Membership[2]) == "1",
-                AgentPowers = ulong.Parse(GroupRole[1]),
-                Title = GroupRole[0],
+                AgentPowers = ulong.Parse(Membership[5]),
+                Title = Membership[4],
                 OnlineStatus = "(Online)"
             };
 
