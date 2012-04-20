@@ -69,7 +69,7 @@ namespace OpenSim.Services
                 {
                     foreach (string k in gridCfg.GetKeys())
                     {
-                        if (k == "currency")
+                        if (k == "economy")
                             _info["helperuri"] = gridCfg.GetString(k);
                         else
                             _info[k] = gridCfg.GetString(k);
