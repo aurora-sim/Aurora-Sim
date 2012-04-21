@@ -105,7 +105,7 @@ namespace Aurora.Services.DataService
             //Add everyone role to group
             AddRoleToGroup(founderID, groupID, UUID.Zero, "Everyone", "Everyone in the group is in the everyone role.", "Member of " + name, EveryonePowers);
 
-            ulong groupPowers = 296868139497678;
+            const ulong groupPowers = 296868139497678;
 
             UUID officersRole = UUID.Random();
             //Add officers role to group
@@ -160,7 +160,7 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> row = new Dictionary<string, object>(10);
                 row["GroupID"] = groupID;
                 row["NoticeID"] = noticeID;
-                row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
+                row["Timestamp"] = ((uint)Util.UnixTimeSinceEpoch());
                 row["FromName"] = fromName.MySqlEscape(50);
                 row["Subject"] = subject.MySqlEscape(50);
                 row["Message"] = message.MySqlEscape(1024);
@@ -182,7 +182,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
-            if (data.Query(new string[1] { "*" }, "osagent", filter, null, null, null).Count != 0)
+            if (data.Query(new[] { "*" }, "osagent", filter, null, null, null).Count != 0)
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["ActiveGroupID"] = GroupID;
@@ -205,7 +205,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(RequestingAgentID, AgentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (UUID)remoteValue;
+                return (UUID)remoteValue; // note: this is bad, you can't cast a null object to a UUID
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["AgentID"] = AgentID;
@@ -245,7 +245,7 @@ namespace Aurora.Services.DataService
             where["AgentID"] = AgentID;
             where["GroupID"] = GroupID;
 
-            if (data.Query(new string[1] { "*" }, "osgroupmembership", new QueryFilter
+            if (data.Query(new[] { "*" }, "osgroupmembership", new QueryFilter
             {
                 andFilters = where
             }, null, null, null).Count != 0)
@@ -253,17 +253,14 @@ namespace Aurora.Services.DataService
                 MainConsole.Instance.Error("[AGM]: Agent " + AgentID + " is already in " + GroupID);
                 return;
             }
-            else
-            {
-                Dictionary<string, object> row = new Dictionary<string, object>(6);
-                row["GroupID"] = GroupID;
-                row["AgentID"] = AgentID;
-                row["SelectedRoleID"] = RoleID;
-                row["Contribution"] = 0;
-                row["ListInProfile"] = 1;
-                row["AcceptNotices"] = 1;
-                data.Insert("osgroupmembership", row);
-            }
+            Dictionary<string, object> row = new Dictionary<string, object>(6);
+            row["GroupID"] = GroupID;
+            row["AgentID"] = AgentID;
+            row["SelectedRoleID"] = RoleID;
+            row["Contribution"] = 0;
+            row["ListInProfile"] = 1;
+            row["AcceptNotices"] = 1;
+            data.Insert("osgroupmembership", row);
 
             // Make sure they're in the Everyone role
             AddAgentToRole(requestingAgentID, AgentID, GroupID, UUID.Zero);
@@ -281,7 +278,7 @@ namespace Aurora.Services.DataService
             //Allow kicking yourself
             object remoteValue = DoRemote(requestingAgentID, AgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue != null && (bool)remoteValue;
 
             if ((CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RemoveMember)) && (requestingAgentID != AgentID))
             {
@@ -289,7 +286,7 @@ namespace Aurora.Services.DataService
                 filter.andFilters["AgentID"] = AgentID;
                 filter.andFilters["ActiveGroupID"] = GroupID;
 
-                Dictionary<string, object> values = new Dictionary<string,object>(1);
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["ActiveGroupID"] = UUID.Zero;
 
                 // 1. If group is agent's active group, change active group to uuidZero
@@ -310,9 +307,9 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Description, string Title, ulong Powers)
+        public void AddRoleToGroup(UUID requestingAgentID, UUID GroupID, UUID RoleID, string NameOf, string Description, string Title, ulong Powers)
         {
-            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Description, Title, Powers);
+            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, NameOf, Description, Title, Powers);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
@@ -321,7 +318,7 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> row = new Dictionary<string, object>(6);
                 row["GroupID"] = GroupID;
                 row["RoleID"] = RoleID;
-                row["Name"] = Name.MySqlEscape(50);
+                row["Name"] = NameOf.MySqlEscape(50);
                 row["Description"] = Description.MySqlEscape(50);
                 row["Title"] = Title;
                 row["Powers"] = Powers;
@@ -330,9 +327,9 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string Name, string Desc, string Title, ulong Powers)
+        public void UpdateRole(UUID requestingAgentID, UUID GroupID, UUID RoleID, string NameOf, string Desc, string Title, ulong Powers)
         {
-            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, Name, Desc, Title, Powers);
+            object remoteValue = DoRemote(requestingAgentID, GroupID, RoleID, NameOf, Desc, Title, Powers);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
@@ -340,9 +337,9 @@ namespace Aurora.Services.DataService
             {
                 Dictionary<string, object> values = new Dictionary<string, object>();
                 values["RoleID"] = RoleID;
-                if (Name != null)
+                if (NameOf != null)
                 {
-                    values["Name"] = Name.MySqlEscape(512);
+                    values["Name"] = NameOf.MySqlEscape(512);
                 }
                 if (Desc != null)
                 {
@@ -395,10 +392,10 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMember))
             {
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
-                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMemberLimited))
+                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMemberLimited))
                 {
                     MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
                                " to group " + GroupID + ", but did not have permissions to do so!");
@@ -411,7 +408,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["RoleID"] = RoleID;
             filter.andFilters["AgentID"] = AgentID;
             //Make sure they arn't already in this role
-            if (uint.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
+            if (uint.Parse(data.Query(new[] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]) == 0)
             {
                 Dictionary<string, object> row = new Dictionary<string, object>(3);
                 row["GroupID"] = GroupID;
@@ -582,8 +579,7 @@ namespace Aurora.Services.DataService
             OpenMetaverse.StructuredData.OSDMap map = GenericUtils.GetGeneric(p.GroupID, p.VoteID.ToString(), agentID.ToString(), data);
             if (map != null)
                 return map["Vote"];
-            else
-                return "";
+            return "";
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -606,10 +602,9 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (uint)remoteValue;
+                return (uint)remoteValue; // note: this is bad, you can't cast a null object to a uint
 
-            List<UUID> GroupIDs = new List<UUID>();
-            GroupIDs.Add(GroupID);
+            List<UUID> GroupIDs = new List<UUID> { GroupID };
             return GetNumberOfGroupNotices(requestingAgentID, GroupIDs);
         }
 
@@ -618,20 +613,22 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, GroupIDs);
             if (remoteValue != null || m_doRemoteOnly)
-                return (uint)remoteValue;
+                return (uint)remoteValue; // note: this is bad, you can't cast a null object to a uint
 
             bool had = GroupIDs.Count > 0;
 
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
+#if (!ISWIN)
                 foreach (UUID GroupID in GroupIDs)
                 {
                     if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
-                    {
                         groupIDs.Add(GroupID);
-                    }
                 }
+#else
+                groupIDs.AddRange(GroupIDs.Where(GroupID => CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices)));
+#endif
             }
             else
             {
@@ -645,16 +642,13 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             List<object> filterGroupIDs = new List<object>(groupIDs.Count);
-            foreach (UUID GroupID in groupIDs)
-            {
-                filterGroupIDs.Add(GroupID);
-            }
+            filterGroupIDs.AddRange(groupIDs.Cast<object>());
             if (filterGroupIDs.Count > 0)
             {
                 filter.orMultiFilters["GroupID"] = filterGroupIDs;
             }
 
-            return uint.Parse(data.Query(new string[1] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
+            return uint.Parse(data.Query(new[] { "COUNT(NoticeID)" }, "osgroupnotice", filter, null, null, null)[0]);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -662,24 +656,26 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, boolFields);
             if (remoteValue != null || m_doRemoteOnly)
-                return (uint)remoteValue;
+                return (uint)remoteValue; // note: this is bad, you can't cast a null object to a uint
 
             QueryFilter filter = new QueryFilter();
 
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
             foreach (string field in BoolFields)
             {
-                if (boolFields.ContainsKey(field) == true)
+                if (boolFields.ContainsKey(field))
                 {
                     filter.andFilters[field] = boolFields[field] ? "1" : "0";
                 }
             }
 
-            return uint.Parse(data.Query(new string[1] { "COUNT(GroupID)" }, "osgroup", filter, null, null, null)[0]);
+            return uint.Parse(data.Query(new[] { "COUNT(GroupID)" }, "osgroup", filter, null, null, null)[0]);
         }
 
-        private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result){
-            return new GroupRecord{
+        private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result)
+        {
+            return new GroupRecord
+            {
                 GroupID = UUID.Parse(result[0]),
                 GroupName = result[1],
                 Charter = result[2],
@@ -701,12 +697,8 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GroupRecord)remoteValue;
 
-            GroupRecord record = new GroupRecord();
-
             QueryFilter filter = new QueryFilter();
 
-            List<string> Keys = new List<string>();
-            List<object> Values = new List<object>();
             if (GroupID != UUID.Zero)
             {
                 filter.andFilters["GroupID"] = GroupID;
@@ -719,7 +711,7 @@ namespace Aurora.Services.DataService
             {
                 return null;
             }
-            List<string> osgroupsData = data.Query(new string[11]{
+            List<string> osgroupsData = data.Query(new[]{
                 "GroupID",
                 "Name",
                 "Charter",
@@ -738,7 +730,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
-//            List<string> filter = new List<string>();
+            //            List<string> filter = new List<string>();
 
             object remoteValue = DoRemote(requestingAgentID, start, count, boolFields);
             if (remoteValue != null || m_doRemoteOnly)
@@ -746,11 +738,10 @@ namespace Aurora.Services.DataService
 
             string[] sortAndBool = { "OpenEnrollment", "MaturePublish" };
             string[] BoolFields = { "OpenEnrollment", "ShowInList", "AllowPublish", "MaturePublish" };
-            string[] SortFields = { "Name", "MembershipFee", "OpenEnrollment", "MaturePublish" };
 
             foreach (string field in sortAndBool)
             {
-                if (boolFields.ContainsKey(field) == true && sort.ContainsKey(field) == true)
+                if (boolFields.ContainsKey(field) && sort.ContainsKey(field))
                 {
                     sort.Remove(field);
                 }
@@ -760,7 +751,7 @@ namespace Aurora.Services.DataService
 
             foreach (string field in BoolFields)
             {
-                if (boolFields.ContainsKey(field) == true)
+                if (boolFields.ContainsKey(field))
                 {
                     filter.andFilters[field] = boolFields[field] ? "1" : "0";
                 }
@@ -768,7 +759,7 @@ namespace Aurora.Services.DataService
 
             List<GroupRecord> Reply = new List<GroupRecord>();
 
-            List<string> osgroupsData = data.Query(new string[]{
+            List<string> osgroupsData = data.Query(new[]{
                 "GroupID",
                 "Name",
                 "Charter",
@@ -786,7 +777,7 @@ namespace Aurora.Services.DataService
             {
                 return Reply;
             }
-            for (int i = 0; i < osgroupsData.Count; i+= 11)
+            for (int i = 0; i < osgroupsData.Count; i += 11)
             {
                 Reply.Add(GroupRecordQueryResult2GroupRecord(osgroupsData.GetRange(i, 11)));
             }
@@ -813,7 +804,7 @@ namespace Aurora.Services.DataService
                 filter.orMultiFilters["GroupID"].Add(groupID);
             }
 
-            List<string> osgroupsData = data.Query(new string[11]{
+            List<string> osgroupsData = data.Query(new[]{
                 "GroupID",
                 "Name",
                 "Charter",
@@ -845,7 +836,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GroupProfileData)remoteValue;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.MemberVisible))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.MemberVisible))
                 return new GroupProfileData();
 
             GroupProfileData GPD = new GroupProfileData();
@@ -858,19 +849,19 @@ namespace Aurora.Services.DataService
             QueryFilter filter2 = new QueryFilter();
             filter2.andFilters["GroupID"] = GroupID;
 
-            List<string> Membership = data.Query(new string[3]{
+            List<string> Membership = data.Query(new[]{
                 "Contribution",
                 "ListInProfile",
                 "SelectedRoleID"
             }, "osgroupmembership", filter1, null, null, null);
 
-            int GroupMemCount = int.Parse(data.Query(new string[] { "COUNT(AgentID)" }, "osgroupmembership", filter2, null, null, null)[0]);
+            int GroupMemCount = int.Parse(data.Query(new[] { "COUNT(AgentID)" }, "osgroupmembership", filter2, null, null, null)[0]);
 
-            int GroupRoleCount = int.Parse(data.Query(new string[] { "COUNT(RoleID)" }, "osrole", filter2, null, null, null)[0]);
+            int GroupRoleCount = int.Parse(data.Query(new[] { "COUNT(RoleID)" }, "osrole", filter2, null, null, null)[0]);
 
             QueryFilter filter3 = new QueryFilter();
             filter3.andFilters["RoleID"] = Membership[2];
-            List<string> GroupRole = data.Query(new string[] {
+            List<string> GroupRole = data.Query(new[] {
                 "Name",
                 "Powers"
             }, "osrole", filter3, null, null, null);
@@ -901,7 +892,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID, AgentID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (GroupMembershipData) remoteValue;
+                return (GroupMembershipData)remoteValue;
 
             if (GroupID == UUID.Zero)
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
@@ -910,7 +901,7 @@ namespace Aurora.Services.DataService
             tables.AddTable("osgroup", "osg");
             tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osg.GroupID", "osgm.GroupID" } });
             tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
-      
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["osg.GroupID"] = GroupID;
             filter.andFilters["osgm.AgentID"] = AgentID;
@@ -934,28 +925,28 @@ namespace Aurora.Services.DataService
                     "osg.ShowInList"
                 };
             List<string> Membership = data.Query(fields, tables, filter, null, null, null);
-            
+
             GroupMembershipData GMD = new GroupMembershipData
-                {
-                    AcceptNotices = int.Parse(Membership[0]) == 1,
-                    Active = true, //TODO: Figure out what this is and its effects if false
-                    ActiveRole = UUID.Parse(Membership[3]),
-                    AllowPublish = int.Parse(Membership[6]) == 1,
-                    Charter = Membership[7],
-                    Contribution = int.Parse(Membership[1]),
-                    FounderID = UUID.Parse(Membership[8]),
-                    GroupID = GroupID,
-                    GroupName = Membership[9],
-                    GroupPicture = UUID.Parse(Membership[10]),
-                    GroupPowers = ulong.Parse(Membership[5]),
-                    GroupTitle = Membership[4],
-                    ListInProfile = int.Parse(Membership[2]) == 1,
-                    MaturePublish = int.Parse(Membership[11]) == 1,
-                    MembershipFee = int.Parse(Membership[12]),
-                    OpenEnrollment = int.Parse(Membership[13]) == 1,
-                    ShowInList = int.Parse(Membership[14]) == 1
-                };
-            
+            {
+                AcceptNotices = int.Parse(Membership[0]) == 1,
+                Active = true, //TODO: Figure out what this is and its effects if false
+                ActiveRole = UUID.Parse(Membership[3]),
+                AllowPublish = int.Parse(Membership[6]) == 1,
+                Charter = Membership[7],
+                Contribution = int.Parse(Membership[1]),
+                FounderID = UUID.Parse(Membership[8]),
+                GroupID = GroupID,
+                GroupName = Membership[9],
+                GroupPicture = UUID.Parse(Membership[10]),
+                GroupPowers = ulong.Parse(Membership[5]),
+                GroupTitle = Membership[4],
+                ListInProfile = int.Parse(Membership[2]) == 1,
+                MaturePublish = int.Parse(Membership[11]) == 1,
+                MembershipFee = int.Parse(Membership[12]),
+                OpenEnrollment = int.Parse(Membership[13]) == 1,
+                ShowInList = int.Parse(Membership[14]) == 1
+            };
+
 
             return GMD;
         }
@@ -983,9 +974,9 @@ namespace Aurora.Services.DataService
                 "osr.Name"
             }, tables, filter, null, null, null);
 
-            
+
             List<GroupTitlesData> titles = new List<GroupTitlesData>();
-            for (int loop = 0; loop < Membership.Count(); loop+=3)
+            for (int loop = 0; loop < Membership.Count(); loop += 3)
             {
                 titles.Add(new GroupTitlesData { Name = Membership[loop + 2], UUID = UUID.Parse(Membership[loop + 1]), Selected = Membership[loop + 0] == Membership[loop + 1] });
             }
@@ -1031,26 +1022,26 @@ namespace Aurora.Services.DataService
             for (int loop = 0; loop < Membership.Count; loop += fields.Length)
             {
                 results.Add(new GroupMembershipData
-                                {
-                                    AcceptNotices = int.Parse(Membership[loop + 0]) == 1,
-                                    Active = true,
-                                    //TODO: Figure out what this is and its effects if false
-                                    ActiveRole = UUID.Parse(Membership[loop + 3]),
-                                    AllowPublish = int.Parse(Membership[loop + 6]) == 1,
-                                    Charter = Membership[loop + 7],
-                                    Contribution = int.Parse(Membership[loop + 1]),
-                                    FounderID = UUID.Parse(Membership[loop + 8]),
-                                    GroupID = UUID.Parse(Membership[loop + 15]),
-                                    GroupName = Membership[loop + 9],
-                                    GroupPicture = UUID.Parse(Membership[loop + 10]),
-                                    GroupPowers = ulong.Parse(Membership[loop + 5]),
-                                    GroupTitle = Membership[loop + 4],
-                                    ListInProfile = int.Parse(Membership[loop + 2]) == 1,
-                                    MaturePublish = int.Parse(Membership[loop + 11]) == 1,
-                                    MembershipFee = int.Parse(Membership[loop + 12]),
-                                    OpenEnrollment = int.Parse(Membership[loop + 13]) == 1,
-                                    ShowInList = int.Parse(Membership[loop + 14]) == 1
-                                });
+                {
+                    AcceptNotices = int.Parse(Membership[loop + 0]) == 1,
+                    Active = true,
+                    //TODO: Figure out what this is and its effects if false
+                    ActiveRole = UUID.Parse(Membership[loop + 3]),
+                    AllowPublish = int.Parse(Membership[loop + 6]) == 1,
+                    Charter = Membership[loop + 7],
+                    Contribution = int.Parse(Membership[loop + 1]),
+                    FounderID = UUID.Parse(Membership[loop + 8]),
+                    GroupID = UUID.Parse(Membership[loop + 15]),
+                    GroupName = Membership[loop + 9],
+                    GroupPicture = UUID.Parse(Membership[loop + 10]),
+                    GroupPowers = ulong.Parse(Membership[loop + 5]),
+                    GroupTitle = Membership[loop + 4],
+                    ListInProfile = int.Parse(Membership[loop + 2]) == 1,
+                    MaturePublish = int.Parse(Membership[loop + 11]) == 1,
+                    MembershipFee = int.Parse(Membership[loop + 12]),
+                    OpenEnrollment = int.Parse(Membership[loop + 13]) == 1,
+                    ShowInList = int.Parse(Membership[loop + 14]) == 1
+                });
             }
             return results;
         }
@@ -1068,7 +1059,8 @@ namespace Aurora.Services.DataService
             where["AgentID"] = requestingAgentID;
             where["InviteID"] = inviteID;
 
-            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", new QueryFilter{
+            List<string> groupInvite = data.Query(new[] { "*" }, "osgroupinvite", new QueryFilter
+            {
                 andFilters = where
             }, null, null, null);
 
@@ -1095,7 +1087,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupInviteInfo>)remoteValue;
 
-            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", filter, null, null, null);
+            List<string> groupInvite = data.Query(new[] { "*" }, "osgroupinvite", filter, null, null, null);
 
             List<GroupInviteInfo> invites = new List<GroupInviteInfo>();
 
@@ -1166,22 +1158,22 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(requestingAgentID, GroupID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (List<GroupMembersData>) remoteValue;
+                return (List<GroupMembersData>)remoteValue;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.None))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.None))
             {
                 return new List<GroupMembersData>(0);
             }
 
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroupmembership", "osgmPerm");
-            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] {{"osgmPerm.GroupID", "osgm.GroupID"}});
+            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osgmPerm.GroupID", "osgm.GroupID" } });
             tables.AddTable("osrole", "osr", JoinType.Inner,
-                            new[,] {{"osgm.SelectedRoleID", "osr.RoleID"}, {"osr.GroupID", "osgmPerm.GroupID"}});
-            tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] {{"osg.GroupID", "osgmPerm.GroupID"}});
+                            new[,] { { "osgm.SelectedRoleID", "osr.RoleID" }, { "osr.GroupID", "osgmPerm.GroupID" } });
+            tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] { { "osg.GroupID", "osgmPerm.GroupID" } });
             // left join means it doesn't have to exist
             tables.AddTable("osgrouprolemembership", "osgmOwn", JoinType.Left,
-                            new[,] {{"osg.OwnerRoleID", "osgmOwn.RoleID"}, {"osgm.AgentID", "osgmOwn.AgentID"}});
+                            new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "osgm.AgentID", "osgmOwn.AgentID" } });
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["osgmPerm.GroupID"] = GroupID;
@@ -1205,16 +1197,16 @@ namespace Aurora.Services.DataService
             for (int loop = 0; loop < Membership.Count; loop += fields.Length)
             {
                 GroupMembersData GMD = new GroupMembersData
-                                           {
-                                               AcceptNotices = (Membership[loop + 0]) == "1",
-                                               AgentID = UUID.Parse(Membership[loop + 7]),
-                                               Contribution = int.Parse(Membership[loop + 1]),
-                                               IsOwner = Membership[loop + 6] != null,
-                                               ListInProfile = (Membership[loop + 2]) == "1",
-                                               AgentPowers = ulong.Parse(Membership[loop + 5]),
-                                               Title = Membership[loop + 4],
-                                               OnlineStatus = "(Online)"
-                                           };
+                {
+                    AcceptNotices = (Membership[loop + 0]) == "1",
+                    AgentID = UUID.Parse(Membership[loop + 7]),
+                    Contribution = int.Parse(Membership[loop + 1]),
+                    IsOwner = Membership[loop + 6] != null,
+                    ListInProfile = (Membership[loop + 2]) == "1",
+                    AgentPowers = ulong.Parse(Membership[loop + 5]),
+                    Title = Membership[loop + 4],
+                    OnlineStatus = "(Online)"
+                };
                 OpenSim.Services.Interfaces.UserInfo info =
                     m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
                         GMD.AgentID.ToString());
@@ -1239,7 +1231,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andLikeFilters["Name"] = "%" + search.MySqlEscape(50) + "%";
 
-            List<string> retVal = data.Query(new string[5]{
+            List<string> retVal = data.Query(new[]{
                 "GroupID",
                 "Name",
                 "ShowInList",
@@ -1248,12 +1240,11 @@ namespace Aurora.Services.DataService
             }, "osgroup", filter, null, (uint)StartQuery, 50);
 
             List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
-            DirGroupsReplyData dirgroup;
 
             for (int i = 0; i < retVal.Count; i += 5)
             {
                 if (retVal[i + 2] == "0")// (ShowInList param) They don't want to be shown in search.. respect this
-                { 
+                {
                     continue;
                 }
 
@@ -1265,14 +1256,10 @@ namespace Aurora.Services.DataService
                     }
                 }
 
-                dirgroup = new DirGroupsReplyData();
-
-                dirgroup.groupID = UUID.Parse(retVal[i]);
-                dirgroup.groupName = retVal[i + 1];
-
+                DirGroupsReplyData dirgroup = new DirGroupsReplyData { groupID = UUID.Parse(retVal[i]), groupName = retVal[i + 1] };
                 filter = new QueryFilter();
                 filter.andFilters["GroupID"] = dirgroup.groupID;
-                dirgroup.members = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgroupmembership", filter, null, null, null)[0]);
+                dirgroup.members = int.Parse(data.Query(new[] { "COUNT(AgentID)" }, "osgroupmembership", filter, null, null, null)[0]);
 
                 Reply.Add(dirgroup);
             }
@@ -1291,7 +1278,7 @@ namespace Aurora.Services.DataService
 
             QueryTables tables = new QueryTables();
             tables.AddTable("osgrouprolemembership", "osgm");
-            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] {{ "osgm.RoleID", "osr.RoleID" }});
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.RoleID", "osr.RoleID" } });
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["osgm.AgentID"] = AgentID;
@@ -1311,11 +1298,11 @@ namespace Aurora.Services.DataService
 
             List<GroupRolesData> RolesData = new List<GroupRolesData>();
 
-            for (int loop = 0; loop < Roles.Count; loop+=fields.Length)
+            for (int loop = 0; loop < Roles.Count; loop += fields.Length)
             {
                 RolesData.Add(new GroupRolesData
                 {
-                    RoleID = UUID.Parse(Roles[loop+4]),
+                    RoleID = UUID.Parse(Roles[loop + 4]),
                     Name = Roles[loop + 0],
                     Description = Roles[loop + 1],
                     Powers = ulong.Parse(Roles[loop + 3]),
@@ -1343,7 +1330,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter rolesFilter = new QueryFilter();
             rolesFilter.andFilters["GroupID"] = GroupID;
-            List<string> Roles = data.Query(new string[5]{
+            List<string> Roles = data.Query(new[]{
                 "Name",
                 "Description",
                 "Title",
@@ -1357,7 +1344,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < Roles.Count; i += 5)
             {
                 filter.andFilters["RoleID"] = UUID.Parse(Roles[i + 4]);
-                int Count = int.Parse(data.Query(new string[1] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]);
+                int Count = int.Parse(data.Query(new[] { "COUNT(AgentID)" }, "osgrouprolemembership", filter, null, null, null)[0]);
 
                 GroupRoles.Add(new GroupRolesData
                 {
@@ -1424,7 +1411,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
-            List<string> notice = data.Query(new string[9]{
+            List<string> notice = data.Query(new[]{
                 "GroupID",
                 "Timestamp",
                 "FromName",
@@ -1463,7 +1450,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
-            List<string> notice = data.Query(new string[9]{
+            List<string> notice = data.Query(new[]{
                 "GroupID",
                 "Timestamp",
                 "FromName",
@@ -1486,7 +1473,7 @@ namespace Aurora.Services.DataService
             if (GND.HasAttachment)
             {
                 GND.ItemID = UUID.Parse(notice[4]);
-                GND.AssetType = (byte) int.Parse(notice[7]);
+                GND.AssetType = (byte)int.Parse(notice[7]);
                 GND.ItemName = notice[8];
             }
 
@@ -1528,7 +1515,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GroupNoticeData>)remoteValue;
 
-            return GetGroupNotices(requestingAgentID, start, count, new List<UUID>(new UUID[1] { GroupID }));
+            return GetGroupNotices(requestingAgentID, start, count, new List<UUID>(new[] { GroupID }));
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -1541,6 +1528,7 @@ namespace Aurora.Services.DataService
             List<UUID> groupIDs = new List<UUID>();
             if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID))
             {
+#if (!ISWIN)
                 foreach (UUID GroupID in GroupIDs)
                 {
                     if (CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.ReceiveNotices))
@@ -1548,6 +1536,9 @@ namespace Aurora.Services.DataService
                         groupIDs.Add(GroupID);
                     }
                 }
+#else
+                groupIDs.AddRange(GroupIDs.Where(GroupID => CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.ReceiveNotices)));
+#endif
             }
             else
             {
@@ -1565,17 +1556,17 @@ namespace Aurora.Services.DataService
                     filter.orMultiFilters["GroupID"].Add(groupID);
                 }
 
-                Dictionary<string, bool> sort = new Dictionary<string,bool>(1);
+                Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
                 sort["Timestamp"] = false;
-                
+
                 uint? s = null;
-                if(start != 0)
+                if (start != 0)
                     s = start;
                 uint? c = null;
-                if(count != 0)
+                if (count != 0)
                     c = count;
 
-                List<string> notice = data.Query(new string[]{
+                List<string> notice = data.Query(new[]{
                     "GroupID",
                     "Timestamp",
                     "FromName",
