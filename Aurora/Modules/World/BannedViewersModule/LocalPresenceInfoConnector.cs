@@ -35,7 +35,7 @@ using Aurora.Framework;
 
 namespace Aurora.Modules.Ban
 {
-    public class LocalPresenceInfoConnector : IPresenceInfo, IAuroraDataPlugin
+    public class LocalPresenceInfoConnector : IPresenceInfo
 	{
         private IGenericData GD = null;
         private string DatabaseToAuthTable = "auth";
@@ -70,7 +70,7 @@ namespace Aurora.Modules.Ban
             PresenceInfo agent = new PresenceInfo();
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["AgentID"] = agentID;
-            List<string> query = GD.Query(new string[] { "*" }, "baninfo", new QueryFilter
+            List<string> query = GD.Query(new[] { "*" }, "baninfo", new QueryFilter
             {
                 andFilters = where
             }, null, null, null);
@@ -119,7 +119,7 @@ namespace Aurora.Modules.Ban
 
         public void Check(List<string> viewers, bool includeList)
         {
-            List<string> query = GD.Query(new string[] { "AgentID" }, "baninfo", new QueryFilter(), null, null, null);
+            List<string> query = GD.Query(new[] { "AgentID" }, "baninfo", new QueryFilter(), null, null, null);
             foreach (string ID in query)
             {
                 //Check all
@@ -141,13 +141,13 @@ namespace Aurora.Modules.Ban
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = info.AgentID;
 
-            List<string> query = GD.Query(new string[] { "passwordHash" }, DatabaseToAuthTable, filter, null, null, null);
+            List<string> query = GD.Query(new[] { "passwordHash" }, DatabaseToAuthTable, filter, null, null, null);
 
             if (query.Count != 0)
             {
                 filter = new QueryFilter();
                 filter.andFilters["passwordHash"] = query[0];
-                query = GD.Query(new string[] { "UUID" }, DatabaseToAuthTable, filter, null, null, null);
+                query = GD.Query(new[] { "UUID" }, DatabaseToAuthTable, filter, null, null, null);
 
                 foreach (string ID in query)
                 {
@@ -171,14 +171,16 @@ namespace Aurora.Modules.Ban
             // 2 == Flags
 
             filter = new QueryFilter();
-            filter.orMultiFilters["Flags"] = new List<object>(5);
-            filter.orMultiFilters["Flags"].Add("SuspectedAltAccountOfKnown");
-            filter.orMultiFilters["Flags"].Add("Known");
-            filter.orMultiFilters["Flags"].Add("SuspectedAltAccountOfSuspected");
-            filter.orMultiFilters["Flags"].Add("Banned");
-            filter.orMultiFilters["Flags"].Add("Suspected");
+            filter.orMultiFilters["Flags"] = new List<object>(5)
+                                                 {
+                                                     "SuspectedAltAccountOfKnown",
+                                                     "Known",
+                                                     "SuspectedAltAccountOfSuspected",
+                                                     "Banned",
+                                                     "Suspected"
+                                                 };
 
-            query = GD.Query(new string[1] { "AgentID" }, "baninfo", filter, null, null, null);
+            query = GD.Query(new[] { "AgentID" }, "baninfo", filter, null, null, null);
 
             foreach (string ID in query)
             {
@@ -284,7 +286,7 @@ namespace Aurora.Modules.Ban
         private void CoralateLists (PresenceInfo info, PresenceInfo suspectedInfo)
         {
             bool addedFlag = false;
-            PresenceInfo.PresenceInfoFlags Flag = 0;
+            const PresenceInfo.PresenceInfoFlags Flag = 0;
 
             if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean &&
                     (info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)

@@ -102,14 +102,13 @@ namespace OpenSim.Services.Connectors.Simulation
                                 AgentData data, out int requestedUDPPort, out string reason)
         {
             requestedUDPPort = 0;
-            if (destination.ExternalEndPoint != null)
-                requestedUDPPort = destination.ExternalEndPoint.Port;
             if (destination == null)
             {
                 reason = "Given destination was null";
                 MainConsole.Instance.DebugFormat("[LOCAL SIMULATION CONNECTOR]: CreateAgent was given a null destination");
                 return false;
             }
+            if (destination.ExternalEndPoint != null) requestedUDPPort = destination.ExternalEndPoint.Port;
 
 #if (!ISWIN)
             foreach (IScene s in m_sceneList)
@@ -222,16 +221,12 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             foreach (IScene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionID == destination.RegionID)
-                {
-                    //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
-                    IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
-                    if (transferModule != null)
-                    {
-                        transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo));
-                        return true;
-                    }
-                }
+                if (s.RegionInfo.RegionID != destination.RegionID) continue;
+                //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
+                IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
+                if (transferModule == null) continue;
+                transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo));
+                return true;
             }
             return false;
         }
@@ -245,6 +240,7 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
+#if (!ISWIN)
             foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
@@ -256,8 +252,15 @@ namespace OpenSim.Services.Connectors.Simulation
                                                                         out circuitData);
                 }
             }
-            //MainConsole.Instance.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
             return false;
+#else
+            return (from s in m_sceneList
+                    where s.RegionInfo.RegionID == destination.RegionID
+                    let transferModule = s.RequestModuleInterface<IEntityTransferModule>()
+                    where transferModule != null
+                    select transferModule.IncomingRetrieveRootAgent(s, id, agentIsLeaving, out agent, out circuitData)).FirstOrDefault();
+#endif
+            //MainConsole.Instance.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
         }
 
         public bool CloseAgent(GridRegion destination, UUID id)
@@ -290,14 +293,12 @@ namespace OpenSim.Services.Connectors.Simulation
 
             foreach (IScene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionHandle == destination.RegionHandle)
+                if (s.RegionInfo.RegionHandle != destination.RegionHandle) continue;
+                //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
+                IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
+                if (AgentTransferModule != null)
                 {
-                    //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to SendCreateObject");
-                    IEntityTransferModule AgentTransferModule = s.RequestModuleInterface<IEntityTransferModule>();
-                    if (AgentTransferModule != null)
-                    {
-                        return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
-                    }
+                    return AgentTransferModule.IncomingCreateObject(s.RegionInfo.RegionID, sog);
                 }
             }
             MainConsole.Instance.Warn("[LOCAL SIMULATION COMMS]: region not found in CreateObject");
@@ -330,10 +331,18 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool IsLocalRegion(ulong regionhandle)
         {
+#if (!ISWIN)
             foreach (IScene s in m_sceneList)
                 if (s.RegionInfo.RegionHandle == regionhandle)
                     return true;
             return false;
+#else
+            if (m_sceneList.Any(s => s.RegionInfo.RegionHandle == regionhandle))
+            {
+                return true;
+            }
+            return false;
+#endif
         }
 
         public bool IsLocalRegion(UUID id)
