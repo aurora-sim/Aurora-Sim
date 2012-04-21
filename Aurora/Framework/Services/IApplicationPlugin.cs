@@ -134,10 +134,15 @@ namespace Aurora.Framework
         /// </summary>
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
+        #region JOIN
+
         List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
         IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue);
         List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
+
+        #endregion
+
         #endregion
 
         #region INSERT
