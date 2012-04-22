@@ -1,24 +1,9 @@
 [Handlers]
     ;; Add any handlers here that you want to use
 
-    WireduxHandler = WireduxHandler
-    WireduxHandlerPassword = Password
-    WireduxHandlerPort = 8007
-    WireduxTextureServerPort = 8002
-
-    AbuseReportsInHandler = AbuseReportsConnector
-    AbuseReportsInHandlerPort = "8003"
-
-    AgentInfoInHandler = AgentInfoServiceConnector
-    AssetInHandler = AssetServiceConnector
-    AuroraDataHandler = AuroraDataServiceConnector
-    AvatarInHandler = AvatarServiceConnector
     FreeswitchInHandler = FreeswitchServerConnector
-    FriendsInHandler = FriendsServiceConnector
     GridInfoInHandler = GridInfoServerInConnector
     GridInHandler = GridServiceConnector
-    InventoryInHandler = InventoryInConnector
-    UserAccountInHandler = UserAccountServiceConnector
     MessagingServiceInHandler = MessagingServiceInHandler
     LLLoginHandler = LLLoginServiceInConnector
     EventQueueInHandler = EventQueueHandler
