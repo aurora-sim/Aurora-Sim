@@ -38,21 +38,21 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.CoreApplicationPlugins
 {
-    public class UpdaterPlugin : IApplicationPlugin
+    public class GitHubUpdaterPlugin : IApplicationPlugin
     {
         private const string m_urlToCheckForUpdates = "https://api.github.com/repos/aurora-sim/aurora-sim/downloads";
         private const string m_regexRelease = "^Aurora(\\d+|\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+\\.\\d+)Release\\.zip$";
 
         private void ErrorMsg(string msg){
-            MainConsole.Instance.Error("[UpdaterPlugin] " + msg);
+            MainConsole.Instance.Error("[UpdaterPlugin:" + Name + "] " + msg);
         }
         private void InfoMsg(string msg)
         {
-            MainConsole.Instance.Info("[UpdaterPlugin] " + msg);
+            MainConsole.Instance.Info("[UpdaterPlugin:" + Name + "] " + msg);
         }
         private void TraceMsg(string msg)
         {
-            MainConsole.Instance.Trace("[UpdaterPlugin] " + msg);
+            MainConsole.Instance.Trace("[UpdaterPlugin:" + Name + "] " + msg);
         }
 
         public void PreStartup(ISimulationBase simBase)
@@ -65,15 +65,13 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 //Check whether this is enabled
                 IConfig updateConfig = openSim.ConfigSource.Configs["Update"];
-                if (updateConfig == null)
+                if (updateConfig == null || updateConfig.GetString("Module", string.Empty) != Name || !updateConfig.GetBoolean("Enabled", false))
+                {
                     return;
-
-                if (!updateConfig.GetBoolean("Enabled", false))
-                    return;
+                }
                 
-                MainConsole.Instance.Info("[AuroraUpdator]: Checking for updates...");
+                InfoMsg("Checking for updates...");
 
-//                string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
                 string WebSite = m_urlToCheckForUpdates;
 
                 // Call the github API
@@ -180,7 +178,7 @@ namespace OpenSim.CoreApplicationPlugins
 
         public string Name
         {
-            get { return "AuroraDataStartupPlugin"; }
+            get { return "GitHubUpdater"; }
         }
 
         public void Dispose()
