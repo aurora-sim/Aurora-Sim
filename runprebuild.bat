@@ -15,7 +15,7 @@ rem ## Default architecture (86 (for 32bit), 64, AnyCPU)
 set bits=AnyCPU
 
 rem ## Default "configuration" choice ((r)elease, (d)ebug)
-set configuration=release
+set configuration=r
 
 rem ## Default "run compile batch" choice (y(es),n(o))
 set compile_at_end=y
@@ -25,8 +25,7 @@ echo However, if you wish to build for:
 echo        Visual Studio %vstudio%
 echo        .NET Framework %framework%
 echo        %bits%x Architecture
-if %compile_at_end%==y echo And you would like to compile straight
-after prebuild...
+if %compile_at_end%==y echo And you would like to compile straight after prebuild...
 echo.
 echo Simply tap [ENTER] four times.
 echo.
@@ -42,8 +41,7 @@ echo "%vstudio%" isn't a valid choice!
 goto vstudio
 
 :framework
-set /p framework="Choose your .NET framework (3_5, 4_0 (Unsupported on
-VS2008)) [%framework%]: "
+set /p framework="Choose your .NET framework (3_5, 4_0 (Unsupported on VS2008)) [%framework%]: "
 if %framework%==3_5 goto bits
 if %framework%==4_0 goto frameworkcheck
 echo "%framework%" isn't a valid choice!
@@ -68,8 +66,7 @@ echo "%bits%" isn't a valid choice!
 goto bits
 
 :configuration
-set /p configuration="Choose your configuration ((r)elease or
-(d)ebug)? [%configuration%]: "
+set /p configuration="Choose your configuration ((r)elease or (d)ebug)? [%configuration%]: "
 if %configuration%==r goto final
 if %configuration%==d goto final
 if %configuration%==release goto final
@@ -93,16 +90,7 @@ bin\Prebuild.exe /target vs%vstudio% /targetframework v%framework%
 echo.
 echo Creating compile batch file for your convinence...
 if %framework%==3_5 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild
-if %framework%==4_0 set
-fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild
-if %bits%==64 (
-    set args=/p:Platform=x64
-    set bits=x64
-)
-if %bits%==86 (
-    set args=/p:Platform=x86
-    set bits=x86
-)
+if %framework%==4_0 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild
 if %bits%==x64 set args=/p:Platform=x64
 if %bits%==x86 set args=/p:Platform=x86
 if %configuration%==r  (
@@ -120,8 +108,7 @@ set filename=Compile.VS%vstudio%.net%framework%.%bits%.%configuration%.bat
 echo %fpath% Aurora.sln %args% %cfg% > %filename% /p:DefineConstants=ISWIN
 
 echo.
-set /p compile_at_end="Done, %filename% created. Compile now? (y,n)
-[%compile_at_end%]"
+set /p compile_at_end="Done, %filename% created. Compile now? (y,n) [%compile_at_end%]"
 if %compile_at_end%==y (
     %filename%
     pause
