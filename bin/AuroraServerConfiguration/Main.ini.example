@@ -105,6 +105,7 @@
     Threat_Level_Medium = 
     Threat_Level_High = 
     Threat_Level_Full = 
+
 [BlackHole]
     CacheDirector = "C:\aurora\admin\BHAssets\"
     BackupCacheDirector = "C:\aurora\admin\BHAssetsBackup\"
