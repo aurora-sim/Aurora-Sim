@@ -40,8 +40,14 @@ namespace OpenSim.CoreApplicationPlugins
 {
     public class GitHubUpdaterPlugin : IApplicationPlugin
     {
+
         private const string m_urlToCheckForUpdates = "https://api.github.com/repos/aurora-sim/aurora-sim/downloads";
         private const string m_regexRelease = "^Aurora(\\d+|\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+|\\d+\\.\\d+\\.\\d+\\.\\d+)Release\\.zip$";
+
+        public string Name
+        {
+            get { return "GitHubUpdater"; }
+        }
 
         private void ErrorMsg(string msg){
             MainConsole.Instance.Error("[UpdaterPlugin:" + Name + "] " + msg);
@@ -174,11 +180,6 @@ namespace OpenSim.CoreApplicationPlugins
 
         public void PostStart()
         {
-        }
-
-        public string Name
-        {
-            get { return "GitHubUpdater"; }
         }
 
         public void Dispose()
