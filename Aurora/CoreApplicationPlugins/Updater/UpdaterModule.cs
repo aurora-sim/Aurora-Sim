@@ -58,6 +58,11 @@ namespace OpenSim.CoreApplicationPlugins
          */
         private const string m_urlToCheckForUpdates = "http://aurora-sim.org/updates.xml";
 
+        public string Name
+        {
+            get { return "AuroraDataStartupPlugin"; }
+        }
+
         public void PreStartup(ISimulationBase simBase)
         {
         }
@@ -68,11 +73,10 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 //Check whether this is enabled
                 IConfig updateConfig = openSim.ConfigSource.Configs["Update"];
-                if (updateConfig == null)
+                if (updateConfig == null || updateConfig.GetString("Module", string.Empty) != Name || !updateConfig.GetBoolean("Enabled", false))
+                {
                     return;
-
-                if (!updateConfig.GetBoolean("Enabled", false))
-                    return;
+                }
                 
                 MainConsole.Instance.Info("[AuroraUpdator]: Checking for updates...");
                 const string CurrentVersion = VersionInfo.VERSION_NUMBER;
@@ -158,11 +162,6 @@ namespace OpenSim.CoreApplicationPlugins
 
         public void PostStart()
         {
-        }
-
-        public string Name
-        {
-            get { return "AuroraDataStartupPlugin"; }
         }
 
         public void Dispose()
