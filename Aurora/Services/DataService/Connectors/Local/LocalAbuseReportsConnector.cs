@@ -39,19 +39,18 @@ namespace Aurora.Services.DataService
     {
         private IGenericData GD;
         private string WebPassword = "";
+        private string m_abuseReportsTable = "abusereports";
 
         #region IAbuseReportsConnector Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
             GD = GenericData;
 
             if (source.Configs[Name] != null)
                 defaultConnectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-            GD.ConnectToDatabase(defaultConnectionString, "AbuseReports",
-                                 source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+            GD.ConnectToDatabase(defaultConnectionString, "AbuseReports", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
             DataManager.DataManager.RegisterPlugin(Name + "Local", this);
             if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
@@ -89,7 +88,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Number"] = Number;
-            List<string> Reports = GD.Query(new string[] { "*" }, "abusereports", filter, null, null, null);
+            List<string> Reports = GD.Query(new string[] { "*" }, m_abuseReportsTable, filter, null, null, null);
 
             return (Reports.Count == 0) ? null : new AbuseReport
             {
@@ -112,40 +111,42 @@ namespace Aurora.Services.DataService
             };
         }
 
-        public List<AbuseReport> GetAbuseReports(int start, int count, string filter)
+        public List<AbuseReport> GetAbuseReports(int start, int count, bool active)
         {
             List<AbuseReport> rv = new List<AbuseReport>();
-            IDataReader dr =
-                GD.QueryData(
-                    "where CAST(number AS UNSIGNED) >= " + start.ToString() + " and " + filter + " LIMIT 0, 10",
-                    "abusereports", "*");
+            QueryFilter filter = new QueryFilter();
+            filter.andGreaterThanEqFilters["CAST(number AS UNSIGNED)"] = start;
+            filter.andFilters["Active"] = active ? 1 : 0;
+            List<string> query = GD.Query(new string[1] { "*" }, m_abuseReportsTable, filter, null, null, null);
+            if (query.Count % 16 != 0)
+            {
+                return rv;
+            }
             try
             {
-                while (dr.Read())
+                for(int i=0;i<query.Count;i+=16)
                 {
                     AbuseReport report = new AbuseReport
-                                             {
-                                                 Category = dr[0].ToString(),
-                                                 ReporterName = dr[1].ToString(),
-                                                 ObjectName = dr[2].ToString(),
-                                                 ObjectUUID = new UUID(dr[3].ToString()),
-                                                 AbuserName = dr[4].ToString(),
-                                                 AbuseLocation = dr[5].ToString(),
-                                                 AbuseDetails = dr[6].ToString(),
-                                                 ObjectPosition = dr[7].ToString(),
-                                                 RegionName = dr[8].ToString(),
-                                                 ScreenshotID = new UUID(dr[9].ToString()),
-                                                 AbuseSummary = dr[10].ToString(),
-                                                 Number = int.Parse(dr[11].ToString()),
-                                                 AssignedTo = dr[12].ToString(),
-                                                 Active = int.Parse(dr[13].ToString()) == 1,
-                                                 Checked = int.Parse(dr[14].ToString()) == 1,
-                                                 Notes = dr[15].ToString()
-                                             };
+                    {
+                        Category = query[i + 0],
+                        ReporterName = query[i + 1],
+                        ObjectName = query[i + 2],
+                        ObjectUUID = new UUID(query[i + 3]),
+                        AbuserName = query[i + 4],
+                        AbuseLocation = query[i + 5],
+                        AbuseDetails = query[i + 6],
+                        ObjectPosition = query[i + 7],
+                        RegionName = query[i + 8],
+                        ScreenshotID = new UUID(query[i + 9]),
+                        AbuseSummary = query[i + 10],
+                        Number = int.Parse(query[i + 11]),
+                        AssignedTo = query[i + 12],
+                        Active = int.Parse(query[i + 13]) == 1,
+                        Checked = int.Parse(query[i + 14]) == 1,
+                        Notes = query[i + 15]
+                    };
                     rv.Add(report);
                 }
-                dr.Close();
-                dr.Dispose();
             }
             catch
             {
@@ -179,7 +180,7 @@ namespace Aurora.Services.DataService
             sort["Number"] = false;
 
             //We do not trust the number sent by the region. Always find it ourselves
-            List<string> values = GD.Query(new string[1] { "Number" }, "abusereports", null, sort, null, null);
+            List<string> values = GD.Query(new string[1] { "Number" }, m_abuseReportsTable, null, sort, null, null);
             report.Number = values.Count == 0 ? 0 : int.Parse(values[0]);
 
             report.Number++;
@@ -191,7 +192,7 @@ namespace Aurora.Services.DataService
             InsertValues.Add(report.Checked ? 1 : 0);
             InsertValues.Add(report.Notes.MySqlEscape(1024));
 
-            GD.Insert("abusereports", InsertValues.ToArray());
+            GD.Insert(m_abuseReportsTable, InsertValues.ToArray());
         }
 
         /// <summary>
@@ -224,7 +225,7 @@ namespace Aurora.Services.DataService
             row["Checked"] = report.Checked ? 1 : 0;
             row["Notes"] = report.Notes.MySqlEscape(1024);
 
-            GD.Replace("abusereports", row);
+            GD.Replace(m_abuseReportsTable, row);
         }
 
         #endregion

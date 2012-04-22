@@ -38,6 +38,8 @@ namespace Aurora.Framework
         void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish);
 
         void AddGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string fromName, string subject, string message, UUID ItemID, int AssetType, string ItemName);
+        bool EditGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string subject, string message);
+        bool RemoveGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID);
 
         string SetAgentActiveGroup(UUID AgentID, UUID GroupID);
         UUID GetAgentActiveGroup(UUID RequestingAgentID, UUID AgentID);

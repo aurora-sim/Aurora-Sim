@@ -61,6 +61,6 @@ namespace Aurora.Framework
         /// <param name = "count"></param>
         /// <param name = "filter"></param>
         /// <returns></returns>
-        List<AbuseReport> GetAbuseReports(int start, int count, string filter);
+        List<AbuseReport> GetAbuseReports(int start, int count, bool active);
     }
 }
