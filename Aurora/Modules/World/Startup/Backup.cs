@@ -524,7 +524,8 @@ namespace Aurora.Modules.Startup
                     //group.RootChild.PhysActor = null;
                 }
 
-                m_scene.SimulationDataService.Tainted ();
+                if(!group.IsAttachment)
+                    m_scene.SimulationDataService.Tainted ();
                 if (m_scene.SceneGraph.DeleteEntity(group))
                 {
                     // We need to keep track of this state in case this group is still queued for backup.

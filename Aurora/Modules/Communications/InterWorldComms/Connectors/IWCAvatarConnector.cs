@@ -60,47 +60,47 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public AvatarAppearance GetAppearance(UUID userID)
+        public AvatarAppearance GetAppearance(UUID principalID)
         {
-            AvatarAppearance app = m_localService.GetAppearance(userID);
+            AvatarAppearance app = m_localService.GetAppearance(principalID);
             if (app == null)
-                app = (AvatarAppearance)DoRemoteForced(userID);
+                app = (AvatarAppearance)DoRemoteForced(principalID);
             return app;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public bool SetAppearance(UUID userID, AvatarAppearance appearance)
+        public bool SetAppearance(UUID principalID, AvatarAppearance appearance)
         {
-            bool success = m_localService.SetAppearance(userID, appearance);
+            bool success = m_localService.SetAppearance(principalID, appearance);
             if (!success)
-                success = (bool)DoRemoteForced(userID, appearance);
+                success = (bool)DoRemoteForced(principalID, appearance);
             return success;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public AvatarData GetAvatar(UUID userID)
+        public AvatarData GetAvatar(UUID principalID)
         {
-            AvatarData app = m_localService.GetAvatar(userID);
+            AvatarData app = m_localService.GetAvatar(principalID);
             if (app == null)
-                app = (AvatarData)DoRemoteForced(userID);
+                app = (AvatarData)DoRemoteForced(principalID);
             return app;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public bool SetAvatar(UUID userID, AvatarData avatar)
+        public bool SetAvatar(UUID principalID, AvatarData avatar)
         {
-            bool success = m_localService.SetAvatar(userID, avatar);
+            bool success = m_localService.SetAvatar(principalID, avatar);
             if (!success)
-                success = (bool)DoRemoteForced(userID, avatar);
+                success = (bool)DoRemoteForced(principalID, avatar);
             return success;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public bool ResetAvatar(UUID userID)
+        public bool ResetAvatar(UUID principalID)
         {
-            bool success = m_localService.ResetAvatar(userID);
+            bool success = m_localService.ResetAvatar(principalID);
             if (!success)
-                success = (bool)DoRemoteForced(userID);
+                success = (bool)DoRemoteForced(principalID);
             return success;
         }
 
