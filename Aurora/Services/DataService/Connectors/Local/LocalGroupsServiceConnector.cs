@@ -159,7 +159,7 @@ namespace Aurora.Services.DataService
             {
                 Dictionary<string, object> row = new Dictionary<string, object>(10);
                 row["GroupID"] = groupID;
-                row["NoticeID"] = noticeID;
+                row["NoticeID"] = noticeID == UUID.Zero ? UUID.Random() : noticeID;
                 row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
                 row["FromName"] = fromName.MySqlEscape(50);
                 row["Subject"] = subject.MySqlEscape(50);
@@ -171,6 +171,82 @@ namespace Aurora.Services.DataService
 
                 data.Insert("osgroupnotice", row);
             }
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        public bool EditGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID, string subject, string message)
+        {
+            object remoteValue = DoRemote(requestingAgentID, groupID, noticeID, subject, message);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                return (bool)remoteValue;
+            }
+
+            if(!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices)){
+                MainConsole.Instance.TraceFormat("Permission check failed when trying to edit group notice {0}.", noticeID);
+                return false;
+            }
+
+            GroupNoticeInfo GNI = GetGroupNotice(requestingAgentID, noticeID);
+            if (GNI == null)
+            {
+                MainConsole.Instance.TraceFormat("Could not find group notice {0}", noticeID);
+                return false;
+            }
+            else if (GNI.GroupID != groupID)
+            {
+                MainConsole.Instance.TraceFormat("Group notice {0} group ID {1} does not match supplied group ID {2}", noticeID, GNI.GroupID, groupID);
+                return false;
+            }
+            else if(subject.Trim() == string.Empty || message.Trim() == string.Empty)
+            {
+                MainConsole.Instance.TraceFormat("Could not edit group notice {0}, message or subject was empty", noticeID);
+                return false;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = groupID;
+            filter.andFilters["NoticeID"] = noticeID;
+
+            Dictionary<string, object> update = new Dictionary<string,object>(2);
+            update["Subject"] = subject.Trim();
+            update["Message"] = message.Trim();
+
+            return data.Update("osgroupnotice", update, null, filter, null, null);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High)]
+        public bool RemoveGroupNotice(UUID requestingAgentID, UUID groupID, UUID noticeID)
+        {
+            object remoteValue = DoRemote(requestingAgentID, groupID, noticeID);
+            if (remoteValue != null || m_doRemoteOnly)
+            {
+                return (bool)remoteValue;
+            }
+
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
+                MainConsole.Instance.TraceFormat("Permission check failed when trying to edit group notice {0}.", noticeID);
+                return false;
+            }
+
+            GroupNoticeInfo GNI = GetGroupNotice(requestingAgentID, noticeID);
+            if (GNI == null)
+            {
+                MainConsole.Instance.TraceFormat("Could not find group notice {0}", noticeID);
+                return false;
+            }
+            else if (GNI.GroupID != groupID)
+            {
+                MainConsole.Instance.TraceFormat("Group notice {0} group ID {1} does not match supplied group ID {2}", noticeID, GNI.GroupID, groupID);
+                return false;
+            }
+
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = groupID;
+            filter.andFilters["NoticeID"] = noticeID;
+
+            return data.Delete("osgroupnotice", filter);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -1410,6 +1486,7 @@ namespace Aurora.Services.DataService
 
             GroupNoticeData GND = new GroupNoticeData
             {
+                GroupID = UUID.Parse(notice[0]),
                 NoticeID = noticeID,
                 Timestamp = uint.Parse(notice[1]),
                 FromName = notice[2],
