@@ -208,7 +208,7 @@ namespace Aurora.Framework
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout / 4;
+                request.ReadWriteTimeout = timeout / 2;
 
                 // If there is some input, write it into the request
                 if (data != null)
@@ -239,8 +239,7 @@ namespace Aurora.Framework
                         // capture how much time was spent writing, this may seem silly
                         // but with the number concurrent requests, this often blocks
                         tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        string responseStr = null;
-                        responseStr = responseStream.GetStreamString();
+                        string responseStr = responseStr = responseStream.GetStreamString();
                         // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
                         return responseStr;
                     }
@@ -261,15 +260,18 @@ namespace Aurora.Framework
             }
             finally
             {
-                // This just dumps a warning for any operation that takes more than 500 ms
-                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                MainConsole.Instance.TraceFormat(
-                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                    url, method, tickdiff, tickdata, tickserialize);
-                if (tickdiff > 5000)
-                    MainConsole.Instance.InfoFormat(
+                if (errorMessage == "unknown error")
+                {
+                    // This just dumps a warning for any operation that takes more than 500 ms
+                    int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                    MainConsole.Instance.TraceFormat(
                         "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                         url, method, tickdiff, tickdata, tickserialize);
+                    if (tickdiff > 5000)
+                        MainConsole.Instance.InfoFormat(
+                            "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                            url, method, tickdiff, tickdata, tickserialize);
+                }
             }
 
             MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
