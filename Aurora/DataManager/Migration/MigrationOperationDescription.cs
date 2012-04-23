@@ -38,8 +38,7 @@ namespace Aurora.DataManager.Migration
 
     public class MigrationOperationDescription
     {
-        public MigrationOperationDescription(MigrationOperationTypes createDefaultAndUpgradeToTarget,
-                                             Version currentVersion, Version startVersion, Version endVersion)
+        public MigrationOperationDescription(MigrationOperationTypes createDefaultAndUpgradeToTarget, Version currentVersion, Version startVersion, Version endVersion)
         {
             OperationType = createDefaultAndUpgradeToTarget;
             CurrentVersion = currentVersion;
@@ -47,8 +46,7 @@ namespace Aurora.DataManager.Migration
             EndVersion = endVersion;
         }
 
-        public MigrationOperationDescription(MigrationOperationTypes createDefaultAndUpgradeToTarget,
-                                             Version currentVersion)
+        public MigrationOperationDescription(MigrationOperationTypes createDefaultAndUpgradeToTarget, Version currentVersion)
         {
             OperationType = createDefaultAndUpgradeToTarget;
             CurrentVersion = currentVersion;

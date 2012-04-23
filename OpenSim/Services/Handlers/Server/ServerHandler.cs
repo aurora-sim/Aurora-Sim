@@ -193,7 +193,10 @@ namespace OpenSim.Services
                 if (args != null)
                     return HandleMap(args);
             }
-            catch { }
+            catch(Exception ex)
+            {
+                MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
+            }
             return new byte[0];
         }
 
@@ -234,6 +237,7 @@ namespace OpenSim.Services
                     return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
                 }
             }
+            MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
 
             return new byte[0];
         }

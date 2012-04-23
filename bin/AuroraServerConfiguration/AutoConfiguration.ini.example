@@ -29,21 +29,13 @@
 	;; By adding a comma and another port after it, more handlers will be added on the given ports
 	;;
 	
-    AgentInfoServerURIInternalPorts = "8003"
     AssetServerURIInternalPorts = "8003"
-    ;; Aurora Data connector
-    RemoteServerURIInternalPorts = "8003"
-    AvatarServerURIInternalPorts = "8003"
     EventQueueServiceURIInternalPorts = "8007"
     FreeswitchServiceURLInternalPorts = "8002"
-    FriendsServerURIInternalPorts = "8003"
-    GridServerURIInternalPorts = "8003"
-    InventoryServerURIInternalPorts = "8003"
     MessagingServerURIInternalPorts = "8007"
-    UserAccountServerURIInternalPorts = "8003"
     MurmurServiceURIInternalPorts = "8007"
     StarDustURIInternalPorts = "8007"
-	ServerURIInternalPorts = "8002-8007"
+	ServerURIInternalPorts = "8003-8007"
     
 	;;
 	;; Remote load balancing

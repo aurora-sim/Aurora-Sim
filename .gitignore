@@ -93,3 +93,5 @@ compilex64.vs2010.bat
 compile.*.bat
 *.db-journal
 addon-modules/*/
+AuroraDocs/doxygen/
+doxygen.error.log

@@ -405,6 +405,10 @@ namespace Aurora.Modules.Attachments
                         }
                         else
                         {
+                            foreach (var prim in objatt.ChildrenEntities())
+                            {
+                                prim.LocalId = 0;
+                            }
                             bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
                             if (!success)
                                 MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");

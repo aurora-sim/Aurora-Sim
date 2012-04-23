@@ -228,7 +228,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Returns true if this inventory contains any scripts
         /// </summary>
-        /// </returns>
+        /// <returns></returns>
         bool ContainsScripts();
 
         /// <summary>
