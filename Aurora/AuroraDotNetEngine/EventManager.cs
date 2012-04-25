@@ -1072,8 +1072,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else if (eventType == scriptEvents.collision_start)
                     ID.RemoveCollisionEvents = false;
                 else if (eventType == scriptEvents.land_collision_start)
-                    ID.RemoveLandCollisionEvents = false;
-
+                    ID.RemoveLandCollisionEvents = false; 
+                
+                if (eventType == scriptEvents.state_entry)
+                    ID.ResetEvents();
 
                 if ((ID.Script.GetStateEventFlags(ID.State) & (long) eventType) == 0)
                     return false; //If the script doesn't contain the state, don't even bother queueing it
@@ -1082,97 +1084,109 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 if (!m_scriptEngine.PipeEventsForScript(ID.Part))
                     return false;
 
-                if (eventType == scriptEvents.timer)
+                switch (eventType)
                 {
-                    if (ID.TimerQueued)
-                        return false;
-                    ID.TimerQueued = true;
-                }
-                else if (eventType == scriptEvents.control)
-                {
-                    int held = ((LSL_Types.LSLInteger) param[1]).value;
-                    // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
-
-                    // If the last message was a 0 (nothing held)
-                    // and this one is also nothing held, drop it
-                    //
-                    if (ID.LastControlLevel == held && held == 0)
-                        return true;
-
-                    // If there is one or more queued, then queue
-                    // only changed ones, else queue unconditionally
-                    //
-                    if (ID.ControlEventsInQueue > 0)
-                    {
-                        if (ID.LastControlLevel == held)
+                    case scriptEvents.timer:
+                        if (ID.TimerInQueue)
                             return false;
-                    }
-                }
-                else if (eventType == scriptEvents.collision)
-                {
-                    if (ID.CollisionInQueue || ID.RemoveCollisionEvents)
-                        return false;
+                        ID.TimerInQueue = true;
+                        break;
+                    case scriptEvents.sensor:
+                        if (ID.SensorInQueue)
+                            return false;
+                        ID.SensorInQueue = true;
+                        break;
+                    case scriptEvents.no_sensor:
+                        if (ID.NoSensorInQueue)
+                            return false;
+                        ID.NoSensorInQueue = true;
+                        break;
+                    case scriptEvents.at_target:
+                        if (ID.AtTargetInQueue)
+                            return false;
+                        ID.AtTargetInQueue = true;
+                        break;
+                    case scriptEvents.not_at_target:
+                        if (ID.NotAtTargetInQueue)
+                            return false;
+                        ID.NotAtTargetInQueue = true;
+                        break;
+                    case scriptEvents.at_rot_target:
+                        if (ID.AtRotTargetInQueue)
+                            return false;
+                        ID.AtRotTargetInQueue = true;
+                        break;
+                    case scriptEvents.not_at_rot_target:
+                        if (ID.NotAtRotTargetInQueue)
+                            return false;
+                        ID.NotAtRotTargetInQueue = true;
+                        break;
+                    case scriptEvents.control:
+                        int held = ((LSL_Types.LSLInteger) param[1]).value;
+                        // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
 
-                    ID.CollisionInQueue = true;
-                }
-                else if (eventType == scriptEvents.moving_start)
-                {
-                    if (ID.MovingInQueue) //Block all other moving_starts until moving_end is called
-                        return false;
-                    ID.MovingInQueue = true;
-                }
-                else if (eventType == scriptEvents.moving_end)
-                {
-                    if (!ID.MovingInQueue) //If we get a moving_end after we have sent one event, don't fire another
-                        return false;
-                }
-                else if (eventType == scriptEvents.collision_end)
-                {
-                    if (ID.RemoveCollisionEvents)
-                        return false;
-                }
-                else if (eventType == scriptEvents.touch)
-                {
-                    if (ID.TouchInQueue || ID.RemoveTouchEvents)
-                        return false;
+                        // If the last message was a 0 (nothing held)
+                        // and this one is also nothing held, drop it
+                        //
+                        if (ID.LastControlLevel == held && held == 0)
+                            return true;
 
-                    ID.TouchInQueue = true;
+                        // If there is one or more queued, then queue
+                        // only changed ones, else queue unconditionally
+                        //
+                        if (ID.ControlEventsInQueue > 0)
+                        {
+                            if (ID.LastControlLevel == held)
+                                return false;
+                        }
+                        break;
+                    case scriptEvents.collision:
+                        if (ID.CollisionInQueue || ID.RemoveCollisionEvents)
+                            return false;
+                        ID.CollisionInQueue = true;
+                        break;
+                    case scriptEvents.moving_start:
+                        if (ID.MovingInQueue) //Block all other moving_starts until moving_end is called
+                            return false;
+                        ID.MovingInQueue = true;
+                        break;
+                    case scriptEvents.moving_end:
+                        if (!ID.MovingInQueue) //If we get a moving_end after we have sent one event, don't fire another
+                            return false;
+                        break;
+                    case scriptEvents.collision_end:
+                        if (ID.RemoveCollisionEvents)
+                            return false;
+                        break;
+                    case scriptEvents.touch:
+                        if (ID.TouchInQueue || ID.RemoveTouchEvents)
+                            return false;
+                        ID.TouchInQueue = true;
+                        break;
+                    case scriptEvents.touch_end:
+                        if (ID.RemoveTouchEvents)
+                            return false;
+                        break;
+                    case scriptEvents.land_collision:
+                        if (ID.LandCollisionInQueue || ID.RemoveLandCollisionEvents)
+                            return false;
+                        ID.LandCollisionInQueue = true;
+                        break;
+                    case scriptEvents.land_collision_end:
+                        if (ID.RemoveLandCollisionEvents)
+                            return false;
+                        break;
+                    case scriptEvents.changed:
+                        Changed changed;
+                        if (param[0] is Changed)
+                            changed = (Changed) param[0];
+                        else
+                            changed = (Changed) (((LSL_Types.LSLInteger) param[0]).value);
+                        if (ID.ChangedInQueue.Contains(changed))
+                            return false;
+                        ID.ChangedInQueue.Add(changed);
+                        break;
                 }
-                else if (eventType == scriptEvents.touch_end)
-                {
-                    if (ID.RemoveTouchEvents)
-                        return false;
-                }
-                else if (eventType == scriptEvents.land_collision)
-                {
-                    if (ID.LandCollisionInQueue || ID.RemoveLandCollisionEvents)
-                        return false;
-
-                    ID.LandCollisionInQueue = true;
-                }
-                else if (eventType == scriptEvents.land_collision_end)
-                {
-                    if (ID.RemoveLandCollisionEvents)
-                        return false;
-                }
-                else if (eventType == scriptEvents.changed)
-                {
-                    Changed changed;
-                    if (param[0] is Changed)
-                    {
-                        changed = (Changed) param[0];
-                    }
-                    else
-                    {
-                        changed = (Changed) (((LSL_Types.LSLInteger) param[0]).value);
-                    }
-                    if (ID.ChangedInQueue.Contains(changed))
-                        return false;
-                    ID.ChangedInQueue.Add(changed);
-                }
-
-                if (FunctionName == "state_entry")
-                    ID.ResetEvents();
             }
             return true;
         }
@@ -1185,37 +1199,67 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             lock (QIS.ID.ScriptEventLock)
             {
-                if (QIS.functionName == "timer")
-                    QIS.ID.TimerQueued = false;
-                else if (QIS.functionName == "control")
+                scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), QIS.functionName);
+                switch (eventType)
                 {
-                    if (QIS.ID.ControlEventsInQueue > 0)
-                        QIS.ID.ControlEventsInQueue--;
-                }
-                else if (QIS.functionName == "collision")
-                    QIS.ID.CollisionInQueue = false;
-                else if (QIS.functionName == "collision_end")
-                    QIS.ID.CollisionInQueue = false;
-                else if (QIS.functionName == "moving_end")
-                    QIS.ID.MovingInQueue = false;
-                else if (QIS.functionName == "touch")
-                    QIS.ID.TouchInQueue = false;
-                else if (QIS.functionName == "touch_end")
-                    QIS.ID.TouchInQueue = false;
-                else if (QIS.functionName == "land_collision")
-                    QIS.ID.LandCollisionInQueue = false;
-                else if (QIS.functionName == "changed")
-                {
-                    Changed changed;
-                    if (QIS.param[0] is Changed)
-                    {
-                        changed = (Changed) QIS.param[0];
-                    }
-                    else
-                    {
-                        changed = (Changed) (((LSL_Types.LSLInteger) QIS.param[0]).value);
-                    }
-                    QIS.ID.ChangedInQueue.Remove(changed);
+                    case scriptEvents.timer:
+                        QIS.ID.TimerInQueue = false;
+                        break;
+                    case scriptEvents.control:
+                        if (QIS.ID.ControlEventsInQueue > 0)
+                            QIS.ID.ControlEventsInQueue--;
+                        break;
+                    case scriptEvents.collision:
+                        QIS.ID.CollisionInQueue = false;
+                        break;
+                    case scriptEvents.collision_end:
+                        QIS.ID.CollisionInQueue = false;
+                        break;
+                    case scriptEvents.moving_end:
+                        QIS.ID.MovingInQueue = false;
+                        break;
+                    case scriptEvents.touch:
+                        QIS.ID.TouchInQueue = false;
+                        break;
+                    case scriptEvents.touch_end:
+                        QIS.ID.TouchInQueue = false;
+                        break;
+                    case scriptEvents.land_collision:
+                        QIS.ID.LandCollisionInQueue = false;
+                        break;
+                    case scriptEvents.land_collision_end:
+                        QIS.ID.LandCollisionInQueue = false;
+                        break;
+                    case scriptEvents.sensor:
+                        QIS.ID.SensorInQueue = false;
+                        break;
+                    case scriptEvents.no_sensor:
+                        QIS.ID.NoSensorInQueue = false;
+                        break;
+                    case scriptEvents.at_target:
+                        QIS.ID.AtTargetInQueue = false;
+                        break;
+                    case scriptEvents.not_at_target:
+                        QIS.ID.NotAtTargetInQueue = false;
+                        break;
+                    case scriptEvents.at_rot_target:
+                        QIS.ID.AtRotTargetInQueue = false;
+                        break;
+                    case scriptEvents.not_at_rot_target:
+                        QIS.ID.NotAtRotTargetInQueue = false;
+                        break;
+                    case scriptEvents.changed:
+                        Changed changed;
+                        if (QIS.param[0] is Changed)
+                        {
+                            changed = (Changed) QIS.param[0];
+                        }
+                        else
+                        {
+                            changed = (Changed) (((LSL_Types.LSLInteger) QIS.param[0]).value);
+                        }
+                        QIS.ID.ChangedInQueue.Remove(changed);
+                        break;
                 }
             }
         }
