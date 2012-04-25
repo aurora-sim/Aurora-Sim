@@ -255,16 +255,16 @@ namespace Aurora.Framework
 
         public Dictionary<string, uint> andBitfieldNandFilters = new Dictionary<string, uint>();
 
-        public Dictionary<string, int> andGreaterThanFilters = new Dictionary<string, int>();
-        public Dictionary<string, int> orGreaterThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, object> andGreaterThanFilters = new Dictionary<string, object>();
+        public Dictionary<string, object> orGreaterThanFilters = new Dictionary<string, object>();
 
-        public Dictionary<string, int> andGreaterThanEqFilters = new Dictionary<string, int>();
-        public Dictionary<string, int> orGreaterThanEqFilters = new Dictionary<string, int>();
+        public Dictionary<string, object> andGreaterThanEqFilters = new Dictionary<string, object>();
+        public Dictionary<string, object> orGreaterThanEqFilters = new Dictionary<string, object>();
 
-        public Dictionary<string, int> andLessThanFilters = new Dictionary<string, int>();
-        public Dictionary<string, int> orLessThanFilters = new Dictionary<string, int>();
+        public Dictionary<string, object> andLessThanFilters = new Dictionary<string, object>();
+        public Dictionary<string, object> orLessThanFilters = new Dictionary<string, object>();
 
-        public Dictionary<string, int> andLessThanEqFilters = new Dictionary<string, int>();
+        public Dictionary<string, object> andLessThanEqFilters = new Dictionary<string, object>();
 
         public Dictionary<string, object> andNotFilters = new Dictionary<string, object>();
 
@@ -476,10 +476,10 @@ namespace Aurora.Framework
                 #region greater than
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in andGreaterThanFilters)
+                foreach (KeyValuePair<string, object> where in andGreaterThanFilters)
                 {
                     string key = prepared.ToString() + "where_gtAND_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} > {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -489,10 +489,10 @@ namespace Aurora.Framework
                 }
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in orGreaterThanFilters)
+                foreach (KeyValuePair<string, object> where in orGreaterThanFilters)
                 {
                     string key = prepared.ToString() + "where_gtOR_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} > {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -502,10 +502,10 @@ namespace Aurora.Framework
                 }
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in andGreaterThanEqFilters)
+                foreach (KeyValuePair<string, object> where in andGreaterThanEqFilters)
                 {
                     string key = prepared.ToString() + "where_gteqAND_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} >= {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -515,10 +515,10 @@ namespace Aurora.Framework
                 }
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in orGreaterThanEqFilters)
+                foreach (KeyValuePair<string, object> where in orGreaterThanEqFilters)
                 {
                     string key = prepared.ToString() + "where_gteqOR_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} >= {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -532,10 +532,10 @@ namespace Aurora.Framework
                 #region less than
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in andLessThanFilters)
+                foreach (KeyValuePair<string, object> where in andLessThanFilters)
                 {
                     string key = prepared.ToString() + "where_ltAND_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -545,10 +545,10 @@ namespace Aurora.Framework
                 }
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in orLessThanFilters)
+                foreach (KeyValuePair<string, object> where in orLessThanFilters)
                 {
                     string key = prepared.ToString() + "where_ltOR_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} < {1}", where.Key, key));
                 }
                 if (parts.Count > 0)
@@ -558,10 +558,10 @@ namespace Aurora.Framework
                 }
 
                 parts = new List<string>();
-                foreach (KeyValuePair<string, int> where in andLessThanEqFilters)
+                foreach (KeyValuePair<string, object> where in andLessThanEqFilters)
                 {
                     string key = prepared.ToString() + "where_lteqAND_" + (++i) + preparedKey(where.Key);
-                    ps[key] = where.Value;
+                    ps[key] = float.Parse((where.Value).ToString());
                     parts.Add(string.Format("{0} <= {1}", where.Key, key));
                 }
                 if (parts.Count > 0)

@@ -171,6 +171,19 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<GridRegion> GetRegionRange(UUID scopeID, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        {
+            List<GridRegion> r = m_localService.GetRegionRange(scopeID, centerX, centerY, squareRangeFromCenterInMeters);
+            List<GridRegion> remoteRegions = (List<GridRegion>)DoRemoteForced(scopeID, centerX, centerY, squareRangeFromCenterInMeters);
+            if (remoteRegions != null)
+            {
+                UpdateGridRegionsForIWC(ref remoteRegions);
+                r.AddRange(remoteRegions);
+            }
+            return r;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
             return m_localService.GetDefaultRegions(scopeID);

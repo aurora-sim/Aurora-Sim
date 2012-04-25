@@ -118,6 +118,16 @@ namespace OpenSim.Services.Interfaces
         List<GridRegion> GetRegionRange (UUID scopeID, int xmin, int xmax, int ymin, int ymax);
 
         /// <summary>
+        /// Get all regions within the range of specified center.
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="centerX"></param>
+        /// <param name="centerY"></param>
+        /// <param name="squareRangeFromCenterInMeters"></param>
+        /// <returns></returns>
+        List<GridRegion> GetRegionRange(UUID scopeID, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+
+        /// <summary>
         /// Get the neighbors of the given region
         /// </summary>
         /// <param name="region"></param>

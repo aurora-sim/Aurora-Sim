@@ -247,27 +247,35 @@ namespace Aurora.Services.DataService
 
             if (region != null)
             {
-                QueryFilter filter = new QueryFilter();
-
-                filter.andNotFilters["RegionUUID"] = region.RegionID; // no need to refetch the same region ID
-
                 int centerX = region.RegionLocX + (region.RegionSizeX / 2); // calculate center of region
                 int centerY = region.RegionLocY + (region.RegionSizeY / 2); // calculate center of region
 
-                filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
-                filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
-                filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
-                filter.andLessThanEqFilters["(LocY - SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
-
-                Dictionary<string, bool> sort = new Dictionary<string,bool>(3);
-                sort["LocZ"] = true;
-                sort["LocX"] = true;
-                sort["LocY"] = true;
-
-                regions = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
+                regions = Get(scopeID, region.RegionID, centerX, centerY, squareRangeFromCenterInMeters);
             }
 
             return regions;
+        }
+
+        public List<GridRegion> Get(UUID scopeID, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        {
+            QueryFilter filter = new QueryFilter();
+
+            if (excludeRegion != UUID.Zero)
+            {
+                filter.andNotFilters["RegionUUID"] = excludeRegion;
+            }
+            filter.andFilters["ScopeID"] = scopeID;
+            filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - squareRangeFromCenterInMeters;
+            filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - squareRangeFromCenterInMeters;
+            filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX + squareRangeFromCenterInMeters;
+            filter.andLessThanEqFilters["(LocY - SizeY)"] = centerY + squareRangeFromCenterInMeters;
+
+            Dictionary<string, bool> sort = new Dictionary<string, bool>(3);
+            sort["LocZ"] = true;
+            sort["LocX"] = true;
+            sort["LocY"] = true;
+
+            return ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
         }
 
         public uint Count(uint estateID, RegionFlags flags)
