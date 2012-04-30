@@ -119,7 +119,7 @@ namespace OpenSim.Services.ConfigurationService
                 {
                     if (kvp.Value.Type == OSDType.String)
                         m_autoConfig[kvp.Key] = kvp.Value;
-                    else
+                    else if (kvp.Value.Type != OSDType.Boolean) // "Success" coming from IWC
                         m_autoConfig[kvp.Key] = string.Join(",", ((OSDArray)kvp.Value).ConvertAll<string>((osd) => osd).ToArray());
                 }
                 else
