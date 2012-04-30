@@ -45,7 +45,7 @@ namespace Aurora.Services.DataService
 
         public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("GridConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
