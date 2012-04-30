@@ -83,8 +83,7 @@ namespace Aurora.Modules.Startup
                 //Set it from the regionInfo if it knows anything
             }
 
-            scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion",
-                                                                                                 region);
+            scene.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("PreRegisterRegion", region);
 
             //Tell the grid service about us
             RegisterRegion error = GridService.RegisterRegion(region, s.SessionID);

@@ -43,11 +43,9 @@ namespace Aurora.Services.DataService
 
         #region IRegionData Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
-                "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
@@ -55,8 +53,7 @@ namespace Aurora.Services.DataService
                 if (source.Configs[Name] != null)
                     connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
 
-                GD.ConnectToDatabase(connectionString, "GridRegions",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(connectionString, "GridRegions", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
             }
