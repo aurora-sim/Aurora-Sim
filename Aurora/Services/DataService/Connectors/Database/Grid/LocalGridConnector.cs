@@ -303,8 +303,6 @@ namespace Aurora.Services.DataService
 
         public bool Store(GridRegion region)
         {
-            List<string> keys = new List<string>();
-            List<object> values = new List<object>();
 
             Dictionary<string, object> row = new Dictionary<string, object>(14);
             row["ScopeID"] = region.ScopeID;
