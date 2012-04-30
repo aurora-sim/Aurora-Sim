@@ -49,9 +49,7 @@ namespace Aurora.Services.DataService
             {
                 GD = GenericData;
 
-                string connectionString = defaultConnectionString;
-                if (source.Configs[Name] != null)
-                    connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+                string connectionString = (source.Configs[Name] != null) ? connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString) : defaultConnectionString;
 
                 GD.ConnectToDatabase(connectionString, "GridRegions", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
