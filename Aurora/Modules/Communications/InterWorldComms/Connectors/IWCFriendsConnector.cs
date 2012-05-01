@@ -106,7 +106,7 @@ namespace Aurora.Modules
             List<FriendInfo> friends = m_localService.GetFriends(PrincipalID);
             if (friends == null || friends.Count == 0)
                 friends = (List<FriendInfo>)DoRemoteForced(PrincipalID);
-            return friends;
+            return friends ?? new List<FriendInfo>();
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

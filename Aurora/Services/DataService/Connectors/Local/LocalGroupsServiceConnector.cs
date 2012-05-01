@@ -1487,7 +1487,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
-            List<string> notice = data.Query(new[]{
+            string[] fields = new string[9]{
                 "GroupID",
                 "Timestamp",
                 "FromName",
@@ -1497,7 +1497,13 @@ namespace Aurora.Services.DataService
                 "Message",
                 "AssetType",
                 "ItemName"
-            }, "osgroupnotice", filter, null, null, null);
+            };
+            List<string> notice = data.Query(fields, "osgroupnotice", filter, null, null, null);
+
+            if (notice.Count != fields.Length)
+            {
+                return null;
+            }
 
             GroupNoticeData GND = new GroupNoticeData
             {
@@ -1527,7 +1533,11 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
+<<<<<<< HEAD
             List<string> notice = data.Query(new[]{
+=======
+            string[] fields = new string[9]{
+>>>>>>> 991c21e46800651b0744735899783d2b934bbb46
                 "GroupID",
                 "Timestamp",
                 "FromName",
@@ -1537,7 +1547,13 @@ namespace Aurora.Services.DataService
                 "Message",
                 "AssetType",
                 "ItemName"
-            }, "osgroupnotice", filter, null, null, null);
+            };
+            List<string> notice = data.Query(fields, "osgroupnotice", filter, null, null, null);
+
+            if (notice.Count != fields.Length)
+            {
+                return null;
+            }
 
             GroupNoticeData GND = new GroupNoticeData
             {

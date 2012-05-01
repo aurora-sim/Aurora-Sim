@@ -715,6 +715,14 @@ namespace OpenSim.Services.GridService
             return m_Database.Get(xmin, ymin, xmax, ymax, scopeID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual List<GridRegion> GetRegionRange(UUID scopeID, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        {
+            object remoteValue = DoRemote(scopeID, centerX, centerY, squareRangeFromCenterInMeters);
+
+            return (remoteValue != null || m_doRemoteOnly) ? (List<GridRegion>)remoteValue : m_Database.Get(scopeID, UUID.Zero, centerX, centerY, squareRangeFromCenterInMeters);
+        }
+
         /// <summary>
         ///   Get the cached list of neighbors or a new list
         /// </summary>

@@ -99,6 +99,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public List<Changed> ChangedInQueue = new List<Changed>();
         private double CollisionEventDelayTicks = 0.5;
         public bool CollisionInQueue;
+        public bool TimerInQueue;
+        public bool TouchInQueue;
+        public bool SensorInQueue;
+        public bool NoSensorInQueue;
+        public bool AtTargetInQueue;
+        public bool NotAtTargetInQueue;
+        public bool AtRotTargetInQueue;
+        public bool NotAtRotTargetInQueue;
+        public bool MovingInQueue;
+        public bool LandCollisionInQueue;
+        public bool RemoveCollisionEvents;
+        public bool RemoveLandCollisionEvents;
+        public bool RemoveTouchEvents;
         public bool Compiled;
         public int ControlEventsInQueue;
         private double DefaultEventDelayTicks = 0.05;
@@ -110,18 +123,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool IgnoreNew;
         public TaskInventoryItem InventoryItem;
         public UUID ItemID;
-        public bool LandCollisionInQueue;
         public int LastControlLevel;
         public DetectParams[] LastDetectParams;
         public bool Loading = true;
-        public bool MovingInQueue;
         public long NextEventTimeTicks;
         public ISceneChildEntity Part;
         public OSDMap PluginData = new OSDMap();
         public bool PostOnRez;
-        public bool RemoveCollisionEvents;
-        public bool RemoveLandCollisionEvents;
-        public bool RemoveTouchEvents;
         public UUID RezzedFrom = UUID.Zero; // If rezzed from llRezObject, this is not Zero
         public bool Running = true;
         public IScript Script;
@@ -134,9 +142,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool Suspended;
         public bool TargetOmegaWasSet;
         private double TimerEventDelayTicks = 0.01;
-        public bool TimerQueued;
         private double TouchEventDelayTicks = 0.1;
-        public bool TouchInQueue;
         public UUID UserInventoryItemID;
 
         /// <summary>
@@ -295,6 +301,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             RemoveLandCollisionEvents = false;
             TouchInQueue = false;
             LandCollisionInQueue = false;
+            SensorInQueue = false;
+            NoSensorInQueue = false;
+            TimerInQueue = false;
+            AtTargetInQueue = false;
+            NotAtTargetInQueue = false;
+            AtRotTargetInQueue = false;
+            NotAtRotTargetInQueue = false;
             ChangedInQueue.Clear();
             LastControlLevel = 0;
             ControlEventsInQueue = 0;

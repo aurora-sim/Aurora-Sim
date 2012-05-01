@@ -43,28 +43,132 @@ namespace Aurora.Services.DataService
 
         #region IRegionData Members
 
-        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase,
-                               string defaultConnectionString)
+        public void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string defaultConnectionString)
         {
-            if (source.Configs["AuroraConnectors"].GetString("AbuseReportsConnector", "LocalConnector") ==
-                "LocalConnector")
+            if (source.Configs["AuroraConnectors"].GetString("GridConnector", "LocalConnector") == "LocalConnector")
             {
                 GD = GenericData;
 
-                string connectionString = defaultConnectionString;
-                if (source.Configs[Name] != null)
-                    connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString);
+                string connectionString = (source.Configs[Name] != null) ? connectionString = source.Configs[Name].GetString("ConnectionString", defaultConnectionString) : defaultConnectionString;
 
-                GD.ConnectToDatabase(connectionString, "GridRegions",
-                                     source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
+                GD.ConnectToDatabase(connectionString, "GridRegions", source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
                 DataManager.DataManager.RegisterPlugin(this);
+
+                MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner", "Attempts to fix missing region owners in the database.", delegate(string[] cmd)
+                {
+                    FixMissingRegionOwners();
+                });
             }
         }
 
         public string Name
         {
             get { return "IRegionData"; }
+        }
+
+        private void FixMissingRegionOwners(){
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["OwnerUUID"] = UUID.Zero;
+
+            List<GridRegion> borked = ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+
+            if(borked.Count < 1){
+                MainConsole.Instance.Debug("[LocalGridConnector] No regions found with missing owners.");
+            }
+            IEstateConnector estatePlugin = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+
+            if(estatePlugin == null){
+                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, but could not get IEstateConnector plugin.");
+                return;
+            }else{
+                MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, attempting fix.");
+            }
+
+            Dictionary<int, List<GridRegion>> borkedByEstate = new Dictionary<int, List<GridRegion>>();
+            foreach (GridRegion region in borked)
+            {
+                int estateID = estatePlugin.GetEstateID(region.RegionID);
+                if (!borkedByEstate.ContainsKey(estateID))
+                {
+                    borkedByEstate[estateID] = new List<GridRegion>();
+                }
+                borkedByEstate[estateID].Add(region);
+            }
+
+            Dictionary<int, UUID> estateOwnerIDs = new Dictionary<int, UUID>();
+            uint estateFail = 0;
+            foreach (int estateID in borkedByEstate.Keys)
+            {
+                EstateSettings es = estatePlugin.GetEstateSettings(estateID);
+                if (es == null)
+                {
+                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", could not get estate settings.");
+                }else if (es.EstateOwner == UUID.Zero)
+                {
+                    MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", Estate Owner is also missing.");
+                }
+                if (es == null || es.EstateOwner == UUID.Zero)
+                {
+                    ++estateFail;
+                    continue;
+                }
+                estateOwnerIDs[estateID] = es.EstateOwner;
+            }
+
+            if (estateFail > 0)
+            {
+                if (estateFail == borkedByEstate.Count)
+                {
+                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, could not locate any estate settings from IEstateConnector plugin.");
+                    return;
+                }
+                else
+                {
+                    MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, could not locate estate settings for " + estateFail + " estates.");
+                }
+            }
+
+            uint storeSuccess = 0;
+            uint storeFail = 0;
+            int borkedCount = borked.Count;
+            foreach (KeyValuePair<int, UUID> kvp in estateOwnerIDs)
+            {
+                List<GridRegion> regions = borkedByEstate[kvp.Key];
+                foreach (GridRegion region in regions)
+                {
+                    region.EstateOwner = kvp.Value;
+                    if (!Store(region))
+                    {
+                        MainConsole.Instance.Error("[LocalGridConnector] Failed to fix missing region for " + region.RegionName + " (" + region.RegionID + ")");
+                        ++storeFail;
+                    }else{
+                        ++storeSuccess;
+                        borked.Remove(region);
+                    }
+                }
+            }
+
+            if (storeFail > 0)
+            {
+                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount + " regions found with missing owners, fix failed on " + storeFail + " regions, fix attempted on " + storeSuccess + " regions.");
+            }
+            else if (storeSuccess != borked.Count)
+            {
+                MainConsole.Instance.Error("[LocalGridConnector] " + borkedCount + " regions found with missing owners, fix attempted on " + storeSuccess + " regions.");
+            }
+            else
+            {
+                MainConsole.Instance.Info("[LocalGridConnector] All regions found with missing owners should have their owners restored.");
+            }
+            if(borked.Count > 0){
+                List<string> blurbs = new List<string>(borked.Count);
+                foreach (GridRegion region in borked)
+                {
+                    blurbs.Add(region.RegionName + " (" + region.RegionID + ")");
+                }
+                MainConsole.Instance.Info("[LocalGridConnector] Failed to fix missing region owners for regions " + string.Join(", ", blurbs.ToArray()));
+            }
         }
 
         public List<GridRegion> Get(string regionName, UUID scopeID)
@@ -247,27 +351,35 @@ namespace Aurora.Services.DataService
 
             if (region != null)
             {
-                QueryFilter filter = new QueryFilter();
-
-                filter.andNotFilters["RegionUUID"] = region.RegionID; // no need to refetch the same region ID
-
                 int centerX = region.RegionLocX + (region.RegionSizeX / 2); // calculate center of region
                 int centerY = region.RegionLocY + (region.RegionSizeY / 2); // calculate center of region
 
-                filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
-                filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
-                filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX - (int)squareRangeFromCenterInMeters;
-                filter.andLessThanEqFilters["(LocY - SizeY)"] = centerY - (int)squareRangeFromCenterInMeters;
-
-                Dictionary<string, bool> sort = new Dictionary<string,bool>(3);
-                sort["LocZ"] = true;
-                sort["LocX"] = true;
-                sort["LocY"] = true;
-
-                regions = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
+                regions = Get(scopeID, region.RegionID, centerX, centerY, squareRangeFromCenterInMeters);
             }
 
             return regions;
+        }
+
+        public List<GridRegion> Get(UUID scopeID, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        {
+            QueryFilter filter = new QueryFilter();
+
+            if (excludeRegion != UUID.Zero)
+            {
+                filter.andNotFilters["RegionUUID"] = excludeRegion;
+            }
+            filter.andFilters["ScopeID"] = scopeID;
+            filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - squareRangeFromCenterInMeters;
+            filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - squareRangeFromCenterInMeters;
+            filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX + squareRangeFromCenterInMeters;
+            filter.andLessThanEqFilters["(LocY - SizeY)"] = centerY + squareRangeFromCenterInMeters;
+
+            Dictionary<string, bool> sort = new Dictionary<string, bool>(3);
+            sort["LocZ"] = true;
+            sort["LocX"] = true;
+            sort["LocY"] = true;
+
+            return ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
         }
 
         public uint Count(uint estateID, RegionFlags flags)
@@ -300,8 +412,10 @@ namespace Aurora.Services.DataService
 
         public bool Store(GridRegion region)
         {
-            List<string> keys = new List<string>();
-            List<object> values = new List<object>();
+            if (region.EstateOwner == UUID.Zero)
+            {
+                MainConsole.Instance.Error("[LocalGridConnector] Attempt to store region with owner of UUID.Zero detected:" + (new System.Diagnostics.StackTrace()).GetFrame(1).ToString());
+            }
 
             Dictionary<string, object> row = new Dictionary<string, object>(14);
             row["ScopeID"] = region.ScopeID;
@@ -391,6 +505,8 @@ namespace Aurora.Services.DataService
                 {
                     GridRegion data = new GridRegion();
                     OSDMap map = (OSDMap)OSDParser.DeserializeJson(query[i + 13]);
+                    map["owner_uuid"] = (!map.ContainsKey("owner_uuid") || map["owner_uuid"].AsUUID() == UUID.Zero) ? OSD.FromUUID(UUID.Parse(query[i + 6])) : map["owner_uuid"];
+                    map["EstateOwner"] = (!map.ContainsKey("EstateOwner") || map["EstateOwner"].AsUUID() == UUID.Zero) ? OSD.FromUUID(UUID.Parse(query[i + 6])) : map["EstateOwner"];
                     data.FromOSD(map);
 
                     //Check whether it should be down

@@ -46,6 +46,7 @@ namespace Aurora.Framework
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort);
+
         /// <summary>
         /// Gets the number of regions matching the specified flags
         /// </summary>
@@ -53,6 +54,7 @@ namespace Aurora.Framework
         /// <param name="excludeFlags"></param>
         /// <returns></returns>
         uint Count(RegionFlags includeFlags, RegionFlags excludeFlags);
+
         /// <summary>
         /// Gets the neighbouring regions, taking into account variable-sized regions
         /// </summary>
@@ -61,6 +63,15 @@ namespace Aurora.Framework
         /// <param name="squareRangeFromCenterInMeters">because calculating circular radii would be a complex.</param>
         /// <returns>If the return result is of zero length the region does not exist.</returns>
         List<GridRegion> GetNeighbours(UUID regionID, UUID ScopeID, uint squareRangeFromCenterInMeters);
+
+        /// <summary>
+        /// Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
+        /// </summary>
+        /// <param name="centerX"></param>
+        /// <param name="centerY"></param>
+        /// <param name="squareRangeFromCenterInMeters"></param>
+        /// <returns></returns>
+        List<GridRegion> Get(UUID scopeID, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
 
         uint Count(uint EstateID, RegionFlags flags);
 

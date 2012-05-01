@@ -958,6 +958,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             id.World = id.Part.ParentEntity.Scene;
             ls.ID = id;
+
+            // Stop long command on script
+            RemoveScriptFromPlugins(partID, itemID);
+
             MaintenanceThread.AddScriptChange(new[] {ls}, LoadPriority.Restart);
         }
 
