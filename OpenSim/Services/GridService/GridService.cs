@@ -753,7 +753,7 @@ namespace OpenSim.Services.GridService
         private void HandleClearAllRegions(string[] cmd)
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
-            m_Database.DeleteAll(new string[0], new object[0]);
+            m_Database.DeleteAll(new string[1]{ "1" }, new object[1]{ 1 });
             MainConsole.Instance.Warn("Cleared all regions");
         }
 
