@@ -292,7 +292,12 @@ namespace OpenSim.Services.InventoryService
                     asset.ID = m_AssetService.Store(asset);
                     defaultShape.AssetID = asset.ID;
                     defaultShape.Folder = bodypartFolder.ID;
-                    defaultShape.CreatorId = UUID.Zero.ToString();
+                    defaultShape.CreatorId = m_LibraryService.LibraryOwner.ToString();
+                    defaultShape.Owner = principalID;
+                    defaultShape.BasePermissions = (uint)PermissionMask.All;
+                    defaultShape.CurrentPermissions = (uint)PermissionMask.All;
+                    defaultShape.EveryOnePermissions = (uint)PermissionMask.None;
+                    defaultShape.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultShape, false);
                 }
 
