@@ -145,8 +145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private readonly Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
 
         private readonly Compiler m_compiler;
-        private readonly Random random = new Random();
-
+        
         private bool FuncCntr;
         private bool IsParentEnumerable;
         private bool IsaGlobalVar;

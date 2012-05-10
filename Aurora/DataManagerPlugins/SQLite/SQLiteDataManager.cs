@@ -47,10 +47,16 @@ namespace Aurora.DataManager.SQLite
 
 //        private static bool m_spammedmessage = false;
         private static bool m_copiedFile = false;
-        public SQLiteLoader()
+        public SQLiteLoader ()
         {
-            try
-            {
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
+                    (Environment.OSVersion.Platform == PlatformID.Unix &&
+                    Environment.OSVersion.Version.Major == 11 &&
+                    Environment.OSVersion.Version.Minor == 3)) {
+                throw new NotSupportedException ("Mac OSX currently does not support SQLite as a database option.");
+            }
+            try {
+
                 if (!m_copiedFile)
                 {
                     m_copiedFile = true;
@@ -61,7 +67,6 @@ namespace Aurora.DataManager.SQLite
                 }
             }
             catch
-//            catch (Exception ex)
             {
 //                if(!m_spammedmessage)
 //                    MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
