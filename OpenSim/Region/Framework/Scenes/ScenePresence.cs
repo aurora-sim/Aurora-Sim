@@ -1185,6 +1185,7 @@ namespace OpenSim.Region.Framework.Scenes
             
             bool update_movementflag = false;
             bool update_rotation = false;
+
             if (AllowMovement && !SitGround && !Frozen)
             {
                 if (FallenStandUp)
@@ -1202,7 +1203,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 int i = 0;
-                
                 
                 bool DCFlagKeyPressed = false;
                 Vector3 agent_control_v3 = Vector3.Zero;

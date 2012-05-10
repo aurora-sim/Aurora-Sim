@@ -35,8 +35,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private static Dictionary<string, string> m_datatypeLSL2OpenSim;
         private readonly SYMBOL m_astRoot;
         private readonly Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
-        private List<string> m_allVariableValues = new List<string>();
-
+        
         /// <summary>
         ///   Pass the new CodeTranformer an abstract syntax tree.
         /// </summary>
