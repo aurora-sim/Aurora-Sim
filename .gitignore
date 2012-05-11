@@ -1,5 +1,7 @@
 .project
 .settings
+*.userprefs
+*.DS_Store
 *.csproj
 *.csproj.user
 *.build
