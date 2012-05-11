@@ -295,10 +295,10 @@ namespace OpenSim.Services
                     if (File.Exists(filename))
                     {
                         lock (m_CurrentlyWriting)
-						{
-							if (!m_CurrentlyWriting.Contains(filename))
-								File.SetLastAccessTime(filename, DateTime.Now);
-						}
+                        {
+                            if (!m_CurrentlyWriting.Contains(filename))
+                                File.SetLastAccessTime(filename, DateTime.Now);
+                        }
                     }
                     else
                     {
