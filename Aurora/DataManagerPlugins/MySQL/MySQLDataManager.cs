@@ -1016,9 +1016,9 @@ namespace Aurora.DataManager.MySQL
                 while (rdr.Read())
                 {
                     var name = rdr["Field"];
-                    var pk = rdr["Key"];
+                    //var pk = rdr["Key"];
                     var type = rdr["Type"];
-                    var extra = rdr["Extra"];
+                    //var extra = rdr["Extra"];
                     object defaultValue = rdr["Default"];
 
                     ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
