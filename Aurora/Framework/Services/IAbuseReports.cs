@@ -173,6 +173,12 @@ namespace OpenSim.Services.Interfaces
         void UpdateAbuseReport(AbuseReport report, string Password);
 
         /// <summary>
+        /// Updates an abuse report without authentication
+        /// </summary>
+        /// <param name="report"></param>
+        void UpdateAbuseReport(AbuseReport report);
+
+        /// <summary>
         ///   Gets a collection of abuse reports
         /// </summary>
         /// <param name = "start"></param>
