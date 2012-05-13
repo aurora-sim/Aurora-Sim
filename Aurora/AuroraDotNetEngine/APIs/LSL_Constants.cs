@@ -244,6 +244,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger LAND_MEDIUM_BRUSH = 2;
         public static readonly LSL_Types.LSLInteger LAND_LARGE_BRUSH = 3;
 
+        // llGetAgentList
+        public static readonly LSL_Types.LSLInteger AGENT_LIST_PARCEL = 1;
+        public static readonly LSL_Types.LSLInteger AGENT_LIST_PARCEL_OWNER = 2;
+        public static readonly LSL_Types.LSLInteger AGENT_LIST_REGION = 4;
+
         //Agent Dataserver
         public static readonly LSL_Types.LSLInteger DATA_ONLINE = 1;
         public static readonly LSL_Types.LSLInteger DATA_NAME = 2;
