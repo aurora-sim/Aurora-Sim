@@ -11,7 +11,7 @@ namespace Aurora.Simulation.Base
 {
     public class BinMigratorService
     {
-        private const int _currentBinVersion = 7;
+        private const int _currentBinVersion = 8;
         public void MigrateBin()
         {
             int currentVersion = GetBinVersion();
