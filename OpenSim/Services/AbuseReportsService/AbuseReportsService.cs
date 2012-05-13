@@ -75,12 +75,6 @@ namespace OpenSim.Services.AbuseReports
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number)
         {
-            object remoteValue = DoRemote(Number);
-            if (remoteValue != null || m_doRemoteOnly)
-            {
-                return (AbuseReport)remoteValue;
-            }
-
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
             return (conn != null) ? conn.GetAbuseReport(Number) : null;
         }
@@ -108,6 +102,13 @@ namespace OpenSim.Services.AbuseReports
                 return conn.GetAbuseReports(start, count, active);
             else
                 return null;
+        }
+
+        public void UpdateAbuseReport(AbuseReport report)
+        {
+            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            if (conn != null)
+                conn.UpdateAbuseReport(report);
         }
 
         #endregion

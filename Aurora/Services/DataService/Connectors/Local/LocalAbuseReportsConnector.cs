@@ -211,6 +211,16 @@ namespace Aurora.Services.DataService
             {
                 return;
             }
+
+            UpdateAbuseReport(report);
+        }
+
+        /// <summary>
+        /// Updates an abuse reprot without authentication
+        /// </summary>
+        /// <param name="report"></param>
+        public void UpdateAbuseReport(AbuseReport report)
+        {
             Dictionary<string, object> row = new Dictionary<string, object>(16);
             //This is update, so we trust the number as it should know the number it's updating now.
             row["Category"] = report.Category.ToString().MySqlEscape(100);
