@@ -62,8 +62,8 @@ namespace Aurora.Framework
         public UUID ScopeID = UUID.Zero;
         private UUID m_GridSecureSessionID = UUID.Zero;
         public int NumberStartup = 0;
-        public StartupType Startup = StartupType.Normal;
-        public bool InfiniteRegion = false;
+        public StartupType Startup = StartupType.Medium;
+        public bool InfiniteRegion = true;
         public bool NewRegion = false;
 
         /// <summary>
@@ -120,10 +120,11 @@ namespace Aurora.Framework
 
         public RegionInfo()
         {
-            TrustBinariesFromForeignSims = false;
-            AllowScriptCrossing = false;
+            TrustBinariesFromForeignSims = true;
+            AllowScriptCrossing = true;
         }
 
+        private bool m_AllowPhysicalPrims = true;
         public bool AllowPhysicalPrims
         {
             get { return m_allowPhysicalPrims; }
