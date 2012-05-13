@@ -81,11 +81,16 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            if (!CheckPassword(Password))
-            {
-                return null;
-            }
+            return (!CheckPassword(Password)) ? null :GetAbuseReport(Number);
+        }
 
+        /// <summary>
+        /// Gets the abuse report associated with the number without authentication
+        /// </summary>
+        /// <param name="Number"></param>
+        /// <returns></returns>
+        public AbuseReport GetAbuseReport(int Number)
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Number"] = Number;
             List<string> Reports = GD.Query(new string[] { "*" }, m_abuseReportsTable, filter, null, null, null);

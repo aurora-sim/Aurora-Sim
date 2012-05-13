@@ -41,6 +41,13 @@ namespace Aurora.Framework
         AbuseReport GetAbuseReport(int Number, string Password);
 
         /// <summary>
+        /// Gets the abuse report associated with the number without authentication
+        /// </summary>
+        /// <param name="Number"></param>
+        /// <returns></returns>
+        AbuseReport GetAbuseReport(int Number);
+
+        /// <summary>
         ///   Adds a new abuse report to the database
         /// </summary>
         /// <param name = "report"></param>
