@@ -180,10 +180,10 @@ namespace Aurora.Configuration
 
         private static void CheckAuroraServer()
         {
-            if (!File.Exists("AuroraServer.ini")) return;
+            if (!File.Exists("Aurora.Server.ini")) return;
             try
             {
-                File.Move("AuroraServer.ini", "AuroraServer.ini.old");
+                File.Move("Aurora.Server.ini", "Aurora.Server.ini.old");
             }
             catch
             {
@@ -253,9 +253,9 @@ namespace Aurora.Configuration
             string str = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
             try
             {
-                using (TextReader reader = new StreamReader("AuroraServer.ini.example"))
+                using (TextReader reader = new StreamReader("Aurora.Server.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServer.ini"))
+                    using (TextWriter writer = new StreamWriter("Aurora.Server.ini"))
                     {
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
@@ -280,11 +280,11 @@ namespace Aurora.Configuration
             catch (Exception exception)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error configuring AuroraServer.ini " + exception.Message);
+                Console.WriteLine("Error configuring Aurora.Server.ini " + exception.Message);
                 return;
             }
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AuroraServer.ini has been successfully configured");
+            Console.WriteLine("Your Aurora.Server.ini has been successfully configured");
         }
 
         private static void ConfigureAuroraData()
@@ -663,26 +663,26 @@ namespace Aurora.Configuration
                 Console.WriteLine("====================================================================\n");
                 if (Environment.OSVersion.Platform == PlatformID.Unix)
                 {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.Server then Aurora.exe>");
-                Console.ReadLine();  
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.Server then Aurora.exe>");
+                    Console.ReadLine();
                 }
                 else
                 {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora.Server>");
-                Console.ReadLine();
-                Process AuroraServer = new Process();
-                Process Aurora = new Process();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora.Server>");
+                    Console.ReadLine();
+                    Process AuroraServer = new Process();
+                    Process Aurora = new Process();
 
-                AuroraServer.StartInfo.FileName = "Aurora.Server.exe";
-                Aurora.StartInfo.FileName = "Aurora.exe";
+                    AuroraServer.StartInfo.FileName = "Aurora.Server.exe";
+                    Aurora.StartInfo.FileName = "Aurora.exe";
 
-                AuroraServer.Start();
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Press Enter key to start the region...");
-                Console.Read();
-                Aurora.Start();
+                    AuroraServer.Start();
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("Press Enter key to start the region...");
+                    Console.Read();
+                    Aurora.Start();
                 }
 
             }
@@ -710,17 +710,17 @@ namespace Aurora.Configuration
                 Console.WriteLine("====================================================================\n");
                 if (Environment.OSVersion.Platform == PlatformID.Unix)
                 {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.exe>");
-                Console.ReadLine();  
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - You can now start Aurora.exe>");
+                    Console.ReadLine();
                 }
                 else
                 {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora>");
-                Console.ReadLine();
-                Process Aurora = new Process { StartInfo = { FileName = "Aurora.exe" } };
-                Aurora.Start();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("<Aurora-Sim Configurator v.0.2 by Rico - Press Enter key to start your Aurora>");
+                    Console.ReadLine();
+                    Process Aurora = new Process { StartInfo = { FileName = "Aurora.exe" } };
+                    Aurora.Start();
                 }
             }
 
