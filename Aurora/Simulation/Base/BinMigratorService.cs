@@ -140,6 +140,18 @@ namespace Aurora.Simulation.Base
                 Directory.Delete(path, true);
             }
         }
+
+        public void RunMigration8()
+        {
+            if (!File.Exists("AuroraServer.ini")) return;
+            try
+            {
+                File.Move("AuroraServer.ini", "Aurora.Server.ini");
+            }
+            catch
+            {
+            }
+        }
     }
 
     public enum MigratorAction
