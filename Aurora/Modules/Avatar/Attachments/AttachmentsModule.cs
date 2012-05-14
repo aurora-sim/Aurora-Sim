@@ -105,6 +105,7 @@ namespace Aurora.Modules.Attachments
 
         #region Suspend/Resume avatars
 
+        private Dictionary<UUID, List<IScenePresence>> _usersToSendAttachmentsToWhenLoaded = new Dictionary<UUID, List<IScenePresence>>();
         public void ResumeAvatar(IScenePresence presence)
         {
             Util.FireAndForget(delegate
@@ -132,11 +133,58 @@ namespace Aurora.Modules.Attachments
                         MainConsole.Instance.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e);
                     }
                 }
+                presence.AttachmentsLoaded = true;
+                lock (_usersToSendAttachmentsToWhenLoaded)
+                {
+                    if (_usersToSendAttachmentsToWhenLoaded.ContainsKey(presence.UUID))
+                    {
+                        foreach (var id in _usersToSendAttachmentsToWhenLoaded[presence.UUID])
+                        {
+                            SendAttachmentsToPresence(id, presence);
+                        }
+                        _usersToSendAttachmentsToWhenLoaded.Remove(presence.UUID);
+                    }
+                }
             });
+        }
+
+        public void SendAttachmentsToPresence(IScenePresence receiver, IScenePresence sender)
+        {
+            if (sender.AttachmentsLoaded)
+            {
+                ISceneEntity[] entities = GetAttachmentsForAvatar(sender.UUID);
+                foreach (ISceneEntity entity in entities)
+                {
+                    receiver.SceneViewer.QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
+#if (!ISWIN)
+                    foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                    {
+                        if (!child.IsRoot)
+                        {
+                            receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                        }
+                    }
+#else
+                                               foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
+                                               {
+                                                   receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
+                                               }
+#endif
+                }
+            }
+            else
+            {
+                lock (_usersToSendAttachmentsToWhenLoaded)
+                    if (_usersToSendAttachmentsToWhenLoaded.ContainsKey(sender.UUID))
+                        _usersToSendAttachmentsToWhenLoaded[sender.UUID].Add(receiver);
+                    else
+                        _usersToSendAttachmentsToWhenLoaded.Add(sender.UUID, new List<IScenePresence>() { receiver });
+            }
         }
 
         public void SuspendAvatar(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
+            presence.AttachmentsLoaded = false;
             ISceneEntity[] attachments = GetAttachmentsForAvatar(presence.UUID);
             foreach (ISceneEntity group in attachments)
             {

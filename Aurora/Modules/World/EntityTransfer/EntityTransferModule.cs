@@ -1160,8 +1160,8 @@ namespace Aurora.Modules.EntityTransfer
         /// <returns>true if we handled it.</returns>
         public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData)
         {
-            //MainConsole.Instance.DebugFormat(
-            //    "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
+            MainConsole.Instance.DebugFormat(
+                "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, scene.RegionInfo.RegionName);
 
             //No null updates!
             if (cAgentData == null)
