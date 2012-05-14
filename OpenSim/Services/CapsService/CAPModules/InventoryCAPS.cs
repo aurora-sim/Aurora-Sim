@@ -499,6 +499,19 @@ namespace OpenSim.Services.CapsService
                 inType = 15;
                 assType = 0;
             }
+            else if (inventoryType == "wearable")
+            {
+                inType = 18;
+                switch (assetType)
+                {
+                    case "bodypart":
+                        assType = 13;
+                        break;
+                    case "clothing":
+                        assType = 5;
+                        break;
+                }
+            }
             else if (inventoryType == "object")
             {
                 inType = (sbyte) InventoryType.Object;
@@ -665,19 +678,6 @@ namespace OpenSim.Services.CapsService
                 }
                 grp.UpdateGroupRotationR(rotations[0]);
                 data = Encoding.ASCII.GetBytes(grp.ToXml2());
-            }
-            else if (inventoryType == "wearable")
-            {
-                inType = 18;
-                switch (assetType)
-                {
-                    case "bodypart":
-                        assType = 13;
-                        break;
-                    case "clothing":
-                        assType = 5;
-                        break;
-                }
             }
             AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
             asset.ID = m_assetService.Store(asset);
