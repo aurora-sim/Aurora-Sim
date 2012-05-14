@@ -64,10 +64,19 @@ namespace OpenSim.Services.AbuseReports
                 return (AbuseReport)remoteValue;
 
             IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
-            if (conn != null)
-                return conn.GetAbuseReport(Number, Password);
-            else
-                return null;
+            return (conn != null) ? conn.GetAbuseReport(Number, Password) : null;
+        }
+
+        /// <summary>
+        /// Cannot be reflected on purpose, so it can only be used locally.
+        /// Gets the abuse report associated with the number without authentication.
+        /// </summary>
+        /// <param name="Number"></param>
+        /// <returns></returns>
+        public AbuseReport GetAbuseReport(int Number)
+        {
+            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            return (conn != null) ? conn.GetAbuseReport(Number) : null;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -82,7 +91,6 @@ namespace OpenSim.Services.AbuseReports
                 conn.UpdateAbuseReport(report, Password);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public List<AbuseReport> GetAbuseReports(int start, int count, bool active)
         {
             object remoteValue = DoRemote(start, count, active);
@@ -94,6 +102,13 @@ namespace OpenSim.Services.AbuseReports
                 return conn.GetAbuseReports(start, count, active);
             else
                 return null;
+        }
+
+        public void UpdateAbuseReport(AbuseReport report)
+        {
+            IAbuseReportsConnector conn = DataManager.RequestPlugin<IAbuseReportsConnector>();
+            if (conn != null)
+                conn.UpdateAbuseReport(report);
         }
 
         #endregion

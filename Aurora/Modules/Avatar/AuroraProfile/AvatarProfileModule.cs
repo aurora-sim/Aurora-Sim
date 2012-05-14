@@ -202,13 +202,9 @@ namespace Aurora.Modules.Profiles
             IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
-#if (!ISWIN)
             Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
             foreach (Classified classified in ProfileFrontend.GetClassifieds(requestedUUID))
                 classifieds.Add(classified.ClassifiedUUID, classified.Name);
-#else
-            Dictionary<UUID, string> classifieds = ProfileFrontend.GetClassifieds(requestedUUID).ToDictionary(classified => classified.ClassifiedUUID, classified => classified.Name);
-#endif
 
             remoteClient.SendAvatarClassifiedReply(requestedUUID, classifieds);
         }

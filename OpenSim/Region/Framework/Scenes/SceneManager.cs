@@ -587,7 +587,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if(scene.RegionInfo.RegionID == region.RegionID)
                 {
-                    bool needsGridUpdate = scene.RegionInfo.RegionName != region.RegionName ||
+                    bool needsGridUpdate = 
+                        scene.RegionInfo.RegionName != region.RegionName ||
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
                         scene.RegionInfo.RegionLocY != region.RegionLocY ||
                         scene.RegionInfo.RegionLocZ != region.RegionLocZ ||
@@ -596,10 +597,12 @@ namespace OpenSim.Region.Framework.Scenes
                         //scene.RegionInfo.RegionSizeX != region.RegionSizeX //Don't allow for size updates on the fly, that needs a restart
                         //scene.RegionInfo.RegionSizeY != region.RegionSizeY
                         //scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
-                        ;
-                    bool needsRegistration = scene.RegionInfo.RegionName != region.RegionName || 
+                    ;
+                    bool needsRegistration = 
+                        scene.RegionInfo.RegionName != region.RegionName || 
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
-                        scene.RegionInfo.RegionLocY != region.RegionLocY;
+                        scene.RegionInfo.RegionLocY != region.RegionLocY
+                    ;
 
                     region.RegionSettings = scene.RegionInfo.RegionSettings;
                     region.EstateSettings = scene.RegionInfo.EstateSettings;

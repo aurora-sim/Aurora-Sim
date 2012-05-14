@@ -144,24 +144,24 @@ namespace Aurora.Services.DataService
                     UserInfo user = new UserInfo
                     {
                         UserID = query[i],
-                        CurrentRegionID = UUID.Parse(query[1]),
-                        IsOnline = query[3] == "1",
-                        LastLogin = Util.ToDateTime(int.Parse(query[4])),
-                        LastLogout = Util.ToDateTime(int.Parse(query[5])),
-                        Info = (OSDMap)OSDParser.DeserializeJson(query[6])
+                        CurrentRegionID = UUID.Parse(query[i + 1]),
+                        IsOnline = query[i + 3] == "1",
+                        LastLogin = Util.ToDateTime(int.Parse(query[i + 4])),
+                        LastLogout = Util.ToDateTime(int.Parse(query[i + 5])),
+                        Info = (OSDMap)OSDParser.DeserializeJson(query[i + 6])
                     };
                     try
                     {
-                        user.CurrentRegionID = UUID.Parse(query[7]);
-                        if (query[8] != "")
-                            user.CurrentPosition = Vector3.Parse(query[8]);
-                        if (query[9] != "")
-                            user.CurrentLookAt = Vector3.Parse(query[9]);
-                        user.HomeRegionID = UUID.Parse(query[10]);
-                        if (query[11] != "")
-                            user.HomePosition = Vector3.Parse(query[11]);
-                        if (query[12] != "")
-                            user.HomeLookAt = Vector3.Parse(query[12]);
+                        user.CurrentRegionID = UUID.Parse(query[i + 7]);
+                        if (query[i + 8] != "")
+                            user.CurrentPosition = Vector3.Parse(query[i + 8]);
+                        if (query[i + 9] != "")
+                            user.CurrentLookAt = Vector3.Parse(query[i + 9]);
+                        user.HomeRegionID = UUID.Parse(query[i + 10]);
+                        if (query[i + 11] != "")
+                            user.HomePosition = Vector3.Parse(query[i + 11]);
+                        if (query[i + 12] != "")
+                            user.HomeLookAt = Vector3.Parse(query[i + 12]);
                     }
                     catch
                     {

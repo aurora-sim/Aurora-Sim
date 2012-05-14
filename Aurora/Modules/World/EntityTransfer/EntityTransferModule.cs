@@ -1082,16 +1082,21 @@ namespace Aurora.Modules.EntityTransfer
 
         private void CacheUserInfo(IScene scene, OSDMap map)
         {
-            CachedUserInfo cache = new CachedUserInfo();
-            cache.FromOSD((OSDMap)map["CachedUserInfo"]);
-            IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
-            if (conn != null)
-                conn.CacheAgent(cache.AgentInfo);
-            scene.UserAccountService.CacheAccount(cache.UserAccount);
-
-            IGroupsModule groupsMod = scene.RequestModuleInterface<IGroupsModule>();
-            if (groupsMod != null)
-                groupsMod.UpdateCachedData(cache.UserAccount.PrincipalID, cache);
+			if(map.ContainsKey("CachedUserInfo"))
+			{
+				//OpenSim does not contain this, only check if it is there
+				// We do this caching so that we don't pull down all of this info as the user is trying to login, which causes major lag, and slows down the sim for people already in the sim
+	            CachedUserInfo cache = new CachedUserInfo();
+	            cache.FromOSD((OSDMap)map["CachedUserInfo"]);
+	            IAgentConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
+	            if (conn != null)
+	                conn.CacheAgent(cache.AgentInfo);
+	            scene.UserAccountService.CacheAccount(cache.UserAccount);
+	
+	            IGroupsModule groupsMod = scene.RequestModuleInterface<IGroupsModule>();
+	            if (groupsMod != null)
+	                groupsMod.UpdateCachedData(cache.UserAccount.PrincipalID, cache);
+			}
         }
 
         private readonly Dictionary<IScene, int> m_lastUsedPort = new Dictionary<IScene, int> ();

@@ -4399,7 +4399,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private void ProcessTextureRequests(int numPackets)
         {
             //note: tmp is never used
-            int tmp = m_udpClient.GetCurTexPacksInQueue();
+            //int tmp = m_udpClient.GetCurTexPacksInQueue();
             if (m_imageManager != null)
                 m_imageManager.ProcessImageQueue(numPackets);
         }
@@ -5405,7 +5405,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                          CompressedFlags updateFlags,
                                                                                          PrimUpdateFlags flags)
         {
-            ObjectUpdateCompressedPacket.ObjectDataBlock block = new ObjectUpdateCompressedPacket.ObjectDataBlock();
             byte[] objectData = new byte[500];
             int i = 0;
             part.UUID.ToBytes(objectData, 0);

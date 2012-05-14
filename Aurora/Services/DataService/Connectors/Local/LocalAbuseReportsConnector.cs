@@ -81,11 +81,16 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            if (!CheckPassword(Password))
-            {
-                return null;
-            }
+            return (!CheckPassword(Password)) ? null :GetAbuseReport(Number);
+        }
 
+        /// <summary>
+        /// Gets the abuse report associated with the number without authentication
+        /// </summary>
+        /// <param name="Number"></param>
+        /// <returns></returns>
+        public AbuseReport GetAbuseReport(int Number)
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Number"] = Number;
             List<string> Reports = GD.Query(new string[] { "*" }, m_abuseReportsTable, filter, null, null, null);
@@ -206,6 +211,16 @@ namespace Aurora.Services.DataService
             {
                 return;
             }
+
+            UpdateAbuseReport(report);
+        }
+
+        /// <summary>
+        /// Updates an abuse reprot without authentication
+        /// </summary>
+        /// <param name="report"></param>
+        public void UpdateAbuseReport(AbuseReport report)
+        {
             Dictionary<string, object> row = new Dictionary<string, object>(16);
             //This is update, so we trust the number as it should know the number it's updating now.
             row["Category"] = report.Category.ToString().MySqlEscape(100);

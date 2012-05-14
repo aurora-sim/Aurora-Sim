@@ -84,6 +84,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected IUrlModule m_UrlModule = null;
         internal ScriptProtectionModule ScriptProtection;
         protected IWorldComm m_comms = null;
+        private IScene m_scene;
 
         // MUST be a ref type
         public class UserInfoCacheEntry
@@ -171,7 +172,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-       protected virtual void ScriptSleep(int delay)
+        protected virtual void ScriptSleep(int delay)
         {
             delay = (int)(delay * m_ScriptDelayFactor);
             if (delay == 0)
@@ -229,24 +230,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ShoutError("llResetOtherScript: script "+name+" not found");
         }
 
-        public LSL_Integer llGetScriptState(string name)
+
+        public LSL_Integer llGetScriptState (string name)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Integer();
+            if (!ScriptProtection.CheckThreatLevel (ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return new LSL_Integer ();
             UUID item;
 
             
 
-            if ((item = ScriptByName(name)) != UUID.Zero)
-            {
-                return m_ScriptEngine.GetScriptRunningState(item) ?1:0;
+            if ((item = ScriptByName (name)) != UUID.Zero) {
+                return m_ScriptEngine.GetScriptRunningState (item) ? 1 : 0;
             }
 
-            ShoutError("llGetScriptState: script "+name+" not found");
+            ShoutError ("llGetScriptState: script " + name + " not found");
 
             // If we didn't find it, then it's safe to
             // assume it is not running.
 
             return 0;
+        }
+
+        public LSL_Key llGenerateKey()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Key();
+
+            return UUID.Random().ToString();
         }
 
         public void llSetScriptState(string name, int run)
@@ -6398,6 +6407,98 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return "en-us";
         }
 
+        /// <summary>
+        /// http://wiki.secondlife.com/wiki/LlGetAgentList
+        /// The list of options is currently not used in SL
+        /// scope is one of:-
+        /// AGENT_LIST_REGION - all in the region
+        /// AGENT_LIST_PARCEL - all in the same parcel as the scripted object
+        /// AGENT_LIST_PARCEL_OWNER - all in any parcel owned by the owner of the
+        /// current parcel.
+        /// </summary>
+        public LSL_List llGetAgentList(LSL_Integer scope, LSL_List options)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return new LSL_List();
+            
+            // the constants are 1, 2 and 4 so bits are being set, but you
+            // get an error "INVALID_SCOPE" if it is anything but 1, 2 and 4
+            bool regionWide = scope == ScriptBaseClass.AGENT_LIST_REGION;
+            bool parcelOwned = scope == ScriptBaseClass.AGENT_LIST_PARCEL_OWNER;
+            bool parcel = scope == ScriptBaseClass.AGENT_LIST_PARCEL;
+            LSL_List result = new LSL_List();
+
+           if (!regionWide && !parcelOwned && !parcel)
+
+           {
+              result.Add("INVALID_SCOPE");
+              return result;
+           }
+         
+            Vector3 pos ;
+            UUID id = UUID.Zero;
+         
+            if (parcel || parcelOwned)
+            {
+                pos = m_host.GetWorldPosition();
+                IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                ILandObject land = parcelManagement.GetLandObject(pos.X, pos.Y);
+                if (land == null)
+                    {
+                    id = UUID.Zero;
+                    }
+                else
+                {
+                    if (parcelOwned)
+                    {
+                         id = land.LandData.OwnerID;
+                    }
+                    else
+                    {
+                      id = land.LandData.GlobalID;
+                    }
+                }   
+
+            }
+
+            List<UUID> presenceIds = new List<UUID>();
+                World.ForEachScenePresence(delegate (IScenePresence ssp)
+                {
+                    // Gods are not listed in SL
+
+                   if (!ssp.IsDeleted && ssp.GodLevel == 0.0 && !ssp.IsChildAgent)
+                  {
+                       if (!regionWide)
+                      {
+                         pos = ssp.AbsolutePosition;
+                           IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                           ILandObject land = parcelManagement.GetLandObject(pos.X, pos.Y);
+                          if (land != null)
+                           {
+                             if (parcelOwned && land.LandData.OwnerID == id ||
+                                parcel && land.LandData.GlobalID == id)
+                              {
+                                    result.Add(ssp.UUID.ToString());
+                              }
+                           }
+
+                     }
+                           else
+                     {
+                           result.Add(ssp.UUID.ToString());
+                     }
+                  }
+
+                   // Maximum of 100 results
+                   if (result.Length > 99)
+                  {
+                       return;
+                  }
+                }
+            );
+            return result;
+       } 
+
         public DateTime llAdjustSoundVolume(double volume)
         {
             if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return DateTime.Now;
@@ -12359,9 +12460,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             List<TravelMode> travelMode = new List<TravelMode>();
             foreach(object pos in patrolPoints.Data)
             {
-                LSL_Vector p = (LSL_Vector)pos;
-                if(p == null)
+                if (!(pos is LSL_Vector))
                     continue;
+                LSL_Vector p = (LSL_Vector)pos;
                 positions.Add(p.ToVector3());
                 travelMode.Add(TravelMode.Walk);
             }

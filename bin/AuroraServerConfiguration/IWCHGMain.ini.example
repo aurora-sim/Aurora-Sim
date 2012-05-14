@@ -97,6 +97,7 @@
     EstateConnector = LocalConnector
     DirectoryServiceConnector = LocalConnector
     ParcelConnector = LocalConnector
+	GridConnector = LocalConnector
     
     MuteListConnector = IWCConnector
     OfflineMessagesConnector = IWCConnector
