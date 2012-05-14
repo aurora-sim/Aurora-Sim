@@ -813,7 +813,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool SetEventParams(string functionName, DetectParams[] qParams)
         {
-            if (Suspended)
+            if (Suspended || !Running)
                 return false; //No suspended scripts...
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
