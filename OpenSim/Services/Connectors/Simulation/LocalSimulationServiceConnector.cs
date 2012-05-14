@@ -228,7 +228,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
                     if (transferModule != null)
                     {
-                        transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo));
+                        transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo), true);
                         return true;
                     }
                 }

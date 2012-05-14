@@ -320,7 +320,7 @@ namespace Aurora.Modules.EntityTransfer
                 }
             }
 
-            MakeChildAgent(sp, finalDestination);
+            MakeChildAgent(sp, finalDestination, false);
         }
 
         private AgentCircuitData BuildCircuitDataForPresence(IScenePresence sp, Vector3 position)
@@ -343,11 +343,13 @@ namespace Aurora.Modules.EntityTransfer
             return agentCircuit;
         }
 
-        public void MakeChildAgent (IScenePresence sp, GridRegion finalDestination)
+        public void MakeChildAgent (IScenePresence sp, GridRegion finalDestination, bool markAgentAsLeaving)
         {
             if(sp == null)
                 return;
 
+            if(markAgentAsLeaving)
+                sp.SetAgentLeaving(null);
             sp.Scene.AuroraEventManager.FireGenericEventHandler("SendingAttachments", new object[] { finalDestination, sp });
 
             //Kill the groups here, otherwise they will become ghost attachments 
@@ -1158,8 +1160,8 @@ namespace Aurora.Modules.EntityTransfer
         /// <returns>true if we handled it.</returns>
         public virtual bool IncomingChildAgentDataUpdate (IScene scene, AgentData cAgentData)
         {
-            //MainConsole.Instance.DebugFormat(
-            //    "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, RegionInfo.RegionName);
+            MainConsole.Instance.DebugFormat(
+                "[SCENE]: Incoming child agent update for {0} in {1}", cAgentData.AgentID, scene.RegionInfo.RegionName);
 
             //No null updates!
             if (cAgentData == null)
@@ -1227,8 +1229,8 @@ namespace Aurora.Modules.EntityTransfer
                 sp.CopyTo (data);
                 agent = data;
                 circuitData = BuildCircuitDataForPresence(sp, sp.AbsolutePosition);
-                if (agentIsLeaving)
-                    sp.SetAgentLeaving(null);//We arn't sure where they are going
+                //if (agentIsLeaving)
+                //    sp.SetAgentLeaving(null);//We arn't sure where they are going
                 return true;
             }
 

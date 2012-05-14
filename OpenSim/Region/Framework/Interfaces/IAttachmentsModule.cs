@@ -98,5 +98,12 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name = "eventName"></param>
         /// <param name = "args"></param>
         void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args);
+
+        /// <summary>
+        /// Send updates for all attachments to the given presences
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="sender"></param>
+        void SendAttachmentsToPresence(IScenePresence receiver, IScenePresence sender);
     }
 }

@@ -410,14 +410,18 @@ namespace Aurora.Framework
         /// </summary>
         public List<AvatarAttachment> GetAttachments()
         {
-            return (from kvp in m_attachments from attach in kvp.Value select new AvatarAttachment(attach)).ToList();
+            lock(m_attachments)
+                return (from kvp in m_attachments from attach in kvp.Value select new AvatarAttachment(attach)).ToList();
         }
 
         internal void AppendAttachment(AvatarAttachment attach)
         {
-            if (!m_attachments.ContainsKey(attach.AttachPoint))
-                m_attachments[attach.AttachPoint] = new List<AvatarAttachment>();
-            m_attachments[attach.AttachPoint].Add(attach);
+            lock (m_attachments)
+            {
+                if (!m_attachments.ContainsKey(attach.AttachPoint))
+                    m_attachments[attach.AttachPoint] = new List<AvatarAttachment>();
+                m_attachments[attach.AttachPoint].Add(attach);
+            }
         }
 
         /// <summary>
@@ -427,14 +431,17 @@ namespace Aurora.Framework
         /// <returns>Whether attachments changed</returns>
         internal bool ReplaceAttachment(AvatarAttachment attach)
         {
-            bool result = true;
-            if (m_attachments.ContainsKey(attach.AttachPoint))
+            lock (m_attachments)
             {
-                if (m_attachments[attach.AttachPoint].Contains(attach))
-                    result = false;
+                bool result = true;
+                if (m_attachments.ContainsKey(attach.AttachPoint))
+                {
+                    if (m_attachments[attach.AttachPoint].Contains(attach))
+                        result = false;
+                }
+                m_attachments[attach.AttachPoint] = new List<AvatarAttachment> { attach };
+                return result;
             }
-            m_attachments[attach.AttachPoint] = new List<AvatarAttachment> {attach};
-            return result;
         }
 
         /// <summary>
@@ -452,8 +459,11 @@ namespace Aurora.Framework
 
             if (item == UUID.Zero)
             {
-                if (m_attachments.ContainsKey(attachpoint))
-                    m_attachments.Remove(attachpoint);
+                lock (m_attachments)
+                {
+                    if (m_attachments.ContainsKey(attachpoint))
+                        m_attachments.Remove(attachpoint);
+                }
                 return true;
             }
 
@@ -483,22 +493,25 @@ namespace Aurora.Framework
         {
             if ((attPnt & 0x80) > 0)
                 return true;
-            if (m_attachments.ContainsKey(attPnt))
+            lock (m_attachments)
             {
-#if (!ISWIN)
-                foreach (AvatarAttachment a in m_attachments[attPnt])
+                if (m_attachments.ContainsKey(attPnt))
                 {
-                    if (a.ItemID == item)
+#if (!ISWIN)
+                    foreach (AvatarAttachment a in m_attachments[attPnt])
                     {
-                        return !(a.AssetID == assetID);
+                        if (a.ItemID == item)
+                        {
+                            return !(a.AssetID == assetID);
+                        }
                     }
-                }
 #else
                 foreach (AvatarAttachment a in m_attachments[attPnt].Where(a => a.ItemID == item))
                 {
                     return !(a.AssetID == assetID);
                 }
 #endif
+                }
             }
             return true;
         }
@@ -510,59 +523,69 @@ namespace Aurora.Framework
             {
                 AvatarAttachment a = new AvatarAttachment(e.GetAttachmentPoint(), e.RootChild.FromUserInventoryItemID,
                                                           e.RootChild.FromUserInventoryAssetID);
-                if (!m_attachments.ContainsKey(e.GetAttachmentPoint()))
-                    m_attachments.Add(e.GetAttachmentPoint(), new List<AvatarAttachment>());
-                m_attachments[e.GetAttachmentPoint()].Add(a);
+                lock (m_attachments)
+                {
+                    if (!m_attachments.ContainsKey(e.GetAttachmentPoint()))
+                        m_attachments.Add(e.GetAttachmentPoint(), new List<AvatarAttachment>());
+                    m_attachments[e.GetAttachmentPoint()].Add(a);
+                }
             }
         }
 
         public int GetAttachpoint(UUID itemID)
         {
-#if (!ISWIN)
-            foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
+            lock (m_attachments)
             {
-                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
-                if (index >= 0)
+#if (!ISWIN)
+                foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
                 {
-                    int i = kvp.Key;
-                    return i;
+                    int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+                    if (index >= 0)
+                    {
+                        int i = kvp.Key;
+                        return i;
+                    }
                 }
-            }
-            return 0;
+                return 0;
 #else
             return (m_attachments.Select(
                 kvp =>
                 new {kvp, index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; })}).
                 Where(@t => @t.index >= 0).Select(@t => @t.kvp.Key)).FirstOrDefault();
 #endif
+            }
         }
 
         public bool DetachAttachment(UUID itemID)
         {
-            foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
+            lock (m_attachments)
             {
+                foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in m_attachments)
+                {
 #if (!ISWIN)
-                int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
+                    int index = kvp.Value.FindIndex(delegate(AvatarAttachment a) { return a.ItemID == itemID; });
 #else
                 int index = kvp.Value.FindIndex(a => a.ItemID == itemID);
 #endif
-                if (index >= 0)
-                {
-                    // Remove it from the list of attachments at that attach point
-                    m_attachments[kvp.Key].RemoveAt(index);
+                    if (index >= 0)
+                    {
+                        // Remove it from the list of attachments at that attach point
+                        m_attachments[kvp.Key].RemoveAt(index);
 
-                    // And remove the list if there are no more attachments here
-                    if (m_attachments[kvp.Key].Count == 0)
-                        m_attachments.Remove(kvp.Key);
-                    return true;
+                        // And remove the list if there are no more attachments here
+                        if (m_attachments[kvp.Key].Count == 0)
+                            m_attachments.Remove(kvp.Key);
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
 
         public void ClearAttachments()
         {
-            m_attachments.Clear();
+            lock(m_attachments)
+                m_attachments.Clear();
         }
 
         #region Packing Functions

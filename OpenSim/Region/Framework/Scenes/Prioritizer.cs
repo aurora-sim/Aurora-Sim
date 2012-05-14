@@ -173,7 +173,7 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 posToCheckFrom = client.GetAbsolutePosition();
             if (client.IsChildAgent)
             {
-                if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
+                /*if (m_cachedXOffset == 0 && m_cachedYOffset == 0) //Not found yet
                 {
                     int RegionLocX, RegionLocY;
                     Util.UlongToInts(client.RootAgentHandle, out RegionLocX, out RegionLocY);
@@ -192,7 +192,7 @@ namespace OpenSim.Region.Framework.Scenes
                                        (scene.RegionInfo.RegionSizeX - (client.AbsolutePosition.X + m_cachedXOffset));
                 if (m_cachedYOffset > scene.RegionInfo.RegionSizeY)
                     posToCheckFrom.Y = scene.RegionInfo.RegionSizeY -
-                                       (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));
+                                       (scene.RegionInfo.RegionSizeY - (client.AbsolutePosition.Y + m_cachedYOffset));*/
             }
             Vector3 entityPosToCheckFrom = Vector3.Zero;
             bool doHeavyCulling = false;

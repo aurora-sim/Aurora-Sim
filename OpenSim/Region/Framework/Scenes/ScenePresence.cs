@@ -243,6 +243,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
+        public bool AttachmentsLoaded 
+        {
+            get; 
+            set;
+        }
+
         public bool SuccessfullyMadeRootAgent
         {
             get;

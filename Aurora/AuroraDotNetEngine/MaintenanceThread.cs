@@ -503,18 +503,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        public void AddEventSchQIS(QueueItemStruct QIS, EventPriority priority)
+        public bool AddEventSchQIS(QueueItemStruct QIS, EventPriority priority)
         {
             if (QIS.ID == null || QIS.ID.Script == null || QIS.ID.IgnoreNew)
             {
                 EventManager.EventComplete(QIS);
-                return;
+                return false;
             }
 
             if (!QIS.ID.SetEventParams(QIS.functionName, QIS.llDetectParams)) // check events delay rules
             {
                 EventManager.EventComplete(QIS);
-                return;
+                return false;
             }
 
             QIS.CurrentlyAt = null;
@@ -548,6 +548,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 scriptThreadpool.QueueEvent(eventLoop, 2);
             }
+            return true;
         }
 
         public void eventLoop()

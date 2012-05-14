@@ -217,7 +217,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_lastPresencesInViewLock)
             {
                 if (!lastPresencesDInView.ContainsKey(presence.UUID))
-                    lastPresencesDInView.Add(presence.UUID, presence);
+                    AddPresenceToCurrentlyInView(presence);
                 else if (!forced) //Only send one full update please!
                     return;
             }
@@ -400,7 +400,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_presence.ControllingClient.SendAvatarDataImmediate(presence);
             lock (m_lastPresencesInViewLock)
                 if (!lastPresencesDInView.ContainsKey(presence.UUID))
-                    lastPresencesDInView.Add(presence.UUID, presence);
+                    AddPresenceToCurrentlyInView(presence);
         }
 
         protected void SendFullUpdateForPresence(IScenePresence presence)
@@ -415,32 +415,17 @@ namespace OpenSim.Region.Framework.Scenes
                                            presence.RequestModuleInterface<IAvatarAppearanceModule>();
                                        if (module != null)
                                            module.SendAppearanceToAgent(m_presence);
-                                       //We need to send all attachments of this avatar as well
-                                       IAttachmentsModule attmodule =
-                                           m_presence.Scene.RequestModuleInterface<IAttachmentsModule>();
-                                       if (attmodule != null)
-                                       {
-                                           ISceneEntity[] entities = attmodule.GetAttachmentsForAvatar(m_presence.UUID);
-                                           foreach (ISceneEntity entity in entities)
-                                           {
-                                               QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-#if (!ISWIN)
-                                               foreach (ISceneChildEntity child in entity.ChildrenEntities())
-                                               {
-                                                   if (!child.IsRoot)
-                                                   {
-                                                       QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                                                   }
-                                               }
-#else
-                                               foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
-                                               {
-                                                   QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                                               }
-#endif
-                                           }
-                                       }
                                    });
+        }
+
+        private void AddPresenceToCurrentlyInView(IScenePresence presence)
+        {
+            lastPresencesDInView.Add(presence.UUID, presence);
+            //We need to send all attachments of this avatar as well
+            IAttachmentsModule attmodule =
+                presence.Scene.RequestModuleInterface<IAttachmentsModule>();
+            if (attmodule != null)
+                attmodule.SendAttachmentsToPresence(presence, m_presence);
         }
 
         #endregion
@@ -516,7 +501,7 @@ namespace OpenSim.Region.Framework.Scenes
             HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
 
             int time = Util.EnvironmentTickCount();
-            foreach (ISceneEntity e in from e in entities where e != null where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
+            foreach (ISceneEntity e in from e in entities where e != null where !e.IsAttachment where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
             {
                 NewGrpsInView.Add(e);
             }
@@ -543,10 +528,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!m_culler.ShowEntityToClient(m_presence, presence, m_scene, time))
                         continue; // if 2 far ignore
 
-                    lock (m_lastPresencesInViewLock)
-                        lastPresencesDInView.Add(presence.UUID, presence);
-
                     SendFullUpdateForPresence(presence);
+                    lock (m_lastPresencesInViewLock)
+                        AddPresenceToCurrentlyInView(presence);
                 }
             }
 #else

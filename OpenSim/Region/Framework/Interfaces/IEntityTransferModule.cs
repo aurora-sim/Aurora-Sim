@@ -195,6 +195,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name = "sp"></param>
         /// <param name = "finalDestination"></param>
-        void MakeChildAgent(IScenePresence sp, GridRegion finalDestination);
+        /// <param name = "markAgentAsLeaving"></param>
+        void MakeChildAgent(IScenePresence sp, GridRegion finalDestination, bool markAgentAsLeaving);
     }
 }

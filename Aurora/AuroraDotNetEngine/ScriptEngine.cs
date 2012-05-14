@@ -665,8 +665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                           State = ID.State
                                       };
 
-            MaintenanceThread.AddEventSchQIS(QIS, priority);
-            return true;
+            return MaintenanceThread.AddEventSchQIS(QIS, priority);
         }
 
         #endregion
