@@ -172,7 +172,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         }
 
-       protected virtual void ScriptSleep(int delay)
+        protected virtual void ScriptSleep(int delay)
         {
             delay = (int)(delay * m_ScriptDelayFactor);
             if (delay == 0)
@@ -230,24 +230,32 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ShoutError("llResetOtherScript: script "+name+" not found");
         }
 
-        public LSL_Integer llGetScriptState(string name)
+
+        public LSL_Integer llGetScriptState (string name)
         {
-            if(!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Integer();
+            if (!ScriptProtection.CheckThreatLevel (ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
+                return new LSL_Integer ();
             UUID item;
 
             
 
-            if ((item = ScriptByName(name)) != UUID.Zero)
-            {
-                return m_ScriptEngine.GetScriptRunningState(item) ?1:0;
+            if ((item = ScriptByName (name)) != UUID.Zero) {
+                return m_ScriptEngine.GetScriptRunningState (item) ? 1 : 0;
             }
 
-            ShoutError("llGetScriptState: script "+name+" not found");
+            ShoutError ("llGetScriptState: script " + name + " not found");
 
             // If we didn't find it, then it's safe to
             // assume it is not running.
 
             return 0;
+        }
+
+        public LSL_Key llGenerateKey()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Key();
+
+            return UUID.Random().ToString();
         }
 
         public void llSetScriptState(string name, int run)
