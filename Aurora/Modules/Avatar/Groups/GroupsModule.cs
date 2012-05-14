@@ -553,10 +553,10 @@ namespace Aurora.Modules.Groups
             GridInstantMessage msg = new GridInstantMessage
                                          {
                                              imSessionID = UUID.Zero,
-                                             fromAgentID = GetRequestingAgentID(remoteClient),
+                                             fromAgentID = UUID.Zero, 
                                              toAgentID = ejecteeID,
                                              timestamp = 0,
-                                             fromAgentName = remoteClient.Name,
+                                             fromAgentName = "System",
                                              message =
                                                  string.Format("You have been ejected from '{1}' by {0}.",
                                                                remoteClient.Name,
@@ -586,31 +586,6 @@ namespace Aurora.Modules.Groups
             // Interop, received special 210 code for ejecting a group member
             // this only works within the comms servers domain, and won't work hypergrid
 
-            msg = new GridInstantMessage
-                      {
-                          imSessionID = UUID.Zero,
-                          fromAgentID = UUID.Zero,
-                          toAgentID = remoteClient.AgentId,
-                          timestamp = 0,
-                          fromAgentName = remoteClient.Name
-                      };
-            if (account != null)
-                msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name,
-                                            groupInfo.GroupName, account.FirstName + " " + account.LastName);
-            else
-            {
-                msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name,
-                                            groupInfo.GroupName, "Unknown member");
-            }
-            msg.dialog = (byte) InstantMessageDialog.MessageFromAgent;
-            msg.fromGroup = false;
-            msg.offline = 0;
-            msg.ParentEstateID = 0;
-            msg.Position = Vector3.Zero;
-            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
-            msg.binaryBucket = new byte[0];
-            OutgoingInstantMessage(msg, GetRequestingAgentID(remoteClient));
-
             m_cachedGroupTitles[ejecteeID] = null;
             UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
@@ -625,7 +600,7 @@ namespace Aurora.Modules.Groups
                                                 fromAgentName = "System",
                                                 fromGroup = true,
                                                 imSessionID = groupID,
-                                                message = remoteClient.Name + " has left the group.",
+                                                message = account.Name + " has been ejected from the group by " + remoteClient.Name + ".",
                                                 offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
                                                 timestamp = (uint) Util.UnixTimeSinceEpoch(),
