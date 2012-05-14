@@ -204,6 +204,8 @@ namespace Aurora.Modules.Estate
                 m_scene.RegionInfo.EstateSettings.SunPosition = sun_hour;
             }
             m_scene.RegionInfo.EstateSettings.Save();
+            IEstateConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            connector.SaveEstateSettings(m_scene.RegionInfo.EstateSettings);
             TriggerEstateInfoChange();
 
             TriggerEstateSunUpdate();
