@@ -166,7 +166,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                         terrainModule.TerrainMap = new TerrainChannel(m_shortterrain, scene);
                     else if (m_oldstyleterrain != null)
                     {
-//Old style
+                        //Old style
                         ITerrainChannel channel = new TerrainChannel(false, scene);
                         MemoryStream ms = new MemoryStream(m_oldstyleterrain);
                         if (terrainModule != null)
@@ -303,14 +303,14 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
             if (m_saveChanges && m_timeBetweenSaves != 0)
             {
-                m_saveTimer = new Timer(m_timeBetweenSaves*60*1000);
+                m_saveTimer = new Timer(m_timeBetweenSaves * 60 * 1000);
                 m_saveTimer.Elapsed += m_saveTimer_Elapsed;
                 m_saveTimer.Start();
             }
 
             if (m_saveChanges && m_timeBetweenBackupSaves != 0)
             {
-                m_backupSaveTimer = new Timer(m_timeBetweenBackupSaves*60*1000);
+                m_backupSaveTimer = new Timer(m_timeBetweenBackupSaves * 60 * 1000);
                 m_backupSaveTimer.Elapsed += m_backupSaveTimer_Elapsed;
                 m_backupSaveTimer.Start();
             }
@@ -520,7 +520,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                         {
                             entity.HasGroupChanged = false;
                             //Write all entities
-                            byte[] xml = ((ISceneObject) entity).ToBinaryXml2();
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
                             writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
                             xml = null;
                         }
@@ -576,7 +576,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                                 || ((entity.RootChild.Flags & PrimFlags.TemporaryOnRez) == PrimFlags.TemporaryOnRez))
                                 continue;
                             //Write all entities
-                            byte[] xml = ((ISceneObject) entity).ToBinaryXml2();
+                            byte[] xml = ((ISceneObject)entity).ToBinaryXml2();
                             writer.WriteFile("entities/" + entity.UUID.ToString(), xml);
                             xml = null;
                         }
@@ -638,7 +638,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             File.Move(fileName + ".tmp", fileName);
             ISceneEntity[] entities = m_scene.Entities.GetEntities();
             try
-            { 
+            {
 #if (!ISWIN)
                 foreach (ISceneEntity entity in entities)
                 {
@@ -673,8 +673,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
         {
-            int tMapSize = tModule.Height*tModule.Height;
-            byte[] sdata = new byte[tMapSize*2];
+            int tMapSize = tModule.Height * tModule.Height;
+            byte[] sdata = new byte[tMapSize * 2];
             Buffer.BlockCopy(tModule.GetSerialised(tModule.Scene), 0, sdata, 0, sdata.Length);
             return sdata;
         }
@@ -721,7 +721,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     //Only use if we are not merging
                     LandData parcel = new LandData();
                     OSD parcelData = OSDParser.DeserializeLLSDBinary(data);
-                    parcel.FromOSD((OSDMap) parcelData);
+                    parcel.FromOSD((OSDMap)parcelData);
                     m_parcels.Add(parcel);
                 }
                 else if (filePath.StartsWith("terrain/"))
@@ -819,7 +819,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     IConfig startupConfig = m_scene.Config.Configs["Startup"];
                     if (startupConfig == null || startupConfig.GetBoolean("NoGUI", false))
                         DoNoGUIWarning();
-                    else if(!m_scene.RegionInfo.NewRegion)
+                    else if (!m_scene.RegionInfo.NewRegion)
                         MessageBox.Show(
                             @"Your sim has been updated to use the FileBased Simulation Service.
 Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.
@@ -878,7 +878,7 @@ More configuration options and info can be found in the Configuration/Data/FileB
 
         private ITerrainChannel ReadFromData(byte[] data, IScene scene)
         {
-            short[] sdata = new short[data.Length/2];
+            short[] sdata = new short[data.Length / 2];
             Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
             return new TerrainChannel(sdata, scene);
         }

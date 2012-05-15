@@ -61,7 +61,7 @@ namespace OpenSim.Data.MySQL
                 return;
             }
 
-            MySqlScript scr = new MySqlScript((MySqlConnection) conn);
+            MySqlScript scr = new MySqlScript((MySqlConnection)conn);
             {
                 foreach (string sql in script)
                 {

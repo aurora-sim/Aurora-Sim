@@ -51,10 +51,10 @@ namespace OpenSim.Services
 
         public XmlRpcResponse HandleXMLRPCLogin(XmlRpcRequest request, IPEndPoint remoteClient)
         {
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
             if (m_Proxy && request.Params[3] != null)
             {
-                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string) request.Params[3]);
+                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string)request.Params[3]);
                 if (ep != null)
                     // Bang!
                     remoteClient = ep;
@@ -92,7 +92,7 @@ namespace OpenSim.Services
                         clientVersion = requestData["version"].ToString();
 
                     //MAC BANNING START
-                    string mac = (string) requestData["mac"];
+                    string mac = (string)requestData["mac"];
                     if (mac == "")
                         return FailedXMLRPCResponse("Bad Viewer Connection.");
 
@@ -109,11 +109,11 @@ namespace OpenSim.Services
 
                     LoginResponse reply = null;
 
-                    
+
                     string loginName = (name == "" || name == null) ? first + " " + last : name;
                     reply = m_LocalService.Login(UUID.Zero, loginName, "UserAccount", passwd, startLocation, scopeID, clientVersion, channel,
                                                      mac, id0, remoteClient, requestData);
-                    XmlRpcResponse response = new XmlRpcResponse {Value = reply.ToHashtable()};
+                    XmlRpcResponse response = new XmlRpcResponse { Value = reply.ToHashtable() };
                     return response;
                 }
             }
@@ -123,7 +123,7 @@ namespace OpenSim.Services
 
         public XmlRpcResponse HandleXMLRPCSetLoginLevel(XmlRpcRequest request, IPEndPoint remoteClient)
         {
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
 
             if (requestData != null)
             {
@@ -141,7 +141,7 @@ namespace OpenSim.Services
 
                     Hashtable reply = m_LocalService.SetLevel(first, last, passwd, level, remoteClient);
 
-                    XmlRpcResponse response = new XmlRpcResponse {Value = reply};
+                    XmlRpcResponse response = new XmlRpcResponse { Value = reply };
 
                     return response;
                 }
@@ -159,7 +159,7 @@ namespace OpenSim.Services
         {
             if (request.Type == OSDType.Map)
             {
-                OSDMap map = (OSDMap) request;
+                OSDMap map = (OSDMap)request;
 
                 if (map.ContainsKey("first") && map.ContainsKey("last") && map.ContainsKey("passwd"))
                 {
@@ -196,7 +196,7 @@ namespace OpenSim.Services
             hash["message"] = "Incomplete login credentials. Check your username and password.";
             hash["login"] = "false";
 
-            XmlRpcResponse response = new XmlRpcResponse {Value = hash};
+            XmlRpcResponse response = new XmlRpcResponse { Value = hash };
 
             return response;
         }
@@ -208,7 +208,7 @@ namespace OpenSim.Services
             hash["message"] = message;
             hash["login"] = "false";
 
-            XmlRpcResponse response = new XmlRpcResponse {Value = hash};
+            XmlRpcResponse response = new XmlRpcResponse { Value = hash };
 
             return response;
         }

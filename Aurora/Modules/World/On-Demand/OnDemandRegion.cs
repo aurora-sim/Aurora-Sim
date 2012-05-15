@@ -59,7 +59,7 @@ namespace Aurora.Modules.OnDemand
         private bool m_isShuttingDown;
         private bool m_isStartingUp;
         private IScene m_scene;
-        private int m_waitTime=0;
+        private int m_waitTime = 0;
 
         #endregion
 
@@ -116,8 +116,8 @@ namespace Aurora.Modules.OnDemand
                 if (!m_isRunning)
                 {
                     m_isRunning = true;
-                    object[] obj = (object[]) parameters;
-                    OSDMap responseMap = (OSDMap) obj[0];
+                    object[] obj = (object[])parameters;
+                    OSDMap responseMap = (OSDMap)obj[0];
                     //Tell the caller that we will have to wait a bit possibly
                     responseMap["WaitTime"] = m_waitTime;
                     if (m_scene.RegionInfo.Startup == StartupType.Medium)
@@ -128,7 +128,7 @@ namespace Aurora.Modules.OnDemand
                 }
             }
             else if (FunctionName == "AgentIsAZombie")
-                m_zombieAgents.Add((UUID) parameters);
+                m_zombieAgents.Add((UUID)parameters);
             return null;
         }
 

@@ -56,7 +56,7 @@ namespace Aurora.DataManager.Migration.Migrators.Asset
                 ColDef("host_uri", ColumnTypes.String1024)
             ), IndexDefs(
                 IndexDef(new string[4] { "id", "hash_code", "parent_id", "creator_id" }, IndexType.Primary),
-                IndexDef(new string[1] { "hash_code" }, IndexType.Index )
+                IndexDef(new string[1] { "hash_code" }, IndexType.Index)
             ));
 
             AddSchema("auroraassets_B", ColDefs(

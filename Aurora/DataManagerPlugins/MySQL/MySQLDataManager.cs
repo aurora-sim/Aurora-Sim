@@ -54,9 +54,9 @@ namespace Aurora.DataManager.MySQL
             MySqlConnection c = new MySqlConnection(connectionstring);
             int subStrA = connectionstring.IndexOf("Database=");
             int subStrB = connectionstring.IndexOf(";", subStrA);
-            string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB+1);
+            string noDatabaseConnector = m_connectionString.Substring(0, subStrA) + m_connectionString.Substring(subStrB + 1);
 
-            retry:
+        retry:
             try
             {
                 ExecuteNonQuery(noDatabaseConnector, "create schema IF NOT EXISTS " + c.Database, new Dictionary<string, object>(), false);
@@ -195,7 +195,7 @@ namespace Aurora.DataManager.MySQL
         public override List<string> Query(string[] wantedValue, string table, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count)
         {
             string query = string.Format("SELECT {0} FROM {1}", string.Join(", ", wantedValue), table); ;
-            Dictionary<string, object> ps = new Dictionary<string,object>();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             List<string> retVal = new List<string>();
             List<string> parts = new List<string>();
 
@@ -214,7 +214,8 @@ namespace Aurora.DataManager.MySQL
                 query += " ORDER BY " + string.Join(", ", parts.ToArray());
             }
 
-            if(start.HasValue){
+            if (start.HasValue)
+            {
                 query += " LIMIT " + start.Value.ToString();
                 if (count.HasValue)
                 {
@@ -291,7 +292,7 @@ namespace Aurora.DataManager.MySQL
                         {
                             Type r = reader[i].GetType();
                             AddValueToList(ref retVal, reader.GetName(i),
-                                           r == typeof (DBNull) ? null : reader[i].ToString());
+                                           r == typeof(DBNull) ? null : reader[i].ToString());
                         }
                     }
                     return retVal;
@@ -511,7 +512,7 @@ namespace Aurora.DataManager.MySQL
 
             try
             {
-                ExecuteNonQuery(query, new Dictionary<string,object>(0));
+                ExecuteNonQuery(query, new Dictionary<string, object>(0));
             }
             catch (Exception e)
             {
@@ -536,14 +537,14 @@ namespace Aurora.DataManager.MySQL
         public override bool DeleteByTime(string table, string key)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andLessThanEqFilters["(UNIX_TIMESTAMP(`" + key.Replace("`","") + "`) - UNIX_TIMESTAMP())"] = 0;
+            filter.andLessThanEqFilters["(UNIX_TIMESTAMP(`" + key.Replace("`", "") + "`) - UNIX_TIMESTAMP())"] = 0;
 
             return Delete(table, filter);
         }
 
         public override bool Delete(string table, QueryFilter queryFilter)
         {
-            Dictionary<string, object> ps = new Dictionary<string,object>();
+            Dictionary<string, object> ps = new Dictionary<string, object>();
             string query = "DELETE FROM " + table + (queryFilter != null ? (" WHERE " + queryFilter.ToSQL('?', out ps)) : "");
 
             try
@@ -744,8 +745,9 @@ namespace Aurora.DataManager.MySQL
                 oldIndexNames.Add(oldIndex.Key);
                 oldIndices.Add(oldIndex.Value);
             }
-            int i=0;
-            foreach(IndexDefinition oldIndex in oldIndices){
+            int i = 0;
+            foreach (IndexDefinition oldIndex in oldIndices)
+            {
                 bool found = false;
                 foreach (IndexDefinition newIndex in indices)
                 {
@@ -785,7 +787,7 @@ namespace Aurora.DataManager.MySQL
             }
             foreach (IndexDefinition newIndex in newIndices)
             {
-                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` ADD {1} (`{2}`)", table, newIndex.Type == IndexType.Primary ? "PRIMARY KEY" : (newIndex.Type == IndexType.Unique ? "UNIQUE" : "INDEX"), string.Join("`, `", newIndex.Fields)), new Dictionary<string,object>());
+                ExecuteNonQuery(string.Format("ALTER TABLE `{0}` ADD {1} (`{2}`)", table, newIndex.Type == IndexType.Primary ? "PRIMARY KEY" : (newIndex.Type == IndexType.Unique ? "UNIQUE" : "INDEX"), string.Join("`, `", newIndex.Fields)), new Dictionary<string, object>());
             }
         }
 
@@ -1060,7 +1062,7 @@ namespace Aurora.DataManager.MySQL
             tableName = tableName.ToLower();
             IDataReader rdr = null;
             Dictionary<string, Dictionary<uint, string>> indexLookup = new Dictionary<string, Dictionary<uint, string>>();
-            Dictionary<string, bool> indexIsUnique = new Dictionary<string,bool>();
+            Dictionary<string, bool> indexIsUnique = new Dictionary<string, bool>();
 
             try
             {
@@ -1100,7 +1102,7 @@ namespace Aurora.DataManager.MySQL
 
             foreach (KeyValuePair<string, Dictionary<uint, string>> index in indexLookup)
             {
-                index.Value.OrderBy(x=>x.Key);
+                index.Value.OrderBy(x => x.Key);
                 defs[index.Key] = new IndexDefinition
                 {
                     Fields = index.Value.Values.ToArray<string>(),
@@ -1110,7 +1112,7 @@ namespace Aurora.DataManager.MySQL
 
             return defs;
         }
-        
+
         #endregion
 
         public override IGenericData Copy()

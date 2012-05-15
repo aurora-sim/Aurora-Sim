@@ -32,7 +32,8 @@ using OpenMetaverse;
 
 namespace Aurora.Services.DataService
 {
-    public class LocalAssetConnector : ConnectorBase, IAssetConnector    {
+    public class LocalAssetConnector : ConnectorBase, IAssetConnector
+    {
         private IGenericData GD;
 
         #region IAssetConnector Members
@@ -61,11 +62,12 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]        public void UpdateLSLData(string token, string key, string value)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void UpdateLSLData(string token, string key, string value)
         {
-            object remoteValue = DoRemote(token, key, value);            if (remoteValue != null || m_doRemoteOnly)                return;            if (FindLSLData(token, key).Count == 0)
+            object remoteValue = DoRemote(token, key, value); if (remoteValue != null || m_doRemoteOnly) return; if (FindLSLData(token, key).Count == 0)
             {
-                GD.Insert("lslgenericdata", new[] {token.MySqlEscape(50), key.MySqlEscape(50), value.MySqlEscape(50)});
+                GD.Insert("lslgenericdata", new[] { token.MySqlEscape(50), key.MySqlEscape(50), value.MySqlEscape(50) });
             }
             else
             {
@@ -79,12 +81,13 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]        public List<string> FindLSLData(string token, string key)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<string> FindLSLData(string token, string key)
         {
             object remoteValue = DoRemote(token, key);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<string>)remoteValue;
-            
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Token"] = token.MySqlEscape(50);
             filter.andFilters["KeySetting"] = token.MySqlEscape(50);

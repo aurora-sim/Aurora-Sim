@@ -78,7 +78,7 @@ namespace OpenSim.Services.MessagingService
         {
             if (FunctionName == "EstateUpdated")
             {
-                EstateSettings es = (EstateSettings) parameters;
+                EstateSettings es = (EstateSettings)parameters;
                 IEstateConnector estateConnector = DataManager.RequestPlugin<IEstateConnector>();
                 if (estateConnector != null)
                 {
@@ -115,7 +115,7 @@ namespace OpenSim.Services.MessagingService
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "EstateUpdated")
             {
-                OSDMap innerMessage = (OSDMap) message["Message"];
+                OSDMap innerMessage = (OSDMap)message["Message"];
                 //We got a message, deal with it
                 uint estateID = innerMessage["EstateID"].AsUInteger();
                 UUID regionID = innerMessage["RegionID"].AsUUID();

@@ -55,7 +55,7 @@ namespace OpenSim.Services.RobustCompat
 
         public List<UserInfo> GetUserInfos(List<string> userIDs)
         {
-            List<UserInfo> us =new List<UserInfo>();
+            List<UserInfo> us = new List<UserInfo>();
             for (int i = 0; i < userIDs.Count; i++)
                 us.Add(GetUserInfo(userIDs[i]));
             return us;
@@ -253,7 +253,7 @@ namespace OpenSim.Services.RobustCompat
                             if (replyData["result"] is Dictionary<string, object>)
                             {
                                 guinfo = new UserInfo();
-                                Dictionary<string, object> kvp = (Dictionary<string, object>) replyData["result"];
+                                Dictionary<string, object> kvp = (Dictionary<string, object>)replyData["result"];
                                 guinfo.UserID = kvp["UserID"].ToString();
                                 guinfo.HomeRegionID = UUID.Parse(kvp["HomeRegionID"].ToString());
                                 guinfo.CurrentRegionID = UUID.Parse(kvp["LastRegionID"].ToString());

@@ -127,7 +127,8 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             get { return _httpResponse.Connection == ConnectionType.KeepAlive; }
 
-            set {
+            set
+            {
                 _httpResponse.Connection = value ? ConnectionType.KeepAlive : ConnectionType.Close;
             }
         }
@@ -207,9 +208,9 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public virtual int StatusCode
         {
-            get { return (int) _httpResponse.Status; }
+            get { return (int)_httpResponse.Status; }
 
-            set { _httpResponse.Status = (HttpStatusCode) value; }
+            set { _httpResponse.Status = (HttpStatusCode)value; }
         }
 
 

@@ -44,10 +44,10 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
             int x, y;
 
-            int xFrom = (int) (rx - BrushSize + 0.5);
-            int xTo = (int) (rx + BrushSize + 0.5) + 1;
-            int yFrom = (int) (ry - BrushSize + 0.5);
-            int yTo = (int) (ry + BrushSize + 0.5) + 1;
+            int xFrom = (int)(rx - BrushSize + 0.5);
+            int xTo = (int)(rx + BrushSize + 0.5) + 1;
+            int yFrom = (int)(ry - BrushSize + 0.5);
+            int yTo = (int)(ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -72,7 +72,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                     float z;
                     if (duration < 4.0)
                     {
-                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength)*duration*0.25f;
+                        z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
                     }
                     else
                     {

@@ -176,7 +176,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                     asset.Name = item.Name;
                     asset.Description = item.Description;
-                    asset.Type = (sbyte) item.Type;
+                    asset.Type = (sbyte)item.Type;
                     item.AssetID = asset.ID;
 
                     IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
@@ -194,9 +194,9 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                     if (part.Inventory.UpdateInventoryItem(item))
                     {
-                        if ((InventoryType) item.InvType == InventoryType.Notecard)
+                        if ((InventoryType)item.InvType == InventoryType.Notecard)
                             remoteClient.SendAgentAlertMessage("Notecard saved", false);
-                        else if ((InventoryType) item.InvType == InventoryType.LSL)
+                        else if ((InventoryType)item.InvType == InventoryType.LSL)
                             remoteClient.SendAgentAlertMessage("Script saved", false);
                         else
                             remoteClient.SendAgentAlertMessage("Item saved", false);
@@ -228,7 +228,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
                     asset.ID = UUID.Random();
                     asset.Name = item.Name;
                     asset.Description = item.Description;
-                    asset.Type = (sbyte) item.AssetType;
+                    asset.Type = (sbyte)item.AssetType;
                     item.AssetID = asset.ID;
 
                     asset.ID = Manager.MyScene.AssetService.Store(asset);

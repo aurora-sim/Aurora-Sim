@@ -47,7 +47,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionInfo", ColumnTypes.Text),
                 ColDef("Disabled", ColumnTypes.String45)
             ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+                IndexDef(new string[1] { "RegionID" }, IndexType.Primary)
             ));
         }
 

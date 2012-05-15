@@ -99,14 +99,14 @@ namespace Aurora.Framework
         public override void FromOSD(OSDMap map)
         {
             RegionID = map["RegionID"].AsUUID();
-            RegionLocX = (float) map["RegionLocX"].AsReal();
-            RegionLocY = (float) map["RegionLocY"].AsReal();
-            TelehubRotX = (float) map["TelehubRotX"].AsReal();
-            TelehubRotY = (float) map["TelehubRotY"].AsReal();
-            TelehubRotZ = (float) map["TelehubRotZ"].AsReal();
-            TelehubLocX = (float) map["TelehubLocX"].AsReal();
-            TelehubLocY = (float) map["TelehubLocY"].AsReal();
-            TelehubLocZ = (float) map["TelehubLocZ"].AsReal();
+            RegionLocX = (float)map["RegionLocX"].AsReal();
+            RegionLocY = (float)map["RegionLocY"].AsReal();
+            TelehubRotX = (float)map["TelehubRotX"].AsReal();
+            TelehubRotY = (float)map["TelehubRotY"].AsReal();
+            TelehubRotZ = (float)map["TelehubRotZ"].AsReal();
+            TelehubLocX = (float)map["TelehubLocX"].AsReal();
+            TelehubLocY = (float)map["TelehubLocY"].AsReal();
+            TelehubLocZ = (float)map["TelehubLocZ"].AsReal();
             SpawnPos = BuildToList(map["Spawns"].AsString());
             Name = map["Name"].AsString();
             ObjectUUID = map["ObjectUUID"].AsUUID();

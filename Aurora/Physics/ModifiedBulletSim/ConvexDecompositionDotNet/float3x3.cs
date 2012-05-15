@@ -172,18 +172,18 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float3x3 operator *(float3x3 a, float3x3 b)
         {
-            return new float3x3(a.x*b, a.y*b, a.z*b);
+            return new float3x3(a.x * b, a.y * b, a.z * b);
         }
 
         public static float3x3 operator *(float3x3 a, float s)
         {
-            return new float3x3(a.x*s, a.y*s, a.z*s);
+            return new float3x3(a.x * s, a.y * s, a.z * s);
         }
 
         public static float3x3 operator /(float3x3 a, float s)
         {
-            float t = 1f/s;
-            return new float3x3(a.x*t, a.y*t, a.z*t);
+            float t = 1f / s;
+            return new float3x3(a.x * t, a.y * t, a.z * t);
         }
 
         public static float3x3 operator +(float3x3 a, float3x3 b)
@@ -198,8 +198,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float Determinant(float3x3 m)
         {
-            return m.x.x*m.y.y*m.z.z + m.y.x*m.z.y*m.x.z + m.z.x*m.x.y*m.y.z - m.x.x*m.z.y*m.y.z - m.y.x*m.x.y*m.z.z -
-                   m.z.x*m.y.y*m.x.z;
+            return m.x.x * m.y.y * m.z.z + m.y.x * m.z.y * m.x.z + m.z.x * m.x.y * m.y.z - m.x.x * m.z.y * m.y.z - m.y.x * m.x.y * m.z.z -
+                   m.z.x * m.y.y * m.x.z;
         }
 
         public static float3x3 Inverse(float3x3 a)
@@ -211,13 +211,13 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    int i1 = (i + 1)%3;
-                    int i2 = (i + 2)%3;
-                    int j1 = (j + 1)%3;
-                    int j2 = (j + 2)%3;
+                    int i1 = (i + 1) % 3;
+                    int i2 = (i + 2) % 3;
+                    int j1 = (j + 1) % 3;
+                    int j2 = (j + 2) % 3;
 
                     // reverse indexs i&j to take transpose
-                    b[i, j] = (a[i1][j1]*a[i2][j2] - a[i1][j2]*a[i2][j1])/d;
+                    b[i, j] = (a[i1][j1] * a[i2][j2] - a[i1][j2] * a[i2][j1]) / d;
                 }
             }
             return b;

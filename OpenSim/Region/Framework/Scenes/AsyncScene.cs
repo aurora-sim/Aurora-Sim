@@ -41,7 +41,7 @@ namespace OpenSim.Region.Framework.Scenes
     {
         #region Fields
 
-        private readonly List<ISceneEntity> m_PhysicsReturns = new List<ISceneEntity> ();
+        private readonly List<ISceneEntity> m_PhysicsReturns = new List<ISceneEntity>();
         public List<ISceneEntity> PhysicsReturns
         {
             get { return m_PhysicsReturns; }
@@ -64,7 +64,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         protected ThreadMonitor monitor = new ThreadMonitor();
         protected ThreadMonitor physmonitor = new ThreadMonitor();
-            
+
         protected AuroraEventManager m_AuroraEventManager = null;
         protected EventManager m_eventManager;
         /// <value>
@@ -279,24 +279,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructors
 
-        public void Initialize (RegionInfo regionInfo)
+        public void Initialize(RegionInfo regionInfo)
         {
             m_regInfo = regionInfo;
         }
 
-        public void Initialize (RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers)
+        public void Initialize(RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers)
         {
-            Initialize (regionInfo);
+            Initialize(regionInfo);
 
             //Set up the clientServer
             m_clientServers = clientServers;
             foreach (IClientNetworkServer clientServer in clientServers)
             {
-                clientServer.AddScene (this);
+                clientServer.AddScene(this);
             }
 
-            m_sceneManager = RequestModuleInterface<SceneManager> ();
-            m_simDataStore = m_sceneManager.GetNewSimulationDataStore ();
+            m_sceneManager = RequestModuleInterface<SceneManager>();
+            m_simDataStore = m_sceneManager.GetNewSimulationDataStore();
 
             m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;
@@ -306,7 +306,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_permissions = new ScenePermissions(this);
 
             // Load region settings
-            m_regInfo.RegionSettings = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector> ().LoadRegionSettings (m_regInfo.RegionID);
+            m_regInfo.RegionSettings = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>().LoadRegionSettings(m_regInfo.RegionID);
 
             m_sceneGraph = new SceneGraph(this, m_regInfo) { Entities = new AsyncEntityManager() };
 
@@ -316,7 +316,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (aurorastartupConfig != null)
             {
                 //Region specific is still honored here, the RegionInfo checks for it, and if it is 0, it didn't set it
-                if(RegionInfo.ObjectCapacity == 0)
+                if (RegionInfo.ObjectCapacity == 0)
                     RegionInfo.ObjectCapacity = aurorastartupConfig.GetInt("ObjectCapacity", 80000);
             }
 
@@ -366,26 +366,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Close()
         {
-            MainConsole.Instance.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
+            MainConsole.Instance.InfoFormat("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
-            SimulationDataService.Shutdown ();
+            SimulationDataService.Shutdown();
 
             // Kick all ROOT agents with the message, 'The simulator is going down'
-            ForEachScenePresence (delegate (IScenePresence avatar)
+            ForEachScenePresence(delegate(IScenePresence avatar)
             {
                 if (!avatar.IsChildAgent)
                     avatar.ControllingClient.Kick("The simulator is going down.");
             });
 
             //Let things process and get sent for a bit
-            Thread.Sleep (1000);
+            Thread.Sleep(1000);
 
-            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule> ();
+            IEntityTransferModule transferModule = RequestModuleInterface<IEntityTransferModule>();
             if (transferModule != null)
             {
-                foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences ()))
+                foreach (IScenePresence avatar in new List<IScenePresence>(GetScenePresences()))
                 {
-                    transferModule.IncomingCloseAgent (this, avatar.UUID);
+                    transferModule.IncomingCloseAgent(this, avatar.UUID);
                 }
             }
             m_ShouldRunHeartbeat = false; //Stop the heartbeat
@@ -393,15 +393,15 @@ namespace OpenSim.Region.Framework.Scenes
             monitor.Stop();
 
             if (m_sceneGraph.PhysicsScene != null)
-                m_sceneGraph.PhysicsScene.Dispose ();
+                m_sceneGraph.PhysicsScene.Dispose();
 
             // Stop updating the scene objects and agents.
             shuttingdown = true;
 
-            m_sceneGraph.Close ();
+            m_sceneGraph.Close();
             foreach (IClientNetworkServer clientServer in m_clientServers)
             {
-                clientServer.Stop ();
+                clientServer.Stop();
             }
         }
 
@@ -419,7 +419,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (IClientNetworkServer clientServer in m_clientServers)
             {
-                clientServer.Start ();
+                clientServer.Start();
             }
 
             //Give it the heartbeat delegate with an infinite timeout
@@ -436,24 +436,24 @@ namespace OpenSim.Region.Framework.Scenes
         #region Scene Heartbeat Methods
 
         private bool m_lastPhysicsChange = false;
-        private bool PhysUpdate ()
+        private bool PhysUpdate()
         {
             IPhysicsFrameMonitor physicsFrameMonitor = (IPhysicsFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalPhysicsFrameTime);
             ITimeMonitor physicsFrameTimeMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.PhysicsUpdateFrameTime);
             IPhysicsMonitor monitor2 = RequestModuleInterface<IPhysicsMonitor>();
-            while(true)
+            while (true)
             {
-                if(!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
+                if (!ShouldRunHeartbeat) //If we arn't supposed to be running, kill ourselves
                     return false;
                 int maintc = Util.EnvironmentTickCount();
                 int BeginningFrameTime = maintc;
 
-                if(PhysicsReturns.Count != 0)
+                if (PhysicsReturns.Count != 0)
                 {
-                    lock(PhysicsReturns)
+                    lock (PhysicsReturns)
                     {
                         ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
-                        if(inventoryModule != null)
+                        if (inventoryModule != null)
                             inventoryModule.ReturnObjects(PhysicsReturns.ToArray(), UUID.Zero);
                         PhysicsReturns.Clear();
                     }
@@ -461,10 +461,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 int PhysicsUpdateTime = Util.EnvironmentTickCount();
 
-                if(m_frame % m_update_physics == 0)
+                if (m_frame % m_update_physics == 0)
                 {
                     TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
-                    if(!RegionInfo.RegionSettings.DisablePhysics && ApproxEquals((float)SinceLastFrame.TotalMilliseconds, 
+                    if (!RegionInfo.RegionSettings.DisablePhysics && ApproxEquals((float)SinceLastFrame.TotalMilliseconds,
                         m_updatetimespan, 3))
                     {
                         m_sceneGraph.UpdatePreparePhysics();
@@ -472,34 +472,34 @@ namespace OpenSim.Region.Framework.Scenes
                         m_lastphysupdate = DateTime.UtcNow;
                         int MonitorPhysicsUpdateTime = Util.EnvironmentTickCountSubtract(PhysicsUpdateTime);
 
-                        if(MonitorPhysicsUpdateTime != 0)
+                        if (MonitorPhysicsUpdateTime != 0)
                         {
-                            if(physicsFrameTimeMonitor != null)
+                            if (physicsFrameTimeMonitor != null)
                                 physicsFrameTimeMonitor.AddTime(MonitorPhysicsUpdateTime);
-                            if(monitor2 != null)
+                            if (monitor2 != null)
                                 monitor2.AddPhysicsStats(RegionInfo.RegionID, PhysicsScene);
-                            if(m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                            if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
                                 StartPhysicsScene();
                         }
-                        if(physicsFrameMonitor != null)
+                        if (physicsFrameMonitor != null)
                             physicsFrameMonitor.AddFPS(1);
                     }
-                    else if(m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
+                    else if (m_lastPhysicsChange != RegionInfo.RegionSettings.DisablePhysics)
                         StopPhysicsScene();
                     m_lastPhysicsChange = RegionInfo.RegionSettings.DisablePhysics;
                 }
 
                 //Get the time between beginning and end
                 maintc = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
-                if(maintc == 0)
+                if (maintc == 0)
                     continue;
                 int getSleepTime = GetHeartbeatSleepTime(maintc, true);
-                if(getSleepTime > 0)
+                if (getSleepTime > 0)
                     Thread.Sleep(getSleepTime);
             }
         }
 
-        private bool ApproxEquals (float a, float b, int approx)
+        private bool ApproxEquals(float a, float b, int approx)
         {
             return (a - b + approx) > 0;
         }
@@ -513,7 +513,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool Update()
         {
             ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SimFrameStats);
-            ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule> ().GetMonitor (RegionInfo.RegionID.ToString (), MonitorModuleHelper.TotalFrameTime);
+            ITotalFrameTimeMonitor totalFrameMonitor = (ITotalFrameTimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.TotalFrameTime);
             ISetMonitor lastFrameMonitor = (ISetMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.LastCompletedFrameAt);
             ITimeMonitor otherFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.OtherFrameTime);
             ITimeMonitor sleepFrameMonitor = (ITimeMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor(RegionInfo.RegionID.ToString(), MonitorModuleHelper.SleepFrameTime);
@@ -530,35 +530,35 @@ namespace OpenSim.Region.Framework.Scenes
                 try
                 {
                     int OtherFrameTime = Util.EnvironmentTickCount();
-                    if(m_frame % m_update_coarse_locations == 0)
+                    if (m_frame % m_update_coarse_locations == 0)
                     {
                         List<Vector3> coarseLocations;
                         List<UUID> avatarUUIDs;
-                        if(SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
+                        if (SceneGraph.GetCoarseLocations(out coarseLocations, out avatarUUIDs, 60))
                         {
                             // Send coarse locations to clients 
-                            foreach(IScenePresence presence in GetScenePresences())
+                            foreach (IScenePresence presence in GetScenePresences())
                             {
                                 presence.SendCoarseLocations(coarseLocations, avatarUUIDs);
                             }
                         }
                     }
-                    
-                    if(m_frame % m_update_entities == 0)
+
+                    if (m_frame % m_update_entities == 0)
                         m_sceneGraph.UpdateEntities();
 
                     BlankHandler[] events;
-                    lock(m_events)
+                    lock (m_events)
                     {
                         events = new BlankHandler[m_events.Count];
                         m_events.CopyTo(events);
                         m_events.Clear();
                     }
-                    foreach(BlankHandler h in events)
+                    foreach (BlankHandler h in events)
                         try { h(); }
                         catch { }
 
-                    if(m_frame % m_update_events == 0)
+                    if (m_frame % m_update_events == 0)
                         m_sceneGraph.PhysicsScene.UpdatesLoop();
 
                     if (m_frame % m_update_events == 0)
@@ -568,7 +568,7 @@ namespace OpenSim.Region.Framework.Scenes
                     int MonitorOtherFrameTime = Util.EnvironmentTickCountSubtract(OtherFrameTime);
                     int MonitorLastCompletedFrame = Util.EnvironmentTickCount();
 
-                    if(simFrameMonitor != null)
+                    if (simFrameMonitor != null)
                     {
                         simFrameMonitor.AddFPS(1);
                         lastFrameMonitor.SetValue(MonitorLastCompletedFrame);
@@ -590,15 +590,15 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 //Get the time between beginning and end
-                maintc = Util.EnvironmentTickCountSubtract (BeginningFrameTime);
+                maintc = Util.EnvironmentTickCountSubtract(BeginningFrameTime);
                 //Beginning + (time between beginning and end) = end
                 int MonitorEndFrameTime = BeginningFrameTime + maintc;
 
-                int getSleepTime = GetHeartbeatSleepTime (maintc, false);
+                int getSleepTime = GetHeartbeatSleepTime(maintc, false);
                 if (getSleepTime > 0)
-                    Thread.Sleep (getSleepTime);
+                    Thread.Sleep(getSleepTime);
 
-                if(sleepFrameMonitor != null)
+                if (sleepFrameMonitor != null)
                 {
                     sleepFrameMonitor.AddTime(maintc);
                     totalFrameMonitor.AddFrameTime(MonitorEndFrameTime);
@@ -609,51 +609,51 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Reload the last saved physics state to the Physics Scene
         /// </summary>
-        public void StartPhysicsScene ()
+        public void StartPhysicsScene()
         {
             //Save how all the prims are moving so that we can resume it when we turn it back on
-            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule>();
             if (physicsState != null)
-                physicsState.ResetToLastSavedState ();
+                physicsState.ResetToLastSavedState();
         }
 
         /// <summary>
         /// Takes a state save of the Physics Scene, then clears all velocity from it so that objects stop moving
         /// </summary>
-        public void StopPhysicsScene ()
+        public void StopPhysicsScene()
         {
             //Save how all the prims are moving so that we can resume it when we turn it back on
-            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule> ();
+            IPhysicsStateModule physicsState = RequestModuleInterface<IPhysicsStateModule>();
             if (physicsState != null)
-                physicsState.SavePhysicsState ();
+                physicsState.SavePhysicsState();
 
             //Then clear all the velocity and stuff on objects
             foreach (PhysicsObject o in PhysicsScene.ActiveObjects)
             {
-                o.ClearVelocity ();
-                o.RequestPhysicsterseUpdate ();
+                o.ClearVelocity();
+                o.RequestPhysicsterseUpdate();
             }
-            foreach (IScenePresence sp in GetScenePresences ())
+            foreach (IScenePresence sp in GetScenePresences())
             {
-                sp.PhysicsActor.ForceSetVelocity (Vector3.Zero);
-                sp.SendTerseUpdateToAllClients ();
+                sp.PhysicsActor.ForceSetVelocity(Vector3.Zero);
+                sp.SendTerseUpdateToAllClients();
             }
         }
 
         private readonly AveragingClass m_heartbeatList = new AveragingClass(50);
         private readonly AveragingClass m_physheartbeatList = new AveragingClass(50);
-        private int GetHeartbeatSleepTime (int timeBeatTook, bool phys)
+        private int GetHeartbeatSleepTime(int timeBeatTook, bool phys)
         {
-            if(phys)
+            if (phys)
             {
                 //Add it to the list of the last 50 heartbeats
-                if(timeBeatTook != 0)
+                if (timeBeatTook != 0)
                     m_physheartbeatList.Add(timeBeatTook);
                 int avgHeartBeat = (int)m_physheartbeatList.GetAverage();
 
                 //The heartbeat sleep time if time dilation is 1
                 float normalHeartBeatSleepTime = m_physicstimespan;
-                if(avgHeartBeat > normalHeartBeatSleepTime)//Fudge a bit
+                if (avgHeartBeat > normalHeartBeatSleepTime)//Fudge a bit
                     return 0;//It doesn't get any sleep
                 int newAvgSleepTime = (int)(normalHeartBeatSleepTime - avgHeartBeat);
                 return newAvgSleepTime;//Fudge a bit
@@ -666,7 +666,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 //The heartbeat sleep time if time dilation is 1
                 int normalHeartBeatSleepTime = (int)m_updatetimespan;
-                if(avgHeartBeat > normalHeartBeatSleepTime)//Fudge a bit
+                if (avgHeartBeat > normalHeartBeatSleepTime)//Fudge a bit
                     return 0;//It doesn't get any sleep
                 int newAvgSleepTime = normalHeartBeatSleepTime - avgHeartBeat;
                 //Console.WriteLine (newAvgSleepTime);
@@ -685,71 +685,71 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="client"></param>
         /// <param name="completed"></param>
-        public void AddNewClient (IClientAPI client, BlankHandler completed)
+        public void AddNewClient(IClientAPI client, BlankHandler completed)
         {
-            lock(m_events)
+            lock (m_events)
                 m_events.Add(delegate
                                  {
-                    try
-                    {
-                        System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
-                        AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
+                                     try
+                                     {
+                                         System.Net.IPEndPoint ep = (System.Net.IPEndPoint)client.GetClientEP();
+                                         AgentCircuitData aCircuit = AuthenticateHandler.AuthenticateSession(client.SessionId, client.AgentId, client.CircuitCode, ep);
 
-                        if(aCircuit == null) // no good, didn't pass NewUserConnection successfully
-                        {
-                            completed();
-                            return;
-                        }
+                                         if (aCircuit == null) // no good, didn't pass NewUserConnection successfully
+                                         {
+                                             completed();
+                                             return;
+                                         }
 
-                        m_clientManager.Add(client);
+                                         m_clientManager.Add(client);
 
-                        //Create the scenepresence
-                        IScenePresence sp = CreateAndAddChildScenePresence(client);
-                        sp.IsChildAgent = aCircuit.child;
-                        sp.RootAgentHandle = aCircuit.roothandle;
-                        sp.DrawDistance = aCircuit.DrawDistance;
+                                         //Create the scenepresence
+                                         IScenePresence sp = CreateAndAddChildScenePresence(client);
+                                         sp.IsChildAgent = aCircuit.child;
+                                         sp.RootAgentHandle = aCircuit.roothandle;
+                                         sp.DrawDistance = aCircuit.DrawDistance;
 
-                        //Trigger events
-                        m_eventManager.TriggerOnNewPresence(sp);
+                                         //Trigger events
+                                         m_eventManager.TriggerOnNewPresence(sp);
 
-                        //Make sure the appearanace is updated
-                        IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-                        if (appearance != null)
-                        {
-                            appearance.Appearance = aCircuit.Appearance ?? sp.Scene.AvatarService.GetAppearance(sp.UUID);
-                            if (appearance.Appearance == null)
-                            {
-                                MainConsole.Instance.Error("[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
-                                appearance.Appearance = new AvatarAppearance(sp.UUID);
-                            }
-                        }
+                                         //Make sure the appearanace is updated
+                                         IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
+                                         if (appearance != null)
+                                         {
+                                             appearance.Appearance = aCircuit.Appearance ?? sp.Scene.AvatarService.GetAppearance(sp.UUID);
+                                             if (appearance.Appearance == null)
+                                             {
+                                                 MainConsole.Instance.Error("[AsyncScene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
+                                                 appearance.Appearance = new AvatarAppearance(sp.UUID);
+                                             }
+                                         }
 
-                        if(GetScenePresence(client.AgentId) != null)
-                        {
-                            EventManager.TriggerOnNewClient(client);
-                            if((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0)
-                                EventManager.TriggerOnClientLogin(client);
-                        }
+                                         if (GetScenePresence(client.AgentId) != null)
+                                         {
+                                             EventManager.TriggerOnNewClient(client);
+                                             if ((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0)
+                                                 EventManager.TriggerOnClientLogin(client);
+                                         }
 
-                        //Add the client to login stats
-                        ILoginMonitor monitor3 = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
-                        if((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0 && monitor3 != null)
-                            monitor3.AddSuccessfulLogin();
+                                         //Add the client to login stats
+                                         ILoginMonitor monitor3 = (ILoginMonitor)RequestModuleInterface<IMonitorModule>().GetMonitor("", MonitorModuleHelper.LoginMonitor);
+                                         if ((aCircuit.teleportFlags & (uint)TeleportFlags.ViaLogin) != 0 && monitor3 != null)
+                                             monitor3.AddSuccessfulLogin();
 
-                        if(sp.IsChildAgent)//If we're a child, trigger this so that we get updated in the modules
-                            sp.TriggerSignificantClientMovement();
-                        completed();
-                    }
-                    catch(Exception ex)
-                    {
-                        MainConsole.Instance.Warn("[Scene]: Error in AddNewClient: " + ex);
-                    }
-                });
+                                         if (sp.IsChildAgent)//If we're a child, trigger this so that we get updated in the modules
+                                             sp.TriggerSignificantClientMovement();
+                                         completed();
+                                     }
+                                     catch (Exception ex)
+                                     {
+                                         MainConsole.Instance.Warn("[Scene]: Error in AddNewClient: " + ex);
+                                     }
+                                 });
         }
 
-        protected internal IScenePresence CreateAndAddChildScenePresence (IClientAPI client)
+        protected internal IScenePresence CreateAndAddChildScenePresence(IClientAPI client)
         {
-            AsyncScenePresence newAvatar = new AsyncScenePresence(client, this) {IsChildAgent = true};
+            AsyncScenePresence newAvatar = new AsyncScenePresence(client, this) { IsChildAgent = true };
 
             m_sceneGraph.AddScenePresence(newAvatar);
 
@@ -764,52 +764,52 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="presence"></param>
         /// <param name="forceClose"></param>
         /// <returns></returns>
-        public bool RemoveAgent (IScenePresence presence, bool forceClose)
+        public bool RemoveAgent(IScenePresence presence, bool forceClose)
         {
-            lock(m_events)
+            lock (m_events)
                 m_events.Add(delegate
                                  {
-                    presence.ControllingClient.Close(forceClose);
-                    foreach(IClientNetworkServer cns in m_clientServers)
-                        cns.RemoveClient(presence.ControllingClient);
+                                     presence.ControllingClient.Close(forceClose);
+                                     foreach (IClientNetworkServer cns in m_clientServers)
+                                         cns.RemoveClient(presence.ControllingClient);
 
-                    if(presence.ParentID != UUID.Zero)
-                        presence.StandUp();
+                                     if (presence.ParentID != UUID.Zero)
+                                         presence.StandUp();
 
-                    EventManager.TriggerOnClosingClient(presence.ControllingClient);
-                    EventManager.TriggerOnRemovePresence(presence);
+                                     EventManager.TriggerOnClosingClient(presence.ControllingClient);
+                                     EventManager.TriggerOnRemovePresence(presence);
 
-                    ForEachClient(
-                        delegate(IClientAPI client)
-                        {
-                            if(client.AgentId != presence.UUID)
-                            {
-                                //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
-                                try { client.SendKillObject(presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
-                                catch(NullReferenceException) { }
-                            }
-                        });
+                                     ForEachClient(
+                                         delegate(IClientAPI client)
+                                         {
+                                             if (client.AgentId != presence.UUID)
+                                             {
+                                                 //We can safely ignore null reference exceptions.  It means the avatar is dead and cleaned up anyway
+                                                 try { client.SendKillObject(presence.Scene.RegionInfo.RegionHandle, new IEntity[] { presence }); }
+                                                 catch (NullReferenceException) { }
+                                             }
+                                         });
 
-                    // Remove the avatar from the scene
-                    m_sceneGraph.RemoveScenePresence(presence);
-                    m_clientManager.Remove(presence.UUID);
+                                     // Remove the avatar from the scene
+                                     m_sceneGraph.RemoveScenePresence(presence);
+                                     m_clientManager.Remove(presence.UUID);
 
-                    try
-                    {
-                        presence.Close();
-                    }
-                    catch(Exception e)
-                    {
-                        MainConsole.Instance.Error("[SCENE] Scene.cs:RemoveClient:Presence.Close exception: " + e);
-                    }
+                                     try
+                                     {
+                                         presence.Close();
+                                     }
+                                     catch (Exception e)
+                                     {
+                                         MainConsole.Instance.Error("[SCENE] Scene.cs:RemoveClient:Presence.Close exception: " + e);
+                                     }
 
-                    //Remove any interfaces it might have stored
-                    presence.RemoveAllInterfaces();
+                                     //Remove any interfaces it might have stored
+                                     presence.RemoveAllInterfaces();
 
-                    AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
-                    //MainConsole.Instance.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
-                    //MainConsole.Instance.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
-                });
+                                     AuthenticateHandler.RemoveCircuit(presence.ControllingClient.CircuitCode);
+                                     //MainConsole.Instance.InfoFormat("[SCENE] Memory pre  GC {0}", System.GC.GetTotalMemory(false));
+                                     //MainConsole.Instance.InfoFormat("[SCENE] Memory post GC {0}", System.GC.GetTotalMemory(true));
+                                 });
             return true;
         }
 
@@ -822,37 +822,37 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="agentID"></param>
         /// <returns>null if the presence was not found</returns>
-        public IScenePresence GetScenePresence (UUID agentID)
+        public IScenePresence GetScenePresence(UUID agentID)
         {
-            return m_sceneGraph.GetScenePresence (agentID);
+            return m_sceneGraph.GetScenePresence(agentID);
         }
 
-        public IScenePresence GetScenePresence (uint agentID)
+        public IScenePresence GetScenePresence(uint agentID)
         {
-            return m_sceneGraph.GetScenePresence (agentID);
+            return m_sceneGraph.GetScenePresence(agentID);
         }
 
         /// <summary>
         /// Performs action on all scene presences.
         /// </summary>
         /// <param name="action"></param>
-        public void ForEachScenePresence (Action<IScenePresence> action)
+        public void ForEachScenePresence(Action<IScenePresence> action)
         {
-            lock(Events)
+            lock (Events)
             {
                 Events.Add(delegate
                                {
-                    if(m_sceneGraph != null)
-                    {
-                        m_sceneGraph.ForEachScenePresence(action);
-                    }
-                });
+                                   if (m_sceneGraph != null)
+                                   {
+                                       m_sceneGraph.ForEachScenePresence(action);
+                                   }
+                               });
             }
         }
 
-        public List<IScenePresence> GetScenePresences ()
+        public List<IScenePresence> GetScenePresences()
         {
-            return m_sceneGraph.GetScenePresences ();
+            return m_sceneGraph.GetScenePresences();
         }
 
         public int GetScenePresenceCount()
@@ -865,7 +865,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns></returns>
-        public ISceneChildEntity GetSceneObjectPart (uint localID)
+        public ISceneChildEntity GetSceneObjectPart(uint localID)
         {
             ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(localID, out entity);
@@ -876,16 +876,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// Get a prim via its UUID
         /// </summary>
         /// <returns></returns>
-        public ISceneChildEntity GetSceneObjectPart (UUID ObjectID)
+        public ISceneChildEntity GetSceneObjectPart(UUID ObjectID)
         {
             ISceneChildEntity entity;
             m_sceneGraph.TryGetPart(ObjectID, out entity);
             return entity as SceneObjectPart;
         }
 
-        public bool TryGetPart (UUID objectUUID, out ISceneChildEntity SensedObject)
+        public bool TryGetPart(UUID objectUUID, out ISceneChildEntity SensedObject)
         {
-            return m_sceneGraph.TryGetPart (objectUUID, out SensedObject);
+            return m_sceneGraph.TryGetPart(objectUUID, out SensedObject);
         }
 
         /// <summary>
@@ -893,27 +893,27 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="localID"></param>
         /// <returns>null if no scene object group containing that prim is found</returns>
-        public ISceneEntity GetGroupByPrim (uint localID)
+        public ISceneEntity GetGroupByPrim(uint localID)
         {
-            ISceneChildEntity part = GetSceneObjectPart (localID);
+            ISceneChildEntity part = GetSceneObjectPart(localID);
             if (part != null)
                 return part.ParentEntity;
             return null;
         }
 
-        public bool TryGetScenePresence (UUID avatarId, out IScenePresence avatar)
+        public bool TryGetScenePresence(UUID avatarId, out IScenePresence avatar)
         {
             return m_sceneGraph.TryGetScenePresence(avatarId, out avatar);
         }
 
-        public bool TryGetAvatarByName (string avatarName, out IScenePresence avatar)
+        public bool TryGetAvatarByName(string avatarName, out IScenePresence avatar)
         {
             return m_sceneGraph.TryGetAvatarByName(avatarName, out avatar);
         }
 
         public void ForEachClient(Action<IClientAPI> action)
         {
-            lock(Events)
+            lock (Events)
             {
 #if (!ISWIN)
                 Events.Add(delegate()
@@ -936,9 +936,9 @@ namespace OpenSim.Region.Framework.Scenes
             return m_clientManager.TryGetValue(remoteEndPoint, out client);
         }
 
-        public void ForEachSceneEntity (Action<ISceneEntity> action)
+        public void ForEachSceneEntity(Action<ISceneEntity> action)
         {
-            lock(Events)
+            lock (Events)
             {
 #if (!ISWIN)
                 Events.Add(delegate()
@@ -985,7 +985,7 @@ namespace OpenSim.Region.Framework.Scenes
                 StartupCallbacks.Remove(name);
                 if (data.Count != 0)
                 {
-                    List<string> NewData = new List<string>(data.Count + 2) {name, data.Count.ToString()}; //Fixed size to reduce memory
+                    List<string> NewData = new List<string>(data.Count + 2) { name, data.Count.ToString() }; //Fixed size to reduce memory
                     NewData.AddRange(data);
                     StartupData.AddRange(NewData);
                 }
@@ -993,7 +993,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     //All callbacks are done, trigger startup complete
                     EventManager.TriggerStartupComplete(this, StartupData);
-                    StartupComplete (this, StartupData);
+                    StartupComplete(this, StartupData);
                 }
             }
         }

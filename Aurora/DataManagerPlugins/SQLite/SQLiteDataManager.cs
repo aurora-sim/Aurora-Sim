@@ -45,17 +45,19 @@ namespace Aurora.DataManager.SQLite
 
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
 
-//        private static bool m_spammedmessage = false;
+        //        private static bool m_spammedmessage = false;
         private static bool m_copiedFile = false;
-        public SQLiteLoader ()
+        public SQLiteLoader()
         {
             if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
                     (Environment.OSVersion.Platform == PlatformID.Unix &&
                     Environment.OSVersion.Version.Major == 11 &&
-                    Environment.OSVersion.Version.Minor == 3)) {
-                throw new NotSupportedException ("Mac OSX currently does not support SQLite as a database option.");
+                    Environment.OSVersion.Version.Minor == 3))
+            {
+                throw new NotSupportedException("Mac OSX currently does not support SQLite as a database option.");
             }
-            try {
+            try
+            {
 
                 if (!m_copiedFile)
                 {
@@ -68,9 +70,9 @@ namespace Aurora.DataManager.SQLite
             }
             catch
             {
-//                if(!m_spammedmessage)
-//                    MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
-//                m_spammedmessage = true;
+                //                if(!m_spammedmessage)
+                //                    MainConsole.Instance.Output("[SQLite]: Failed to copy SQLite dll file, may have issues with SQLite! (Can be caused by running multiple instances in the same bin, if so, ignore this warning) " + ex.ToString(), log4net.Core.Level.Emergency);
+                //                m_spammedmessage = true;
             }
         }
 
@@ -107,7 +109,7 @@ namespace Aurora.DataManager.SQLite
             try
             {
                 var newConnection =
-                    (SQLiteConnection) (m_Connection).Clone();
+                    (SQLiteConnection)(m_Connection).Clone();
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
                 cmd.Connection = newConnection;
@@ -161,12 +163,12 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
-/*#if Experimental
-                var newConnection = m_Connection;
-#else*/
+                /*#if Experimental
+                                var newConnection = m_Connection;
+                #else*/
                 var newConnection =
-                    (SQLiteConnection) (m_Connection).Clone();
-//#endif
+                    (SQLiteConnection)(m_Connection).Clone();
+                //#endif
                 if (newConnection.State != ConnectionState.Open)
                     newConnection.Open();
                 var cmd = newConnection.CreateCommand();
@@ -190,12 +192,12 @@ namespace Aurora.DataManager.SQLite
             {
                 lock (m_Connection)
                 {
-/*#if Experimental
-                    var newConnection = m_Connection;
-#else*/
+                    /*#if Experimental
+                                        var newConnection = m_Connection;
+                    #else*/
                     var newConnection =
-                        (SQLiteConnection) (m_Connection).Clone();
-//#endif
+                        (SQLiteConnection)(m_Connection).Clone();
+                    //#endif
                     if (newConnection.State != ConnectionState.Open)
                         newConnection.Open();
                     cmd.Connection = newConnection;
@@ -358,7 +360,7 @@ namespace Aurora.DataManager.SQLite
                     for (i = 0; i < reader.FieldCount; i++)
                     {
                         Type r = reader[i].GetType();
-                        if (r == typeof (DBNull))
+                        if (r == typeof(DBNull))
                             AddValueToList(ref RetVal, reader.GetName(i), null);
                         else
                             AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
@@ -467,7 +469,7 @@ namespace Aurora.DataManager.SQLite
                 query += " union all select ";
             }
             query = query.Remove(query.Length - (" union all select ").Length);
-            
+
             cmd.CommandText = query;
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
@@ -519,7 +521,7 @@ namespace Aurora.DataManager.SQLite
             CloseReaderCommand(cmd);
             return true;
         }
-        
+
         public override bool Insert(string table, Dictionary<string, object> row)
         {
             return InsertOrReplace(table, row, true);
@@ -547,7 +549,7 @@ namespace Aurora.DataManager.SQLite
                 ExecuteNonQuery(cmd);
                 CloseReaderCommand(cmd);
             }
-                //Execute the update then...
+            //Execute the update then...
             catch (Exception)
             {
                 cmd = new SQLiteCommand();
@@ -688,7 +690,8 @@ namespace Aurora.DataManager.SQLite
                 columnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
 
-            var cmd = new SQLiteCommand {
+            var cmd = new SQLiteCommand
+            {
                 CommandText = string.Format("create table " + table + " ({0})", string.Join(", ", columnDefinition.ToArray()))
             };
             ExecuteNonQuery(cmd);
@@ -765,19 +768,22 @@ namespace Aurora.DataManager.SQLite
                 renamedTempTableColumnDefinition += column.Name + " " + GetColumnTypeStringSymbol(column.Type);
             }
 
-            var cmd = new SQLiteCommand {
+            var cmd = new SQLiteCommand
+            {
                 CommandText = "CREATE TABLE " + table + "__temp(" + renamedTempTableColumnDefinition + ");"
             };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            cmd = new SQLiteCommand {
+            cmd = new SQLiteCommand
+            {
                 CommandText = "INSERT INTO " + table + "__temp SELECT " + renamedTempTableColumn + " from " + table + ";"
             };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            cmd = new SQLiteCommand {
+            cmd = new SQLiteCommand
+            {
                 CommandText = "drop table " + table
             };
             ExecuteNonQuery(cmd);
@@ -804,11 +810,13 @@ namespace Aurora.DataManager.SQLite
                 }
                 newTableColumnDefinition.Add(column.Name + " " + GetColumnTypeStringSymbol(column.Type));
             }
-            if (!has_auto_increment && primary != null && primary.Fields.Length > 0){
+            if (!has_auto_increment && primary != null && primary.Fields.Length > 0)
+            {
                 newTableColumnDefinition.Add("PRIMARY KEY (" + string.Join(", ", primary.Fields) + ")");
             }
 
-            cmd = new SQLiteCommand {
+            cmd = new SQLiteCommand
+            {
                 CommandText = string.Format("create table " + table + " ({0}) ", string.Join(", ", newTableColumnDefinition.ToArray()))
             };
             ExecuteNonQuery(cmd);
@@ -861,13 +869,15 @@ namespace Aurora.DataManager.SQLite
                 InsertFromTempTableColumnDefinition += column.Name;
             }
 
-            cmd = new SQLiteCommand {
+            cmd = new SQLiteCommand
+            {
                 CommandText = "INSERT INTO " + table + " (" + InsertIntoFromTempTableColumnDefinition + ") SELECT " + InsertFromTempTableColumnDefinition + " from " + table + "__temp;"
             };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
 
-            cmd = new SQLiteCommand {
+            cmd = new SQLiteCommand
+            {
                 CommandText = "drop table " + table + "__temp"
             };
             ExecuteNonQuery(cmd);
@@ -1070,7 +1080,7 @@ namespace Aurora.DataManager.SQLite
             Dictionary<string, IndexDefinition> defs = new Dictionary<string, IndexDefinition>();
             IndexDefinition primary = new IndexDefinition
             {
-                Fields = new string[]{},
+                Fields = new string[] { },
                 Type = IndexType.Primary
             };
 
@@ -1146,7 +1156,7 @@ namespace Aurora.DataManager.SQLite
                     }
                     if (isPrimary)
                     {
-//                        MainConsole.Instance.Warn("[" + Identifier + "]: Primary Key found (" + string.Join(", ", defs[index.Key].Fields) + ")");
+                        //                        MainConsole.Instance.Warn("[" + Identifier + "]: Primary Key found (" + string.Join(", ", defs[index.Key].Fields) + ")");
                         defs[index.Key].Type = IndexType.Primary;
                         checkForPrimary = false;
                     }
@@ -1168,7 +1178,7 @@ namespace Aurora.DataManager.SQLite
 
         public override void DropTable(string tableName)
         {
-            var cmd = new SQLiteCommand {CommandText = string.Format("drop table {0}", tableName)};
+            var cmd = new SQLiteCommand { CommandText = string.Format("drop table {0}", tableName) };
             ExecuteNonQuery(cmd);
             CloseReaderCommand(cmd);
         }

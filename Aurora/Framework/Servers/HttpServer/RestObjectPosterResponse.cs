@@ -41,8 +41,8 @@ namespace Aurora.Framework.Servers.HttpServer
     /// </summary>
     public class RestObjectPosterResponse<TResponse> where TResponse : class
     {
-//        private static readonly log4net.ILog MainConsole.Instance
-//            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly log4net.ILog MainConsole.Instance
+        //            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public ReturnResponse<TResponse> ResponseCallback;
 
@@ -53,7 +53,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void BeginPostObject<TRequest>(string verb, string requestUrl, TRequest obj)
         {
-            Type type = typeof (TRequest);
+            Type type = typeof(TRequest);
 
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
@@ -62,7 +62,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
+            XmlWriterSettings settings = new XmlWriterSettings { Encoding = Encoding.UTF8 };
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -71,7 +71,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 writer.Flush();
             }
 
-            int length = (int) buffer.Length;
+            int length = (int)buffer.Length;
             request.ContentLength = length;
 
             Stream requestStream = request.GetRequestStream();
@@ -83,20 +83,20 @@ namespace Aurora.Framework.Servers.HttpServer
 
         private void AsyncCallback(IAsyncResult result)
         {
-            WebRequest request = (WebRequest) result.AsyncState;
+            WebRequest request = (WebRequest)result.AsyncState;
             using (WebResponse resp = request.EndGetResponse(result))
             {
                 TResponse deserial;
-                XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
                 Stream stream = resp.GetResponseStream();
 
                 // This is currently a bad debug stanza since it gobbles us the response...
-//                StreamReader reader = new StreamReader(stream);
-//                MainConsole.Instance.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
+                //                StreamReader reader = new StreamReader(stream);
+                //                MainConsole.Instance.DebugFormat("[REST OBJECT POSTER RESPONSE]: Received {0}", reader.ReadToEnd());
 
                 if (stream != null)
                 {
-                    deserial = (TResponse) deserializer.Deserialize(stream);
+                    deserial = (TResponse)deserializer.Deserialize(stream);
 
                     if (deserial != null && ResponseCallback != null)
                     {

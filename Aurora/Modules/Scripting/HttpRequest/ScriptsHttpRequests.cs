@@ -141,22 +141,22 @@ namespace Aurora.Modules.Scripting
                 {
                     switch (Int32.Parse(parms[i]))
                     {
-                        case (int) HttpRequestConstants.HTTP_METHOD:
+                        case (int)HttpRequestConstants.HTTP_METHOD:
 
                             htc.HttpMethod = parms[i + 1];
                             break;
 
-                        case (int) HttpRequestConstants.HTTP_MIMETYPE:
+                        case (int)HttpRequestConstants.HTTP_MIMETYPE:
 
                             htc.HttpMIMEType = parms[i + 1];
                             break;
 
-                        case (int) HttpRequestConstants.HTTP_BODY_MAXLENGTH:
+                        case (int)HttpRequestConstants.HTTP_BODY_MAXLENGTH:
 
                             BODY_MAXLENGTH = int.Parse(parms[i + 1]);
                             break;
 
-                        case (int) HttpRequestConstants.HTTP_VERIFY_CERT:
+                        case (int)HttpRequestConstants.HTTP_VERIFY_CERT:
 
                             htc.HttpVerifyCert = (int.Parse(parms[i + 1]) != 0);
                             break;
@@ -176,7 +176,7 @@ namespace Aurora.Modules.Scripting
             if (r.Number++ > MaxNumberOfHTTPRequestsPerSecond)
             {
                 ShouldProcess = false; //Too many for this prim, return status 499
-                htc.Status = (int) OSHttpStatusCode.ClientErrorJoker;
+                htc.Status = (int)OSHttpStatusCode.ClientErrorJoker;
                 htc.Finished = true;
             }
 
@@ -198,7 +198,7 @@ namespace Aurora.Modules.Scripting
                 else
                 {
                     m_reqID2itemID.Add(reqID, itemID);
-                    m_pendingRequests.Add(itemID, new List<HttpRequestClass> {htc});
+                    m_pendingRequests.Add(itemID, new List<HttpRequestClass> { htc });
                 }
             }
 
@@ -253,7 +253,7 @@ namespace Aurora.Modules.Scripting
 
         public void RemoveCompletedRequest(IServiceRequest reqid)
         {
-            HttpRequestClass req = (HttpRequestClass) reqid;
+            HttpRequestClass req = (HttpRequestClass)reqid;
             lock (HttpListLock)
             {
                 List<HttpRequestClass> tmpReqs;
@@ -325,13 +325,13 @@ namespace Aurora.Modules.Scripting
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            HttpWebRequest Request = (HttpWebRequest) sender;
+            HttpWebRequest Request = (HttpWebRequest)sender;
 
             if (Request.Headers.Get("NoVerifyCert") != null)
             {
                 return true;
             }
-            if ((((int) sslPolicyErrors) & ~4) != 0)
+            if ((((int)sslPolicyErrors) & ~4) != 0)
                 return false;
 #pragma warning disable 618
             if (ServicePointManager.CertificatePolicy != null)
@@ -406,8 +406,7 @@ namespace Aurora.Modules.Scripting
 
         public void Process()
         {
-            httpThread = new Thread(SendRequest)
-                             {Name = "HttpRequestThread", Priority = ThreadPriority.Lowest, IsBackground = true};
+            httpThread = new Thread(SendRequest) { Name = "HttpRequestThread", Priority = ThreadPriority.Lowest, IsBackground = true };
             _finished = false;
             httpThread.Start();
         }
@@ -428,7 +427,7 @@ namespace Aurora.Modules.Scripting
 
             try
             {
-                Request = (HttpWebRequest) WebRequest.Create(Url);
+                Request = (HttpWebRequest)WebRequest.Create(Url);
 
                 Request.Method = HttpMethod;
                 Request.ContentType = HttpMIMEType;
@@ -437,13 +436,13 @@ namespace Aurora.Modules.Scripting
                 {
                     // Connection Group Name is probably not used so we hijack it to identify
                     // a desired security exception
-//                  Request.ConnectionGroupName="NoVerify";
+                    //                  Request.ConnectionGroupName="NoVerify";
                     Request.Headers.Add("NoVerifyCert", "true");
                 }
-//              else
-//              {
-//                  Request.ConnectionGroupName="Verify";
-//              }
+                //              else
+                //              {
+                //                  Request.ConnectionGroupName="Verify";
+                //              }
 
                 if (!string.IsNullOrEmpty(proxyurl))
                 {
@@ -480,7 +479,7 @@ namespace Aurora.Modules.Scripting
                 try
                 {
                     // execute the request
-                    response = (HttpWebResponse) Request.GetResponse();
+                    response = (HttpWebResponse)Request.GetResponse();
                 }
                 catch (WebException e)
                 {
@@ -517,7 +516,7 @@ namespace Aurora.Modules.Scripting
                 {
                     ResponseBody = ResponseBody.Remove(MaxLength);
                     //Add the metaData
-                    Metadata = new object[2] {0, MaxLength};
+                    Metadata = new object[2] { 0, MaxLength };
                 }
             }
             catch (Exception e)
@@ -534,7 +533,7 @@ namespace Aurora.Modules.Scripting
                     response.Close();
             }
 
-            Status = (int) OSHttpStatusCode.SuccessOk;
+            Status = (int)OSHttpStatusCode.SuccessOk;
             _finished = true;
         }
 

@@ -46,7 +46,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("KeySetting", ColumnTypes.String50),
                 ColDef("ValueSetting", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[2]{ "Token", "KeySetting" }, IndexType.Primary)
+                IndexDef(new string[2] { "Token", "KeySetting" }, IndexType.Primary)
             ));
 
             AddSchema("assetblob", ColDefs(
@@ -56,7 +56,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Data", ColumnTypes.LongBlob),
                 ColDef("Info", ColumnTypes.String512)
             ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
+                IndexDef(new string[2] { "AssetID", "OwnerID" }, IndexType.Primary)
             ));
 
             AddSchema("assettext", ColDefs(
@@ -66,7 +66,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Data", ColumnTypes.Text),
                 ColDef("Info", ColumnTypes.String512)
             ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID" }, IndexType.Primary)
+                IndexDef(new string[2] { "AssetID", "OwnerID" }, IndexType.Primary)
             ));
 
             AddSchema("assetmesh", ColDefs(
@@ -75,7 +75,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Data", ColumnTypes.LongBlob),
                 ColDef("Info", ColumnTypes.String512)
             ), IndexDefs(
-                IndexDef(new string[2]{ "AssetID", "OwnerID"}, IndexType.Primary)
+                IndexDef(new string[2] { "AssetID", "OwnerID" }, IndexType.Primary)
             ));
         }
 

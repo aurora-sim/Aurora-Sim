@@ -216,7 +216,7 @@ namespace Aurora.Modules.Entities.EntityCount
             //If the object changes physical status, we need to make sure to update the active objects count
             if (FunctionName == "ObjectChangedPhysicalStatus")
             {
-                OnObjectBeingAddedToScene((SceneObjectGroup) parameters);
+                OnObjectBeingAddedToScene((SceneObjectGroup)parameters);
             }
             return null;
         }

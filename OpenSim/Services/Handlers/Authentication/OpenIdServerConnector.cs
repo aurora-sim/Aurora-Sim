@@ -57,7 +57,7 @@ namespace OpenSim.Services
                 return;
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint) handlerConfig.GetInt("OpenIdHandlerPort"));
+                    (uint)handlerConfig.GetInt("OpenIdHandlerPort"));
 
             m_AuthenticationService = registry.RequestModuleInterface<IAuthenticationService>();
             m_UserAccountService = registry.RequestModuleInterface<IUserAccountService>();

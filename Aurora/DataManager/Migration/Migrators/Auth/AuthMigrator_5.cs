@@ -53,8 +53,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("passwordSalt", ColumnTypes.String1024),
                 ColDef("accountType", ColumnTypes.Char32)
             ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "accountType" }, IndexType.Primary),
-                IndexDef(new string[1]{ "passwordHash" }, IndexType.Index)
+                IndexDef(new string[2] { "UUID", "accountType" }, IndexType.Primary),
+                IndexDef(new string[1] { "passwordHash" }, IndexType.Index)
             ));
 
             RemoveSchema("tokens");

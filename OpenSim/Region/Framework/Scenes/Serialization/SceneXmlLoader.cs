@@ -46,7 +46,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
             if (fileName.StartsWith("http:") || File.Exists(fileName))
             {
-                XmlTextReader reader = new XmlTextReader(fileName) {WhitespaceHandling = WhitespaceHandling.None};
+                XmlTextReader reader = new XmlTextReader(fileName) { WhitespaceHandling = WhitespaceHandling.None };
                 doc.Load(reader);
                 reader.Close();
                 XmlNode rootNode = doc.FirstChild;
@@ -78,7 +78,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             int primCount = 0;
             stream.WriteLine("<scene>\n");
 
-            ISceneEntity[] entityList = scene.Entities.GetEntities ();
+            ISceneEntity[] entityList = scene.Entities.GetEntities();
             foreach (ISceneEntity ent in entityList)
             {
                 if (ent is SceneObjectGroup)
@@ -97,31 +97,30 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             return SceneObjectSerializer.ToXml2Format(grp);
         }
 
-        public static SceneObjectGroup DeserializeGroupFromXml2 (string xmlString, IScene scene)
+        public static SceneObjectGroup DeserializeGroupFromXml2(string xmlString, IScene scene)
         {
-            XmlDocument doc = new XmlDocument ();
+            XmlDocument doc = new XmlDocument();
 
-            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString))
-                                       {WhitespaceHandling = WhitespaceHandling.None};
-            doc.Load (reader);
-            reader.Close ();
+            XmlTextReader reader = new XmlTextReader(new StringReader(xmlString)) { WhitespaceHandling = WhitespaceHandling.None };
+            doc.Load(reader);
+            reader.Close();
             XmlNode rootNode = doc.FirstChild;
 
-            return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
+            return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
         }
 
-        public static SceneObjectGroup DeserializeGroupFromXml2 (byte[] xml, IScene scene)
+        public static SceneObjectGroup DeserializeGroupFromXml2(byte[] xml, IScene scene)
         {
-            XmlDocument doc = new XmlDocument ();
+            XmlDocument doc = new XmlDocument();
 
-            MemoryStream stream = new MemoryStream (xml);
-            XmlTextReader reader = new XmlTextReader(stream) {WhitespaceHandling = WhitespaceHandling.None};
-            doc.Load (reader);
-            reader.Close ();
-            stream.Close ();
+            MemoryStream stream = new MemoryStream(xml);
+            XmlTextReader reader = new XmlTextReader(stream) { WhitespaceHandling = WhitespaceHandling.None };
+            doc.Load(reader);
+            reader.Close();
+            stream.Close();
             XmlNode rootNode = doc.FirstChild;
 
-            return SceneObjectSerializer.FromXml2Format (rootNode.OuterXml, scene);
+            return SceneObjectSerializer.FromXml2Format(rootNode.OuterXml, scene);
         }
 
         /// <summary>
@@ -137,13 +136,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             doc.Load(reader);
             reader.Close();
             XmlNode rootNode = doc.FirstChild;
-            
+
 #if (!ISWIN)
             List<SceneObjectGroup> sceneObjects = new List<SceneObjectGroup>();
-            foreach(XmlNode aPrimNode in rootNode.ChildNodes)
+            foreach (XmlNode aPrimNode in rootNode.ChildNodes)
             {
                 SceneObjectGroup grp = CreatePrimFromXml2(scene, aPrimNode.OuterXml);
-                if(grp != null)
+                if (grp != null)
                     sceneObjects.Add(grp);
             }
 #else
@@ -156,7 +155,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             {
                 if (scene.SceneGraph.AddPrimToScene(sceneObject))
                 {
-                    sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                    sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     if (startScripts)
                     {
                         sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
@@ -179,23 +178,23 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 
         public static void SavePrimsToXml2(IScene scene, string fileName)
         {
-            ISceneEntity[] entityList = scene.Entities.GetEntities ();
+            ISceneEntity[] entityList = scene.Entities.GetEntities();
             SavePrimListToXml2(entityList, fileName);
         }
 
         public static void SavePrimsToXml2(IScene scene, TextWriter stream, Vector3 min, Vector3 max)
         {
-            ISceneEntity[] entityList = scene.Entities.GetEntities ();
+            ISceneEntity[] entityList = scene.Entities.GetEntities();
             SavePrimListToXml2(entityList, stream, min, max);
         }
-        
+
         public static void SaveNamedPrimsToXml2(IScene scene, string primName, string fileName)
         {
             //MainConsole.Instance.InfoFormat(
             //    "[SERIALISER]: Saving prims with name {0} in xml2 format for region {1} to {2}", 
             //    primName, scene.RegionInfo.RegionName, fileName);
 
-            ISceneEntity[] entityList = scene.Entities.GetEntities ();
+            ISceneEntity[] entityList = scene.Entities.GetEntities();
 
 #if (!ISWIN)
             List<ISceneEntity> primList = new List<ISceneEntity>();
@@ -217,7 +216,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
 #endif
         }
 
-        public static void SavePrimListToXml2 (ISceneEntity[] entityList, string fileName)
+        public static void SavePrimListToXml2(ISceneEntity[] entityList, string fileName)
         {
             FileStream file = new FileStream(fileName, FileMode.Create);
             try
@@ -238,7 +237,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
         }
 
-        public static void SavePrimListToXml2 (ISceneEntity[] entityList, TextWriter stream, Vector3 min, Vector3 max)
+        public static void SavePrimListToXml2(ISceneEntity[] entityList, TextWriter stream, Vector3 min, Vector3 max)
         {
             int primCount = 0;
             stream.WriteLine("<scene>\n");

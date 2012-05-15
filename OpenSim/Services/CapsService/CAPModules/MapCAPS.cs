@@ -101,12 +101,12 @@ namespace OpenSim.Services.CapsService
         public string MapLayerRequest(string request, string path, string param,
                                       OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            int bottom = (m_service.RegionY/Constants.RegionSize) - m_mapDistance;
-            int top = (m_service.RegionY/Constants.RegionSize) + m_mapDistance;
-            int left = (m_service.RegionX/Constants.RegionSize) - m_mapDistance;
-            int right = (m_service.RegionX/Constants.RegionSize) + m_mapDistance;
+            int bottom = (m_service.RegionY / Constants.RegionSize) - m_mapDistance;
+            int top = (m_service.RegionY / Constants.RegionSize) + m_mapDistance;
+            int left = (m_service.RegionX / Constants.RegionSize) - m_mapDistance;
+            int right = (m_service.RegionX / Constants.RegionSize) + m_mapDistance;
 
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             int flags = map["Flags"].AsInteger();
 
@@ -122,10 +122,10 @@ namespace OpenSim.Services.CapsService
                 if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
                     List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
-                                                                            left*Constants.RegionSize,
-                                                                            right*Constants.RegionSize,
-                                                                            bottom*Constants.RegionSize,
-                                                                            top*Constants.RegionSize);
+                                                                            left * Constants.RegionSize,
+                                                                            right * Constants.RegionSize,
+                                                                            bottom * Constants.RegionSize,
+                                                                            top * Constants.RegionSize);
                     foreach (GridRegion r in regions)
                     {
                         m_mapLayer.Add(MapBlockFromGridRegion(r, flags));
@@ -147,7 +147,7 @@ namespace OpenSim.Services.CapsService
             MapBlockData block = new MapBlockData();
             if (r == null)
             {
-                block.Access = (byte) SimAccess.Down;
+                block.Access = (byte)SimAccess.Down;
                 block.MapImageID = UUID.Zero;
                 return block;
             }
@@ -159,10 +159,10 @@ namespace OpenSim.Services.CapsService
             if ((flag & 0xffff) == 2)
                 block.MapImageID = r.ParcelMapImage;
             block.Name = r.RegionName;
-            block.X = (ushort) (r.RegionLocX/Constants.RegionSize);
-            block.Y = (ushort) (r.RegionLocY/Constants.RegionSize);
-            block.SizeX = (ushort) (r.RegionSizeX);
-            block.SizeY = (ushort) (r.RegionSizeY);
+            block.X = (ushort)(r.RegionLocX / Constants.RegionSize);
+            block.Y = (ushort)(r.RegionLocY / Constants.RegionSize);
+            block.SizeX = (ushort)(r.RegionSizeX);
+            block.SizeY = (ushort)(r.RegionSizeY);
             return block;
         }
 

@@ -1361,7 +1361,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                                             _parent_scene.meshSculptLOD, true);
 
                     //Tell things above if they want to cache it or something
-                    if(_mesh != null)
+                    if (_mesh != null)
                         _parent_entity.ParentEntity.GeneratedMesh(_parent_entity, _mesh);
                     // createmesh returns null when it's a shape that isn't a cube.
                     // MainConsole.Instance.Debug(m_localID);

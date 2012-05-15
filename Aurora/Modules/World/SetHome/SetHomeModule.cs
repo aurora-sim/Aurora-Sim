@@ -157,7 +157,7 @@ namespace Aurora.Modules.SetHome
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
 
-            OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
+            OSDMap osd = new OSDMap { { "ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL()) } };
             string response = OSDParser.SerializeLLSDXmlString(osd);
             responsedata["str_response_string"] = response;
             return responsedata;
@@ -165,7 +165,7 @@ namespace Aurora.Modules.SetHome
 
         private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID agentID)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();
@@ -179,7 +179,7 @@ namespace Aurora.Modules.SetHome
                     TaskInventoryItem item = part.Inventory.GetInventoryItem(NotecardID);
                     if (m_scene.Permissions.CanCopyObjectInventory(NotecardID, ObjectID, agentID))
                     {
-                        notecardItem = new InventoryItemBase(NotecardID, agentID) {AssetID = item.AssetID};
+                        notecardItem = new InventoryItemBase(NotecardID, agentID) { AssetID = item.AssetID };
                     }
                 }
             }
@@ -264,7 +264,7 @@ namespace Aurora.Modules.SetHome
                 if (scene.Permissions.CanSetHome(SP.UUID))
                 {
                     IAvatarAppearanceModule appearance = SP.RequestModuleInterface<IAvatarAppearanceModule>();
-                    position.Z += appearance.Appearance.AvatarHeight/2;
+                    position.Z += appearance.Appearance.AvatarHeight / 2;
                     IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                     if (agentInfoService != null &&
                         agentInfoService.SetHomePosition(remoteClient.AgentId.ToString(), scene.RegionInfo.RegionID,

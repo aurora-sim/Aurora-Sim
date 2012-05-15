@@ -76,9 +76,9 @@ namespace Aurora.DataManager
                  ColDef("f_invalid", ColumnTypes.Integer11),
                  ColDef("f_off_circuit", ColumnTypes.Integer11),
                  ColDef("f_resent", ColumnTypes.Integer11),
-                 ColDef("f_send_packet", ColumnTypes.Integer11)), 
+                 ColDef("f_send_packet", ColumnTypes.Integer11)),
                 IndexDefs(
-                 IndexDef(new string[1]{ "session_id" }, IndexType.Primary)));
+                 IndexDef(new string[1] { "session_id" }, IndexType.Primary)));
         }
 
         protected override void DoCreateDefaults(IDataConnector genericData)

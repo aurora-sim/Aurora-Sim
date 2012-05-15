@@ -73,7 +73,7 @@ namespace OpenSim.Services
             UUID objectID;
             UUID regionID;
             string action;
-            if (!WebUtils.GetParams((string) request["uri"], out objectID, out regionID, out action) ||
+            if (!WebUtils.GetParams((string)request["uri"], out objectID, out regionID, out action) ||
                 m_allowForeignIncomingObjects)
             {
                 //MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: Invalid parameters for object message {0}", request["uri"]);
@@ -84,7 +84,7 @@ namespace OpenSim.Services
             }
 
             // Next, let's parse the verb
-            string method = (string) request["http-method"];
+            string method = (string)request["http-method"];
             if (method.Equals("POST"))
             {
                 DoObjectPost(request, responsedata, regionID);
@@ -95,11 +95,11 @@ namespace OpenSim.Services
                 DoObjectPut(request, responsedata, regionID);
                 return responsedata;
             }
-                //else if (method.Equals("DELETE"))
-                //{
-                //    DoObjectDelete(request, responsedata, agentID, action, regionHandle);
-                //    return responsedata;
-                //}
+            //else if (method.Equals("DELETE"))
+            //{
+            //    DoObjectDelete(request, responsedata, agentID, action, regionHandle);
+            //    return responsedata;
+            //}
             else
             {
                 MainConsole.Instance.InfoFormat("[OBJECT HANDLER]: method {0} not supported in object message", method);
@@ -112,7 +112,7 @@ namespace OpenSim.Services
 
         protected virtual void DoObjectPost(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;
@@ -132,8 +132,7 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion
-                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
+            GridRegion destination = new GridRegion { RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname };
 
             string sogXmlStr = "", extraStr = "";
             if (args.ContainsKey("sog") && args["sog"] != null)
@@ -186,7 +185,7 @@ namespace OpenSim.Services
 
         protected virtual void DoObjectPut(Hashtable request, Hashtable responsedata, UUID regionID)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = 400;
@@ -207,8 +206,7 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion
-                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
+            GridRegion destination = new GridRegion { RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname };
 
             UUID userID = UUID.Zero, itemID = UUID.Zero;
             if (args.ContainsKey("userid") && args["userid"] != null)

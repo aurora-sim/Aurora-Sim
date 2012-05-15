@@ -49,7 +49,8 @@ namespace OpenSim.CoreApplicationPlugins
             get { return "GitHubUpdater"; }
         }
 
-        private void ErrorMsg(string msg){
+        private void ErrorMsg(string msg)
+        {
             MainConsole.Instance.Error("[UpdaterPlugin:" + Name + "] " + msg);
         }
         private void InfoMsg(string msg)
@@ -75,7 +76,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     return;
                 }
-                
+
                 InfoMsg("Checking for updates...");
 
                 string WebSite = m_urlToCheckForUpdates;
@@ -152,21 +153,21 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        private bool Compare (string givenVersion, string CurrentVersion)
+        private bool Compare(string givenVersion, string CurrentVersion)
         {
-            string[] given = givenVersion.Split ('.');
-            string[] current = CurrentVersion.Split ('.');
-            for (int i = 0; i < (int)Math.Max (given.Length, current.Length); i++)
+            string[] given = givenVersion.Split('.');
+            string[] current = CurrentVersion.Split('.');
+            for (int i = 0; i < (int)Math.Max(given.Length, current.Length); i++)
             {
                 if (i == given.Length || i == current.Length)
                     break;
-                if (int.Parse (given[i]) > int.Parse (current[i]))
+                if (int.Parse(given[i]) > int.Parse(current[i]))
                     return true;
             }
             return false;
         }
 
-        public void ReloadConfiguration (IConfigSource config)
+        public void ReloadConfiguration(IConfigSource config)
         {
         }
 

@@ -225,7 +225,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if (serialized == "")
                     map = new OSDMap();
                 else
-                    map = (OSDMap) OSDParser.DeserializeJson(serialized);
+                    map = (OSDMap)OSDParser.DeserializeJson(serialized);
             }
             catch
             {
@@ -264,7 +264,7 @@ namespace OpenSim.Region.Framework.Scenes.Components
                 if (o != null && o.Type != OSDType.Unknown)
                     ComponentsBody.Add(component.Name, o);
             }
-            string result = OSDParser.SerializeJsonString(ComponentsBody,  true);
+            string result = OSDParser.SerializeJsonString(ComponentsBody, true);
             ComponentsBody.Clear();
 
             return result;

@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
         /// <returns></returns>
         public AbuseReport GetAbuseReport(int Number, string Password)
         {
-            return (!CheckPassword(Password)) ? null :GetAbuseReport(Number);
+            return (!CheckPassword(Password)) ? null : GetAbuseReport(Number);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace Aurora.Services.DataService
             }
             try
             {
-                for(int i=0;i<query.Count;i+=16)
+                for (int i = 0; i < query.Count; i += 16)
                 {
                     AbuseReport report = new AbuseReport
                     {

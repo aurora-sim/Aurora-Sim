@@ -121,7 +121,7 @@ namespace OpenSim.Services.MessagingService
                 IAsyncMessageRecievedService service = registry.RequestModuleInterface<IAsyncMessageRecievedService>();
                 if (service == null)
                     registry.RegisterModuleInterface<IAsyncMessageRecievedService>(this);
-                        //Register so that we have an internal message handler, but don't add the external handler
+                //Register so that we have an internal message handler, but don't add the external handler
                 return;
             }
             IConfig handlerConfig = config.Configs["Handlers"];

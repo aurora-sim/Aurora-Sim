@@ -42,7 +42,7 @@ namespace Aurora.Framework
             AuctionStart = map["AuctionStart"];
             Description = map["Description"];
             AuctionLength = map["AuctionLength"];
-            foreach(OSD o in (OSDArray)map["AuctionBids"])
+            foreach (OSD o in (OSDArray)map["AuctionBids"])
             {
                 AuctionBid bid = new AuctionBid();
                 bid.FromOSD((OSDMap)o);

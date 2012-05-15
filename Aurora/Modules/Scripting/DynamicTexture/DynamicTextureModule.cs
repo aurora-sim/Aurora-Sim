@@ -354,8 +354,7 @@ namespace Aurora.Modules.Scripting
                     // Create a new asset for user
                     asset = new AssetBase(UUID.Random(), "DynamicImage" + Util.RandomClass.Next(1, 10000),
                                           AssetType.Texture,
-                                          scene.RegionInfo.RegionID)
-                                {Data = assetData, Description = String.Format("URL image : {0}", Url)};
+                                          scene.RegionInfo.RegionID) { Data = assetData, Description = String.Format("URL image : {0}", Url) };
                     if ((Disp & DISP_TEMP) != 0) asset.Flags = AssetFlags.Temporary;
                     asset.ID = scene.AssetService.Store(asset);
                 }
@@ -386,7 +385,7 @@ namespace Aurora.Modules.Scripting
                     {
                         try
                         {
-                            Primitive.TextureEntryFace texface = tmptex.CreateFace((uint) Face);
+                            Primitive.TextureEntryFace texface = tmptex.CreateFace((uint)Face);
                             texface.TextureID = asset.ID;
                             tmptex.FaceTextures[Face] = texface;
                         }

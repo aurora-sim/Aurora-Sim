@@ -94,7 +94,7 @@ namespace Aurora.Services.DataService
                 if (query == null || query.Count == 0)
                     return null;
                 //Pull out the OSDmap
-                OSDMap profile = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+                OSDMap profile = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
                 UserProfile = new IUserProfileInfo();
                 UserProfile.FromOSD(profile);
@@ -152,10 +152,10 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            List<object> values = new List<object> {AgentID.ToString(), "LLProfile"};
+            List<object> values = new List<object> { AgentID.ToString(), "LLProfile" };
 
             //Create a new basic profile for them
-            IUserProfileInfo profile = new IUserProfileInfo {PrincipalID = AgentID};
+            IUserProfileInfo profile = new IUserProfileInfo { PrincipalID = AgentID };
 
             values.Add(OSDParser.SerializeLLSDXmlString(profile.ToOSD())); //Value which is a default Profile
 
@@ -193,7 +193,7 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<Classified>)remoteValue;
-            
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
 
@@ -203,7 +203,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < query.Count; i += 6)
             {
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 5]));
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(query[i + 5]));
                 classifieds.Add(classified);
             }
             return classifieds;
@@ -226,7 +226,7 @@ namespace Aurora.Services.DataService
                 return null;
             }
             Classified classified = new Classified();
-            classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[5]));
+            classified.FromOSD((OSDMap)OSDParser.DeserializeJson(query[5]));
             return classified;
         }
 
@@ -282,7 +282,7 @@ namespace Aurora.Services.DataService
             if (query.Count < 5)
                 return null;
             ProfilePickInfo pick = new ProfilePickInfo();
-            pick.FromOSD((OSDMap) OSDParser.DeserializeJson(query[4]));
+            pick.FromOSD((OSDMap)OSDParser.DeserializeJson(query[4]));
             return pick;
         }
 
@@ -292,7 +292,7 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<ProfilePickInfo>)remoteValue;
-            
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
 
@@ -302,7 +302,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < query.Count; i += 5)
             {
                 ProfilePickInfo pick = new ProfilePickInfo();
-                pick.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 4]));
+                pick.FromOSD((OSDMap)OSDParser.DeserializeJson(query[i + 4]));
                 picks.Add(pick);
             }
             return picks;

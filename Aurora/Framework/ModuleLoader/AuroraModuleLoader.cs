@@ -284,9 +284,9 @@ namespace Aurora.Framework
                                                 loadedTypes.Add(pluginType);
                                         }
                                     }
-                                    if (pluginType.GetInterface(typeof (T).Name, true) != null)
+                                    if (pluginType.GetInterface(typeof(T).Name, true) != null)
                                     {
-                                        modules.Add((T) Activator.CreateInstance(pluginType));
+                                        modules.Add((T)Activator.CreateInstance(pluginType));
                                     }
                                 }
                             }
@@ -319,7 +319,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName)
         {
-            string type = typeof (T).ToString();
+            string type = typeof(T).ToString();
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -381,7 +381,7 @@ namespace Aurora.Framework
         public static List<T> LoadPlugins<T>(string dllName)
         {
             List<T> plugins = new List<T>();
-            string type = typeof (T).ToString();
+            string type = typeof(T).ToString();
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -421,7 +421,7 @@ namespace Aurora.Framework
                     }
                 }
 #endif
-                
+
             }
             catch (ReflectionTypeLoadException e)
             {
@@ -442,7 +442,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, Object[] args) where T : class
         {
-            string[] parts = dllName.Split(new[] {':'});
+            string[] parts = dllName.Split(new[] { ':' });
 
             dllName = parts[0];
 
@@ -463,7 +463,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, string className, Object[] args) where T : class
         {
-            string interfaceName = typeof (T).ToString();
+            string interfaceName = typeof(T).ToString();
 
             try
             {
@@ -484,7 +484,7 @@ namespace Aurora.Framework
                             T plug = null;
                             try
                             {
-                                plug = (T) Activator.CreateInstance(pluginType,
+                                plug = (T)Activator.CreateInstance(pluginType,
                                                                     args);
                             }
                             catch (Exception e)

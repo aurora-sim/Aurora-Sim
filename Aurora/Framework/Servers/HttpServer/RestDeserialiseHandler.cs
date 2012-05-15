@@ -52,15 +52,15 @@ namespace Aurora.Framework.Servers.HttpServer
             TRequest deserial;
             using (XmlTextReader xmlReader = new XmlTextReader(request))
             {
-                XmlSerializer deserializer = new XmlSerializer(typeof (TRequest));
-                deserial = (TRequest) deserializer.Deserialize(xmlReader);
+                XmlSerializer deserializer = new XmlSerializer(typeof(TRequest));
+                deserial = (TRequest)deserializer.Deserialize(xmlReader);
             }
 
             TResponse response = m_method(deserial);
 
             using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer serializer = new XmlSerializer(typeof(TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }

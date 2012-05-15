@@ -87,7 +87,7 @@ namespace Aurora.Modules.Ban
             }
 
             string message;
-            if(!m_module.CheckUser(account.PrincipalID, ip,
+            if (!m_module.CheckUser(account.PrincipalID, ip,
                 version,
                 platform,
                 mac,
@@ -137,13 +137,13 @@ namespace Aurora.Modules.Ban
 
         #region Constructor
 
-        public BanCheck (IConfigSource source, IUserAccountService UserAccountService)
+        public BanCheck(IConfigSource source, IUserAccountService UserAccountService)
         {
             IConfig config = source.Configs["GrieferProtection"];
             if (config == null)
                 return;
 
-            m_enabled = config.GetBoolean ("Enabled", true);
+            m_enabled = config.GetBoolean("Enabled", true);
 
             if (!m_enabled)
                 return;
@@ -154,20 +154,20 @@ namespace Aurora.Modules.Ban
             m_allowedViewers = Util.ConvertToList(allowedViewers);
             m_useIncludeList = config.GetBoolean("UseAllowListInsteadOfBanList", false);
 
-            m_checkOnLogin = config.GetBoolean ("CheckForSimilaritiesOnLogin", m_checkOnLogin);
-            m_checkOnTimer = config.GetBoolean ("CheckForSimilaritiesOnTimer", m_checkOnTimer);
-            TimerMinutes = config.GetInt ("MinutesForTimerToCheck", TimerMinutes);
+            m_checkOnLogin = config.GetBoolean("CheckForSimilaritiesOnLogin", m_checkOnLogin);
+            m_checkOnTimer = config.GetBoolean("CheckForSimilaritiesOnTimer", m_checkOnTimer);
+            TimerMinutes = config.GetInt("MinutesForTimerToCheck", TimerMinutes);
 
             if (m_checkOnTimer)
             {
-                System.Timers.Timer timer = new System.Timers.Timer (TimerMinutes * 1000 * 60);
-                timer.Elapsed += new System.Timers.ElapsedEventHandler (CheckOnTimer);
-                timer.Start ();
+                System.Timers.Timer timer = new System.Timers.Timer(TimerMinutes * 1000 * 60);
+                timer.Elapsed += new System.Timers.ElapsedEventHandler(CheckOnTimer);
+                timer.Start();
             }
 
-            GrieferAllowLevel = (AllowLevel)Enum.Parse (typeof (AllowLevel), config.GetString ("GrieferAllowLevel", "AllowKnown"));
+            GrieferAllowLevel = (AllowLevel)Enum.Parse(typeof(AllowLevel), config.GetString("GrieferAllowLevel", "AllowKnown"));
 
-            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo> ();
+            presenceInfo = Aurora.DataManager.DataManager.RequestPlugin<IPresenceInfo>();
             m_accountService = UserAccountService;
 
             if (MainConsole.Instance != null)
@@ -205,7 +205,7 @@ namespace Aurora.Modules.Ban
         {
             PresenceInfo info = new PresenceInfo();
             info.AgentID = AgentID;
-            if(!string.IsNullOrEmpty(ip))
+            if (!string.IsNullOrEmpty(ip))
                 info.LastKnownIP = ip;
             if (!string.IsNullOrEmpty(version))
                 info.LastKnownViewer = version;
@@ -470,7 +470,7 @@ namespace Aurora.Modules.Ban
             if (GrieferAllowLevel == AllowLevel.AllowKnown)
                 return true; //Allow all
             else if (GrieferAllowLevel == AllowLevel.AllowCleanOnly)
-            { 
+            {
                 //Allow people with only clean flag or suspected alt
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
                     return true;
@@ -484,7 +484,7 @@ namespace Aurora.Modules.Ban
             {
                 //Block all alts of knowns, and suspected alts of knowns
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown || 
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
                     (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown)
                 {
                     message = "Not a Clean agent and have been denied access.";
@@ -564,7 +564,7 @@ namespace Aurora.Modules.Ban
                 foreach (string ip in iPBans)
                 {
                     IPAddress ipa;
-                    if(IPAddress.TryParse(ip, out ipa))
+                    if (IPAddress.TryParse(ip, out ipa))
                         IPBans.Add(ipa);
                 }
                 IPRangeBans = Util.ConvertToList(config.GetString("IPRangeBans", ""));

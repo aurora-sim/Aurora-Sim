@@ -57,9 +57,9 @@ namespace Aurora.Modules.Terrain.PaintBrushes
             if (duration < 0)
                 return;
 
-            int n = (int) (BrushSize + 0.5f);
-            int zx = (int) (rx + 0.5);
-            int zy = (int) (ry + 0.5);
+            int n = (int)(BrushSize + 0.5f);
+            int zx = (int)(rx + 0.5);
+            int zy = (int)(ry + 0.5);
 
             int dx;
             for (dx = -n; dx <= n; dx++)
@@ -77,12 +77,12 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                         // Calculate a sphere and add it to the heighmap
                         float z = 0;
                         if (duration < 4.0)
-                            z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength)*duration*0.25f;
+                            z = TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * duration * 0.25f;
 
                         if (z > 0.0)
                         {
-                            float s = strength*0.025f;
-                            map[x, y] = (map[x, y]*(1 - s)) + (m_module.TerrainRevertMap[x, y]*s);
+                            float s = strength * 0.025f;
+                            map[x, y] = (map[x, y] * (1 - s)) + (m_module.TerrainRevertMap[x, y] * s);
                         }
                     }
                 }

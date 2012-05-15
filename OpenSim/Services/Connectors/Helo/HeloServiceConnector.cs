@@ -14,7 +14,7 @@ namespace OpenSim.Services
 
         public virtual string Helo(string serverURI)
         {
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(serverURI + "/helo");
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(serverURI + "/helo");
 
             try
             {

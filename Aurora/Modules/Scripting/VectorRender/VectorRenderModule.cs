@@ -178,8 +178,8 @@ namespace Aurora.Modules.Scripting
             Color bgColour = Color.White; // Default background color
             char altDataDelim = ';';
 
-            char[] paramDelimiter = {','};
-            char[] nvpDelimiter = {':'};
+            char[] paramDelimiter = { ',' };
+            char[] nvpDelimiter = { ':' };
 
             extraParams = extraParams.Trim();
             extraParams = extraParams.ToLower();
@@ -258,7 +258,7 @@ namespace Aurora.Modules.Scripting
                                 alpha = temp;
                             }
                         }
-                            // Allow a bitmap w/o the alpha component to be created
+                        // Allow a bitmap w/o the alpha component to be created
                         else if (value.ToLower() == "false")
                         {
                             alpha = 256;
@@ -372,43 +372,43 @@ namespace Aurora.Modules.Scripting
             return parsed;
         }
 
-/*
-        private void CairoDraw(string data, System.Drawing.Graphics graph)
-        {
-            using (Win32Surface draw = new Win32Surface(graph.GetHdc()))
-            {
-                Context contex = new Context(draw);
-
-                contex.Antialias = Antialias.None;    //fastest method but low quality
-                contex.LineWidth = 7;
-                char[] lineDelimiter = { ';' };
-                char[] partsDelimiter = { ',' };
-                string[] lines = data.Split(lineDelimiter);
-
-                foreach (string line in lines)
+        /*
+                private void CairoDraw(string data, System.Drawing.Graphics graph)
                 {
-                    string nextLine = line.Trim();
+                    using (Win32Surface draw = new Win32Surface(graph.GetHdc()))
+                    {
+                        Context contex = new Context(draw);
 
-                    if (nextLine.StartsWith("MoveTO"))
-                    {
-                        float x = 0;
-                        float y = 0;
-                        GetParams(partsDelimiter, ref nextLine, ref x, ref y);
-                        contex.MoveTo(x, y);
+                        contex.Antialias = Antialias.None;    //fastest method but low quality
+                        contex.LineWidth = 7;
+                        char[] lineDelimiter = { ';' };
+                        char[] partsDelimiter = { ',' };
+                        string[] lines = data.Split(lineDelimiter);
+
+                        foreach (string line in lines)
+                        {
+                            string nextLine = line.Trim();
+
+                            if (nextLine.StartsWith("MoveTO"))
+                            {
+                                float x = 0;
+                                float y = 0;
+                                GetParams(partsDelimiter, ref nextLine, ref x, ref y);
+                                contex.MoveTo(x, y);
+                            }
+                            else if (nextLine.StartsWith("LineTo"))
+                            {
+                                float x = 0;
+                                float y = 0;
+                                GetParams(partsDelimiter, ref nextLine, ref x, ref y);
+                                contex.LineTo(x, y);
+                                contex.Stroke();
+                            }
+                        }
                     }
-                    else if (nextLine.StartsWith("LineTo"))
-                    {
-                        float x = 0;
-                        float y = 0;
-                        GetParams(partsDelimiter, ref nextLine, ref x, ref y);
-                        contex.LineTo(x, y);
-                        contex.Stroke();
-                    }
+                    graph.ReleaseHdc();
                 }
-            }
-            graph.ReleaseHdc();
-        }
-*/
+        */
 
         private void GDIDraw(string data, Graphics graph, char dataDelim)
         {
@@ -420,8 +420,8 @@ namespace Aurora.Modules.Scripting
             Font myFont = new Font(fontName, fontSize);
             SolidBrush myBrush = new SolidBrush(Color.Black);
 
-            char[] lineDelimiter = {dataDelim};
-            char[] partsDelimiter = {','};
+            char[] lineDelimiter = { dataDelim };
+            char[] partsDelimiter = { ',' };
             string[] lines = data.Split(lineDelimiter);
 
             foreach (string line in lines)
@@ -433,16 +433,16 @@ namespace Aurora.Modules.Scripting
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 6, ref x, ref y);
-                    startPoint.X = (int) x;
-                    startPoint.Y = (int) y;
+                    startPoint.X = (int)x;
+                    startPoint.Y = (int)y;
                 }
                 else if (nextLine.StartsWith("LineTo"))
                 {
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 6, ref x, ref y);
-                    endPoint.X = (int) x;
-                    endPoint.Y = (int) y;
+                    endPoint.X = (int)x;
+                    endPoint.Y = (int)y;
                     graph.DrawLine(drawPen, startPoint, endPoint);
                     startPoint.X = endPoint.X;
                     startPoint.Y = endPoint.Y;
@@ -459,8 +459,8 @@ namespace Aurora.Modules.Scripting
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 5, ref x, ref y);
-                    endPoint.X = (int) x;
-                    endPoint.Y = (int) y;
+                    endPoint.X = (int)x;
+                    endPoint.Y = (int)y;
                     Image image = ImageHttpRequest(nextLine);
                     if (image != null)
                     {
@@ -482,8 +482,8 @@ namespace Aurora.Modules.Scripting
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 9, ref x, ref y);
-                    endPoint.X = (int) x;
-                    endPoint.Y = (int) y;
+                    endPoint.X = (int)x;
+                    endPoint.Y = (int)y;
                     graph.DrawRectangle(drawPen, startPoint.X, startPoint.Y, endPoint.X, endPoint.Y);
                     startPoint.X += endPoint.X;
                     startPoint.Y += endPoint.Y;
@@ -493,8 +493,8 @@ namespace Aurora.Modules.Scripting
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 13, ref x, ref y);
-                    endPoint.X = (int) x;
-                    endPoint.Y = (int) y;
+                    endPoint.X = (int)x;
+                    endPoint.Y = (int)y;
                     graph.FillRectangle(myBrush, startPoint.X, startPoint.Y, endPoint.X, endPoint.Y);
                     startPoint.X += endPoint.X;
                     startPoint.Y += endPoint.Y;
@@ -516,8 +516,8 @@ namespace Aurora.Modules.Scripting
                     float x = 0;
                     float y = 0;
                     GetParams(partsDelimiter, ref nextLine, 7, ref x, ref y);
-                    endPoint.X = (int) x;
-                    endPoint.Y = (int) y;
+                    endPoint.X = (int)x;
+                    endPoint.Y = (int)y;
                     graph.DrawEllipse(drawPen, startPoint.X, startPoint.Y, endPoint.X, endPoint.Y);
                     startPoint.X += endPoint.X;
                     startPoint.Y += endPoint.Y;
@@ -671,9 +671,9 @@ namespace Aurora.Modules.Scripting
         {
             line = line.Remove(0, startLength);
             string[] parts = line.Split(partsDelimiter);
-            if (parts.Length > 1 && parts.Length%2 == 0)
+            if (parts.Length > 1 && parts.Length % 2 == 0)
             {
-                points = new PointF[parts.Length/2];
+                points = new PointF[parts.Length / 2];
                 for (int i = 0; i < parts.Length; i = i + 2)
                 {
                     string xVal = parts[i].Trim();
@@ -681,7 +681,7 @@ namespace Aurora.Modules.Scripting
                     float x = Convert.ToSingle(xVal, CultureInfo.InvariantCulture);
                     float y = Convert.ToSingle(yVal, CultureInfo.InvariantCulture);
                     PointF point = new PointF(x, y);
-                    points[i/2] = point;
+                    points[i / 2] = point;
                 }
             }
         }
@@ -691,9 +691,9 @@ namespace Aurora.Modules.Scripting
             try
             {
                 WebRequest request = WebRequest.Create(url);
-//Ckrinke: Comment out for now as 'str' is unused. Bring it back into play later when it is used.
-//Ckrinke            Stream str = null;
-                HttpWebResponse response = (HttpWebResponse) (request).GetResponse();
+                //Ckrinke: Comment out for now as 'str' is unused. Bring it back into play later when it is used.
+                //Ckrinke            Stream str = null;
+                HttpWebResponse response = (HttpWebResponse)(request).GetResponse();
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     Bitmap image = new Bitmap(response.GetResponseStream());

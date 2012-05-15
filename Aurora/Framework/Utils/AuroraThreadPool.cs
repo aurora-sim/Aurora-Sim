@@ -156,7 +156,7 @@ namespace Aurora.Framework
                                                 };
                             try
                             {
-                                thread.Start(new[] {i});
+                                thread.Start(new[] { i });
                                 Threads[i] = thread;
                                 Sleeping[i] = 0;
                                 nthreads++;

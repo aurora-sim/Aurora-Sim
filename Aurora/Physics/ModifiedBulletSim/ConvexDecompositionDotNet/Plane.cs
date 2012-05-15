@@ -53,8 +53,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             //   Transforms the plane to the space defined by the
             //   given position/orientation
-            float3 newNormal = Quaternion.Inverse(orientation)*normal;
-            float3 origin = Quaternion.Inverse(orientation)*(-normal*dist - position);
+            float3 newNormal = Quaternion.Inverse(orientation) * normal;
+            float3 origin = Quaternion.Inverse(orientation) * (-normal * dist - position);
 
             normal = newNormal;
             dist = -float3.dot(newNormal, origin);

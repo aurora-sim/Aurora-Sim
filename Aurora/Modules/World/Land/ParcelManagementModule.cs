@@ -109,7 +109,7 @@ namespace Aurora.Modules.Land
         private IScene m_scene;
 
         private int m_update_land = 10;
-                    //Check whether we need to rebuild the parcel prim count and other land related functions
+        //Check whether we need to rebuild the parcel prim count and other land related functions
 
         private bool m_usePrivateParcelAsBan = true;
 
@@ -149,11 +149,11 @@ namespace Aurora.Modules.Land
         {
             m_scene = scene;
 
-            m_landIDList = new int[m_scene.RegionInfo.RegionSizeX/4,m_scene.RegionInfo.RegionSizeY/4];
+            m_landIDList = new int[m_scene.RegionInfo.RegionSizeX / 4, m_scene.RegionInfo.RegionSizeY / 4];
 
             if (m_UpdateDirectoryOnTimer)
             {
-                m_UpdateDirectoryTimer.Interval = 1000*60*m_minutesBeforeTimer;
+                m_UpdateDirectoryTimer.Interval = 1000 * 60 * m_minutesBeforeTimer;
                 m_UpdateDirectoryTimer.Elapsed += UpdateDirectoryTimerElapsed;
                 m_UpdateDirectoryTimer.Start();
             }
@@ -296,7 +296,7 @@ namespace Aurora.Modules.Land
 
         private void EventManager_OnFrame()
         {
-            if (m_scene.Frame%m_update_land == 0)
+            if (m_scene.Frame % m_update_land == 0)
             {
                 //It's time, check the parts we have
                 CheckFrameEvents();
@@ -307,17 +307,17 @@ namespace Aurora.Modules.Land
         {
             if (FunctionName == "ObjectAddedFlag")
             {
-                object[] param = (object[]) parameters;
-                ISceneChildEntity child = (ISceneChildEntity) param[0];
-                PrimFlags flag = (PrimFlags) param[1];
+                object[] param = (object[])parameters;
+                ISceneChildEntity child = (ISceneChildEntity)param[0];
+                PrimFlags flag = (PrimFlags)param[1];
                 if (flag == PrimFlags.TemporaryOnRez)
                     m_entitiesInAutoReturnQueue.Add(child.ParentEntity);
             }
             else if (FunctionName == "ObjectRemovedFlag")
             {
-                object[] param = (object[]) parameters;
-                ISceneChildEntity child = (ISceneChildEntity) param[0];
-                PrimFlags flag = (PrimFlags) param[1];
+                object[] param = (object[])parameters;
+                ISceneChildEntity child = (ISceneChildEntity)param[0];
+                PrimFlags flag = (PrimFlags)param[1];
                 if (flag == PrimFlags.TemporaryOnRez)
                     m_entitiesInAutoReturnQueue.Remove(child.ParentEntity);
             }
@@ -345,7 +345,7 @@ namespace Aurora.Modules.Land
                                                          fromAgentID = UUID.Zero,
                                                          toAgentID = ret.Key,
                                                          imSessionID = transaction,
-                                                         timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                         timestamp = (uint)Util.UnixTimeSinceEpoch(),
                                                          fromAgentName = "Server",
                                                          dialog = 19,
                                                          fromGroup = false,
@@ -404,7 +404,7 @@ namespace Aurora.Modules.Land
                 {
                     entitiesToRemove.Add(entity);
                     //Temporary objects don't get a reason, they return quietly
-                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> {entity});
+                    AddReturns(entity.OwnerID, entity.Name, entity.AbsolutePosition, "", new List<ISceneEntity> { entity });
                 }
             }
 #else
@@ -450,7 +450,7 @@ namespace Aurora.Modules.Land
                 {
                     entities.Add(sog);
                 }
-                if(entities.Count > 0)
+                if (entities.Count > 0)
                     AddReturns(entities[0].OwnerID, entities[0].Name, entities[0].AbsolutePosition, "Auto Parcel Return",
                            entities);
             }
@@ -527,7 +527,7 @@ namespace Aurora.Modules.Land
             fullSimParcel.LandData.ClaimDate = Util.UnixTimeSinceEpoch();
             fullSimParcel.SetInfoID();
             fullSimParcel.LandData.Bitmap =
-                new byte[(m_scene.RegionInfo.RegionSizeX/4)*(m_scene.RegionInfo.RegionSizeY/4)/8];
+                new byte[(m_scene.RegionInfo.RegionSizeX / 4) * (m_scene.RegionInfo.RegionSizeY / 4) / 8];
             fullSimParcel = AddLandObject(fullSimParcel);
             ModifyLandBitmapSquare(0, 0,
                                    m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeY,
@@ -548,7 +548,7 @@ namespace Aurora.Modules.Land
             {
                 for (int y = -4; y <= 4; y += 4)
                 {
-                    ILandObject check = GetLandObject((int) (position.X + x), (int) (position.Y + y));
+                    ILandObject check = GetLandObject((int)(position.X + x), (int)(position.Y + y));
                     if (check != null)
                     {
                         if (!parcelsNear.Contains(check))
@@ -587,7 +587,7 @@ namespace Aurora.Modules.Land
 
         public ILandObject GetLandObject(float x, float y)
         {
-            return GetLandObject((int) x, (int) y);
+            return GetLandObject((int)x, (int)y);
         }
 
         public ILandObject GetLandObject(int x, int y)
@@ -609,7 +609,7 @@ namespace Aurora.Modules.Land
             {
                 try
                 {
-                    return m_landList[m_landIDList[x/4, y/4]];
+                    return m_landList[m_landIDList[x / 4, y / 4]];
                 }
                 catch (IndexOutOfRangeException)
                 {
@@ -712,7 +712,7 @@ namespace Aurora.Modules.Land
                             if (sp.CurrentParcelUUID == avatar.CurrentParcelUUID) //Send full updates for those in the sim
                             {
                                 if (avatar.CurrentParcel.LandData.Private || (oldParcel != null && oldParcel.LandData.Private))
-                                    //Either one, we gotta send an update
+                                //Either one, we gotta send an update
                                 {
                                     sp.SceneViewer.RemoveAvatarFromView(avatar);
                                     avatar.SceneViewer.RemoveAvatarFromView(sp);
@@ -724,8 +724,8 @@ namespace Aurora.Modules.Land
                             {
                                 if (sp.CurrentParcel.LandData.Private || avatar.CurrentParcel.LandData.Private)
                                 {
-                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {avatar});
-                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] {sp});
+                                    sp.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] { avatar });
+                                    avatar.ControllingClient.SendKillObject(sp.Scene.RegionInfo.RegionHandle, new IEntity[1] { sp });
                                     sp.SceneViewer.RemoveAvatarFromView(avatar);
                                     avatar.SceneViewer.RemoveAvatarFromView(sp);
                                 }
@@ -787,26 +787,30 @@ namespace Aurora.Modules.Land
             int multiple = 0;
             int result = 0;
             Vector3 spAbs = sp.AbsolutePosition;
-            foreach (ILandObject parcel in from parcel in AllParcels() let aamax = parcel.LandData.AABBMax let aamin = parcel.LandData.AABBMin where Math.Abs(aamax.X - spAbs.X) < 4 ||
-                                                                                                                                                     Math.Abs(aamax.Y - spAbs.Y) < 4 ||
-                                                                                                                                                     Math.Abs(aamin.X - spAbs.X) < 4 ||
-                                                                                                                                                     Math.Abs(aamin.Y - spAbs.Y) < 4 select parcel)
+            foreach (ILandObject parcel in from parcel in AllParcels()
+                                           let aamax = parcel.LandData.AABBMax
+                                           let aamin = parcel.LandData.AABBMin
+                                           where Math.Abs(aamax.X - spAbs.X) < 4 ||
+                                                 Math.Abs(aamax.Y - spAbs.Y) < 4 ||
+                                                 Math.Abs(aamin.X - spAbs.X) < 4 ||
+                                                 Math.Abs(aamin.Y - spAbs.Y) < 4
+                                           select parcel)
             {
                 //Do the & since we don't need to check again if we have already set the ban flag
-                if ((result & (int) ParcelPropertiesStatus.CollisionBanned) !=
-                    (int) ParcelPropertiesStatus.CollisionBanned &&
+                if ((result & (int)ParcelPropertiesStatus.CollisionBanned) !=
+                    (int)ParcelPropertiesStatus.CollisionBanned &&
                     parcel.IsBannedFromLand(sp.UUID))
                 {
                     multiple++;
-                    result |= (int) ParcelPropertiesStatus.CollisionBanned;
+                    result |= (int)ParcelPropertiesStatus.CollisionBanned;
                     continue; //Only send one
                 }
-                else if ((result & (int) ParcelPropertiesStatus.CollisionNotOnAccessList) !=
-                         (int) ParcelPropertiesStatus.CollisionNotOnAccessList &&
+                else if ((result & (int)ParcelPropertiesStatus.CollisionNotOnAccessList) !=
+                         (int)ParcelPropertiesStatus.CollisionNotOnAccessList &&
                          parcel.IsRestrictedFromLand(sp.UUID))
                 {
                     multiple++;
-                    result |= (int) ParcelPropertiesStatus.CollisionNotOnAccessList;
+                    result |= (int)ParcelPropertiesStatus.CollisionNotOnAccessList;
                     continue; //Only send one
                 }
             }
@@ -822,13 +826,13 @@ namespace Aurora.Modules.Land
 
             if (multiple == 0) //If there is no result, don't send anything
                 return;
-            ourLandObject.SendLandProperties(result, false, (int) dataResult, sp.ControllingClient);
+            ourLandObject.SendLandProperties(result, false, (int)dataResult, sp.ControllingClient);
         }
 
         private void CheckEnteringNewParcel(IScenePresence avatar)
         {
-            ILandObject over = GetLandObject((int) avatar.AbsolutePosition.X,
-                                             (int) avatar.AbsolutePosition.Y);
+            ILandObject over = GetLandObject((int)avatar.AbsolutePosition.X,
+                                             (int)avatar.AbsolutePosition.Y);
 
             CheckEnteringNewParcel(avatar, over);
         }
@@ -855,14 +859,14 @@ namespace Aurora.Modules.Land
             IScenePresence clientAvatar = m_scene.GetScenePresence(sp.UUID);
             if (clientAvatar != null)
             {
-                ILandObject over = GetLandObject((int) clientAvatar.AbsolutePosition.X,
-                                                 (int) clientAvatar.AbsolutePosition.Y);
+                ILandObject over = GetLandObject((int)clientAvatar.AbsolutePosition.X,
+                                                 (int)clientAvatar.AbsolutePosition.Y);
                 if (over != null)
                 {
                     if (!over.IsRestrictedFromLand(clientAvatar.UUID) &&
                         (!over.IsBannedFromLand(clientAvatar.UUID) ||
                          clientAvatar.AbsolutePosition.Z >= BAN_LINE_SAFETY_HEIGHT))
-                        //Allow for the flying over of ban lines
+                    //Allow for the flying over of ban lines
                     {
                         clientAvatar.LastKnownAllowedPosition =
                             new Vector3(clientAvatar.AbsolutePosition.X, clientAvatar.AbsolutePosition.Y,
@@ -885,7 +889,7 @@ namespace Aurora.Modules.Land
         //Like handleEventManagerOnSignificantClientMovement, but for objects for parcel incoming object permissions
         public void EventManagerOnSignificantObjectMovement(ISceneEntity group)
         {
-            ILandObject over = GetLandObject((int) group.AbsolutePosition.X, (int) group.AbsolutePosition.Y);
+            ILandObject over = GetLandObject((int)group.AbsolutePosition.X, (int)group.AbsolutePosition.Y);
             if (over != null)
             {
                 //Entered this new parcel
@@ -903,7 +907,7 @@ namespace Aurora.Modules.Land
                             bool wasTemporary = ((group.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0);
                             bool wasPhantom = ((group.RootChild.Flags & PrimFlags.Phantom) != 0);
                             bool wasVD = group.RootChild.VolumeDetectActive;
-                            bool needsPhysicalRebuild = ((SceneObjectPart) group.RootChild).UpdatePrimFlags(false,
+                            bool needsPhysicalRebuild = ((SceneObjectPart)group.RootChild).UpdatePrimFlags(false,
                                                                                                             wasTemporary,
                                                                                                             wasPhantom,
                                                                                                             wasVD, null);
@@ -967,9 +971,9 @@ namespace Aurora.Modules.Land
         {
             lock (m_landListLock)
             {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                     {
                         if (m_landIDList[x, y] == local_id)
                         {
@@ -1126,12 +1130,12 @@ namespace Aurora.Modules.Land
         public void ModifyLandBitmapSquare(int start_x, int start_y, int end_x, int end_y, int localIDToSet)
         {
             int x, y;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    if (x >= start_x/4 && x < end_x/4
-                        && y >= start_y/4 && y < end_y/4)
+                    if (x >= start_x / 4 && x < end_x / 4
+                        && y >= start_y / 4 && y < end_y / 4)
                     {
                         m_landIDList[x, y] = localIDToSet;
                     }
@@ -1143,12 +1147,12 @@ namespace Aurora.Modules.Land
         public void ModifyLandBitmapSquare(int start_x, int start_y, int end_x, int end_y, ILandObject landObject)
         {
             int x, y;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
-                    if (x >= start_x/4 && x < end_x/4
-                        && y >= start_y/4 && y < end_y/4)
+                    if (x >= start_x / 4 && x < end_x / 4
+                        && y >= start_y / 4 && y < end_y / 4)
                     {
                         m_landIDList[x, y] = landObject.LandData.LocalID;
                     }
@@ -1172,13 +1176,13 @@ namespace Aurora.Modules.Land
         {
             int y, x, i = 0, byteNum = 0;
             byte tempByte = 0;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     tempByte = Convert.ToByte(tempByte |
-                                              Convert.ToByte(m_landIDList[x, y] == lo.LandData.LocalID) << (i++%8));
-                    if (i%8 == 0)
+                                              Convert.ToByte(m_landIDList[x, y] == lo.LandData.LocalID) << (i++ % 8));
+                    if (i % 8 == 0)
                     {
                         lo.LandData.Bitmap[byteNum] = tempByte;
                         tempByte = 0;
@@ -1192,9 +1196,9 @@ namespace Aurora.Modules.Land
         private void MergeLandBitmaps(int masterLocalID, int slaveLocalID)
         {
             int x, y;
-            for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+            for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
             {
-                for (x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+                for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
                 {
                     if (m_landIDList[x, y] == slaveLocalID)
                         m_landIDList[x, y] = masterLocalID;
@@ -1310,20 +1314,20 @@ namespace Aurora.Modules.Land
                                        int sequenceID = 0;
                                        for (int y = 0;
                                             y <
-                                            (LAND_OVERLAY_CHUNKS*m_scene.RegionInfo.RegionSizeY/
+                                            (LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeY /
                                              Constants.TerrainPatchSize);
                                             y++)
                                        {
                                            for (int x = 0;
                                                 x <
-                                                (LAND_OVERLAY_CHUNKS*m_scene.RegionInfo.RegionSizeX/
+                                                (LAND_OVERLAY_CHUNKS * m_scene.RegionInfo.RegionSizeX /
                                                  Constants.TerrainPatchSize);
                                                 x++)
                                            {
                                                byte tempByte = 0; //This represents the byte for the current 4x4
 
-                                               ILandObject currentParcelBlock = GetLandObject(x*LAND_OVERLAY_CHUNKS,
-                                                                                              y*LAND_OVERLAY_CHUNKS);
+                                               ILandObject currentParcelBlock = GetLandObject(x * LAND_OVERLAY_CHUNKS,
+                                                                                              y * LAND_OVERLAY_CHUNKS);
 
                                                if (currentParcelBlock != null)
                                                {
@@ -1332,7 +1336,7 @@ namespace Aurora.Modules.Land
                                                        //Owner Flag
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
-                                                                          (byte) ParcelOverlayType.OwnedBySelf);
+                                                                          (byte)ParcelOverlayType.OwnedBySelf);
                                                    }
                                                    else if (currentParcelBlock.LandData.SalePrice > 0 &&
                                                             (currentParcelBlock.LandData.AuthBuyerID == UUID.Zero ||
@@ -1341,13 +1345,13 @@ namespace Aurora.Modules.Land
                                                    {
                                                        //Sale Flag
                                                        tempByte =
-                                                           Convert.ToByte(tempByte | (byte) ParcelOverlayType.ForSale);
+                                                           Convert.ToByte(tempByte | (byte)ParcelOverlayType.ForSale);
                                                    }
                                                    else if (currentParcelBlock.LandData.OwnerID == UUID.Zero)
                                                    {
                                                        //Public Flag
                                                        tempByte =
-                                                           Convert.ToByte(tempByte | (byte) ParcelOverlayType.Public);
+                                                           Convert.ToByte(tempByte | (byte)ParcelOverlayType.Public);
                                                    }
                                                    else if (currentParcelBlock.LandData.GroupID != UUID.Zero &&
                                                             m_scene.Permissions.IsInGroup(remote_client.AgentId,
@@ -1356,20 +1360,20 @@ namespace Aurora.Modules.Land
                                                    {
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
-                                                                          (byte) ParcelOverlayType.OwnedByGroup);
+                                                                          (byte)ParcelOverlayType.OwnedByGroup);
                                                    }
                                                    else
                                                    {
                                                        //Other Flag
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
-                                                                          (byte) ParcelOverlayType.OwnedByOther);
+                                                                          (byte)ParcelOverlayType.OwnedByOther);
                                                    }
                                                    if (currentParcelBlock.LandData.Private)
                                                    {
                                                        //Public Flag
                                                        tempByte =
-                                                           Convert.ToByte(tempByte | (byte) ParcelOverlayType.Private);
+                                                           Convert.ToByte(tempByte | (byte)ParcelOverlayType.Private);
                                                    }
 
                                                    //Now for border control
@@ -1379,44 +1383,44 @@ namespace Aurora.Modules.Land
                                                    if (x > 0)
                                                    {
                                                        if (currentParcelBlock.ContainsPoint(
-                                                           (x - 1)*LAND_OVERLAY_CHUNKS, y*LAND_OVERLAY_CHUNKS))
+                                                           (x - 1) * LAND_OVERLAY_CHUNKS, y * LAND_OVERLAY_CHUNKS))
                                                            westParcel = currentParcelBlock;
                                                        else
-                                                           westParcel = GetLandObject((x - 1)*LAND_OVERLAY_CHUNKS,
-                                                                                      y*LAND_OVERLAY_CHUNKS);
+                                                           westParcel = GetLandObject((x - 1) * LAND_OVERLAY_CHUNKS,
+                                                                                      y * LAND_OVERLAY_CHUNKS);
                                                    }
                                                    if (y > 0)
                                                    {
-                                                       if (currentParcelBlock.ContainsPoint(x*LAND_OVERLAY_CHUNKS,
-                                                                                            (y - 1)*LAND_OVERLAY_CHUNKS))
+                                                       if (currentParcelBlock.ContainsPoint(x * LAND_OVERLAY_CHUNKS,
+                                                                                            (y - 1) * LAND_OVERLAY_CHUNKS))
                                                            southParcel = currentParcelBlock;
                                                        else
-                                                           southParcel = GetLandObject(x*LAND_OVERLAY_CHUNKS,
-                                                                                       (y - 1)*LAND_OVERLAY_CHUNKS);
+                                                           southParcel = GetLandObject(x * LAND_OVERLAY_CHUNKS,
+                                                                                       (y - 1) * LAND_OVERLAY_CHUNKS);
                                                    }
 
                                                    if (x == 0)
                                                    {
                                                        tempByte =
-                                                           Convert.ToByte(tempByte | (byte) ParcelOverlayType.BorderWest);
+                                                           Convert.ToByte(tempByte | (byte)ParcelOverlayType.BorderWest);
                                                    }
                                                    else if (westParcel != null && westParcel != currentParcelBlock)
                                                    {
                                                        tempByte =
-                                                           Convert.ToByte(tempByte | (byte) ParcelOverlayType.BorderWest);
+                                                           Convert.ToByte(tempByte | (byte)ParcelOverlayType.BorderWest);
                                                    }
 
                                                    if (y == 0)
                                                    {
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
-                                                                          (byte) ParcelOverlayType.BorderSouth);
+                                                                          (byte)ParcelOverlayType.BorderSouth);
                                                    }
                                                    else if (southParcel != null && southParcel != currentParcelBlock)
                                                    {
                                                        tempByte =
                                                            Convert.ToByte(tempByte |
-                                                                          (byte) ParcelOverlayType.BorderSouth);
+                                                                          (byte)ParcelOverlayType.BorderSouth);
                                                    }
 
                                                    byteArray[byteArrayCount] = tempByte;
@@ -1614,7 +1618,7 @@ namespace Aurora.Modules.Land
                 // Make sure that we do all checking that we can sell this land
                 if (m_scene.EventManager.TriggerValidateBuyLand(args))
                 {
-                    land.UpdateLandSold(args.agentId, args.groupId, args.groupOwned, (uint) args.transactionID,
+                    land.UpdateLandSold(args.agentId, args.groupId, args.groupOwned, (uint)args.transactionID,
                                         args.parcelPrice, args.parcelArea);
                 }
             }
@@ -1696,14 +1700,14 @@ namespace Aurora.Modules.Land
 #endif
             List<ILandObject> newSimDefault = new List<ILandObject>();
             if (!result || data.Count == 0) //Force a new base first, then force a merge later
-                newSimDefault = AllParcels().Count > 0 ? AllParcels() : new List<ILandObject>(new ILandObject[1] {ResetSimLandObjects()});
+                newSimDefault = AllParcels().Count > 0 ? AllParcels() : new List<ILandObject>(new ILandObject[1] { ResetSimLandObjects() });
 
             foreach (LandData t in data)
             {
                 ILandObject new_land = new LandObject(t.OwnerID, t.IsGroupOwned, m_scene);
                 new_land.LandData = t;
                 if (SetLandBitmapFromByteArray(new_land, !result, parcelOffset))
-                    //Merge it into the large parcel if possible
+                //Merge it into the large parcel if possible
                 {
                     new_land.ForceUpdateLandInfo();
                     new_land.SetInfoID();
@@ -1716,16 +1720,16 @@ namespace Aurora.Modules.Land
 
         private bool SetLandBitmapFromByteArray(ILandObject parcel, bool forceSet, Vector2 offsetOfParcel)
         {
-            int avg = (m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeY/128);
-            int oldParcelRegionAvg = (int) Math.Sqrt(parcel.LandData.Bitmap.Length*128);
+            int avg = (m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeY / 128);
+            int oldParcelRegionAvg = (int)Math.Sqrt(parcel.LandData.Bitmap.Length * 128);
             if (parcel.LandData.Bitmap.Length != avg && !(forceSet && parcel.LandData.Bitmap.Length < avg))
-                //Are the sizes the same
+            //Are the sizes the same
             {
                 //The sim size changed, deal with it
                 return false;
             }
             byte tempByte = 0;
-            int x = (int) offsetOfParcel.X/4, y = (int) offsetOfParcel.Y/4, i = 0, bitNum = 0;
+            int x = (int)offsetOfParcel.X / 4, y = (int)offsetOfParcel.Y / 4, i = 0, bitNum = 0;
             if (parcel.LandData.Bitmap.Length < avg)
             {
                 byte[] newArray = new byte[avg];
@@ -1745,10 +1749,10 @@ namespace Aurora.Modules.Land
                         m_landIDList[x, y] = parcel.LandData.LocalID;
                     x++;
                     //Remove the offset so that we get a calc from the beginning of the array, not the offset array
-                    if (x - (int) (offsetOfParcel.X/4) >
-                        (((forceSet ? oldParcelRegionAvg : m_scene.RegionInfo.RegionSizeX)/4) - 1))
+                    if (x - (int)(offsetOfParcel.X / 4) >
+                        (((forceSet ? oldParcelRegionAvg : m_scene.RegionInfo.RegionSizeX) / 4) - 1))
                     {
-                        x = (int) offsetOfParcel.X/4; //Back to the beginning
+                        x = (int)offsetOfParcel.X / 4; //Back to the beginning
                         y++;
                     }
                 }
@@ -1866,7 +1870,7 @@ namespace Aurora.Modules.Land
                 MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
                 return OSDParser.SerializeLLSDXmlString(new OSDMap());
             }
-            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap args = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             ILandObject o = GetLandObject(args["local-id"].AsInteger());
 
@@ -1888,7 +1892,7 @@ namespace Aurora.Modules.Land
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
-            OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap args = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             properties.Deserialize(args);
 
@@ -1898,17 +1902,17 @@ namespace Aurora.Modules.Land
             land_update.Category = properties.Category;
             land_update.Desc = properties.Desc;
             land_update.GroupID = properties.GroupID;
-            land_update.LandingType = (byte) properties.Landing;
-            land_update.MediaAutoScale = (byte) Convert.ToInt32(properties.MediaAutoScale);
+            land_update.LandingType = (byte)properties.Landing;
+            land_update.MediaAutoScale = (byte)Convert.ToInt32(properties.MediaAutoScale);
             land_update.MediaID = properties.MediaID;
             land_update.MediaURL = properties.MediaURL;
             land_update.MusicURL = properties.MusicURL;
             land_update.Name = properties.Name;
-            land_update.ParcelFlags = (uint) properties.ParcelFlags;
-            land_update.PassHours = (int) properties.PassHours;
-            land_update.PassPrice = (int) properties.PassPrice;
+            land_update.ParcelFlags = (uint)properties.ParcelFlags;
+            land_update.PassHours = (int)properties.PassHours;
+            land_update.PassPrice = (int)properties.PassPrice;
             land_update.Privacy = properties.Privacy;
-            land_update.SalePrice = (int) properties.SalePrice;
+            land_update.SalePrice = (int)properties.SalePrice;
             land_update.SnapshotID = properties.SnapshotID;
             land_update.UserLocation = properties.UserLocation;
             land_update.UserLookAt = properties.UserLookAt;
@@ -1951,11 +1955,11 @@ namespace Aurora.Modules.Land
             UUID parcelID = UUID.Zero;
             try
             {
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
                 if ((map.ContainsKey("region_id") || map.ContainsKey("region_handle")) && map.ContainsKey("location"))
                 {
                     UUID regionID = map["region_id"].AsUUID();
-                    OSDArray list = (OSDArray) map["location"];
+                    OSDArray list = (OSDArray)map["location"];
                     uint x = list[0].AsUInteger();
                     uint y = list[1].AsUInteger();
                     if (map.ContainsKey("region_handle"))
@@ -2072,17 +2076,17 @@ namespace Aurora.Modules.Land
 
         public Vector3 GetNearestRegionEdgePosition(IScenePresence avatar)
         {
-            float xdistance = avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX/2
+            float xdistance = avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX / 2
                                   ? avatar.AbsolutePosition.X
                                   : m_scene.RegionInfo.RegionSizeX - avatar.AbsolutePosition.X;
-            float ydistance = avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY/2
+            float ydistance = avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY / 2
                                   ? avatar.AbsolutePosition.Y
                                   : m_scene.RegionInfo.RegionSizeY - avatar.AbsolutePosition.Y;
 
             //find out what vertical edge to go to
             if (xdistance < ydistance)
             {
-                if (avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX/2)
+                if (avatar.AbsolutePosition.X < m_scene.RegionInfo.RegionSizeX / 2)
                 {
                     return GetPositionAtAvatarHeightOrGroundHeight(avatar, 0.0f, avatar.AbsolutePosition.Y);
                 }
@@ -2092,10 +2096,10 @@ namespace Aurora.Modules.Land
                                                                    avatar.AbsolutePosition.Y);
                 }
             }
-                //find out what horizontal edge to go to
+            //find out what horizontal edge to go to
             else
             {
-                if (avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY/2)
+                if (avatar.AbsolutePosition.Y < m_scene.RegionInfo.RegionSizeY / 2)
                 {
                     return GetPositionAtAvatarHeightOrGroundHeight(avatar, avatar.AbsolutePosition.X, 0.0f);
                 }
@@ -2119,10 +2123,10 @@ namespace Aurora.Modules.Land
             int size = m_scene.RegionInfo.RegionSizeX > m_scene.RegionInfo.RegionSizeY
                            ? m_scene.RegionInfo.RegionSizeX
                            : m_scene.RegionInfo.RegionSizeY;
-            for (float distance = 0; distance < size*2; distance += .5f)
+            for (float distance = 0; distance < size * 2; distance += .5f)
             {
                 Vector3 testPos = Vector3.Add(pos, Vector3.Multiply(unitDirection, distance));
-                if (parcel.ContainsPoint((int) testPos.X, (int) testPos.Y))
+                if (parcel.ContainsPoint((int)testPos.X, (int)testPos.Y))
                 {
                     return GetPositionAtGround(testPos.X, testPos.Y);
                 }
@@ -2160,8 +2164,8 @@ namespace Aurora.Modules.Land
                         }
                         else
                         {
-                            avgx = (avgx*count + x)/(count + 1);
-                            avgy = (avgy*count + y)/(count + 1);
+                            avgx = (avgx * count + x) / (count + 1);
+                            avgy = (avgy * count + y) / (count + 1);
                         }
                         count += 1;
                     }
@@ -2185,7 +2189,7 @@ namespace Aurora.Modules.Land
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             if (heightmap == null)
                 return new Vector3(x, y, float.MinValue);
-            return new Vector3(x, y, heightmap.GetNormalizedGroundHeight((int) x, (int) y));
+            return new Vector3(x, y, heightmap.GetNormalizedGroundHeight((int)x, (int)y));
         }
 
         #endregion
@@ -2358,8 +2362,8 @@ namespace Aurora.Modules.Land
                     GridRegion info;
                     int RegionX, RegionY;
                     Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
-                    RegionX = (int) ((float) RegionX/Constants.RegionSize)*Constants.RegionSize;
-                    RegionY = (RegionY/Constants.RegionSize)*Constants.RegionSize;
+                    RegionX = (int)((float)RegionX / Constants.RegionSize) * Constants.RegionSize;
+                    RegionY = (RegionY / Constants.RegionSize) * Constants.RegionSize;
                     if (RegionX == m_scene.RegionInfo.RegionLocX &&
                         RegionY == m_scene.RegionInfo.RegionLocY)
                     {
@@ -2378,8 +2382,8 @@ namespace Aurora.Modules.Land
                     // we need to transfer the fake parcelID, not the one in landData, so the viewer can match it to the landmark.
                     MainConsole.Instance.DebugFormat("[LAND] got parcelinfo for parcel {0} in region {1}; sending...",
                                       data.Name, RegionHandle);
-                    remoteClient.SendParcelInfo(data, parcelID, (uint) (info.RegionLocX + data.UserLocation.X),
-                                                (uint) (info.RegionLocY + data.UserLocation.Y), info.RegionName);
+                    remoteClient.SendParcelInfo(data, parcelID, (uint)(info.RegionLocX + data.UserLocation.X),
+                                                (uint)(info.RegionLocY + data.UserLocation.Y), info.RegionName);
                 }
                 else
                     MainConsole.Instance.WarnFormat("[LAND]: Failed to find parcel {0}", parcelID);
@@ -2421,7 +2425,7 @@ namespace Aurora.Modules.Land
             ILandObject land = GetLandObject(targetAvatar.AbsolutePosition.X, targetAvatar.AbsolutePosition.Y);
             if (
                 !m_scene.Permissions.GenericParcelPermission(client.AgentId, land,
-                                                             (ulong) GroupPowers.LandEjectAndFreeze))
+                                                             (ulong)GroupPowers.LandEjectAndFreeze))
                 return;
 
             if (flags == 0)
@@ -2447,7 +2451,7 @@ namespace Aurora.Modules.Land
             ILandObject land = GetLandObject(targetAvatar.AbsolutePosition.X, targetAvatar.AbsolutePosition.Y);
             if (
                 !m_scene.Permissions.GenericParcelPermission(client.AgentId, land,
-                                                             (ulong) GroupPowers.LandEjectAndFreeze))
+                                                             (ulong)GroupPowers.LandEjectAndFreeze))
                 return;
 
             land.LandData.ParcelAccessList.Add(new ParcelManager.ParcelAccessEntry
@@ -2457,7 +2461,7 @@ namespace Aurora.Modules.Land
                                                        Time = DateTime.MaxValue
                                                    });
 
-            land.LandData.Flags |= (uint) ParcelFlags.UseBanList;
+            land.LandData.Flags |= (uint)ParcelFlags.UseBanList;
 
             Vector3 Pos = GetNearestAllowedPosition(targetAvatar);
 

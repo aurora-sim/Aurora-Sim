@@ -305,10 +305,10 @@ namespace OpenSim.Data.MySQL
                                 if (!hasX || !hasRevert || reader["X"].ToString() == "-1")
                                 {
                                     MainConsole.Instance.Warn("Found double terrain");
-                                    byte[] heightmap = (byte[]) reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX*RegionSizeX];
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
                                     double[,] terrain = null;
-                                    terrain = new double[RegionSizeX,RegionSizeY];
+                                    terrain = new double[RegionSizeX, RegionSizeY];
                                     terrain.Initialize();
 
                                     using (MemoryStream str = new MemoryStream(heightmap))
@@ -328,8 +328,8 @@ namespace OpenSim.Data.MySQL
                                     {
                                         for (int y = 0; y < RegionSizeY; y++)
                                         {
-                                            map[y*RegionSizeX + x] =
-                                                (short) (terrain[x, y]*Constants.TerrainCompression);
+                                            map[y * RegionSizeX + x] =
+                                                (short)(terrain[x, y] * Constants.TerrainCompression);
                                         }
                                     }
                                     return map;
@@ -337,10 +337,10 @@ namespace OpenSim.Data.MySQL
                                 else
                                 {
                                     MainConsole.Instance.Warn("Found single terrain");
-                                    byte[] heightmap = (byte[]) reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX*RegionSizeX];
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof (short))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
                                     {
                                         map[ii] = Utils.BytesToInt16(heightmap, i);
                                         ii++;
@@ -381,23 +381,23 @@ namespace OpenSim.Data.MySQL
                             {
                                 if (reader["X"].ToString() == "-1")
                                 {
-                                    byte[] heightmap = (byte[]) reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX*RegionSizeX];
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof (double))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(double))
                                     {
                                         map[ii] =
-                                            (short) (Utils.BytesToDouble(heightmap, i)*Constants.TerrainCompression);
+                                            (short)(Utils.BytesToDouble(heightmap, i) * Constants.TerrainCompression);
                                         ii++;
                                     }
                                     return map;
                                 }
                                 else
                                 {
-                                    byte[] heightmap = (byte[]) reader["Heightfield"];
-                                    short[] map = new short[RegionSizeX*RegionSizeX];
+                                    byte[] heightmap = (byte[])reader["Heightfield"];
+                                    short[] map = new short[RegionSizeX * RegionSizeX];
                                     int ii = 0;
-                                    for (int i = 0; i < heightmap.Length; i += sizeof (short))
+                                    for (int i = 0; i < heightmap.Length; i += sizeof(short))
                                     {
                                         map[ii] = Utils.BytesToInt16(heightmap, i);
                                         ii++;
@@ -642,7 +642,7 @@ namespace OpenSim.Data.MySQL
                             prim.TouchName = o[i].ToString();
                             break;
                         case "ObjectFlags":
-                            prim.Flags = (PrimFlags) Convert.ToUInt32(o[i].ToString());
+                            prim.Flags = (PrimFlags)Convert.ToUInt32(o[i].ToString());
                             break;
                         case "OwnerMask":
                             prim.OwnerMask = Convert.ToUInt32(o[i].ToString());
@@ -760,11 +760,11 @@ namespace OpenSim.Data.MySQL
                             break;
                         case "TextureAnimation":
                             if (!(row[i] is DBNull))
-                                prim.TextureAnimation = (byte[]) o[i];
+                                prim.TextureAnimation = (byte[])o[i];
                             break;
                         case "ParticleSystem":
                             if (!(row[i] is DBNull))
-                                prim.ParticleSystem = (byte[]) o[i];
+                                prim.ParticleSystem = (byte[])o[i];
                             break;
                         case "OmegaX":
                             OmegaX = Convert.ToSingle(o[i].ToString());
@@ -825,7 +825,7 @@ namespace OpenSim.Data.MySQL
                             prim.CollisionSoundVolume = Convert.ToSingle(o[i].ToString());
                             break;
                         case "PassTouches":
-                            prim.PassTouch = (int) Convert.ToSingle(o[i].ToString());
+                            prim.PassTouch = (int)Convert.ToSingle(o[i].ToString());
                             break;
                         case "VolumeDetect":
                             if (!(row[i] is DBNull))
@@ -839,7 +839,7 @@ namespace OpenSim.Data.MySQL
                             break;
                         case "MediaURL":
                             if (!(o[i] is DBNull))
-                                prim.MediaUrl = (string) o[i];
+                                prim.MediaUrl = (string)o[i];
                             break;
                         case "SceneGroupID":
                             break;
@@ -917,15 +917,15 @@ namespace OpenSim.Data.MySQL
                             s.State = Convert.ToByte(o[i]);
                             break;
                         case "Texture":
-                            byte[] textureEntry = (byte[]) o[i];
+                            byte[] textureEntry = (byte[])o[i];
                             s.TextureEntry = textureEntry;
                             break;
                         case "ExtraParams":
-                            s.ExtraParams = (byte[]) o[i];
+                            s.ExtraParams = (byte[])o[i];
                             break;
                         case "Media":
                             if (!(o[i] is DBNull))
-                                s.Media = PrimitiveBaseShape.MediaList.FromXml((string) o[i]);
+                                s.Media = PrimitiveBaseShape.MediaList.FromXml((string)o[i]);
                             break;
                         default:
                             MainConsole.Instance.Warn("[MySQL]: Unknown database row: " + name);
@@ -977,8 +977,8 @@ namespace OpenSim.Data.MySQL
                                                  ParentID = DBGuid.FromDB(row["parentFolderID"]),
                                                  InvType = Convert.ToInt32(row["invType"]),
                                                  Type = Convert.ToInt32(row["assetType"]),
-                                                 Name = (String) row["name"],
-                                                 Description = (String) row["description"],
+                                                 Name = (String)row["name"],
+                                                 Description = (String)row["description"],
                                                  CreationDate = Convert.ToUInt32(row["creationDate"]),
                                                  CreatorIdentification = row["creatorID"].ToString(),
                                                  OwnerID = DBGuid.FromDB(row["ownerID"]),
@@ -1054,15 +1054,15 @@ namespace OpenSim.Data.MySQL
             if (row["loaded_creation_id"] is DBNull)
                 newSettings.LoadedCreationID = "";
             else
-                newSettings.LoadedCreationID = (String) row["loaded_creation_id"];
+                newSettings.LoadedCreationID = (String)row["loaded_creation_id"];
 
             newSettings.TerrainImageID = DBGuid.FromDB(row["map_tile_ID"]);
             newSettings.TerrainMapImageID = DBGuid.FromDB(row["terrain_tile_ID"]);
             newSettings.MinimumAge = Convert.ToInt32(row["minimum_age"]);
 
-            OSD o = OSDParser.DeserializeJson((String) row["generic"]);
+            OSD o = OSDParser.DeserializeJson((String)row["generic"]);
             if (o.Type == OSDType.Map)
-                newSettings.Generic = (OSDMap) o;
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1077,25 +1077,25 @@ namespace OpenSim.Data.MySQL
                                    {
                                        GlobalID = DBGuid.FromDB(row["UUID"]),
                                        LocalID = Convert.ToInt32(row["LocalLandID"]),
-                                       Bitmap = (Byte[]) row["Bitmap"],
-                                       Name = (String) row["Name"],
-                                       Description = (String) row["Description"],
+                                       Bitmap = (Byte[])row["Bitmap"],
+                                       Name = (String)row["Name"],
+                                       Description = (String)row["Description"],
                                        OwnerID = DBGuid.FromDB(row["OwnerUUID"]),
                                        IsGroupOwned = Convert.ToBoolean(row["IsGroupOwned"]),
                                        Area = Convert.ToInt32(row["Area"]),
                                        AuctionID = Convert.ToUInt32(row["AuctionID"]),
-                                       Category = (ParcelCategory) Convert.ToInt32(row["Category"]),
+                                       Category = (ParcelCategory)Convert.ToInt32(row["Category"]),
                                        ClaimDate = Convert.ToInt32(row["ClaimDate"]),
                                        ClaimPrice = Convert.ToInt32(row["ClaimPrice"]),
                                        GroupID = DBGuid.FromDB(row["GroupUUID"]),
                                        SalePrice = Convert.ToInt32(row["SalePrice"]),
-                                       Status = (ParcelStatus) Convert.ToInt32(row["LandStatus"]),
+                                       Status = (ParcelStatus)Convert.ToInt32(row["LandStatus"]),
                                        Flags = Convert.ToUInt32(row["LandFlags"]),
                                        LandingType = Convert.ToByte(row["LandingType"]),
                                        MediaAutoScale = Convert.ToByte(row["MediaAutoScale"]),
                                        MediaID = DBGuid.FromDB(row["MediaTextureUUID"]),
-                                       MediaURL = (String) row["MediaURL"],
-                                       MusicURL = (String) row["MusicURL"],
+                                       MediaURL = (String)row["MediaURL"],
+                                       MusicURL = (String)row["MusicURL"],
                                        PassHours = Convert.ToSingle(row["PassHours"]),
                                        PassPrice = Convert.ToInt32(row["PassPrice"])
                                    };
@@ -1109,8 +1109,8 @@ namespace OpenSim.Data.MySQL
             UUID authedbuyer = UUID.Zero;
             UUID snapshotID = UUID.Zero;
 
-            UUID.TryParse((string) row["AuthBuyerID"], out authedbuyer);
-            UUID.TryParse((string) row["SnapshotUUID"], out snapshotID);
+            UUID.TryParse((string)row["AuthBuyerID"], out authedbuyer);
+            UUID.TryParse((string)row["SnapshotUUID"], out snapshotID);
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
 
             newData.AuthBuyerID = authedbuyer;
@@ -1131,10 +1131,10 @@ namespace OpenSim.Data.MySQL
                 MainConsole.Instance.ErrorFormat("[PARCEL]: unable to get parcel telehub settings for {1}", newData.Name);
             }
 
-            newData.MediaDescription = (string) row["MediaDescription"];
-            newData.MediaType = (string) row["MediaType"];
-            newData.MediaWidth = Convert.ToInt32((((string) row["MediaSize"]).Split(','))[0]);
-            newData.MediaHeight = Convert.ToInt32((((string) row["MediaSize"]).Split(','))[1]);
+            newData.MediaDescription = (string)row["MediaDescription"];
+            newData.MediaType = (string)row["MediaType"];
+            newData.MediaWidth = Convert.ToInt32((((string)row["MediaSize"]).Split(','))[0]);
+            newData.MediaHeight = Convert.ToInt32((((string)row["MediaSize"]).Split(','))[1]);
             newData.MediaLoop = Convert.ToBoolean(row["MediaLoop"]);
             newData.ObscureMusic = Convert.ToBoolean(row["ObscureMusic"]);
             newData.ObscureMedia = Convert.ToBoolean(row["ObscureMedia"]);
@@ -1153,7 +1153,7 @@ namespace OpenSim.Data.MySQL
             ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry
                                                         {
                                                             AgentID = DBGuid.FromDB(row["AccessUUID"]),
-                                                            Flags = (AccessList) Convert.ToInt32(row["Flags"]),
+                                                            Flags = (AccessList)Convert.ToInt32(row["Flags"]),
                                                             Time = new DateTime()
                                                         };
             return entry;

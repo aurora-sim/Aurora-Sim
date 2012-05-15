@@ -19,15 +19,18 @@ namespace Amib.Threading
         {
         }
 
-        public WorkItemCancelException(string message) : base(message)
+        public WorkItemCancelException(string message)
+            : base(message)
         {
         }
 
-        public WorkItemCancelException(string message, Exception e) : base(message, e)
+        public WorkItemCancelException(string message, Exception e)
+            : base(message, e)
         {
         }
 
-        public WorkItemCancelException(SerializationInfo si, StreamingContext sc) : base(si, sc)
+        public WorkItemCancelException(SerializationInfo si, StreamingContext sc)
+            : base(si, sc)
         {
         }
     }
@@ -42,15 +45,18 @@ namespace Amib.Threading
         {
         }
 
-        public WorkItemTimeoutException(string message) : base(message)
+        public WorkItemTimeoutException(string message)
+            : base(message)
         {
         }
 
-        public WorkItemTimeoutException(string message, Exception e) : base(message, e)
+        public WorkItemTimeoutException(string message, Exception e)
+            : base(message, e)
         {
         }
 
-        public WorkItemTimeoutException(SerializationInfo si, StreamingContext sc) : base(si, sc)
+        public WorkItemTimeoutException(SerializationInfo si, StreamingContext sc)
+            : base(si, sc)
         {
         }
     }
@@ -65,15 +71,18 @@ namespace Amib.Threading
         {
         }
 
-        public WorkItemResultException(string message) : base(message)
+        public WorkItemResultException(string message)
+            : base(message)
         {
         }
 
-        public WorkItemResultException(string message, Exception e) : base(message, e)
+        public WorkItemResultException(string message, Exception e)
+            : base(message, e)
         {
         }
 
-        public WorkItemResultException(SerializationInfo si, StreamingContext sc) : base(si, sc)
+        public WorkItemResultException(SerializationInfo si, StreamingContext sc)
+            : base(si, sc)
         {
         }
     }

@@ -48,7 +48,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public AsyncScenePresence(IClientAPI client, IScene scene)
-            :base(client, scene)
+            : base(client, scene)
         {
         }
 
@@ -92,7 +92,7 @@ namespace OpenSim.Region.Framework.Scenes
         public override void AddUpdateToAvatar(ISceneChildEntity part, PrimUpdateFlags flags)
         {
             lock (m_terseUpdates)
-                m_terseUpdates.Add(new OUpdates {Child = part, Flags = flags});
+                m_terseUpdates.Add(new OUpdates { Child = part, Flags = flags });
             Scene.SceneGraph.TaintPresenceForUpdate(this, PresenceTaint.ObjectUpdates);
         }
 

@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int) (GetValue()/(1024*1024)) + "MB (Global)";
+            return (int)(GetValue() / (1024 * 1024)) + "MB (Global)";
         }
 
         public void ResetStats()

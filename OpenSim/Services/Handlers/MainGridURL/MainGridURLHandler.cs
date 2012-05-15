@@ -7,16 +7,16 @@ namespace Aurora.Addon.Hypergrid
 {
     public class MainGridURLModule : IService, IGridRegistrationUrlModule
     {
-        public void Initialize (IConfigSource config, IRegistryCore registry)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public void Start (IConfigSource config, IRegistryCore registry)
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
-            registry.RequestModuleInterface<IGridRegistrationService> ().RegisterModule (this);
+            registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 
-        public void FinishedStartup ()
+        public void FinishedStartup()
         {
         }
 
@@ -30,17 +30,17 @@ namespace Aurora.Addon.Hypergrid
 
         public bool DoMultiplePorts { get { return false; } }
 
-        public string GetUrlForRegisteringClient (string SessionID, uint port)
+        public string GetUrlForRegisteringClient(string SessionID, uint port)
         {
             //We only return the gatekeeper URL so that regions know what it is
             return MainServer.Instance.ServerURI + "/";
         }
 
-        public void AddExistingUrlForClient (string SessionID, string url, uint port)
+        public void AddExistingUrlForClient(string SessionID, string url, uint port)
         {
         }
 
-        public void RemoveUrlForClient (string sessionID, string url, uint port)
+        public void RemoveUrlForClient(string sessionID, string url, uint port)
         {
         }
     }

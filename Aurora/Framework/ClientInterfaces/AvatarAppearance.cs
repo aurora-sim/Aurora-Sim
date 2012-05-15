@@ -42,7 +42,7 @@ namespace Aurora.Framework
         public static readonly int VISUALPARAM_COUNT = 218;
 
         public static readonly int TEXTURE_COUNT = 21;
-        public static readonly byte[] BAKE_INDICES = new byte[] {8, 9, 10, 11, 19, 20};
+        public static readonly byte[] BAKE_INDICES = new byte[] { 8, 9, 10, 11, 19, 20 };
         private Dictionary<int, List<AvatarAttachment>> m_attachments;
         private float m_avatarHeight;
 
@@ -52,7 +52,8 @@ namespace Aurora.Framework
         private byte[] m_visualparams;
         private AvatarWearable[] m_wearables;
 
-        public AvatarAppearance() : this(UUID.Zero)
+        public AvatarAppearance()
+            : this(UUID.Zero)
         {
         }
 
@@ -153,7 +154,7 @@ namespace Aurora.Framework
 
             m_visualparams = null;
             if (appearance.VisualParams != null)
-                m_visualparams = (byte[]) appearance.VisualParams.Clone();
+                m_visualparams = (byte[])appearance.VisualParams.Clone();
 
             // Copy the attachment, force append mode since that ensures consistency
             m_attachments = new Dictionary<int, List<AvatarAttachment>>();
@@ -196,11 +197,11 @@ namespace Aurora.Framework
             get { return m_avatarHeight; }
             set { m_avatarHeight = value; }
         }
-		
-		public Dictionary<int, List<AvatarAttachment>> Attachments
+
+        public Dictionary<int, List<AvatarAttachment>> Attachments
         {
             get { return m_attachments; }
-            set { m_attachments = value;  }
+            set { m_attachments = value; }
         }
 
         public void GetAssetsFrom(AvatarAppearance app)
@@ -358,13 +359,13 @@ namespace Aurora.Framework
         public void SetHeight()
         {
             m_avatarHeight = 1.26077f // Shortest possible avatar height
-                             + 0.506945f*m_visualparams[(int) VPElement.SHAPE_HEIGHT]/255.0f // Body height
-                             + 0.072514f*m_visualparams[(int) VPElement.SHAPE_HEAD_SIZE]/255.0f // Head size
-                             + 0.3836f*m_visualparams[(int) VPElement.SHAPE_LEG_LENGTH]/255.0f // Leg length
-                             + 0.08f*m_visualparams[(int) VPElement.SHOES_PLATFORM_HEIGHT]/255.0f
-                             // Shoe platform height
-                             + 0.07f*m_visualparams[(int) VPElement.SHOES_HEEL_HEIGHT]/255.0f // Shoe heel height
-                             + 0.076f*m_visualparams[(int) VPElement.SHAPE_NECK_LENGTH]/255.0f; // Neck length
+                             + 0.506945f * m_visualparams[(int)VPElement.SHAPE_HEIGHT] / 255.0f // Body height
+                             + 0.072514f * m_visualparams[(int)VPElement.SHAPE_HEAD_SIZE] / 255.0f // Head size
+                             + 0.3836f * m_visualparams[(int)VPElement.SHAPE_LEG_LENGTH] / 255.0f // Leg length
+                             + 0.08f * m_visualparams[(int)VPElement.SHOES_PLATFORM_HEIGHT] / 255.0f
+                // Shoe platform height
+                             + 0.07f * m_visualparams[(int)VPElement.SHOES_HEEL_HEIGHT] / 255.0f // Shoe heel height
+                             + 0.076f * m_visualparams[(int)VPElement.SHAPE_NECK_LENGTH] / 255.0f; // Neck length
         }
 
         public void SetWearable(int wearableId, AvatarWearable wearable)
@@ -410,7 +411,7 @@ namespace Aurora.Framework
         /// </summary>
         public List<AvatarAttachment> GetAttachments()
         {
-            lock(m_attachments)
+            lock (m_attachments)
                 return (from kvp in m_attachments from attach in kvp.Value select new AvatarAttachment(attach)).ToList();
         }
 
@@ -584,12 +585,12 @@ namespace Aurora.Framework
 
         public void ClearAttachments()
         {
-            lock(m_attachments)
+            lock (m_attachments)
                 m_attachments.Clear();
         }
 
         #region Packing Functions
-        
+
         public override OSDMap ToOSD()
         {
             return Pack();
@@ -648,7 +649,7 @@ namespace Aurora.Framework
             if ((data != null) && (data["serial"] != null))
                 m_serial = data["serial"].AsInteger();
             if ((data != null) && (data["height"] != null))
-                m_avatarHeight = (float) data["height"].AsReal();
+                m_avatarHeight = (float)data["height"].AsReal();
 
             try
             {
@@ -656,9 +657,9 @@ namespace Aurora.Framework
                 SetDefaultWearables();
                 if ((data != null) && (data["wearables"] != null) && (data["wearables"]).Type == OSDType.Array)
                 {
-                    OSDArray wears = (OSDArray) (data["wearables"]);
+                    OSDArray wears = (OSDArray)(data["wearables"]);
                     for (int i = 0; i < wears.Count; i++)
-                        m_wearables[i] = new AvatarWearable((OSDArray) wears[i]);
+                        m_wearables[i] = new AvatarWearable((OSDArray)wears[i]);
                 }
                 else
                 {
@@ -669,13 +670,13 @@ namespace Aurora.Framework
                 SetDefaultTexture();
                 if ((data != null) && (data["textures"] != null) && (data["textures"]).Type == OSDType.Array)
                 {
-                    OSDArray textures = (OSDArray) (data["textures"]);
+                    OSDArray textures = (OSDArray)(data["textures"]);
                     for (int i = 0; i < TEXTURE_COUNT && i < textures.Count; i++)
                     {
                         UUID textureID = AppearanceManager.DEFAULT_AVATAR_TEXTURE;
                         if (textures[i] != null)
                             textureID = textures[i].AsUUID();
-                        m_texture.CreateFace((uint) i).TextureID = new UUID(textureID);
+                        m_texture.CreateFace((uint)i).TextureID = new UUID(textureID);
                     }
                 }
                 else
@@ -699,9 +700,9 @@ namespace Aurora.Framework
                 m_attachments = new Dictionary<int, List<AvatarAttachment>>();
                 if ((data != null) && (data["attachments"] != null) && (data["attachments"]).Type == OSDType.Array)
                 {
-                    OSDArray attachs = (OSDArray) (data["attachments"]);
+                    OSDArray attachs = (OSDArray)(data["attachments"]);
                     foreach (OSD t in attachs)
-                        AppendAttachment(new AvatarAttachment((OSDMap) t));
+                        AppendAttachment(new AvatarAttachment((OSDMap)t));
                 }
             }
             catch (Exception e)

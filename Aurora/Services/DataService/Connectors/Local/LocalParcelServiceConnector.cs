@@ -202,7 +202,7 @@ namespace Aurora.Services.DataService
             {
                 entry = new ParcelManager.ParcelAccessEntry();
                 entry.AgentID = UUID.Parse(Query[i]);
-                entry.Flags = (AccessList) Enum.Parse(typeof (AccessList), Query[i + 1]);
+                entry.Flags = (AccessList)Enum.Parse(typeof(AccessList), Query[i + 1]);
                 entry.Time = new DateTime(long.Parse(Query[i + 2]));
                 LandData.ParcelAccessList.Add(entry);
             }

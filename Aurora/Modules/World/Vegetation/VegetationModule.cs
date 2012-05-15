@@ -37,7 +37,7 @@ namespace Aurora.Modules.Vegetation
 {
     public class VegetationModule : INonSharedRegionModule, IVegetationModule
     {
-        protected static readonly PCode[] creationCapabilities = new[] {PCode.Grass, PCode.NewTree, PCode.Tree};
+        protected static readonly PCode[] creationCapabilities = new[] { PCode.Grass, PCode.NewTree, PCode.Tree };
         protected IScene m_scene;
 
         public bool IsSharedModule
@@ -96,9 +96,9 @@ namespace Aurora.Modules.Vegetation
                                                {
                                                    PathCurve = 16,
                                                    PathEnd = 49900,
-                                                   PCode = newTree ? (byte) PCode.NewTree : (byte) PCode.Tree,
+                                                   PCode = newTree ? (byte)PCode.NewTree : (byte)PCode.Tree,
                                                    Scale = scale,
-                                                   State = (byte) treeType
+                                                   State = (byte)treeType
                                                };
 
             return m_scene.SceneGraph.AddNewPrim(uuid, groupID, position, rotation, treeShape);
@@ -107,19 +107,19 @@ namespace Aurora.Modules.Vegetation
         public ISceneEntity CreateEntity(
             ISceneEntity baseEntity, UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
-            if (Array.IndexOf(creationCapabilities, (PCode) shape.PCode) < 0)
+            if (Array.IndexOf(creationCapabilities, (PCode)shape.PCode) < 0)
             {
                 MainConsole.Instance.DebugFormat("[VEGETATION]: PCode {0} not handled by {1}", shape.PCode, Name);
                 return null;
             }
 
             SceneObjectGroup sceneObject = baseEntity as SceneObjectGroup;
-            SceneObjectPart rootPart = (SceneObjectPart) sceneObject.GetChildPart(sceneObject.UUID);
+            SceneObjectPart rootPart = (SceneObjectPart)sceneObject.GetChildPart(sceneObject.UUID);
 
             // if grass or tree, make phantom
             //rootPart.TrimPermissions();
             rootPart.AddFlag(PrimFlags.Phantom);
-            if (rootPart.Shape.PCode != (byte) PCode.Grass)
+            if (rootPart.Shape.PCode != (byte)PCode.Grass)
                 AdaptTree(ref shape);
 
             m_scene.SceneGraph.AddPrimToScene(sceneObject);
@@ -138,7 +138,7 @@ namespace Aurora.Modules.Vegetation
         protected void AdaptTree(ref PrimitiveBaseShape tree)
         {
             // Tree size has to be adapted depending on its type
-            switch ((Tree) tree.State)
+            switch ((Tree)tree.State)
             {
                 case Tree.Cypress1:
                 case Tree.Cypress2:
@@ -156,9 +156,9 @@ namespace Aurora.Modules.Vegetation
                     tree.Scale = new Vector3(6.5f, 6.5f, 6.5f);
                     break;
 
-                    // case... other tree types
-                    // tree.Scale = new Vector3(?, ?, ?);
-                    // break;
+                // case... other tree types
+                // tree.Scale = new Vector3(?, ?, ?);
+                // break;
 
                 default:
                     tree.Scale = new Vector3(4, 4, 4);

@@ -82,7 +82,7 @@ namespace Aurora.Modules.Chat
                 {
                     float Num1 = float.Parse(operators[1]);
                     float Num2 = float.Parse(operators[2]);
-                    float RetVal = Num1*Num2;
+                    float RetVal = Num1 * Num2;
                     BuildAndSendResult(RetVal, c.Scene, c.Position);
                 }
             }
@@ -92,7 +92,7 @@ namespace Aurora.Modules.Chat
                 {
                     float Num1 = float.Parse(operators[1]);
                     float Num2 = float.Parse(operators[2]);
-                    float RetVal = Num1/Num2;
+                    float RetVal = Num1 / Num2;
                     BuildAndSendResult(RetVal, c.Scene, c.Position);
                 }
             }
@@ -472,8 +472,8 @@ namespace Aurora.Modules.Chat
                                                                           " has joined the region. Total Agents: " +
                                                                           (entityCountModule.RootAgents + 1), 1,
                                                                           SP.AbsolutePosition, "System",
-                                                                          UUID.Zero, (byte) ChatSourceType.System,
-                                                                          (byte) ChatAudibleLevel.Fully);
+                                                                          UUID.Zero, (byte)ChatSourceType.System,
+                                                                          (byte)ChatAudibleLevel.Fully);
                                                               }
                                                           }
                         );
@@ -485,7 +485,7 @@ namespace Aurora.Modules.Chat
                     if (m_welcomeMessage != "")
                     {
                         client.SendChatMessage(m_welcomeMessage, 1, SP.AbsolutePosition, "System",
-                                               UUID.Zero, (byte) ChatSourceType.System, (byte) ChatAudibleLevel.Fully);
+                                               UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
                     }
                 }
             }
@@ -519,8 +519,8 @@ namespace Aurora.Modules.Chat
                                                                    " has left the region. Total Agents: " +
                                                                    (entityCountModule.RootAgents - 1), 1,
                                                                    SP.AbsolutePosition, "System",
-                                                                   UUID.Zero, (byte) ChatSourceType.System,
-                                                                   (byte) ChatAudibleLevel.Fully);
+                                                                   UUID.Zero, (byte)ChatSourceType.System,
+                                                                   (byte)ChatAudibleLevel.Fully);
                                                        }
                                                    }
                         );

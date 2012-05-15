@@ -32,13 +32,13 @@ using Aurora.Framework;
 namespace Aurora.Framework
 {
     public interface IRegionInfoConnector : IAuroraDataPlugin
-	{
+    {
         /// <summary>
         /// Gets RegionInfos for the database region connector
         /// </summary>
         /// <returns></returns>
         RegionInfo[] GetRegionInfos(bool nonDisabledOnly);
-        
+
         /// <summary>
         /// Gets a specific region info for the given region ID
         /// </summary>
@@ -51,7 +51,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="regionName"></param>
         /// <returns></returns>
-        RegionInfo GetRegionInfo (string regionName);
+        RegionInfo GetRegionInfo(string regionName);
 
         /// <summary>
         /// Updates the region info for the given region
@@ -75,19 +75,19 @@ namespace Aurora.Framework
         /// <summary>
         /// Stores WindLight settings for the given region
         /// </summary>
-        void StoreRegionWindlightSettings (UUID RegionID, UUID ID, RegionLightShareData lsd);
+        void StoreRegionWindlightSettings(UUID RegionID, UUID ID, RegionLightShareData lsd);
 
         /// <summary>
         /// Store the given regions settings (this includes some of the Region/Estate pieces)
         /// </summary>
         /// <param name="rs"></param>
-        void StoreRegionSettings (RegionSettings rs);
+        void StoreRegionSettings(RegionSettings rs);
 
         /// <summary>
         /// Load stored region settings from the database
         /// </summary>
         /// <param name="regionUUID"></param>
         /// <returns></returns>
-        RegionSettings LoadRegionSettings (UUID regionUUID);
+        RegionSettings LoadRegionSettings(UUID regionUUID);
     }
 }

@@ -154,7 +154,7 @@ namespace Aurora.Modules.Inventory
             if (scene == null) // Something seriously wrong here.
                 return;
 
-            if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
+            if (im.dialog == (byte)InstantMessageDialog.InventoryOffered)
             {
                 //MainConsole.Instance.DebugFormat("Asset type {0}", ((AssetType)im.binaryBucket[0]));
 
@@ -172,7 +172,7 @@ namespace Aurora.Modules.Inventory
                 if (user != null)
                 {
                     // First byte is the asset type
-                    AssetType assetType = (AssetType) im.binaryBucket[0];
+                    AssetType assetType = (AssetType)im.binaryBucket[0];
 
                     if (AssetType.Folder == assetType)
                     {
@@ -199,7 +199,7 @@ namespace Aurora.Modules.Inventory
                         copyID = folderCopy.ID;
                         byte[] copyIDBytes = copyID.GetBytes();
                         im.binaryBucket = new byte[1 + copyIDBytes.Length];
-                        im.binaryBucket[0] = (byte) AssetType.Folder;
+                        im.binaryBucket[0] = (byte)AssetType.Folder;
                         Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
 
                         if (user != null)
@@ -253,7 +253,7 @@ namespace Aurora.Modules.Inventory
                         m_TransferModule.SendInstantMessage(im);
                 }
             }
-            else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
+            else if (im.dialog == (byte)InstantMessageDialog.InventoryAccepted)
             {
                 IScenePresence user = scene.GetScenePresence(im.toAgentID);
 
@@ -267,7 +267,7 @@ namespace Aurora.Modules.Inventory
                         m_TransferModule.SendInstantMessage(im);
                 }
             }
-            else if (im.dialog == (byte) InstantMessageDialog.InventoryDeclined)
+            else if (im.dialog == (byte)InstantMessageDialog.InventoryDeclined)
             {
                 // Here, the recipient is local and we can assume that the
                 // inventory is loaded. Courtesy of the above bulk update,
@@ -289,7 +289,7 @@ namespace Aurora.Modules.Inventory
                     item.Folder = trashFolder.ID;
 
                     // Diva comment: can't we just update this item???
-                    List<UUID> uuids = new List<UUID> {item.ID};
+                    List<UUID> uuids = new List<UUID> { item.ID };
                     invService.DeleteItems(item.Owner, uuids);
                     ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
                     if (inventory != null)

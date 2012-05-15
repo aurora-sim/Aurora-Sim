@@ -72,8 +72,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
             // Prevents off-by-one issue
             fileHeight--;
 
-            int xoffset = w*x;
-            int yoffset = h*(fileHeight - y);
+            int xoffset = w * x;
+            int yoffset = h * (fileHeight - y);
 
             //MainConsole.Instance.DebugFormat(
             //    "[TERRAIN]: Loading tile {0},{1} (offset {2},{3}) from tilemap size of {4},{5}",
@@ -144,7 +144,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 int y;
                 for (y = 0; y < bitmap.Height; y++)
                 {
-                    retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness()*128;
+                    retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness() * 128;
                 }
             }
 
@@ -179,7 +179,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     // 512 is the largest possible height before colours clamp
-                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y]/128.0), 0.0)*(pallete - 1));
+                    int colorindex = (int)(Math.Max(Math.Min(1.0, map[x, y] / 128.0), 0.0) * (pallete - 1));
 
                     // Handle error conditions
                     if (colorindex > pallete - 1 || colorindex < 0)
@@ -216,7 +216,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 for (int x = 0; x < map.Width; x++)
                 {
                     // 512 is the largest possible height before colours clamp
-                    int colorindex = (int) (Math.Max(Math.Min(1.0, map[x, y]/512.0), 0.0)*(pallete - 1));
+                    int colorindex = (int)(Math.Max(Math.Min(1.0, map[x, y] / 512.0), 0.0) * (pallete - 1));
 
                     // Handle error conditions
                     if (colorindex > pallete - 1 || colorindex < 0)

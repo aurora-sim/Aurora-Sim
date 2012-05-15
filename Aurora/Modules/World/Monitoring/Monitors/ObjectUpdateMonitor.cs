@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public double GetValue()
         {
-            return LastPrimsLimited/10;
+            return LastPrimsLimited / 10;
         }
 
         public string GetName()

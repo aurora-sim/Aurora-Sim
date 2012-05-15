@@ -109,7 +109,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                             try
                             {
                                 using (MemoryStream stream = new MemoryStream(asset.Data))
-                                    detailTexture[i] = (Bitmap) Image.FromStream(stream);
+                                    detailTexture[i] = (Bitmap)Image.FromStream(stream);
                             }
                             catch (Exception ex)
                             {
@@ -126,7 +126,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                             {
                                 try
                                 {
-                                    detailTexture[i] = (Bitmap) J2kImage.FromBytes(asset.Data);
+                                    detailTexture[i] = (Bitmap)J2kImage.FromBytes(asset.Data);
                                 }
                                 catch (Exception ex)
                                 {
@@ -194,7 +194,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
             #region Layer Map
 
             float diff = (float)heightmap.Height / (float)Constants.RegionSize;
-            float[] layermap = new float[Constants.RegionSize*Constants.RegionSize];
+            float[] layermap = new float[Constants.RegionSize * Constants.RegionSize];
 
             for (float y = 0; y < heightmap.Height; y += diff)
             {
@@ -204,8 +204,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     float newY = y / diff;
                     float height = heightmap[(int)newX, (int)newY];
 
-                    float pctX = newX/255f;
-                    float pctY = newY/255f;
+                    float pctX = newX / 255f;
+                    float pctY = newY / 255f;
 
                     // Use bilinear interpolation between the four corners of start height and
                     // height range to select the current values at this position
@@ -229,17 +229,17 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     // The magic values were taken from http://opensimulator.org/wiki/Terrain_Splatting
                     Vector3 vec = new Vector3
                         (
-                        ((float) regionPosition.X + newX)*0.20319f,
-                        ((float) regionPosition.Y + newY)*0.20319f,
-                        height*0.25f
+                        ((float)regionPosition.X + newX) * 0.20319f,
+                        ((float)regionPosition.Y + newY) * 0.20319f,
+                        height * 0.25f
                         );
 
-                    float lowFreq = Perlin.noise2(vec.X*0.222222f, vec.Y*0.222222f)*6.5f;
-                    float highFreq = Perlin.turbulence2(vec.X, vec.Y, 2f)*2.25f;
-                    float noise = (lowFreq + highFreq)*2f;
+                    float lowFreq = Perlin.noise2(vec.X * 0.222222f, vec.Y * 0.222222f) * 6.5f;
+                    float highFreq = Perlin.turbulence2(vec.X, vec.Y, 2f) * 2.25f;
+                    float noise = (lowFreq + highFreq) * 2f;
 
                     // Combine the current height, generated noise, start height, and height range parameters, then scale all of it
-                    float layer = ((height + noise - startHeight)/heightRange)*4f;
+                    float layer = ((height + noise - startHeight) / heightRange) * 4f;
                     if (Single.IsNaN(layer))
                         layer = 0f;
                     layermap[(int)(newY * Constants.RegionSize + newX)] = Utils.Clamp(layer, 0f, 3f);
@@ -285,15 +285,15 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 {
                     for (int x = 0; x < Constants.RegionSize; x++)
                     {
-                        float layer = layermap[y*Constants.RegionSize + x];
+                        float layer = layermap[y * Constants.RegionSize + x];
 
                         // Select two textures
-                        int l0 = (int) Math.Floor(layer);
+                        int l0 = (int)Math.Floor(layer);
                         int l1 = Math.Min(l0 + 1, 3);
 
-                        byte* ptrA = (byte*) datas[l0].Scan0 + y*datas[l0].Stride + x*comps[l0];
-                        byte* ptrB = (byte*) datas[l1].Scan0 + y*datas[l1].Stride + x*comps[l1];
-                        byte* ptrO = (byte*) outputData.Scan0 + y*outputData.Stride + x*3;
+                        byte* ptrA = (byte*)datas[l0].Scan0 + y * datas[l0].Stride + x * comps[l0];
+                        byte* ptrB = (byte*)datas[l1].Scan0 + y * datas[l1].Stride + x * comps[l1];
+                        byte* ptrO = (byte*)outputData.Scan0 + y * outputData.Stride + x * 3;
 
                         float aB = *(ptrA + 0);
                         float aG = *(ptrA + 1);
@@ -306,9 +306,9 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                         float layerDiff = layer - l0;
 
                         // Interpolate between the two selected textures
-                        *(ptrO + 0) = (byte) Math.Floor(aB + layerDiff*(bB - aB));
-                        *(ptrO + 1) = (byte) Math.Floor(aG + layerDiff*(bG - aG));
-                        *(ptrO + 2) = (byte) Math.Floor(aR + layerDiff*(bR - aR));
+                        *(ptrO + 0) = (byte)Math.Floor(aB + layerDiff * (bB - aB));
+                        *(ptrO + 1) = (byte)Math.Floor(aG + layerDiff * (bG - aG));
+                        *(ptrO + 2) = (byte)Math.Floor(aR + layerDiff * (bR - aR));
                     }
                 }
 
@@ -341,9 +341,9 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 
         public static Bitmap SplatSimple(ITerrainChannel heightmap)
         {
-            const float BASE_HSV_H = 93f/360f;
-            const float BASE_HSV_S = 44f/100f;
-            const float BASE_HSV_V = 34f/100f;
+            const float BASE_HSV_H = 93f / 360f;
+            const float BASE_HSV_S = 44f / 100f;
+            const float BASE_HSV_V = 34f / 100f;
 
             Bitmap img = new Bitmap(256, 256);
             BitmapData bitmapData = img.LockBits(new Rectangle(0, 0, 256, 256), ImageLockMode.WriteOnly,
@@ -355,15 +355,15 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 {
                     for (int x = 0; x < 256; x++)
                     {
-                        float normHeight = heightmap[x, y]/255f;
+                        float normHeight = heightmap[x, y] / 255f;
                         normHeight = Utils.Clamp(normHeight, BASE_HSV_V, 1.0f);
 
                         Color4 color = Color4.FromHSV(BASE_HSV_H, BASE_HSV_S, normHeight);
 
-                        byte* ptr = (byte*) bitmapData.Scan0 + y*bitmapData.Stride + x*3;
-                        *(ptr + 0) = (byte) (color.B*255f);
-                        *(ptr + 1) = (byte) (color.G*255f);
-                        *(ptr + 2) = (byte) (color.R*255f);
+                        byte* ptr = (byte*)bitmapData.Scan0 + y * bitmapData.Stride + x * 3;
+                        *(ptr + 0) = (byte)(color.B * 255f);
+                        *(ptr + 1) = (byte)(color.G * 255f);
+                        *(ptr + 2) = (byte)(color.R * 255f);
                     }
                 }
             }

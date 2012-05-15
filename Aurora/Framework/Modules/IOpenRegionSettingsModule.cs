@@ -321,19 +321,19 @@ namespace Aurora.Framework
         {
             if (rm == null)
                 return;
-            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
+            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
             ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
-            MaximumPrimScale = (float) rm["MaxPrimScale"].AsReal();
-            MinimumPrimScale = (float) rm["MinPrimScale"].AsReal();
-            MaximumPhysPrimScale = (float) rm["MaxPhysPrimScale"].AsReal();
-            MaximumHollowSize = (float) rm["MaxHollowSize"].AsReal();
-            MinimumHoleSize = (float) rm["MinHoleSize"].AsReal();
+            MaximumPrimScale = (float)rm["MaxPrimScale"].AsReal();
+            MinimumPrimScale = (float)rm["MinPrimScale"].AsReal();
+            MaximumPhysPrimScale = (float)rm["MaxPhysPrimScale"].AsReal();
+            MaximumHollowSize = (float)rm["MaxHollowSize"].AsReal();
+            MinimumHoleSize = (float)rm["MinHoleSize"].AsReal();
             ClampPrimSizes = rm["EnforceMaxBuild"].AsInteger() == 1;
             MaximumLinkCount = rm["MaxLinkCount"].AsInteger();
             MaximumLinkCountPhys = rm["MaxLinkCountPhys"].AsInteger();
-            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
+            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
             RenderWater = rm["RenderWater"].AsInteger() == 1;
-            TerrainDetailScale = (float) rm["TerrainDetailScale"].AsReal();
+            TerrainDetailScale = (float)rm["TerrainDetailScale"].AsReal();
             MaximumInventoryItemsTransfer = rm["MaxInventoryItemsTransfer"].AsInteger();
             DisplayMinimap = rm["AllowMinimap"].AsInteger() == 1;
             AllowPhysicalPrims = rm["AllowPhysicalPrims"].AsInteger() == 1;

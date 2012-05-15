@@ -125,7 +125,7 @@ namespace OpenSim.Services
 
         public EQMEventPoster(string url, IEventQueueService handler, ICapsService capsService, string SessionID,
                               IRegistryCore registry) :
-                                  base("POST", url)
+            base("POST", url)
         {
             m_eventQueueService = handler;
             m_capsService = capsService;
@@ -170,7 +170,7 @@ namespace OpenSim.Services
                 ulong regionHandle = m_ourRegionHandle == 0 ? request["RegionHandle"].AsULong() : m_ourRegionHandle;
                 OSDArray events = new OSDArray();
                 if (request.ContainsKey("Events") && request["Events"].Type == OSDType.Array)
-                    events = (OSDArray) request["Events"];
+                    events = (OSDArray)request["Events"];
 
 #if (!ISWIN)
                 List<OSD> OSDEvents = new List<OSD>();

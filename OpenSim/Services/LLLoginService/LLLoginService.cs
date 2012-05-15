@@ -1146,13 +1146,13 @@ namespace OpenSim.Services.LLLoginService
                 // ok, now we have a empty folder, lets add the items 
                 foreach (InventoryItemBase itemBase in itemsInFolder)
                 {
-                    InventoryItemBase newcopy = (InventoryItemBase) itemBase.Clone();
+                    InventoryItemBase newcopy = (InventoryItemBase)itemBase.Clone();
                     newcopy.ID = UUID.Random();
                     newcopy.Folder = folderForAppearance.ID;
                     newcopy.Owner = user;
                     m_InventoryService.AddItem(newcopy);
 
-                    if (newcopy.InvType == (int) InventoryType.Object)
+                    if (newcopy.InvType == (int)InventoryType.Object)
                     {
                         AssetBase attobj = m_AssetService.Get(newcopy.AssetID.ToString());
 
@@ -1207,7 +1207,7 @@ namespace OpenSim.Services.LLLoginService
         public AvatarAppearance FixCurrentOutFitFolder(UUID user, AvatarAppearance avappearance)
         {
             InventoryFolderBase CurrentOutFitFolder = m_InventoryService.GetFolderForType(user, 0, AssetType.CurrentOutfitFolder);
-			if (CurrentOutFitFolder == null) return avappearance;
+            if (CurrentOutFitFolder == null) return avappearance;
             List<InventoryItemBase> ic = m_InventoryService.GetFolderItems(user, CurrentOutFitFolder.ID);
             List<UUID> brokenLinks = new List<UUID>();
             List<UUID> OtherStuff = new List<UUID>();

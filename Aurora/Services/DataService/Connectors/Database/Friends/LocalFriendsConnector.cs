@@ -101,7 +101,8 @@ namespace Aurora.Services.DataService
 
             for (int i = 0; i < query.Count; i += 2)
             {
-                FriendInfo info = new FriendInfo{
+                FriendInfo info = new FriendInfo
+                {
                     PrincipalID = principalID,
                     Friend = query[i],
                     MyFlags = int.Parse(query[i + 1])

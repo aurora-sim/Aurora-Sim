@@ -95,7 +95,7 @@ namespace Aurora.Framework
                 ulong regionHandle = ulong.Parse(kvp.Key);
                 OSDArray array = (OSDArray)kvp.Value;
                 List<mapItemReply> replies = new List<mapItemReply>();
-                foreach(OSD o in array)
+                foreach (OSD o in array)
                 {
                     mapItemReply r = new mapItemReply();
                     r.FromOSD((OSDMap)o);

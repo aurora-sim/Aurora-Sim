@@ -66,12 +66,12 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Bitmap", ColumnTypes.LongText),
                 ColDef("Category", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary),
-                IndexDef(new string[4]{ "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
-                IndexDef(new string[2]{ "RegionID", "Name" }, IndexType.Index),
-                IndexDef(new string[1]{ "OwnerID" }, IndexType.Index),
-//                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
-                IndexDef(new string[3]{ "ForSale", "SalePrice", "Area" }, IndexType.Index)
+                IndexDef(new string[1] { "ParcelID" }, IndexType.Primary),
+                IndexDef(new string[4] { "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
+                IndexDef(new string[2] { "RegionID", "Name" }, IndexType.Index),
+                IndexDef(new string[1] { "OwnerID" }, IndexType.Index),
+                //                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
+                IndexDef(new string[3] { "ForSale", "SalePrice", "Area" }, IndexType.Index)
             ));
 
             AddSchema("asevents", ColDefs(

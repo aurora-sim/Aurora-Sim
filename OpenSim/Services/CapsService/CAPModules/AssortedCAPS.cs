@@ -84,7 +84,7 @@ namespace OpenSim.Services.CapsService
             };
 #else
             GenericHTTPMethod method = httpMethod => ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
-#endif  
+#endif
             service.AddStreamHandler("UpdateAgentLanguage", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
                                                       method));
 
@@ -100,7 +100,7 @@ namespace OpenSim.Services.CapsService
             service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
                                 method));
 
-            service.AddStreamHandler ("AvatarPickerSearch", new StreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
+            service.AddStreamHandler("AvatarPickerSearch", new StreamHandler("GET", service.CreateCAPS("AvatarPickerSearch", ""),
                                                       ProcessAvatarPickerSearch));
 
 #if (!ISWIN)
@@ -134,11 +134,11 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
-            m_service.RemoveStreamHandler ("UpdateAgentLanguage", "POST");
-            m_service.RemoveStreamHandler ("UpdateAgentInformation", "POST");
-            m_service.RemoveStreamHandler ("AvatarPickerSearch", "GET");
-            m_service.RemoveStreamHandler ("HomeLocation", "POST");
-            m_service.RemoveStreamHandler ("TeleportLocation", "POST");
+            m_service.RemoveStreamHandler("UpdateAgentLanguage", "POST");
+            m_service.RemoveStreamHandler("UpdateAgentInformation", "POST");
+            m_service.RemoveStreamHandler("AvatarPickerSearch", "GET");
+            m_service.RemoveStreamHandler("HomeLocation", "POST");
+            m_service.RemoveStreamHandler("TeleportLocation", "POST");
         }
 
         #region Other CAPS
@@ -255,7 +255,7 @@ namespace OpenSim.Services.CapsService
         }
 
         private bool _isInTeleportCurrently = false;
-        private Hashtable TeleportLocation (Hashtable mDhttpMethod, UUID agentID)
+        private Hashtable TeleportLocation(Hashtable mDhttpMethod, UUID agentID)
         {
             OSDMap retVal = new OSDMap();
             Hashtable responsedata = new Hashtable();
@@ -307,7 +307,7 @@ namespace OpenSim.Services.CapsService
                 if (ad != null)
                     ad.Position = position;
             }
-            if(destination == null || circuitData == null)
+            if (destination == null || circuitData == null)
             {
                 retVal.Add("reason", "Could not find the destination region.");
                 retVal.Add("success", OSD.FromBoolean(false));
@@ -320,7 +320,7 @@ namespace OpenSim.Services.CapsService
             if (m_service.RegionHandle != destination.RegionHandle)
                 simService.MakeChildAgent(m_service.AgentID, m_service.Region);
 
-            if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
+            if (m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
                 m_service.AgentID, m_service.RegionHandle, out reason) || reason == "")
             {
                 retVal.Add("success", OSD.FromBoolean(true));

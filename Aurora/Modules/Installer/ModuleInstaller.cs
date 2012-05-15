@@ -29,8 +29,8 @@ namespace Aurora.Modules.Installer
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            MainConsole.Instance.Commands.AddCommand("compile module", 
-                "compile module <gui>", 
+            MainConsole.Instance.Commands.AddCommand("compile module",
+                "compile module <gui>",
                 "Compiles and adds a given addon-module to Aurora, adding the gui parameter opens a file picker in Windows", consoleCommand);
         }
 
@@ -99,7 +99,7 @@ namespace Aurora.Modules.Installer
             bool standaloneSwitch = map["StandaloneSwitch"];
             bool ConsoleConfiguration = map["ConsoleConfiguration"];
             bool useConfigDirectory = true;
-            if(standaloneSwitch)
+            if (standaloneSwitch)
                 useConfigDirectory = MainConsole.Instance.Prompt("Are you running this module in standalone or on Aurora.Server?", "Standalone", new List<string>(new[] { "Standalone", "Aurora.Server" })) == "Standalone";
             string configDir = useConfigDirectory ? map["ConfigDirectory"] : map["ServerConfigDirectory"];
             string configurationFinished = map["ConfigurationFinished"];
@@ -157,13 +157,13 @@ namespace Aurora.Modules.Installer
             string copiedDllFile = Path.GetFileNameWithoutExtension(projFile) + ".dll";
             if (project.BuildOutput == "Project built successfully!")
             {
-                if(options != null)
+                if (options != null)
                     MainConsole.Instance.Warn(options["CompileFinished"]);
                 CopyAndInstallDllFile(dllFile, copiedDllFile, options);
             }
             else
                 MainConsole.Instance.Warn("Failed to compile the module, exiting! (" + project.BuildOutput + ")");
-            
+
             File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), "Aurora.sln"));
             File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), projFile));
             File.Delete(Path.Combine(Path.GetDirectoryName(tmpFile), projFile + ".user"));
@@ -358,13 +358,13 @@ namespace Aurora.Modules.Installer
                     string[] lines = line.Split(new[] { "path=\"" }, StringSplitOptions.RemoveEmptyEntries);
                     string li = "";
                     int i = 0;
-                    foreach(string ll in lines[1].Split('"'))
+                    foreach (string ll in lines[1].Split('"'))
                     {
                         if (i > 0)
                             li += ll + "\"";
                         i++;
                     }
-                    l = lines[0] + "path=\"./\" " + li.Remove(li.Length-1);
+                    l = lines[0] + "path=\"./\" " + li.Remove(li.Length - 1);
                 }
                 f += l;
             }

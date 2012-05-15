@@ -208,8 +208,8 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap v)
         {
-            OSDMap values = (OSDMap) v;
-            EstateID = (uint) values["EstateID"].AsInteger();
+            OSDMap values = (OSDMap)v;
+            EstateID = (uint)values["EstateID"].AsInteger();
             EstateName = values["EstateName"].AsString();
             AbuseEmailToEstateOwner = values["AbuseEmailToEstateOwner"].AsBoolean();
             DenyAnonymous = values["DenyAnonymous"].AsBoolean();
@@ -225,10 +225,10 @@ namespace Aurora.Framework
             AllowDirectTeleport = values["AllowDirectTeleport"].AsBoolean();
             RedirectGridX = values["RedirectGridX"].AsInteger();
             RedirectGridY = values["RedirectGridY"].AsInteger();
-            ParentEstateID = (uint) values["ParentEstateID"].AsInteger();
+            ParentEstateID = (uint)values["ParentEstateID"].AsInteger();
             SunPosition = values["SunPosition"].AsReal();
             EstateSkipScripts = values["EstateSkipScripts"].AsBoolean();
-            BillableFactor = (float) values["BillableFactor"].AsReal();
+            BillableFactor = (float)values["BillableFactor"].AsReal();
             PublicAccess = values["PublicAccess"].AsBoolean();
             AbuseEmail = values["AbuseEmail"].AsString();
             EstateOwner = values["EstateOwner"].AsUUID();
@@ -299,7 +299,7 @@ namespace Aurora.Framework
         public override OSDMap ToOSD()
         {
             OSDMap values = new OSDMap();
-            values["EstateID"] = (int) EstateID;
+            values["EstateID"] = (int)EstateID;
             values["EstateName"] = EstateName;
             values["AbuseEmailToEstateOwner"] = AbuseEmailToEstateOwner;
             values["DenyAnonymous"] = DenyAnonymous;
@@ -315,7 +315,7 @@ namespace Aurora.Framework
             values["AllowDirectTeleport"] = AllowDirectTeleport;
             values["RedirectGridX"] = RedirectGridX;
             values["RedirectGridY"] = RedirectGridY;
-            values["ParentEstateID"] = (int) ParentEstateID;
+            values["ParentEstateID"] = (int)ParentEstateID;
             values["SunPosition"] = SunPosition;
             values["EstateSkipScripts"] = EstateSkipScripts;
             values["BillableFactor"] = BillableFactor;
@@ -481,7 +481,7 @@ namespace Aurora.Framework
 
         public void SetFromFlags(ulong regionFlags)
         {
-            ResetHomeOnTeleport = ((regionFlags & (ulong) OpenMetaverse.RegionFlags.ResetHomeOnTeleport) ==
+            ResetHomeOnTeleport = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.ResetHomeOnTeleport) ==
                                    (ulong)OpenMetaverse.RegionFlags.ResetHomeOnTeleport);
             BlockDwell = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.BlockDwell) == (ulong)OpenMetaverse.RegionFlags.BlockDwell);
             AllowLandmark = ((regionFlags & (ulong)OpenMetaverse.RegionFlags.AllowLandmark) == (ulong)OpenMetaverse.RegionFlags.AllowLandmark);

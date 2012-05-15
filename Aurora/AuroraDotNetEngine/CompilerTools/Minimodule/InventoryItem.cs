@@ -63,7 +63,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
             AssetBase a = m_rootScene.AssetService.Get(AssetID.ToString());
             T result = new T();
 
-            if ((sbyte) result.AssetType != a.Type)
+            if ((sbyte)result.AssetType != a.Type)
                 throw new ApplicationException("[MRM] The supplied asset class does not match the found asset");
 
             result.AssetData = a.Data;
@@ -93,9 +93,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         /// </returns>
         internal static InventoryItem FromInterface(IInventoryItem i)
         {
-            if (typeof (InventoryItem).IsAssignableFrom(i.GetType()))
+            if (typeof(InventoryItem).IsAssignableFrom(i.GetType()))
             {
-                return (InventoryItem) i;
+                return (InventoryItem)i;
             }
             else
             {

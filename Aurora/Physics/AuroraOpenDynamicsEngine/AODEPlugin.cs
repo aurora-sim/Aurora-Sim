@@ -74,7 +74,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
                 }
             }
-            
+
             return _mScene;
         }
 

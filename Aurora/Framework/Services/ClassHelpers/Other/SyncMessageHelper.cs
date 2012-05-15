@@ -67,7 +67,7 @@ namespace Aurora.Framework
 
         public static OSDMap UpdateEstateInfo(uint EstateID, UUID RegionID)
         {
-            OSDMap llsdBody = new OSDMap {{"EstateID", EstateID}, {"RegionID", RegionID}};
+            OSDMap llsdBody = new OSDMap { { "EstateID", EstateID }, { "RegionID", RegionID } };
 
             return buildEvent("UpdateEstateInfo", llsdBody, UUID.Zero, 0);
         }
@@ -117,21 +117,21 @@ namespace Aurora.Framework
 
         public static OSDMap SendChildAgentUpdate(AgentPosition agentpos, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentPos", agentpos.Pack()}};
+            OSDMap llsdBody = new OSDMap { { "AgentPos", agentpos.Pack() } };
 
             return buildEvent("SendChildAgentUpdate", llsdBody, agentpos.AgentID, requestingRegion);
         }
 
         public static OSDMap CancelTeleport(UUID AgentID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
+            OSDMap llsdBody = new OSDMap { { "AgentID", AgentID }, { "RequestingRegion", requestingRegion } };
 
             return buildEvent("CancelTeleport", llsdBody, AgentID, requestingRegion);
         }
 
         public static OSDMap AgentLoggedOut(UUID AgentID, ulong requestingRegion)
         {
-            OSDMap llsdBody = new OSDMap {{"AgentID", AgentID}, {"RequestingRegion", requestingRegion}};
+            OSDMap llsdBody = new OSDMap { { "AgentID", AgentID }, { "RequestingRegion", requestingRegion } };
 
             return buildEvent("AgentLoggedOut", llsdBody, AgentID, requestingRegion);
         }

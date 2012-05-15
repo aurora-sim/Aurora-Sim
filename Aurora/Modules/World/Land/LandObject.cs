@@ -115,7 +115,7 @@ namespace Aurora.Modules.Land
         public void SetInfoID()
         {
             //Make the InfoUUID for this parcel
-            uint x = (uint) LandData.UserLocation.X, y = (uint) LandData.UserLocation.Y;
+            uint x = (uint)LandData.UserLocation.X, y = (uint)LandData.UserLocation.Y;
             findPointInParcel(this, ref x, ref y); // find a suitable spot
             LandData.InfoUUID = Util.BuildFakeParcelID(m_scene.RegionInfo.RegionHandle, x, y);
         }
@@ -125,27 +125,27 @@ namespace Aurora.Modules.Land
         private void findPointInParcel(ILandObject land, ref uint refX, ref uint refY)
         {
             // the point we started with already is in the parcel
-            if (land.ContainsPoint((int) refX, (int) refY) && refX != 0 && refY != 0)
+            if (land.ContainsPoint((int)refX, (int)refY) && refX != 0 && refY != 0)
                 return;
 
             // ... otherwise, we have to search for a point within the parcel
-            uint startX = (uint) land.LandData.AABBMin.X;
-            uint startY = (uint) land.LandData.AABBMin.Y;
-            uint endX = (uint) land.LandData.AABBMax.X;
-            uint endY = (uint) land.LandData.AABBMax.Y;
+            uint startX = (uint)land.LandData.AABBMin.X;
+            uint startY = (uint)land.LandData.AABBMin.Y;
+            uint endX = (uint)land.LandData.AABBMax.X;
+            uint endY = (uint)land.LandData.AABBMax.Y;
 
             // default: center of the parcel
-            refX = (startX + endX)/2;
-            refY = (startY + endY)/2;
+            refX = (startX + endX) / 2;
+            refY = (startY + endY) / 2;
             // If the center point is within the parcel, take that one
-            if (land.ContainsPoint((int) refX, (int) refY)) return;
+            if (land.ContainsPoint((int)refX, (int)refY)) return;
 
             // otherwise, go the long way.
             for (uint y = startY; y <= endY; ++y)
             {
                 for (uint x = startX; x <= endX; ++x)
                 {
-                    if (land.ContainsPoint((int) x, (int) y))
+                    if (land.ContainsPoint((int)x, (int)y))
                     {
                         // found a point
                         refX = x;
@@ -175,7 +175,7 @@ namespace Aurora.Modules.Land
                 return false;
             if (x >= 0 && y >= 0 && x < m_scene.RegionInfo.RegionSizeX && y < m_scene.RegionInfo.RegionSizeY)
             {
-                return (parcelManModule.LandIDList[x/4, y/4] == LandData.LocalID);
+                return (parcelManModule.LandIDList[x / 4, y / 4] == LandData.LocalID);
             }
             else
             {
@@ -201,7 +201,7 @@ namespace Aurora.Modules.Land
                                        IClientAPI remote_client)
         {
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
-            uint regionFlags = 336723974 & ~((uint) (OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
+            uint regionFlags = 336723974 & ~((uint)(OpenMetaverse.RegionFlags.AllowLandmark | OpenMetaverse.RegionFlags.AllowSetHome));
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
@@ -223,7 +223,7 @@ namespace Aurora.Modules.Land
 
             remote_client.SendLandProperties(seq_id,
                                              snap_selection, request_result, LandData,
-                                             (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
+                                             (float)m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                              MaxPrimCounts,
                                              m_scene.RegionInfo.ObjectCapacity, regionFlags);
         }
@@ -249,9 +249,9 @@ namespace Aurora.Modules.Land
                         else
                         {
                             remote_client.SendAlertMessage("Permissions: You cannot set this parcel for sale");
-                            args.ParcelFlags &= ~(uint) ParcelFlags.ForSale;
-                            args.ParcelFlags &= ~(uint) ParcelFlags.ForSaleObjects;
-                            args.ParcelFlags &= ~(uint) ParcelFlags.SellParcelObjects;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.ForSale;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.ForSaleObjects;
+                            args.ParcelFlags &= ~(uint)ParcelFlags.SellParcelObjects;
                         }
                     }
 
@@ -282,25 +282,25 @@ namespace Aurora.Modules.Land
                     }
 
                     if (m_scene.RegionInfo.RegionSettings.BlockFly &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.AllowFly) == (uint) ParcelFlags.AllowFly))
+                        ((args.ParcelFlags & (uint)ParcelFlags.AllowFly) == (uint)ParcelFlags.AllowFly))
                         //Vanquish flying as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.AllowFly;
+                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowFly;
 
                     if (m_scene.RegionInfo.RegionSettings.RestrictPushing &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.RestrictPushObject) ==
-                         (uint) ParcelFlags.RestrictPushObject))
+                        ((args.ParcelFlags & (uint)ParcelFlags.RestrictPushObject) ==
+                         (uint)ParcelFlags.RestrictPushObject))
                         //Vanquish pushing as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.RestrictPushObject;
+                        args.ParcelFlags &= ~(uint)ParcelFlags.RestrictPushObject;
 
                     if (!m_scene.RegionInfo.EstateSettings.AllowLandmark &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.AllowLandmark) == (uint) ParcelFlags.AllowLandmark))
+                        ((args.ParcelFlags & (uint)ParcelFlags.AllowLandmark) == (uint)ParcelFlags.AllowLandmark))
                         //Vanquish landmarks as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.AllowLandmark;
+                        args.ParcelFlags &= ~(uint)ParcelFlags.AllowLandmark;
 
                     if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch &&
-                        ((args.ParcelFlags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory))
+                        ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory))
                         //Vanquish show in search as per estate settings!
-                        args.ParcelFlags &= ~(uint) ParcelFlags.ShowDirectory;
+                        args.ParcelFlags &= ~(uint)ParcelFlags.ShowDirectory;
 
                     if (m_scene.Permissions.CanEditParcelProperties(remote_client.AgentId, this,
                                                                     GroupPowers.SetLandingPoint))
@@ -326,8 +326,8 @@ namespace Aurora.Modules.Land
                         LandData.PassPrice = args.PassPrice;
                     }
 
-                    if ((args.ParcelFlags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory &&
-                        (LandData.Flags & (uint) ParcelFlags.ShowDirectory) != (uint) ParcelFlags.ShowDirectory)
+                    if ((args.ParcelFlags & (uint)ParcelFlags.ShowDirectory) == (uint)ParcelFlags.ShowDirectory &&
+                        (LandData.Flags & (uint)ParcelFlags.ShowDirectory) != (uint)ParcelFlags.ShowDirectory)
                     {
                         //If the flags have changed, we need to charge them.. maybe
                         // We really need to check per month or whatever
@@ -360,7 +360,7 @@ namespace Aurora.Modules.Land
         public void UpdateLandSold(UUID avatarID, UUID groupID, bool groupOwned, uint AuctionID, int claimprice,
                                    int area)
         {
-            if ((LandData.Flags & (uint) ParcelFlags.SellParcelObjects) == (uint) ParcelFlags.SellParcelObjects)
+            if ((LandData.Flags & (uint)ParcelFlags.SellParcelObjects) == (uint)ParcelFlags.SellParcelObjects)
             {
                 //Sell all objects on the parcel too
                 IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
@@ -443,8 +443,7 @@ namespace Aurora.Modules.Land
 
             if (LandData.ParcelAccessList.Count > 0)
             {
-                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry
-                                                            {AgentID = avatar, Flags = AccessList.Ban};
+                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry { AgentID = avatar, Flags = AccessList.Ban };
                 entry = LandData.ParcelAccessList.Find(delegate(ParcelManager.ParcelAccessEntry pae)
                                                            {
                                                                if (entry.AgentID == pae.AgentID &&
@@ -465,7 +464,7 @@ namespace Aurora.Modules.Land
 
         public bool IsRestrictedFromLand(UUID avatar)
         {
-            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong) GroupPowers.LandManageAllowed))
+            if (m_scene.Permissions.GenericParcelPermission(avatar, this, (ulong)GroupPowers.LandManageAllowed))
                 return false;
 
             if ((LandData.Flags & (uint)ParcelFlags.UsePassList) > 0 ||
@@ -614,21 +613,21 @@ namespace Aurora.Modules.Land
         public void SendAccessList(UUID agentID, UUID sessionID, uint flags, int sequenceID,
                                    IClientAPI remote_client)
         {
-            if (flags == (uint) AccessList.Access || flags == (uint) AccessList.Both)
+            if (flags == (uint)AccessList.Access || flags == (uint)AccessList.Both)
             {
                 List<List<UUID>> avatars = CreateAccessListArrayByFlag(AccessList.Access);
                 foreach (List<UUID> accessListAvs in avatars)
                 {
-                    remote_client.SendLandAccessListData(accessListAvs, (uint) AccessList.Access, LandData.LocalID);
+                    remote_client.SendLandAccessListData(accessListAvs, (uint)AccessList.Access, LandData.LocalID);
                 }
             }
 
-            if (flags == (uint) AccessList.Ban || flags == (uint) AccessList.Both)
+            if (flags == (uint)AccessList.Ban || flags == (uint)AccessList.Both)
             {
                 List<List<UUID>> avatars = CreateAccessListArrayByFlag(AccessList.Ban);
                 foreach (List<UUID> accessListAvs in avatars)
                 {
-                    remote_client.SendLandAccessListData(accessListAvs, (uint) AccessList.Ban, LandData.LocalID);
+                    remote_client.SendLandAccessListData(accessListAvs, (uint)AccessList.Ban, LandData.LocalID);
                 }
             }
         }
@@ -642,7 +641,7 @@ namespace Aurora.Modules.Land
             List<ParcelManager.ParcelAccessEntry> toRemove = new List<ParcelManager.ParcelAccessEntry>();
             foreach (ParcelManager.ParcelAccessEntry entry in LandData.ParcelAccessList)
             {
-                if (entry.Flags == (AccessList) flags) toRemove.Add(entry);
+                if (entry.Flags == (AccessList)flags) toRemove.Add(entry);
             }
 #else
             List<ParcelManager.ParcelAccessEntry> toRemove =
@@ -660,7 +659,7 @@ namespace Aurora.Modules.Land
                                                            {
                                                                AgentID = entry.AgentID,
                                                                Time = DateTime.MaxValue,
-                                                               Flags = (AccessList) flags
+                                                               Flags = (AccessList)flags
                                                            };
                 if (!LandData.ParcelAccessList.Contains(temp))
                 {
@@ -701,15 +700,15 @@ namespace Aurora.Modules.Land
         {
             ITerrainChannel heightmap = m_scene.RequestModuleInterface<ITerrainChannel>();
             IParcelManagementModule parcelManModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            int min_x = m_scene.RegionInfo.RegionSizeX/4;
-            int min_y = m_scene.RegionInfo.RegionSizeY/4;
+            int min_x = m_scene.RegionInfo.RegionSizeX / 4;
+            int min_y = m_scene.RegionInfo.RegionSizeY / 4;
             int max_x = 0;
             int max_y = 0;
             int tempArea = 0;
             int x, y;
-            for (x = 0; x < m_scene.RegionInfo.RegionSizeX/4; x++)
+            for (x = 0; x < m_scene.RegionInfo.RegionSizeX / 4; x++)
             {
-                for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
+                for (y = 0; y < m_scene.RegionInfo.RegionSizeY / 4; y++)
                 {
                     if (parcelManModule.LandIDList[x, y] == LandData.LocalID)
                     {
@@ -721,26 +720,26 @@ namespace Aurora.Modules.Land
                     }
                 }
             }
-            int tx = min_x*4;
+            int tx = min_x * 4;
             if (tx > (m_scene.RegionInfo.RegionSizeX - 1))
                 tx = (m_scene.RegionInfo.RegionSizeX - 1);
-            int ty = min_y*4;
+            int ty = min_y * 4;
             if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
                 ty = (m_scene.RegionInfo.RegionSizeY - 1);
             float min = heightmap != null ? heightmap[tx, ty] : 0;
             LandData.AABBMin =
-                new Vector3((min_x*4), (min_y*4),
+                new Vector3((min_x * 4), (min_y * 4),
                             min);
 
-            tx = max_x*4;
+            tx = max_x * 4;
             if (tx > (m_scene.RegionInfo.RegionSizeX - 1))
                 tx = (m_scene.RegionInfo.RegionSizeX - 1);
-            ty = max_y*4;
+            ty = max_y * 4;
             if (ty > (m_scene.RegionInfo.RegionSizeY - 1))
                 ty = (m_scene.RegionInfo.RegionSizeY - 1);
             min = heightmap != null ? heightmap[tx, ty] : 0;
             LandData.AABBMax =
-                new Vector3((max_x*4), (max_y*4),
+                new Vector3((max_x * 4), (max_y * 4),
                             min);
             LandData.Area = tempArea;
         }
@@ -775,11 +774,11 @@ namespace Aurora.Modules.Land
                             {
                                 resultLocalIDs.Add(obj.LocalId);
                             }
-                            else if (request_type == (int) ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
+                            else if (request_type == (int)ObjectReturnType.List && returnIDs.Contains(obj.OwnerID))
                             {
                                 resultLocalIDs.Add(obj.LocalId);
                             }
-                            else if (request_type == (int) ObjectReturnType.Sell && obj.OwnerID == remote_client.AgentId)
+                            else if (request_type == (int)ObjectReturnType.Sell && obj.OwnerID == remote_client.AgentId)
                             {
                                 resultLocalIDs.Add(obj.LocalId);
                             }
@@ -935,7 +934,7 @@ namespace Aurora.Modules.Land
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-            if (type == (uint) ObjectReturnType.Owner)
+            if (type == (uint)ObjectReturnType.Owner)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -959,7 +958,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -983,7 +982,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.Other)
+            else if (type == (uint)ObjectReturnType.Other)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -1009,7 +1008,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.List)
+            else if (type == (uint)ObjectReturnType.List)
             {
                 List<UUID> ownerlist = new List<UUID>(owners);
 
@@ -1089,7 +1088,7 @@ namespace Aurora.Modules.Land
 
             IPrimCountModule primCountModule = m_scene.RequestModuleInterface<IPrimCountModule>();
             IPrimCounts primCounts = primCountModule.GetPrimCounts(LandData.GlobalID);
-            if (type == (uint) ObjectReturnType.Owner)
+            if (type == (uint)ObjectReturnType.Owner)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -1113,7 +1112,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
+            else if (type == (uint)ObjectReturnType.Group && m_landData.GroupID != UUID.Zero)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -1137,7 +1136,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.Other)
+            else if (type == (uint)ObjectReturnType.Other)
             {
 #if (!ISWIN)
                 foreach (ISceneEntity obj in primCounts.Objects)
@@ -1161,7 +1160,7 @@ namespace Aurora.Modules.Land
                 }
 #endif
             }
-            else if (type == (uint) ObjectReturnType.List)
+            else if (type == (uint)ObjectReturnType.List)
             {
                 List<UUID> ownerlist = new List<UUID>(owners);
 
@@ -1223,7 +1222,7 @@ namespace Aurora.Modules.Land
                             {
                                 foreach (TaskInventoryItem item in part.Inventory.GetInventoryItems())
                                 {
-                                    if (item.InvType == (int) InventoryType.LSL)
+                                    if (item.InvType == (int)InventoryType.LSL)
                                     {
                                         module.SuspendScript(item.ItemID);
                                     }

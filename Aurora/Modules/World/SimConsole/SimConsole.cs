@@ -80,13 +80,13 @@ namespace Aurora.Modules.SimConsole
                 if (!m_enabled)
                     return;
                 string User = config.GetString("Users", "");
-                string[] Users = User.Split(new string[1] {"|"}, StringSplitOptions.RemoveEmptyEntries);
+                string[] Users = User.Split(new string[1] { "|" }, StringSplitOptions.RemoveEmptyEntries);
                 MainConsole.OnIncomingLogWrite += IncomingLogWrite; //Get this hooked up
                 for (int i = 0; i < Users.Length; i += 2)
                 {
                     if (!m_userKeys.ContainsKey(Users[i]) && (i + 1) < Users.Length)
                     {
-                        m_userKeys.Add(Users[i], (Access) Enum.Parse(typeof (Access), Users[i + 1]));
+                        m_userKeys.Add(Users[i], (Access)Enum.Parse(typeof(Access), Users[i + 1]));
                     }
                     else
                         MainConsole.Instance.Output(
@@ -171,7 +171,7 @@ namespace Aurora.Modules.SimConsole
             if (SP == null)
                 return responsedata; //They don't exist
 
-            OSD rm = OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSD rm = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
 
             string message = rm.AsString();
 
@@ -325,7 +325,7 @@ namespace Aurora.Modules.SimConsole
         /// <param name = "text"></param>
         private void SendConsoleEventEQM(UUID AgentID, string text)
         {
-            OSDMap item = new OSDMap {{"body", text}, {"message", OSD.FromString("SimConsoleResponse")}};
+            OSDMap item = new OSDMap { { "body", text }, { "message", OSD.FromString("SimConsoleResponse") } };
             IEventQueueService eq = m_scenes[0].RequestModuleInterface<IEventQueueService>();
             IScene scene = findScene(AgentID);
             if (eq != null && scene != null)

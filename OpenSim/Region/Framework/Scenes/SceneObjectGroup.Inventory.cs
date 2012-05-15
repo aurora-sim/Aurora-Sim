@@ -87,7 +87,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID newItemId = (copyItemID != UUID.Zero) ? copyItemID : item.ID;
 
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart(localID);
             if (part != null)
             {
                 TaskInventoryItem taskItem = new TaskInventoryItem
@@ -133,7 +133,7 @@ namespace OpenSim.Region.Framework.Scenes
                 taskItem.Flags = item.Flags;
                 taskItem.SalePrice = item.SalePrice;
                 taskItem.SaleType = item.SaleType;
-                taskItem.CreationDate = (uint) item.CreationDate;
+                taskItem.CreationDate = (uint)item.CreationDate;
 
                 bool addFromAllowedDrop = false;
                 if (remoteClient != null)
@@ -161,7 +161,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if the item does not exist</returns>
         public TaskInventoryItem GetInventoryItem(uint primID, UUID itemID)
         {
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(primID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart(primID);
             if (part != null)
             {
                 return part.Inventory.GetInventoryItem(itemID);
@@ -182,7 +182,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>false if the item did not exist, true if the update occurred succesfully</returns>
         public bool UpdateInventoryItem(TaskInventoryItem item)
         {
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(item.ParentPartID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart(item.ParentPartID);
             if (part != null)
             {
                 part.Inventory.UpdateInventoryItem(item);
@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public int RemoveInventoryItem(uint localID, UUID itemID)
         {
-            SceneObjectPart part = (SceneObjectPart) GetChildPart(localID);
+            SceneObjectPart part = (SceneObjectPart)GetChildPart(localID);
             if (part != null)
             {
                 int type = part.Inventory.RemoveInventoryItem(itemID);
@@ -212,7 +212,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public uint GetEffectivePermissions()
         {
-            uint perms = (uint) (PermissionMask.Modify |
+            uint perms = (uint)(PermissionMask.Modify |
                                  PermissionMask.Copy |
                                  PermissionMask.Move |
                                  PermissionMask.Transfer) | 7;
@@ -224,23 +224,23 @@ namespace OpenSim.Region.Framework.Scenes
                 perms &= part.Inventory.MaskEffectivePermissions();
             }
 
-            if ((ownerMask & (uint) PermissionMask.Modify) == 0)
-                perms &= ~(uint) PermissionMask.Modify;
-            if ((ownerMask & (uint) PermissionMask.Copy) == 0)
-                perms &= ~(uint) PermissionMask.Copy;
-            if ((ownerMask & (uint) PermissionMask.Transfer) == 0)
-                perms &= ~(uint) PermissionMask.Transfer;
+            if ((ownerMask & (uint)PermissionMask.Modify) == 0)
+                perms &= ~(uint)PermissionMask.Modify;
+            if ((ownerMask & (uint)PermissionMask.Copy) == 0)
+                perms &= ~(uint)PermissionMask.Copy;
+            if ((ownerMask & (uint)PermissionMask.Transfer) == 0)
+                perms &= ~(uint)PermissionMask.Transfer;
 
             // If root prim permissions are applied here, this would screw
             // with in-inventory manipulation of the next owner perms
             // in a major way. So, let's move this to the give itself.
             // Yes. I know. Evil.
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
-//                perms &= ~((uint)PermissionMask.Modify >> 13);
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
-//                perms &= ~((uint)PermissionMask.Copy >> 13);
-//            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
-//                perms &= ~((uint)PermissionMask.Transfer >> 13);
+            //            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Modify) == 0)
+            //                perms &= ~((uint)PermissionMask.Modify >> 13);
+            //            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Copy) == 0)
+            //                perms &= ~((uint)PermissionMask.Copy >> 13);
+            //            if ((ownerMask & RootPart.NextOwnerMask & (uint)PermissionMask.Transfer) == 0)
+            //                perms &= ~((uint)PermissionMask.Transfer >> 13);
 
             return perms;
         }

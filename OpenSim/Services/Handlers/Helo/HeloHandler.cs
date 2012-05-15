@@ -74,7 +74,7 @@ namespace OpenSim.Services
         private byte[] OKResponse(OSHttpResponse httpResponse)
         {
             httpResponse.AddHeader("X-Handlers-Provided", m_HandlersType);
-            httpResponse.StatusCode = (int) HttpStatusCode.OK;
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
             httpResponse.StatusDescription = "OK";
             return new byte[0];
         }

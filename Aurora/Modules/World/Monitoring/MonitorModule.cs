@@ -348,7 +348,7 @@ namespace Aurora.Modules.Monitoring
                 // eg url/?monitor=Monitor.Name
                 if (request.ContainsKey("monitor"))
                 {
-                    string monID = (string) request["monitor"];
+                    string monID = (string)request["monitor"];
 
                     foreach (IMonitor monitor in m_monitors.Values)
                     {
@@ -419,10 +419,10 @@ namespace Aurora.Modules.Monitoring
                 {
                     // leave region flags at 0
                 }
-                rb.ObjectCapacity = (uint) m_currentScene.RegionInfo.ObjectCapacity;
+                rb.ObjectCapacity = (uint)m_currentScene.RegionInfo.ObjectCapacity;
                 rb.RegionFlags = regionFlags;
-                rb.RegionX = (uint) m_currentScene.RegionInfo.RegionLocX/Constants.RegionSize;
-                rb.RegionY = (uint) m_currentScene.RegionInfo.RegionLocY/Constants.RegionSize;
+                rb.RegionX = (uint)m_currentScene.RegionInfo.RegionLocX / Constants.RegionSize;
+                rb.RegionY = (uint)m_currentScene.RegionInfo.RegionLocY / Constants.RegionSize;
             }
 
             /// <summary>
@@ -442,34 +442,34 @@ namespace Aurora.Modules.Monitoring
                 // Know what's not thread safe in Mono... modifying timers.
                 lock (m_report)
                 {
-                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor) GetMonitor(MonitorModuleHelper.SimFrameStats);
+                    ISimFrameMonitor simFrameMonitor = (ISimFrameMonitor)GetMonitor(MonitorModuleHelper.SimFrameStats);
                     ITimeDilationMonitor timeDilationMonitor =
-                        (ITimeDilationMonitor) GetMonitor(MonitorModuleHelper.TimeDilation);
+                        (ITimeDilationMonitor)GetMonitor(MonitorModuleHelper.TimeDilation);
                     ITotalFrameTimeMonitor totalFrameMonitor =
-                        (ITotalFrameTimeMonitor) GetMonitor(MonitorModuleHelper.TotalFrameTime);
-                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.SleepFrameTime);
-                    ITimeMonitor otherFrameMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.OtherFrameTime);
+                        (ITotalFrameTimeMonitor)GetMonitor(MonitorModuleHelper.TotalFrameTime);
+                    ITimeMonitor sleepFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.SleepFrameTime);
+                    ITimeMonitor otherFrameMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.OtherFrameTime);
                     IPhysicsFrameMonitor physicsFrameMonitor =
-                        (IPhysicsFrameMonitor) GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
+                        (IPhysicsFrameMonitor)GetMonitor(MonitorModuleHelper.TotalPhysicsFrameTime);
                     ITimeMonitor physicsSyncFrameMonitor =
-                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
+                        (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsSyncFrameTime);
                     ITimeMonitor physicsTimeFrameMonitor =
-                        (ITimeMonitor) GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
+                        (ITimeMonitor)GetMonitor(MonitorModuleHelper.PhysicsUpdateFrameTime);
                     IAgentUpdateMonitor agentUpdateFrameMonitor =
-                        (IAgentUpdateMonitor) GetMonitor(MonitorModuleHelper.AgentUpdateCount);
-                    INetworkMonitor networkMonitor = (INetworkMonitor) GetMonitor(MonitorModuleHelper.NetworkMonitor);
+                        (IAgentUpdateMonitor)GetMonitor(MonitorModuleHelper.AgentUpdateCount);
+                    INetworkMonitor networkMonitor = (INetworkMonitor)GetMonitor(MonitorModuleHelper.NetworkMonitor);
                     IMonitor imagesMonitor = GetMonitor(MonitorModuleHelper.ImagesFrameTime);
-                    ITimeMonitor scriptMonitor = (ITimeMonitor) GetMonitor(MonitorModuleHelper.ScriptFrameTime);
+                    ITimeMonitor scriptMonitor = (ITimeMonitor)GetMonitor(MonitorModuleHelper.ScriptFrameTime);
                     IScriptCountMonitor totalScriptMonitor =
-                        (IScriptCountMonitor) GetMonitor(MonitorModuleHelper.TotalScriptCount);
+                        (IScriptCountMonitor)GetMonitor(MonitorModuleHelper.TotalScriptCount);
 
                     #region various statistic googly moogly
 
-                    float simfps = simFrameMonitor.SimFPS/statsUpdateFactor;
+                    float simfps = simFrameMonitor.SimFPS / statsUpdateFactor;
                     // save the reported value so there is something available for llGetRegionFPS 
                     simFrameMonitor.LastReportedSimFPS = simfps;
 
-                    float physfps = physicsFrameMonitor.PhysicsFPS/statsUpdateFactor;
+                    float physfps = physicsFrameMonitor.PhysicsFPS / statsUpdateFactor;
                     physicsFrameMonitor.LastReportedPhysicsFPS = physfps;
                     //Update the time dilation with the newest physicsFPS
                     timeDilationMonitor.SetPhysicsFPS(physfps);
@@ -480,50 +480,50 @@ namespace Aurora.Modules.Monitoring
 
                     //Some info on this packet http://wiki.secondlife.com/wiki/Statistics_Bar_Guide
 
-                    sb[0].StatID = (uint) Stats.TimeDilation;
-                    sb[0].StatValue = (float) timeDilationMonitor.GetValue();
+                    sb[0].StatID = (uint)Stats.TimeDilation;
+                    sb[0].StatValue = (float)timeDilationMonitor.GetValue();
 
-                    sb[1].StatID = (uint) Stats.FPS;
+                    sb[1].StatID = (uint)Stats.FPS;
                     sb[1].StatValue = simfps;
 
-                    float realsimfps = simfps*2;
+                    float realsimfps = simfps * 2;
 
-                    sb[2].StatID = (uint) Stats.PhysFPS;
+                    sb[2].StatID = (uint)Stats.PhysFPS;
                     sb[2].StatValue = physfps;
 
-                    sb[3].StatID = (uint) Stats.AgentUpdates;
-                    sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates/realsimfps);
+                    sb[3].StatID = (uint)Stats.AgentUpdates;
+                    sb[3].StatValue = (agentUpdateFrameMonitor.AgentUpdates / realsimfps);
 
-                    sb[4].StatID = (uint) Stats.FrameMS;
-                    float TotalFrames = (float) (totalFrameMonitor.GetValue()/realsimfps);
+                    sb[4].StatID = (uint)Stats.FrameMS;
+                    float TotalFrames = (float)(totalFrameMonitor.GetValue() / realsimfps);
                     sb[4].StatValue = TotalFrames;
 
-                    sb[5].StatID = (uint) Stats.NetMS;
+                    sb[5].StatID = (uint)Stats.NetMS;
                     sb[5].StatValue = 0; //TODO: Implement this
 
-                    sb[6].StatID = (uint) Stats.SimOtherMS;
-                    float otherMS = (float) (otherFrameMonitor.GetValue()/realsimfps);
+                    sb[6].StatID = (uint)Stats.SimOtherMS;
+                    float otherMS = (float)(otherFrameMonitor.GetValue() / realsimfps);
                     sb[6].StatValue = otherMS;
 
-                    sb[7].StatID = (uint) Stats.SimPhysicsMS;
-                    float PhysicsMS = (float) (physicsTimeFrameMonitor.GetValue()/realsimfps);
+                    sb[7].StatID = (uint)Stats.SimPhysicsMS;
+                    float PhysicsMS = (float)(physicsTimeFrameMonitor.GetValue() / realsimfps);
                     sb[7].StatValue = PhysicsMS;
 
-                    sb[8].StatID = (uint) Stats.AgentMS;
-                    sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime/realsimfps);
+                    sb[8].StatID = (uint)Stats.AgentMS;
+                    sb[8].StatValue = (agentUpdateFrameMonitor.AgentFrameTime / realsimfps);
 
-                    sb[9].StatID = (uint) Stats.ImagesMS;
-                    float imageMS = (float) (imagesMonitor.GetValue()/realsimfps);
+                    sb[9].StatID = (uint)Stats.ImagesMS;
+                    float imageMS = (float)(imagesMonitor.GetValue() / realsimfps);
                     sb[9].StatValue = imageMS;
 
-                    sb[10].StatID = (uint) Stats.ScriptMS;
-                    float ScriptMS = (float) (scriptMonitor.GetValue()/realsimfps);
+                    sb[10].StatID = (uint)Stats.ScriptMS;
+                    float ScriptMS = (float)(scriptMonitor.GetValue() / realsimfps);
                     sb[10].StatValue = ScriptMS;
 
-                    sb[11].StatID = (uint) Stats.TotalObjects;
-                    sb[12].StatID = (uint) Stats.ActiveObjects;
-                    sb[13].StatID = (uint) Stats.NumAgentMain;
-                    sb[14].StatID = (uint) Stats.NumAgentChild;
+                    sb[11].StatID = (uint)Stats.TotalObjects;
+                    sb[12].StatID = (uint)Stats.ActiveObjects;
+                    sb[13].StatID = (uint)Stats.NumAgentMain;
+                    sb[14].StatID = (uint)Stats.NumAgentChild;
 
                     IEntityCountModule entityCountModule = m_currentScene.RequestModuleInterface<IEntityCountModule>();
                     if (entityCountModule != null)
@@ -537,75 +537,75 @@ namespace Aurora.Modules.Monitoring
                         sb[14].StatValue = entityCountModule.ChildAgents;
                     }
 
-                    sb[15].StatID = (uint) Stats.NumScriptActive;
+                    sb[15].StatID = (uint)Stats.NumScriptActive;
                     sb[15].StatValue = totalScriptMonitor.ActiveScripts;
 
-                    sb[16].StatID = (uint) Stats.LSLIPS;
+                    sb[16].StatID = (uint)Stats.LSLIPS;
                     sb[16].StatValue = 0; //This isn't used anymore, and has been superseeded by LSLEPS
 
-                    sb[17].StatID = (uint) Stats.InPPS;
-                    sb[17].StatValue = (networkMonitor.InPacketsPerSecond/statsUpdateFactor);
+                    sb[17].StatID = (uint)Stats.InPPS;
+                    sb[17].StatValue = (networkMonitor.InPacketsPerSecond / statsUpdateFactor);
 
-                    sb[18].StatID = (uint) Stats.OutPPS;
-                    sb[18].StatValue = (networkMonitor.OutPacketsPerSecond/statsUpdateFactor);
+                    sb[18].StatID = (uint)Stats.OutPPS;
+                    sb[18].StatValue = (networkMonitor.OutPacketsPerSecond / statsUpdateFactor);
 
-                    sb[19].StatID = (uint) Stats.PendingDownloads;
+                    sb[19].StatID = (uint)Stats.PendingDownloads;
                     sb[19].StatValue = (networkMonitor.PendingDownloads);
 
-                    sb[20].StatID = (uint) Stats.PendingUploads;
+                    sb[20].StatID = (uint)Stats.PendingUploads;
                     sb[20].StatValue = (networkMonitor.PendingUploads);
 
                     //21 and 22 are forced to the GC memory as they WILL make memory usage go up rapidly otherwise!
-                    sb[21].StatID = (uint) Stats.VirtualSizeKB;
-                    sb[21].StatValue = GC.GetTotalMemory(false)/1024;
-                        // System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
+                    sb[21].StatID = (uint)Stats.VirtualSizeKB;
+                    sb[21].StatValue = GC.GetTotalMemory(false) / 1024;
+                    // System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024);
 
-                    sb[22].StatID = (uint) Stats.ResidentSizeKB;
-                    sb[22].StatValue = GC.GetTotalMemory(false)/1024;
-                        //(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
+                    sb[22].StatID = (uint)Stats.ResidentSizeKB;
+                    sb[22].StatValue = GC.GetTotalMemory(false) / 1024;
+                    //(float)System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024);
 
-                    sb[23].StatID = (uint) Stats.PendingLocalUploads;
-                    sb[23].StatValue = (networkMonitor.PendingUploads/statsUpdateFactor);
+                    sb[23].StatID = (uint)Stats.PendingLocalUploads;
+                    sb[23].StatValue = (networkMonitor.PendingUploads / statsUpdateFactor);
 
-                    sb[24].StatID = (uint) Stats.TotalUnackedBytes;
+                    sb[24].StatID = (uint)Stats.TotalUnackedBytes;
                     sb[24].StatValue = (networkMonitor.UnackedBytes);
 
-                    sb[25].StatID = (uint) Stats.PhysicsPinnedTasks;
+                    sb[25].StatID = (uint)Stats.PhysicsPinnedTasks;
                     sb[25].StatValue = 0;
 
-                    sb[26].StatID = (uint) Stats.PhysicsLODTasks;
+                    sb[26].StatID = (uint)Stats.PhysicsLODTasks;
                     sb[26].StatValue = 0;
 
-                    sb[27].StatID = (uint) Stats.SimPhysicsStepMS;
+                    sb[27].StatID = (uint)Stats.SimPhysicsStepMS;
                     sb[27].StatValue = m_currentScene.PhysicsScene.StepTime;
 
-                    sb[28].StatID = (uint) Stats.SimPhysicsShape;
+                    sb[28].StatID = (uint)Stats.SimPhysicsShape;
                     sb[28].StatValue = 0;
 
-                    sb[29].StatID = (uint) Stats.SimPhysicsOtherMS;
-                    sb[29].StatValue = (float) (physicsSyncFrameMonitor.GetValue()/realsimfps);
+                    sb[29].StatID = (uint)Stats.SimPhysicsOtherMS;
+                    sb[29].StatValue = (float)(physicsSyncFrameMonitor.GetValue() / realsimfps);
 
-                    sb[30].StatID = (uint) Stats.SimPhysicsMemory;
+                    sb[30].StatID = (uint)Stats.SimPhysicsMemory;
                     sb[30].StatValue = 0;
 
-                    sb[31].StatID = (uint) Stats.ScriptEPS;
-                    sb[31].StatValue = totalScriptMonitor.ScriptEPS/statsUpdateFactor;
+                    sb[31].StatID = (uint)Stats.ScriptEPS;
+                    sb[31].StatValue = totalScriptMonitor.ScriptEPS / statsUpdateFactor;
 
-                    sb[32].StatID = (uint) Stats.SimSpareTime;
+                    sb[32].StatID = (uint)Stats.SimSpareTime;
                     //Spare time is the total time minus the stats that are in the same category in the client
                     // It is the sleep time, physics step, update physics shape, physics other, and pumpI0.
                     // Note: take out agent Update and script time for now, as they are not a part of the heartbeat right now and will mess this calc up
                     float SpareTime = TotalFrames - (
-                                                        /*NetMS + */ PhysicsMS + otherMS + imageMS);
-//                         + /*(agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor) +*/
-//                        (imagesMonitor.GetValue() / statsUpdateFactor) /* + ScriptMS*/));
+                        /*NetMS + */ PhysicsMS + otherMS + imageMS);
+                    //                         + /*(agentUpdateFrameMonitor.AgentFrameTime / statsUpdateFactor) +*/
+                    //                        (imagesMonitor.GetValue() / statsUpdateFactor) /* + ScriptMS*/));
 
                     sb[32].StatValue = SpareTime;
 
-                    sb[33].StatID = (uint) Stats.SimSleepTime;
-                    sb[33].StatValue = (float) (sleepFrameMonitor.GetValue()/realsimfps);
+                    sb[33].StatID = (uint)Stats.SimSleepTime;
+                    sb[33].StatValue = (float)(sleepFrameMonitor.GetValue() / realsimfps);
 
-                    sb[34].StatID = (uint) Stats.IOPumpTime;
+                    sb[34].StatID = (uint)Stats.IOPumpTime;
                     sb[34].StatValue = 0; //TODO: implement this
 
                     #endregion
@@ -664,7 +664,7 @@ namespace Aurora.Modules.Monitoring
             public void SetUpdateMS(int ms)
             {
                 statsUpdatesEveryMS = ms;
-                statsUpdateFactor = (statsUpdatesEveryMS/1000);
+                statsUpdateFactor = (statsUpdatesEveryMS / 1000);
                 m_report.Interval = statsUpdatesEveryMS;
             }
 
@@ -997,7 +997,7 @@ namespace Aurora.Modules.Monitoring
         {
             m_simulationBase = simulationBase;
 
-            Timer PeriodicDiagnosticsTimer = new Timer(60*60*1000); // One hour
+            Timer PeriodicDiagnosticsTimer = new Timer(60 * 60 * 1000); // One hour
             PeriodicDiagnosticsTimer.Elapsed += LogDiagnostics;
             PeriodicDiagnosticsTimer.Enabled = true;
             PeriodicDiagnosticsTimer.Start();

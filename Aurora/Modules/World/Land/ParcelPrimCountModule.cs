@@ -152,10 +152,10 @@ namespace Aurora.Modules.Land
         public int GetParcelMaxPrimCount(ILandObject thisObject)
         {
             // Normal Calculations
-            return (int) Math.Round(((float) thisObject.LandData.Area/
-                                     (256*256))*
-                                    m_Scene.RegionInfo.ObjectCapacity*
-                                    (float) m_Scene.RegionInfo.RegionSettings.ObjectBonus);
+            return (int)Math.Round(((float)thisObject.LandData.Area /
+                                     (256 * 256)) *
+                                    m_Scene.RegionInfo.ObjectCapacity *
+                                    (float)m_Scene.RegionInfo.RegionSettings.ObjectBonus);
         }
 
         public IPrimCounts GetPrimCounts(UUID parcelID)
@@ -554,15 +554,15 @@ namespace Aurora.Modules.Land
             //}
             if (FunctionName == "ObjectChangedOwner")
             {
-                TaintPrimCount((int) ((SceneObjectGroup) parameters).AbsolutePosition.X,
-                               (int) ((SceneObjectGroup) parameters).AbsolutePosition.Y);
+                TaintPrimCount((int)((SceneObjectGroup)parameters).AbsolutePosition.X,
+                               (int)((SceneObjectGroup)parameters).AbsolutePosition.Y);
             }
             else if (FunctionName == "ObjectEnteringNewParcel")
             {
                 //Taint the parcels
                 //SceneObjectGroup grp = (((Object[])parameters)[0]) as SceneObjectGroup;
-                UUID newParcel = (UUID) (((Object[]) parameters)[1]);
-                UUID oldParcel = (UUID) (((Object[]) parameters)[2]);
+                UUID newParcel = (UUID)(((Object[])parameters)[1]);
+                UUID oldParcel = (UUID)(((Object[])parameters)[2]);
                 ILandObject oldlandObject =
                     m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(oldParcel);
                 ILandObject newlandObject =

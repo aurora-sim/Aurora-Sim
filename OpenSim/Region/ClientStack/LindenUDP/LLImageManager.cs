@@ -118,7 +118,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                             //Update the requested priority
                             imgrequest.Priority = newRequest.Priority;
-                            lock(m_syncRoot)
+                            lock (m_syncRoot)
                                 m_queue.Remove(imgrequest);
                             AddImageToQueue(imgrequest);
 
@@ -170,7 +170,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return null;
 
             lock (m_syncRoot)
-                return m_queue.Find(new J2KImage(this) {TextureID = newRequest.RequestedAssetID},
+                return m_queue.Find(new J2KImage(this) { TextureID = newRequest.RequestedAssetID },
                                     new Comparer());
         }
 
@@ -187,14 +187,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 // If null was returned, the texture priority queue is currently empty
                 if (image == null)
                     break;
-                        //Break so that we add any images back that we might remove because they arn't finished decoding
+                //Break so that we add any images back that we might remove because they arn't finished decoding
 
                 if (image.IsDecoded)
                 {
                     if (image.Layers == null)
                     {
                         //We don't have it, tell the client that it doesn't exist
-                        m_client.SendAssetUploadCompleteMessage((sbyte) AssetType.Texture, false, image.TextureID);
+                        m_client.SendAssetUploadCompleteMessage((sbyte)AssetType.Texture, false, image.TextureID);
                         packetsSent++;
                     }
                     else
@@ -312,7 +312,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         #region Nested type: J2KImageComparer
 
-/*
+        /*
         private sealed class J2KImageComparer : IComparer<J2KImage>
         {
             #region IComparer<J2KImage> Members

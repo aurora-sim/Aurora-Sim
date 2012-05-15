@@ -16,17 +16,17 @@ namespace Aurora.Modules
     public class ServerSettingsModule : INonSharedRegionModule, IServerSettings
     {
         private List<ServerSetting> m_settings = new List<ServerSetting>();
-        public void Initialise (IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             scene.RegisterModuleInterface<IServerSettings>(this);
             scene.EventManager.OnRegisterCaps += EventManager_OnRegisterCaps;
         }
 
-        OSDMap EventManager_OnRegisterCaps (UUID agentID, IHttpServer httpServer)
+        OSDMap EventManager_OnRegisterCaps(UUID agentID, IHttpServer httpServer)
         {
             OSDMap map = new OSDMap();
 
@@ -45,7 +45,7 @@ namespace Aurora.Modules
             return map;
         }
 
-        private Hashtable SetServerFeature (Hashtable m_dhttpMethod, UUID agentID)
+        private Hashtable SetServerFeature(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -56,7 +56,7 @@ namespace Aurora.Modules
             return responsedata;
         }
 
-        private Hashtable GetServerFeature (Hashtable m_dhttpMethod, UUID agentID)
+        private Hashtable GetServerFeature(Hashtable m_dhttpMethod, UUID agentID)
         {
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -67,15 +67,15 @@ namespace Aurora.Modules
             return responsedata;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void Close ()
+        public void Close()
         {
         }
 
@@ -89,7 +89,7 @@ namespace Aurora.Modules
             get { return null; }
         }
 
-        public string BuildSettingsXML ()
+        public string BuildSettingsXML()
         {
             StringBuilder builder = new StringBuilder();
 
@@ -97,21 +97,21 @@ namespace Aurora.Modules
             builder.AppendLine("<llsd>");
             builder.AppendLine("<map>");
 
-            foreach(ServerSetting setting in m_settings)
+            foreach (ServerSetting setting in m_settings)
             {
                 builder.Append("<key>");
                 builder.Append(setting.Name);
                 builder.AppendLine("</key>");
                 builder.AppendLine("<map>");
                 builder.AppendLine("<key>Comment</key>");
-			    builder.Append("<string>");
+                builder.Append("<string>");
                 builder.Append(setting.Comment);
                 builder.AppendLine("</string>");
-			    builder.AppendLine("<key>Type</key>");
-			    builder.Append("<string>");
+                builder.AppendLine("<key>Type</key>");
+                builder.Append("<string>");
                 builder.Append(setting.Type);
                 builder.AppendLine("</string>");
-			    builder.AppendLine("<key>Value</key>");
+                builder.AppendLine("<key>Value</key>");
                 builder.Append(setting.GetValue());
                 builder.AppendLine("</map>");
             }
@@ -122,12 +122,12 @@ namespace Aurora.Modules
             return builder.ToString();
         }
 
-        public void RegisterSetting (ServerSetting setting)
+        public void RegisterSetting(ServerSetting setting)
         {
             m_settings.Add(setting);
         }
 
-        public void UnregisterSetting (ServerSetting setting)
+        public void UnregisterSetting(ServerSetting setting)
         {
             m_settings.RemoveAll(s => s.Name == setting.Name);
         }

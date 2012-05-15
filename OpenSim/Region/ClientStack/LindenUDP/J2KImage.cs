@@ -185,16 +185,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         // Treat initial texture downloads with a DiscardLevel of -1 a request for the highest DiscardLevel
                         if (DiscardLevel < 0 && m_stopPacket == 0)
-                            DiscardLevel = (sbyte) maxDiscardLevel;
+                            DiscardLevel = (sbyte)maxDiscardLevel;
 
                         // Clamp at the highest discard level
-                        DiscardLevel = (sbyte) Math.Min(DiscardLevel, maxDiscardLevel);
+                        DiscardLevel = (sbyte)Math.Min(DiscardLevel, maxDiscardLevel);
 
                         //Calculate the m_stopPacket
                         if (Layers.Length > 0)
                         {
                             m_stopPacket =
-                                (uint) GetPacketForBytePosition(Layers[(Layers.Length - 1) - DiscardLevel].End);
+                                (uint)GetPacketForBytePosition(Layers[(Layers.Length - 1) - DiscardLevel].End);
                             //I don't know why, but the viewer seems to expect the final packet if the file
                             //is just one packet bigger.
                             if (TexturePacketCount() == m_stopPacket + 1)
@@ -227,7 +227,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_asset.Length <= FIRST_PACKET_SIZE)
             {
                 // We have less then one packet's worth of data
-                client.SendImageFirstPart(1, TextureID, (uint) m_asset.Length, m_asset, 2);
+                client.SendImageFirstPart(1, TextureID, (uint)m_asset.Length, m_asset, 2);
                 m_stopPacket = 0;
                 return true;
             }
@@ -246,8 +246,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return true;
             }
 
-            client.SendImageFirstPart(TexturePacketCount(), TextureID, (uint) m_asset.Length, firstImageData,
-                                      (byte) ImageCodec.J2C);
+            client.SendImageFirstPart(TexturePacketCount(), TextureID, (uint)m_asset.Length, firstImageData,
+                                      (byte)ImageCodec.J2C);
             return false;
         }
 
@@ -257,7 +257,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return false;
 
             bool complete = false;
-            int imagePacketSize = ((int) m_currentPacket == (TexturePacketCount()))
+            int imagePacketSize = ((int)m_currentPacket == (TexturePacketCount()))
                                       ? LastPacketSize()
                                       : IMAGE_PACKET_SIZE;
 
@@ -295,7 +295,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
 
                     //Send the packet
-                    client.SendImageNextPart((ushort) (m_currentPacket - 1), TextureID, imageData);
+                    client.SendImageNextPart((ushort)(m_currentPacket - 1), TextureID, imageData);
                 }
 
                 return !complete;
@@ -317,19 +317,19 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_asset.Length <= FIRST_PACKET_SIZE)
                 return 1;
 
-            return (ushort) (((m_asset.Length - FIRST_PACKET_SIZE + IMAGE_PACKET_SIZE - 1)/IMAGE_PACKET_SIZE) + 1);
+            return (ushort)(((m_asset.Length - FIRST_PACKET_SIZE + IMAGE_PACKET_SIZE - 1) / IMAGE_PACKET_SIZE) + 1);
         }
 
         private int GetPacketForBytePosition(int bytePosition)
         {
-            return ((bytePosition - FIRST_PACKET_SIZE + IMAGE_PACKET_SIZE - 1)/IMAGE_PACKET_SIZE) + 1;
+            return ((bytePosition - FIRST_PACKET_SIZE + IMAGE_PACKET_SIZE - 1) / IMAGE_PACKET_SIZE) + 1;
         }
 
         private int LastPacketSize()
         {
             if (m_currentPacket == 1)
                 return m_asset.Length;
-            int lastsize = (m_asset.Length - FIRST_PACKET_SIZE)%IMAGE_PACKET_SIZE;
+            int lastsize = (m_asset.Length - FIRST_PACKET_SIZE) % IMAGE_PACKET_SIZE;
             //If the last packet size is zero, it's really cImagePacketSize, it sits on the boundary
             if (lastsize == 0)
             {
@@ -345,7 +345,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (m_currentPacket == 1)
                 return FIRST_PACKET_SIZE;
 
-            int result = FIRST_PACKET_SIZE + ((int) m_currentPacket - 2)*IMAGE_PACKET_SIZE;
+            int result = FIRST_PACKET_SIZE + ((int)m_currentPacket - 2) * IMAGE_PACKET_SIZE;
             if (result < 0)
             {
                 result = FIRST_PACKET_SIZE;

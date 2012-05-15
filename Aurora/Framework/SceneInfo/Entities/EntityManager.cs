@@ -80,7 +80,7 @@ namespace Aurora.Framework
                 }
                 else
                 {
-                    IScenePresence presence = (IScenePresence) entity;
+                    IScenePresence presence = (IScenePresence)entity;
 
                     lock (m_presenceEntitiesLock)
                     {
@@ -138,7 +138,7 @@ namespace Aurora.Framework
                 {
                     lock (m_presenceEntitiesLock)
                     {
-                        m_presenceEntitiesList.Remove((IScenePresence) entity);
+                        m_presenceEntitiesList.Remove((IScenePresence)entity);
                         m_presenceEntities.Remove(entity.UUID);
                     }
                 }
@@ -199,7 +199,7 @@ namespace Aurora.Framework
                 m_objectEntities.ForEach(delegate(ISceneEntity entity)
                                              {
                                                  //Add attachments as well, as they might be needed
-                                                 if ((entity.AbsolutePosition - pos).LengthSquared() < radius*radius ||
+                                                 if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius ||
                                                      entity.IsAttachment)
                                                      tmp.Add(entity);
                                              });

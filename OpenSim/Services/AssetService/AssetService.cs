@@ -253,7 +253,7 @@ namespace OpenSim.Services.AssetService
 
             for (i = 0; i < 5; i++)
             {
-                int off = i*16;
+                int off = i * 16;
                 if (asset.Data.Length <= off)
                     break;
                 int len = 16;

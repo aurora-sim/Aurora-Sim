@@ -68,8 +68,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
             while (currFileYOffset < offsetY)
             {
                 // read a whole strip of regions
-                int heightsToRead = sectionHeight*(fileWidth*sectionWidth);
-                bs.ReadBytes(heightsToRead*4); // because the floats are 4 bytes in the file
+                int heightsToRead = sectionHeight * (fileWidth * sectionWidth);
+                bs.ReadBytes(heightsToRead * 4); // because the floats are 4 bytes in the file
                 currFileYOffset++;
             }
 
@@ -86,7 +86,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 // i.e. eat X upto where we start
                 while (currFileXOffset < offsetX)
                 {
-                    bs.ReadBytes(sectionWidth*4); // 4 bytes = single
+                    bs.ReadBytes(sectionWidth * 4); // 4 bytes = single
                     currFileXOffset++;
                 }
 
@@ -105,7 +105,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 while (currFileXOffset < fileWidth)
                 {
                     // eat the next regions x line
-                    bs.ReadBytes(sectionWidth*4); // 4 bytes = single
+                    bs.ReadBytes(sectionWidth * 4); // 4 bytes = single
                     currFileXOffset++;
                 }
             }
@@ -119,8 +119,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
         public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
             BinaryReader bs = new BinaryReader(s);
-            int size = (int) Math.Sqrt(s.Length);
-            size /= sizeof (short);
+            int size = (int)Math.Sqrt(s.Length);
+            size /= sizeof(short);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
             for (int y = 0; y < retval.Height; y++)
             {

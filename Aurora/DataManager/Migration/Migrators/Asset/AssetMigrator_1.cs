@@ -46,7 +46,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("KeySetting", ColumnTypes.String50),
                 ColDef("ValueSetting", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[2]{ "Token", "KeySetting" }, IndexType.Primary)
+                IndexDef(new string[2] { "Token", "KeySetting" }, IndexType.Primary)
             ));
 
             renameColumns.Add("UUID", "id");
@@ -71,7 +71,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("create_time", ColumnTypes.Integer11),
                 ColDef("access_time", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[1]{ "id" }, IndexType.Primary)
+                IndexDef(new string[1] { "id" }, IndexType.Primary)
             ));
 
             RemoveSchema("assetblob");

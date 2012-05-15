@@ -251,7 +251,7 @@ namespace Aurora.Framework
             if (part == null)
                 return 0;
 
-            uint perms = part.GetEffectiveObjectFlags() | (uint) DEFAULT_FLAGS;
+            uint perms = part.GetEffectiveObjectFlags() | (uint)DEFAULT_FLAGS;
 
             GenerateClientFlagsHandler handlerGenerateClientFlags = OnGenerateClientFlags;
             if (handlerGenerateClientFlags != null)

@@ -278,7 +278,7 @@ namespace Aurora.Simulation.Base
                 return;
 
             _IsHandlingException = true;
-            Exception ex = (Exception) e.ExceptionObject;
+            Exception ex = (Exception)e.ExceptionObject;
 
             UnhandledException(e.IsTerminating, ex);
 
@@ -443,7 +443,7 @@ namespace Aurora.Simulation.Base
         {
             Process currentProcess = Process.GetCurrentProcess();
             IntPtr currentProcessHandle = currentProcess.Handle;
-            uint currentProcessId = (uint) currentProcess.Id;
+            uint currentProcessId = (uint)currentProcess.Id;
             MiniDumpExceptionInformation exp;
             exp.ThreadId = GetCurrentThreadId();
             exp.ClientPointers = false;
@@ -455,12 +455,12 @@ namespace Aurora.Simulation.Base
             bool bRet = false;
             if (exp.ExceptionPointers == IntPtr.Zero)
             {
-                bRet = MiniDumpWriteDump(currentProcessHandle, currentProcessId, fileHandle, (uint) options, IntPtr.Zero,
+                bRet = MiniDumpWriteDump(currentProcessHandle, currentProcessId, fileHandle, (uint)options, IntPtr.Zero,
                                          IntPtr.Zero, IntPtr.Zero);
             }
             else
             {
-                bRet = MiniDumpWriteDump(currentProcessHandle, currentProcessId, fileHandle, (uint) options, ref exp,
+                bRet = MiniDumpWriteDump(currentProcessHandle, currentProcessId, fileHandle, (uint)options, ref exp,
                                          IntPtr.Zero, IntPtr.Zero);
             }
             return bRet;
@@ -478,7 +478,8 @@ namespace Aurora.Simulation.Base
         {
             public uint ThreadId;
             public IntPtr ExceptionPointers;
-            [MarshalAs(UnmanagedType.Bool)] public bool ClientPointers;
+            [MarshalAs(UnmanagedType.Bool)]
+            public bool ClientPointers;
         }
 
         #endregion
