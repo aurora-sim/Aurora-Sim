@@ -1258,29 +1258,24 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["GroupID"] = GroupID;
             List<string> Agents = data.Query(new string[1] { "AgentID" }, "osgroupmembership", filter, null, null, null);
-#if (!ISWIN)
+
             List<GroupMembersData> list = new List<GroupMembersData>();
             foreach (string agent in Agents)
             {
                 GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
-                if (d != null)
-                {
-                    OpenSim.Services.Interfaces.UserInfo info =
-                        m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
-                            d.AgentID.ToString());
-                    if (info != null && !info.IsOnline)
-                        d.OnlineStatus = info.LastLogin.ToShortDateString();
-                    else if (info == null)
-                        d.OnlineStatus = "Unknown";
-                    else
-                        d.OnlineStatus = "Online";
-                    list.Add(d);
-                }
+                if (d == null) continue;
+                OpenSim.Services.Interfaces.UserInfo info =
+                    m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
+                        d.AgentID.ToString());
+                if (info != null && !info.IsOnline)
+                    d.OnlineStatus = info.LastLogin.ToShortDateString();
+                else if (info == null)
+                    d.OnlineStatus = "Unknown";
+                else
+                    d.OnlineStatus = "Online";
+                list.Add(d);
             }
             return list;
-#else
-            return Agents.Select(Agent => GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(Agent))).ToList();
-#endif
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

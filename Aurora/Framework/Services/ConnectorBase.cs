@@ -63,6 +63,7 @@ namespace Aurora.Framework
         protected bool m_doRemoteCalls = false;
         protected string m_name;
         protected bool m_doRemoteOnly = false;
+        protected int m_OSDRequestTimeout = 10000;
 
         public string PluginName
         {
@@ -84,6 +85,8 @@ namespace Aurora.Framework
             IConfig config;
             if ((config = source.Configs["AuroraConnectors"]) != null)
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+            if ((config = source.Configs["Configuration"]) != null)
+                m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
@@ -163,20 +166,19 @@ namespace Aurora.Framework
             }
             if (response["Value"] == "null")
                 return null;
-            if (inst is IDataTransferable)
+            var instance = inst as IDataTransferable;
+            if (instance != null)
             {
-                IDataTransferable instance = (IDataTransferable)inst;
                 instance.FromOSD((OSDMap)response["Value"]);
                 return instance;
             }
-            else
-                return Util.OSDToObject(response["Value"], method.ReturnType);
+            return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = ServiceOSDRequest(url, map, "POST", 10000);
+            string resp = ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
             
             if (resp == "" || resp.StartsWith("<"))
                 return false;

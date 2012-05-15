@@ -30,7 +30,7 @@
     AllowRemoteCalls = False
 [Configuration]
     UseRegistrationService = false
-
+	OSDRequestTimeout = 10000
 [Handlers]
 
     AbuseReportHandler = AbuseReportsService
