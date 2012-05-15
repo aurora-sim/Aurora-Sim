@@ -66,7 +66,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Bitmap", ColumnTypes.LongText),
                 ColDef("Category", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
+                IndexDef(new string[1] { "ParcelID" }, IndexType.Primary)
             ));
 
             AddSchema("asevents", ColDefs(
@@ -86,7 +86,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("description", ColumnTypes.String255),
                 ColDef("category", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "EID" }, IndexType.Primary)
+                IndexDef(new string[1] { "EID" }, IndexType.Primary)
             ));
         }
 

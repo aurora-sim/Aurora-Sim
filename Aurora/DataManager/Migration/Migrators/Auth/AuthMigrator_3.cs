@@ -53,7 +53,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("passwordSalt", ColumnTypes.String1024),
                 ColDef("accountType", ColumnTypes.Char32)
             ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "accountType" }, IndexType.Primary)
+                IndexDef(new string[2] { "UUID", "accountType" }, IndexType.Primary)
             ));
 
             AddSchema("tokens", ColDefs(
@@ -61,7 +61,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("token", ColumnTypes.String255),
                 ColDef("validity", ColumnTypes.Date)
             ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "token" }, IndexType.Primary)
+                IndexDef(new string[2] { "UUID", "token" }, IndexType.Primary)
             ));
         }
 

@@ -43,7 +43,7 @@ namespace OpenSim.Services
         public AuroraEventManager EventManager = new AuroraEventManager();
         private ISchedulerDataPlugin m_database;
         private bool m_enabled = false;
-        
+
         private readonly Timer scheduleTimer = new Timer();
 
         #region Implementation of IService
@@ -66,7 +66,7 @@ namespace OpenSim.Services
         /// <param name = "registry">Place to register and retrieve module interfaces</param>
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            
+
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace OpenSim.Services
             return true;
         }
 
-        
+
         public bool Register(string fName, OnGenericEventHandler handler)
         {
             if (m_doRemoteCalls) return false;
@@ -133,11 +133,11 @@ namespace OpenSim.Services
         public bool Exist(string scdID)
         {
             if (m_doRemoteCalls)
-                return (bool) DoRemote(scdID);
+                return (bool)DoRemote(scdID);
             return m_database.SchedulerExist(scdID);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="SchedulerGet")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerGet")]
         public SchedulerItem Get(string ID)
         {
             if (m_doRemoteCalls)
@@ -205,8 +205,8 @@ namespace OpenSim.Services
                     }
 #endif
                 }
-            
-                
+
+
             }
             catch (Exception e)
             {
@@ -222,5 +222,5 @@ namespace OpenSim.Services
         #endregion
     }
 
-    
+
 }

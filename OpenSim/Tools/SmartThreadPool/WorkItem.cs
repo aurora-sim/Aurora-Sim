@@ -18,7 +18,7 @@ namespace Amib.Threading.Internal
 
     #endregion
 
-    #region IInternalWorkItemResult interface 
+    #region IInternalWorkItemResult interface
 
     public class CanceledWorkItemsGroup
     {
@@ -425,7 +425,7 @@ namespace Amib.Threading.Internal
                 DateTime start = DateTime.Now;
 
                 WaitHandle[] whs;
-                whs = null != cancelWaitHandle ? new[] {null, cancelWaitHandle} : new WaitHandle[] {null};
+                whs = null != cancelWaitHandle ? new[] { null, cancelWaitHandle } : new WaitHandle[] { null };
 
                 bool waitInfinitely = (Timeout.Infinite == millisecondsTimeout);
                 // Iterate over the wait handles and wait for each one to complete.
@@ -453,7 +453,7 @@ namespace Amib.Threading.Internal
                     {
                         // Update the time left to wait
                         TimeSpan ts = DateTime.Now - start;
-                        millisecondsLeft = millisecondsTimeout - (int) ts.TotalMilliseconds;
+                        millisecondsLeft = millisecondsTimeout - (int)ts.TotalMilliseconds;
                     }
                 }
             }
@@ -697,7 +697,7 @@ namespace Amib.Threading.Internal
             else
             {
                 WaitHandle wh = GetWaitHandle();
-                int result = WaitHandle.WaitAny(new[] {wh, cancelWaitHandle});
+                int result = WaitHandle.WaitAny(new[] { wh, cancelWaitHandle });
                 ReleaseWaitHandle();
 
                 switch (result)
@@ -878,7 +878,7 @@ namespace Amib.Threading.Internal
 
             public object GetResult(TimeSpan timeout, bool exitContext)
             {
-                return _workItem.GetResult((int) timeout.TotalMilliseconds, exitContext, null);
+                return _workItem.GetResult((int)timeout.TotalMilliseconds, exitContext, null);
             }
 
             public object GetResult(int millisecondsTimeout, bool exitContext, WaitHandle cancelWaitHandle)
@@ -888,7 +888,7 @@ namespace Amib.Threading.Internal
 
             public object GetResult(TimeSpan timeout, bool exitContext, WaitHandle cancelWaitHandle)
             {
-                return _workItem.GetResult((int) timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
+                return _workItem.GetResult((int)timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
             }
 
             public object GetResult(out Exception e)
@@ -903,7 +903,7 @@ namespace Amib.Threading.Internal
 
             public object GetResult(TimeSpan timeout, bool exitContext, out Exception e)
             {
-                return _workItem.GetResult((int) timeout.TotalMilliseconds, exitContext, null, out e);
+                return _workItem.GetResult((int)timeout.TotalMilliseconds, exitContext, null, out e);
             }
 
             public object GetResult(int millisecondsTimeout, bool exitContext, WaitHandle cancelWaitHandle,
@@ -914,7 +914,7 @@ namespace Amib.Threading.Internal
 
             public object GetResult(TimeSpan timeout, bool exitContext, WaitHandle cancelWaitHandle, out Exception e)
             {
-                return _workItem.GetResult((int) timeout.TotalMilliseconds, exitContext, cancelWaitHandle, out e);
+                return _workItem.GetResult((int)timeout.TotalMilliseconds, exitContext, cancelWaitHandle, out e);
             }
 
             public bool Cancel()

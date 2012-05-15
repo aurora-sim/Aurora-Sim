@@ -56,7 +56,7 @@ namespace OpenSim.Services.RobustCompat
             m_enabled = source.Configs["Handlers"].GetBoolean("RobustCompatibility", m_enabled);
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (!m_enabled)
                 return;
@@ -64,56 +64,56 @@ namespace OpenSim.Services.RobustCompat
             scene.EventManager.OnClosingClient += OnClosingClient;
             scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
             scene.EventManager.OnSetAgentLeaving += OnSetAgentLeaving;
-            scene.AuroraEventManager.RegisterEventHandler ("NewUserConnection", OnGenericEvent);
-            scene.AuroraEventManager.RegisterEventHandler ("UserStatusChange", OnGenericEvent);
-            scene.AuroraEventManager.RegisterEventHandler ("SendingAttachments", SendAttachments);
+            scene.AuroraEventManager.RegisterEventHandler("NewUserConnection", OnGenericEvent);
+            scene.AuroraEventManager.RegisterEventHandler("UserStatusChange", OnGenericEvent);
+            scene.AuroraEventManager.RegisterEventHandler("SendingAttachments", SendAttachments);
         }
 
         void OnSetAgentLeaving(IScenePresence presence, Interfaces.GridRegion destination)
         {
             IAttachmentsModule attModule = presence.Scene.RequestModuleInterface<IAttachmentsModule>();
-            if(attModule != null)
+            if (attModule != null)
                 m_userAttachments[presence.UUID] = attModule.GetAttachmentsForAvatar(presence.UUID);
         }
 
         private readonly Dictionary<UUID, ISceneEntity[]> m_userAttachments = new Dictionary<UUID, ISceneEntity[]>();
-        public object SendAttachments (string funct, object param)
+        public object SendAttachments(string funct, object param)
         {
             object[] parameters = (object[])param;
             IScenePresence sp = (IScenePresence)parameters[1];
             Interfaces.GridRegion dest = (Interfaces.GridRegion)parameters[0];
             // this is never used.. 
-            IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
+            IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (m_userAttachments.ContainsKey(sp.UUID))
             {
-                Util.FireAndForget (delegate
+                Util.FireAndForget(delegate
                                         {
-                    foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
-                    {
-                        Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
-                        attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
-                        //Now send it to them
-                        ssc.CreateObject (dest, (ISceneObject)attachment);
-                        attachment.IsDeleted = true;
-                    }
-                });
+                                            foreach (ISceneEntity attachment in m_userAttachments[sp.UUID])
+                                            {
+                                                Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector();
+                                                attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
+                                                //Now send it to them
+                                                ssc.CreateObject(dest, (ISceneObject)attachment);
+                                                attachment.IsDeleted = true;
+                                            }
+                                        });
             }
             return null;
         }
 
-        void OnMakeRootAgent (IScenePresence presence)
+        void OnMakeRootAgent(IScenePresence presence)
         {
-            ICapsService service = m_scene.RequestModuleInterface<ICapsService> ();
+            ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
             if (service != null)
             {
-                IClientCapsService clientCaps = service.GetClientCapsService (presence.UUID);
+                IClientCapsService clientCaps = service.GetClientCapsService(presence.UUID);
                 if (clientCaps != null)
                 {
-                    IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
+                    IRegionClientCapsService regionCaps = clientCaps.GetCapsService(m_scene.RegionInfo.RegionHandle);
                     if (regionCaps != null)
                     {
                         regionCaps.RootAgent = true;
-                        foreach (IRegionClientCapsService regionClientCaps in clientCaps.GetCapsServices ())
+                        foreach (IRegionClientCapsService regionClientCaps in clientCaps.GetCapsServices())
                         {
                             if (regionCaps.RegionHandle != regionClientCaps.RegionHandle)
                                 regionClientCaps.RootAgent = false; //Reset any other agents that we might have
@@ -121,9 +121,9 @@ namespace OpenSim.Services.RobustCompat
                     }
                 }
             }
-            if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals (""))
+            if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals(""))
             {
-                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
+                WebUtils.ServiceOSDRequest(presence.CallbackURI, null, "DELETE", 10000, false, false, false);
                 presence.CallbackURI = null;
             }
 #if (!ISWIN)
@@ -178,7 +178,7 @@ namespace OpenSim.Services.RobustCompat
             sendData["FromID"] = presence.UUID.ToString();
             sendData["ToID"] = u.UserID;
             sendData["Online"] = u.IsOnline.ToString();
-            
+
             Call(m_scene.GridService.GetRegionByUUID(UUID.Zero, u.CurrentRegionID), sendData);
         }
 
@@ -278,7 +278,7 @@ namespace OpenSim.Services.RobustCompat
                     }
                     if (client.IsLoggingOut)
                     {
-                        clientCaps.Close ();
+                        clientCaps.Close();
                     }
                 }
             }
@@ -304,24 +304,24 @@ namespace OpenSim.Services.RobustCompat
                         m_scene.AvatarService.SetAppearance(circuit.AgentID, circuit.Appearance);
                     //circuit.Appearance.Texture = new Primitive.TextureEntry(UUID.Zero);
                     circuit.child = false;//ONLY USE ROOT AGENTS, SINCE OPENSIM SENDS CHILD == TRUE ALL THE TIME
-                    if (circuit.ServiceURLs != null && circuit.ServiceURLs.ContainsKey ("IncomingCAPSHandler"))
+                    if (circuit.ServiceURLs != null && circuit.ServiceURLs.ContainsKey("IncomingCAPSHandler"))
                     {
                         AddCapsHandler(circuit);
                     }
                     else
                     {
-                        IClientCapsService clientService = service.GetOrCreateClientCapsService (circuit.AgentID);
-                        clientService.RemoveCAPS (m_scene.RegionInfo.RegionHandle);
-                        service.CreateCAPS (circuit.AgentID, CapsUtil.GetCapsSeedPath (circuit.CapsPath),
+                        IClientCapsService clientService = service.GetOrCreateClientCapsService(circuit.AgentID);
+                        clientService.RemoveCAPS(m_scene.RegionInfo.RegionHandle);
+                        service.CreateCAPS(circuit.AgentID, CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                             m_scene.RegionInfo.RegionHandle, true, circuit, MainServer.Instance.Port); //We ONLY use root agents because of OpenSim's inability to send the correct data
-                        MainConsole.Instance.Output ("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath (circuit.CapsPath));
-                        IClientCapsService clientCaps = service.GetClientCapsService (circuit.AgentID);
+                        MainConsole.Instance.Output("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath(circuit.CapsPath));
+                        IClientCapsService clientCaps = service.GetClientCapsService(circuit.AgentID);
                         if (clientCaps != null)
                         {
-                            IRegionClientCapsService regionCaps = clientCaps.GetCapsService (m_scene.RegionInfo.RegionHandle);
+                            IRegionClientCapsService regionCaps = clientCaps.GetCapsService(m_scene.RegionInfo.RegionHandle);
                             if (regionCaps != null)
                             {
-                                regionCaps.AddCAPS ((OSDMap)param["CapsUrls"]);
+                                regionCaps.AddCAPS((OSDMap)param["CapsUrls"]);
                             }
                         }
                     }
@@ -335,7 +335,7 @@ namespace OpenSim.Services.RobustCompat
                     ICapsService service = m_scene.RequestModuleInterface<ICapsService>();
                     if (service != null)
                     {
-                        service.RemoveCAPS (UUID.Parse (info[0].ToString ()));
+                        service.RemoveCAPS(UUID.Parse(info[0].ToString()));
                     }
                 }
             }
@@ -349,10 +349,10 @@ namespace OpenSim.Services.RobustCompat
             MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                 delegate(string request, string path, string param2,
                       OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-                    {
-                        return CapsRequest(request, path, param2, httpRequest, httpResponse,
-                                           circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
-                    }));
+                {
+                    return CapsRequest(request, path, param2, httpRequest, httpResponse,
+                                       circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
+                }));
 #else
             MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                                                                        (request, path, param2, httpRequest, httpResponse)
@@ -364,11 +364,11 @@ namespace OpenSim.Services.RobustCompat
 #endif
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
@@ -390,11 +390,11 @@ namespace OpenSim.Services.RobustCompat
 
         #region Virtual caps handler
 
-        public virtual string CapsRequest (string request, string path, string param,
+        public virtual string CapsRequest(string request, string path, string param,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse, string url)
         {
-            OSDMap response = WebUtils.PostToService (url, new OSDMap (), true, false, true);
-            return OSDParser.SerializeLLSDXmlString (response);
+            OSDMap response = WebUtils.PostToService(url, new OSDMap(), true, false, true);
+            return OSDParser.SerializeLLSDXmlString(response);
         }
 
         #endregion

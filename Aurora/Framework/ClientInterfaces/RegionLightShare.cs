@@ -95,82 +95,82 @@ namespace Aurora.Framework
 
         public override void FromOSD(OSDMap map)
         {
-            this.ambient = new Vector4((float) map["ambientX"].AsReal(),
-                                       (float) map["ambientY"].AsReal(),
-                                       (float) map["ambientZ"].AsReal(),
-                                       (float) map["ambientW"].AsReal());
+            this.ambient = new Vector4((float)map["ambientX"].AsReal(),
+                                       (float)map["ambientY"].AsReal(),
+                                       (float)map["ambientZ"].AsReal(),
+                                       (float)map["ambientW"].AsReal());
 
-            this.bigWaveDirection = new Vector2((float) map["bigWaveDirectionX"].AsReal(),
-                                                (float) map["bigWaveDirectionY"].AsReal());
-            this.blueDensity = new Vector4((float) map["blueDensityX"].AsReal(),
-                                           (float) map["blueDensityY"].AsReal(),
-                                           (float) map["blueDensityZ"].AsReal(),
-                                           (float) map["blueDensityW"].AsReal());
-            this.blurMultiplier = (float) map["blurMultiplier"].AsReal();
-            this.cloudColor = new Vector4((float) map["cloudColorX"].AsReal(),
-                                          (float) map["cloudColorY"].AsReal(),
-                                          (float) map["cloudColorZ"].AsReal(),
-                                          (float) map["cloudColorW"].AsReal());
-            this.cloudCoverage = (float) map["cloudCoverage"].AsReal();
-            this.cloudDetailXYDensity = new Vector3((float) map["cloudDetailXYDensityX"].AsReal(),
-                                                    (float) map["cloudDetailXYDensityY"].AsReal(),
-                                                    (float) map["cloudDetailXYDensityZ"].AsReal());
-            this.cloudScale = (float) map["cloudScale"].AsReal();
-            this.cloudScrollX = (float) map["cloudScrollX"].AsReal();
+            this.bigWaveDirection = new Vector2((float)map["bigWaveDirectionX"].AsReal(),
+                                                (float)map["bigWaveDirectionY"].AsReal());
+            this.blueDensity = new Vector4((float)map["blueDensityX"].AsReal(),
+                                           (float)map["blueDensityY"].AsReal(),
+                                           (float)map["blueDensityZ"].AsReal(),
+                                           (float)map["blueDensityW"].AsReal());
+            this.blurMultiplier = (float)map["blurMultiplier"].AsReal();
+            this.cloudColor = new Vector4((float)map["cloudColorX"].AsReal(),
+                                          (float)map["cloudColorY"].AsReal(),
+                                          (float)map["cloudColorZ"].AsReal(),
+                                          (float)map["cloudColorW"].AsReal());
+            this.cloudCoverage = (float)map["cloudCoverage"].AsReal();
+            this.cloudDetailXYDensity = new Vector3((float)map["cloudDetailXYDensityX"].AsReal(),
+                                                    (float)map["cloudDetailXYDensityY"].AsReal(),
+                                                    (float)map["cloudDetailXYDensityZ"].AsReal());
+            this.cloudScale = (float)map["cloudScale"].AsReal();
+            this.cloudScrollX = (float)map["cloudScrollX"].AsReal();
             this.cloudScrollXLock = map["cloudScrollXLock"].AsBoolean();
-            this.cloudScrollY = (float) map["cloudScrollY"].AsReal();
+            this.cloudScrollY = (float)map["cloudScrollY"].AsReal();
             this.cloudScrollYLock = map["cloudScrollYLock"].AsBoolean();
 
-            this.cloudXYDensity = new Vector3((float) map["cloudXYDensityX"].AsReal(),
-                                              (float) map["cloudXYDensityY"].AsReal(),
-                                              (float) map["cloudXYDensityZ"].AsReal());
-            this.densityMultiplier = (float) map["densityMultiplier"].AsReal();
-            this.distanceMultiplier = (float) map["distanceMultiplier"].AsReal();
+            this.cloudXYDensity = new Vector3((float)map["cloudXYDensityX"].AsReal(),
+                                              (float)map["cloudXYDensityY"].AsReal(),
+                                              (float)map["cloudXYDensityZ"].AsReal());
+            this.densityMultiplier = (float)map["densityMultiplier"].AsReal();
+            this.distanceMultiplier = (float)map["distanceMultiplier"].AsReal();
 
             this.drawClassicClouds = map["drawClassicClouds"].AsBoolean();
-            this.classicCloudHeight = (float) map["classicCloudHeight"].AsReal();
-            this.classicCloudRange = (float) map["classicCloudRange"].AsReal();
+            this.classicCloudHeight = (float)map["classicCloudHeight"].AsReal();
+            this.classicCloudRange = (float)map["classicCloudRange"].AsReal();
 
-            this.eastAngle = (float) map["eastAngle"].AsReal();
-            this.fresnelOffset = (float) map["fresnelOffset"].AsReal();
-            this.fresnelScale = (float) map["fresnelScale"].AsReal();
-            this.hazeDensity = (float) map["hazeDensity"].AsReal();
-            this.hazeHorizon = (float) map["hazeHorizon"].AsReal();
-            this.horizon = new Vector4((float) map["horizonX"].AsReal(),
-                                       (float) map["horizonY"].AsReal(),
-                                       (float) map["horizonZ"].AsReal(),
-                                       (float) map["horizonW"].AsReal());
-            this.littleWaveDirection = new Vector2((float) map["littleWaveDirectionX"].AsReal(),
-                                                   (float) map["littleWaveDirectionY"].AsReal());
-            this.maxAltitude = (ushort) map["maxAltitude"].AsReal();
+            this.eastAngle = (float)map["eastAngle"].AsReal();
+            this.fresnelOffset = (float)map["fresnelOffset"].AsReal();
+            this.fresnelScale = (float)map["fresnelScale"].AsReal();
+            this.hazeDensity = (float)map["hazeDensity"].AsReal();
+            this.hazeHorizon = (float)map["hazeHorizon"].AsReal();
+            this.horizon = new Vector4((float)map["horizonX"].AsReal(),
+                                       (float)map["horizonY"].AsReal(),
+                                       (float)map["horizonZ"].AsReal(),
+                                       (float)map["horizonW"].AsReal());
+            this.littleWaveDirection = new Vector2((float)map["littleWaveDirectionX"].AsReal(),
+                                                   (float)map["littleWaveDirectionY"].AsReal());
+            this.maxAltitude = (ushort)map["maxAltitude"].AsReal();
             this.normalMapTexture = map["normalMapTexture"].AsUUID();
-            this.reflectionWaveletScale = new Vector3((float) map["reflectionWaveletScaleX"].AsReal(),
-                                                      (float) map["reflectionWaveletScaleY"].AsReal(),
-                                                      (float) map["reflectionWaveletScaleZ"].AsReal());
-            this.refractScaleAbove = (float) map["refractScaleAbove"].AsReal();
-            this.refractScaleBelow = (float) map["refractScaleBelow"].AsReal();
-            this.sceneGamma = (float) map["sceneGamma"].AsReal();
-            this.starBrightness = (float) map["starBrightness"].AsReal();
-            this.sunGlowFocus = (float) map["sunGlowFocus"].AsReal();
-            this.sunGlowSize = (float) map["sunGlowSize"].AsReal();
-            this.sunMoonColor = new Vector4((float) map["sunMoonColorX"].AsReal(),
-                                            (float) map["sunMoonColorY"].AsReal(),
-                                            (float) map["sunMoonColorZ"].AsReal(),
-                                            (float) map["sunMoonColorW"].AsReal());
-            this.sunMoonPosition = (float) map["sunMoonPosition"].AsReal();
-            this.underwaterFogModifier = (float) map["underwaterFogModifier"].AsReal();
-            this.waterColor = new Vector4((float) map["waterColorX"].AsReal(),
-                                          (float) map["waterColorY"].AsReal(),
-                                          (float) map["waterColorZ"].AsReal(),
-                                          (float) map["waterColorW"].AsReal());
-            this.waterFogDensityExponent = (float) map["waterFogDensityExponent"].AsReal();
-            this.fade = (float) map["fade"].AsReal();
+            this.reflectionWaveletScale = new Vector3((float)map["reflectionWaveletScaleX"].AsReal(),
+                                                      (float)map["reflectionWaveletScaleY"].AsReal(),
+                                                      (float)map["reflectionWaveletScaleZ"].AsReal());
+            this.refractScaleAbove = (float)map["refractScaleAbove"].AsReal();
+            this.refractScaleBelow = (float)map["refractScaleBelow"].AsReal();
+            this.sceneGamma = (float)map["sceneGamma"].AsReal();
+            this.starBrightness = (float)map["starBrightness"].AsReal();
+            this.sunGlowFocus = (float)map["sunGlowFocus"].AsReal();
+            this.sunGlowSize = (float)map["sunGlowSize"].AsReal();
+            this.sunMoonColor = new Vector4((float)map["sunMoonColorX"].AsReal(),
+                                            (float)map["sunMoonColorY"].AsReal(),
+                                            (float)map["sunMoonColorZ"].AsReal(),
+                                            (float)map["sunMoonColorW"].AsReal());
+            this.sunMoonPosition = (float)map["sunMoonPosition"].AsReal();
+            this.underwaterFogModifier = (float)map["underwaterFogModifier"].AsReal();
+            this.waterColor = new Vector4((float)map["waterColorX"].AsReal(),
+                                          (float)map["waterColorY"].AsReal(),
+                                          (float)map["waterColorZ"].AsReal(),
+                                          (float)map["waterColorW"].AsReal());
+            this.waterFogDensityExponent = (float)map["waterFogDensityExponent"].AsReal();
+            this.fade = (float)map["fade"].AsReal();
             if (map.ContainsKey("overrideParcels"))
                 this.overrideParcels = map["overrideParcels"].AsBoolean();
             if (map.ContainsKey("maxEffectiveAltitude"))
-                this.maxEffectiveAltitude = (float) map["maxEffectiveAltitude"].AsReal();
+                this.maxEffectiveAltitude = (float)map["maxEffectiveAltitude"].AsReal();
             if (map.ContainsKey("minEffectiveAltitude"))
-                this.minEffectiveAltitude = (float) map["minEffectiveAltitude"].AsReal();
+                this.minEffectiveAltitude = (float)map["minEffectiveAltitude"].AsReal();
             this.type = map["type"].AsInteger();
 
             this.regionID = map["regionID"].AsUUID();

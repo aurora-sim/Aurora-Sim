@@ -97,8 +97,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
                         while (currFileYOffset < offsetY)
                         {
                             // read a whole strip of regions
-                            int heightsToRead = sectionHeight*fileXPoints;
-                            bs.ReadBytes(heightsToRead*2); // because the shorts are 2 bytes in the file
+                            int heightsToRead = sectionHeight * fileXPoints;
+                            bs.ReadBytes(heightsToRead * 2); // because the shorts are 2 bytes in the file
                             currFileYOffset++;
                         }
 
@@ -111,7 +111,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                             // i.e. eat X upto where we start
                             while (currFileXOffset < offsetX)
                             {
-                                bs.ReadBytes(sectionWidth*2); // 2 bytes = short
+                                bs.ReadBytes(sectionWidth * 2); // 2 bytes = short
                                 currFileXOffset++;
                             }
 
@@ -119,7 +119,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                             for (int x = 0; x < sectionWidth; x++)
                             {
                                 // Read a strip and continue
-                                retval[x, y] = baseHeight + bs.ReadInt16()*heightScale/65536;
+                                retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
                             }
                             // record that we wrote it
                             currFileXOffset++;
@@ -129,7 +129,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                             while (currFileXOffset < fileWidth)
                             {
                                 // eat the next regions x line
-                                bs.ReadBytes(sectionWidth*2); // 2 bytes = short
+                                bs.ReadBytes(sectionWidth * 2); // 2 bytes = short
                                 currFileXOffset++;
                             }
                             //eat the last additional point
@@ -152,7 +152,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
 
         public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
-            int size = (int) Math.Sqrt(s.Length);
+            int size = (int)Math.Sqrt(s.Length);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
 
             BinaryReader bs = new BinaryReader(s);
@@ -192,7 +192,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                             {
                                 for (int x = 0; x < fileWidth; x++)
                                 {
-                                    retval[x, y] = baseHeight + bs.ReadInt16()*heightScale/65536;
+                                    retval[x, y] = baseHeight + bs.ReadInt16() * heightScale / 65536;
                                 }
                             }
                             break;
@@ -237,7 +237,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 }
             }
 
-            double baseHeight = Math.Floor((heightMax + heightMin)/2d);
+            double baseHeight = Math.Floor((heightMax + heightMin) / 2d);
 
             double horizontalScale = Math.Ceiling((heightMax - heightMin));
 
@@ -280,8 +280,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
             {
                 for (int x = 0; x < map.Width; x++)
                 {
-                    float elevation = (float) ((map[x, y] - baseHeight)*65536)/(float) horizontalScale;
-                        // see LoadStream for inverse
+                    float elevation = (float)((map[x, y] - baseHeight) * 65536) / (float)horizontalScale;
+                    // see LoadStream for inverse
 
                     // clamp rounding issues
                     if (elevation > Int16.MaxValue)

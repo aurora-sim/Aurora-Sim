@@ -119,7 +119,7 @@ namespace Aurora.Modules.Caps
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
                 return responsedata;
 
-            OSDMap r = (OSDMap) OSDParser.Deserialize((string) request["requestbody"]);
+            OSDMap r = (OSDMap)OSDParser.Deserialize((string)request["requestbody"]);
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
             try
             {
@@ -142,7 +142,7 @@ namespace Aurora.Modules.Caps
                 return responsedata;
             }
 
-            Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX*avatar.Rotation);
+            Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX * avatar.Rotation);
             Quaternion rot = Quaternion.Identity;
             Vector3 rootpos = Vector3.Zero;
 
@@ -180,18 +180,18 @@ namespace Aurora.Modules.Caps
                 //pbs.ExtraParams = extraparams;
                 foreach (UploadObjectAssetMessage.Object.ExtraParam extraParam in obj.ExtraParams)
                 {
-                    switch ((ushort) extraParam.Type)
+                    switch ((ushort)extraParam.Type)
                     {
-                        case (ushort) ExtraParamType.Sculpt:
+                        case (ushort)ExtraParamType.Sculpt:
                             Primitive.SculptData sculpt = new Primitive.SculptData(extraParam.ExtraParamData, 0);
 
                             pbs.SculptEntry = true;
 
                             pbs.SculptTexture = obj.SculptID;
-                            pbs.SculptType = (byte) sculpt.Type;
+                            pbs.SculptType = (byte)sculpt.Type;
 
                             break;
-                        case (ushort) ExtraParamType.Flexible:
+                        case (ushort)ExtraParamType.Flexible:
                             Primitive.FlexibleData flex = new Primitive.FlexibleData(extraParam.ExtraParamData, 0);
                             pbs.FlexiEntry = true;
                             pbs.FlexiDrag = flex.Drag;
@@ -203,7 +203,7 @@ namespace Aurora.Modules.Caps
                             pbs.FlexiTension = flex.Tension;
                             pbs.FlexiWind = flex.Wind;
                             break;
-                        case (ushort) ExtraParamType.Light:
+                        case (ushort)ExtraParamType.Light:
                             Primitive.LightData light = new Primitive.LightData(extraParam.ExtraParamData, 0);
                             pbs.LightColorA = light.Color.A;
                             pbs.LightColorB = light.Color.B;
@@ -220,25 +220,25 @@ namespace Aurora.Modules.Caps
                             break;
                     }
                 }
-                pbs.PathBegin = (ushort) obj.PathBegin;
-                pbs.PathCurve = (byte) obj.PathCurve;
-                pbs.PathEnd = (ushort) obj.PathEnd;
-                pbs.PathRadiusOffset = (sbyte) obj.RadiusOffset;
-                pbs.PathRevolutions = (byte) obj.Revolutions;
-                pbs.PathScaleX = (byte) obj.ScaleX;
-                pbs.PathScaleY = (byte) obj.ScaleY;
-                pbs.PathShearX = (byte) obj.ShearX;
-                pbs.PathShearY = (byte) obj.ShearY;
-                pbs.PathSkew = (sbyte) obj.Skew;
-                pbs.PathTaperX = (sbyte) obj.TaperX;
-                pbs.PathTaperY = (sbyte) obj.TaperY;
-                pbs.PathTwist = (sbyte) obj.Twist;
-                pbs.PathTwistBegin = (sbyte) obj.TwistBegin;
-                pbs.HollowShape = (HollowShape) obj.ProfileHollow;
-                pbs.PCode = (byte) PCode.Prim;
-                pbs.ProfileBegin = (ushort) obj.ProfileBegin;
-                pbs.ProfileCurve = (byte) obj.ProfileCurve;
-                pbs.ProfileEnd = (ushort) obj.ProfileEnd;
+                pbs.PathBegin = (ushort)obj.PathBegin;
+                pbs.PathCurve = (byte)obj.PathCurve;
+                pbs.PathEnd = (ushort)obj.PathEnd;
+                pbs.PathRadiusOffset = (sbyte)obj.RadiusOffset;
+                pbs.PathRevolutions = (byte)obj.Revolutions;
+                pbs.PathScaleX = (byte)obj.ScaleX;
+                pbs.PathScaleY = (byte)obj.ScaleY;
+                pbs.PathShearX = (byte)obj.ShearX;
+                pbs.PathShearY = (byte)obj.ShearY;
+                pbs.PathSkew = (sbyte)obj.Skew;
+                pbs.PathTaperX = (sbyte)obj.TaperX;
+                pbs.PathTaperY = (sbyte)obj.TaperY;
+                pbs.PathTwist = (sbyte)obj.Twist;
+                pbs.PathTwistBegin = (sbyte)obj.TwistBegin;
+                pbs.HollowShape = (HollowShape)obj.ProfileHollow;
+                pbs.PCode = (byte)PCode.Prim;
+                pbs.ProfileBegin = (ushort)obj.ProfileBegin;
+                pbs.ProfileCurve = (byte)obj.ProfileCurve;
+                pbs.ProfileEnd = (ushort)obj.ProfileEnd;
                 pbs.Scale = obj.Scale;
                 pbs.State = 0;
                 SceneObjectPart prim = new SceneObjectPart(AgentId, pbs, obj.Position, obj.Rotation,
@@ -266,7 +266,7 @@ namespace Aurora.Modules.Caps
                 {
                     UploadObjectAssetMessage.Object.Face face = obj.Faces[j];
 
-                    Primitive.TextureEntryFace primFace = tmp.CreateFace((uint) j);
+                    Primitive.TextureEntryFace primFace = tmp.CreateFace((uint)j);
 
                     primFace.Bump = face.Bump;
                     primFace.RGBA = face.Color;
@@ -280,7 +280,7 @@ namespace Aurora.Modules.Caps
                     primFace.OffsetV = face.OffsetT;
                     primFace.RepeatU = face.ScaleS;
                     primFace.RepeatV = face.ScaleT;
-                    primFace.TexMapType = (MappingType) (face.MediaFlags & 6);
+                    primFace.TexMapType = (MappingType)(face.MediaFlags & 6);
                 }
                 pbs.TextureEntry = tmp.GetBytes();
                 prim.Shape = pbs;

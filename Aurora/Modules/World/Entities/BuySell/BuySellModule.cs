@@ -39,7 +39,7 @@ namespace Aurora.Modules.Entities.BuySell
 {
     public class BuySellModule : IBuySellModule, INonSharedRegionModule
     {
-//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected IDialogModule m_dialogModule;
         protected IScene m_scene;
@@ -64,7 +64,7 @@ namespace Aurora.Modules.Entities.BuySell
                 case 1: // Sell as original (in-place sale)
                     uint effectivePerms = group.GetEffectivePermissions();
 
-                    if ((effectivePerms & (uint) PermissionMask.Transfer) == 0)
+                    if ((effectivePerms & (uint)PermissionMask.Transfer) == 0)
                     {
                         if (m_dialogModule != null)
                             m_dialogModule.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
@@ -110,12 +110,12 @@ namespace Aurora.Modules.Entities.BuySell
 
                     group.AbsolutePosition = inventoryStoredPosition;
 
-                    string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup) group);
+                    string sceneObjectXml = SceneObjectSerializer.ToOriginalXmlFormat((SceneObjectGroup)group);
                     group.AbsolutePosition = originalPosition;
 
                     uint perms = group.GetEffectivePermissions();
 
-                    if ((perms & (uint) PermissionMask.Transfer) == 0)
+                    if ((perms & (uint)PermissionMask.Transfer) == 0)
                     {
                         if (m_dialogModule != null)
                             m_dialogModule.SendAlertToUser(remoteClient, "This item doesn't appear to be for sale");
@@ -123,8 +123,7 @@ namespace Aurora.Modules.Entities.BuySell
                     }
 
                     AssetBase asset = new AssetBase(UUID.Random(), part.Name,
-                                                    AssetType.Object, group.OwnerID)
-                                          {Description = part.Description, Data = Utils.StringToBytes(sceneObjectXml)};
+                                                    AssetType.Object, group.OwnerID) { Description = part.Description, Data = Utils.StringToBytes(sceneObjectXml) };
                     asset.ID = m_scene.AssetService.Store(asset);
 
                     InventoryItemBase item = new InventoryItemBase
@@ -137,18 +136,18 @@ namespace Aurora.Modules.Entities.BuySell
                                                      Description = asset.Description,
                                                      Name = asset.Name,
                                                      AssetType = asset.Type,
-                                                     InvType = (int) InventoryType.Object,
+                                                     InvType = (int)InventoryType.Object,
                                                      Folder = categoryID
                                                  };
 
 
                     uint nextPerms = (perms & 7) << 13;
-                    if ((nextPerms & (uint) PermissionMask.Copy) == 0)
-                        perms &= ~(uint) PermissionMask.Copy;
-                    if ((nextPerms & (uint) PermissionMask.Transfer) == 0)
-                        perms &= ~(uint) PermissionMask.Transfer;
-                    if ((nextPerms & (uint) PermissionMask.Modify) == 0)
-                        perms &= ~(uint) PermissionMask.Modify;
+                    if ((nextPerms & (uint)PermissionMask.Copy) == 0)
+                        perms &= ~(uint)PermissionMask.Copy;
+                    if ((nextPerms & (uint)PermissionMask.Transfer) == 0)
+                        perms &= ~(uint)PermissionMask.Transfer;
+                    if ((nextPerms & (uint)PermissionMask.Modify) == 0)
+                        perms &= ~(uint)PermissionMask.Modify;
 
                     item.BasePermissions = perms & part.NextOwnerMask;
                     item.CurrentPermissions = perms & part.NextOwnerMask;
@@ -184,7 +183,7 @@ namespace Aurora.Modules.Entities.BuySell
                     foreach (UUID invId in invList)
                     {
                         TaskInventoryItem item1 = part.Inventory.GetInventoryItem(invId);
-                        if ((item1.CurrentPermissions & (uint) PermissionMask.Transfer) == 0)
+                        if ((item1.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
                         {
                             okToSell = false;
                             break;

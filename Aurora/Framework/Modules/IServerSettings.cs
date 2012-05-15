@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Aurora.Framework
 {
-    public delegate void UpdatedSetting (string value);
-    public delegate string GetSetting ();
+    public delegate void UpdatedSetting(string value);
+    public delegate string GetSetting();
     public class ServerSetting
     {
         public string Name;
@@ -14,15 +14,15 @@ namespace Aurora.Framework
         public string Type;
         //Full XML representation
         public event GetSetting OnGetSetting;
-        public string GetValue ()
+        public string GetValue()
         {
-            if(OnGetSetting != null)
+            if (OnGetSetting != null)
                 return OnGetSetting();
             return "";
         }
-        public void SetValue (string value)
+        public void SetValue(string value)
         {
-            if(OnUpdatedSetting != null)
+            if (OnUpdatedSetting != null)
                 OnUpdatedSetting(value);
         }
         public event UpdatedSetting OnUpdatedSetting;
@@ -30,7 +30,7 @@ namespace Aurora.Framework
 
     public interface IServerSettings
     {
-        void RegisterSetting (ServerSetting setting);
-        void UnregisterSetting (ServerSetting setting);
+        void RegisterSetting(ServerSetting setting);
+        void UnregisterSetting(ServerSetting setting);
     }
 }

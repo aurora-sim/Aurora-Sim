@@ -40,8 +40,8 @@ namespace Aurora.Framework
     {
         private readonly Color BackgroundColor = Color.LightGray;
         private readonly Color BarColor = Color.Aqua;
-        private readonly int[] GraphBarsEnd = new[] {35, 50, 65, 80, 95, 110, 125, 140, 155, 170};
-        private readonly int[] GraphBarsStart = new[] {25, 40, 55, 70, 85, 100, 115, 130, 145, 160};
+        private readonly int[] GraphBarsEnd = new[] { 35, 50, 65, 80, 95, 110, 125, 140, 155, 170 };
+        private readonly int[] GraphBarsStart = new[] { 25, 40, 55, 70, 85, 100, 115, 130, 145, 160 };
         private readonly Color LineColor = Color.DarkGray;
         private readonly Dictionary<string, ProfilerValueManager> Stats = new Dictionary<string, ProfilerValueManager>();
 
@@ -70,7 +70,7 @@ namespace Aurora.Framework
             if (statManager != null)
                 MaxVal = statManager.GetMaxValue();
 
-            double ScaleFactor = 1/(MaxVal/200); //We multiply by this so that the graph uses the full space
+            double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
             double[] Stats2 = new double[0];
             if (statManager != null)
@@ -79,7 +79,7 @@ namespace Aurora.Framework
             for (int i = 0; i < Stats2.Length; i++)
             {
                 //Update the scales
-                Stats2[i] = Stats2[i]*ScaleFactor;
+                Stats2[i] = Stats2[i] * ScaleFactor;
             }
 
             for (int x = 200; x > 0; x--)
@@ -109,7 +109,7 @@ namespace Aurora.Framework
 
             ProfilerValueManager statManager = GetStat(StatName);
 
-            double ScaleFactor = 1/(MaxVal/200); //We multiply by this so that the graph uses the full space
+            double ScaleFactor = 1 / (MaxVal / 200); //We multiply by this so that the graph uses the full space
 
             double[] Stats2 = new double[0];
             if (statManager != null)
@@ -136,7 +136,7 @@ namespace Aurora.Framework
 
         private bool DrawLine(double y, double ScaleFactor)
         {
-            return (y%10) == 0;
+            return (y % 10) == 0;
         }
 
         private bool IsInGraphBar(int x, int y, double[] Stats, double scaleFactor)
@@ -146,7 +146,7 @@ namespace Aurora.Framework
                 //Check whether it is between both the start and end
                 if (x > GraphBarsStart[i] && x < GraphBarsEnd[i])
                 {
-                    if (Stats[i] >= (y/scaleFactor))
+                    if (Stats[i] >= (y / scaleFactor))
                         return true;
                 }
             }

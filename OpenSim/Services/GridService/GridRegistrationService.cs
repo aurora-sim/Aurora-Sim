@@ -60,20 +60,20 @@ namespace OpenSim.Services.GridService
         /// Timeout before the handlers expire (in hours)
         /// </summary>
         protected float m_timeBeforeTimeout = 24;
-        public float ExpiresTime 
-        { 
+        public float ExpiresTime
+        {
             get
             {
-                return m_timeBeforeTimeout; 
+                return m_timeBeforeTimeout;
             }
         }
 
         protected ThreatLevel m_defaultRegionThreatLevel = ThreatLevel.High;
-        
+
         protected class PermissionSet
         {
             private static readonly Dictionary<string, ThreatLevel> PermittedFunctions = new Dictionary<string, ThreatLevel>();
-            
+
             public static void ReadFunctions(IConfig config)
             {
                 //Combine all threat level configs for ones that are less than our given threat level as well
@@ -121,15 +121,15 @@ namespace OpenSim.Services.GridService
             m_loadBalancer.SetConfig(config, this);
 
             if (m_configurationConfig != null)
-                m_useSessionTime = m_configurationConfig.GetBoolean ("UseSessionTime", m_useSessionTime);
+                m_useSessionTime = m_configurationConfig.GetBoolean("UseSessionTime", m_useSessionTime);
             if (m_configurationConfig != null)
-                m_useRegistrationService = m_configurationConfig.GetBoolean ("UseRegistrationService", m_useRegistrationService);
+                m_useRegistrationService = m_configurationConfig.GetBoolean("UseRegistrationService", m_useRegistrationService);
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
         }
 
-        object EventManager_OnGenericEvent (string FunctionName, object parameters)
+        object EventManager_OnGenericEvent(string FunctionName, object parameters)
         {
             if (FunctionName == "GridRegionSuccessfullyRegistered")
             {
@@ -137,9 +137,9 @@ namespace OpenSim.Services.GridService
                 OSDMap resultMap = (OSDMap)param[0];
                 UUID SecureSessionID = (UUID)param[1];
                 GridRegion rinfo = (GridRegion)param[2];
-                OSDMap urls = GetUrlForRegisteringClient (rinfo.RegionHandle.ToString());
+                OSDMap urls = GetUrlForRegisteringClient(rinfo.RegionHandle.ToString());
                 resultMap["URLs"] = urls;
-                resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService> ().ExpiresTime;
+                resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService>().ExpiresTime;
                 param[0] = resultMap;
                 parameters = param;
             }
@@ -153,8 +153,8 @@ namespace OpenSim.Services.GridService
 
         public void FinishedStartup()
         {
-            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector> ();
-            LoadFromDatabase ();
+            m_genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            LoadFromDatabase();
         }
 
         protected void ReadConfiguration(IConfig config)
@@ -167,23 +167,23 @@ namespace OpenSim.Services.GridService
         private ThreatLevel FindRegionThreatLevel(string SessionID)
         {
             ThreatLevel regionThreatLevel = m_defaultRegionThreatLevel;
-            if (m_cachedThreatLevels.TryGetValue (SessionID, out regionThreatLevel))
+            if (m_cachedThreatLevels.TryGetValue(SessionID, out regionThreatLevel))
                 return regionThreatLevel;
             regionThreatLevel = m_defaultRegionThreatLevel;
             ulong handle;
-            if (ulong.TryParse (SessionID, out handle))
+            if (ulong.TryParse(SessionID, out handle))
             {
                 int x;
                 int y;
-                Util.UlongToInts (handle, out x, out y);
-                GridRegion region = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y);
+                Util.UlongToInts(handle, out x, out y);
+                GridRegion region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, x, y);
                 if (region == null)
                     regionThreatLevel = ThreatLevel.None;
                 else
                 {
-                    string rThreat = region.GenericMap["ThreatLevel"].AsString ();
+                    string rThreat = region.GenericMap["ThreatLevel"].AsString();
                     if (rThreat != "")
-                        regionThreatLevel = (ThreatLevel)Enum.Parse (typeof (ThreatLevel), rThreat);
+                        regionThreatLevel = (ThreatLevel)Enum.Parse(typeof(ThreatLevel), rThreat);
                 }
             }
             m_cachedThreatLevels[SessionID] = regionThreatLevel;
@@ -201,7 +201,7 @@ namespace OpenSim.Services.GridService
             foreach (GridRegistrationURLs url in urls)
             {
                 ulong e;
-                if (!ulong.TryParse (url.SessionID, out e))
+                if (!ulong.TryParse(url.SessionID, out e))
                 {
                     //Don't load links (yet)
                     continue;
@@ -229,7 +229,7 @@ namespace OpenSim.Services.GridService
                     if (m_useSessionTime && (url.Expiration.AddMinutes((m_timeBeforeTimeout * 60) * 0.9)) < DateTime.UtcNow) //Check to see whether the expiration is soon before updating
                     {
                         //Fix the expiration time
-                        InnerUpdateUrlsForClient (url);
+                        InnerUpdateUrlsForClient(url);
                     }
                 }
             }
@@ -246,7 +246,7 @@ namespace OpenSim.Services.GridService
             OSDMap retVal = new OSDMap();
             if (urls != null)
             {
-                if(urls.HostNames == null || urls.Ports == null ||
+                if (urls.HostNames == null || urls.Ports == null ||
                     urls.URLS == null || urls.SessionID != SessionID ||
                     MainServer.Instance.HostName != urls._ParentHostName ||
                     !CheckModuleNames(urls) || urls.VersionNumber < GridRegistrationURLs.CurrentVersionNumber)
@@ -264,9 +264,9 @@ namespace OpenSim.Services.GridService
                 }
                 else
                 {
-                    urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
+                    urls.Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout * 60);
                     urls.SessionID = SessionID;
-                    InnerUpdateUrlsForClient (urls);
+                    InnerUpdateUrlsForClient(urls);
                     foreach (KeyValuePair<string, OSD> module in urls.URLS)
                     {
                         if (module.Value.Type == OSDType.Array)
@@ -308,7 +308,7 @@ namespace OpenSim.Services.GridService
                 List<string> hostName;
                 List<string> innerURL;
 
-                m_loadBalancer.GetHost (module.UrlName, module, SessionID, out port, out hostName, out innerURL);
+                m_loadBalancer.GetHost(module.UrlName, module, SessionID, out port, out hostName, out innerURL);
                 ports[module.UrlName] = port.Count == 1 ? (OSD)port[0] : (OSD)port.ToOSDArray();
                 hostnames[module.UrlName] = hostName.Count == 1 ? (OSD)hostName[0] : (OSD)hostName.ToOSDArray();
                 databaseSave[module.UrlName] = innerURL.Count == 1 ? (OSD)innerURL[0] : (OSD)innerURL.ToOSDArray();
@@ -349,15 +349,15 @@ namespace OpenSim.Services.GridService
                            SessionID = SessionID,
                            Ports = ports,
                            HostNames = hostnames,
-                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout*60),
+                           Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout * 60),
                            _ParentHostName = MainServer.Instance.HostName
                        };
-            m_genericsConnector.AddGeneric (UUID.Zero, "GridRegistrationUrls", SessionID, urls.ToOSD ());
+            m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", SessionID, urls.ToOSD());
 
             return retVal;
         }
 
-        private bool CheckModuleNames (GridRegistrationURLs urls)
+        private bool CheckModuleNames(GridRegistrationURLs urls)
         {
 #if (!ISWIN)
             foreach (string urlName in m_modules.Keys)
@@ -392,7 +392,7 @@ namespace OpenSim.Services.GridService
                 "GridRegistrationUrls", SessionID);
             if (urls != null)
             {
-                MainConsole.Instance.WarnFormat ("[GridRegService]: Removing URLs for {0}", SessionID);
+                MainConsole.Instance.WarnFormat("[GridRegService]: Removing URLs for {0}", SessionID);
                 //Remove all the handlers from the HTTP Server
                 foreach (IGridRegistrationUrlModule module in m_modules.Values)
                 {
@@ -400,7 +400,7 @@ namespace OpenSim.Services.GridService
                         continue;
                     try
                     {
-                        module.RemoveUrlForClient (urls.SessionID, urls.URLS[module.UrlName], urls.Ports[module.UrlName]);
+                        module.RemoveUrlForClient(urls.SessionID, urls.URLS[module.UrlName], urls.Ports[module.UrlName]);
                     }
                     catch
                     {
@@ -425,12 +425,12 @@ namespace OpenSim.Services.GridService
         {
             if (urls != null)
             {
-                urls.Expiration = DateTime.UtcNow.AddMinutes (m_timeBeforeTimeout * 60);
+                urls.Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout * 60);
                 m_genericsConnector.AddGeneric(UUID.Zero, "GridRegistrationUrls", urls.SessionID, urls.ToOSD());
-                MainConsole.Instance.DebugFormat ("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
+                MainConsole.Instance.DebugFormat("[GridRegistrationService]: Updated URLs for {0}", urls.SessionID);
             }
             else
-                MainConsole.Instance.ErrorFormat ("[GridRegistrationService]: Failed to find URLs to update for {0}", "unknown");
+                MainConsole.Instance.ErrorFormat("[GridRegistrationService]: Failed to find URLs to update for {0}", "unknown");
         }
 
         public void RegisterModule(IGridRegistrationUrlModule module)
@@ -451,7 +451,7 @@ namespace OpenSim.Services.GridService
                 //Past time for it to expire
                 if (m_useSessionTime && urls.Expiration < DateTime.UtcNow)
                 {
-                    MainConsole.Instance.Warn ("[GridRegService]: URLs expired for " + SessionID);
+                    MainConsole.Instance.Warn("[GridRegService]: URLs expired for " + SessionID);
                     RemoveUrlsForClient(SessionID);
                     return false;
                 }
@@ -459,13 +459,13 @@ namespace OpenSim.Services.GridService
                 ThreatLevel functionThreatLevel = PermissionSet.FindThreatLevelForFunction(function, defaultThreatLevel);
                 //Now find the permission for that threat level
                 //else, check it against the threat level that the region has
-                ThreatLevel regionThreatLevel = FindRegionThreatLevel (SessionID);
+                ThreatLevel regionThreatLevel = FindRegionThreatLevel(SessionID);
                 //Return whether the region threat level is higher than the function threat level
-                if(!(functionThreatLevel <= regionThreatLevel))
-                    MainConsole.Instance.Warn ("[GridRegService]: checkThreatLevel (" + function + ") failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
+                if (!(functionThreatLevel <= regionThreatLevel))
+                    MainConsole.Instance.Warn("[GridRegService]: checkThreatLevel (" + function + ") failed for " + SessionID + ", fperm " + functionThreatLevel + ", rperm " + regionThreatLevel + "!");
                 return functionThreatLevel <= regionThreatLevel;
             }
-            MainConsole.Instance.Warn ("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");
+            MainConsole.Instance.Warn("[GridRegService]: Could not find URLs for checkThreatLevel for " + SessionID + "!");
             return false;
         }
 
@@ -501,8 +501,8 @@ namespace OpenSim.Services.GridService
             {
                 URLS = (OSDMap)retVal["URLS"];
                 SessionID = retVal["SessionID"].AsString();
-                Expiration = retVal["Expiration"].AsDate ();
-                Expiration = Expiration.ToUniversalTime ();
+                Expiration = retVal["Expiration"].AsDate();
+                Expiration = Expiration.ToUniversalTime();
                 HostNames = retVal["HostName"] as OSDMap;
                 Ports = retVal["Port"] as OSDMap;
                 if (!retVal.ContainsKey("VersionNumber"))
@@ -515,47 +515,47 @@ namespace OpenSim.Services.GridService
 
         public class LoadBalancerUrls
         {
-            protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>> ();
-            protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>> ();
-            protected Dictionary<string, int> lastSet = new Dictionary<string, int> ();
+            protected Dictionary<string, List<string>> m_urls = new Dictionary<string, List<string>>();
+            protected Dictionary<string, List<uint>> m_ports = new Dictionary<string, List<uint>>();
+            protected Dictionary<string, int> lastSet = new Dictionary<string, int>();
             protected const uint m_defaultPort = 8003;
             protected string m_defaultHostname = "http://127.0.0.1";
             protected IConfig m_configurationConfig;
 
             protected int m_externalUrlCountTotal = 0;
-            protected List<int> m_externalUrlCount = new List<int> ();
+            protected List<int> m_externalUrlCount = new List<int>();
             protected uint m_remotePort = 8003;
-            protected List<string> m_remoteLoadBalancingInstances = new List<string> ();
+            protected List<string> m_remoteLoadBalancingInstances = new List<string>();
             protected string m_remotePassword = "";
 
-            public void SetConfig (IConfigSource config, GridRegistrationService gridRegService)
+            public void SetConfig(IConfigSource config, GridRegistrationService gridRegService)
             {
                 m_configurationConfig = config.Configs["Configuration"];
 
                 if (m_configurationConfig != null)
                 {
                     m_defaultHostname = MainServer.Instance.FullHostName;
-                    m_remotePassword = m_configurationConfig.GetString ("RemotePassword", "");
-                    m_remotePort = m_configurationConfig.GetUInt ("RemoteLoadBalancingPort", m_defaultPort);
-                    SetRemoteUrls (m_configurationConfig.GetString ("RemoteLoadBalancingUrls", "").Split (new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
+                    m_remotePassword = m_configurationConfig.GetString("RemotePassword", "");
+                    m_remotePort = m_configurationConfig.GetUInt("RemoteLoadBalancingPort", m_defaultPort);
+                    SetRemoteUrls(m_configurationConfig.GetString("RemoteLoadBalancingUrls", "").Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
                     if (m_configurationConfig.GetBoolean("UseRemoteLoadBalancing", false))
                     {
                         //Set up the external handlers
-                        IHttpServer server = gridRegService.m_registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_remotePort);
+                        IHttpServer server = gridRegService.m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_remotePort);
 
-                        RemoteLoadBalancingPostHandler handler = new RemoteLoadBalancingPostHandler ("/LoadBalancing", m_remotePassword, gridRegService);
-                        server.AddStreamHandler (handler);
+                        RemoteLoadBalancingPostHandler handler = new RemoteLoadBalancingPostHandler("/LoadBalancing", m_remotePassword, gridRegService);
+                        server.AddStreamHandler(handler);
                     }
                 }
             }
 
             #region Set accessors
 
-            protected void SetRemoteUrls (string[] urls)
+            protected void SetRemoteUrls(string[] urls)
             {
                 for (int i = 0; i < urls.Length; i++)
                 {
-                    if (urls[i].StartsWith (" "))
+                    if (urls[i].StartsWith(" "))
                         urls[i] = urls[i].Remove(0, 1);
                     bool isSecure = urls[i].StartsWith("https://");
                     urls[i] = urls[i].Replace("http://", "");
@@ -563,33 +563,33 @@ namespace OpenSim.Services.GridService
                     //Readd the http://
                     urls[i] = "http" + (isSecure ? "s" : "") + "://" + urls[i];
                 }
-                m_remoteLoadBalancingInstances = new List<string> (urls);
+                m_remoteLoadBalancingInstances = new List<string>(urls);
             }
 
-            protected void SetUrls (string name, string[] urls)
+            protected void SetUrls(string name, string[] urls)
             {
                 for (int i = 0; i < urls.Length; i++)
                 {
-                    if (urls[i].StartsWith (" "))
-                        urls[i] = urls[i].Remove (0, 1);
+                    if (urls[i].StartsWith(" "))
+                        urls[i] = urls[i].Remove(0, 1);
                     //Remove any ports people may have added
                     bool isSecure = urls[i].StartsWith("https://");
                     urls[i] = urls[i].Replace("http://", "");
                     urls[i] = urls[i].Replace("https://", "");
-                    urls[i] = urls[i].Split (':')[0];
+                    urls[i] = urls[i].Split(':')[0];
                     //Readd the http://
                     urls[i] = "http" + (isSecure ? "s" : "") + "://" + urls[i];
                 }
-                m_urls[name] = new List<string> (urls);
+                m_urls[name] = new List<string>(urls);
             }
 
-            protected void AddPorts (string name, string[] ports)
+            protected void AddPorts(string name, string[] ports)
             {
-                List<uint> uPorts = new List<uint> ();
+                List<uint> uPorts = new List<uint>();
                 for (int i = 0; i < ports.Length; i++)
                 {
-                    if (ports[i].StartsWith (" "))
-                        ports[i] = ports[i].Remove (0, 1);
+                    if (ports[i].StartsWith(" "))
+                        ports[i] = ports[i].Remove(0, 1);
                     if (ports[i].Contains("-"))
                     {
                         uint first = (uint.Parse(ports[i].Split('-')[0]));
@@ -598,11 +598,11 @@ namespace OpenSim.Services.GridService
                             uPorts.Add(port);
                     }
                     else
-                        uPorts.Add (uint.Parse (ports[i]));
+                        uPorts.Add(uint.Parse(ports[i]));
                 }
-                if (!m_ports.ContainsKey (name))
-                    m_ports[name] = new List<uint> ();
-                m_ports[name].AddRange (uPorts);
+                if (!m_ports.ContainsKey(name))
+                    m_ports[name] = new List<uint>();
+                m_ports[name].AddRange(uPorts);
             }
 
             #endregion
@@ -619,16 +619,16 @@ namespace OpenSim.Services.GridService
             /// <param name="module"></param>
             /// <param name="innerUrl"></param>
             /// <returns>Whether we need to create a handler or whether it is an external URL</returns>
-            public void GetHost (string name, IGridRegistrationUrlModule module, string SessionID, out List<uint> ports, out List<string> hostNames, out List<string> innerUrls)
+            public void GetHost(string name, IGridRegistrationUrlModule module, string SessionID, out List<uint> ports, out List<string> hostNames, out List<string> innerUrls)
             {
-                if (!m_urls.ContainsKey (name))
+                if (!m_urls.ContainsKey(name))
                 {
-                    SetUrls (name, m_configurationConfig.GetString (name + "Hostnames", m_defaultHostname).Split (','));
-                    AddPorts (name, m_configurationConfig.GetString (name + "InternalPorts", m_defaultPort.ToString ()).Split (','));
-                    GetExternalCounts (name);
+                    SetUrls(name, m_configurationConfig.GetString(name + "Hostnames", m_defaultHostname).Split(','));
+                    AddPorts(name, m_configurationConfig.GetString(name + "InternalPorts", m_defaultPort.ToString()).Split(','));
+                    GetExternalCounts(name);
                 }
-                if (!lastSet.ContainsKey (name))
-                    lastSet.Add (name, 0);
+                if (!lastSet.ContainsKey(name))
+                    lastSet.Add(name, 0);
 
                 ports = new List<uint>();
                 innerUrls = new List<string>();
@@ -639,9 +639,9 @@ namespace OpenSim.Services.GridService
                 if (module.DoMultiplePorts)
                 {
                     ports = m_ports[name];
-                    foreach(var port in ports)
+                    foreach (var port in ports)
                         hostNames.Add(urls[lastSet[name]]);
-                    foreach(uint port in ports)
+                    foreach (uint port in ports)
                         innerUrls.Add(module.GetUrlForRegisteringClient(SessionID, port));
                     return;
                 }
@@ -653,7 +653,7 @@ namespace OpenSim.Services.GridService
                         //Internal, just pull it from the lists
                         hostNames.Add(urls[lastSet[name]]);
                         ports.Add(m_ports[name][lastSet[name]]);
-                        innerUrls.Add(module.GetUrlForRegisteringClient (SessionID, ports[0]));
+                        innerUrls.Add(module.GetUrlForRegisteringClient(SessionID, ports[0]));
                     }
                     else
                     {
@@ -695,11 +695,11 @@ namespace OpenSim.Services.GridService
                         ports.Add(m_defaultPort);
                         hostNames.Add(m_defaultHostname);
                     }
-                    innerUrls.Add(module.GetUrlForRegisteringClient (SessionID, ports[0]));
+                    innerUrls.Add(module.GetUrlForRegisteringClient(SessionID, ports[0]));
                 }
             }
 
-            private bool GetExternalInfo (int lastSet2, string name, string SessionID, out uint port, out string hostName, out string innerUrl)
+            private bool GetExternalInfo(int lastSet2, string name, string SessionID, out uint port, out string hostName, out string innerUrl)
             {
                 port = 0;
                 hostName = "";
@@ -719,10 +719,10 @@ namespace OpenSim.Services.GridService
                 if (externalURL == "")
                     return false;
 
-                OSDMap resp = MakeGenericCall (externalURL, "GetExternalInfo", name, SessionID);
+                OSDMap resp = MakeGenericCall(externalURL, "GetExternalInfo", name, SessionID);
                 if (resp == null)
                     //Try again
-                    return GetExternalInfo ((currentCount + m_externalUrlCount[i]), SessionID, name, out port, out hostName, out innerUrl);
+                    return GetExternalInfo((currentCount + m_externalUrlCount[i]), SessionID, name, out port, out hostName, out innerUrl);
                 port = resp["Port"];
                 hostName = resp["HostName"];
                 innerUrl = resp["InnerUrl"];
@@ -734,12 +734,12 @@ namespace OpenSim.Services.GridService
             /// Gets hostnames and ports from an external instance
             /// </summary>
             /// <param name="name"></param>
-            private void GetExternalCounts (string name)
+            private void GetExternalCounts(string name)
             {
                 int count = 0;
                 foreach (string url in m_remoteLoadBalancingInstances)
                 {
-                    OSDMap resp = MakeGenericCall (url, "GetExternalCounts", name, "");
+                    OSDMap resp = MakeGenericCall(url, "GetExternalCounts", name, "");
                     if (resp != null)
                     {
                         m_externalUrlCountTotal += resp["Count"];
@@ -751,14 +751,14 @@ namespace OpenSim.Services.GridService
                 }
             }
 
-            private OSDMap MakeGenericCall (string url, string method, string param, string param2)
+            private OSDMap MakeGenericCall(string url, string method, string param, string param2)
             {
-                OSDMap request = new OSDMap ();
+                OSDMap request = new OSDMap();
                 request["Password"] = m_remotePassword;
                 request["Method"] = method;
                 request["Param"] = param;
                 request["Param2"] = param2;
-                return WebUtils.PostToService (url + "/LoadBalancing", request, true, false, true);
+                return WebUtils.PostToService(url + "/LoadBalancing", request, true, false, true);
             }
 
             #endregion
@@ -770,24 +770,24 @@ namespace OpenSim.Services.GridService
                 private readonly GridRegistrationService m_service;
                 private readonly string m_password;
 
-                public RemoteLoadBalancingPostHandler (string url, string password, GridRegistrationService gridReg) :
-                    base ("POST", url)
+                public RemoteLoadBalancingPostHandler(string url, string password, GridRegistrationService gridReg) :
+                    base("POST", url)
                 {
                     m_password = password;
                     m_service = gridReg;
                 }
 
-                public override byte[] Handle (string path, Stream requestData,
+                public override byte[] Handle(string path, Stream requestData,
                         OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                 {
-                    StreamReader sr = new StreamReader (requestData);
-                    string body = sr.ReadToEnd ();
-                    sr.Close ();
-                    body = body.Trim ();
-                    OSDMap request = WebUtils.GetOSDMap (body);
-                    if(request["Password"] != m_password)
+                    StreamReader sr = new StreamReader(requestData);
+                    string body = sr.ReadToEnd();
+                    sr.Close();
+                    body = body.Trim();
+                    OSDMap request = WebUtils.GetOSDMap(body);
+                    if (request["Password"] != m_password)
                         return null;
-                    OSDMap response = new OSDMap ();
+                    OSDMap response = new OSDMap();
 
                     switch (response["Method"].AsString())
                     {
@@ -797,12 +797,12 @@ namespace OpenSim.Services.GridService
                         case "GetExternalInfo":
                             string moduleName = request["Param"];
                             string SessionID = request["Param2"];
-                            if (m_service.m_modules.ContainsKey (moduleName))
+                            if (m_service.m_modules.ContainsKey(moduleName))
                             {
                                 List<uint> port;
                                 List<string> hostName;
                                 List<string> innerUrl;
-                                m_service.m_loadBalancer.GetHost (moduleName, m_service.m_modules[moduleName], SessionID, out port, out hostName, out innerUrl);
+                                m_service.m_loadBalancer.GetHost(moduleName, m_service.m_modules[moduleName], SessionID, out port, out hostName, out innerUrl);
                                 response["HostName"] = hostName[0];
                                 response["InnerUrl"] = innerUrl[0];
                                 response["Port"] = port[0];
@@ -810,7 +810,7 @@ namespace OpenSim.Services.GridService
                             break;
                     }
 
-                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString (response));
+                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response));
                 }
             }
 

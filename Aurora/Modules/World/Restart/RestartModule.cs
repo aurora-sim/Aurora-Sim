@@ -91,7 +91,7 @@ namespace Aurora.Modules.Restart
 
         public Type ReplaceableInterface
         {
-            get { return typeof (IRestartModule); }
+            get { return typeof(IRestartModule); }
         }
 
         #endregion
@@ -200,7 +200,7 @@ namespace Aurora.Modules.Restart
 
             m_Alerts.RemoveAt(0);
 
-            int minutes = currentAlert/60;
+            int minutes = currentAlert / 60;
             string currentAlertString = String.Empty;
             if (minutes > 0)
             {
@@ -208,12 +208,12 @@ namespace Aurora.Modules.Restart
                     currentAlertString += "1 minute";
                 else
                     currentAlertString += String.Format("{0} minutes", minutes);
-                if ((currentAlert%60) != 0)
+                if ((currentAlert % 60) != 0)
                     currentAlertString += " and ";
             }
-            if ((currentAlert%60) != 0)
+            if ((currentAlert % 60) != 0)
             {
-                int seconds = currentAlert%60;
+                int seconds = currentAlert % 60;
                 if (seconds == 1)
                     currentAlertString += "1 second";
                 else
@@ -238,7 +238,7 @@ namespace Aurora.Modules.Restart
         {
             if (intervalSeconds == 0)
                 return;
-            m_CountdownTimer = new Timer {AutoReset = false, Interval = intervalSeconds*1000};
+            m_CountdownTimer = new Timer { AutoReset = false, Interval = intervalSeconds * 1000 };
             m_CountdownTimer.Elapsed += OnTimer;
             m_CountdownTimer.Start();
         }

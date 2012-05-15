@@ -104,7 +104,7 @@ namespace Aurora.Framework
             SingleLinkNode<T> oldTail = null;
             SingleLinkNode<T> oldTailNext;
 
-            SingleLinkNode<T> newNode = new SingleLinkNode<T> {Item = item};
+            SingleLinkNode<T> newNode = new SingleLinkNode<T> { Item = item };
 
             bool newNodeWasAdded = false;
             while (!newNodeWasAdded)
@@ -199,7 +199,7 @@ namespace Aurora.Framework
             SingleLinkNode oldTail = null;
             SingleLinkNode oldTailNext;
 
-            SingleLinkNode newNode = new SingleLinkNode {Item = item};
+            SingleLinkNode newNode = new SingleLinkNode { Item = item };
 
             bool newNodeWasAdded = false;
 

@@ -66,11 +66,12 @@ namespace Aurora.Framework
         /// <param name = "fn"></param>
         public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
         {
-            CommandInfo info = new CommandInfo{
+            CommandInfo info = new CommandInfo
+            {
                 command = command,
                 commandHelp = commandHelp,
                 info = infomessage,
-                fn = new List<CommandDelegate> {fn}
+                fn = new List<CommandDelegate> { fn }
             };
             tree.AddCommand(info);
         }
@@ -153,7 +154,7 @@ namespace Aurora.Framework
                 {
                     innerPath = innerPath.Remove(0, 1);
                 }
-                string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
+                string[] commandPath = innerPath.Split(new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                 if (commandPath.Length == 1 || !m_allowSubSets)
                 {
                     //Only one command after our path, its ours
@@ -200,7 +201,7 @@ namespace Aurora.Framework
                     {
                         innerPath = innerPath.Remove(0, 1);
                     }
-                    string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
+                    string[] commandPath = innerPath.Split(new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     List<string> commandPathList = new List<string>(commandPath);
                     List<string> commandOptions = new List<string>();
                     int i;
@@ -218,7 +219,7 @@ namespace Aurora.Framework
                     }
                     commandOptions.Reverse();
                     commandPath = commandPathList.ToArray();
-                    if(commandOptions.Count > 0)
+                    if (commandOptions.Count > 0)
                         MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
                     List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
@@ -393,7 +394,7 @@ namespace Aurora.Framework
                     {
                         innerPath = innerPath.Remove(0, 1);
                     }
-                    string[] commandPath = innerPath.Split(new string[1] {" "}, StringSplitOptions.RemoveEmptyEntries);
+                    string[] commandPath = innerPath.Split(new string[1] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if ((commandPath.Length == 1 || !m_allowSubSets))
                     {
                         string fullcommand = string.Join(" ", command, 0, 2 > command.Length ? command.Length : 2);
@@ -528,13 +529,13 @@ namespace Aurora.Framework
 
             int index;
 
-            string[] unquoted = text.Split(new[] {'"'});
+            string[] unquoted = text.Split(new[] { '"' });
 
             for (index = 0; index < unquoted.Length; index++)
             {
-                if (index%2 == 0)
+                if (index % 2 == 0)
                 {
-                    string[] words = unquoted[index].Split(new[] {' '});
+                    string[] words = unquoted[index].Split(new[] { ' ' });
 #if (!ISWIN)
                     foreach (string w in words)
                     {
@@ -694,25 +695,25 @@ namespace Aurora.Framework
             itisdone = false;
             while (!itisdone && excludedCharacters.Count > 0)
             {
-                #if (!ISWIN)
-                    bool found = false;
-                    foreach (char c in excludedCharacters)
+#if (!ISWIN)
+                bool found = false;
+                foreach (char c in excludedCharacters)
+                {
+                    if (temp.Contains(c.ToString()))
                     {
-                        if (temp.Contains(c.ToString()))
-                        {
-                            Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
-                            itisdone = false;
-                            found = true;
-                        }
+                        Console.WriteLine("The character \"" + c.ToString() + "\" is not permitted.");
+                        itisdone = false;
+                        found = true;
                     }
-                    if (!found)
-                    {
-                        itisdone = true;
-                    }
-                    else
-                    {
-                        temp = InternalPrompt(prompt, defaultresponse, options);
-                    }
+                }
+                if (!found)
+                {
+                    itisdone = true;
+                }
+                else
+                {
+                    temp = InternalPrompt(prompt, defaultresponse, options);
+                }
 #else
                     foreach (char c in excludedCharacters.Where(c => temp.Contains(c.ToString())))
                     {
@@ -898,7 +899,7 @@ namespace Aurora.Framework
                 lock (m_consoleLock)
                 {
 #if !NET_4_0
-                    if(m_consoleReadingThread == null)
+                    if (m_consoleReadingThread == null)
                         m_consoleReadingThread = StartReadingThread();
                     try
                     {

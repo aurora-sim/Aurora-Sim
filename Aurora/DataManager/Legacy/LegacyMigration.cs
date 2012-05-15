@@ -174,7 +174,7 @@ namespace Aurora.DataManager
 
         protected void ExecuteScript(DbConnection conn, string sql)
         {
-            ExecuteScript(conn, new[] {sql});
+            ExecuteScript(conn, new[] { sql });
         }
 
         protected void ExecuteScript(string sql)
@@ -309,7 +309,7 @@ namespace Aurora.DataManager
                                                          return m.Success;
                                                      });
 #endif
-                // ; nm.StartsWith(sPrefix, StringComparison.InvariantCultureIgnoreCase
+            // ; nm.StartsWith(sPrefix, StringComparison.InvariantCultureIgnoreCase
 
             if ((m != null) && !String.IsNullOrEmpty(sFile))
             {
@@ -376,7 +376,7 @@ namespace Aurora.DataManager
                                 }
 
                                 if (sLine.StartsWith(":VERSION ", StringComparison.InvariantCultureIgnoreCase))
-                                    // ":VERSION nnn"
+                                // ":VERSION nnn"
                                 {
                                     flush();
 
@@ -405,7 +405,7 @@ namespace Aurora.DataManager
                         }
             }
 
-            scan_old_style:
+        scan_old_style:
             // scan "old style" migration pieces anyway, ignore any versions already filled from the single file
             foreach (string s in names)
             {
@@ -421,7 +421,7 @@ namespace Aurora.DataManager
                                 using (StreamReader resourceReader = new StreamReader(resource))
                                 {
                                     string sql = resourceReader.ReadToEnd();
-                                    migrations.Add(version, new[] {sql});
+                                    migrations.Add(version, new[] { sql });
                                 }
                         }
                     }

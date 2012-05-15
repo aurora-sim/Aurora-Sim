@@ -106,7 +106,7 @@ namespace Aurora.Modules.Sound
             {
                 ILO = parcelManagement.GetLandObject(position.X, position.Y);
                 if (ILO != null)
-                    LocalOnly = (ILO.LandData.Flags & (uint) ParcelFlags.SoundLocal) == (uint) ParcelFlags.SoundLocal;
+                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
             }
 
             m_scene.ForEachScenePresence(delegate(IScenePresence sp)
@@ -162,19 +162,19 @@ namespace Aurora.Modules.Sound
                                                  if ((sp.CurrentParcelUUID != ILO.LandData.GlobalID &&
                                                       (sp.CurrentParcel.LandData.Private || ILO.LandData.Private)))
                                                      return;
-                                                         //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
+                                                 //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
 
 
                                                  // Scale by distance
                                                  if (radius == 0)
-                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                     gain = (float)(gain * ((100.0 - dis) / 100.0));
                                                  else
-                                                     gain = (float) (gain*((radius - dis)/radius));
+                                                     gain = (float)(gain * ((radius - dis) / radius));
 
                                                  if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
-                                                     flags += (int) SoundFlags.Queue;
+                                                     flags += (int)SoundFlags.Queue;
                                                  sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID,
-                                                                                            (float) gain, flags);
+                                                                                            (float)gain, flags);
                                              });
         }
 
@@ -185,11 +185,11 @@ namespace Aurora.Modules.Sound
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                ILandObject land = parcelManagement.GetLandObject((int) position.X, (int) position.Y);
+                ILandObject land = parcelManagement.GetLandObject((int)position.X, (int)position.Y);
                 if (!m_scene.Permissions.CanEditParcel(group.OwnerID, land))
                     return;
             }
-            ConeOfSilence CS = new ConeOfSilence {Position = position, Radius = Radius};
+            ConeOfSilence CS = new ConeOfSilence { Position = position, Radius = Radius };
             Cones.Add(objectID, CS);
         }
 
@@ -209,7 +209,7 @@ namespace Aurora.Modules.Sound
             {
                 ILO = parcelManagement.GetLandObject(position.X, position.Y);
                 if (ILO != null) //Check only if null, otherwise this breaks megaregions
-                    LocalOnly = (ILO.LandData.Flags & (uint) ParcelFlags.SoundLocal) == (uint) ParcelFlags.SoundLocal;
+                    LocalOnly = (ILO.LandData.Flags & (uint)ParcelFlags.SoundLocal) == (uint)ParcelFlags.SoundLocal;
             }
             ISceneChildEntity part = m_scene.GetSceneObjectPart(objectID);
             if (part == null)
@@ -270,13 +270,13 @@ namespace Aurora.Modules.Sound
 
                                                  // Scale by distance
                                                  if (radius == 0)
-                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                     gain = (float)(gain * ((100.0 - dis) / 100.0));
                                                  else
-                                                     gain = (float) (gain*((radius - dis)/radius));
+                                                     gain = (float)(gain * ((radius - dis) / radius));
 
                                                  sp.ControllingClient.SendTriggeredSound(
                                                      soundId, ownerID, objectID, parentID, handle, position,
-                                                     (float) gain);
+                                                     (float)gain);
                                              });
         }
 

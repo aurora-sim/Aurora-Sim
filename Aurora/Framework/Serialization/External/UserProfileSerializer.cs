@@ -42,7 +42,7 @@ namespace Aurora.Framework.Serialization.External
         public static string Serialize(UUID userID, string firstName, string lastName)
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
             xtw.WriteStartDocument();
 
             xtw.WriteStartElement("user_profile");
@@ -54,7 +54,7 @@ namespace Aurora.Framework.Serialization.External
             xtw.WriteElementString("about", "");
 
             // Not sure if we're storing this yet, need to take a look
-//            xtw.WriteElementString("Url", profile.Url);
+            //            xtw.WriteElementString("Url", profile.Url);
             // or, indeed, interests
 
             xtw.WriteEndElement();

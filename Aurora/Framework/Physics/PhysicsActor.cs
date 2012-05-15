@@ -418,7 +418,7 @@ namespace Aurora.Framework
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Ground; }
+            get { return (int)ActorTypes.Ground; }
         }
 
         public override Vector3 RotationalVelocity
@@ -580,7 +580,7 @@ namespace Aurora.Framework
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Unknown; }
+            get { return (int)ActorTypes.Unknown; }
         }
 
         public override Vector3 RotationalVelocity

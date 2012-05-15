@@ -92,7 +92,7 @@ namespace Aurora.Modules.VersionControl
 
             if (m_autoOAREnabled)
             {
-                m_autoOARTimer = new Timer(m_autoOARTime*1000*60*60*24); //Time in days
+                m_autoOARTimer = new Timer(m_autoOARTime * 1000 * 60 * 60 * 24); //Time in days
                 m_autoOARTimer.Elapsed += SaveOAR;
                 m_autoOARTimer.Enabled = true;
             }

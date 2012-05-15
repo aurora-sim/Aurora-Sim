@@ -277,7 +277,7 @@ namespace Aurora.Modules.Groups
         public string GetGroupTitle(UUID avatarID)
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
-            
+
             //Check the cache first
             GroupMembershipData membership = null;
             if (m_cachedGroupTitles.ContainsKey(avatarID))
@@ -338,7 +338,7 @@ namespace Aurora.Modules.Groups
 
             // Security Checks are handled in the Groups Service.
 
-            switch ((GroupRoleUpdate) updateType)
+            switch ((GroupRoleUpdate)updateType)
             {
                 case OpenMetaverse.GroupRoleUpdate.Create:
                     m_groupData.AddGroupRole(GetRequestingAgentID(remoteClient), groupID, UUID.Random(), name,
@@ -354,7 +354,7 @@ namespace Aurora.Modules.Groups
                 case OpenMetaverse.GroupRoleUpdate.UpdatePowers:
                     if (m_debugEnabled)
                     {
-                        GroupPowers gp = (GroupPowers) powers;
+                        GroupPowers gp = (GroupPowers)powers;
                         MainConsole.Instance.DebugFormat("[GROUPS]: Role ({0}) updated with Powers ({1}) ({2})", name,
                                           powers.ToString(), gp.ToString());
                     }
@@ -514,7 +514,7 @@ namespace Aurora.Modules.Groups
                 GridInstantMessage im = new GridInstantMessage
                                             {
                                                 fromAgentID = groupID,
-                                                dialog = (byte) InstantMessageDialog.SessionSend,
+                                                dialog = (byte)InstantMessageDialog.SessionSend,
                                                 binaryBucket = new byte[0],
                                                 fromAgentName = "System",
                                                 fromGroup = true,
@@ -522,7 +522,7 @@ namespace Aurora.Modules.Groups
                                                 message = remoteClient.Name + " has left the group.",
                                                 offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
-                                                timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                timestamp = (uint)Util.UnixTimeSinceEpoch(),
                                                 toAgentID = UUID.Zero
                                             };
 
@@ -553,7 +553,7 @@ namespace Aurora.Modules.Groups
             GridInstantMessage msg = new GridInstantMessage
                                          {
                                              imSessionID = UUID.Zero,
-                                             fromAgentID = UUID.Zero, 
+                                             fromAgentID = UUID.Zero,
                                              toAgentID = ejecteeID,
                                              timestamp = 0,
                                              fromAgentName = "System",
@@ -576,7 +576,7 @@ namespace Aurora.Modules.Groups
             IClientAPI ejectee = GetActiveClient(ejecteeID);
             if (ejectee != null)
             {
-                msg.dialog = (byte) InstantMessageDialog.MessageFromAgent;
+                msg.dialog = (byte)InstantMessageDialog.MessageFromAgent;
                 OutgoingInstantMessage(msg, ejecteeID);
                 ejectee.SendAgentDropGroup(groupID);
             }
@@ -595,7 +595,7 @@ namespace Aurora.Modules.Groups
                 GridInstantMessage im = new GridInstantMessage
                                             {
                                                 fromAgentID = groupID,
-                                                dialog = (byte) InstantMessageDialog.SessionSend,
+                                                dialog = (byte)InstantMessageDialog.SessionSend,
                                                 binaryBucket = new byte[0],
                                                 fromAgentName = "System",
                                                 fromGroup = true,
@@ -603,7 +603,7 @@ namespace Aurora.Modules.Groups
                                                 message = account.Name + " has been ejected from the group by " + remoteClient.Name + ".",
                                                 offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
-                                                timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                timestamp = (uint)Util.UnixTimeSinceEpoch(),
                                                 toAgentID = UUID.Zero
                                             };
 
@@ -651,7 +651,7 @@ namespace Aurora.Modules.Groups
                     }
                     msg.message = string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
                                                 remoteClient.Name);
-                    msg.dialog = (byte) InstantMessageDialog.GroupInvitation;
+                    msg.dialog = (byte)InstantMessageDialog.GroupInvitation;
                     msg.fromGroup = true;
                     msg.offline = 0;
                     msg.ParentEstateID = 0;
@@ -722,7 +722,7 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled) MainConsole.Instance.InfoFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
             OSDArray AgentData = new OSDArray(1);
-            OSDMap AgentDataMap = new OSDMap(1) {{"AgentID", OSD.FromUUID(dataForAgentID)}};
+            OSDMap AgentDataMap = new OSDMap(1) { { "AgentID", OSD.FromUUID(dataForAgentID) } };
             AgentData.Add(AgentDataMap);
 
 
@@ -775,7 +775,7 @@ namespace Aurora.Modules.Groups
 
         public OSD buildEvent(string eventName, OSD eventBody)
         {
-            OSDMap llsdEvent = new OSDMap(2) {{"body", eventBody}, {"message", new OSDString(eventName)}};
+            OSDMap llsdEvent = new OSDMap(2) { { "body", eventBody }, { "message", new OSDString(eventName) } };
 
             return llsdEvent;
         }
@@ -1206,7 +1206,7 @@ namespace Aurora.Modules.Groups
 
         private string GroupProposalBallot(string request, UUID agentID)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             UUID groupID = map["group-id"].AsUUID();
             UUID proposalID = map["proposal-id"].AsUUID();
@@ -1221,7 +1221,7 @@ namespace Aurora.Modules.Groups
 
         private string StartGroupProposal(string request, UUID agentID)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             int duration = map["duration"].AsInteger();
             UUID group = map["group-id"].AsUUID();
@@ -1233,7 +1233,7 @@ namespace Aurora.Modules.Groups
             GroupProposalInfo info = new GroupProposalInfo
                                          {
                                              GroupID = group,
-                                             Majority = (float) majority,
+                                             Majority = (float)majority,
                                              Quorum = quorum,
                                              Session = session,
                                              Text = text,
@@ -1280,7 +1280,7 @@ namespace Aurora.Modules.Groups
                                                          imSessionID = inviteUUID,
                                                          fromAgentID = Invite.GroupID,
                                                          toAgentID = Invite.AgentID,
-                                                         timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                         timestamp = (uint)Util.UnixTimeSinceEpoch(),
                                                          fromAgentName = Invite.FromAgentName
                                                      };
 
@@ -1294,7 +1294,7 @@ namespace Aurora.Modules.Groups
                         msg.message =
                             string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
                                           Invite.FromAgentName);
-                        msg.dialog = (byte) InstantMessageDialog.GroupInvitation;
+                        msg.dialog = (byte)InstantMessageDialog.GroupInvitation;
                         msg.fromGroup = true;
                         msg.offline = 0;
                         msg.ParentEstateID = 0;
@@ -1345,13 +1345,13 @@ namespace Aurora.Modules.Groups
         private void OnDirFindQuery(IClientAPI remoteClient, UUID queryID, string queryText, uint queryFlags,
                                     int queryStart)
         {
-            if (((DirectoryManager.DirFindFlags) queryFlags & DirectoryManager.DirFindFlags.Groups) ==
+            if (((DirectoryManager.DirFindFlags)queryFlags & DirectoryManager.DirFindFlags.Groups) ==
                 DirectoryManager.DirFindFlags.Groups)
             {
                 if (m_debugEnabled)
                     MainConsole.Instance.DebugFormat(
                         "[GROUPS]: {0} called with queryText({1}) queryFlags({2}) queryStart({3})",
-                        MethodBase.GetCurrentMethod().Name, queryText, (DirectoryManager.DirFindFlags) queryFlags,
+                        MethodBase.GetCurrentMethod().Name, queryText, (DirectoryManager.DirFindFlags)queryFlags,
                         queryStart);
 
                 remoteClient.SendDirGroupsReply(queryID,
@@ -1373,10 +1373,10 @@ namespace Aurora.Modules.Groups
             UUID activeGroupID = UUID.Zero;
             string activeGroupTitle = string.Empty;
             string activeGroupName = string.Empty;
-            ulong activeGroupPowers = (ulong) GroupPowers.None;
+            ulong activeGroupPowers = (ulong)GroupPowers.None;
 
-            GroupMembershipData membership = m_cachedGroupTitles.ContainsKey(dataForAgentID) ? 
-                m_cachedGroupTitles[dataForAgentID] : 
+            GroupMembershipData membership = m_cachedGroupTitles.ContainsKey(dataForAgentID) ?
+                m_cachedGroupTitles[dataForAgentID] :
                 m_groupData.GetAgentActiveMembership(GetRequestingAgentID(remoteClient),
                                                                                    dataForAgentID);
             m_cachedGroupTitles[dataForAgentID] = membership;
@@ -1414,8 +1414,8 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
             // Group invitations
-            if ((im.dialog == (byte) InstantMessageDialog.GroupInvitationAccept) ||
-                (im.dialog == (byte) InstantMessageDialog.GroupInvitationDecline))
+            if ((im.dialog == (byte)InstantMessageDialog.GroupInvitationAccept) ||
+                (im.dialog == (byte)InstantMessageDialog.GroupInvitationDecline))
             {
                 UUID inviteID = im.imSessionID;
                 GroupInviteInfo inviteInfo = m_groupData.GetAgentToGroupInvite(GetRequestingAgentID(remoteClient),
@@ -1437,7 +1437,7 @@ namespace Aurora.Modules.Groups
                 if ((inviteInfo != null) && (fromAgentID == inviteInfo.AgentID))
                 {
                     // Accept
-                    if (im.dialog == (byte) InstantMessageDialog.GroupInvitationAccept)
+                    if (im.dialog == (byte)InstantMessageDialog.GroupInvitationAccept)
                     {
                         if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: Received an accept invite notice.");
 
@@ -1454,11 +1454,11 @@ namespace Aurora.Modules.Groups
                                                              imSessionID = UUID.Zero,
                                                              fromAgentID = UUID.Zero,
                                                              toAgentID = inviteInfo.AgentID,
-                                                             timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                             timestamp = (uint)Util.UnixTimeSinceEpoch(),
                                                              fromAgentName = "Groups",
                                                              message =
                                                                  string.Format("You have been added to the group."),
-                                                             dialog = (byte) InstantMessageDialog.MessageBox,
+                                                             dialog = (byte)InstantMessageDialog.MessageBox,
                                                              fromGroup = false,
                                                              offline = 0,
                                                              ParentEstateID = 0,
@@ -1485,7 +1485,7 @@ namespace Aurora.Modules.Groups
                     }
 
                     // Reject
-                    if (im.dialog == (byte) InstantMessageDialog.GroupInvitationDecline)
+                    if (im.dialog == (byte)InstantMessageDialog.GroupInvitationDecline)
                     {
                         if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: Received a reject invite notice.");
                         m_groupData.RemoveAgentToGroupInvite(GetRequestingAgentID(remoteClient), inviteID);
@@ -1494,7 +1494,7 @@ namespace Aurora.Modules.Groups
             }
 
             // Group notices
-            if ((im.dialog == (byte) InstantMessageDialog.GroupNotice))
+            if ((im.dialog == (byte)InstantMessageDialog.GroupNotice))
             {
                 if (!m_groupNoticesEnabled)
                     return;
@@ -1525,7 +1525,7 @@ namespace Aurora.Modules.Groups
                         string binBucket = Utils.BytesToString(im.binaryBucket);
                         binBucket = binBucket.Remove(0, 14).Trim();
 
-                        OSDMap binBucketOSD = (OSDMap) OSDParser.DeserializeLLSDXml(binBucket);
+                        OSDMap binBucketOSD = (OSDMap)OSDParser.DeserializeLLSDXml(binBucket);
                         if (binBucketOSD.ContainsKey("item_id"))
                         {
                             ItemID = binBucketOSD["item_id"].AsUUID();
@@ -1592,7 +1592,7 @@ namespace Aurora.Modules.Groups
                         {
                             // Build notice IIM
                             GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), notice,
-                                                                         (byte) InstantMessageDialog.GroupNotice);
+                                                                         (byte)InstantMessageDialog.GroupNotice);
 
                             msg.toAgentID = member.AgentID;
                             OutgoingInstantMessage(msg, member.AgentID);
@@ -1600,13 +1600,13 @@ namespace Aurora.Modules.Groups
                     }
                 }
             }
-            else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined) ||
-                     (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined))
+            else if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined) ||
+                     (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryDeclined))
             {
                 //GroupAttachmentCache.Remove(im.imSessionID);
             }
-            else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted) ||
-                     (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
+            else if ((im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted) ||
+                     (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
                 InventoryItemBase item = null;
@@ -1628,7 +1628,7 @@ namespace Aurora.Modules.Groups
 
                 UUID ejecteeID = im.toAgentID;
 
-                im.dialog = (byte) InstantMessageDialog.MessageFromAgent;
+                im.dialog = (byte)InstantMessageDialog.MessageFromAgent;
                 OutgoingInstantMessage(im, ejecteeID);
 
                 IClientAPI ejectee = GetActiveClient(ejecteeID);
@@ -1644,7 +1644,7 @@ namespace Aurora.Modules.Groups
                 // Interop, received special 211 code for offline group notice
             else if ((im.dialog == 211))
             {
-                im.dialog = (byte) InstantMessageDialog.GroupNotice;
+                im.dialog = (byte)InstantMessageDialog.GroupNotice;
 
                 //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
                 GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
@@ -1685,7 +1685,7 @@ namespace Aurora.Modules.Groups
             if (m_cachedGroupMemberships.ContainsKey(agentID))
             {
                 foreach (GroupMembershipData data in from d in m_cachedGroupMemberships[agentID] where d.GroupID == groupID select d)
-                return data;
+                    return data;
             }
             return m_groupData.GetAgentGroupMembership(requestingAgentID, agentID, groupID);
         }
@@ -1702,8 +1702,8 @@ namespace Aurora.Modules.Groups
             {
                 switch (msg.dialog)
                 {
-                    case (byte) InstantMessageDialog.GroupInvitation:
-                    case (byte) InstantMessageDialog.GroupNotice:
+                    case (byte)InstantMessageDialog.GroupInvitation:
+                    case (byte)InstantMessageDialog.GroupNotice:
                         UUID toAgentID = msg.toAgentID;
                         IClientAPI localClient = GetActiveClient(toAgentID);
                         if (localClient != null)
@@ -1759,7 +1759,7 @@ namespace Aurora.Modules.Groups
                                              timestamp = data.noticeData.Timestamp,
                                              fromAgentName = data.noticeData.FromName,
                                              message = data.noticeData.Subject + "|" + data.Message,
-                                             dialog = (byte) InstantMessageDialog.GroupNoticeRequested,
+                                             dialog = (byte)InstantMessageDialog.GroupNoticeRequested,
                                              fromGroup = true,
                                              offline = 1,
                                              ParentEstateID = 0,
@@ -1852,7 +1852,7 @@ namespace Aurora.Modules.Groups
                         ourPowers = groupsCache[GroupID];
                         if (ourPowers == 1)
                             return false;
-                                //1 means not in the group or not found in the cache, so stop it here so that we don't check every time, and it can't be a permission, as its 0 then 2 in GroupPermissions
+                        //1 means not in the group or not found in the cache, so stop it here so that we don't check every time, and it can't be a permission, as its 0 then 2 in GroupPermissions
                     }
                 }
             }
@@ -1874,7 +1874,7 @@ namespace Aurora.Modules.Groups
             if (permissions == GroupPowers.None)
                 return true;
 
-            if ((((GroupPowers) ourPowers) & permissions) != permissions)
+            if ((((GroupPowers)ourPowers) & permissions) != permissions)
                 return false;
 
             return true;

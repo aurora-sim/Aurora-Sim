@@ -124,7 +124,7 @@ namespace Aurora.Modules.Caps
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
 
-            OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
+            OSDMap osd = new OSDMap { { "ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL()) } };
             string response = OSDParser.SerializeLLSDXmlString(osd);
             responsedata["str_response_string"] = response;
             return responsedata;
@@ -143,7 +143,7 @@ namespace Aurora.Modules.Caps
                 return responsedata;
 
 
-            OSD r = OSDParser.DeserializeLLSDXml((string) request["requestbody"]);
+            OSD r = OSDParser.DeserializeLLSDXml((string)request["requestbody"]);
             //UUID session_id = UUID.Zero;
             bool bypass_raycast = false;
             uint everyone_mask = 0;
@@ -182,7 +182,7 @@ namespace Aurora.Modules.Caps
             if (r.Type != OSDType.Map) // not a proper req
                 return responsedata;
 
-            OSDMap rm = (OSDMap) r;
+            OSDMap rm = (OSDMap)r;
 
             if (rm.ContainsKey("ObjectData")) //v2
             {
@@ -192,7 +192,7 @@ namespace Aurora.Modules.Caps
                     return responsedata;
                 }
 
-                OSDMap ObjMap = (OSDMap) rm["ObjectData"];
+                OSDMap ObjMap = (OSDMap)rm["ObjectData"];
 
                 bypass_raycast = ObjMap["BypassRaycast"].AsBoolean();
                 everyone_mask = readuintval(ObjMap["EveryoneMask"]);
@@ -210,7 +210,7 @@ namespace Aurora.Modules.Caps
                         return responsedata;
                     }
 
-                    OSDMap PathMap = (OSDMap) ObjMap["Path"];
+                    OSDMap PathMap = (OSDMap)ObjMap["Path"];
                     path_begin = PathMap["Begin"].AsInteger();
                     path_curve = PathMap["Curve"].AsInteger();
                     path_end = PathMap["End"].AsInteger();
@@ -235,7 +235,7 @@ namespace Aurora.Modules.Caps
                         return responsedata;
                     }
 
-                    OSDMap ProfileMap = (OSDMap) ObjMap["Profile"];
+                    OSDMap ProfileMap = (OSDMap)ObjMap["Profile"];
 
                     profile_begin = ProfileMap["Begin"].AsInteger();
                     profile_curve = ProfileMap["Curve"].AsInteger();
@@ -268,7 +268,7 @@ namespace Aurora.Modules.Caps
                         return responsedata;
                     }
 
-                    OSDMap AgentDataMap = (OSDMap) rm["AgentData"];
+                    OSDMap AgentDataMap = (OSDMap)rm["AgentData"];
 
                     //session_id = AgentDataMap["SessionId"].AsUUID();
                     group_id = AgentDataMap["GroupId"].AsUUID();
@@ -330,33 +330,33 @@ namespace Aurora.Modules.Caps
 
 
             Vector3 pos = m_scene.SceneGraph.GetNewRezLocation(ray_start, ray_end, ray_target_id, rotation,
-                                                               (bypass_raycast) ? (byte) 1 : (byte) 0,
-                                                               (ray_end_is_intersection) ? (byte) 1 : (byte) 0, true,
+                                                               (bypass_raycast) ? (byte)1 : (byte)0,
+                                                               (ray_end_is_intersection) ? (byte)1 : (byte)0, true,
                                                                scale, false);
 
             PrimitiveBaseShape pbs = PrimitiveBaseShape.CreateBox();
 
-            pbs.PathBegin = (ushort) path_begin;
-            pbs.PathCurve = (byte) path_curve;
-            pbs.PathEnd = (ushort) path_end;
-            pbs.PathRadiusOffset = (sbyte) path_radius_offset;
-            pbs.PathRevolutions = (byte) path_revolutions;
-            pbs.PathScaleX = (byte) path_scale_x;
-            pbs.PathScaleY = (byte) path_scale_y;
-            pbs.PathShearX = (byte) path_shear_x;
-            pbs.PathShearY = (byte) path_shear_y;
-            pbs.PathSkew = (sbyte) path_skew;
-            pbs.PathTaperX = (sbyte) path_taper_x;
-            pbs.PathTaperY = (sbyte) path_taper_y;
-            pbs.PathTwist = (sbyte) path_twist;
-            pbs.PathTwistBegin = (sbyte) path_twist_begin;
-            pbs.HollowShape = (HollowShape) hollow;
-            pbs.PCode = (byte) p_code;
-            pbs.ProfileBegin = (ushort) profile_begin;
-            pbs.ProfileCurve = (byte) profile_curve;
-            pbs.ProfileEnd = (ushort) profile_end;
+            pbs.PathBegin = (ushort)path_begin;
+            pbs.PathCurve = (byte)path_curve;
+            pbs.PathEnd = (ushort)path_end;
+            pbs.PathRadiusOffset = (sbyte)path_radius_offset;
+            pbs.PathRevolutions = (byte)path_revolutions;
+            pbs.PathScaleX = (byte)path_scale_x;
+            pbs.PathScaleY = (byte)path_scale_y;
+            pbs.PathShearX = (byte)path_shear_x;
+            pbs.PathShearY = (byte)path_shear_y;
+            pbs.PathSkew = (sbyte)path_skew;
+            pbs.PathTaperX = (sbyte)path_taper_x;
+            pbs.PathTaperY = (sbyte)path_taper_y;
+            pbs.PathTwist = (sbyte)path_twist;
+            pbs.PathTwistBegin = (sbyte)path_twist_begin;
+            pbs.HollowShape = (HollowShape)hollow;
+            pbs.PCode = (byte)p_code;
+            pbs.ProfileBegin = (ushort)profile_begin;
+            pbs.ProfileCurve = (byte)profile_curve;
+            pbs.ProfileEnd = (ushort)profile_end;
             pbs.Scale = scale;
-            pbs.State = (byte) state;
+            pbs.State = (byte)state;
 
             SceneObjectGroup obj = null;
             ;
@@ -367,7 +367,7 @@ namespace Aurora.Modules.Caps
                 // rez ON the ground, not IN the ground
                 // pos.Z += 0.25F;
 
-                obj = (SceneObjectGroup) m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
+                obj = (SceneObjectGroup)m_scene.SceneGraph.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs);
             }
             else
             {
@@ -380,12 +380,12 @@ namespace Aurora.Modules.Caps
 
             SceneObjectPart rootpart = obj.RootPart;
             rootpart.Shape = pbs;
-            rootpart.Flags |= (PrimFlags) flags;
+            rootpart.Flags |= (PrimFlags)flags;
             rootpart.EveryoneMask = everyone_mask;
             rootpart.GroupID = group_id;
             rootpart.GroupMask = group_mask;
             rootpart.NextOwnerMask = next_owner_mask;
-            rootpart.Material = (byte) material;
+            rootpart.Material = (byte)material;
 
 
             m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);

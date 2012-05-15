@@ -55,11 +55,11 @@ namespace Aurora.Framework
         private string _description = String.Empty;
         private int _dwell;
 
-        private uint _flags = (uint) ParcelFlags.AllowFly | (uint) ParcelFlags.AllowLandmark |
-                              (uint) ParcelFlags.AllowAPrimitiveEntry |
-                              (uint) ParcelFlags.AllowDeedToGroup | (uint) ParcelFlags.AllowTerraform |
-                              (uint) ParcelFlags.CreateObjects | (uint) ParcelFlags.AllowOtherScripts |
-                              (uint) ParcelFlags.SoundLocal | (uint) ParcelFlags.AllowVoiceChat;
+        private uint _flags = (uint)ParcelFlags.AllowFly | (uint)ParcelFlags.AllowLandmark |
+                              (uint)ParcelFlags.AllowAPrimitiveEntry |
+                              (uint)ParcelFlags.AllowDeedToGroup | (uint)ParcelFlags.AllowTerraform |
+                              (uint)ParcelFlags.CreateObjects | (uint)ParcelFlags.AllowOtherScripts |
+                              (uint)ParcelFlags.SoundLocal | (uint)ParcelFlags.AllowVoiceChat;
 
         private UUID _globalID = UUID.Zero;
         private UUID _groupID = UUID.Zero;
@@ -222,7 +222,8 @@ namespace Aurora.Framework
         public ParcelCategory Category
         {
             get { return _category; }
-            set {
+            set
+            {
                 _category = value;
             }
         }
@@ -310,7 +311,7 @@ namespace Aurora.Framework
         /// </summary>
         public uint Flags
         {
-            get { return _flags | (uint) ParcelFlags.AllowVoiceChat; }//Force add allow voice chat
+            get { return _flags | (uint)ParcelFlags.AllowVoiceChat; }//Force add allow voice chat
             set { _flags = value; }
         }
 
@@ -579,7 +580,7 @@ namespace Aurora.Framework
                                         _mediaURL = _mediaURL,
                                         _musicURL = _musicURL,
                                         _ownerID = _ownerID,
-                                        _bitmap = (byte[]) _bitmap.Clone(),
+                                        _bitmap = (byte[])_bitmap.Clone(),
                                         _description = _description,
                                         _flags = _flags,
                                         _name = _name,
@@ -614,7 +615,9 @@ namespace Aurora.Framework
             {
                 ParcelManager.ParcelAccessEntry newEntry = new ParcelManager.ParcelAccessEntry
                                                                {
-                                                                   AgentID = entry.AgentID, Flags = entry.Flags, Time = entry.Time
+                                                                   AgentID = entry.AgentID,
+                                                                   Flags = entry.Flags,
+                                                                   Time = entry.Time
                                                                };
                 landData._parcelAccessList.Add(newEntry);
             }
@@ -652,7 +655,7 @@ namespace Aurora.Framework
             map["SalePrice"] = OSD.FromInteger(SalePrice);
             map["InfoUUID"] = OSD.FromUUID(InfoUUID);
             map["Dwell"] = OSD.FromInteger(Dwell);
-            map["Flags"] = OSD.FromInteger((int) Flags);
+            map["Flags"] = OSD.FromInteger((int)Flags);
             map["Name"] = OSD.FromString(Name);
             map["Description"] = OSD.FromString(Description);
             map["UserLocation"] = OSD.FromVector3(UserLocation);
@@ -673,11 +676,11 @@ namespace Aurora.Framework
             map["MediaURL"] = OSD.FromString(MediaURL);
             map["MusicURL"] = OSD.FromString(MusicURL);
             map["Bitmap"] = OSD.FromBinary(Bitmap);
-            map["Category"] = OSD.FromInteger((int) Category);
+            map["Category"] = OSD.FromInteger((int)Category);
             map["FirstParty"] = OSD.FromBoolean(FirstParty);
             map["ClaimDate"] = OSD.FromInteger(ClaimDate);
             map["ClaimPrice"] = OSD.FromInteger(ClaimPrice);
-            map["Status"] = OSD.FromInteger((int) Status);
+            map["Status"] = OSD.FromInteger((int)Status);
             map["LandingType"] = OSD.FromInteger(LandingType);
             map["PassHours"] = OSD.FromReal(PassHours);
             map["PassPrice"] = OSD.FromInteger(PassPrice);
@@ -701,7 +704,7 @@ namespace Aurora.Framework
             UserLookAt = map["UserLookAt"].AsVector3();
             Name = map["Name"].AsString();
             Description = map["Description"].AsString();
-            Flags = (uint) map["Flags"].AsInteger();
+            Flags = (uint)map["Flags"].AsInteger();
             Dwell = map["Dwell"].AsInteger();
             InfoUUID = map["InfoUUID"].AsUUID();
             AuctionID = map["AuctionID"].AsUInteger();
@@ -718,27 +721,27 @@ namespace Aurora.Framework
             MediaType = map["MediaType"].AsString();
             ObscureMedia = map["ObscureMedia"].AsBoolean();
             ObscureMusic = map["ObscureMusic"].AsBoolean();
-            MediaLoopSet = (float) map["MediaLoopSet"].AsReal();
-            MediaAutoScale = (byte) map["MediaAutoScale"].AsInteger();
+            MediaLoopSet = (float)map["MediaLoopSet"].AsReal();
+            MediaAutoScale = (byte)map["MediaAutoScale"].AsInteger();
             MediaURL = map["MediaURL"].AsString();
             MusicURL = map["MusicURL"].AsString();
             Bitmap = map["Bitmap"].AsBinary();
-            Category = (ParcelCategory) map["Category"].AsInteger();
+            Category = (ParcelCategory)map["Category"].AsInteger();
             FirstParty = map["FirstParty"].AsBoolean();
             ClaimDate = map["ClaimDate"].AsInteger();
             ClaimPrice = map["ClaimPrice"].AsInteger();
-            Status = (ParcelStatus) map["Status"].AsInteger();
-            LandingType = (byte) map["LandingType"].AsInteger();
-            PassHours = (float) map["PassHours"].AsReal();
+            Status = (ParcelStatus)map["Status"].AsInteger();
+            LandingType = (byte)map["LandingType"].AsInteger();
+            PassHours = (float)map["PassHours"].AsReal();
             PassPrice = map["PassPrice"].AsInteger();
             AuthBuyerID = map["AuthBuyerID"].AsUUID();
             OtherCleanTime = map["OtherCleanTime"].AsInteger();
             RegionHandle = map["RegionHandle"].AsULong();
             Private = map["Private"].AsBoolean();
-            GenericData = map.ContainsKey("GenericDataMap") && map["GenericDataMap"].Type == OSDType.Map ? 
+            GenericData = map.ContainsKey("GenericDataMap") && map["GenericDataMap"].Type == OSDType.Map ?
                 (OSDMap)map["GenericDataMap"] : new OSDMap();
-				
-			if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
+
+            if ((IsGroupOwned) && (GroupID != OwnerID)) OwnerID = GroupID;
         }
 
         public override void FromKVP(Dictionary<string, object> KVP)

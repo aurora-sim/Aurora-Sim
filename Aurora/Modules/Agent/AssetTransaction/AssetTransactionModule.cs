@@ -36,7 +36,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
 {
     public class AssetTransactionModule : ISharedRegionModule, IAgentAssetTransactions
     {
-//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         ///   Each agent has its own singleton collection of transactions
@@ -290,12 +290,12 @@ namespace Aurora.Modules.Agent.AssetTransaction
         public void HandleUDPUploadRequest(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type,
                                            byte[] data, bool storeLocal, bool tempFile)
         {
-//            MainConsole.Instance.Debug("HandleUDPUploadRequest - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
+            //            MainConsole.Instance.Debug("HandleUDPUploadRequest - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
 
-            if (((AssetType) type == AssetType.Texture ||
-                 (AssetType) type == AssetType.Sound ||
-                 (AssetType) type == AssetType.TextureTGA ||
-                 (AssetType) type == AssetType.Animation) &&
+            if (((AssetType)type == AssetType.Texture ||
+                 (AssetType)type == AssetType.Sound ||
+                 (AssetType)type == AssetType.TextureTGA ||
+                 (AssetType)type == AssetType.Animation) &&
                 tempFile == false)
             {
                 IScene scene = remoteClient.Scene;

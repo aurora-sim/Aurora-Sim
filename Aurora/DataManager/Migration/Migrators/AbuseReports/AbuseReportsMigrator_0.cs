@@ -60,7 +60,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Notes", ColumnTypes.String1024)
             ),
                 IndexDefs(
-                    IndexDef(new string[1]{ "Number" }, IndexType.Primary)
+                    IndexDef(new string[1] { "Number" }, IndexType.Primary)
                 )
             );
         }

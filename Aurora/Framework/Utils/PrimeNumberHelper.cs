@@ -103,10 +103,10 @@ namespace Aurora.Framework
                 // Even number - only prime if 2
                 return candinate == 2;
 
-            int upperBound = (int) Math.Sqrt(candinate);
+            int upperBound = (int)Math.Sqrt(candinate);
             for (int i = 3; i < upperBound; i += 2)
             {
-                if (candinate%i == 0)
+                if (candinate % i == 0)
                     return false;
             }
 

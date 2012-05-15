@@ -262,7 +262,7 @@ namespace Aurora.Services.DataService
                                                                                                  RegionY);
             if (r == null)
             {
-//                m_log.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
+                //                m_log.Warn("[DirectoryService]: Could not find region for ParcelID: " + InfoUUID);
                 return null;
             }
             //Get info about a specific parcel somewhere in the metaverse
@@ -278,7 +278,7 @@ namespace Aurora.Services.DataService
             List<LandData> Lands = Query2LandData(Query);
             LandData LandData = null;
 
-            bool[,] tempConvertMap = new bool[r.RegionSizeX/4,r.RegionSizeX/4];
+            bool[,] tempConvertMap = new bool[r.RegionSizeX / 4, r.RegionSizeX / 4];
             tempConvertMap.Initialize();
 #if (!ISWIN)
             foreach (LandData land in Lands)
@@ -286,7 +286,7 @@ namespace Aurora.Services.DataService
                 if (land.Bitmap != null)
                 {
                     ConvertBytesToLandBitmap(ref tempConvertMap, land.Bitmap, r.RegionSizeX);
-                    if (tempConvertMap[X/64, Y/64])
+                    if (tempConvertMap[X / 64, Y / 64])
                     {
                         LandData = land;
                         break;
@@ -360,17 +360,17 @@ namespace Aurora.Services.DataService
 
         public List<ExtendedLandData> LandDataToExtendedLandData(List<LandData> data)
         {
-           return (from land in data
-                                              let region = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, land.RegionID)
-                                              where region != null
-                                              select new ExtendedLandData
-                                              {
-                                                  LandData = land,
-                                                  RegionType = region.RegionType,
-                                                  RegionName = region.RegionName,
-                                                  GlobalPosX = region.RegionLocX + land.UserLocation.X,
-                                                  GlobalPosY = region.RegionLocY + land.UserLocation.Y
-                                              }).ToList();
+            return (from land in data
+                    let region = this.m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, land.RegionID)
+                    where region != null
+                    select new ExtendedLandData
+                    {
+                        LandData = land,
+                        RegionType = region.RegionType,
+                        RegionName = region.RegionName,
+                        GlobalPosX = region.RegionLocX + land.UserLocation.X,
+                        GlobalPosY = region.RegionLocY + land.UserLocation.Y
+                    }).ToList();
         }
 
         private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
@@ -466,7 +466,7 @@ namespace Aurora.Services.DataService
                     QueryFilter filter = new QueryFilter();
                     filter.andFilters["RegionID"] = RegionID;
                     filter.andFilters["Name"] = name;
-                    
+
                     Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
                     sort["OwnerID"] = false;
 
@@ -738,7 +738,7 @@ namespace Aurora.Services.DataService
 
             return Data;
         }
-        
+
         /// <summary>
         ///   Searches for the most popular places around the grid
         /// </summary>
@@ -804,7 +804,7 @@ namespace Aurora.Services.DataService
             {
                 byte tempByte = 0;
                 int x = 0, y = 0, i = 0, bitNum = 0;
-                int avg = (sizeX*sizeX/128);
+                int avg = (sizeX * sizeX / 128);
                 for (i = 0; i < avg; i++)
                 {
                     tempByte = Bitmap[i];
@@ -813,7 +813,7 @@ namespace Aurora.Services.DataService
                         bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & 1);
                         tempConvertMap[x, y] = bit;
                         x++;
-                        if (x > (sizeX/4) - 1)
+                        if (x > (sizeX / 4) - 1)
                         {
                             x = 0;
                             y++;
@@ -863,7 +863,7 @@ namespace Aurora.Services.DataService
             {
                 //Pull the classified out of OSD
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 5]));
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 5]));
 
                 replyData = new DirClassifiedReplyData
                 {
@@ -914,7 +914,7 @@ namespace Aurora.Services.DataService
             {
                 classified = new Classified();
                 //Pull the classified out of OSD
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(retVal[i + 6]));
+                classified.FromOSD((OSDMap)OSDParser.DeserializeJson(retVal[i + 6]));
                 Classifieds.Add(classified);
             }
             return Classifieds;
@@ -1019,7 +1019,7 @@ namespace Aurora.Services.DataService
 
                     //Check the maturity levels
                     uint maturity = Convert.ToUInt32(retVal[i + 3]);
-                    if(
+                    if (
                             (maturity == 0 && (eventFlags & (uint)DirectoryManager.EventFlags.PG) == (uint)DirectoryManager.EventFlags.PG) ||
                             (maturity == 1 && (eventFlags & (uint)DirectoryManager.EventFlags.Mature) == (uint)DirectoryManager.EventFlags.Mature) ||
                             (maturity == 2 && (eventFlags & (uint)DirectoryManager.EventFlags.Adult) == (uint)DirectoryManager.EventFlags.Adult)
@@ -1091,8 +1091,9 @@ namespace Aurora.Services.DataService
 
             return Data;
         }
-        
-        private static List<EventData> Query2EventData(List<string> RetVal){
+
+        private static List<EventData> Query2EventData(List<string> RetVal)
+        {
             List<EventData> Events = new List<EventData>();
             IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
             if (RetVal.Count % 16 != 0 || regiondata == null)
@@ -1102,7 +1103,7 @@ namespace Aurora.Services.DataService
 
             GridRegion region;
             EventData data;
-            
+
             for (int i = 0; i < RetVal.Count; i += 16)
             {
                 data = new EventData();
@@ -1170,12 +1171,14 @@ namespace Aurora.Services.DataService
 
             IRegionData regiondata = Aurora.DataManager.DataManager.RequestPlugin<IRegionData>();
             IParcelServiceConnector parceldata = Aurora.DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
-            if(regiondata == null || parceldata == null){
+            if (regiondata == null || parceldata == null)
+            {
                 return null;
             }
 
             GridRegion region = regiondata.Get(regionID, UUID.Zero);
-            if(region == null){
+            if (region == null)
+            {
                 return null;
             }
             if (parcelID != UUID.Zero)
@@ -1232,16 +1235,18 @@ namespace Aurora.Services.DataService
 
         public List<EventData> GetEvents(uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, object> filter)
         {
-            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(new string[]{ "*" }, "asevents", new QueryFilter{
+            return (count == 0) ? new List<EventData>(0) : Query2EventData(GD.Query(new string[] { "*" }, "asevents", new QueryFilter
+            {
                 andFilters = filter
-            }, sort, start, count ));
+            }, sort, start, count));
         }
 
         public uint GetNumberOfEvents(Dictionary<string, object> filter)
         {
             return uint.Parse(GD.Query(new string[1]{
                 "COUNT(EID)"
-            }, "asevents", new QueryFilter{
+            }, "asevents", new QueryFilter
+            {
                 andFilters = filter
             }, null, null, null)[0]);
         }

@@ -63,7 +63,7 @@ namespace Aurora.Framework
         ///<param name = "help">the text displayed in "help showme new commands"</param>
         public ConsolePluginCommand(string command, ConsoleCommand dlg, string help)
         {
-            m_cmdText = command.Split(new[] {' '});
+            m_cmdText = command.Split(new[] { ' ' });
             m_commandDelegate = dlg;
             m_helpText = help;
         }

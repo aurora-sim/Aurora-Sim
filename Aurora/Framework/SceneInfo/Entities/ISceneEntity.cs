@@ -35,7 +35,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Framework
 {
-    public delegate void BlankHandler ();
+    public delegate void BlankHandler();
 
     public enum StateSource
     {
@@ -125,9 +125,9 @@ namespace Aurora.Framework
 
         IScene Scene { get; set; }
         UUID LastParcelUUID { get; set; }
-        Vector3 LastSignificantPosition{ get; }
+        Vector3 LastSignificantPosition { get; }
         bool IsDeleted { get; set; }
-        Vector3 GroupScale ();
+        Vector3 GroupScale();
         Quaternion GroupRotation { get; }
         UUID OwnerID { get; set; }
         float Damage { get; set; }
@@ -138,24 +138,24 @@ namespace Aurora.Framework
         bool IsSelected { get; set; }
         ISceneChildEntity LoopSoundMasterPrim { get; set; }
         List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
-        Vector3 OOBsize { get; } 
+        Vector3 OOBsize { get; }
 
         #endregion
 
         #region Children
 
         ISceneChildEntity RootChild { get; set; }
-        List<ISceneChildEntity> ChildrenEntities ();
-        void ClearChildren ();
-        bool AddChild (ISceneChildEntity child, int linkNum);
-        bool LinkChild (ISceneChildEntity child);
-        bool RemoveChild (ISceneChildEntity child);
-        bool GetChildPrim (uint LocalID, out ISceneChildEntity entity);
-        bool GetChildPrim (UUID UUID, out ISceneChildEntity entity);
-        ISceneChildEntity GetChildPart (UUID objectID);
-        ISceneChildEntity GetChildPart (uint childkey);
-        void LinkToGroup (ISceneEntity childPrim);
-        IEntity GetLinkNumPart (int linkType);
+        List<ISceneChildEntity> ChildrenEntities();
+        void ClearChildren();
+        bool AddChild(ISceneChildEntity child, int linkNum);
+        bool LinkChild(ISceneChildEntity child);
+        bool RemoveChild(ISceneChildEntity child);
+        bool GetChildPrim(uint LocalID, out ISceneChildEntity entity);
+        bool GetChildPrim(UUID UUID, out ISceneChildEntity entity);
+        ISceneChildEntity GetChildPart(UUID objectID);
+        ISceneChildEntity GetChildPart(uint childkey);
+        void LinkToGroup(ISceneEntity childPrim);
+        IEntity GetLinkNumPart(int linkType);
 
         #endregion
 
@@ -165,75 +165,75 @@ namespace Aurora.Framework
 
         List<UUID> SitTargetAvatar { get; }
 
-        void ClearUndoState ();
+        void ClearUndoState();
 
-        void AttachToScene (IScene m_parentScene);
+        void AttachToScene(IScene m_parentScene);
 
-        ISceneEntity Copy (bool copyPhysicsRepresentation);
+        ISceneEntity Copy(bool copyPhysicsRepresentation);
 
-        void ForcePersistence ();
+        void ForcePersistence();
 
-        void RebuildPhysicalRepresentation (bool keepSelectedStatus);
+        void RebuildPhysicalRepresentation(bool keepSelectedStatus);
 
-        void ScheduleGroupTerseUpdate ();
-
-
-        
-
-        void TriggerScriptChangedEvent (Changed changed);
+        void ScheduleGroupTerseUpdate();
 
 
-        void ScheduleGroupUpdate (PrimUpdateFlags primUpdateFlags);
 
-        void GetProperties (IClientAPI client);
 
-        ISceneEntity DelinkFromGroup (ISceneChildEntity part, bool p);
+        void TriggerScriptChangedEvent(Changed changed);
 
-        void UpdateGroupPosition (Vector3 vector3, bool p);
 
-        void ResetChildPrimPhysicsPositions ();
+        void ScheduleGroupUpdate(PrimUpdateFlags primUpdateFlags);
 
-        Vector3 GetAttachmentPos ();
+        void GetProperties(IClientAPI client);
 
-        byte GetAttachmentPoint ();
+        ISceneEntity DelinkFromGroup(ISceneChildEntity part, bool p);
 
-        byte GetSavedAttachmentPoint ();
+        void UpdateGroupPosition(Vector3 vector3, bool p);
 
-        void SetAttachmentPoint (byte p);
+        void ResetChildPrimPhysicsPositions();
 
-        void CreateScriptInstances (int p, bool p_2, StateSource stateSource, UUID uUID);
+        Vector3 GetAttachmentPos();
 
-        void ResumeScripts ();
+        byte GetAttachmentPoint();
+
+        byte GetSavedAttachmentPoint();
+
+        void SetAttachmentPoint(byte p);
+
+        void CreateScriptInstances(int p, bool p_2, StateSource stateSource, UUID uUID);
+
+        void ResumeScripts();
 
         void SetFromItemID(UUID itemID, UUID assetID);
 
-        void FireAttachmentCollisionEvents (EventArgs e);
+        void FireAttachmentCollisionEvents(EventArgs e);
 
-        void DetachToInventoryPrep ();
+        void DetachToInventoryPrep();
 
-        TaskInventoryItem GetInventoryItem (uint localID, UUID itemID);
+        TaskInventoryItem GetInventoryItem(uint localID, UUID itemID);
 
-        int RemoveInventoryItem (uint localID, UUID itemID);
+        int RemoveInventoryItem(uint localID, UUID itemID);
 
-        bool AddInventoryItem (IClientAPI remoteClient, uint primLocalID, InventoryItemBase item, UUID copyID);
+        bool AddInventoryItem(IClientAPI remoteClient, uint primLocalID, InventoryItemBase item, UUID copyID);
 
-        void ScheduleGroupUpdateToAvatar (IScenePresence SP, PrimUpdateFlags primUpdateFlags);
+        void ScheduleGroupUpdateToAvatar(IScenePresence SP, PrimUpdateFlags primUpdateFlags);
 
-        void SetOwnerId (UUID uUID);
+        void SetOwnerId(UUID uUID);
 
-        uint GetEffectivePermissions ();
+        uint GetEffectivePermissions();
 
-        void SetRootPartOwner (ISceneChildEntity part, UUID uUID, UUID uUID_2);
+        void SetRootPartOwner(ISceneChildEntity part, UUID uUID, UUID uUID_2);
 
-        void SetGroup (UUID groupID, UUID attemptingUser, bool needsPropertyUpdateForuser);
+        void SetGroup(UUID groupID, UUID attemptingUser, bool needsPropertyUpdateForuser);
 
-        void ApplyNextOwnerPermissions ();
+        void ApplyNextOwnerPermissions();
 
-        bool UpdateInventoryItem (TaskInventoryItem item);
+        bool UpdateInventoryItem(TaskInventoryItem item);
 
-        void DetachToGround ();
+        void DetachToGround();
 
-        void UpdatePermissions (UUID agentID, byte field, uint localId, uint mask, byte set);
+        void UpdatePermissions(UUID agentID, byte field, uint localId, uint mask, byte set);
 
         float BSphereRadiusSQ { get; }
 
@@ -242,9 +242,9 @@ namespace Aurora.Framework
         /// </summary>
         void BackupPreparation();
 
-        void RemoveScriptInstances (bool p);
+        void RemoveScriptInstances(bool p);
 
-        float GetMass ();
+        float GetMass();
 
         void AddKeyframedMotion(KeyframeAnimation animation, KeyframeAnimation.Commands command);
 

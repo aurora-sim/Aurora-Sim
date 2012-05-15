@@ -97,7 +97,7 @@ namespace Aurora.BotManager
 
         public void OnBotAgentUpdate(Vector3 toward, uint controlFlag, Quaternion bodyRotation, bool isMoving)
         {
-            if(isMoving)
+            if (isMoving)
                 m_hasStoppedMoving = false;
             m_object.AbsolutePosition += toward * (m_speed * (1f / 45f));
             m_object.ScheduleGroupTerseUpdate();
@@ -105,7 +105,7 @@ namespace Aurora.BotManager
 
         public void UpdateMovementAnimations(bool sendTerseUpdate)
         {
-            if(sendTerseUpdate)
+            if (sendTerseUpdate)
                 m_object.ScheduleGroupTerseUpdate();
         }
 

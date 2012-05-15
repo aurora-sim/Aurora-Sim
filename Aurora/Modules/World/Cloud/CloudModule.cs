@@ -34,9 +34,9 @@ namespace Aurora.Modules.Cloud
 {
     public class CloudModule : ICloudModule
     {
-//        private static readonly log4net.ILog MainConsole.Instance 
-//            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly float[] cloudCover = new float[16*16];
+        //        private static readonly log4net.ILog MainConsole.Instance 
+        //            = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly float[] cloudCover = new float[16 * 16];
         private readonly Random m_rndnums = new Random(Environment.TickCount);
         private float m_cloudDensity = 1.0F;
         private bool m_enabled;
@@ -127,7 +127,7 @@ namespace Aurora.Modules.Cloud
 
             if (cloudCover != null)
             {
-                cover = cloudCover[y*16 + x];
+                cover = cloudCover[y * 16 + x];
             }
 
             return cover;
@@ -141,7 +141,7 @@ namespace Aurora.Modules.Cloud
 
         private void UpdateCloudCover()
         {
-            float[] newCover = new float[16*16];
+            float[] newCover = new float[16 * 16];
             int rowAbove = new int();
             int rowBelow = new int();
             int columnLeft = new int();
@@ -180,25 +180,25 @@ namespace Aurora.Modules.Cloud
                         rowAbove = y + 1;
                         rowBelow = y - 1;
                     }
-                    float neighborAverage = (cloudCover[rowBelow*16 + columnLeft] +
-                                             cloudCover[y*16 + columnLeft] +
-                                             cloudCover[rowAbove*16 + columnLeft] +
-                                             cloudCover[rowBelow*16 + x] +
-                                             cloudCover[rowAbove*16 + x] +
-                                             cloudCover[rowBelow*16 + columnRight] +
-                                             cloudCover[y*16 + columnRight] +
-                                             cloudCover[rowAbove*16 + columnRight] +
-                                             cloudCover[y*16 + x])/9;
-                    newCover[y*16 + x] = ((neighborAverage/m_cloudDensity) + 0.175f)%1.0f;
-                    newCover[y*16 + x] *= m_cloudDensity;
+                    float neighborAverage = (cloudCover[rowBelow * 16 + columnLeft] +
+                                             cloudCover[y * 16 + columnLeft] +
+                                             cloudCover[rowAbove * 16 + columnLeft] +
+                                             cloudCover[rowBelow * 16 + x] +
+                                             cloudCover[rowAbove * 16 + x] +
+                                             cloudCover[rowBelow * 16 + columnRight] +
+                                             cloudCover[y * 16 + columnRight] +
+                                             cloudCover[rowAbove * 16 + columnRight] +
+                                             cloudCover[y * 16 + x]) / 9;
+                    newCover[y * 16 + x] = ((neighborAverage / m_cloudDensity) + 0.175f) % 1.0f;
+                    newCover[y * 16 + x] *= m_cloudDensity;
                 }
             }
-            Array.Copy(newCover, cloudCover, 16*16);
+            Array.Copy(newCover, cloudCover, 16 * 16);
         }
 
         private void CloudUpdate()
         {
-            if (((m_frame++%m_frameUpdateRate) != 0) || !m_ready || (m_cloudDensity == 0))
+            if (((m_frame++ % m_frameUpdateRate) != 0) || !m_ready || (m_cloudDensity == 0))
             {
                 return;
             }
@@ -223,8 +223,8 @@ namespace Aurora.Modules.Cloud
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    cloudCover[y*16 + x] = (float) (m_rndnums.NextDouble()); // 0 to 1
-                    cloudCover[y*16 + x] *= m_cloudDensity;
+                    cloudCover[y * 16 + x] = (float)(m_rndnums.NextDouble()); // 0 to 1
+                    cloudCover[y * 16 + x] *= m_cloudDensity;
                 }
             }
         }

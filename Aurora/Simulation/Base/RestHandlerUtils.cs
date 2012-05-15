@@ -46,7 +46,7 @@ namespace Aurora.Simulation.Base
             action = "";
             regionHandle = 0;
 
-            path = path.Trim(new[] {'/'});
+            path = path.Trim(new[] { '/' });
             string[] parts = path.Split('/');
             if (parts.Length <= 1)
             {

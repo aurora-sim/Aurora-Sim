@@ -66,7 +66,7 @@ namespace OpenSim.Services.AuthenticationService
             AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
+                auth = new AuthData { PrincipalID = principalID, AccountType = authType };
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;
@@ -103,7 +103,7 @@ namespace OpenSim.Services.AuthenticationService
             AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
+                auth = new AuthData { PrincipalID = principalID, AccountType = authType };
             }
             auth.PasswordHash = md5PasswdHash;
             auth.PasswordSalt = passwordSalt;
@@ -122,7 +122,7 @@ namespace OpenSim.Services.AuthenticationService
             AuthData auth = m_Database.Get(principalID, authType);
             if (auth == null)
             {
-                auth = new AuthData {PrincipalID = principalID, AccountType = authType};
+                auth = new AuthData { PrincipalID = principalID, AccountType = authType };
             }
             auth.PasswordHash = pass;
             auth.PasswordSalt = "";

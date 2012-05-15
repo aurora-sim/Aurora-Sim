@@ -127,8 +127,7 @@ namespace Tanis.Collections
         /// <returns>Cloned object.</returns>
         public object Clone()
         {
-            Heap Clone = new Heap(FComparer, FList.Capacity)
-                             {FList = (ArrayList) FList.Clone(), FAddDuplicates = FAddDuplicates};
+            Heap Clone = new Heap(FComparer, FList.Capacity) { FList = (ArrayList)FList.Clone(), FAddDuplicates = FAddDuplicates };
             return Clone;
         }
 
@@ -336,7 +335,7 @@ namespace Tanis.Collections
         /// <returns>true if object is equal to this, otherwise false.</returns>
         public override bool Equals(object Object)
         {
-            Heap SL = (Heap) Object;
+            Heap SL = (Heap)Object;
             if (SL.Count != Count)
                 return false;
             for (int i = 0; i < Count; i++)

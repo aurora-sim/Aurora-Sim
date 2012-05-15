@@ -137,7 +137,8 @@ namespace Aurora.Framework
                     m_PaintTerrainTexture = UUID.Random();
                 return m_PaintTerrainTexture;
             }
-            set {
+            set
+            {
                 m_PaintTerrainTexture = value == UUID.Zero ? UUID.Random() : value;
             }
         }
@@ -145,7 +146,8 @@ namespace Aurora.Framework
         public UUID TerrainTexture1
         {
             get { return m_TerrainTexture1; }
-            set {
+            set
+            {
                 m_TerrainTexture1 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_1 : value;
             }
         }
@@ -153,7 +155,8 @@ namespace Aurora.Framework
         public UUID TerrainTexture2
         {
             get { return m_TerrainTexture2; }
-            set {
+            set
+            {
                 m_TerrainTexture2 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_2 : value;
             }
         }
@@ -161,7 +164,8 @@ namespace Aurora.Framework
         public UUID TerrainTexture3
         {
             get { return m_TerrainTexture3; }
-            set {
+            set
+            {
                 m_TerrainTexture3 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_3 : value;
             }
         }
@@ -169,7 +173,8 @@ namespace Aurora.Framework
         public UUID TerrainTexture4
         {
             get { return m_TerrainTexture4; }
-            set {
+            set
+            {
                 m_TerrainTexture4 = value == UUID.Zero ? DEFAULT_TERRAIN_TEXTURE_4 : value;
             }
         }
@@ -417,7 +422,7 @@ namespace Aurora.Framework
             this.Elevation2SE = map["Elevation2SE"];
             this.Elevation2SW = map["Elevation2SW"];
             this.FixedSun = map["FixedSun"];
-            this.Generic = (OSDMap) map["Generic"];
+            this.Generic = (OSDMap)map["Generic"];
             this.LoadedCreationDateTime = map["LoadedCreationDateTime"];
             this.LoadedCreationID = map["LoadedCreationID"];
             this.Maturity = map["Maturity"];

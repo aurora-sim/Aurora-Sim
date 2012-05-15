@@ -140,7 +140,7 @@ namespace Aurora.Modules.Scripting
                 // Attach xmlrpc handlers
                 MainConsole.Instance.Info("[XMLRPC MODULE]: " +
                            "Starting up XMLRPC Server on port " + m_remoteDataPort + " for llRemoteData commands.");
-                BaseHttpServer httpServer = new BaseHttpServer((uint) m_remoteDataPort, MainServer.Instance.HostName,
+                BaseHttpServer httpServer = new BaseHttpServer((uint)m_remoteDataPort, MainServer.Instance.HostName,
                                                                false);
                 httpServer.AddXmlRPCHandler("llRemoteData", XmlRpcRemoteData);
                 httpServer.Start();
@@ -272,7 +272,7 @@ namespace Aurora.Modules.Scripting
 
                     IEnumerator tmpEnumerator = tmp.GetEnumerator();
                     while (tmpEnumerator.MoveNext())
-                        m_openChannels.Remove((UUID) tmpEnumerator.Current);
+                        m_openChannels.Remove((UUID)tmpEnumerator.Current);
                 }
             }
 
@@ -481,18 +481,18 @@ namespace Aurora.Modules.Scripting
         {
             XmlRpcResponse response = new XmlRpcResponse();
 
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
             bool GoodXML = (requestData.Contains("Channel") && requestData.Contains("IntValue") &&
                             requestData.Contains("StringValue"));
 
             if (GoodXML)
             {
-                UUID channel = new UUID((string) requestData["Channel"]);
+                UUID channel = new UUID((string)requestData["Channel"]);
                 RPCChannelInfo rpcChanInfo;
                 if (m_openChannels.TryGetValue(channel, out rpcChanInfo))
                 {
                     string intVal = Convert.ToInt32(requestData["IntValue"]).ToString();
-                    string strVal = (string) requestData["StringValue"];
+                    string strVal = (string)requestData["StringValue"];
 
                     RPCRequestInfo rpcInfo;
 
@@ -517,7 +517,7 @@ namespace Aurora.Modules.Scripting
                         param["StringValue"] = rpcInfo.GetStrRetval();
                         param["IntValue"] = rpcInfo.GetIntRetval();
 
-                        ArrayList parameters = new ArrayList {param};
+                        ArrayList parameters = new ArrayList { param };
 
                         response.Value = parameters;
                         rpcInfo = null;
@@ -701,8 +701,7 @@ namespace Aurora.Modules.Scripting
 
         public void Process()
         {
-            httpThread = new Thread(SendRequest)
-                             {Name = "HttpRequestThread", Priority = ThreadPriority.BelowNormal, IsBackground = true};
+            httpThread = new Thread(SendRequest) { Name = "HttpRequestThread", Priority = ThreadPriority.BelowNormal, IsBackground = true };
             _finished = false;
             httpThread.Start();
         }
@@ -730,7 +729,7 @@ namespace Aurora.Modules.Scripting
             param["StringValue"] = Sdata;
             param["IntValue"] = Convert.ToString(Idata);
 
-            ArrayList parameters = new ArrayList {param};
+            ArrayList parameters = new ArrayList { param };
             XmlRpcRequest req = new XmlRpcRequest(mName, parameters);
             try
             {
@@ -738,20 +737,20 @@ namespace Aurora.Modules.Scripting
                 if (resp != null)
                 {
                     Hashtable respParms;
-                    if (resp.Value.GetType().Equals(typeof (Hashtable)))
+                    if (resp.Value.GetType().Equals(typeof(Hashtable)))
                     {
-                        respParms = (Hashtable) resp.Value;
+                        respParms = (Hashtable)resp.Value;
                     }
                     else
                     {
-                        ArrayList respData = (ArrayList) resp.Value;
-                        respParms = (Hashtable) respData[0];
+                        ArrayList respData = (ArrayList)resp.Value;
+                        respParms = (Hashtable)respData[0];
                     }
                     if (respParms != null)
                     {
                         if (respParms.Contains("StringValue"))
                         {
-                            Sdata = (string) respParms["StringValue"];
+                            Sdata = (string)respParms["StringValue"];
                         }
                         if (respParms.Contains("IntValue"))
                         {
@@ -759,7 +758,7 @@ namespace Aurora.Modules.Scripting
                         }
                         if (respParms.Contains("faultString"))
                         {
-                            Sdata = (string) respParms["faultString"];
+                            Sdata = (string)respParms["faultString"];
                         }
                         if (respParms.Contains("faultCode"))
                         {

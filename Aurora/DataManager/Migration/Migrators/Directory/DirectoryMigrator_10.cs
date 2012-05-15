@@ -71,16 +71,16 @@ namespace Aurora.DataManager.Migration.Migrators
                     Type = new ColumnTypeDef
                     {
                         Type = ColumnType.UUID,
-                        defaultValue= OpenMetaverse.UUID.Zero.ToString()
+                        defaultValue = OpenMetaverse.UUID.Zero.ToString()
                     }
                 }
             ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary),
-                IndexDef(new string[4]{ "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
-                IndexDef(new string[2]{ "RegionID", "Name" }, IndexType.Index),
-                IndexDef(new string[1]{ "OwnerID" }, IndexType.Index),
-//                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
-                IndexDef(new string[3]{ "ForSale", "SalePrice", "Area" }, IndexType.Index)
+                IndexDef(new string[1] { "ParcelID" }, IndexType.Primary),
+                IndexDef(new string[4] { "RegionID", "OwnerID", "Flags", "Category" }, IndexType.Index),
+                IndexDef(new string[2] { "RegionID", "Name" }, IndexType.Index),
+                IndexDef(new string[1] { "OwnerID" }, IndexType.Index),
+                //                IndexDef(new string[4]{ "Name", "Description", "ShowInSearch", "Category" }, IndexType.Index),
+                IndexDef(new string[3] { "ForSale", "SalePrice", "Area" }, IndexType.Index)
             ));
 
             AddSchema("asevents", ColDefs(
@@ -126,7 +126,7 @@ namespace Aurora.DataManager.Migration.Migrators
                     Type = new ColumnTypeDef
                     {
                         Type = ColumnType.UUID,
-                        defaultValue= OpenMetaverse.UUID.Zero.ToString()
+                        defaultValue = OpenMetaverse.UUID.Zero.ToString()
                     }
                 }
             ), IndexDefs(

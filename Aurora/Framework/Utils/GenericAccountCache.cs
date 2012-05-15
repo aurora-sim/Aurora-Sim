@@ -38,8 +38,8 @@ namespace Aurora.Framework
 
     public class GenericAccountCache<T> where T : BaseCacheAccount
     {
-        private double CACHE_EXPIRATION_SECONDS = 6*60*1000;
-                             // 6 hour cache on useraccounts, since they should not change
+        private double CACHE_EXPIRATION_SECONDS = 6 * 60 * 1000;
+        // 6 hour cache on useraccounts, since they should not change
 
         private const bool m_allowNullCaching = true;
         private readonly ExpiringCache<string, UUID> m_NameCache;

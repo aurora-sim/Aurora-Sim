@@ -45,7 +45,7 @@ namespace OpenSim.Services.MessagingService
 
         public MessagingServiceInPostHandler(string url, IRegistryCore registry, IAsyncMessageRecievedService handler,
                                              string SessionID) :
-                                                 base("POST", url)
+            base("POST", url)
         {
             m_handler = handler;
             m_SessionID = SessionID;
@@ -83,7 +83,7 @@ namespace OpenSim.Services.MessagingService
 
         private byte[] NewMessage(OSDMap map)
         {
-            OSDMap message = (OSDMap) map["Message"];
+            OSDMap message = (OSDMap)map["Message"];
             if (m_ourRegionHandle != 0)
                 (message)["RegionHandle"] = m_ourRegionHandle;
             OSDMap result = m_handler.FireMessageReceived(m_SessionID, message);

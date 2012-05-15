@@ -97,14 +97,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </remarks>
         public float DripRate
         {
-            get { return tokensPerMS*1000; }
+            get { return tokensPerMS * 1000; }
             set
             {
                 if (value == 0)
                     tokensPerMS = 0;
                 else
                 {
-                    float bpms = (int) (value/1000.0f);
+                    float bpms = (int)(value / 1000.0f);
 
                     tokensPerMS = bpms <= 0.5f ? .5f : bpms;
                 }
@@ -216,16 +216,16 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 return false;
             }
 
-            int dripAmount = (int) (deltaMS*tokensPerMS);
+            int dripAmount = (int)(deltaMS * tokensPerMS);
 
             content = Math.Min(content + dripAmount, maxBurst);
             lastDrip = now;
-/*
-                if (dripAmount < 0 || content < 0)
-                    // sim has been idle for too long, integer has overflown
-                    // previous calculation is meaningless, let's put it at correct max
-                    content = maxBurst;
-*/
+            /*
+                            if (dripAmount < 0 || content < 0)
+                                // sim has been idle for too long, integer has overflown
+                                // previous calculation is meaningless, let's put it at correct max
+                                content = maxBurst;
+            */
             return true;
         }
     }

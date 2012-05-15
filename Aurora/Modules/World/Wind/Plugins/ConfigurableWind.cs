@@ -44,7 +44,7 @@ namespace Aurora.Modules.Wind.Plugins
         private float m_rateChange = 1.0f; // 
         private float m_varDirection = 30.0f; // Max Direction Variance
         private float m_varStrength = 5.0f; // Max Strength  Variance
-        private Vector2[] m_windSpeeds = new Vector2[16*16];
+        private Vector2[] m_windSpeeds = new Vector2[16 * 16];
 
         public string Version
         {
@@ -81,8 +81,8 @@ namespace Aurora.Modules.Wind.Plugins
 
         public void WindUpdate(uint frame)
         {
-            double avgAng = m_avgDirection*(Math.PI/180.0f);
-            double varDir = m_varDirection*(Math.PI/180.0f);
+            double avgAng = m_avgDirection * (Math.PI / 180.0f);
+            double varDir = m_varDirection * (Math.PI / 180.0f);
 
             // Prevailing wind algorithm
             // Inspired by Kanker Greenacre
@@ -90,33 +90,33 @@ namespace Aurora.Modules.Wind.Plugins
             // TODO: 
             // * This should probably be based on in-world time.
             // * should probably move all these local variables to class members and constants
-            double time = DateTime.Now.TimeOfDay.TotalSeconds/86400.0f;
+            double time = DateTime.Now.TimeOfDay.TotalSeconds / 86400.0f;
 
-            double theta = time*(2*Math.PI)*m_rateChange;
+            double theta = time * (2 * Math.PI) * m_rateChange;
 
-            double offset = Math.Sin(theta)*Math.Sin(theta*2)*Math.Sin(theta*9)*Math.Cos(theta*4);
+            double offset = Math.Sin(theta) * Math.Sin(theta * 2) * Math.Sin(theta * 9) * Math.Cos(theta * 4);
 
-            double windDir = avgAng + (varDir*offset);
+            double windDir = avgAng + (varDir * offset);
 
-            offset = Math.Sin(theta)*Math.Sin(theta*4) + (Math.Sin(theta*13)/3);
-            double windSpeed = m_avgStrength + (m_varStrength*offset);
+            offset = Math.Sin(theta) * Math.Sin(theta * 4) + (Math.Sin(theta * 13) / 3);
+            double windSpeed = m_avgStrength + (m_varStrength * offset);
 
             if (windSpeed < 0)
                 windSpeed = 0;
 
 
-            m_curPredominateWind.X = (float) Math.Cos(windDir);
-            m_curPredominateWind.Y = (float) Math.Sin(windDir);
+            m_curPredominateWind.X = (float)Math.Cos(windDir);
+            m_curPredominateWind.Y = (float)Math.Sin(windDir);
 
             m_curPredominateWind.Normalize();
-            m_curPredominateWind.X *= (float) windSpeed;
-            m_curPredominateWind.Y *= (float) windSpeed;
+            m_curPredominateWind.X *= (float)windSpeed;
+            m_curPredominateWind.Y *= (float)windSpeed;
 
             for (int y = 0; y < 16; y++)
             {
                 for (int x = 0; x < 16; x++)
                 {
-                    m_windSpeeds[y*16 + x] = m_curPredominateWind;
+                    m_windSpeeds[y * 16 + x] = m_curPredominateWind;
                 }
             }
         }

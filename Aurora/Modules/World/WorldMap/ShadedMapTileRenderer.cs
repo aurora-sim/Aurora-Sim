@@ -71,7 +71,7 @@ namespace Aurora.Modules.WorldMap
                 }
             }
 
-            float waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+            float waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
 
             for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
             {
@@ -95,7 +95,7 @@ namespace Aurora.Modules.WorldMap
                         else if (heightvalue < 0f)
                             heightvalue = 0f;
 
-                        Color color = Color.FromArgb((int) heightvalue, 100, (int) heightvalue);
+                        Color color = Color.FromArgb((int)heightvalue, 100, (int)heightvalue);
 
                         mapbmp.SetPixel(x, yr, color);
 
@@ -113,7 +113,7 @@ namespace Aurora.Modules.WorldMap
                                 if ((x + 1 < m_scene.RegionInfo.RegionSizeX) && (y + 1 < m_scene.RegionInfo.RegionSizeY))
                                 {
                                     hfvaluecompare = heightmap[x + 1, y + 1];
-                                        // light from north-east => look at land height there
+                                    // light from north-east => look at land height there
                                 }
                                 if (Single.IsInfinity(hfvalue) || Single.IsNaN(hfvalue))
                                     hfvalue = 0f;
@@ -122,7 +122,7 @@ namespace Aurora.Modules.WorldMap
                                     hfvaluecompare = 0f;
 
                                 float hfdiff = hfvalue - hfvaluecompare;
-                                    // => positive if NE is lower, negative if here is lower
+                                // => positive if NE is lower, negative if here is lower
 
                                 int hfdiffi = 0;
                                 int hfdiffihighlight = 0;
@@ -131,19 +131,19 @@ namespace Aurora.Modules.WorldMap
                                 try
                                 {
                                     // hfdiffi = Math.Abs((int)((hfdiff * 4) + (hfdiff * 0.5))) + 1;
-                                    hfdiffi = Math.Abs((int) (hfdiff*4.5f)) + 1;
-                                    if (hfdiff%1f != 0)
+                                    hfdiffi = Math.Abs((int)(hfdiff * 4.5f)) + 1;
+                                    if (hfdiff % 1f != 0)
                                     {
                                         // hfdiffi = hfdiffi + Math.Abs((int)(((hfdiff % 1) * 0.5f) * 10f) - 1);
-                                        hfdiffi = hfdiffi + Math.Abs((int) ((hfdiff%1f)*5f) - 1);
+                                        hfdiffi = hfdiffi + Math.Abs((int)((hfdiff % 1f) * 5f) - 1);
                                     }
 
-                                    hfdiffihighlight = Math.Abs((int) ((hfdiff*highlightfactor)*4.5f)) + 1;
-                                    if (hfdiff%1f != 0)
+                                    hfdiffihighlight = Math.Abs((int)((hfdiff * highlightfactor) * 4.5f)) + 1;
+                                    if (hfdiff % 1f != 0)
                                     {
                                         // hfdiffi = hfdiffi + Math.Abs((int)(((hfdiff % 1) * 0.5f) * 10f) - 1);
                                         hfdiffihighlight = hfdiffihighlight +
-                                                           Math.Abs((int) (((hfdiff*highlightfactor)%1f)*5f) - 1);
+                                                           Math.Abs((int)(((hfdiff * highlightfactor) % 1f) * 5f) - 1);
                                     }
                                 }
                                 catch (OverflowException)
@@ -221,7 +221,7 @@ namespace Aurora.Modules.WorldMap
                         else if (heightvalue < 0f)
                             heightvalue = 0f;
 
-                        heightvalue = 100f - (heightvalue*100f)/19f;
+                        heightvalue = 100f - (heightvalue * 100f) / 19f;
 
                         try
                         {

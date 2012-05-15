@@ -55,7 +55,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Method", ColumnTypes.String50),
                 ColDef("Password", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "Method" }, IndexType.Primary )
+                IndexDef(new string[1] { "Method" }, IndexType.Primary)
             ));
         }
 

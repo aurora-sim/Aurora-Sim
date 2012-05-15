@@ -73,9 +73,9 @@ namespace OpenSim.Services.MessagingService
             {
                 //COMES IN ON AURORA.SERVER SIDE
                 //Send it on to whomever it concerns
-                OSDMap innerMessage = (OSDMap) message["Message"];
+                OSDMap innerMessage = (OSDMap)message["Message"];
                 if (innerMessage["message"] == "ChatterBoxSessionAgentListUpdates")
-                    //ONLY forward on this type of message
+                //ONLY forward on this type of message
                 {
                     UUID agentID = message["AgentID"];
                     IEventQueueService eqs = m_registry.RequestModuleInterface<IEventQueueService>();
@@ -94,7 +94,7 @@ namespace OpenSim.Services.MessagingService
                 UUID groupID = message["GroupID"].AsUUID();
                 UUID agentID = message["AgentID"].AsUUID();
                 UUID roleID = message["RoleID"].AsUUID();
-                byte type = (byte) message["Type"].AsInteger();
+                byte type = (byte)message["Type"].AsInteger();
                 IGroupsServiceConnector con = DataManager.RequestPlugin<IGroupsServiceConnector>();
                 List<GroupRoleMembersData> members = con.GetGroupRoleMembers(agentID, groupID);
                 List<GroupRolesData> roles = con.GetGroupRoles(agentID, groupID);
@@ -115,7 +115,7 @@ namespace OpenSim.Services.MessagingService
                     if (data.RoleID == roleID)
                     {
                         //They were affected by the change
-                        switch ((GroupRoleUpdate) type)
+                        switch ((GroupRoleUpdate)type)
                         {
                             case GroupRoleUpdate.Create:
                             case GroupRoleUpdate.NoUpdate:
@@ -126,7 +126,7 @@ namespace OpenSim.Services.MessagingService
                             case GroupRoleUpdate.UpdateAll:
                             case GroupRoleUpdate.UpdateData:
                             case GroupRoleUpdate.Delete:
-                                if (type == (byte) GroupRoleUpdate.Delete)
+                                if (type == (byte)GroupRoleUpdate.Delete)
                                     //Set them to the most limited role since their role is gone
                                     con.SetAgentGroupSelectedRole(data.MemberID, groupID, everyone.RoleID);
                                 //Need to update their title inworld

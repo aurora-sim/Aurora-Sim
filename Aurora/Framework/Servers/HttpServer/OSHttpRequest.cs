@@ -73,7 +73,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     IPAddress addr = IPAddress.Parse(req.Headers["remote_addr"]);
                     // sometimes req.Headers["remote_port"] returns a comma separated list, so use
                     // the first one in the list and log it 
-                    string[] strPorts = req.Headers["remote_port"].Split(new[] {','});
+                    string[] strPorts = req.Headers["remote_port"].Split(new[] { ',' });
                     if (strPorts.Length > 1)
                     {
                         MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
@@ -112,12 +112,12 @@ namespace Aurora.Framework.Servers.HttpServer
                 MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
             }
 
-//            Form = new Hashtable();
-//            foreach (HttpInputItem item in req.Form)
-//            {
-//                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
-//                Form.Add(item.Name, item.Value);
-//            }
+            //            Form = new Hashtable();
+            //            foreach (HttpInputItem item in req.Form)
+            //            {
+            //                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
+            //                Form.Add(item.Name, item.Value);
+            //            }
         }
 
         public string[] AcceptTypes
@@ -200,7 +200,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <value>
         ///   POST request values, if applicable
         /// </value>
-//        public Hashtable Form { get; private set; }
+        //        public Hashtable Form { get; private set; }
         public string RawUrl
         {
             get { return _request.Uri.AbsolutePath; }

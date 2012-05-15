@@ -64,7 +64,7 @@ namespace OpenSim.Services.CapsService
             get { return m_disabled; }
             set { m_disabled = value; }
         }
-        
+
         public ulong RegionHandle
         {
             get
@@ -103,7 +103,7 @@ namespace OpenSim.Services.CapsService
         /// This is the /CAPS/UUID 0000/ string
         /// </summary>
         protected String m_capsUrlBase;
-        
+
         public UUID AgentID
         {
             get { return m_clientCapsService.AgentID; }
@@ -157,7 +157,7 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         public String CapsUrl
         {
-            get 
+            get
             {
                 if (!string.IsNullOrEmpty(m_overrideCapsURL))
                     return m_overrideCapsURL;
@@ -177,8 +177,8 @@ namespace OpenSim.Services.CapsService
             m_circuitData = circuitData;
             if (port != 0)//Someone requested a non standard port, probably for OpenSim
             {
-                ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase> ();
-                Server = simBase.GetHttpServer (port);
+                ISimulationBase simBase = Registry.RequestModuleInterface<ISimulationBase>();
+                Server = simBase.GetHttpServer(port);
             }
             AddSEEDCap(capsBase);
 
@@ -210,7 +210,7 @@ namespace OpenSim.Services.CapsService
         {
             foreach (KeyValuePair<string, OSD> kvp in caps)
             {
-                if(!registeredCAPS.ContainsKey(kvp.Key))
+                if (!registeredCAPS.ContainsKey(kvp.Key))
                     registeredCAPS[kvp.Key] = kvp.Value;
             }
         }
@@ -230,23 +230,23 @@ namespace OpenSim.Services.CapsService
             AddCAPS(method, handler.Path);
         }
 
-        public void RemoveStreamHandler (string method, string httpMethod, string path)
+        public void RemoveStreamHandler(string method, string httpMethod, string path)
         {
-            Server.RemoveStreamHandler (httpMethod, path);
-            RemoveCaps (method);
+            Server.RemoveStreamHandler(httpMethod, path);
+            RemoveCaps(method);
         }
 
-        public void RemoveStreamHandler (string method, string httpMethod)
+        public void RemoveStreamHandler(string method, string httpMethod)
         {
-            string path = registeredCAPS[method].AsString ();
+            string path = registeredCAPS[method].AsString();
             if (path != "")//If it doesn't exist...
             {
-                if (path.StartsWith (HostUri))//Only try to remove local ones
+                if (path.StartsWith(HostUri))//Only try to remove local ones
                 {
-                    path = path.Remove (0, HostUri.Length);
-                    Server.RemoveStreamHandler (httpMethod, path);
+                    path = path.Remove(0, HostUri.Length);
+                    Server.RemoveStreamHandler(httpMethod, path);
                 }
-                RemoveCaps (method);
+                RemoveCaps(method);
             }
         }
 
@@ -267,7 +267,7 @@ namespace OpenSim.Services.CapsService
         {
             //Remove our SEED cap
             RemoveStreamHandler("SEED", "POST", m_capsUrlBase);
-            RemoveCAPS ();
+            RemoveCAPS();
         }
 
         public virtual string CapsRequest(string request, string path, string param,

@@ -53,14 +53,14 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (100*GetValue()) + "%";
+            return (100 * GetValue()) + "%";
         }
 
         public void SetPhysicsFPS(float value)
         {
             m_average.Add(value);
             //Now fix time dilation
-            m_scene.TimeDilation = m_average.GetAverage()/m_scene.BaseSimPhysFPS;
+            m_scene.TimeDilation = m_average.GetAverage() / m_scene.BaseSimPhysFPS;
             if (m_scene.TimeDilation < 0.1) //Limit so that the client (and physics engine) don't go crazy
                 m_scene.TimeDilation = 0.1f;
             else if (m_scene.TimeDilation > 1.0) //No going over!

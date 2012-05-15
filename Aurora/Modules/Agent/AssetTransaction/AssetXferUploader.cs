@@ -105,8 +105,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         public bool Initialise(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data,
                                bool storeLocal, bool tempFile)
         {
-            m_asset = new AssetBase(assetID, "blank", (AssetType) type, remoteClient.AgentId)
-                          {Data = data, Description = "empty"};
+            m_asset = new AssetBase(assetID, "blank", (AssetType)type, remoteClient.AgentId) { Data = data, Description = "empty" };
             if (storeLocal) m_asset.Flags |= AssetFlags.Local;
             if (tempFile) m_asset.Flags |= AssetFlags.Temporary;
 
@@ -143,7 +142,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
             }
-            remoteClient.SendAssetUploadCompleteMessage((sbyte) m_asset.Type, true, m_asset.ID);
+            remoteClient.SendAssetUploadCompleteMessage((sbyte)m_asset.Type, true, m_asset.ID);
 
             IMonitorModule monitorModule = m_userTransactions.Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)

@@ -177,8 +177,8 @@ namespace OpenSim.Services.CapsService
 
         public byte[] HandleWebFetchInventoryDescendents(string request, UUID AgentID)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
-            OSDArray foldersrequested = (OSDArray) map["folders"];
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDArray foldersrequested = (OSDArray)map["folders"];
             try
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received WebFetchInventoryDescendents request for {0}", AgentID);
@@ -206,9 +206,9 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLibDescendents request for {0}", AgentID);
 
-                OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-                OSDArray foldersrequested = (OSDArray) map["folders"];
+                OSDArray foldersrequested = (OSDArray)map["folders"];
 
                 return DataManager.RequestPlugin<IInventoryData>().FetchInventoryReply(foldersrequested,
                                                                                        m_libraryService.LibraryOwner,
@@ -229,12 +229,12 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchInventory request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(request);
                 if (requestmap["items"].Type == OSDType.Unknown)
                     return new byte[0]; //Its dead, Jim!!!
-                OSDArray foldersrequested = (OSDArray) requestmap["items"];
+                OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
-                OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
+                OSDMap map = new OSDMap { { "agent_id", OSD.FromUUID(AgentID) } };
                 //We have to send the agent_id in the main map as well as all the items
 
                 OSDArray items = new OSDArray();
@@ -275,11 +275,11 @@ namespace OpenSim.Services.CapsService
             {
                 //MainConsole.Instance.DebugFormat("[InventoryCAPS]: Received FetchLib request for {0}", AgentID);
 
-                OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+                OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-                OSDArray foldersrequested = (OSDArray) requestmap["items"];
+                OSDArray foldersrequested = (OSDArray)requestmap["items"];
 
-                OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
+                OSDMap map = new OSDMap { { "agent_id", OSD.FromUUID(AgentID) } };
                 OSDArray items = new OSDArray();
 #if (!ISWIN)
                 foreach (OSDMap requestedFolders in foldersrequested)
@@ -324,7 +324,7 @@ namespace OpenSim.Services.CapsService
         public string NewAgentInventoryRequest(string request, string path, string param,
                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             if (!ChargeUser(asset_type, map))
             {
@@ -340,7 +340,7 @@ namespace OpenSim.Services.CapsService
         public string NewAgentInventoryRequestVariablePrice(string request, string path, string param,
                                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             int charge = 0;
             int resourceCost = 0;
@@ -434,7 +434,7 @@ namespace OpenSim.Services.CapsService
 
         public string HandleInventoryItemCreate(string request, UUID AgentID)
         {
-            OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
             if (!ChargeUser(asset_type, map))
             {
@@ -514,15 +514,15 @@ namespace OpenSim.Services.CapsService
             }
             else if (inventoryType == "object")
             {
-                inType = (sbyte) InventoryType.Object;
-                assType = (sbyte) AssetType.Object;
+                inType = (sbyte)InventoryType.Object;
+                assType = (sbyte)AssetType.Object;
 
                 List<Vector3> positions = new List<Vector3>();
                 List<Quaternion> rotations = new List<Quaternion>();
-                OSDMap request = (OSDMap) OSDParser.DeserializeLLSDXml(data);
-                OSDArray instance_list = (OSDArray) request["instance_list"];
-                OSDArray mesh_list = (OSDArray) request["mesh_list"];
-                OSDArray texture_list = (OSDArray) request["texture_list"];
+                OSDMap request = (OSDMap)OSDParser.DeserializeLLSDXml(data);
+                OSDArray instance_list = (OSDArray)request["instance_list"];
+                OSDArray mesh_list = (OSDArray)request["mesh_list"];
+                OSDArray texture_list = (OSDArray)request["texture_list"];
                 SceneObjectGroup grp = null;
 
                 List<UUID> textures = new List<UUID>();
@@ -550,12 +550,12 @@ namespace OpenSim.Services.CapsService
 
                     Primitive.TextureEntry textureEntry =
                         new Primitive.TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
-                    OSDMap inner_instance_list = (OSDMap) instance_list[i];
+                    OSDMap inner_instance_list = (OSDMap)instance_list[i];
 
-                    OSDArray face_list = (OSDArray) inner_instance_list["face_list"];
+                    OSDArray face_list = (OSDArray)inner_instance_list["face_list"];
                     for (uint face = 0; face < face_list.Count; face++)
                     {
-                        OSDMap faceMap = (OSDMap) face_list[(int) face];
+                        OSDMap faceMap = (OSDMap)face_list[(int)face];
                         Primitive.TextureEntryFace f = pbs.Textures.CreateFace(face);
                         if (faceMap.ContainsKey("fullbright"))
                             f.Fullbright = faceMap["fullbright"].AsBoolean();
@@ -564,10 +564,10 @@ namespace OpenSim.Services.CapsService
 
                         int textureNum = faceMap["image"].AsInteger();
                         float imagerot = faceMap["imagerot"].AsInteger();
-                        float offsets = (float) faceMap["offsets"].AsReal();
-                        float offsett = (float) faceMap["offsett"].AsReal();
-                        float scales = (float) faceMap["scales"].AsReal();
-                        float scalet = (float) faceMap["scalet"].AsReal();
+                        float offsets = (float)faceMap["offsets"].AsReal();
+                        float offsett = (float)faceMap["offsett"].AsReal();
+                        float scales = (float)faceMap["scales"].AsReal();
+                        float scalet = (float)faceMap["scalet"].AsReal();
 
                         if (imagerot != 0)
                             f.Rotation = imagerot;
@@ -584,8 +584,7 @@ namespace OpenSim.Services.CapsService
                     }
                     pbs.TextureEntry = textureEntry.GetBytes();
 
-                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID)
-                                              {Data = mesh_list[i].AsBinary()};
+                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, AssetType.Mesh, m_service.AgentID) { Data = mesh_list[i].AsBinary() };
                     meshAsset.ID = m_assetService.Store(meshAsset);
 
                     if (meshFolder == null)
@@ -597,14 +596,14 @@ namespace OpenSim.Services.CapsService
 
                     InventoryItemBase itemBase = new InventoryItemBase(UUID.Random(), m_service.AgentID)
                                                      {
-                                                         AssetType = (sbyte) AssetType.Mesh,
+                                                         AssetType = (sbyte)AssetType.Mesh,
                                                          AssetID = meshAsset.ID,
                                                          CreatorId = m_service.AgentID.ToString(),
                                                          Folder = meshFolder.ID,
-                                                         InvType = (int) InventoryType.Texture,
+                                                         InvType = (int)InventoryType.Texture,
                                                          Name = "(Mesh) - " + assetName,
-                                                         CurrentPermissions = (uint) PermissionMask.All,
-                                                         BasePermissions = (uint) PermissionMask.All,
+                                                         CurrentPermissions = (uint)PermissionMask.All,
+                                                         BasePermissions = (uint)PermissionMask.All,
                                                          EveryOnePermissions = everyone_mask,
                                                          GroupPermissions = group_mask,
                                                          NextPermissions = next_owner_mask
@@ -614,7 +613,7 @@ namespace OpenSim.Services.CapsService
 
                     pbs.SculptEntry = true;
                     pbs.SculptTexture = meshAsset.ID;
-                    pbs.SculptType = (byte) SculptType.Mesh;
+                    pbs.SculptType = (byte)SculptType.Mesh;
                     pbs.SculptData = meshAsset.Data;
 
                     Vector3 position = inner_instance_list["position"].AsVector3();
@@ -631,8 +630,7 @@ namespace OpenSim.Services.CapsService
                     fakeScene.AddModuleInterfaces(m_service.Registry.GetInterfaces());
 
                     SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity,
-                                                               Vector3.Zero, assetName, fakeScene)
-                                               {Scale = scale, AbsolutePosition = position};
+                                                               Vector3.Zero, assetName, fakeScene) { Scale = scale, AbsolutePosition = position };
 
                     rotations.Add(rotation);
                     positions.Add(position);
@@ -644,13 +642,13 @@ namespace OpenSim.Services.CapsService
                     prim.CreationDate = Util.UnixTimeSinceEpoch();
                     prim.Name = assetName;
                     prim.Description = "";
-                    prim.PhysicsType = (byte) physicsShapeType;
+                    prim.PhysicsType = (byte)physicsShapeType;
 
-                    prim.BaseMask = (uint) PermissionMask.All;
+                    prim.BaseMask = (uint)PermissionMask.All;
                     prim.EveryoneMask = everyone_mask;
                     prim.NextOwnerMask = next_owner_mask;
                     prim.GroupMask = group_mask;
-                    prim.OwnerMask = (uint) PermissionMask.All;
+                    prim.OwnerMask = (uint)PermissionMask.All;
 
                     if (grp == null)
                         grp = new SceneObjectGroup(prim, fakeScene);
@@ -679,7 +677,7 @@ namespace OpenSim.Services.CapsService
                 grp.UpdateGroupRotationR(rotations[0]);
                 data = Encoding.ASCII.GetBytes(grp.ToXml2());
             }
-            AssetBase asset = new AssetBase(assetID, assetName, (AssetType) assType, m_service.AgentID) {Data = data};
+            AssetBase asset = new AssetBase(assetID, assetName, (AssetType)assType, m_service.AgentID) { Data = data };
             asset.ID = m_assetService.Store(asset);
             assetID = asset.ID;
 
@@ -694,8 +692,8 @@ namespace OpenSim.Services.CapsService
                                              AssetType = assType,
                                              InvType = inType,
                                              Folder = parentFolder,
-                                             CurrentPermissions = (uint) PermissionMask.All,
-                                             BasePermissions = (uint) PermissionMask.All,
+                                             CurrentPermissions = (uint)PermissionMask.All,
+                                             BasePermissions = (uint)PermissionMask.All,
                                              EveryOnePermissions = everyone_mask,
                                              NextPermissions = next_owner_mask,
                                              GroupPermissions = group_mask,

@@ -47,14 +47,14 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Snapshot", ColumnTypes.Char36),
                 ColDef("IsPublic", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[1]{ "Name" }, IndexType.Primary )
+                IndexDef(new string[1] { "Name" }, IndexType.Primary)
             ));
 
             AddSchema("passwords", ColDefs(
                 ColDef("Method", ColumnTypes.String50),
                 ColDef("Password", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "Method" }, IndexType.Primary )
+                IndexDef(new string[1] { "Method" }, IndexType.Primary)
             ));
         }
 

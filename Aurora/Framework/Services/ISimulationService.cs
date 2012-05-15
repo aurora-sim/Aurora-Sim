@@ -53,7 +53,7 @@ namespace OpenSim.Services.Interfaces
                 ActiveGroup = new GroupMembershipData();
                 ActiveGroup.FromOSD((OSDMap)(map["ActiveGroup"]));
             }
-            GroupMemberships = ((OSDArray)map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) => 
+            GroupMemberships = ((OSDArray)map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) =>
                 {
                     GroupMembershipData group = new GroupMembershipData();
                     group.FromOSD((OSDMap)o);
@@ -66,7 +66,7 @@ namespace OpenSim.Services.Interfaces
             OSDMap map = new OSDMap();
             map["AgentInfo"] = AgentInfo.ToOSD();
             map["UserAccount"] = UserAccount.ToOSD();
-            if(ActiveGroup != null)
+            if (ActiveGroup != null)
                 map["ActiveGroup"] = ActiveGroup.ToOSD();
             map["GroupMemberships"] = GroupMemberships.ToOSDArray();
             return map;

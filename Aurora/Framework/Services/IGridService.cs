@@ -115,7 +115,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="ymin"></param>
         /// <param name="ymax"></param>
         /// <returns></returns>
-        List<GridRegion> GetRegionRange (UUID scopeID, int xmin, int xmax, int ymin, int ymax);
+        List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax);
 
         /// <summary>
         /// Get all regions within the range of specified center.
@@ -132,7 +132,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
-        List<GridRegion> GetNeighbors (GridRegion region);
+        List<GridRegion> GetNeighbors(GridRegion region);
 
         /// <summary>
         /// Get any default regions that have been set for users that are logging in that don't have a region to log into
@@ -157,7 +157,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-		List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+        List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
 
         /// <summary>
         /// Get the current flags of the given region
@@ -180,19 +180,19 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="gridItemType"></param>
         /// <returns></returns>
-        multipleMapItemReply GetMapItems (ulong regionHandle, GridItemType gridItemType);
+        multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType);
 
         /// <summary>
         /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
         /// </summary>
         /// <param name="RegionID"></param>
-        void SetRegionUnsafe (UUID RegionID);
+        void SetRegionUnsafe(UUID RegionID);
 
         /// <summary>
         /// The region (RegionID) has been determined to be safe, allow agents to log into it again
         /// </summary>
         /// <param name="RegionID"></param>
-        void SetRegionSafe (UUID RegionID);
+        void SetRegionSafe(UUID RegionID);
 
         /// <summary>
         /// Verify the given SessionID for the given region
@@ -202,11 +202,11 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         bool VerifyRegionSessionID(GridRegion r, UUID SessionID);
 
-        void Configure (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Configure(Nini.Config.IConfigSource config, IRegistryCore registry);
 
-        void Start (Nini.Config.IConfigSource config, IRegistryCore registry);
+        void Start(Nini.Config.IConfigSource config, IRegistryCore registry);
 
-        void FinishedStartup ();
+        void FinishedStartup();
     }
 
     public class RegisterRegion : IDataTransferable
@@ -258,11 +258,11 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         public string ServerURI
         {
-            get 
+            get
             {
-                if(string.IsNullOrEmpty(m_serverURI))
+                if (string.IsNullOrEmpty(m_serverURI))
                     return "http://" + ExternalHostName + ":" + HttpPort;
-                return m_serverURI; 
+                return m_serverURI;
             }
             set { m_serverURI = value; }
         }
@@ -396,7 +396,7 @@ namespace OpenSim.Services.Interfaces
             TerrainMapImage = ConvertFrom.RegionSettings.TerrainMapImageID;
             ParcelMapImage = ConvertFrom.RegionSettings.ParcelMapImageID;
             Access = ConvertFrom.AccessLevel;
-            if(ConvertFrom.EstateSettings != null)
+            if (ConvertFrom.EstateSettings != null)
                 EstateOwner = ConvertFrom.EstateSettings.EstateOwner;
             m_RegionSizeX = ConvertFrom.RegionSizeX;
             m_RegionSizeY = ConvertFrom.RegionSizeY;
@@ -486,7 +486,7 @@ namespace OpenSim.Services.Interfaces
             map["serverIP"] = ExternalHostName; //ExternalEndPoint.Address.ToString();
             map["serverHttpPort"] = HttpPort;
             map["serverURI"] = ServerURI;
-            if(InternalEndPoint != null)
+            if (InternalEndPoint != null)
                 map["serverPort"] = InternalEndPoint.Port;
             map["regionMapTexture"] = TerrainImage;
             map["regionTerrainTexture"] = TerrainMapImage;
@@ -506,7 +506,7 @@ namespace OpenSim.Services.Interfaces
             // We send it along too so that it doesn't need resolved on the other end
             if (ExternalEndPoint != null)
             {
-                map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes ();
+                map["remoteEndPointIP"] = ExternalEndPoint.Address.GetAddressBytes();
                 map["remoteEndPointPort"] = ExternalEndPoint.Port;
             }
 
@@ -696,7 +696,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="port"></param>
         /// <returns></returns>
-        string GetUrlForRegisteringClient (string SessionID, uint port);
+        string GetUrlForRegisteringClient(string SessionID, uint port);
 
         /// <summary>
         /// Adds an existing URL to the module for the given SessionID and RegionHandle
@@ -704,7 +704,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="SessionID"></param>
         /// <param name="url"></param>
         /// <param name="port"></param>
-        void AddExistingUrlForClient (string SessionID, string url, uint port);
+        void AddExistingUrlForClient(string SessionID, string url, uint port);
 
         /// <summary>
         /// Removes the given region from the http server so that the URLs cannot be used anymore
@@ -712,6 +712,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name="sessionID"></param>
         /// <param name="url"></param>
         /// <param name="port"></param>
-        void RemoveUrlForClient (string sessionID, string url, uint port);
+        void RemoveUrlForClient(string sessionID, string url, uint port);
     }
 }

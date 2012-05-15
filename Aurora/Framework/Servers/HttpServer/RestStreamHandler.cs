@@ -34,7 +34,8 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         private readonly RestMethod m_restMethod;
 
-        public RestStreamHandler(string httpMethod, string path, RestMethod restMethod) : base(httpMethod, path)
+        public RestStreamHandler(string httpMethod, string path, RestMethod restMethod)
+            : base(httpMethod, path)
         {
             m_restMethod = restMethod;
         }

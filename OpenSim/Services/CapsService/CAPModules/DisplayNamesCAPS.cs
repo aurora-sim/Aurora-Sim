@@ -136,8 +136,8 @@ namespace OpenSim.Services.CapsService
         {
             try
             {
-                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
-                OSDArray display_name = (OSDArray) rm["display_name"];
+                OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+                OSDArray display_name = (OSDArray)rm["display_name"];
                 string oldDisplayName = display_name[0].AsString();
                 string newDisplayName = display_name[1].AsString();
                 UserAccount account = m_userService.GetUserAccount(UUID.Zero, m_service.AgentID);
@@ -266,7 +266,7 @@ namespace OpenSim.Services.CapsService
 
             byte[] m = OSDParser.SerializeLLSDXmlBytes(map);
             httpResponse.Body.Write(m, 0, m.Length);
-            httpResponse.StatusCode = (int) HttpStatusCode.OK;
+            httpResponse.StatusCode = (int)HttpStatusCode.OK;
             httpResponse.Send();
             return null;
         }
@@ -360,7 +360,7 @@ namespace OpenSim.Services.CapsService
         public OSD DisplayNameUpdate(string newDisplayName, string oldDisplayName, UUID ID, bool isDefault, string First,
                                      string Last, string Account)
         {
-            OSDMap nameReply = new OSDMap {{"message", OSD.FromString("DisplayNameUpdate")}};
+            OSDMap nameReply = new OSDMap { { "message", OSD.FromString("DisplayNameUpdate") } };
 
             OSDMap body = new OSDMap();
             OSDMap agentData = new OSDMap

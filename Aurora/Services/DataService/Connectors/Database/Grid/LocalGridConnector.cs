@@ -67,21 +67,26 @@ namespace Aurora.Services.DataService
             get { return "IRegionData"; }
         }
 
-        private void FixMissingRegionOwners(){
+        private void FixMissingRegionOwners()
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = UUID.Zero;
 
             List<GridRegion> borked = ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
 
-            if(borked.Count < 1){
+            if (borked.Count < 1)
+            {
                 MainConsole.Instance.Debug("[LocalGridConnector] No regions found with missing owners.");
             }
             IEstateConnector estatePlugin = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
 
-            if(estatePlugin == null){
+            if (estatePlugin == null)
+            {
                 MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, but could not get IEstateConnector plugin.");
                 return;
-            }else{
+            }
+            else
+            {
                 MainConsole.Instance.Error("[LocalGridConnector] " + borked.Count + " regions found with missing owners, attempting fix.");
             }
 
@@ -104,7 +109,8 @@ namespace Aurora.Services.DataService
                 if (es == null)
                 {
                     MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", could not get estate settings.");
-                }else if (es.EstateOwner == UUID.Zero)
+                }
+                else if (es.EstateOwner == UUID.Zero)
                 {
                     MainConsole.Instance.Error("[LocalGridConnector] Cannot fix missing owner for regions in Estate " + estateID + ", Estate Owner is also missing.");
                 }
@@ -142,7 +148,9 @@ namespace Aurora.Services.DataService
                     {
                         MainConsole.Instance.Error("[LocalGridConnector] Failed to fix missing region for " + region.RegionName + " (" + region.RegionID + ")");
                         ++storeFail;
-                    }else{
+                    }
+                    else
+                    {
                         ++storeSuccess;
                         borked.Remove(region);
                     }
@@ -161,7 +169,8 @@ namespace Aurora.Services.DataService
             {
                 MainConsole.Instance.Info("[LocalGridConnector] All regions found with missing owners should have their owners restored.");
             }
-            if(borked.Count > 0){
+            if (borked.Count > 0)
+            {
                 List<string> blurbs = new List<string>(borked.Count);
                 foreach (GridRegion region in borked)
                 {
@@ -197,7 +206,8 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["LocX"] = posX;
             filter.andFilters["LocY"] = posY;
-            if (scopeID != UUID.Zero){
+            if (scopeID != UUID.Zero)
+            {
                 filter.andFilters["ScopeID"] = scopeID;
             }
 
@@ -219,7 +229,7 @@ namespace Aurora.Services.DataService
             Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
             sort["LocZ"] = true;
 
-            return ParseQuery(GD.Query(new string[1]{ "*" }, m_realm, filter, sort, null, null));
+            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, sort, null, null));
         }
 
         public GridRegion Get(UUID regionID, UUID scopeID)
@@ -468,12 +478,12 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> GetDefaultRegions(UUID scopeID)
         {
-            return Get((int) RegionFlags.DefaultRegion, scopeID);
+            return Get((int)RegionFlags.DefaultRegion, scopeID);
         }
 
         public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
         {
-            List<GridRegion> regions = Get((int) RegionFlags.FallbackRegion, scopeID);
+            List<GridRegion> regions = Get((int)RegionFlags.FallbackRegion, scopeID);
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             regions.Sort(distanceComparer);
             return regions;
@@ -481,8 +491,8 @@ namespace Aurora.Services.DataService
 
         public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
         {
-            List<GridRegion> Regions = Get((int) RegionFlags.Safe, scopeID);
-            Regions.AddRange(Get((int) RegionFlags.RegionOnline, scopeID));
+            List<GridRegion> Regions = Get((int)RegionFlags.Safe, scopeID);
+            Regions.AddRange(Get((int)RegionFlags.RegionOnline, scopeID));
 
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             Regions.Sort(distanceComparer);

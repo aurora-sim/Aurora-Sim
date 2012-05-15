@@ -56,7 +56,7 @@ namespace Aurora.Framework
             Running = map["Running"].AsBoolean();
             Disabled = map["Disabled"].AsBoolean();
             Variables = map["Variables"].AsString();
-            Plugins = (OSDMap) map["Plugins"];
+            Plugins = (OSDMap)map["Plugins"];
             PermsGranter = map["PermsGranter"].AsUUID();
             PermsMask = map["PermsMask"].AsInteger();
             MinEventDelay = map["MinEventDelay"].AsReal();

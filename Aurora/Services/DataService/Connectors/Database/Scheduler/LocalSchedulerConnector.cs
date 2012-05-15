@@ -145,7 +145,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             IDataReader dr = null;
             try
             {
-                dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd hh:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
+                dr = m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd hh:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
                 if (dr != null)
                 {
                     while (dr.Read())
@@ -154,12 +154,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                     }
                 }
             }
-            catch{}
+            catch { }
             finally
             {
                 if (dr != null) dr.Close();
             }
-            
+
             return returnValue;
         }
 

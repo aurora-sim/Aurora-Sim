@@ -55,7 +55,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ObjectUUID", ColumnTypes.String50),
                 ColDef("Name", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary)
+                IndexDef(new string[1] { "RegionID" }, IndexType.Primary)
             ));
         }
 

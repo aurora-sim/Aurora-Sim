@@ -334,11 +334,11 @@ namespace OpenSim.Services.Interfaces
 
                 if (Data.ContainsKey("VisualParams"))
                 {
-                    string[] vps = Data["VisualParams"].Split(new[] {','});
+                    string[] vps = Data["VisualParams"].Split(new[] { ',' });
                     byte[] binary = new byte[AvatarAppearance.VISUALPARAM_COUNT];
 
                     for (int i = 0; i < vps.Length && i < binary.Length; i++)
-                        binary[i] = (byte) Convert.ToInt32(vps[i]);
+                        binary[i] = (byte)Convert.ToInt32(vps[i]);
 
                     appearance.VisualParams = binary;
                 }
@@ -356,10 +356,10 @@ namespace OpenSim.Services.Interfaces
                     if (_kvp.Key.StartsWith("Wearable "))
                     {
                         string wearIndex = _kvp.Key.Substring(9);
-                        string[] wearIndices = wearIndex.Split(new[] {':'});
+                        string[] wearIndices = wearIndex.Split(new[] { ':' });
                         int index = Convert.ToInt32(wearIndices[0]);
 
-                        string[] ids = _kvp.Value.Split(new[] {':'});
+                        string[] ids = _kvp.Value.Split(new[] { ':' });
                         UUID itemID = new UUID(ids[0]);
                         UUID assetID = new UUID(ids[1]);
 
@@ -392,7 +392,7 @@ namespace OpenSim.Services.Interfaces
                     UUID uuid = UUID.Zero;
                     UUID.TryParse(_kvp.Value, out uuid);
                     UUID assetuuid = UUID.Zero;
-                    if(attchsAssets.ContainsKey(_kvp.Key))
+                    if (attchsAssets.ContainsKey(_kvp.Key))
                         UUID.TryParse(attchsAssets[_kvp.Key], out uuid);
 
                     appearance.SetAttachment(point, uuid, assetuuid);

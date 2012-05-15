@@ -114,8 +114,8 @@ namespace OpenSim.Services.CapsService
                 return false;
             try
             {
-                OSDMap request = new OSDMap {{"AgentID", avatarID}, {"RegionHandle", regionHandle}};
-                OSDArray events = new OSDArray {OSDParser.SerializeLLSDXmlString(ev)};
+                OSDMap request = new OSDMap { { "AgentID", avatarID }, { "RegionHandle", regionHandle } };
+                OSDArray events = new OSDArray { OSDParser.SerializeLLSDXmlString(ev) };
                 //Note: we HAVE to convert it to xml, otherwise things like byte[] arrays will not be passed through correctly!
 
                 request.Add("Events", events);
@@ -161,7 +161,7 @@ namespace OpenSim.Services.CapsService
             OSD r = OSDParser.DeserializeJson(response);
             if (r.Type == OSDType.Map)
             {
-                OSDMap result = (OSDMap) r;
+                OSDMap result = (OSDMap)r;
                 if (result != null)
                 {
                     bool success = result["success"].AsBoolean();

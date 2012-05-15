@@ -245,7 +245,7 @@ namespace Aurora.Modules.WorldMap
         public void StartupComplete(IScene scene, List<string> data)
         {
             //Startup complete, we can generate a tile now
-            if((DateTime.Now - m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated).TotalMinutes > minutes)
+            if ((DateTime.Now - m_scene.RegionInfo.RegionSettings.TerrainMapLastRegenerated).TotalMinutes > minutes)
                 CreateTerrainTexture();
             //and set up timers.
             SetUpTimers();
@@ -286,7 +286,7 @@ namespace Aurora.Modules.WorldMap
 
         private void OnTimedCreateNewMapImage(object source, ElapsedEventArgs e)
         {
-            if(m_scene.SimulationDataService.MapTileNeedsGenerated)
+            if (m_scene.SimulationDataService.MapTileNeedsGenerated)
                 CreateTerrainTexture();
             m_scene.SimulationDataService.MapTileNeedsGenerated = false;
         }
@@ -368,7 +368,7 @@ namespace Aurora.Modules.WorldMap
             if (mapdata != null)
             {
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID != UUID.Zero)
-                    m_scene.RegionInfo.RegionSettings.TerrainImageID = 
+                    m_scene.RegionInfo.RegionSettings.TerrainImageID =
                         m_scene.AssetService.UpdateContent(m_scene.RegionInfo.RegionSettings.TerrainImageID, mapdata);
                 if (m_scene.RegionInfo.RegionSettings.TerrainImageID == UUID.Zero)//Do not optimize away! UpdateContent can fail sometimes!
                 {
@@ -501,7 +501,7 @@ namespace Aurora.Modules.WorldMap
 
                 imgstream = new MemoryStream();
 
-                image = m_scene.RequestModuleInterface<IJ2KDecoder> ().DecodeToImage (data);
+                image = m_scene.RequestModuleInterface<IJ2KDecoder>().DecodeToImage(data);
                 // Decode image to System.Drawing.Image
                 if (image != null)
                 {
@@ -545,7 +545,7 @@ namespace Aurora.Modules.WorldMap
         }
 
         #endregion
-        
+
         private Bitmap DrawObjectVolume(IScene whichScene, Bitmap mapbmp)
         {
             ITerrainChannel heightmap = whichScene.RequestModuleInterface<ITerrainChannel>();
@@ -563,7 +563,7 @@ namespace Aurora.Modules.WorldMap
                     // Only draw the contents of SceneObjectGroup
                     if (obj is SceneObjectGroup)
                     {
-                        SceneObjectGroup mapdot = (SceneObjectGroup) obj;
+                        SceneObjectGroup mapdot = (SceneObjectGroup)obj;
                         Color mapdotspot = Color.Gray; // Default color when prim color is white
 
                         // Loop over prim in group
@@ -591,11 +591,11 @@ namespace Aurora.Modules.WorldMap
 
                                 try
                                 {
-                                    if ((int) pos.X == m_scene.RegionInfo.RegionSizeX)
+                                    if ((int)pos.X == m_scene.RegionInfo.RegionSizeX)
                                         pos.X = m_scene.RegionInfo.RegionSizeX - 1;
-                                    if ((int) pos.Y == m_scene.RegionInfo.RegionSizeY)
+                                    if ((int)pos.Y == m_scene.RegionInfo.RegionSizeY)
                                         pos.Y = m_scene.RegionInfo.RegionSizeY - 1;
-                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int) pos.X, (int) pos.Y] + 256f));
+                                    isBelow256AboveTerrain = (pos.Z < (heightmap[(int)pos.X, (int)pos.Y] + 256f));
                                 }
                                 catch (Exception)
                                 {
@@ -615,11 +615,11 @@ namespace Aurora.Modules.WorldMap
                                         if (part.Shape == null)
                                             continue;
 
-                                        if (part.Shape.PCode == (byte) PCode.Tree ||
-                                            part.Shape.PCode == (byte) PCode.NewTree ||
-                                            part.Shape.PCode == (byte) PCode.Grass)
+                                        if (part.Shape.PCode == (byte)PCode.Tree ||
+                                            part.Shape.PCode == (byte)PCode.NewTree ||
+                                            part.Shape.PCode == (byte)PCode.Grass)
                                             continue;
-                                                // eliminates trees from this since we don't really have a good tree representation
+                                        // eliminates trees from this since we don't really have a good tree representation
                                         // if you want tree blocks on the map comment the above line and uncomment the below line
                                         //mapdotspot = Color.PaleGreen;
 
@@ -635,10 +635,10 @@ namespace Aurora.Modules.WorldMap
                                         }
                                         catch (Exception)
                                         {
-                                            texcolor = Color.FromArgb((int) textureEntry.DefaultTexture.RGBA.A,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.R,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.G,
-                                                                      (int) textureEntry.DefaultTexture.RGBA.B);
+                                            texcolor = Color.FromArgb((int)textureEntry.DefaultTexture.RGBA.A,
+                                                                      (int)textureEntry.DefaultTexture.RGBA.R,
+                                                                      (int)textureEntry.DefaultTexture.RGBA.G,
+                                                                      (int)textureEntry.DefaultTexture.RGBA.B);
                                         }
 
                                         if (!(texcolor.R == 255 && texcolor.G == 255 && texcolor.B == 255))
@@ -663,7 +663,7 @@ namespace Aurora.Modules.WorldMap
                                     Vector3 tScale = new Vector3();
                                     Vector3 axPos = new Vector3(pos.X, pos.Y, pos.Z);
 
-                                    scale = lscale*part.GetWorldRotation();
+                                    scale = lscale * part.GetWorldRotation();
 
                                     // negative scales don't work in this situation
                                     scale.X = Math.Abs(scale.X);
@@ -671,10 +671,10 @@ namespace Aurora.Modules.WorldMap
                                     scale.Z = Math.Abs(scale.Z);
 
                                     // This scaling isn't very accurate and doesn't take into account the face rotation :P
-                                    int mapdrawstartX = (int) (pos.X - scale.X);
-                                    int mapdrawstartY = (int) (pos.Y - scale.Y);
-                                    int mapdrawendX = (int) (pos.X + scale.X);
-                                    int mapdrawendY = (int) (pos.Y + scale.Y);
+                                    int mapdrawstartX = (int)(pos.X - scale.X);
+                                    int mapdrawstartY = (int)(pos.Y - scale.Y);
+                                    int mapdrawendX = (int)(pos.X + scale.X);
+                                    int mapdrawendY = (int)(pos.Y + scale.Y);
 
                                     // If object is beyond the edge of the map, don't draw it to avoid errors
                                     if (mapdrawstartX < 0 || mapdrawstartX > (m_scene.RegionInfo.RegionSizeX - 1) ||
@@ -695,7 +695,7 @@ namespace Aurora.Modules.WorldMap
                                     Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
                                     // vertexes[0].x = pos.X + vertexes[0].x;
                                     //vertexes[0].y = pos.Y + vertexes[0].y;
@@ -706,7 +706,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceA[4] = vertexes[0];
 
                                     tScale = lscale;
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[1].x = pos.X + vertexes[1].x;
@@ -718,7 +718,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceC[4] = vertexes[1];
 
                                     tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
 
                                     vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
@@ -731,7 +731,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceC[5] = vertexes[2];
 
                                     tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     //vertexes[3].x = pos.X + vertexes[3].x;
@@ -743,7 +743,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceA[5] = vertexes[3];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[4].x = pos.X + vertexes[4].x;
@@ -755,7 +755,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceD[4] = vertexes[4];
 
                                     tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[5].x = pos.X + vertexes[5].x;
@@ -767,7 +767,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceB[5] = vertexes[5];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[6].x = pos.X + vertexes[6].x;
@@ -779,7 +779,7 @@ namespace Aurora.Modules.WorldMap
                                     FaceB[4] = vertexes[6];
 
                                     tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale*part.GetWorldRotation()));
+                                    scale = ((tScale * part.GetWorldRotation()));
                                     vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
 
                                     // vertexes[7].x = pos.X + vertexes[7].x;
@@ -796,20 +796,20 @@ namespace Aurora.Modules.WorldMap
 
                                     //bool breakYN = false; // If we run into an error drawing, break out of the
                                     // loop so we don't lag to death on error handling
-                                    DrawStruct ds = new DrawStruct {brush = new SolidBrush(mapdotspot)};
+                                    DrawStruct ds = new DrawStruct { brush = new SolidBrush(mapdotspot) };
                                     if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Circle)
                                     {
                                         ds.dr = DrawRoutine.Ellipse;
-                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X/2),
+                                        Vector3 Location = new Vector3(part.AbsolutePosition.X - (part.Scale.X / 2),
                                                                        (256 -
-                                                                        (part.AbsolutePosition.Y + (part.Scale.Y/2))),
+                                                                        (part.AbsolutePosition.Y + (part.Scale.Y / 2))),
                                                                        0);
-                                        Location.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
-                                        Location.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
-                                        Location = Location*part.GetWorldRotation();
-                                        ds.rect = new Rectangle((int) Location.X, (int) Location.Y,
-                                                                (int) Math.Abs(part.Shape.Scale.X),
-                                                                (int) Math.Abs(part.Shape.Scale.Y));
+                                        Location.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+                                        Location.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
+                                        Location = Location * part.GetWorldRotation();
+                                        ds.rect = new Rectangle((int)Location.X, (int)Location.Y,
+                                                                (int)Math.Abs(part.Shape.Scale.X),
+                                                                (int)Math.Abs(part.Shape.Scale.Y));
                                     }
                                     else //if (mapdot.RootPart.Shape.ProfileShape == ProfileShape.Square)
                                     {
@@ -827,7 +827,7 @@ namespace Aurora.Modules.WorldMap
                                             working[3] = project(FaceC[i], axPos);
                                             working[4] = project(FaceA[i], axPos);
 
-                                            face workingface = new face {pts = working};
+                                            face workingface = new face { pts = working };
 
                                             ds.trns[i] = workingface;
                                         }
@@ -923,7 +923,7 @@ namespace Aurora.Modules.WorldMap
                 UUID key = UUID.Parse(kvp.Key);
                 if (!m_mapping.ContainsKey(key))
                     m_mapping.Add(key,
-                                  Color.FromArgb((int) (c.A*255), (int) (c.R*255), (int) (c.G*255), (int) (c.B*255)));
+                                  Color.FromArgb((int)(c.A * 255), (int)(c.R * 255), (int)(c.G * 255), (int)(c.B * 255)));
             }
 
             return true;
@@ -1025,13 +1025,12 @@ namespace Aurora.Modules.WorldMap
 
             unsafeBMP.UnlockBitmap();
 
-            return Color.FromArgb(r/pixels, g/pixels, b/pixels);
+            return Color.FromArgb(r / pixels, g / pixels, b / pixels);
         }
 
         private Point project(Vector3 point3d, Vector3 originpos)
         {
-            Point returnpt = new Point
-                                 {X = (int) point3d.X, Y = (int) ((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y)};
+            Point returnpt = new Point { X = (int)point3d.X, Y = (int)((m_scene.RegionInfo.RegionSizeY - 1) - point3d.Y) };
             //originpos = point3d;
             //int d = (int)(256f / 1.5f);
 
@@ -1040,8 +1039,8 @@ namespace Aurora.Modules.WorldMap
 
             //(int)((topos.x - point3d.x) / z * d);
             //(int)(255 - (((topos.y - point3d.y) / z * d)));
-            returnpt.X /= m_scene.RegionInfo.RegionSizeX/Constants.RegionSize;
-            returnpt.Y /= m_scene.RegionInfo.RegionSizeY/Constants.RegionSize;
+            returnpt.X /= m_scene.RegionInfo.RegionSizeX / Constants.RegionSize;
+            returnpt.Y /= m_scene.RegionInfo.RegionSizeY / Constants.RegionSize;
             return returnpt;
         }
     }

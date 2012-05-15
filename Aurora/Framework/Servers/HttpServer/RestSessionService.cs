@@ -48,10 +48,9 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         public static TResponse BeginPostObject(string verb, string requestUrl, TRequest obj, string sid, string aid)
         {
-            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>
-                                                   {SessionID = sid, AvatarID = aid, Body = obj};
+            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest> { SessionID = sid, AvatarID = aid, Body = obj };
 
-            Type type = typeof (RestSessionObject<TRequest>);
+            Type type = typeof(RestSessionObject<TRequest>);
 
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
@@ -60,7 +59,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
+            XmlWriterSettings settings = new XmlWriterSettings { Encoding = Encoding.UTF8 };
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -69,7 +68,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 writer.Flush();
             }
 
-            int length = (int) buffer.Length;
+            int length = (int)buffer.Length;
             request.ContentLength = length;
 
             Stream requestStream = request.GetRequestStream();
@@ -80,12 +79,12 @@ namespace Aurora.Framework.Servers.HttpServer
             TResponse deserial = default(TResponse);
             using (WebResponse resp = request.GetResponse())
             {
-                XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
                 Stream respStream = null;
                 try
                 {
                     respStream = resp.GetResponseStream();
-                    if (respStream != null) deserial = (TResponse) deserializer.Deserialize(respStream);
+                    if (respStream != null) deserial = (TResponse)deserializer.Deserialize(respStream);
                 }
                 catch
                 {
@@ -112,10 +111,9 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void BeginPostObject(string verb, string requestUrl, TRequest obj, string sid, string aid)
         {
-            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest>
-                                                   {SessionID = sid, AvatarID = aid, Body = obj};
+            RestSessionObject<TRequest> sobj = new RestSessionObject<TRequest> { SessionID = sid, AvatarID = aid, Body = obj };
 
-            Type type = typeof (RestSessionObject<TRequest>);
+            Type type = typeof(RestSessionObject<TRequest>);
 
             WebRequest request = WebRequest.Create(requestUrl);
             request.Method = verb;
@@ -124,7 +122,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             MemoryStream buffer = new MemoryStream();
 
-            XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
+            XmlWriterSettings settings = new XmlWriterSettings { Encoding = Encoding.UTF8 };
 
             using (XmlWriter writer = XmlWriter.Create(buffer, settings))
             {
@@ -134,7 +132,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             buffer.Close();
 
-            int length = (int) buffer.Length;
+            int length = (int)buffer.Length;
             request.ContentLength = length;
 
             Stream requestStream = request.GetRequestStream();
@@ -146,11 +144,11 @@ namespace Aurora.Framework.Servers.HttpServer
 
         private void AsyncCallback(IAsyncResult result)
         {
-            WebRequest request = (WebRequest) result.AsyncState;
+            WebRequest request = (WebRequest)result.AsyncState;
             using (WebResponse resp = request.EndGetResponse(result))
             {
                 TResponse deserial;
-                XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
                 Stream stream = resp.GetResponseStream();
 
                 // This is currently a bad debug stanza since it gobbles us the response...
@@ -159,7 +157,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 if (stream != null)
                 {
-                    deserial = (TResponse) deserializer.Deserialize(stream);
+                    deserial = (TResponse)deserializer.Deserialize(stream);
                     stream.Close();
 
                     if (deserial != null && ResponseCallback != null)
@@ -168,7 +166,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                 }
 
-                
+
             }
         }
     }
@@ -202,8 +200,8 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 try
                 {
-                    XmlSerializer deserializer = new XmlSerializer(typeof (RestSessionObject<TRequest>));
-                    deserial = (RestSessionObject<TRequest>) deserializer.Deserialize(xmlReader);
+                    XmlSerializer deserializer = new XmlSerializer(typeof(RestSessionObject<TRequest>));
+                    deserial = (RestSessionObject<TRequest>)deserializer.Deserialize(xmlReader);
                 }
                 catch (Exception e)
                 {
@@ -220,7 +218,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer serializer = new XmlSerializer(typeof(TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }
@@ -264,8 +262,8 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 try
                 {
-                    XmlSerializer deserializer = new XmlSerializer(typeof (TRequest));
-                    deserial = (TRequest) deserializer.Deserialize(xmlReader);
+                    XmlSerializer deserializer = new XmlSerializer(typeof(TRequest));
+                    deserial = (TRequest)deserializer.Deserialize(xmlReader);
                 }
                 catch (Exception e)
                 {
@@ -282,7 +280,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             using (XmlWriter xmlWriter = XmlWriter.Create(responseStream))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof (TResponse));
+                XmlSerializer serializer = new XmlSerializer(typeof(TResponse));
                 serializer.Serialize(xmlWriter, response);
             }
         }

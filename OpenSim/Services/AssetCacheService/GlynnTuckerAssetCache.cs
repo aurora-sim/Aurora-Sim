@@ -72,7 +72,7 @@ namespace OpenSim.Services
                     // Instrumentation
                     IConfig cacheConfig = config.Configs["AssetCache"];
                     if (cacheConfig != null)
-                        m_DebugRate = (uint) cacheConfig.GetInt("DebugRate", 0);
+                        m_DebugRate = (uint)cacheConfig.GetInt("DebugRate", 0);
                     registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
             }
@@ -142,9 +142,9 @@ namespace OpenSim.Services
                 if (asset != null)
                     ++m_Hits;
 
-                if ((m_Requests%m_DebugRate) == 0)
+                if ((m_Requests % m_DebugRate) == 0)
                     MainConsole.Instance.DebugFormat("[ASSET CACHE]: Hit Rate {0} / {1} == {2}%", m_Hits, m_Requests,
-                                      (m_Hits/(float) m_Requests)*100.0f);
+                                      (m_Hits / (float)m_Requests) * 100.0f);
             }
             // End instrumentation
         }

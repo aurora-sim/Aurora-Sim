@@ -111,7 +111,7 @@ namespace Aurora.Simulation.Base
         protected string[] m_commandLineParameters = null;
         public string[] CommandLineParameters
         {
-             get { return m_commandLineParameters; }
+            get { return m_commandLineParameters; }
         }
 
         protected string m_pidFile = String.Empty;
@@ -189,7 +189,7 @@ namespace Aurora.Simulation.Base
         public virtual void Startup()
         {
             MainConsole.Instance.Warn("====================================================================");
-            MainConsole.Instance.Warn(string.Format("====================== STARTING AURORA ({0}) ======================", 
+            MainConsole.Instance.Warn(string.Format("====================== STARTING AURORA ({0}) ======================",
                 (IntPtr.Size == 4 ? "x86" : "x64")));
             MainConsole.Instance.Warn("====================================================================");
             MainConsole.Instance.Warn("[AuroraStartup]: Version: " + Version + "\n");
@@ -248,13 +248,13 @@ namespace Aurora.Simulation.Base
             return GetHttpServer(port, false, "", "", SslProtocols.None);
         }
 
-        public IHttpServer GetHttpServer (uint port, bool secure, string certPath, string certPass, SslProtocols sslProtocol)
+        public IHttpServer GetHttpServer(uint port, bool secure, string certPath, string certPass, SslProtocols sslProtocol)
         {
             if ((port == m_Port || port == 0) && HttpServer != null)
                 return HttpServer;
 
             BaseHttpServer server;
-            if(m_Servers.TryGetValue(port, out server) && server.Secure == secure)
+            if (m_Servers.TryGetValue(port, out server) && server.Secure == secure)
                 return server;
 
             string hostName =
@@ -262,21 +262,21 @@ namespace Aurora.Simulation.Base
             //Clean it up a bit
             if (hostName.StartsWith("http://") || hostName.StartsWith("https://"))
                 hostName = hostName.Replace("https://", "").Replace("http://", "");
-            if (hostName.EndsWith ("/"))
-                hostName = hostName.Remove (hostName.Length - 1, 1);
+            if (hostName.EndsWith("/"))
+                hostName = hostName.Remove(hostName.Length - 1, 1);
 
             server = new BaseHttpServer(port, hostName, secure);
 
             try
             {
-                if(secure)//Set these params now
+                if (secure)//Set these params now
                     server.SetSecureParams(certPath, certPass, sslProtocol);
                 server.Start();
             }
-            catch(Exception)
+            catch (Exception)
             {
                 //Remove the server from the list
-                m_Servers.Remove (port);
+                m_Servers.Remove(port);
                 //Then pass the exception upwards
                 throw;
             }
@@ -368,7 +368,7 @@ namespace Aurora.Simulation.Base
             // Start timer script (run a script every xx seconds)
             if (m_TimerScriptFileName != "disabled")
             {
-                Timer newtimername = new Timer {Enabled = true, Interval = m_TimerScriptTime*60*1000};
+                Timer newtimername = new Timer { Enabled = true, Interval = m_TimerScriptTime * 60 * 1000 };
                 newtimername.Elapsed += RunAutoTimerScript;
             }
         }
@@ -481,7 +481,7 @@ namespace Aurora.Simulation.Base
         public virtual void HandleConfigRefresh(string[] cmd)
         {
             //Rebuild the configs
-            m_config = m_configurationLoader.LoadConfigSettings (m_original_config);
+            m_config = m_configurationLoader.LoadConfigSettings(m_original_config);
             foreach (IApplicationPlugin plugin in m_applicationPlugins)
                 plugin.ReloadConfiguration(m_config);
 
@@ -491,25 +491,25 @@ namespace Aurora.Simulation.Base
             // these are doing nothing??
             hostName.Replace("http://", "");
             hostName.Replace("https://", "");
-            if(hostName.EndsWith("/"))
+            if (hostName.EndsWith("/"))
                 hostName = hostName.Remove(hostName.Length - 1, 1);
-            foreach(IHttpServer server in m_Servers.Values)
+            foreach (IHttpServer server in m_Servers.Values)
             {
                 server.HostName = hostName;
             }
-            MainConsole.Instance.Info ("Finished reloading configuration.");
+            MainConsole.Instance.Info("Finished reloading configuration.");
         }
 
-        public virtual void HandleShowInfo (string[] cmd)
+        public virtual void HandleShowInfo(string[] cmd)
         {
-            MainConsole.Instance.Info ("Version: " + m_version);
-            MainConsole.Instance.Info ("Startup directory: " + Environment.CurrentDirectory);
+            MainConsole.Instance.Info("Version: " + m_version);
+            MainConsole.Instance.Info("Startup directory: " + Environment.CurrentDirectory);
         }
 
-        public virtual void HandleShowVersion (string[] cmd)
+        public virtual void HandleShowVersion(string[] cmd)
         {
-            MainConsole.Instance.Info (
-                String.Format (
+            MainConsole.Instance.Info(
+                String.Format(
                     "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
         }
 

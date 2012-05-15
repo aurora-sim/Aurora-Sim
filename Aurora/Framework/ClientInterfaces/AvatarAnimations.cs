@@ -47,7 +47,7 @@ namespace Aurora.Framework
                     if (nod.Attributes["name"] != null)
                     {
                         string name = nod.Attributes["name"].Value;
-                        UUID id = (UUID) nod.InnerText;
+                        UUID id = (UUID)nod.InnerText;
                         string animState = nod.Attributes["state"].Value;
 
                         try

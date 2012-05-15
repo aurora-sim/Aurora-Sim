@@ -91,7 +91,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
                     }
                     else
                     {
-                        List<DecodedCallback> notifylist = new List<DecodedCallback> {callback};
+                        List<DecodedCallback> notifylist = new List<DecodedCallback> { callback };
                         m_notifyList.Add(assetID, notifylist);
                         decode = true;
                     }
@@ -167,8 +167,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
 
                             for (int i = 0; i < layerStarts.Count; i++)
                             {
-                                OpenJPEG.J2KLayerInfo layer = new OpenJPEG.J2KLayerInfo
-                                                                  {Start = i == 0 ? 0 : layerStarts[i]};
+                                OpenJPEG.J2KLayerInfo layer = new OpenJPEG.J2KLayerInfo { Start = i == 0 ? 0 : layerStarts[i] };
 
 
                                 if (i == layerStarts.Count - 1)
@@ -280,10 +279,10 @@ namespace Aurora.Modules.Agent.J2KDecoder
             // with extra padding thrown in for good measure. This is a worst case fallback plan
             // and may not gracefully handle all real world data
             layers[0].Start = 0;
-            layers[1].Start = (int) (j2kLength*0.02f);
-            layers[2].Start = (int) (j2kLength*0.05f);
-            layers[3].Start = (int) (j2kLength*0.20f);
-            layers[4].Start = (int) (j2kLength*0.50f);
+            layers[1].Start = (int)(j2kLength * 0.02f);
+            layers[2].Start = (int)(j2kLength * 0.05f);
+            layers[3].Start = (int)(j2kLength * 0.20f);
+            layers[4].Start = (int)(j2kLength * 0.50f);
 
             layers[0].End = layers[1].Start - 1;
             layers[1].End = layers[2].Start - 1;
@@ -304,8 +303,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
                 string assetID = "j2kCache_" + AssetId.ToString();
 
                 AssetBase layerDecodeAsset = new AssetBase(assetID, assetID, AssetType.Notecard,
-                                                           UUID.Zero)
-                                                 {Flags = AssetFlags.Local | AssetFlags.Temporary};
+                                                           UUID.Zero) { Flags = AssetFlags.Local | AssetFlags.Temporary };
 
                 #region Serialize Layer Data
 
@@ -344,7 +342,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
                     #region Deserialize Layer Data
 
                     string readResult = Util.UTF8.GetString(layerDecodeAsset.Data);
-                    string[] lines = readResult.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+                    string[] lines = readResult.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     if (lines.Length == 0)
                     {
@@ -374,7 +372,7 @@ namespace Aurora.Modules.Agent.J2KDecoder
                                 return false;
                             }
 
-                            Layers[i] = new OpenJPEG.J2KLayerInfo {Start = element1, End = element2};
+                            Layers[i] = new OpenJPEG.J2KLayerInfo { Start = element1, End = element2 };
                         }
                         else
                         {

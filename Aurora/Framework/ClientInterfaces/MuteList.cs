@@ -57,7 +57,7 @@ namespace Aurora.Framework
 
         public override OSDMap ToOSD()
         {
-            OSDMap map = new OSDMap {{"MuteName", MuteName}, {"MuteID", MuteID}, {"MuteType", MuteType}};
+            OSDMap map = new OSDMap { { "MuteName", MuteName }, { "MuteID", MuteID }, { "MuteType", MuteType } };
             return map;
         }
 

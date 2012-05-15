@@ -113,7 +113,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     Int32 diff = currentTickCount - m_lastCached;
                     Int32 timingDiff = (diff >= 0) ? diff : (diff + Util.EnvironmentTickCountMask + 1);
-                    if (timingDiff > 5*1000) //Only recheck every 5 seconds
+                    if (timingDiff > 5 * 1000) //Only recheck every 5 seconds
                     {
                         m_lastCached = Util.EnvironmentTickCount();
                         m_previousCulled.Clear();
@@ -147,7 +147,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (entity is IScenePresence)
             {
-                IScenePresence pEntity = (IScenePresence) entity;
+                IScenePresence pEntity = (IScenePresence)entity;
                 if ((client.CurrentParcel != null &&
                      client.CurrentParcel.LandData.Private) ||
                     (pEntity.CurrentParcel != null &&
@@ -201,7 +201,7 @@ namespace OpenSim.Region.Framework.Scenes
                 doHeavyCulling = true;
                 //We need to check whether this object is an attachment, and if so, set it so that we check from the avatar's
                 // position, rather than from the offset of the attachment
-                ISceneEntity sEntity = (ISceneEntity) entity;
+                ISceneEntity sEntity = (ISceneEntity)entity;
                 if (sEntity.RootChild.IsAttachment)
                 {
                     IScenePresence attachedAvatar = scene.GetScenePresence(sEntity.RootChild.AttachedAvatar);
@@ -215,7 +215,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //We need to check whether this presence is sitting on anything, so that we can check from the object's
                 // position, rather than the offset position of the object that the avatar is sitting on
-                IScenePresence pEntity = (IScenePresence) entity;
+                IScenePresence pEntity = (IScenePresence)entity;
                 if (pEntity.Sitting)
                 {
                     ISceneChildEntity sittingEntity = scene.GetSceneObjectPart(pEntity.SittingOnUUID);
@@ -227,7 +227,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             //If the distance is greater than the clients draw distance, its out of range
             if (Vector3.DistanceSquared(posToCheckFrom, entityPosToCheckFrom) >
-                DD*DD) //Use squares to make it faster than having to do the sqrt
+                DD * DD) //Use squares to make it faster than having to do the sqrt
             {
                 if (!doHeavyCulling)
                     return false; //Don't do the hardcore checks
@@ -239,32 +239,32 @@ namespace OpenSim.Region.Framework.Scenes
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom + new Vector3(childEntity.OOBsize.X, 0, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom - new Vector3(childEntity.OOBsize.X, 0, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom + new Vector3(0, childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom - new Vector3(0, childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom + new Vector3(0, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom - new Vector3(0, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
 
                     #endregion
@@ -275,73 +275,73 @@ namespace OpenSim.Region.Framework.Scenes
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(childEntity.OOBsize.X, childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(childEntity.OOBsize.X, -childEntity.OOBsize.Y, 0)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(0, childEntity.OOBsize.Y, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(0, childEntity.OOBsize.Y, -childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom +
                                                 new Vector3(-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
                     if (
                         Vector3.DistanceSquared(posToCheckFrom,
                                                 entityPosToCheckFrom -
                                                 new Vector3(-childEntity.OOBsize.X, 0, childEntity.OOBsize.Z)) <
-                        DD*DD) //Use squares to make it faster than having to do the sqrt
+                        DD * DD) //Use squares to make it faster than having to do the sqrt
                         return true;
 
                     #endregion
@@ -355,16 +355,16 @@ namespace OpenSim.Region.Framework.Scenes
         private bool HardCullingCheck(ISceneEntity childEntity)
         {
             Vector3 OOBsize = childEntity.OOBsize;
-            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling*m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling*m_sizeToForceDualCulling ||
-                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling*m_sizeToForceDualCulling)
+            if (LengthSquared(OOBsize.X, OOBsize.Y) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Y, OOBsize.Z) > m_sizeToForceDualCulling * m_sizeToForceDualCulling ||
+                LengthSquared(OOBsize.Z, OOBsize.X) > m_sizeToForceDualCulling * m_sizeToForceDualCulling)
                 return true;
             return false;
         }
 
         private float LengthSquared(float a, float b)
         {
-            return (a*a) + (b*b);
+            return (a * a) + (b * b);
         }
     }
 
@@ -387,7 +387,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     UpdatePrioritizationScheme =
                         (UpdatePrioritizationSchemes)
-                        Enum.Parse(typeof (UpdatePrioritizationSchemes), update_prioritization_scheme, true);
+                        Enum.Parse(typeof(UpdatePrioritizationSchemes), update_prioritization_scheme, true);
                 }
                 catch (Exception)
                 {
@@ -458,7 +458,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (adjustRootPriority && entity is ISceneChildEntity)
             {
-                ISceneChildEntity sop = ((ISceneChildEntity) entity);
+                ISceneChildEntity sop = ((ISceneChildEntity)entity);
                 if (sop.IsRoot)
                 {
                     ISceneEntity grp = sop.ParentEntity;
@@ -500,18 +500,18 @@ namespace OpenSim.Region.Framework.Scenes
             float distsq;
             if (entity is SceneObjectGroup)
             {
-                SceneObjectGroup g = (SceneObjectGroup) entity;
-                entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
+                SceneObjectGroup g = (SceneObjectGroup)entity;
+                entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
                 distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
             }
 
             else if (entity is SceneObjectPart)
             {
-                SceneObjectPart p = (SceneObjectPart) entity;
+                SceneObjectPart p = (SceneObjectPart)entity;
                 if (p.IsRoot)
                 {
                     SceneObjectGroup g = p.ParentGroup;
-                    entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
+                    entityPos = g.AbsolutePosition + g.OOBoffset * g.GroupRotation;
                     distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
                 }
                 else
@@ -523,7 +523,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 entityPos = entity.AbsolutePosition;
-                distsq = - Vector3.DistanceSquared(presencePos, entityPos);
+                distsq = -Vector3.DistanceSquared(presencePos, entityPos);
             }
 
             if (distsq > 0.0f)
@@ -567,7 +567,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
                 // before its scheduled update was triggered
                 //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
-                entityPos = ((SceneObjectPart) entity).ParentGroup.AbsolutePosition;
+                entityPos = ((SceneObjectPart)entity).ParentGroup.AbsolutePosition;
             }
             else
             {
@@ -629,7 +629,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Add distance again to really emphasize it
                 priority += Vector3.DistanceSquared(presence.AbsolutePosition, entityPos);
 
-                if ((Vector3.Distance(presence.AbsolutePosition, entityPos)/2) > presence.DrawDistance)
+                if ((Vector3.Distance(presence.AbsolutePosition, entityPos) / 2) > presence.DrawDistance)
                 {
                     //Outside of draw distance!
                     priority *= 2;
@@ -638,14 +638,14 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart rootPart = null;
                 if (entity is SceneObjectPart)
                 {
-                    if (((SceneObjectPart) entity).ParentGroup != null &&
-                        ((SceneObjectPart) entity).ParentGroup.RootPart != null)
-                        rootPart = ((SceneObjectPart) entity).ParentGroup.RootPart;
+                    if (((SceneObjectPart)entity).ParentGroup != null &&
+                        ((SceneObjectPart)entity).ParentGroup.RootPart != null)
+                        rootPart = ((SceneObjectPart)entity).ParentGroup.RootPart;
                 }
                 if (entity is SceneObjectGroup)
                 {
-                    if (((SceneObjectGroup) entity).RootPart != null)
-                        rootPart = ((SceneObjectGroup) entity).RootPart;
+                    if (((SceneObjectGroup)entity).RootPart != null)
+                        rootPart = ((SceneObjectGroup)entity).RootPart;
                 }
 
                 if (rootPart != null)
@@ -672,7 +672,7 @@ namespace OpenSim.Region.Framework.Scenes
                         size = 200;
 
                     //Do it dynamically as well so that larger prims get smaller quicker
-                    priority /= size > 40 ? (size/35) : (size > 20 ? (size/17) : 1);
+                    priority /= size > 40 ? (size / 35) : (size > 20 ? (size / 17) : 1);
 
                     if (rootPart.IsAttachment)
                     {

@@ -191,7 +191,7 @@ namespace Aurora.Modules.Voice
             response["region_name"] = scene.RegionInfo.RegionName;
             response["parcel_local_id"] = 0;
             response["voice_credentials"] = new OSDMap();
-            ((OSDMap) response["voice_credentials"])["channel_uri"] = "";
+            ((OSDMap)response["voice_credentials"])["channel_uri"] = "";
             return OSDParser.SerializeLLSDXmlString(response);
         }
     }

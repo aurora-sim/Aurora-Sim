@@ -50,7 +50,8 @@ namespace Amib.Threading
             _stackSize = SmartThreadPool.DefaultStackSize;
         }
 
-        public STPStartInfo(STPStartInfo stpStartInfo) : base(stpStartInfo)
+        public STPStartInfo(STPStartInfo stpStartInfo)
+            : base(stpStartInfo)
         {
             _idleTimeout = stpStartInfo._idleTimeout;
             _minWorkerThreads = stpStartInfo._minWorkerThreads;

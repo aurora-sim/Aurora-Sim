@@ -95,7 +95,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateName"] = name;
             return GetEstate(
-                int.Parse(GD.Query(new string[1]{ "EstateID" }, "estatesettings", filter, null, null, null)[0])
+                int.Parse(GD.Query(new string[1] { "EstateID" }, "estatesettings", filter, null, null, null)[0])
             );
         }
 
@@ -207,7 +207,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<EstateSettings> GetEstates(UUID OwnerID)
         {
-            return GetEstates(OwnerID, new Dictionary<string,bool>(0));
+            return GetEstates(OwnerID, new Dictionary<string, bool>(0));
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -227,10 +227,13 @@ namespace Aurora.Services.DataService
                 bool Add = true;
                 EstateSettings es = GetEstate(estateID);
 
-                if(boolFields.Count > 0){
+                if (boolFields.Count > 0)
+                {
                     OSDMap esmap = es.ToOSD();
-                    foreach(KeyValuePair<string, bool> field in boolFields){
-                        if(esmap.ContainsKey(field.Key) && esmap[field.Key].AsBoolean() != field.Value){
+                    foreach (KeyValuePair<string, bool> field in boolFields)
+                    {
+                        if (esmap.ContainsKey(field.Key) && esmap[field.Key].AsBoolean() != field.Value)
+                        {
                             Add = false;
                             break;
                         }
@@ -268,7 +271,8 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["EstateID"] = estateID;
             List<string> retVals = GD.Query(new string[1] { "*" }, m_estateTable, filter, null, null, null);
-            EstateSettings settings = new EstateSettings{
+            EstateSettings settings = new EstateSettings
+            {
                 EstateID = 0
             };
             if (retVals.Count > 0)

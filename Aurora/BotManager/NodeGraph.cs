@@ -89,7 +89,7 @@ namespace Aurora.BotManager
             const bool found = false;
             lock (m_lock)
             {
-                findNewTarget:
+            findNewTarget:
                 position = Vector3.Zero;
                 state = TravelMode.None;
                 needsToTeleportToPosition = false;

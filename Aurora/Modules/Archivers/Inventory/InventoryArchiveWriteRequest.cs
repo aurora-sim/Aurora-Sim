@@ -156,14 +156,14 @@ namespace Aurora.Modules.Archivers
             // Record the creator of this item for user record purposes (which might go away soon)
             m_userUuids[inventoryItem.CreatorIdAsUuid] = 1;
 
-            InventoryItemBase saveItem = (InventoryItemBase) inventoryItem.Clone();
+            InventoryItemBase saveItem = (InventoryItemBase)inventoryItem.Clone();
             saveItem.CreatorId = OspResolver.MakeOspa(saveItem.CreatorIdAsUuid,
                                                       m_registry.RequestModuleInterface<IUserAccountService>());
 
             string serialization = UserInventoryItemSerializer.Serialize(saveItem);
             m_archiveWriter.WriteFile(filename, serialization);
 
-            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType) saveItem.AssetType, m_assetUuids, m_registry);
+            m_assetGatherer.GatherAssetUuids(saveItem.AssetID, (AssetType)saveItem.AssetType, m_assetUuids, m_registry);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace Aurora.Modules.Archivers
                 // Eliminate double slashes and any leading / on the path.
                 string[] components
                     = m_invPath.Split(
-                        new[] {InventoryFolderImpl.PATH_DELIMITER}, StringSplitOptions.RemoveEmptyEntries);
+                        new[] { InventoryFolderImpl.PATH_DELIMITER }, StringSplitOptions.RemoveEmptyEntries);
 
                 int maxComponentIndex = components.Length - 1;
 
@@ -304,7 +304,7 @@ namespace Aurora.Modules.Archivers
             {
                 foreach (AssetBase asset in m_assetsToAdd)
                 {
-                    m_assetUuids[asset.ID] = (AssetType) asset.Type;
+                    m_assetUuids[asset.ID] = (AssetType)asset.Type;
                 }
                 new AssetsRequest(
                     new AssetsArchiver(m_archiveWriter), m_assetUuids,
@@ -404,7 +404,7 @@ namespace Aurora.Modules.Archivers
         public static string Create0p1ControlFile()
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
             xtw.WriteStartDocument();
             xtw.WriteStartElement("archive");
             xtw.WriteAttributeString("major_version", "0");

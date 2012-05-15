@@ -191,7 +191,8 @@ namespace OpenSim.Services
                              LastLogout = DateTime.Now.ToUniversalTime(),
                          });
             }
-            if (m_lockedUsers.Contains(userID)){
+            if (m_lockedUsers.Contains(userID))
+            {
                 return; //User is locked, leave them alone
             }
 
@@ -216,7 +217,7 @@ namespace OpenSim.Services
             {
                 //Trigger an event so listeners know
                 m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                    "UserStatusChange", new object[] {userID, loggingIn, enteringRegion});
+                    "UserStatusChange", new object[] { userID, loggingIn, enteringRegion });
             }
         }
 
@@ -231,7 +232,7 @@ namespace OpenSim.Services
             if (changed)
                 if (!m_lockedUsers.Contains(userID))
                     m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                        "UserStatusChange", new object[] {userID, false, UUID.Zero});
+                        "UserStatusChange", new object[] { userID, false, UUID.Zero });
             return info;
         }
 

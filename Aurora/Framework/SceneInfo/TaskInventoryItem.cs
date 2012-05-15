@@ -153,7 +153,7 @@ namespace Aurora.Framework
 
         public TaskInventoryItem()
         {
-            CreationDate = (uint) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+            CreationDate = (uint)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
         public UUID AssetID

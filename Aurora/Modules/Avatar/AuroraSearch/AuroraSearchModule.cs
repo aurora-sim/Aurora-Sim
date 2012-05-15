@@ -108,7 +108,7 @@ namespace Aurora.Modules.Search
         {
             List<DirPlacesReplyData> ReturnValues =
                 directoryService.FindLand(queryText, category.ToString(), queryStart,
-                                                                       (uint) queryFlags, remoteClient.ScopeID);
+                                                                       (uint)queryFlags, remoteClient.ScopeID);
 
 #if (!ISWIN)
             SplitPackets<DirPlacesReplyData>(ReturnValues, delegate(DirPlacesReplyData[] data)
@@ -356,7 +356,7 @@ namespace Aurora.Modules.Search
             Utils.LongToUInts(remoteClient.Scene.RegionInfo.RegionHandle, out xstart, out ystart);
             GridRegion GR = null;
 
-            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int) xstart, (int) ystart);
+            GR = regionhandle == 0 ? new GridRegion(remoteClient.Scene.RegionInfo) : m_Scenes[0].GridService.GetRegionByPosition(UUID.Zero, (int)xstart, (int)ystart);
             if (GR == null)
             {
                 //No region???
@@ -365,7 +365,7 @@ namespace Aurora.Modules.Search
 
             #region Telehub
 
-            if (itemtype == (uint) GridItemType.Telehub)
+            if (itemtype == (uint)GridItemType.Telehub)
             {
                 IRegionConnector GF = DataManager.DataManager.RequestPlugin<IRegionConnector>();
                 if (GF == null)
@@ -378,8 +378,8 @@ namespace Aurora.Modules.Search
                 {
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (GR.RegionLocX + telehub.TelehubLocX),
-                                      y = (uint) (GR.RegionLocY + telehub.TelehubLocY),
+                                      x = (uint)(GR.RegionLocX + telehub.TelehubLocX),
+                                      y = (uint)(GR.RegionLocY + telehub.TelehubLocY),
                                       id = GR.RegionID,
                                       name = Util.Md5Hash(GR.RegionName + tc.ToString()),
                                       Extra = 1,
@@ -400,7 +400,7 @@ namespace Aurora.Modules.Search
             #region Land for sale
 
             //PG land that is for sale
-            if (itemtype == (uint) GridItemType.LandForSale)
+            if (itemtype == (uint)GridItemType.LandForSale)
             {
                 if (directoryService == null)
                     return;
@@ -449,8 +449,8 @@ namespace Aurora.Modules.Search
 
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (locX + landdata.UserLocation.X),
-                                      y = (uint) (locY + landdata.UserLocation.Y),
+                                      x = (uint)(locX + landdata.UserLocation.X),
+                                      y = (uint)(locY + landdata.UserLocation.Y),
                                       id = landDir.parcelID,
                                       name = landDir.name,
                                       Extra = landDir.actualArea,
@@ -468,7 +468,7 @@ namespace Aurora.Modules.Search
             }
 
             //Adult or mature land that is for sale
-            if (itemtype == (uint) GridItemType.AdultLandForSale)
+            if (itemtype == (uint)GridItemType.AdultLandForSale)
             {
                 if (directoryService == null)
                     return;
@@ -513,8 +513,8 @@ namespace Aurora.Modules.Search
 
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (locX + landdata.UserLocation.X),
-                                      y = (uint) (locY + landdata.UserLocation.Y),
+                                      x = (uint)(locX + landdata.UserLocation.X),
+                                      y = (uint)(locY + landdata.UserLocation.Y),
                                       id = landDir.parcelID,
                                       name = landDir.name,
                                       Extra = landDir.actualArea,
@@ -536,19 +536,19 @@ namespace Aurora.Modules.Search
 
             #region Events
 
-            if (itemtype == (uint) GridItemType.PgEvent ||
-                itemtype == (uint) GridItemType.MatureEvent ||
-                itemtype == (uint) GridItemType.AdultEvent)
+            if (itemtype == (uint)GridItemType.PgEvent ||
+                itemtype == (uint)GridItemType.MatureEvent ||
+                itemtype == (uint)GridItemType.AdultEvent)
             {
                 if (directoryService == null)
                     return;
 
                 //Find the maturity level
-                int maturity = itemtype == (uint) GridItemType.PgEvent
-                                   ? (int) DirectoryManager.EventFlags.PG
-                                   : (itemtype == (uint) GridItemType.MatureEvent)
-                                         ? (int) DirectoryManager.EventFlags.Mature
-                                         : (int) DirectoryManager.EventFlags.Adult;
+                int maturity = itemtype == (uint)GridItemType.PgEvent
+                                   ? (int)DirectoryManager.EventFlags.PG
+                                   : (itemtype == (uint)GridItemType.MatureEvent)
+                                         ? (int)DirectoryManager.EventFlags.Mature
+                                         : (int)DirectoryManager.EventFlags.Adult;
 
                 //Gets all the events occuring in the given region by maturity level
                 List<DirEventsReplyData> Eventdata = directoryService.FindAllEventsInRegion(GR.RegionName, maturity);
@@ -562,12 +562,12 @@ namespace Aurora.Modules.Search
                     Vector3 globalPos = eventdata.globalPos;
                     mapitem = new mapItemReply
                                   {
-                                      x = (uint) (globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
-                                      y = (uint) (globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                      x = (uint)(globalPos.X + (remoteClient.Scene.RegionInfo.RegionSizeX / 2)),
+                                      y = (uint)(globalPos.Y + (remoteClient.Scene.RegionInfo.RegionSizeY / 2)),
                                       id = UUID.Random(),
                                       name = eventData.name,
-                                      Extra = (int) eventdata.dateUTC,
-                                      Extra2 = (int) eventdata.eventID
+                                      Extra = (int)eventdata.dateUTC,
+                                      Extra2 = (int)eventdata.eventID
                                   };
 
                     //Use global position plus half the region so that it doesn't always appear in the bottom corner
@@ -586,7 +586,7 @@ namespace Aurora.Modules.Search
 
             #region Classified
 
-            if (itemtype == (uint) GridItemType.Classified)
+            if (itemtype == (uint)GridItemType.Classified)
             {
                 if (directoryService == null)
                     return;
@@ -601,10 +601,10 @@ namespace Aurora.Modules.Search
                                   {
                                       x = (uint)
                                           (region.RegionLocX + classified.GlobalPos.X +
-                                           (remoteClient.Scene.RegionInfo.RegionSizeX/2)),
+                                           (remoteClient.Scene.RegionInfo.RegionSizeX / 2)),
                                       y = (uint)
                                           (region.RegionLocY + classified.GlobalPos.Y +
-                                           (remoteClient.Scene.RegionInfo.RegionSizeY/2)),
+                                           (remoteClient.Scene.RegionInfo.RegionSizeY / 2)),
                                       id = classified.CreatorUUID,
                                       name = classified.Name,
                                       Extra = 0,
@@ -654,13 +654,12 @@ namespace Aurora.Modules.Search
                 accounts = new List<UserAccount>(0);
 
             AvatarPickerReplyPacket replyPacket =
-                (AvatarPickerReplyPacket) PacketPool.Instance.GetPacket(PacketType.AvatarPickerReply);
+                (AvatarPickerReplyPacket)PacketPool.Instance.GetPacket(PacketType.AvatarPickerReply);
             // TODO: don't create new blocks if recycling an old packet
 
             AvatarPickerReplyPacket.DataBlock[] searchData =
                 new AvatarPickerReplyPacket.DataBlock[accounts.Count];
-            AvatarPickerReplyPacket.AgentDataBlock agentData = new AvatarPickerReplyPacket.AgentDataBlock
-                                                                   {AgentID = avatarID, QueryID = RequestID};
+            AvatarPickerReplyPacket.AgentDataBlock agentData = new AvatarPickerReplyPacket.AgentDataBlock { AgentID = avatarID, QueryID = RequestID };
 
             replyPacket.AgentData = agentData;
 

@@ -57,11 +57,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
                 {
                     i++;
 
-                    bool running = m_threads[i%m_threads.Count].MoveNext();
+                    bool running = m_threads[i % m_threads.Count].MoveNext();
 
 
                     if (!running)
-                        m_threads.Remove(m_threads[i%m_threads.Count]);
+                        m_threads.Remove(m_threads[i % m_threads.Count]);
                 }
             }
         }

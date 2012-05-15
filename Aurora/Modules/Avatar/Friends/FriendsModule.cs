@@ -117,9 +117,9 @@ namespace Aurora.Modules.Friends
                 //MainConsole.Instance.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
                 // the  friend in this sim as root agent
                 if (online)
-                    friendClient.SendAgentOnline(new[] {userID});
+                    friendClient.SendAgentOnline(new[] { userID });
                 else
-                    friendClient.SendAgentOffline(new[] {userID});
+                    friendClient.SendAgentOffline(new[] { userID });
                 // we're done
                 return;
             }
@@ -237,7 +237,7 @@ namespace Aurora.Modules.Friends
                 //UUID Requester = message["Requester"].AsUUID();
                 UUID ExFriend = message["ExFriend"].AsUUID();
                 GridInstantMessage im = new GridInstantMessage();
-                im.FromOSD((OSDMap) message["Message"]);
+                im.FromOSD((OSDMap)message["Message"]);
                 LocalFriendshipOffered(ExFriend, im);
             }
             else if (message["Method"] == "FriendshipDenied")
@@ -309,7 +309,7 @@ namespace Aurora.Modules.Friends
             }
 
             GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
-                                                           (byte) InstantMessageDialog.FriendshipOffered,
+                                                           (byte)InstantMessageDialog.FriendshipOffered,
                                                            "Will you be my friend?", true, Vector3.Zero);
 
             foreach (string fid in outstanding)
@@ -385,7 +385,7 @@ namespace Aurora.Modules.Friends
 
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            if ((InstantMessageDialog) im.dialog == InstantMessageDialog.FriendshipOffered)
+            if ((InstantMessageDialog)im.dialog == InstantMessageDialog.FriendshipOffered)
             {
                 // we got a friendship offer
                 UUID principalID = im.fromAgentID;
@@ -592,11 +592,11 @@ namespace Aurora.Modules.Friends
             {
                 //They are online, send the online message
                 if (us != null)
-                    us.SendAgentOnline(new[] {friendID});
+                    us.SendAgentOnline(new[] { friendID });
 
                 // the prospective friend in this sim as root agent
                 GridInstantMessage im = new GridInstantMessage(m_Scenes[0], userID, name, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipAccepted,
+                                                               (byte)InstantMessageDialog.FriendshipAccepted,
                                                                userID.ToString(), false, Vector3.Zero);
                 friendClient.SendInstantMessage(im);
 
@@ -630,7 +630,7 @@ namespace Aurora.Modules.Friends
             {
                 // the prospective friend in this sim as root agent
                 GridInstantMessage im = new GridInstantMessage(m_Scenes[0], userID, userName, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipDeclined,
+                                                               (byte)InstantMessageDialog.FriendshipDeclined,
                                                                userID.ToString(), false, Vector3.Zero);
                 friendClient.SendInstantMessage(im);
                 // we're done
@@ -661,17 +661,17 @@ namespace Aurora.Modules.Friends
             IClientAPI friendClient = LocateClientObject(friendID);
             if (friendClient != null)
             {
-                bool onlineBitChanged = ((rights ^ userFlags) & (int) FriendRights.CanSeeOnline) != 0;
+                bool onlineBitChanged = ((rights ^ userFlags) & (int)FriendRights.CanSeeOnline) != 0;
                 if (onlineBitChanged)
                 {
-                    if ((rights & (int) FriendRights.CanSeeOnline) == 1)
-                        friendClient.SendAgentOnline(new[] {new UUID(userID)});
+                    if ((rights & (int)FriendRights.CanSeeOnline) == 1)
+                        friendClient.SendAgentOnline(new[] { new UUID(userID) });
                     else
-                        friendClient.SendAgentOffline(new[] {new UUID(userID)});
+                        friendClient.SendAgentOffline(new[] { new UUID(userID) });
                 }
                 else
                 {
-                    bool canEditObjectsChanged = ((rights ^ userFlags) & (int) FriendRights.CanModifyObjects) != 0;
+                    bool canEditObjectsChanged = ((rights ^ userFlags) & (int)FriendRights.CanModifyObjects) != 0;
                     if (canEditObjectsChanged)
                         friendClient.SendChangeUserRights(userID, friendID, rights);
                 }

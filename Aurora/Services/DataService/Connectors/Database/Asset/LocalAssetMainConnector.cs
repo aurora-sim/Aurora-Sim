@@ -216,7 +216,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
-                    return (byte[]) dr["data"];
+                    return (byte[])dr["data"];
                 MainConsole.Instance.Warn("[LocalAssetDatabase] GetData(" + uuid + ") - Asset " + uuid + " was not found.");
             }
             catch (Exception e)
@@ -239,8 +239,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     AssetBase asset = GetAsset(id, false);
                     if (asset == null)
                         return false;
-                    if ((int) (asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
-                        (int) (asset.Flags & AssetFlags.Deletable) != 0)
+                    if ((int)(asset.Flags & AssetFlags.Maptile) != 0 || //Depriated, use Deletable instead
+                        (int)(asset.Flags & AssetFlags.Deletable) != 0)
                         ignoreFlags = true;
                 }
                 if (ignoreFlags)
@@ -266,9 +266,9 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                   };
             string Flags = dr["asset_flags"].ToString();
             if (Flags != "")
-                asset.Flags = (AssetFlags) int.Parse(Flags);
+                asset.Flags = (AssetFlags)int.Parse(Flags);
             string type = dr["assetType"].ToString();
-            asset.TypeAsset = (AssetType) int.Parse(type);
+            asset.TypeAsset = (AssetType)int.Parse(type);
             UUID creator;
 
             if (UUID.TryParse(dr["creatorID"].ToString(), out creator))
@@ -278,7 +278,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 object d = dr["data"];
                 if ((d != null) && (d.ToString() != ""))
                 {
-                    asset.Data = (Byte[]) d;
+                    asset.Data = (Byte[])d;
                     asset.MetaOnly = false;
                 }
                 else

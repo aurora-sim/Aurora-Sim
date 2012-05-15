@@ -195,7 +195,7 @@ namespace Aurora.Framework.Serialization.External
         public static string Serialize(RegionSettings settings)
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
             xtw.WriteStartDocument();
 
             xtw.WriteStartElement("RegionSettings");

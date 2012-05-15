@@ -46,7 +46,7 @@ namespace Aurora.Framework
         /// </summary>
         private const bool DEBUG = true;
 
-        private static readonly ICollection<string> allowableSchemes = new List<string> {"http", "https"};
+        private static readonly ICollection<string> allowableSchemes = new List<string> { "http", "https" };
 
         /// <summary>
         ///   Creates an HttpWebRequest that is hardened against malicious
@@ -58,7 +58,7 @@ namespace Aurora.Framework
         /// <exception cref = "ArgumentException">If uri is unsafe</exception>
         public static HttpWebRequest Create(Uri uri)
         {
-            return Create(uri, DEBUG, 1000*5, 1000*20, 10);
+            return Create(uri, DEBUG, 1000 * 5, 1000 * 20, 10);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Aurora.Framework
             if (!IsUriAllowable(uri, allowLoopback))
                 throw new ArgumentException("Uri " + uri + " was rejected");
 
-            HttpWebRequest httpWebRequest = (HttpWebRequest) WebRequest.Create(uri);
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(uri);
             httpWebRequest.MaximumAutomaticRedirections = maximumRedirects;
             httpWebRequest.ReadWriteTimeout = readWriteTimeoutMS;
             httpWebRequest.Timeout = timeoutMS;

@@ -82,7 +82,7 @@ namespace Aurora.Services.DataService
             values[0] = info.UserID;
             values[1] = info.CurrentRegionID;
             values[2] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Convert to binary so that it can be converted easily
+            //Convert to binary so that it can be converted easily
             values[3] = info.IsOnline ? 1 : 0;
             values[4] = Util.ToUnixTime(info.LastLogin);
             values[5] = Util.ToUnixTime(info.LastLogout);
@@ -115,7 +115,7 @@ namespace Aurora.Services.DataService
             values["CurrentPosition"] = lastPosition;
             values["CurrentLookat"] = lastLookAt;
             values["LastSeen"] = Util.ToUnixTime(DateTime.Now.ToUniversalTime());
-                //Set the last seen and is online since if the user is moving, they are sending updates
+            //Set the last seen and is online since if the user is moving, they are sending updates
             values["IsOnline"] = 1;
 
             Update(userID, values);
@@ -194,7 +194,7 @@ namespace Aurora.Services.DataService
             if (checkOnlineStatus && m_checkLastSeen && user.IsOnline && (timeLastSeen.AddHours(1) < timeNow))
             {
                 if (user.CurrentRegionID != AgentInfoHelpers.LOGIN_STATUS_LOCKED)
-                    //The login status can be locked with this so that it cannot be changed with this method
+                //The login status can be locked with this so that it cannot be changed with this method
                 {
                     MainConsole.Instance.Warn("[UserInfoService]: Found a user (" + user.UserID +
                                ") that was not seen within the last hour " +
@@ -218,7 +218,7 @@ namespace Aurora.Services.DataService
             filter.orGreaterThanEqFilters["LastSeen"] = now;
             if (stillOnline)
             {
-//                filter.andGreaterThanFilters["LastLogout"] = now;
+                //                filter.andGreaterThanFilters["LastLogout"] = now;
                 filter.andFilters["IsOnline"] = "1";
             }
 
@@ -234,7 +234,7 @@ namespace Aurora.Services.DataService
             filter.orGreaterThanEqFilters["LastSeen"] = now;
             if (stillOnline)
             {
-//                filter.andGreaterThanFilters["LastLogout"] = now;
+                //                filter.andGreaterThanFilters["LastLogout"] = now;
                 filter.andFilters["IsOnline"] = "1";
             }
 

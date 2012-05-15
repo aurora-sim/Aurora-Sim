@@ -62,7 +62,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("webLoginKey", ColumnTypes.String255),
                 ColDef("accountType", ColumnTypes.Char32)
             ), IndexDefs(
-                IndexDef(new string[1]{ "UUID" }, IndexType.Primary)
+                IndexDef(new string[1] { "UUID" }, IndexType.Primary)
             ));
 
             AddSchema("tokens", ColDefs(
@@ -70,7 +70,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("token", ColumnTypes.String255),
                 ColDef("validity", ColumnTypes.Date)
             ), IndexDefs(
-                IndexDef(new string[2]{ "UUID", "token" }, IndexType.Primary)
+                IndexDef(new string[2] { "UUID", "token" }, IndexType.Primary)
             ));
         }
 

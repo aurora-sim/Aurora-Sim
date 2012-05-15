@@ -48,15 +48,18 @@ namespace Aurora.Framework
         private object sync_root;
         private int version;
 
-        public MinHeap() : this(DEFAULT_CAPACITY, Comparer<T>.Default)
+        public MinHeap()
+            : this(DEFAULT_CAPACITY, Comparer<T>.Default)
         {
         }
 
-        public MinHeap(int capacity) : this(capacity, Comparer<T>.Default)
+        public MinHeap(int capacity)
+            : this(capacity, Comparer<T>.Default)
         {
         }
 
-        public MinHeap(IComparer<T> comparer) : this(DEFAULT_CAPACITY, comparer)
+        public MinHeap(IComparer<T> comparer)
+            : this(DEFAULT_CAPACITY, comparer)
         {
         }
 
@@ -65,7 +68,8 @@ namespace Aurora.Framework
         {
         }
 
-        public MinHeap(Comparison<T> comparison) : this(DEFAULT_CAPACITY, comparison)
+        public MinHeap(Comparison<T> comparison)
+            : this(DEFAULT_CAPACITY, comparison)
         {
         }
 
@@ -249,9 +253,9 @@ namespace Aurora.Framework
             HeapItem item = this.items[index];
             int current, parent;
 
-            for (current = index, parent = (current - 1)/2;
+            for (current = index, parent = (current - 1) / 2;
                  (current > 0) && (this.comparison(this.items[parent].value, item.value)) > 0;
-                 current = parent, parent = (current - 1)/2)
+                 current = parent, parent = (current - 1) / 2)
             {
                 Set(this.items[parent], current);
             }
@@ -270,9 +274,9 @@ namespace Aurora.Framework
             HeapItem item = this.items[index];
             int current, child;
 
-            for (current = index, child = (2*current) + 1;
-                 current < this.size/2;
-                 current = child, child = (2*current) + 1)
+            for (current = index, child = (2 * current) + 1;
+                 current < this.size / 2;
+                 current = child, child = (2 * current) + 1)
             {
                 if ((child < this.size - 1) && this.comparison(this.items[child].value, this.items[child + 1].value) > 0)
                     ++child;
@@ -317,7 +321,7 @@ namespace Aurora.Framework
         {
             if (this.size == this.items.Length)
             {
-                int capacity = (int) ((this.items.Length*200L)/100L);
+                int capacity = (int)((this.items.Length * 200L) / 100L);
                 if (capacity < (this.items.Length + DEFAULT_CAPACITY))
                     capacity = this.items.Length + DEFAULT_CAPACITY;
                 Array.Resize(ref this.items, capacity);
@@ -346,7 +350,7 @@ namespace Aurora.Framework
 
         public void TrimExcess()
         {
-            int length = (int) (this.items.Length*0.9);
+            int length = (int)(this.items.Length * 0.9);
             if (this.size < length)
                 Array.Resize(ref this.items, Math.Min(this.size, DEFAULT_CAPACITY));
         }

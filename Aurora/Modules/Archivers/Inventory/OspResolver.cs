@@ -88,7 +88,7 @@ namespace Aurora.Modules.Archivers
             if (!ospa.StartsWith(OSPA_PREFIX))
                 return UUID.Zero;
 
-//            MainConsole.Instance.DebugFormat("[OSP RESOLVER]: Resolving {0}", ospa);
+            //            MainConsole.Instance.DebugFormat("[OSP RESOLVER]: Resolving {0}", ospa);
 
             string ospaMeat = ospa.Substring(OSPA_PREFIX.Length);
             string[] ospaTuples = ospaMeat.Split(OSPA_TUPLE_SEPARATOR_ARRAY);

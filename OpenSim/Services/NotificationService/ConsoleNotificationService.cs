@@ -52,7 +52,7 @@ namespace OpenSim.Services.NotificationService
             Notification not = new Notification()
             {
                 AlertLevel = level,
-                Message = new List<string>(new []{message}),
+                Message = new List<string>(new[] { message }),
                 Identifer = identifer,
                 DuplicateNotificationRequest = notificationCombiner
             };
@@ -80,7 +80,7 @@ namespace OpenSim.Services.NotificationService
                 if (MainConsole.Instance.Prompt("Do you want to remove this notification?", "yes", new List<string>(new[] { "yes", "no" })) == "yes")
                     notificationsToRemove.Add(not.Identifer);
             }
-            foreach(string ident in notificationsToRemove)
+            foreach (string ident in notificationsToRemove)
                 m_dicNotifications.Remove(ident);
         }
 

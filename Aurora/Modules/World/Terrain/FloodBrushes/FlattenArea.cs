@@ -41,9 +41,9 @@ namespace Aurora.Modules.Terrain.FloodBrushes
             float steps = 0;
 
             int x, y;
-            for (x = (int) west; x < (int) east; x++)
+            for (x = (int)west; x < (int)east; x++)
             {
-                for (y = (int) south; y < (int) north; y++)
+                for (y = (int)south; y < (int)north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
@@ -52,17 +52,17 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                 }
             }
 
-            float avg = sum/steps;
+            float avg = sum / steps;
 
-            float str = 0.1f*strength; // == 0.2 in the default client
+            float str = 0.1f * strength; // == 0.2 in the default client
 
-            for (x = (int) west; x < (int) east; x++)
+            for (x = (int)west; x < (int)east; x++)
             {
-                for (y = (int) south; y < (int) north; y++)
+                for (y = (int)south; y < (int)north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
-                    map[x, y] = (map[x, y]*(1 - str)) + (avg*str);
+                    map[x, y] = (map[x, y] * (1 - str)) + (avg * str);
                 }
             }
         }

@@ -39,7 +39,7 @@ namespace Aurora.Framework
         private UUID m_assetID;
         private int m_assetType;
         private uint m_basePermissions;
-        private int m_creationDate = (int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+        private int m_creationDate = (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
         private string m_creatorData = string.Empty;
         private string m_creatorId;
         private UUID m_creatorIdAsUuid = UUID.Zero;

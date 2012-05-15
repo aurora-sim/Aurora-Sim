@@ -164,24 +164,24 @@ namespace Aurora.Modules.Scripting
                 }
             }
 
-            RequestState state = new RequestState((HttpWebRequest) request, requestID);
+            RequestState state = new RequestState((HttpWebRequest)request, requestID);
             // IAsyncResult result = request.BeginGetResponse(new AsyncCallback(HttpRequestReturn), state);
             request.BeginGetResponse(HttpRequestReturn, state);
 
             TimeSpan t = (DateTime.UtcNow - new DateTime(1970, 1, 1));
-            state.TimeOfRequest = (int) t.TotalSeconds;
+            state.TimeOfRequest = (int)t.TotalSeconds;
         }
 
         private void HttpRequestReturn(IAsyncResult result)
         {
-            RequestState state = (RequestState) result.AsyncState;
+            RequestState state = (RequestState)result.AsyncState;
             WebRequest request = state.Request;
             Stream stream = null;
             byte[] imageJ2000 = new byte[0];
 
             try
             {
-                HttpWebResponse response = (HttpWebResponse) request.EndGetResponse(result);
+                HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(result);
                 if (response != null && response.StatusCode == HttpStatusCode.OK)
                 {
                     stream = response.GetResponseStream();

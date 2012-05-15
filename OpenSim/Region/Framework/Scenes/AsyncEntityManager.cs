@@ -35,7 +35,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        IScenePresence presence = (IScenePresence) entity;
+                        IScenePresence presence = (IScenePresence)entity;
                         m_presenceEntities.Add(presence.UUID, presence);
                         m_presenceEntitiesList.Add(presence);
                     }
@@ -72,7 +72,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        m_presenceEntitiesList.Remove((IScenePresence) entity);
+                        m_presenceEntitiesList.Remove((IScenePresence)entity);
                         m_presenceEntities.Remove(entity.UUID);
                     }
                 }
@@ -136,7 +136,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_objectEntities.ForEach(delegate(ISceneEntity entity)
                                                  {
                                                      //Add attachments as well, as they might be needed
-                                                     if ((entity.AbsolutePosition - pos).LengthSquared() < radius*radius ||
+                                                     if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius ||
                                                          entity.IsAttachment)
                                                          tmp.Add(entity);
                                                  });
@@ -150,7 +150,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_objectEntities.ForEach(delegate(ISceneEntity entity)
                                              {
                                                  //Add attachments as well, as they might be needed
-                                                 if ((entity.AbsolutePosition - pos).LengthSquared() < radius*radius ||
+                                                 if ((entity.AbsolutePosition - pos).LengthSquared() < radius * radius ||
                                                      entity.IsAttachment)
                                                      tmp.Add(entity);
                                              });

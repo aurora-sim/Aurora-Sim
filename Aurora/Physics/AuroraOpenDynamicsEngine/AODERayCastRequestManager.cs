@@ -187,7 +187,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool hitYN = false;
             uint hitConsumerID = 0;
             float distance = 999999999999f;
-            Vector3[] closestcontact = {new Vector3(99999f, 99999f, 99999f)};
+            Vector3[] closestcontact = { new Vector3(99999f, 99999f, 99999f) };
             Vector3 snormal = Vector3.Zero;
 
             // Find closest contact and object.
@@ -389,7 +389,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         ContactResult collisionresult = new ContactResult
                                                             {
-                                                                ConsumerID = ((AuroraODEPrim) p1).m_localID,
+                                                                ConsumerID = ((AuroraODEPrim)p1).m_localID,
                                                                 Pos =
                                                                     new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
                                                                                 contacts[i].pos.Z),
@@ -411,7 +411,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         ContactResult collisionresult = new ContactResult
                                                             {
-                                                                ConsumerID = ((AuroraODEPrim) p2).m_localID,
+                                                                ConsumerID = ((AuroraODEPrim)p2).m_localID,
                                                                 Pos =
                                                                     new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
                                                                                 contacts[i].pos.Z),

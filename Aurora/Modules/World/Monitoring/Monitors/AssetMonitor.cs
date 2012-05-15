@@ -126,7 +126,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
         {
             if (asset != null && asset.Data != null)
             {
-                if (asset.Type == (sbyte) AssetType.Texture)
+                if (asset.Type == (sbyte)AssetType.Texture)
                 {
                     texturesInCache++;
                     // This could have been a pull stat, though there was originally a nebulous idea to measure flow rates
@@ -189,9 +189,9 @@ Latest asset request time after cache miss: {4}s
 Blocked client requests for missing textures: {5}
 Asset service request failures: {6}" +
                     Environment.NewLine,
-                    AssetsInCache, Math.Round(AssetCacheMemoryUsage/1024.0),
-                    TexturesInCache, Math.Round(TextureCacheMemoryUsage/1024.0),
-                    assetRequestTimeAfterCacheMiss.Milliseconds/1000.0,
+                    AssetsInCache, Math.Round(AssetCacheMemoryUsage / 1024.0),
+                    TexturesInCache, Math.Round(TextureCacheMemoryUsage / 1024.0),
+                    assetRequestTimeAfterCacheMiss.Milliseconds / 1000.0,
                     BlockedMissingTextureRequests,
                     AssetServiceRequestFailures);
             return Value;

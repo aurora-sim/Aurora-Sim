@@ -147,7 +147,9 @@ namespace Aurora.Modules.Chat
         {
             return (from s in m_SceneList
                     select s.GetScenePresence(agentID)
-                    into presence where presence != null && !presence.IsChildAgent select presence.ControllingClient).
+                        into presence
+                        where presence != null && !presence.IsChildAgent
+                        select presence.ControllingClient).
                 FirstOrDefault();
         }
 
@@ -196,7 +198,7 @@ namespace Aurora.Modules.Chat
                 bool success = SynchronousRestObjectRequester.MakeRequest<GridInstantMessage, bool>(
                     "POST", m_RestURL + "/SaveMessage/", im);
 
-                if (im.dialog == (byte) InstantMessageDialog.MessageFromAgent)
+                if (im.dialog == (byte)InstantMessageDialog.MessageFromAgent)
                 {
                     IClientAPI client = FindClient(im.fromAgentID);
                     if (client == null)
@@ -205,7 +207,7 @@ namespace Aurora.Modules.Chat
                     client.SendInstantMessage(new GridInstantMessage(
                                                   null, im.toAgentID,
                                                   "System", im.fromAgentID,
-                                                  (byte) InstantMessageDialog.MessageFromAgent,
+                                                  (byte)InstantMessageDialog.MessageFromAgent,
                                                   "User is not logged in. " +
                                                   (success ? "Message saved." : "Message not saved"),
                                                   false, new Vector3()));

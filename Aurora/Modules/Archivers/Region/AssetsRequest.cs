@@ -45,7 +45,7 @@ namespace Aurora.Modules.Archivers
         ///   Timeout threshold if we still need assets or missing asset notifications but have stopped receiving them
         ///   from the asset service
         /// </value>
-        protected const int TIMEOUT = 60*1000;
+        protected const int TIMEOUT = 60 * 1000;
 
         /// <value>
         ///   If a timeout does occur, limit the amount of UUID information put to the console.
@@ -101,7 +101,7 @@ namespace Aurora.Modules.Archivers
             m_assetService = assetService;
             m_repliesRequired = uuids.Count;
 
-            m_requestCallbackTimer = new Timer(TIMEOUT) {AutoReset = false};
+            m_requestCallbackTimer = new Timer(TIMEOUT) { AutoReset = false };
             m_requestCallbackTimer.Elapsed += OnRequestCallbackTimeout;
         }
 
@@ -186,11 +186,11 @@ namespace Aurora.Modules.Archivers
         protected void PreAssetRequestCallback(string fetchedAssetID, object assetType, AssetBase fetchedAsset)
         {
             // Check for broken asset types and fix them with the AssetType gleaned by UuidGatherer
-            if (fetchedAsset != null && fetchedAsset.Type == (sbyte) AssetType.Unknown)
+            if (fetchedAsset != null && fetchedAsset.Type == (sbyte)AssetType.Unknown)
             {
-                AssetType type = (AssetType) assetType;
+                AssetType type = (AssetType)assetType;
                 MainConsole.Instance.InfoFormat("[ARCHIVER]: Rewriting broken asset type for {0} to {1}", fetchedAsset.ID, type);
-                fetchedAsset.Type = (sbyte) type;
+                fetchedAsset.Type = (sbyte)type;
             }
 
             AssetRequestCallback(fetchedAssetID, this, fetchedAsset);
@@ -222,13 +222,13 @@ namespace Aurora.Modules.Archivers
 
                     if (asset != null)
                     {
-//                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Writing asset {0}", id);
+                        //                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Writing asset {0}", id);
                         m_foundAssetUuids.Add(asset.ID);
                         m_assetsArchiver.WriteAsset(asset);
                     }
                     else
                     {
-//                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Recording asset {0} as not found", id);
+                        //                        MainConsole.Instance.DebugFormat("[ARCHIVER]: Recording asset {0} as not found", id);
                         m_notFoundAssetUuids.Add(new UUID(id));
                     }
 

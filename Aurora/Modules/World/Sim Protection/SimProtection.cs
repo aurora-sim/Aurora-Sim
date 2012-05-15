@@ -69,7 +69,7 @@ namespace Aurora.Modules.SimProtection
         {
             if (!source.Configs.Contains("Protection"))
                 return;
-            TimeAfterToReenableScripts = TimeAfterToReenablePhysics*2;
+            TimeAfterToReenableScripts = TimeAfterToReenablePhysics * 2;
             IConfig config = source.Configs["Protection"];
             m_Enabled = config.GetBoolean("Enabled", false);
             BaseRateFramesPerSecond = config.GetFloat("BaseRateFramesPerSecond", 45);
@@ -122,7 +122,7 @@ namespace Aurora.Modules.SimProtection
                 MainConsole.Instance.Warn("[SimProtection]: Cannot be used as SimStatsReporter does not exist.");
                 return;
             }
-            TimerToCheckHeartbeat = new Timer {Interval = TimeBetweenChecks*1000*60};
+            TimerToCheckHeartbeat = new Timer { Interval = TimeBetweenChecks * 1000 * 60 };
             //minutes
             TimerToCheckHeartbeat.Elapsed += OnCheck;
             TimerToCheckHeartbeat.Start();
@@ -140,14 +140,14 @@ namespace Aurora.Modules.SimProtection
         {
             IEstateModule mod = m_scene.RequestModuleInterface<IEstateModule>();
             if (AllowDisableScripts &&
-                m_statsReporter.LastReportedSimFPS < BaseRateFramesPerSecond*(PercentToBeginShutDownOfServices/100) &&
+                m_statsReporter.LastReportedSimFPS < BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
                 m_statsReporter.LastReportedSimFPS != 0)
             {
                 //Less than the percent to start shutting things down... Lets kill some stuff
                 if (mod != null)
                     mod.SetSceneCoreDebug(false, m_scene.RegionInfo.RegionSettings.DisableCollisions,
                                           m_scene.RegionInfo.RegionSettings.DisablePhysics);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
                 DisabledScriptStartTime = DateTime.Now;
             }
             if (m_scene.RegionInfo.RegionSettings.DisableScripts &&
@@ -160,7 +160,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(true, m_scene.RegionInfo.RegionSettings.DisableCollisions,
                                           m_scene.RegionInfo.RegionSettings.DisablePhysics);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
 
             if (m_statsReporter.LastReportedSimFPS == 0 && KillSimOnZeroFPS)
@@ -175,17 +175,17 @@ namespace Aurora.Modules.SimProtection
 
             float[] stats =
                 m_scene.RequestModuleInterface<IMonitorModule>().GetRegionStats(m_scene.RegionInfo.RegionID.ToString());
-            if (stats[2] /*PhysicsFPS*/< BaseRateFramesPerSecond*(PercentToBeginShutDownOfServices/100) &&
+            if (stats[2] /*PhysicsFPS*/< BaseRateFramesPerSecond * (PercentToBeginShutDownOfServices / 100) &&
                 stats[2] != 0 &&
                 AllowDisablePhysics &&
                 !m_scene.RegionInfo.RegionSettings.DisablePhysics)
-                //Don't redisable physics again, physics will be frozen at the last FPS
+            //Don't redisable physics again, physics will be frozen at the last FPS
             {
                 DisabledPhysicsStartTime = DateTime.Now;
                 if (mod != null)
                     mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts,
                                           m_scene.RegionInfo.RegionSettings.DisableCollisions, false);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
 
             if (m_scene.RegionInfo.RegionSettings.DisablePhysics &&
@@ -198,7 +198,7 @@ namespace Aurora.Modules.SimProtection
                 if (mod != null)
                     mod.SetSceneCoreDebug(m_scene.RegionInfo.RegionSettings.DisableScripts,
                                           m_scene.RegionInfo.RegionSettings.DisableCollisions, true);
-                        //These are opposite of what you want the value to be... go figure
+                //These are opposite of what you want the value to be... go figure
             }
         }
 

@@ -62,7 +62,7 @@ namespace Aurora.Modules.Archivers
         public string SerializeGroupToXml2(ISceneEntity grp)
         {
             if (grp is SceneObjectGroup)
-                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup) grp);
+                return SceneXmlLoader.SaveGroupToXml2((SceneObjectGroup)grp);
             return "";
         }
 

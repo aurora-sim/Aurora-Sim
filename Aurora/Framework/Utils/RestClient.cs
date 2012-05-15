@@ -244,17 +244,17 @@ namespace Aurora.Framework
         {
             lock (_lock)
             {
-                _request = (HttpWebRequest) WebRequest.Create(buildUri());
+                _request = (HttpWebRequest)WebRequest.Create(buildUri());
                 _request.KeepAlive = false;
                 _request.ContentType = "application/xml";
                 _request.Timeout = 200000;
                 _request.Method = RequestMethod;
                 _asyncException = null;
 
-//                IAsyncResult responseAsyncResult = _request.BeginGetResponse(new AsyncCallback(ResponseIsReadyDelegate), _request);
+                //                IAsyncResult responseAsyncResult = _request.BeginGetResponse(new AsyncCallback(ResponseIsReadyDelegate), _request);
                 try
                 {
-                    _response = (HttpWebResponse) _request.GetResponse();
+                    _response = (HttpWebResponse)_request.GetResponse();
                 }
                 catch (WebException e)
                 {
@@ -285,7 +285,7 @@ namespace Aurora.Framework
                 // this line implements the timeout, if there is a timeout, the callback fires and the request becomes aborted
                 //ThreadPool.RegisterWaitForSingleObject(responseAsyncResult.AsyncWaitHandle, new WaitOrTimerCallback(TimeoutCallback), _request, DefaultTimeout, true);
 
-//                _allDone.WaitOne();
+                //                _allDone.WaitOne();
                 if (_response != null)
                     _response.Close();
                 if (_asyncException != null)
@@ -303,7 +303,7 @@ namespace Aurora.Framework
 
         public Stream Request(Stream src)
         {
-            _request = (HttpWebRequest) WebRequest.Create(buildUri());
+            _request = (HttpWebRequest)WebRequest.Create(buildUri());
             _request.KeepAlive = false;
             _request.ContentType = "application/xml";
             _request.Timeout = 900000;
@@ -327,9 +327,9 @@ namespace Aurora.Framework
                 length = src.Read(buf, 0, 1024);
             }
 
-            _response = (HttpWebResponse) _request.GetResponse();
+            _response = (HttpWebResponse)_request.GetResponse();
 
-//            IAsyncResult responseAsyncResult = _request.BeginGetResponse(new AsyncCallback(ResponseIsReadyDelegate), _request);
+            //            IAsyncResult responseAsyncResult = _request.BeginGetResponse(new AsyncCallback(ResponseIsReadyDelegate), _request);
 
             // TODO! Implement timeout, without killing the server
             // this line implements the timeout, if there is a timeout, the callback fires and the request becomes aborted
@@ -352,7 +352,7 @@ namespace Aurora.Framework
 
         public Stream EndRequest(IAsyncResult asyncResult)
         {
-            AsyncResult<Stream> ar = (AsyncResult<Stream>) asyncResult;
+            AsyncResult<Stream> ar = (AsyncResult<Stream>)asyncResult;
 
             // Wait for operation to complete, then return result or
             // throw exception
@@ -362,7 +362,7 @@ namespace Aurora.Framework
         private void RequestHelper(Object asyncResult)
         {
             // We know that it's really an AsyncResult<DateTime> object
-            AsyncResult<Stream> ar = (AsyncResult<Stream>) asyncResult;
+            AsyncResult<Stream> ar = (AsyncResult<Stream>)asyncResult;
             try
             {
                 // Perform the operation; if sucessful set the result
@@ -388,7 +388,7 @@ namespace Aurora.Framework
         {
             try
             {
-                Stream s = (Stream) ar.AsyncState;
+                Stream s = (Stream)ar.AsyncState;
                 int read = s.EndRead(ar);
 
                 if (read > 0)

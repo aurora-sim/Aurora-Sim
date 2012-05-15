@@ -23,7 +23,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             DataManager.DataManager.RegisterPlugin(this);
 
             string path = Util.BasePathCombine(System.IO.Path.Combine("data", "OpenRegionSettingsPage.html"));
-            if(System.IO.File.Exists(path))
+            if (System.IO.File.Exists(path))
                 HTMLPage = System.IO.File.ReadAllText(path);
         }
 
@@ -55,7 +55,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         public string AddOpenRegionSettingsHTMLPage(UUID regionID)
         {
-            Dictionary<string, string> vars = new Dictionary<string,string>();
+            Dictionary<string, string> vars = new Dictionary<string, string>();
             IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {
@@ -78,10 +78,10 @@ namespace Aurora.Modules.OpenRegionSettingsModule
                 vars.Add("Allow Physical Prims", settings.AllowPhysicalPrims ? "checked" : "");
                 vars.Add("Enable Teen Mode", settings.EnableTeenMode ? "checked" : "");
                 vars.Add("Enforce Max Build Constraints", settings.ClampPrimSizes ? "checked" : "");
-                return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) => 
+                return CSHTMLCreator.AddHTMLPage(HTMLPage, "", "OpenRegionSettings", vars, (newVars) =>
                 {
                     ParseUpdatedList(regionID, newVars);
-                    return AddOpenRegionSettingsHTMLPage(regionID); 
+                    return AddOpenRegionSettingsHTMLPage(regionID);
                 });
             }
             return "";

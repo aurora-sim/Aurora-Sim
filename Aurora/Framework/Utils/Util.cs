@@ -1089,25 +1089,25 @@ namespace Aurora.Framework
             {
                 if (!fieldInfo.IsStatic)
                 {
-                    if (fieldInfo.FieldType == typeof (String))
+                    if (fieldInfo.FieldType == typeof(String))
                     {
-                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass, config.Get(fieldInfo.Name, (string)fieldInfo.GetValue(settingsClass)));
                     }
-                    else if (fieldInfo.FieldType == typeof (Boolean))
+                    else if (fieldInfo.FieldType == typeof(Boolean))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass, config.GetBoolean(fieldInfo.Name, (bool)fieldInfo.GetValue(settingsClass)));
                     }
-                    else if (fieldInfo.FieldType == typeof (Int32))
+                    else if (fieldInfo.FieldType == typeof(Int32))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass, config.GetInt(fieldInfo.Name, (int)fieldInfo.GetValue(settingsClass)));
                     }
-                    else if (fieldInfo.FieldType == typeof (Single))
+                    else if (fieldInfo.FieldType == typeof(Single))
                     {
-                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float) fieldInfo.GetValue(settingsClass)));
+                        fieldInfo.SetValue(settingsClass, config.GetFloat(fieldInfo.Name, (float)fieldInfo.GetValue(settingsClass)));
                     }
-                    else if (fieldInfo.FieldType == typeof (UInt32))
+                    else if (fieldInfo.FieldType == typeof(UInt32))
                     {
-                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint) fieldInfo.GetValue(settingsClass)).ToString())));
+                        fieldInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(fieldInfo.Name, ((uint)fieldInfo.GetValue(settingsClass)).ToString())));
                     }
                 }
             }
@@ -1117,25 +1117,25 @@ namespace Aurora.Framework
             {
                 if ((propInfo.CanRead) && (propInfo.CanWrite))
                 {
-                    if (propInfo.PropertyType == typeof (String))
+                    if (propInfo.PropertyType == typeof(String))
                     {
-                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass, config.Get(propInfo.Name, (string)propInfo.GetValue(settingsClass, null)), null);
                     }
-                    else if (propInfo.PropertyType == typeof (Boolean))
+                    else if (propInfo.PropertyType == typeof(Boolean))
                     {
-                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass, config.GetBoolean(propInfo.Name, (bool)propInfo.GetValue(settingsClass, null)), null);
                     }
-                    else if (propInfo.PropertyType == typeof (Int32))
+                    else if (propInfo.PropertyType == typeof(Int32))
                     {
-                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass, config.GetInt(propInfo.Name, (int)propInfo.GetValue(settingsClass, null)), null);
                     }
-                    else if (propInfo.PropertyType == typeof (Single))
+                    else if (propInfo.PropertyType == typeof(Single))
                     {
-                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float) propInfo.GetValue(settingsClass, null)), null);
+                        propInfo.SetValue(settingsClass, config.GetFloat(propInfo.Name, (float)propInfo.GetValue(settingsClass, null)), null);
                     }
-                    if (propInfo.PropertyType == typeof (UInt32))
+                    if (propInfo.PropertyType == typeof(UInt32))
                     {
-                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint) propInfo.GetValue(settingsClass, null)).ToString())), null);
+                        propInfo.SetValue(settingsClass, Convert.ToUInt32(config.Get(propInfo.Name, ((uint)propInfo.GetValue(settingsClass, null)).ToString())), null);
                     }
                 }
             }
@@ -1765,7 +1765,7 @@ namespace Aurora.Framework
                 }
                 return list;
             }
-            
+
             var possType = Activator.CreateInstance(PossibleArrayType);
             if (possType is IDataTransferable)
             {
@@ -1799,7 +1799,7 @@ namespace Aurora.Framework
         {
             Dictionary<A, B> newList = new Dictionary<A, B>();
             return newList;
-        }   
+        }
 
         public static void UlongToInts(ulong regionHandle, out int x, out int y)
         {
@@ -2107,7 +2107,7 @@ namespace Aurora.Framework
     {
         private static bool m_noInternetConnection;
         private static int m_nextInternetConnectionCheck;
-        private static bool useLocalhostLoopback=false;
+        private static bool useLocalhostLoopback = false;
         private static readonly ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
 
         public static IPEndPoint ResolveEndPoint(string hostName, int port)
@@ -2426,7 +2426,7 @@ namespace Aurora.Framework
                 {
                     if (host.AddressFamily == AddressFamily.InterNetwork)
                     {
-                        m_dnsCache.Add(dnsAddress, host, 30*60 /*30mins*/);
+                        m_dnsCache.Add(dnsAddress, host, 30 * 60 /*30mins*/);
                         return host;
                     }
                 }
@@ -2591,7 +2591,7 @@ namespace Aurora.Framework
             foreach (object o in array)
             {
                 OSD osd = Util.MakeOSD(o, o.GetType());
-                if(osd != null)
+                if (osd != null)
                     list.Add(osd);
             }
             return list;
@@ -2641,7 +2641,7 @@ namespace Aurora.Framework
             else
                 EmitBoxIfNeeded(il, method.ReturnType);
             il.Emit(OpCodes.Ret);
-            return dynamicMethod.Invoke(null, new object[2] {invokeClass, invokeParameters });
+            return dynamicMethod.Invoke(null, new object[2] { invokeClass, invokeParameters });
             /*FastInvokeHandler invoder =
               (FastInvokeHandler)dynamicMethod.CreateDelegate(
               typeof(FastInvokeHandler));

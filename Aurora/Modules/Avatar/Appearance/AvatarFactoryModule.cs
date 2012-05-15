@@ -222,7 +222,7 @@ textures 1
 
         private void EventManager_OnRemovePresence(IScenePresence presence)
         {
-            AvatarApperanceModule m = (AvatarApperanceModule) presence.RequestModuleInterface<IAvatarAppearanceModule>();
+            AvatarApperanceModule m = (AvatarApperanceModule)presence.RequestModuleInterface<IAvatarAppearanceModule>();
             if (m != null)
             {
                 m.Close();
@@ -391,7 +391,7 @@ textures 1
         /// <param name = "args"></param>
         public void AgentCachedTexturesRequest(IClientAPI client, List<CachedAgentArgs> args)
         {
-            List<CachedAgentArgs> resp = (from arg in args let cachedID = UUID.Zero select new CachedAgentArgs {ID = cachedID, TextureIndex = arg.TextureIndex}).ToList();
+            List<CachedAgentArgs> resp = (from arg in args let cachedID = UUID.Zero select new CachedAgentArgs { ID = cachedID, TextureIndex = arg.TextureIndex }).ToList();
 
             //AvatarData ad = m_scene.AvatarService.GetAvatar(client.AgentId);
             //Send all with UUID zero for now so that we don't confuse the client about baked textures...
@@ -430,7 +430,7 @@ textures 1
             // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance send for {0}", agentid);
 
             // 10000 ticks per millisecond, 1000 milliseconds per second
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_sendtime*1000*10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_sendtime * 1000 * 10000);
             lock (m_sendqueue)
             {
                 m_sendqueue[agentid] = timestamp;
@@ -443,7 +443,7 @@ textures 1
             // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue appearance save for {0}", agentid);
 
             // 10000 ticks per millisecond, 1000 milliseconds per second
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime*1000*10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             lock (m_savequeue)
             {
                 IScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -466,7 +466,7 @@ textures 1
             // MainConsole.Instance.WarnFormat("[AVFACTORY]: Queue initial appearance send for {0}", agentid);
 
             // 10000 ticks per millisecond, 1000 milliseconds per second
-            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime*1000*10000);
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             lock (m_initialsendqueue)
             {
                 IScenePresence sp = m_scene.GetScenePresence(agentid);
@@ -692,8 +692,8 @@ textures 1
                         wear.ItemID = module.DefaultUnderpants;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
                                                      {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
+                                                         InvType = (int)InventoryType.Wearable,
+                                                         AssetType = (int)AssetType.Clothing,
                                                          Name = "Default Underpants",
                                                          Folder =
                                                              m_scene.InventoryService.GetFolderForType(client.AgentId,
@@ -714,8 +714,8 @@ textures 1
                         NeedsRebake = true;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
                                                      {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
+                                                         InvType = (int)InventoryType.Wearable,
+                                                         AssetType = (int)AssetType.Clothing,
                                                          Name = "Default Underpants",
                                                          Folder =
                                                              m_scene.InventoryService.GetFolderForType(client.AgentId,
@@ -731,7 +731,7 @@ textures 1
                         {
                             m_underPantsUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underPantsUUID, "Default Underpants", AssetType.Clothing,
-                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderPants)};
+                                                            UUID.Zero) { Data = Utils.StringToBytes(m_defaultUnderPants) };
                             asset.FillHash();
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underPantsUUID = asset.ID;
@@ -748,8 +748,8 @@ textures 1
                         wear.ItemID = module.DefaultUndershirt;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
                                                      {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
+                                                         InvType = (int)InventoryType.Wearable,
+                                                         AssetType = (int)AssetType.Clothing,
                                                          Name = "Default Undershirt",
                                                          Folder =
                                                              m_scene.InventoryService.GetFolderForType(client.AgentId,
@@ -770,8 +770,8 @@ textures 1
                         NeedsRebake = true;
                         InventoryItemBase item = new InventoryItemBase(UUID.Random())
                                                      {
-                                                         InvType = (int) InventoryType.Wearable,
-                                                         AssetType = (int) AssetType.Clothing,
+                                                         InvType = (int)InventoryType.Wearable,
+                                                         AssetType = (int)AssetType.Clothing,
                                                          Name = "Default Undershirt",
                                                          Folder =
                                                              m_scene.InventoryService.GetFolderForType(client.AgentId,
@@ -787,7 +787,7 @@ textures 1
                         {
                             m_underShirtUUID = UUID.Random();
                             AssetBase asset = new AssetBase(m_underShirtUUID, "Default Undershirt", AssetType.Clothing,
-                                                            UUID.Zero) {Data = Utils.StringToBytes(m_defaultUnderShirt)};
+                                                            UUID.Zero) { Data = Utils.StringToBytes(m_defaultUnderShirt) };
                             asset.FillHash();
                             asset.ID = m_scene.AssetService.Store(asset);
                             m_underShirtUUID = asset.ID;
@@ -890,7 +890,7 @@ textures 1
 
                     if (baseItem != null)
                     {
-                        if (baseItem.AssetType == (int) AssetType.Link)
+                        if (baseItem.AssetType == (int)AssetType.Link)
                         {
                             baseItem = new InventoryItemBase(baseItem.AssetID, userID);
                             baseItem = invService.GetItem(baseItem);
@@ -901,7 +901,7 @@ textures 1
                     {
                         MainConsole.Instance.ErrorFormat(
                             "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
-                            appearance.Wearables[i][j].ItemID, (WearableType) i);
+                            appearance.Wearables[i][j].ItemID, (WearableType)i);
 
                         appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
                         appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID,
@@ -946,7 +946,7 @@ textures 1
 
             if (cmds.Length != 5)
             {
-                if(MainConsole.Instance.ConsoleScene != null)
+                if (MainConsole.Instance.ConsoleScene != null)
                     MainConsole.Instance.Info("Wrong number of commands.");
                 return;
             }
@@ -1128,7 +1128,7 @@ textures 1
                     //Send everyone to me!
                     SendOtherAgentsAvatarDataToMe();
                     //Check to make sure that we have sent all the appearance info 10 seconds later
-                    Timer t = new Timer(10*1000);
+                    Timer t = new Timer(10 * 1000);
                     t.Elapsed += CheckToMakeSureWearablesHaveBeenSent;
                     t.AutoReset = false;
                     t.Start();
