@@ -62,7 +62,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("HomePosition", ColumnTypes.String16),
                 ColDef("HomeLookat", ColumnTypes.String16)
             ), IndexDefs(
-                IndexDef(new string[1]{ "UserID" }, IndexType.Primary)
+                IndexDef(new string[1] { "UserID" }, IndexType.Primary)
             ));
         }
 

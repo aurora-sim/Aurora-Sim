@@ -242,7 +242,7 @@ namespace Aurora.DataManager.Migration
                     type.Type = ColumnType.Unknown;
                     break;
             }
-            return new ColumnDefinition {Name = name, Type = type};
+            return new ColumnDefinition { Name = name, Type = type };
         }
 
         protected IndexDefinition[] IndexDefs(params IndexDefinition[] defs)

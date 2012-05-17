@@ -523,8 +523,8 @@ namespace OpenSim.Data.SQLite
                 }
             }
 
-//			MainConsole.Instance.DebugFormat(
-//			    "[SQLite REGION DB]: Found {0} items for {1} {2}", dbItemRows.Length, prim.Name, prim.UUID);
+            //			MainConsole.Instance.DebugFormat(
+            //			    "[SQLite REGION DB]: Found {0} items for {1} {2}", dbItemRows.Length, prim.Name, prim.UUID);
 
             prim.Inventory.RestoreInventoryItems(inventory);
         }
@@ -573,7 +573,7 @@ namespace OpenSim.Data.SQLite
                 {
                     cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SQLiteParameter(":Revision", revision));
-                    byte[] heightmap = new byte[ter.Length*sizeof (short)];
+                    byte[] heightmap = new byte[ter.Length * sizeof(short)];
                     int ii = 0;
                     foreach (short t in ter)
                     {
@@ -630,7 +630,7 @@ namespace OpenSim.Data.SQLite
                 {
                     cmd.Parameters.Add(new SQLiteParameter(":RegionUUID", regionID.ToString()));
                     cmd.Parameters.Add(new SQLiteParameter(":Revision", revision));
-                    byte[] waterheightmap = new byte[water.Length*sizeof (short)];
+                    byte[] waterheightmap = new byte[water.Length * sizeof(short)];
                     int ii = 0;
                     foreach (short t in water)
                     {
@@ -836,9 +836,9 @@ namespace OpenSim.Data.SQLite
         {
             DataTable terrain = new DataTable("terrain");
 
-            createCol(terrain, "RegionUUID", typeof (String));
-            createCol(terrain, "Revision", typeof (Int32));
-            createCol(terrain, "Heightfield", typeof (Byte[]));
+            createCol(terrain, "RegionUUID", typeof(String));
+            createCol(terrain, "Revision", typeof(Int32));
+            createCol(terrain, "Heightfield", typeof(Byte[]));
 
             return terrain;
         }
@@ -850,45 +850,45 @@ namespace OpenSim.Data.SQLite
         private DataTable createLandTable()
         {
             DataTable land = new DataTable("land");
-            createCol(land, "UUID", typeof (String));
-            createCol(land, "RegionUUID", typeof (String));
-            createCol(land, "LocalLandID", typeof (UInt32));
+            createCol(land, "UUID", typeof(String));
+            createCol(land, "RegionUUID", typeof(String));
+            createCol(land, "LocalLandID", typeof(UInt32));
 
             // Bitmap is a byte[512]
-            createCol(land, "Bitmap", typeof (Byte[]));
+            createCol(land, "Bitmap", typeof(Byte[]));
 
-            createCol(land, "Name", typeof (String));
-            createCol(land, "Desc", typeof (String));
-            createCol(land, "OwnerUUID", typeof (String));
-            createCol(land, "IsGroupOwned", typeof (Boolean));
-            createCol(land, "Area", typeof (Int32));
-            createCol(land, "AuctionID", typeof (Int32)); //Unemplemented
-            createCol(land, "Category", typeof (Int32)); //Enum OpenMetaverse.Parcel.ParcelCategory
-            createCol(land, "ClaimDate", typeof (Int32));
-            createCol(land, "ClaimPrice", typeof (Int32));
-            createCol(land, "GroupUUID", typeof (string));
-            createCol(land, "SalePrice", typeof (Int32));
-            createCol(land, "LandStatus", typeof (Int32)); //Enum. OpenMetaverse.Parcel.ParcelStatus
-            createCol(land, "LandFlags", typeof (UInt32));
-            createCol(land, "LandingType", typeof (Byte));
-            createCol(land, "MediaAutoScale", typeof (Byte));
-            createCol(land, "MediaTextureUUID", typeof (String));
-            createCol(land, "MediaURL", typeof (String));
-            createCol(land, "MusicURL", typeof (String));
-            createCol(land, "PassHours", typeof (Double));
-            createCol(land, "PassPrice", typeof (UInt32));
-            createCol(land, "SnapshotUUID", typeof (String));
-            createCol(land, "UserLocationX", typeof (Double));
-            createCol(land, "UserLocationY", typeof (Double));
-            createCol(land, "UserLocationZ", typeof (Double));
-            createCol(land, "UserLookAtX", typeof (Double));
-            createCol(land, "UserLookAtY", typeof (Double));
-            createCol(land, "UserLookAtZ", typeof (Double));
-            createCol(land, "AuthbuyerID", typeof (String));
-            createCol(land, "OtherCleanTime", typeof (Int32));
-            createCol(land, "Dwell", typeof (Int32));
+            createCol(land, "Name", typeof(String));
+            createCol(land, "Desc", typeof(String));
+            createCol(land, "OwnerUUID", typeof(String));
+            createCol(land, "IsGroupOwned", typeof(Boolean));
+            createCol(land, "Area", typeof(Int32));
+            createCol(land, "AuctionID", typeof(Int32)); //Unemplemented
+            createCol(land, "Category", typeof(Int32)); //Enum OpenMetaverse.Parcel.ParcelCategory
+            createCol(land, "ClaimDate", typeof(Int32));
+            createCol(land, "ClaimPrice", typeof(Int32));
+            createCol(land, "GroupUUID", typeof(string));
+            createCol(land, "SalePrice", typeof(Int32));
+            createCol(land, "LandStatus", typeof(Int32)); //Enum. OpenMetaverse.Parcel.ParcelStatus
+            createCol(land, "LandFlags", typeof(UInt32));
+            createCol(land, "LandingType", typeof(Byte));
+            createCol(land, "MediaAutoScale", typeof(Byte));
+            createCol(land, "MediaTextureUUID", typeof(String));
+            createCol(land, "MediaURL", typeof(String));
+            createCol(land, "MusicURL", typeof(String));
+            createCol(land, "PassHours", typeof(Double));
+            createCol(land, "PassPrice", typeof(UInt32));
+            createCol(land, "SnapshotUUID", typeof(String));
+            createCol(land, "UserLocationX", typeof(Double));
+            createCol(land, "UserLocationY", typeof(Double));
+            createCol(land, "UserLocationZ", typeof(Double));
+            createCol(land, "UserLookAtX", typeof(Double));
+            createCol(land, "UserLookAtY", typeof(Double));
+            createCol(land, "UserLookAtZ", typeof(Double));
+            createCol(land, "AuthbuyerID", typeof(String));
+            createCol(land, "OtherCleanTime", typeof(Int32));
+            createCol(land, "Dwell", typeof(Int32));
 
-            land.PrimaryKey = new[] {land.Columns["UUID"]};
+            land.PrimaryKey = new[] { land.Columns["UUID"] };
 
             return land;
         }
@@ -900,9 +900,9 @@ namespace OpenSim.Data.SQLite
         private DataTable createLandAccessListTable()
         {
             DataTable landaccess = new DataTable("landaccesslist");
-            createCol(landaccess, "LandUUID", typeof (String));
-            createCol(landaccess, "AccessUUID", typeof (String));
-            createCol(landaccess, "Flags", typeof (UInt32));
+            createCol(landaccess, "LandUUID", typeof(String));
+            createCol(landaccess, "AccessUUID", typeof(String));
+            createCol(landaccess, "Flags", typeof(UInt32));
 
             return landaccess;
         }
@@ -910,45 +910,45 @@ namespace OpenSim.Data.SQLite
         private DataTable createRegionSettingsTable()
         {
             DataTable regionsettings = new DataTable("regionsettings");
-            createCol(regionsettings, "regionUUID", typeof (String));
-            createCol(regionsettings, "block_terraform", typeof (Int32));
-            createCol(regionsettings, "block_fly", typeof (Int32));
-            createCol(regionsettings, "allow_damage", typeof (Int32));
-            createCol(regionsettings, "restrict_pushing", typeof (Int32));
-            createCol(regionsettings, "allow_land_resell", typeof (Int32));
-            createCol(regionsettings, "allow_land_join_divide", typeof (Int32));
-            createCol(regionsettings, "block_show_in_search", typeof (Int32));
-            createCol(regionsettings, "agent_limit", typeof (Int32));
-            createCol(regionsettings, "object_bonus", typeof (Double));
-            createCol(regionsettings, "maturity", typeof (Int32));
-            createCol(regionsettings, "disable_scripts", typeof (Int32));
-            createCol(regionsettings, "disable_collisions", typeof (Int32));
-            createCol(regionsettings, "disable_physics", typeof (Int32));
-            createCol(regionsettings, "terrain_texture_1", typeof (String));
-            createCol(regionsettings, "terrain_texture_2", typeof (String));
-            createCol(regionsettings, "terrain_texture_3", typeof (String));
-            createCol(regionsettings, "terrain_texture_4", typeof (String));
-            createCol(regionsettings, "elevation_1_nw", typeof (Double));
-            createCol(regionsettings, "elevation_2_nw", typeof (Double));
-            createCol(regionsettings, "elevation_1_ne", typeof (Double));
-            createCol(regionsettings, "elevation_2_ne", typeof (Double));
-            createCol(regionsettings, "elevation_1_se", typeof (Double));
-            createCol(regionsettings, "elevation_2_se", typeof (Double));
-            createCol(regionsettings, "elevation_1_sw", typeof (Double));
-            createCol(regionsettings, "elevation_2_sw", typeof (Double));
-            createCol(regionsettings, "water_height", typeof (Double));
-            createCol(regionsettings, "terrain_raise_limit", typeof (Double));
-            createCol(regionsettings, "terrain_lower_limit", typeof (Double));
-            createCol(regionsettings, "use_estate_sun", typeof (Int32));
-            createCol(regionsettings, "sandbox", typeof (Int32));
-            createCol(regionsettings, "sunvectorx", typeof (Double));
-            createCol(regionsettings, "sunvectory", typeof (Double));
-            createCol(regionsettings, "sunvectorz", typeof (Double));
-            createCol(regionsettings, "fixed_sun", typeof (Int32));
-            createCol(regionsettings, "sun_position", typeof (Double));
-            createCol(regionsettings, "covenant", typeof (String));
-            createCol(regionsettings, "map_tile_ID", typeof (String));
-            regionsettings.PrimaryKey = new[] {regionsettings.Columns["regionUUID"]};
+            createCol(regionsettings, "regionUUID", typeof(String));
+            createCol(regionsettings, "block_terraform", typeof(Int32));
+            createCol(regionsettings, "block_fly", typeof(Int32));
+            createCol(regionsettings, "allow_damage", typeof(Int32));
+            createCol(regionsettings, "restrict_pushing", typeof(Int32));
+            createCol(regionsettings, "allow_land_resell", typeof(Int32));
+            createCol(regionsettings, "allow_land_join_divide", typeof(Int32));
+            createCol(regionsettings, "block_show_in_search", typeof(Int32));
+            createCol(regionsettings, "agent_limit", typeof(Int32));
+            createCol(regionsettings, "object_bonus", typeof(Double));
+            createCol(regionsettings, "maturity", typeof(Int32));
+            createCol(regionsettings, "disable_scripts", typeof(Int32));
+            createCol(regionsettings, "disable_collisions", typeof(Int32));
+            createCol(regionsettings, "disable_physics", typeof(Int32));
+            createCol(regionsettings, "terrain_texture_1", typeof(String));
+            createCol(regionsettings, "terrain_texture_2", typeof(String));
+            createCol(regionsettings, "terrain_texture_3", typeof(String));
+            createCol(regionsettings, "terrain_texture_4", typeof(String));
+            createCol(regionsettings, "elevation_1_nw", typeof(Double));
+            createCol(regionsettings, "elevation_2_nw", typeof(Double));
+            createCol(regionsettings, "elevation_1_ne", typeof(Double));
+            createCol(regionsettings, "elevation_2_ne", typeof(Double));
+            createCol(regionsettings, "elevation_1_se", typeof(Double));
+            createCol(regionsettings, "elevation_2_se", typeof(Double));
+            createCol(regionsettings, "elevation_1_sw", typeof(Double));
+            createCol(regionsettings, "elevation_2_sw", typeof(Double));
+            createCol(regionsettings, "water_height", typeof(Double));
+            createCol(regionsettings, "terrain_raise_limit", typeof(Double));
+            createCol(regionsettings, "terrain_lower_limit", typeof(Double));
+            createCol(regionsettings, "use_estate_sun", typeof(Int32));
+            createCol(regionsettings, "sandbox", typeof(Int32));
+            createCol(regionsettings, "sunvectorx", typeof(Double));
+            createCol(regionsettings, "sunvectory", typeof(Double));
+            createCol(regionsettings, "sunvectorz", typeof(Double));
+            createCol(regionsettings, "fixed_sun", typeof(Int32));
+            createCol(regionsettings, "sun_position", typeof(Double));
+            createCol(regionsettings, "covenant", typeof(String));
+            createCol(regionsettings, "map_tile_ID", typeof(String));
+            regionsettings.PrimaryKey = new[] { regionsettings.Columns["regionUUID"] };
             return regionsettings;
         }
 
@@ -1097,7 +1097,7 @@ namespace OpenSim.Data.SQLite
                         prim.TouchName = o[i].ToString();
                         break;
                     case "ObjectFlags":
-                        prim.Flags = (PrimFlags) Convert.ToUInt32(o[i].ToString());
+                        prim.Flags = (PrimFlags)Convert.ToUInt32(o[i].ToString());
                         break;
                     case "OwnerMask":
                         prim.OwnerMask = Convert.ToUInt32(o[i].ToString());
@@ -1280,7 +1280,7 @@ namespace OpenSim.Data.SQLite
                         prim.CollisionSoundVolume = Convert.ToSingle(o[i].ToString());
                         break;
                     case "PassTouches":
-                        prim.PassTouch = (int) Convert.ToSingle(o[i].ToString());
+                        prim.PassTouch = (int)Convert.ToSingle(o[i].ToString());
                         break;
                     case "VolumeDetect":
                         if (!(row[i] is DBNull))
@@ -1372,30 +1372,30 @@ namespace OpenSim.Data.SQLite
         {
             LandData newData = new LandData
                                    {
-                                       GlobalID = new UUID((String) row["UUID"]),
+                                       GlobalID = new UUID((String)row["UUID"]),
                                        LocalID = Convert.ToInt32(row["LocalLandID"]),
-                                       Bitmap = (Byte[]) row["Bitmap"],
-                                       Name = (String) row["Name"],
-                                       Description = (String) row["Desc"],
-                                       OwnerID = (UUID) (String) row["OwnerUUID"],
-                                       IsGroupOwned = (Boolean) row["IsGroupOwned"],
+                                       Bitmap = (Byte[])row["Bitmap"],
+                                       Name = (String)row["Name"],
+                                       Description = (String)row["Desc"],
+                                       OwnerID = (UUID)(String)row["OwnerUUID"],
+                                       IsGroupOwned = (Boolean)row["IsGroupOwned"],
                                        Area = Convert.ToInt32(row["Area"]),
                                        AuctionID = Convert.ToUInt32(row["AuctionID"]),
-                                       Category = (ParcelCategory) Convert.ToInt32(row["Category"]),
+                                       Category = (ParcelCategory)Convert.ToInt32(row["Category"]),
                                        ClaimDate = Convert.ToInt32(row["ClaimDate"]),
                                        ClaimPrice = Convert.ToInt32(row["ClaimPrice"]),
-                                       GroupID = new UUID((String) row["GroupUUID"]),
+                                       GroupID = new UUID((String)row["GroupUUID"]),
                                        SalePrice = Convert.ToInt32(row["SalePrice"]),
-                                       Status = (ParcelStatus) Convert.ToInt32(row["LandStatus"]),
+                                       Status = (ParcelStatus)Convert.ToInt32(row["LandStatus"]),
                                        Flags = Convert.ToUInt32(row["LandFlags"]),
-                                       LandingType = (Byte) row["LandingType"],
-                                       MediaAutoScale = (Byte) row["MediaAutoScale"],
-                                       MediaID = new UUID((String) row["MediaTextureUUID"]),
-                                       MediaURL = (String) row["MediaURL"],
-                                       MusicURL = (String) row["MusicURL"],
+                                       LandingType = (Byte)row["LandingType"],
+                                       MediaAutoScale = (Byte)row["MediaAutoScale"],
+                                       MediaID = new UUID((String)row["MediaTextureUUID"]),
+                                       MediaURL = (String)row["MediaURL"],
+                                       MusicURL = (String)row["MusicURL"],
                                        PassHours = Convert.ToSingle(row["PassHours"]),
                                        PassPrice = Convert.ToInt32(row["PassPrice"]),
-                                       SnapshotID = (UUID) (String) row["SnapshotUUID"]
+                                       SnapshotID = (UUID)(String)row["SnapshotUUID"]
                                    };
 
 
@@ -1422,7 +1422,7 @@ namespace OpenSim.Data.SQLite
             newData.ParcelAccessList = new List<ParcelManager.ParcelAccessEntry>();
             UUID authBuyerID = UUID.Zero;
 
-            UUID.TryParse((string) row["AuthbuyerID"], out authBuyerID);
+            UUID.TryParse((string)row["AuthbuyerID"], out authBuyerID);
 
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
             newData.Dwell = Convert.ToInt32(row["Dwell"]);
@@ -1434,7 +1434,7 @@ namespace OpenSim.Data.SQLite
         {
             RegionSettings newSettings = new RegionSettings
                                              {
-                                                 RegionUUID = new UUID((string) row["regionUUID"]),
+                                                 RegionUUID = new UUID((string)row["regionUUID"]),
                                                  BlockTerraform = Convert.ToBoolean(row["block_terraform"]),
                                                  AllowDamage = Convert.ToBoolean(row["allow_damage"]),
                                                  BlockFly = Convert.ToBoolean(row["block_fly"]),
@@ -1448,10 +1448,10 @@ namespace OpenSim.Data.SQLite
                                                  DisableScripts = Convert.ToBoolean(row["disable_scripts"]),
                                                  DisableCollisions = Convert.ToBoolean(row["disable_collisions"]),
                                                  DisablePhysics = Convert.ToBoolean(row["disable_physics"]),
-                                                 TerrainTexture1 = new UUID((String) row["terrain_texture_1"]),
-                                                 TerrainTexture2 = new UUID((String) row["terrain_texture_2"]),
-                                                 TerrainTexture3 = new UUID((String) row["terrain_texture_3"]),
-                                                 TerrainTexture4 = new UUID((String) row["terrain_texture_4"]),
+                                                 TerrainTexture1 = new UUID((String)row["terrain_texture_1"]),
+                                                 TerrainTexture2 = new UUID((String)row["terrain_texture_2"]),
+                                                 TerrainTexture3 = new UUID((String)row["terrain_texture_3"]),
+                                                 TerrainTexture4 = new UUID((String)row["terrain_texture_4"]),
                                                  Elevation1NW = Convert.ToDouble(row["elevation_1_nw"]),
                                                  Elevation2NW = Convert.ToDouble(row["elevation_2_nw"]),
                                                  Elevation1NE = Convert.ToDouble(row["elevation_1_ne"]),
@@ -1489,7 +1489,7 @@ namespace OpenSim.Data.SQLite
 
             OSD o = OSDParser.DeserializeJson(row["generic"].ToString());
             if (o.Type == OSDType.Map)
-                newSettings.Generic = (OSDMap) o;
+                newSettings.Generic = (OSDMap)o;
 
             return newSettings;
         }
@@ -1503,8 +1503,8 @@ namespace OpenSim.Data.SQLite
         {
             ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry
                                                         {
-                                                            AgentID = new UUID((string) row["AccessUUID"]),
-                                                            Flags = (AccessList) row["Flags"],
+                                                            AgentID = new UUID((string)row["AccessUUID"]),
+                                                            Flags = (AccessList)row["Flags"],
                                                             Time = new DateTime()
                                                         };
             return entry;
@@ -1602,11 +1602,11 @@ namespace OpenSim.Data.SQLite
                         s.State = Convert.ToByte(o[i]);
                         break;
                     case "Texture":
-                        byte[] textureEntry = (byte[]) o[i];
+                        byte[] textureEntry = (byte[])o[i];
                         s.TextureEntry = textureEntry;
                         break;
                     case "ExtraParams":
-                        s.ExtraParams = (byte[]) o[i];
+                        s.ExtraParams = (byte[])o[i];
                         break;
                     case "UUID":
                         break;
@@ -1791,7 +1791,7 @@ namespace OpenSim.Data.SQLite
             da.UpdateCommand.Connection = conn;
 
             SQLiteCommand delete = new SQLiteCommand("delete from land where UUID=:UUID");
-            delete.Parameters.Add(createSQLiteParameter("UUID", typeof (String)));
+            delete.Parameters.Add(createSQLiteParameter("UUID", typeof(String)));
             da.DeleteCommand = delete;
             da.DeleteCommand.Connection = conn;
         }
@@ -1807,8 +1807,8 @@ namespace OpenSim.Data.SQLite
 
             SQLiteCommand delete =
                 new SQLiteCommand("delete from landaccesslist where LandUUID= :LandUUID and AccessUUID= :AccessUUID");
-            delete.Parameters.Add(createSQLiteParameter("LandUUID", typeof (String)));
-            delete.Parameters.Add(createSQLiteParameter("AccessUUID", typeof (String)));
+            delete.Parameters.Add(createSQLiteParameter("LandUUID", typeof(String)));
+            delete.Parameters.Add(createSQLiteParameter("AccessUUID", typeof(String)));
             da.DeleteCommand = delete;
             da.DeleteCommand.Connection = conn;
         }
@@ -1835,27 +1835,27 @@ namespace OpenSim.Data.SQLite
         /// <returns></returns>
         private DbType dbtypeFromType(Type type)
         {
-            if (type == typeof (String))
+            if (type == typeof(String))
             {
                 return DbType.String;
             }
-            else if (type == typeof (Int32))
+            else if (type == typeof(Int32))
             {
                 return DbType.Int32;
             }
-            else if (type == typeof (Double))
+            else if (type == typeof(Double))
             {
                 return DbType.Double;
             }
-            else if (type == typeof (Byte))
+            else if (type == typeof(Byte))
             {
                 return DbType.Byte;
             }
-            else if (type == typeof (Double))
+            else if (type == typeof(Double))
             {
                 return DbType.Double;
             }
-            else if (type == typeof (Byte[]))
+            else if (type == typeof(Byte[]))
             {
                 return DbType.Binary;
             }

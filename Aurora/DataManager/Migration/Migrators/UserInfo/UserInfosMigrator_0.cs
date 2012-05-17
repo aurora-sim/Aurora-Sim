@@ -56,7 +56,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("LastLogout", ColumnTypes.String50),
                 ColDef("Info", ColumnTypes.String512)
             ), IndexDefs(
-                IndexDef(new string[2]{ "UserID", "RegionID" }, IndexType.Primary)
+                IndexDef(new string[2] { "UserID", "RegionID" }, IndexType.Primary)
             ));
         }
 

@@ -47,7 +47,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Key", ColumnTypes.String64),
                 ColDef("Value", ColumnTypes.LongText)
             ), IndexDefs(
-                IndexDef(new string[3]{ "OwnerID", "Type", "Key" }, IndexType.Primary)
+                IndexDef(new string[3] { "OwnerID", "Type", "Key" }, IndexType.Primary)
             ));
         }
 

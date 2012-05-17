@@ -47,9 +47,9 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionInfo", ColumnTypes.Text),
                 ColDef("Disabled", ColumnTypes.String45)
             ), IndexDefs(
-                IndexDef(new string[1]{ "RegionID" }, IndexType.Primary),
-                IndexDef(new string[1]{ "RegionName" }, IndexType.Index),
-                IndexDef(new string[1]{ "Disabled" }, IndexType.Index)
+                IndexDef(new string[1] { "RegionID" }, IndexType.Primary),
+                IndexDef(new string[1] { "RegionName" }, IndexType.Index),
+                IndexDef(new string[1] { "Disabled" }, IndexType.Index)
             ));
 
             AddSchema("regionsettings", ColDefs(
@@ -99,7 +99,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("generic", ColumnTypes.LongText),
                 ColDef("terrainmaplastregenerated", ColumnTypes.Integer30)
             ), IndexDefs(
-                IndexDef(new string[1]{ "regionUUID" }, IndexType.Primary)
+                IndexDef(new string[1] { "regionUUID" }, IndexType.Primary)
             ));
         }
 

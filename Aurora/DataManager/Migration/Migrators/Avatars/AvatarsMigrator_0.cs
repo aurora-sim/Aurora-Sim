@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Name", ColumnTypes.String32),
                 ColDef("Value", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[2]{ "PrincipalID", "Name" }, IndexType.Primary)
+                IndexDef(new string[2] { "PrincipalID", "Name" }, IndexType.Primary)
             ));
         }
 
