@@ -134,7 +134,8 @@ namespace Aurora.Services.DataService
             return GetUsers(scopeID, query, null, null);
         }
 
-        private static QueryFilter GetUsersFilter(UUID scopeID, string query){
+        private static QueryFilter GetUsersFilter(UUID scopeID, string query)
+        {
             QueryFilter filter = new QueryFilter();
 
             filter.orMultiFilters["ScopeID"] = new List<object>
@@ -220,8 +221,7 @@ namespace Aurora.Services.DataService
         {
             for (int i = 0; i < query.Count; i += 11)
             {
-                UserAccount data = new UserAccount
-                                       {PrincipalID = UUID.Parse(query[i + 0]), ScopeID = UUID.Parse(query[i + 1])};
+                UserAccount data = new UserAccount { PrincipalID = UUID.Parse(query[i + 0]), ScopeID = UUID.Parse(query[i + 1]) };
 
                 //We keep these even though we don't always use them because we might need to create the "Name" from them
                 string FirstName = query[i + 2];
@@ -231,11 +231,11 @@ namespace Aurora.Services.DataService
                 data.ServiceURLs = new Dictionary<string, object>();
                 if (query[i + 5] != null)
                 {
-                    string[] URLs = query[i + 5].Split(new[] {' '});
+                    string[] URLs = query[i + 5].Split(new[] { ' ' });
 
                     foreach (string url in URLs)
                     {
-                        string[] parts = url.Split(new[] {'='});
+                        string[] parts = url.Split(new[] { '=' });
 
                         if (parts.Length != 2)
                             continue;

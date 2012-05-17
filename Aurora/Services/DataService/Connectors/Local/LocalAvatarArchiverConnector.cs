@@ -70,7 +70,8 @@ namespace Aurora.Services.DataService
             filter.andFilters["Name"] = Name;
             List<string> RetVal = GD.Query(new string[] { "*" }, "avatararchives", filter, null, null, null);
 
-            return (RetVal.Count == 0) ?  null :  new AvatarArchive {
+            return (RetVal.Count == 0) ? null : new AvatarArchive
+            {
                 Name = RetVal[0],
                 ArchiveXML = RetVal[1]
             };

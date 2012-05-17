@@ -93,7 +93,7 @@ namespace Aurora.Services.DataService
             foreach (string ret in retVal)
             {
                 OSDMap map = (OSDMap)OSDParser.DeserializeJson(ret);
-                if(map != null)
+                if (map != null)
                     Values.Add(map);
             }
 
@@ -113,7 +113,7 @@ namespace Aurora.Services.DataService
         public static T GetGeneric<T>(UUID OwnerID, string Type, string Key, IGenericData GD) where T : IDataTransferable
         {
             OSDMap map = GetGeneric(OwnerID, Type, Key, GD);
-			if (map == null) return null;
+            if (map == null) return null;
             T data = (T)System.Activator.CreateInstance(typeof(T));
             data.FromOSD(map);
             return data;
