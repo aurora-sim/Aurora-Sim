@@ -81,7 +81,7 @@ namespace OpenSim.CoreApplicationPlugins
             List<RegionInfo[]> regions = new List<RegionInfo[]>();
             SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
             MainConsole.Instance.DefaultPrompt = "Region (root)";//Set this up
-            reload:
+        reload:
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, m_openSim);
@@ -126,7 +126,7 @@ namespace OpenSim.CoreApplicationPlugins
                     RegionInfo reg = r;
                     //System.Threading.Thread t = new System.Threading.Thread(delegate()
                     //    {
-                            manager.StartNewRegion(reg);
+                    manager.StartNewRegion(reg);
                     //    });
                     //t.Start();
                 }

@@ -50,8 +50,8 @@ namespace OpenSim.CoreApplicationPlugins
     public class RemoteAdminPlugin : IApplicationPlugin
     {
         private static bool m_defaultAvatarsLoaded = false;
-        private static readonly Object   m_requestLock = new Object();
-        private static readonly Object   m_saveOarLock = new Object();
+        private static readonly Object m_requestLock = new Object();
+        private static readonly Object m_saveOarLock = new Object();
 
         private ISimulationBase m_application;
         private SceneManager manager;
@@ -266,15 +266,15 @@ namespace OpenSim.CoreApplicationPlugins
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
-                CheckStringParameters(request, new[] {"password", "message"});
+                CheckStringParameters(request, new[] { "password", "message" });
 
                 if (m_requiredPassword != String.Empty &&
-                    (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
+                    (!requestData.Contains("password") || (string)requestData["password"] != m_requiredPassword))
                     throw new Exception("wrong password");
 
-                string message = (string) requestData["message"];
+                string message = (string)requestData["message"];
                 MainConsole.Instance.InfoFormat("[RADMIN]: Broadcasting: {0}", message);
 
                 responseData["accepted"] = true;
@@ -283,11 +283,11 @@ namespace OpenSim.CoreApplicationPlugins
 
                 manager.ForEachScene(
                     delegate(IScene scene)
-                        {
-                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if (dialogModule != null)
-                                dialogModule.SendGeneralAlert(message);
-                        });
+                    {
+                        IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                        if (dialogModule != null)
+                            dialogModule.SendGeneralAlert(message);
+                    });
             }
             catch (Exception e)
             {
@@ -313,7 +313,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 MainConsole.Instance.DebugFormat("[RADMIN]: Load Terrain: XmlRpc {0}", request);
                 // foreach (string k in requestData.Keys)
@@ -322,14 +322,14 @@ namespace OpenSim.CoreApplicationPlugins
                 //                       k, (string)requestData[k], ((string)requestData[k]).Length);
                 // }
 
-                CheckStringParameters(request, new[] {"password", "filename", "regionid"});
+                CheckStringParameters(request, new[] { "password", "filename", "regionid" });
 
                 if (m_requiredPassword != String.Empty &&
-                    (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
+                    (!requestData.Contains("password") || (string)requestData["password"] != m_requiredPassword))
                     throw new Exception("wrong password");
 
-                string file = (string) requestData["filename"];
-                UUID regionID = (UUID) (string) requestData["regionid"];
+                string file = (string)requestData["filename"];
+                UUID regionID = (UUID)(string)requestData["regionid"];
                 MainConsole.Instance.InfoFormat("[RADMIN]: Terrain Loading: {0}", file);
 
                 responseData["accepted"] = true;
@@ -383,10 +383,10 @@ namespace OpenSim.CoreApplicationPlugins
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 if (m_requiredPassword != String.Empty &&
-                    (!requestData.Contains("password") || (string) requestData["password"] != m_requiredPassword))
+                    (!requestData.Contains("password") || (string)requestData["password"] != m_requiredPassword))
                     throw new Exception("wrong password");
 
                 responseData["accepted"] = true;
@@ -396,13 +396,13 @@ namespace OpenSim.CoreApplicationPlugins
                 string message;
 
                 if (requestData.ContainsKey("shutdown")
-                    && ((string) requestData["shutdown"] == "delayed")
+                    && ((string)requestData["shutdown"] == "delayed")
                     && requestData.ContainsKey("milliseconds"))
                 {
                     timeout = Int32.Parse(requestData["milliseconds"].ToString());
 
                     message
-                        = "Region is going down in " + ((int) (timeout/1000)).ToString()
+                        = "Region is going down in " + ((int)(timeout / 1000)).ToString()
                           + " second(s). Please save what you are doing and log out.";
                 }
                 else
@@ -412,15 +412,15 @@ namespace OpenSim.CoreApplicationPlugins
 
                 manager.ForEachScene(
                     delegate(IScene scene)
-                        {
-                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if (dialogModule != null)
-                                dialogModule.SendGeneralAlert(message);
-                        });
+                    {
+                        IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                        if (dialogModule != null)
+                            dialogModule.SendGeneralAlert(message);
+                    });
 
                 // Perform shutdown
-                System.Timers.Timer shutdownTimer = new System.Timers.Timer(timeout) {AutoReset = false};
-                    // Wait before firing
+                System.Timers.Timer shutdownTimer = new System.Timers.Timer(timeout) { AutoReset = false };
+                // Wait before firing
                 shutdownTimer.Elapsed += shutdownTimer_Elapsed;
                 lock (shutdownTimer)
                 {
@@ -522,7 +522,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             lock (m_requestLock)
             {
-                int  m_regionLimit = m_config.GetInt("region_limit", 0);
+                int m_regionLimit = m_config.GetInt("region_limit", 0);
                 bool m_enableVoiceForNewRegions = m_config.GetBoolean("create_region_enable_voice", false);
                 bool m_publicAccess = m_config.GetBoolean("create_region_public", true);
 
@@ -570,11 +570,11 @@ namespace OpenSim.CoreApplicationPlugins
                     RegionInfo region = new RegionInfo
                                             {
                                                 RegionID = regionID,
-                                                RegionName = (string) requestData["region_name"],
+                                                RegionName = (string)requestData["region_name"],
                                                 RegionLocX =
-                                                    Convert.ToInt32(requestData["region_x"])*Constants.RegionSize,
+                                                    Convert.ToInt32(requestData["region_x"]) * Constants.RegionSize,
                                                 RegionLocY =
-                                                    Convert.ToInt32(requestData["region_y"])*Constants.RegionSize
+                                                    Convert.ToInt32(requestData["region_y"]) * Constants.RegionSize
                                             };
 
 
@@ -592,11 +592,10 @@ namespace OpenSim.CoreApplicationPlugins
                                           scene));
 
                     region.InternalEndPoint =
-                        new IPEndPoint(IPAddress.Parse((string) requestData["listen_ip"]), 0)
-                            {Port = Convert.ToInt32(requestData["listen_port"])};
+                        new IPEndPoint(IPAddress.Parse((string)requestData["listen_ip"]), 0) { Port = Convert.ToInt32(requestData["listen_port"]) };
 
                     if (0 == region.InternalEndPoint.Port) throw new Exception("listen_port is 0");
-                    
+
                     // default place for region configuration files is in the
                     // Regions directory of the config dir (aka /bin)
                     string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
@@ -770,11 +769,11 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new[] {"password", "region_name"});
+                    Hashtable requestData = (Hashtable)request.Params[0];
+                    CheckStringParameters(request, new[] { "password", "region_name" });
 
                     IScene scene = null;
-                    string regionName = (string) requestData["region_name"];
+                    string regionName = (string)requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
@@ -838,19 +837,19 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new[] {"password"});
+                    Hashtable requestData = (Hashtable)request.Params[0];
+                    CheckStringParameters(request, new[] { "password" });
 
                     IScene scene = null;
                     if (requestData.ContainsKey("region_id") &&
-                        !String.IsNullOrEmpty((string) requestData["region_id"]))
+                        !String.IsNullOrEmpty((string)requestData["region_id"]))
                     {
                         // Region specified by UUID
-                        UUID regionID = (UUID) (string) requestData["region_id"];
+                        UUID regionID = (UUID)(string)requestData["region_id"];
                         if (!manager.TryGetScene(regionID, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionID));
 
-                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
+                        manager.CloseRegion(scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_id"] = regionID;
@@ -858,15 +857,15 @@ namespace OpenSim.CoreApplicationPlugins
                         response.Value = responseData;
                     }
                     else if (requestData.ContainsKey("region_name") &&
-                        !String.IsNullOrEmpty((string) requestData["region_name"]))
+                        !String.IsNullOrEmpty((string)requestData["region_name"]))
                     {
                         // Region specified by name
 
-                        string regionName = (string) requestData["region_name"];
+                        string regionName = (string)requestData["region_name"];
                         if (!manager.TryGetScene(regionName, out scene))
                             throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
-                        manager.CloseRegion (scene, ShutdownType.Immediate, 0);
+                        manager.CloseRegion(scene, ShutdownType.Immediate, 0);
 
                         responseData["success"] = true;
                         responseData["region_name"] = regionName;
@@ -933,17 +932,17 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
-                    CheckStringParameters(request, new[] {"password", "region_name"});
+                    Hashtable requestData = (Hashtable)request.Params[0];
+                    CheckStringParameters(request, new[] { "password", "region_name" });
 
                     IScene scene = null;
-                    string regionName = (string) requestData["region_name"];
+                    string regionName = (string)requestData["region_name"];
                     if (!manager.TryGetScene(regionName, out scene))
                         throw new Exception(String.Format("region \"{0}\" does not exist", regionName));
 
                     // Modify access
                     scene.RegionInfo.EstateSettings.PublicAccess =
-                        GetBoolean(requestData,"public", scene.RegionInfo.EstateSettings.PublicAccess);
+                        GetBoolean(requestData, "public", scene.RegionInfo.EstateSettings.PublicAccess);
                     scene.RegionInfo.EstateSettings.Save();
 
                     if (requestData.ContainsKey("enable_voice"))
@@ -1042,7 +1041,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
+                    Hashtable requestData = (Hashtable)request.Params[0];
 
                     // check completeness
                     CheckStringParameters(request, new[]
@@ -1050,19 +1049,19 @@ namespace OpenSim.CoreApplicationPlugins
                                                            "password", "user_firstname",
                                                            "user_lastname", "user_password"
                                                        });
-                    CheckIntegerParams(request, new[] {"start_region_x", "start_region_y"});
+                    CheckIntegerParams(request, new[] { "start_region_x", "start_region_y" });
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                        (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                        (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     // do the job
-                    string firstName = (string) requestData["user_firstname"];
-                    string lastName = (string) requestData["user_lastname"];
-                    string password = (string) requestData["user_password"];
+                    string firstName = (string)requestData["user_firstname"];
+                    string lastName = (string)requestData["user_lastname"];
+                    string password = (string)requestData["user_password"];
 
-                    uint regionXLocation = Convert.ToUInt32((Int32) requestData["start_region_x"]);
-                    uint regionYLocation = Convert.ToUInt32((Int32) requestData["start_region_y"]);
+                    uint regionXLocation = Convert.ToUInt32((Int32)requestData["start_region_x"]);
+                    uint regionYLocation = Convert.ToUInt32((Int32)requestData["start_region_y"]);
 
                     string email = ""; // empty string for email
                     if (requestData.Contains("user_email"))
@@ -1079,11 +1078,14 @@ namespace OpenSim.CoreApplicationPlugins
 
                     // Set home position
 
-                    GridRegion home = scene.GridService.GetRegionByPosition(scopeID, 
+                    GridRegion home = scene.GridService.GetRegionByPosition(scopeID,
                         (int)(regionXLocation * Constants.RegionSize), (int)(regionYLocation * Constants.RegionSize));
-                    if (null == home) {
+                    if (null == home)
+                    {
                         MainConsole.Instance.WarnFormat("[RADMIN]: Unable to set home region for newly created user account {0} {1}", firstName, lastName);
-                    } else {
+                    }
+                    else
+                    {
                         IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                         agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                         MainConsole.Instance.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, firstName, lastName);
@@ -1158,13 +1160,13 @@ namespace OpenSim.CoreApplicationPlugins
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 // check completeness
-                CheckStringParameters(request, new[] {"password", "user_firstname", "user_lastname"});
+                CheckStringParameters(request, new[] { "password", "user_firstname", "user_lastname" });
 
-                string firstName = (string) requestData["user_firstname"];
-                string lastName = (string) requestData["user_lastname"];
+                string firstName = (string)requestData["user_firstname"];
+                string lastName = (string)requestData["user_lastname"];
 
                 responseData["user_firstname"] = firstName;
                 responseData["user_lastname"] = lastName;
@@ -1261,7 +1263,7 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
+                    Hashtable requestData = (Hashtable)request.Params[0];
 
                     // check completeness
                     CheckStringParameters(request, new[] {
@@ -1270,47 +1272,47 @@ namespace OpenSim.CoreApplicationPlugins
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                        (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                        (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     // do the job
-                    string firstName = (string) requestData["user_firstname"];
-                    string lastName = (string) requestData["user_lastname"];
+                    string firstName = (string)requestData["user_firstname"];
+                    string lastName = (string)requestData["user_lastname"];
 
                     string password = String.Empty;
                     uint? regionXLocation = null;
                     uint? regionYLocation = null;
-            //        uint? ulaX = null;
-            //        uint? ulaY = null;
-            //        uint? ulaZ = null;
-            //        uint? usaX = null;
-            //        uint? usaY = null;
-            //        uint? usaZ = null;
-            //        string aboutFirstLive = String.Empty;
-            //        string aboutAvatar = String.Empty;
+                    //        uint? ulaX = null;
+                    //        uint? ulaY = null;
+                    //        uint? ulaZ = null;
+                    //        uint? usaX = null;
+                    //        uint? usaY = null;
+                    //        uint? usaZ = null;
+                    //        string aboutFirstLive = String.Empty;
+                    //        string aboutAvatar = String.Empty;
 
-                    if (requestData.ContainsKey("user_password")) password = (string) requestData["user_password"];
+                    if (requestData.ContainsKey("user_password")) password = (string)requestData["user_password"];
                     if (requestData.ContainsKey("start_region_x"))
-                        regionXLocation = Convert.ToUInt32((Int32) requestData["start_region_x"]);
+                        regionXLocation = Convert.ToUInt32((Int32)requestData["start_region_x"]);
                     if (requestData.ContainsKey("start_region_y"))
-                        regionYLocation = Convert.ToUInt32((Int32) requestData["start_region_y"]);
+                        regionYLocation = Convert.ToUInt32((Int32)requestData["start_region_y"]);
 
-            //        if (requestData.ContainsKey("start_lookat_x"))
-            //            ulaX = Convert.ToUInt32((Int32) requestData["start_lookat_x"]);
-            //        if (requestData.ContainsKey("start_lookat_y"))
-            //            ulaY = Convert.ToUInt32((Int32) requestData["start_lookat_y"]);
-            //        if (requestData.ContainsKey("start_lookat_z"))
-            //            ulaZ = Convert.ToUInt32((Int32) requestData["start_lookat_z"]);
+                    //        if (requestData.ContainsKey("start_lookat_x"))
+                    //            ulaX = Convert.ToUInt32((Int32) requestData["start_lookat_x"]);
+                    //        if (requestData.ContainsKey("start_lookat_y"))
+                    //            ulaY = Convert.ToUInt32((Int32) requestData["start_lookat_y"]);
+                    //        if (requestData.ContainsKey("start_lookat_z"))
+                    //            ulaZ = Convert.ToUInt32((Int32) requestData["start_lookat_z"]);
 
-            //        if (requestData.ContainsKey("start_standat_x"))
-            //            usaX = Convert.ToUInt32((Int32) requestData["start_standat_x"]);
-            //        if (requestData.ContainsKey("start_standat_y"))
-            //            usaY = Convert.ToUInt32((Int32) requestData["start_standat_y"]);
-            //        if (requestData.ContainsKey("start_standat_z"))
-            //            usaZ = Convert.ToUInt32((Int32) requestData["start_standat_z"]);
-            //        if (requestData.ContainsKey("about_real_world"))
-            //            aboutFirstLive = (string)requestData["about_real_world"];
-            //        if (requestData.ContainsKey("about_virtual_world"))
-            //            aboutAvatar = (string)requestData["about_virtual_world"];
+                    //        if (requestData.ContainsKey("start_standat_x"))
+                    //            usaX = Convert.ToUInt32((Int32) requestData["start_standat_x"]);
+                    //        if (requestData.ContainsKey("start_standat_y"))
+                    //            usaY = Convert.ToUInt32((Int32) requestData["start_standat_y"]);
+                    //        if (requestData.ContainsKey("start_standat_z"))
+                    //            usaZ = Convert.ToUInt32((Int32) requestData["start_standat_z"]);
+                    //        if (requestData.ContainsKey("about_real_world"))
+                    //            aboutFirstLive = (string)requestData["about_real_world"];
+                    //        if (requestData.ContainsKey("about_virtual_world"))
+                    //            aboutAvatar = (string)requestData["about_virtual_world"];
 
                     IScene scene = manager.CurrentOrFirstScene;
                     UUID scopeID = scene.RegionInfo.ScopeID;
@@ -1325,26 +1327,29 @@ namespace OpenSim.CoreApplicationPlugins
                         ChangeUserPassword(firstName, lastName, password);
                     }
 
-            //        if (null != usaX) userProfile.HomeLocationX = (uint) usaX;
-            //        if (null != usaY) userProfile.HomeLocationY = (uint) usaY;
-            //        if (null != usaZ) userProfile.HomeLocationZ = (uint) usaZ;
+                    //        if (null != usaX) userProfile.HomeLocationX = (uint) usaX;
+                    //        if (null != usaY) userProfile.HomeLocationY = (uint) usaY;
+                    //        if (null != usaZ) userProfile.HomeLocationZ = (uint) usaZ;
 
-            //        if (null != ulaX) userProfile.HomeLookAtX = (uint) ulaX;
-            //        if (null != ulaY) userProfile.HomeLookAtY = (uint) ulaY;
-            //        if (null != ulaZ) userProfile.HomeLookAtZ = (uint) ulaZ;
+                    //        if (null != ulaX) userProfile.HomeLookAtX = (uint) ulaX;
+                    //        if (null != ulaY) userProfile.HomeLookAtY = (uint) ulaY;
+                    //        if (null != ulaZ) userProfile.HomeLookAtZ = (uint) ulaZ;
 
-            //        if (String.Empty != aboutFirstLive) userProfile.FirstLifeAboutText = aboutFirstLive;
-            //        if (String.Empty != aboutAvatar) userProfile.AboutText = aboutAvatar;
+                    //        if (String.Empty != aboutFirstLive) userProfile.FirstLifeAboutText = aboutFirstLive;
+                    //        if (String.Empty != aboutAvatar) userProfile.AboutText = aboutAvatar;
 
                     // Set home position
 
                     if ((null != regionXLocation) && (null != regionYLocation))
                     {
-                        GridRegion home = scene.GridService.GetRegionByPosition(scopeID, 
+                        GridRegion home = scene.GridService.GetRegionByPosition(scopeID,
                             (int)(regionXLocation * Constants.RegionSize), (int)(regionYLocation * Constants.RegionSize));
-                        if (null == home) {
+                        if (null == home)
+                        {
                             MainConsole.Instance.WarnFormat("[RADMIN]: Unable to set home region for updated user account {0} {1}", firstName, lastName);
-                        } else {
+                        }
+                        else
+                        {
                             IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                             agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                             MainConsole.Instance.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, firstName, lastName);
@@ -1393,10 +1398,10 @@ namespace OpenSim.CoreApplicationPlugins
         {
             MainConsole.Instance.DebugFormat("[RADMIN] updateUserAppearance");
 
-            string defaultMale   = m_config.GetString("default_male", "Default Male");
+            string defaultMale = m_config.GetString("default_male", "Default Male");
             string defaultFemale = m_config.GetString("default_female", "Default Female");
-            string defaultNeutral   = m_config.GetString("default_female", "Default Default");
-            string model   = String.Empty;
+            string defaultNeutral = m_config.GetString("default_female", "Default Default");
+            string model = String.Empty;
 
             // Has a gender preference been supplied?
 
@@ -1404,17 +1409,17 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 switch ((string)requestData["gender"])
                 {
-                    case "m" :
-                    case "male" :
+                    case "m":
+                    case "male":
                         model = defaultMale;
                         break;
-                    case "f" :
-                    case "female" :
+                    case "f":
+                    case "female":
                         model = defaultFemale;
                         break;
-                    case "n" :
-                    case "neutral" :
-                    default :
+                    case "n":
+                    case "neutral":
+                    default:
                         model = defaultNeutral;
                         break;
                 }
@@ -1544,7 +1549,7 @@ namespace OpenSim.CoreApplicationPlugins
             IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
             // Get Clothing folder of receiver
-            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Wearable, AssetType.Clothing);
+            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, InventoryType.Wearable, AssetType.Clothing);
 
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
@@ -1557,7 +1562,7 @@ namespace OpenSim.CoreApplicationPlugins
                                             ID = UUID.Random(),
                                             Name = "Clothing",
                                             Owner = destination,
-                                            Type = (short) AssetType.Clothing,
+                                            Type = (short)AssetType.Clothing,
                                             ParentID = inventoryService.GetRootFolder(destination).ID,
                                             Version = 1
                                         };
@@ -1681,13 +1686,13 @@ namespace OpenSim.CoreApplicationPlugins
         /// copies of Clothing and Bodyparts inventory folders and attaches worn attachments
         /// </summary>
 
-        private void CopyInventoryFolders(UUID destination, UUID source, AssetType assetType, Dictionary<UUID,UUID> inventoryMap,
+        private void CopyInventoryFolders(UUID destination, UUID source, AssetType assetType, Dictionary<UUID, UUID> inventoryMap,
                                           AvatarAppearance avatarAppearance)
         {
             IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
 
             InventoryFolderBase sourceFolder = inventoryService.GetFolderForType(source, InventoryType.Unknown, assetType);
-            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Unknown, assetType);
+            InventoryFolderBase destinationFolder = inventoryService.GetFolderForType(destination, InventoryType.Unknown, assetType);
 
             if (sourceFolder == null || destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
@@ -1700,7 +1705,7 @@ namespace OpenSim.CoreApplicationPlugins
                                        ID = UUID.Random(),
                                        Name = assetType == AssetType.Clothing ? "Clothing" : "Body Parts",
                                        Owner = source,
-                                       Type = (short) assetType,
+                                       Type = (short)assetType,
                                        ParentID = inventoryService.GetRootFolder(source).ID,
                                        Version = 1
                                    };
@@ -1716,7 +1721,7 @@ namespace OpenSim.CoreApplicationPlugins
                                             ID = UUID.Random(),
                                             Name = assetType.ToString(),
                                             Owner = destination,
-                                            Type = (short) assetType,
+                                            Type = (short)assetType,
                                             ParentID = inventoryService.GetRootFolder(destination).ID,
                                             Version = 1
                                         };
@@ -1824,11 +1829,11 @@ namespace OpenSim.CoreApplicationPlugins
                 if (File.Exists(defaultAppearanceFileName))
                 {
                     XmlDocument doc = new XmlDocument();
-                    string name     = "*unknown*";
-                    string email    = "anon@anon";
-                    uint   regionXLocation     = 1000;
-                    uint   regionYLocation     = 1000;
-                    string password   = UUID.Random().ToString(); // No requirement to sign-in.
+                    string name = "*unknown*";
+                    string email = "anon@anon";
+                    uint regionXLocation = 1000;
+                    uint regionYLocation = 1000;
+                    string password = UUID.Random().ToString(); // No requirement to sign-in.
                     UUID ID = UUID.Zero;
                     XmlNode perms = null;
 
@@ -1868,7 +1873,7 @@ namespace OpenSim.CoreApplicationPlugins
                     foreach (XmlElement avatar in avatars)
                     {
                         MainConsole.Instance.DebugFormat("[RADMIN] Loading appearance for {0}, gender = {1}",
-                            GetStringAttribute(avatar,"name","?"), GetStringAttribute(avatar,"gender","?"));
+                            GetStringAttribute(avatar, "name", "?"), GetStringAttribute(avatar, "gender", "?"));
 
                         // Create the user identified by the avatar entry
 
@@ -1876,11 +1881,11 @@ namespace OpenSim.CoreApplicationPlugins
                         try
                         {
                             // Only the name value is mandatory
-                            name   = GetStringAttribute(avatar,"name",name);
-                            email  = GetStringAttribute(avatar,"email",email);
-                            regionXLocation   = GetUnsignedAttribute(avatar,"regx",regionXLocation);
-                            regionYLocation   = GetUnsignedAttribute(avatar,"regy",regionYLocation);
-                            password = GetStringAttribute(avatar,"password",password);
+                            name = GetStringAttribute(avatar, "name", name);
+                            email = GetStringAttribute(avatar, "email", email);
+                            regionXLocation = GetUnsignedAttribute(avatar, "regx", regionXLocation);
+                            regionYLocation = GetUnsignedAttribute(avatar, "regy", regionYLocation);
+                            password = GetStringAttribute(avatar, "password", password);
 
                             string[] names = name.Split();
                             UUID scopeID = scene.RegionInfo.ScopeID;
@@ -1897,11 +1902,14 @@ namespace OpenSim.CoreApplicationPlugins
 
                             // Set home position
 
-                            GridRegion home = scene.GridService.GetRegionByPosition(scopeID, 
+                            GridRegion home = scene.GridService.GetRegionByPosition(scopeID,
                                 (int)(regionXLocation * Constants.RegionSize), (int)(regionYLocation * Constants.RegionSize));
-                            if (null == home) {
+                            if (null == home)
+                            {
                                 MainConsole.Instance.WarnFormat("[RADMIN]: Unable to set home region for newly created user account {0} {1}", names[0], names[1]);
-                            } else {
+                            }
+                            else
+                            {
                                 IAgentInfoService agentInfoService = scene.RequestModuleInterface<IAgentInfoService>();
                                 agentInfoService.SetHomePosition(account.PrincipalID.ToString(), home.RegionID, new Vector3(128, 128, 0), new Vector3(0, 1, 0));
                                 MainConsole.Instance.DebugFormat("[RADMIN]: Set home region {0} for updated user account {1} {2}", home.RegionID, names[0], names[1]);
@@ -1932,7 +1940,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                     : new AvatarAppearance();
 
                             AvatarWearable[] wearables = avatarAppearance.Wearables;
-                            for (int i=0; i<wearables.Length; i++)
+                            for (int i = 0; i < wearables.Length; i++)
                             {
                                 wearables[i] = new AvatarWearable();
                             }
@@ -1942,7 +1950,7 @@ namespace OpenSim.CoreApplicationPlugins
                                 // MainConsole.Instance.DebugFormat("[RADMIN] {0} folders, {1} items in inventory",
                                 //   uic.folders.Count, uic.items.Count);
 
-                                InventoryFolderBase clothingFolder = inventoryService.GetFolderForType (ID, InventoryType.Wearable, AssetType.Clothing);
+                                InventoryFolderBase clothingFolder = inventoryService.GetFolderForType(ID, InventoryType.Wearable, AssetType.Clothing);
 
                                 // This should *never* be the case
                                 if (clothingFolder == null || clothingFolder.Type != (short)AssetType.Clothing)
@@ -1952,7 +1960,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                              ID = UUID.Random(),
                                                              Name = "Clothing",
                                                              Owner = ID,
-                                                             Type = (short) AssetType.Clothing,
+                                                             Type = (short)AssetType.Clothing,
                                                              ParentID = inventoryService.GetRootFolder(ID).ID,
                                                              Version = 1
                                                          };
@@ -1968,10 +1976,10 @@ namespace OpenSim.CoreApplicationPlugins
                                 foreach (XmlElement outfit in outfits)
                                 {
                                     MainConsole.Instance.DebugFormat("[RADMIN] Loading outfit {0} for {1}",
-                                        GetStringAttribute(outfit,"name","?"), GetStringAttribute(avatar,"name","?"));
+                                        GetStringAttribute(outfit, "name", "?"), GetStringAttribute(avatar, "name", "?"));
 
-                                    string outfitName = GetStringAttribute(outfit,"name","");
-                                    bool select  = (GetStringAttribute(outfit,"default","no") == "yes");
+                                    string outfitName = GetStringAttribute(outfit, "name", "");
+                                    bool select = (GetStringAttribute(outfit, "default", "no") == "yes");
 
                                     // If the folder already exists, re-use it. The defaults may
                                     // change over time. Augment only.
@@ -2000,7 +2008,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                               ID = UUID.Random(),
                                                               Name = outfitName,
                                                               Owner = ID,
-                                                              Type = (short) AssetType.Clothing,
+                                                              Type = (short)AssetType.Clothing,
                                                               Version = 1,
                                                               ParentID = clothingFolder.ID
                                                           };
@@ -2019,11 +2027,11 @@ namespace OpenSim.CoreApplicationPlugins
                                         {
                                             switch (child.Name)
                                             {
-                                                case "Permissions" :
+                                                case "Permissions":
                                                     MainConsole.Instance.DebugFormat("[RADMIN] Permissions specified");
                                                     perms = child;
                                                     break;
-                                                case "Asset" :
+                                                case "Asset":
                                                     assetid = new UUID(child.InnerText);
                                                     break;
                                             }
@@ -2077,14 +2085,14 @@ namespace OpenSim.CoreApplicationPlugins
                                                                         GetIntegerAttribute(item, "assettype", -1),
                                                                     AssetID = assetid,
                                                                     GroupID =
-                                                                        (UUID) GetStringAttribute(item, "groupid", ""),
+                                                                        (UUID)GetStringAttribute(item, "groupid", ""),
                                                                     GroupOwned =
                                                                         (GetStringAttribute(item, "groupowned", "false") ==
                                                                          "true"),
                                                                     SalePrice =
                                                                         GetIntegerAttribute(item, "saleprice", 0),
                                                                     SaleType =
-                                                                        (byte) GetIntegerAttribute(item, "saletype", 0),
+                                                                        (byte)GetIntegerAttribute(item, "saletype", 0),
                                                                     Flags = GetUnsignedAttribute(item, "flags", 0),
                                                                     CreationDate =
                                                                         GetIntegerAttribute(item, "creationdate",
@@ -2101,7 +2109,7 @@ namespace OpenSim.CoreApplicationPlugins
                                         }
 
                                         // Attach item, if attachpoint is specified
-                                        int attachpoint = GetIntegerAttribute(item,"attachpoint",0);
+                                        int attachpoint = GetIntegerAttribute(item, "attachpoint", 0);
                                         if (attachpoint != 0)
                                         {
                                             avatarAppearance.SetAttachment(attachpoint, inventoryItem.ID, inventoryItem.AssetID);
@@ -2195,32 +2203,32 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 try
                 {
-                    Hashtable requestData = (Hashtable) request.Params[0];
+                    Hashtable requestData = (Hashtable)request.Params[0];
 
                     // check completeness
-                    foreach (string parameter in new[] {"password", "filename"})
+                    foreach (string parameter in new[] { "password", "filename" })
                     {
                         if (!requestData.Contains(parameter))
                             throw new Exception(String.Format("missing parameter {0}", parameter));
-                        if (String.IsNullOrEmpty((string) requestData[parameter]))
+                        if (String.IsNullOrEmpty((string)requestData[parameter]))
                             throw new Exception(String.Format("parameter {0} is empty", parameter));
                     }
 
                     // check password
                     if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                        (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                        (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                    string filename = (string) requestData["filename"];
+                    string filename = (string)requestData["filename"];
                     IScene scene = null;
                     if (requestData.Contains("region_uuid"))
                     {
-                        UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                        UUID region_uuid = (UUID)(string)requestData["region_uuid"];
                         if (!manager.TryGetScene(region_uuid, out scene))
                             throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     }
                     else if (requestData.Contains("region_name"))
                     {
-                        string region_name = (string) requestData["region_name"];
+                        string region_name = (string)requestData["region_name"];
                         if (!manager.TryGetScene(region_name, out scene))
                             throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     }
@@ -2294,32 +2302,32 @@ namespace OpenSim.CoreApplicationPlugins
 
             try
             {
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 // check completeness
-                foreach (string p in new string[] {"password", "filename"})
+                foreach (string p in new string[] { "password", "filename" })
                 {
                     if (!requestData.Contains(p))
                         throw new Exception(String.Format("missing parameter {0}", p));
-                    if (String.IsNullOrEmpty((string) requestData[p]))
+                    if (String.IsNullOrEmpty((string)requestData[p]))
                         throw new Exception(String.Format("parameter {0} is empty"));
                 }
 
                 // check password
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
-                string filename = (string) requestData["filename"];
+                string filename = (string)requestData["filename"];
                 IScene scene = null;
                 if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
                     if (!manager.TryGetScene(region_uuid, out scene))
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
+                    string region_name = (string)requestData["region_name"];
                     if (!manager.TryGetScene(region_name, out scene))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                 }
@@ -2331,7 +2339,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     scene.EventManager.OnOarFileSaved += RemoteAdminOarSaveCompleted;
                     archiver.ArchiveRegion(filename);
-                    lock (m_saveOarLock) Monitor.Wait(m_saveOarLock,5000);
+                    lock (m_saveOarLock) Monitor.Wait(m_saveOarLock, 5000);
                     scene.EventManager.OnOarFileSaved -= RemoteAdminOarSaveCompleted;
                 }
                 else
@@ -2411,28 +2419,28 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 // check completeness
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
                     IScene scene;
-                    if (manager.TryGetScene (region_uuid, out scene))
-                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    if (manager.TryGetScene(region_uuid, out scene))
+                        manager.ChangeConsoleRegion(scene.RegionInfo.RegionName);
                     else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
-                    if (!manager.ChangeConsoleRegion (region_name))
+                    string region_name = (string)requestData["region_name"];
+                    if (!manager.ChangeConsoleRegion(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2469,13 +2477,13 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 // check completeness
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 if (!requestData.Contains("command"))
                     throw new Exception(String.Format("missing required parameter"));
@@ -2510,35 +2518,35 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 IScene scene;
-                if (requestData.Contains ("region_uuid"))
+                if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
 
-                    if (manager.TryGetScene (region_uuid, out scene))
-                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    if (manager.TryGetScene(region_uuid, out scene))
+                        manager.ChangeConsoleRegion(scene.RegionInfo.RegionName);
                     else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
-                    if (!manager.ChangeConsoleRegion (region_name))
+                    string region_name = (string)requestData["region_name"];
+                    if (!manager.ChangeConsoleRegion(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
                 scene = manager.CurrentOrFirstScene;
-                scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
+                scene.RegionInfo.EstateSettings.EstateAccess = new UUID[] { };
                 scene.RegionInfo.EstateSettings.Save();
             }
             catch (Exception e)
@@ -2570,27 +2578,27 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
                     IScene scene;
-                    if (manager.TryGetScene (region_uuid, out scene))
-                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    if (manager.TryGetScene(region_uuid, out scene))
+                        manager.ChangeConsoleRegion(scene.RegionInfo.RegionName);
                     else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
-                    if (!manager.ChangeConsoleRegion (region_name))
+                    string region_name = (string)requestData["region_name"];
+                    if (!manager.ChangeConsoleRegion(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2603,7 +2611,7 @@ namespace OpenSim.CoreApplicationPlugins
                     UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
                     IScene scene = manager.CurrentOrFirstScene;
-                    Hashtable users = (Hashtable) requestData["users"];
+                    Hashtable users = (Hashtable)requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
                     {
@@ -2618,7 +2626,7 @@ namespace OpenSim.CoreApplicationPlugins
                     List<UUID> accessControlList = new List<UUID>(scene.RegionInfo.EstateSettings.EstateAccess);
                     foreach (UUID uuid in uuids)
                     {
-                       if (!accessControlList.Contains(uuid))
+                        if (!accessControlList.Contains(uuid))
                         {
                             accessControlList.Add(uuid);
                             addedUsers++;
@@ -2659,27 +2667,27 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
                     IScene scene;
-                    if (manager.TryGetScene (region_uuid, out scene))
-                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    if (manager.TryGetScene(region_uuid, out scene))
+                        manager.ChangeConsoleRegion(scene.RegionInfo.RegionName);
                     else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
-                    if (!manager.ChangeConsoleRegion (region_name))
+                    string region_name = (string)requestData["region_name"];
+                    if (!manager.ChangeConsoleRegion(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2693,15 +2701,18 @@ namespace OpenSim.CoreApplicationPlugins
                     IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
                     IScene scene = manager.CurrentOrFirstScene;
-                    Hashtable users = (Hashtable) requestData["users"];
+                    Hashtable users = (Hashtable)requestData["users"];
                     List<UUID> uuids = (from string name in users.Values
                                         select name.Split()
-                                        into parts select userService.GetUserAccount(scopeID, parts[0], parts[1])
-                                        into account where account != null select account.PrincipalID).ToList();
+                                            into parts
+                                            select userService.GetUserAccount(scopeID, parts[0], parts[1])
+                                                into account
+                                                where account != null
+                                                select account.PrincipalID).ToList();
                     List<UUID> accessControlList = new List<UUID>(scene.RegionInfo.EstateSettings.EstateAccess);
                     foreach (UUID uuid in uuids)
                     {
-                       if (accessControlList.Contains(uuid))
+                        if (accessControlList.Contains(uuid))
                         {
                             accessControlList.Remove(uuid);
                             removedUsers++;
@@ -2742,27 +2753,27 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 responseData["success"] = true;
 
-                Hashtable requestData = (Hashtable) request.Params[0];
+                Hashtable requestData = (Hashtable)request.Params[0];
 
                 if (!requestData.Contains("password"))
                     throw new Exception(String.Format("missing required parameter"));
                 if (!String.IsNullOrEmpty(m_requiredPassword) &&
-                    (string) requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
+                    (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                 IScene scene;
-                if (requestData.Contains ("region_uuid"))
+                if (requestData.Contains("region_uuid"))
                 {
-                    UUID region_uuid = (UUID) (string) requestData["region_uuid"];
-                    if (manager.TryGetScene (region_uuid, out scene))
-                        manager.ChangeConsoleRegion (scene.RegionInfo.RegionName);
+                    UUID region_uuid = (UUID)(string)requestData["region_uuid"];
+                    if (manager.TryGetScene(region_uuid, out scene))
+                        manager.ChangeConsoleRegion(scene.RegionInfo.RegionName);
                     else
                         throw new Exception(String.Format("failed to switch to region {0}", region_uuid.ToString()));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_uuid.ToString());
                 }
                 else if (requestData.Contains("region_name"))
                 {
-                    string region_name = (string) requestData["region_name"];
-                    if (!manager.ChangeConsoleRegion (region_name))
+                    string region_name = (string)requestData["region_name"];
+                    if (!manager.ChangeConsoleRegion(region_name))
                         throw new Exception(String.Format("failed to switch to region {0}", region_name));
                     MainConsole.Instance.InfoFormat("[RADMIN] Switched to region {0}", region_name);
                 }
@@ -2802,19 +2813,19 @@ namespace OpenSim.CoreApplicationPlugins
 
         private static void CheckStringParameters(XmlRpcRequest request, IEnumerable<string> param)
         {
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
             foreach (string parameter in param)
             {
                 if (!requestData.Contains(parameter))
                     throw new Exception(String.Format("missing string parameter {0}", parameter));
-                if (String.IsNullOrEmpty((string) requestData[parameter]))
+                if (String.IsNullOrEmpty((string)requestData[parameter]))
                     throw new Exception(String.Format("parameter {0} is empty", parameter));
             }
         }
 
         private static void CheckIntegerParams(XmlRpcRequest request, IEnumerable<string> param)
         {
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
             foreach (string parameter in param)
             {
                 if (!requestData.Contains(parameter))
@@ -2829,15 +2840,15 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 switch (((string)requestData[tag]).ToLower())
                 {
-                    case "true" :
-                    case "t" :
-                    case "1" :
+                    case "true":
+                    case "t":
+                    case "1":
                         return true;
-                    case "false" :
-                    case "f" :
-                    case "0" :
+                    case "false":
+                    case "f":
+                    case "0":
                         return false;
-                    default :
+                    default:
                         return defaultValue;
                 }
             }
@@ -2846,25 +2857,31 @@ namespace OpenSim.CoreApplicationPlugins
 
         private int GetIntegerAttribute(XmlNode node, string attribute, int defaultValue)
         {
-            try {
+            try
+            {
                 if (node.Attributes != null) return Convert.ToInt32(node.Attributes[attribute].Value);
-            } catch{}
+            }
+            catch { }
             return defaultValue;
         }
 
         private uint GetUnsignedAttribute(XmlNode node, string attribute, uint defaultValue)
         {
-            try {
+            try
+            {
                 if (node.Attributes != null) return Convert.ToUInt32(node.Attributes[attribute].Value);
-            } catch{}
+            }
+            catch { }
             return defaultValue;
         }
 
         private string GetStringAttribute(XmlNode node, string attribute, string defaultValue)
         {
-            try {
+            try
+            {
                 if (node.Attributes != null) return node.Attributes[attribute].Value;
-            } catch{}
+            }
+            catch { }
             return defaultValue;
         }
 
@@ -2898,7 +2915,7 @@ namespace OpenSim.CoreApplicationPlugins
                     bool success;
                     if (authenticationService != null)
                     {
-                        success = authenticationService.SetPassword (account.PrincipalID, "UserAccount", password);
+                        success = authenticationService.SetPassword(account.PrincipalID, "UserAccount", password);
                         if (!success)
                             MainConsole.Instance.WarnFormat("[RADMIN]: Unable to set password for account {0} {1}.",
                                 firstName, lastName);
@@ -2934,7 +2951,7 @@ namespace OpenSim.CoreApplicationPlugins
 
                     MainConsole.Instance.InfoFormat("[RADMIN]: Account {0} {1} created successfully", firstName, lastName);
                     return account;
-                 }
+                }
                 MainConsole.Instance.ErrorFormat("[RADMIN]: Account creation failed for account {0} {1}", firstName, lastName);
             }
             else
@@ -2961,8 +2978,9 @@ namespace OpenSim.CoreApplicationPlugins
             {
                 bool success = false;
                 if (authenticationService != null)
-                    success = authenticationService.SetPassword (account.PrincipalID, "UserAccount", password);
-                if (!success) {
+                    success = authenticationService.SetPassword(account.PrincipalID, "UserAccount", password);
+                if (!success)
+                {
                     MainConsole.Instance.WarnFormat("[RADMIN]: Unable to set password for account {0} {1}.",
                        firstName, lastName);
                     return false;

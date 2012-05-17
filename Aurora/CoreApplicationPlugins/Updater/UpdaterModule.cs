@@ -77,15 +77,15 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     return;
                 }
-                
+
                 MainConsole.Instance.Info("[AuroraUpdator]: Checking for updates...");
                 const string CurrentVersion = VersionInfo.VERSION_NUMBER;
-                string LastestVersionToBlock = updateConfig.GetString ("LatestRelease", VersionInfo.VERSION_NUMBER);
+                string LastestVersionToBlock = updateConfig.GetString("LatestRelease", VersionInfo.VERSION_NUMBER);
 
                 string WebSite = updateConfig.GetString("URLToCheckForUpdates", m_urlToCheckForUpdates);
                 //Pull the xml from the website
                 string XmlData = Utilities.ReadExternalWebsite(WebSite);
-                if (string.IsNullOrEmpty (XmlData))
+                if (string.IsNullOrEmpty(XmlData))
                     return;
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(XmlData);
@@ -101,7 +101,7 @@ namespace OpenSim.CoreApplicationPlugins
                 //[5] - Download link
 
                 //Read the newest version [2] and see if it is higher than the current version and less than the version the user last told us to block
-                if (Compare (UpdaterNode.ChildNodes[2].InnerText, CurrentVersion) && Compare (UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
+                if (Compare(UpdaterNode.ChildNodes[2].InnerText, CurrentVersion) && Compare(UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
                 {
                     //Ask if they would like to update
                     DialogResult result = MessageBox.Show("A new version of Aurora has been released, version " +
@@ -116,14 +116,14 @@ namespace OpenSim.CoreApplicationPlugins
                     {
                         Utilities.DownloadFile(UpdaterNode.ChildNodes[5].InnerText,
                             "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip");
-                        MessageBox.Show (string.Format("Downloaded to {0}, exiting for user to upgrade.", "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip"), "Aurora Update");
-                        Environment.Exit (0);
+                        MessageBox.Show(string.Format("Downloaded to {0}, exiting for user to upgrade.", "AuroraVersion" + UpdaterNode.ChildNodes[2].InnerText + ".zip"), "Aurora Update");
+                        Environment.Exit(0);
                     }
                     //Update the config so that we do not ask again
                     updateConfig.Set("LatestRelease", UpdaterNode.ChildNodes[2].InnerText);
                     updateConfig.ConfigSource.Save();
                 }
-                else if (Compare (UpdaterNode.ChildNodes[0].InnerText, CurrentVersion) && Compare (UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
+                else if (Compare(UpdaterNode.ChildNodes[0].InnerText, CurrentVersion) && Compare(UpdaterNode.ChildNodes[2].InnerText, LastestVersionToBlock))
                 {
                     //This version is not supported anymore
                     MessageBox.Show("Your version of Aurora (" + CurrentVersion + ", Released " + UpdaterNode.ChildNodes[1].InnerText + ") is not supported anymore.", "Aurora Update");
@@ -134,21 +134,21 @@ namespace OpenSim.CoreApplicationPlugins
             }
         }
 
-        private bool Compare (string givenVersion, string CurrentVersion)
+        private bool Compare(string givenVersion, string CurrentVersion)
         {
-            string[] given = givenVersion.Split ('.');
-            string[] current = CurrentVersion.Split ('.');
-            for (int i = 0; i < (int)Math.Max (given.Length, current.Length); i++)
+            string[] given = givenVersion.Split('.');
+            string[] current = CurrentVersion.Split('.');
+            for (int i = 0; i < (int)Math.Max(given.Length, current.Length); i++)
             {
                 if (i == given.Length || i == current.Length)
                     break;
-                if (int.Parse (given[i]) > int.Parse (current[i]))
+                if (int.Parse(given[i]) > int.Parse(current[i]))
                     return true;
             }
             return false;
         }
 
-        public void ReloadConfiguration (IConfigSource config)
+        public void ReloadConfiguration(IConfigSource config)
         {
         }
 

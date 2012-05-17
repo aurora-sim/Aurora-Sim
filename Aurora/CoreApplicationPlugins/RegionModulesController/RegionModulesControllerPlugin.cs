@@ -368,7 +368,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     module.Initialise(m_openSim.ConfigSource);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MainConsole.Instance.ErrorFormat("[RegionModulesControllerPlugin]: Failed to load module {0}: {1}", module.Name, ex.ToString());
                 }
