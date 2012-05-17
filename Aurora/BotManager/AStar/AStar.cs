@@ -153,7 +153,7 @@ namespace Games.Pathfinding
 
         public override bool Equals(object obj)
         {
-            return IsSameState((AStarNode) obj);
+            return IsSameState((AStarNode)obj);
         }
 
         public override int GetHashCode()
@@ -167,7 +167,7 @@ namespace Games.Pathfinding
 
         public int CompareTo(object obj)
         {
-            return (-TotalCost.CompareTo(((AStarNode) obj).TotalCost));
+            return (-TotalCost.CompareTo(((AStarNode)obj).TotalCost));
         }
 
         #endregion
@@ -256,7 +256,7 @@ namespace Games.Pathfinding
             while (FOpenList.Count > 0 && i < 2000)
             {
                 // Get the node with the lowest TotalCost
-                AStarNode NodeCurrent = (AStarNode) FOpenList.Pop();
+                AStarNode NodeCurrent = (AStarNode)FOpenList.Pop();
 
                 // If the node is the goal copy the path to the solution array
                 if (NodeCurrent.IsGoal())
@@ -277,7 +277,7 @@ namespace Games.Pathfinding
                     // the TotalCost is higher, we will throw away the current successor.
                     AStarNode NodeOpen = null;
                     if (FOpenList.Contains(NodeSuccessor))
-                        NodeOpen = (AStarNode) FOpenList[FOpenList.IndexOf(NodeSuccessor)];
+                        NodeOpen = (AStarNode)FOpenList[FOpenList.IndexOf(NodeSuccessor)];
                     if ((NodeOpen != null) && (NodeSuccessor.TotalCost > NodeOpen.TotalCost))
                         continue;
 
@@ -285,7 +285,7 @@ namespace Games.Pathfinding
                     // the TotalCost is higher, we will throw away the current successor.
                     AStarNode NodeClosed = null;
                     if (FClosedList.Contains(NodeSuccessor))
-                        NodeClosed = (AStarNode) FClosedList[FClosedList.IndexOf(NodeSuccessor)];
+                        NodeClosed = (AStarNode)FClosedList[FClosedList.IndexOf(NodeSuccessor)];
                     if ((NodeClosed != null) && (NodeSuccessor.TotalCost > NodeClosed.TotalCost))
                         continue;
 

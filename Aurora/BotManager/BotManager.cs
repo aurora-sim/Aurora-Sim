@@ -96,7 +96,7 @@ namespace Aurora.BotManager
             AgentCircuitData m_aCircuitData = new AgentCircuitData
                                                   {
                                                       child = false,
-                                                      circuitcode = (uint) Util.RandomClass.Next(),
+                                                      circuitcode = (uint)Util.RandomClass.Next(),
                                                       Appearance = GetAppearance(cloneAppearanceFrom, scene)
                                                   };
 
@@ -105,7 +105,7 @@ namespace Aurora.BotManager
             //Sets up appearance
             if (m_aCircuitData.Appearance == null)
             {
-                m_aCircuitData.Appearance = new AvatarAppearance {Wearables = AvatarWearable.DefaultWearables};
+                m_aCircuitData.Appearance = new AvatarAppearance { Wearables = AvatarWearable.DefaultWearables };
             }
             //Create the new bot data
             BotClientAPI m_character = new BotClientAPI(scene, m_aCircuitData) { FirstName = FirstName, LastName = LastName };
@@ -321,12 +321,12 @@ namespace Aurora.BotManager
                     return;
             }
             List<string> tagsToRemove = new List<string>();
-            foreach(KeyValuePair<string, List<UUID>> kvp in m_botTags)
+            foreach (KeyValuePair<string, List<UUID>> kvp in m_botTags)
             {
                 if (kvp.Value.Contains(Bot))
                     tagsToRemove.Add(kvp.Key);
             }
-            foreach(string tag in tagsToRemove)
+            foreach (string tag in tagsToRemove)
                 m_botTags[tag].Remove(Bot);
         }
 
@@ -442,7 +442,7 @@ namespace Aurora.BotManager
                     fromAgentID = botID,
                     fromAgentName = bot.Controller.Name,
                     fromGroup = false,
-                    imSessionID = UUID.Random(), 
+                    imSessionID = UUID.Random(),
                     offline = 0,
                     ParentEstateID = 0,
                     RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
