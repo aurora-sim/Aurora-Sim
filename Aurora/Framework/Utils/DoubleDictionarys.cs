@@ -44,7 +44,7 @@ namespace Aurora.Framework
 
                 List<Object> Values = new List<object>();
                 Dictionary.TryGetValue(key, out Values);
-                return (TValue1) Values[0];
+                return (TValue1)Values[0];
             }
             set
             {
@@ -66,7 +66,7 @@ namespace Aurora.Framework
 
                 List<Object> Values = new List<object>();
                 Dictionary.TryGetValue(key, out Values);
-                return (TValue2) Values[1];
+                return (TValue2)Values[1];
             }
             set
             {
@@ -89,7 +89,7 @@ namespace Aurora.Framework
             if (Dictionary.ContainsKey(key))
                 throw new ArgumentException("Key is already in the dictionary");
 
-            List<object> Values = new List<object>(2) {value1, value2};
+            List<object> Values = new List<object>(2) { value1, value2 };
             Dictionary.Add(key, Values);
         }
 
@@ -118,7 +118,7 @@ namespace Aurora.Framework
                 return false;
             List<object> Values = new List<object>();
             Dictionary.TryGetValue(key, out Values);
-            value = (TValue1) Values[0];
+            value = (TValue1)Values[0];
             return true;
         }
 
@@ -129,7 +129,7 @@ namespace Aurora.Framework
                 return false;
             List<object> Values = new List<object>();
             Dictionary.TryGetValue(key, out Values);
-            value = (TValue2) Values[1];
+            value = (TValue2)Values[1];
             return true;
         }
     }

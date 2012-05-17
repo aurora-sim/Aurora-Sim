@@ -31,7 +31,8 @@ namespace Aurora.Framework.Servers.HttpServer
 {
     public abstract class BaseStreamHandler : BaseRequestHandler, IStreamedRequestHandler
     {
-        protected BaseStreamHandler(string httpMethod, string path) : base(httpMethod, path)
+        protected BaseStreamHandler(string httpMethod, string path)
+            : base(httpMethod, path)
         {
         }
 

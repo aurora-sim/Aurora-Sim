@@ -62,7 +62,7 @@ namespace Aurora.Framework.Serialization.External
             item.InvType = Convert.ToInt32(xtr.ReadElementString("InvType"));
             item.CreatorId = xtr.ReadElementString("CreatorUUID");
             try
-            {   
+            {
                 item.CreatorData = xtr.ReadElementString("CreatorData");
             }
             catch
@@ -136,7 +136,7 @@ namespace Aurora.Framework.Serialization.External
         public static string Serialize(InventoryItemBase inventoryItem)
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter writer = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter writer = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
             writer.WriteStartDocument();
 
             writer.WriteStartElement("InventoryItem");

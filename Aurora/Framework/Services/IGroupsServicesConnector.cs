@@ -290,7 +290,7 @@ namespace Aurora.Framework
         {
             GroupID = map["GroupID"].AsUUID();
             Duration = map["Duration"].AsInteger();
-            Majority = (float) map["Majority"].AsReal();
+            Majority = (float)map["Majority"].AsReal();
             Text = map["Text"].AsString();
             Quorum = map["Quorum"].AsInteger();
             Session = map["Session"].AsUUID();

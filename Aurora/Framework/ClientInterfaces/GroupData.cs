@@ -314,7 +314,7 @@ namespace Aurora.Framework
 
         public GroupProfileData(Dictionary<string, object> values)
         {
-            FromKVP(values);   
+            FromKVP(values);
         }
 
         public override Dictionary<string, object> ToKVP()

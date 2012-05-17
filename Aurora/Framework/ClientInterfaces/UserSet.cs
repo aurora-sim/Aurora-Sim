@@ -64,7 +64,7 @@ namespace Aurora.Framework
             // Doing it this was so that we can do a case insensitive conversion
             try
             {
-                userSet = (UserSet) Enum.Parse(typeof (UserSet), rawSetting, true);
+                userSet = (UserSet)Enum.Parse(typeof(UserSet), rawSetting, true);
             }
             catch
             {

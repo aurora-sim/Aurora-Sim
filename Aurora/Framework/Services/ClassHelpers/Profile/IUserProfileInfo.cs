@@ -124,14 +124,14 @@ namespace Aurora.Framework
         public override void FromOSD(OSDMap map)
         {
             PrincipalID = map["PrincipalID"].AsUUID();
-            Flags = (IAgentFlags) map["Flags"].AsInteger();
+            Flags = (IAgentFlags)map["Flags"].AsInteger();
             MaxMaturity = Convert.ToInt32(map["MaxMaturity"].AsInteger());
             MaturityRating = Convert.ToInt32(map["MaturityRating"].AsInteger());
             Language = map["Language"].AsString();
             AcceptTOS = map["AcceptTOS"].AsBoolean();
             LanguageIsPublic = map["LanguageIsPublic"].AsBoolean();
             if (map.ContainsKey("OtherAgentInformation"))
-                OtherAgentInformation = (OSDMap) OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
+                OtherAgentInformation = (OSDMap)OSDParser.DeserializeLLSDXml(map["OtherAgentInformation"].AsString());
         }
 
         public override void FromKVP(Dictionary<string, object> RetVal)
@@ -323,7 +323,7 @@ namespace Aurora.Framework
             try
             {
                 if (map.ContainsKey("Notes"))
-                    Notes = (OSDMap) OSDParser.DeserializeJson(map["Notes"].AsString());
+                    Notes = (OSDMap)OSDParser.DeserializeJson(map["Notes"].AsString());
             }
             catch
             {
@@ -419,7 +419,7 @@ namespace Aurora.Framework
             SimName = map["SimName"].AsString();
             GlobalPos = map["GlobalPos"].AsVector3();
             ParcelName = map["ParcelName"].AsString();
-            ClassifiedFlags = (byte) map["ClassifiedFlags"].AsInteger();
+            ClassifiedFlags = (byte)map["ClassifiedFlags"].AsInteger();
             PriceForListing = map["PriceForListing"].AsInteger();
         }
 

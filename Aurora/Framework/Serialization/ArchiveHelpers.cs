@@ -101,7 +101,7 @@ namespace Aurora.Framework.Serialization
 
         public static Stream URIFetch(Uri uri)
         {
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(uri);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 
             // request.Credentials = credentials;
 

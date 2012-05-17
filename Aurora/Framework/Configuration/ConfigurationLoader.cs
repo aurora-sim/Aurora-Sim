@@ -345,14 +345,14 @@ namespace Aurora.Framework
                             // Resolve relative paths with wildcards
                             string chunkWithoutWildcards = file;
                             string chunkWithWildcards = string.Empty;
-                            int wildcardIndex = file.IndexOfAny(new[] {'*', '?'});
+                            int wildcardIndex = file.IndexOfAny(new[] { '*', '?' });
                             if (wildcardIndex != -1)
                             {
                                 chunkWithoutWildcards = file.Substring(0, wildcardIndex);
                                 chunkWithWildcards = file.Substring(wildcardIndex);
                             }
                             string path = Path.Combine(basePath, chunkWithoutWildcards + chunkWithWildcards);
-                            List<string> paths = new List<string>(new string[1] {path});
+                            List<string> paths = new List<string>(new string[1] { path });
                             if (path.Contains("*"))
                                 if (path.Contains("*.ini"))
                                 {
@@ -410,14 +410,14 @@ namespace Aurora.Framework
                             // Resolve relative paths with wildcards
                             string chunkWithoutWildcards = file;
                             string chunkWithWildcards = string.Empty;
-                            int wildcardIndex = file.IndexOfAny(new[] {'*', '?'});
+                            int wildcardIndex = file.IndexOfAny(new[] { '*', '?' });
                             if (wildcardIndex != -1)
                             {
                                 chunkWithoutWildcards = file.Substring(0, wildcardIndex);
                                 chunkWithWildcards = file.Substring(wildcardIndex);
                             }
                             string path = Path.Combine(basePath, chunkWithoutWildcards + chunkWithWildcards);
-                            string[] paths = new string[1] {path};
+                            string[] paths = new string[1] { path };
                             if (path.Contains("*"))
                                 paths = Util.GetSubFiles(path);
 #if (!ISWIN)

@@ -38,7 +38,7 @@ namespace OpenSim.Services.Interfaces
     {
         public int Created;
         public string Email;
-        public string Name { get; set;}
+        public string Name { get; set; }
         public OSDMap GenericData = new OSDMap();
         public UUID PrincipalID { get; set; }
         public UUID ScopeID;

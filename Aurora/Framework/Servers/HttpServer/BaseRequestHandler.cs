@@ -81,7 +81,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             string param = GetParam(path);
 
-            return param.Split(new[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
+            return param.Split(new[] { '/', '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         public string GetBodyAsString(Stream request)

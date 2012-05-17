@@ -100,7 +100,7 @@ namespace Aurora.Framework
 
         public bool AllowScriptCrossing { get; set; }
 
-        private List<int> m_UDPPorts = new List<int> ();
+        private List<int> m_UDPPorts = new List<int>();
         public List<int> UDPPorts
         {
             get { return m_UDPPorts; }
@@ -239,10 +239,10 @@ namespace Aurora.Framework
             config.Set("TrustBinariesFromForeignSims", TrustBinariesFromForeignSims);
             config.Set("SeeIntoThisSimFromNeighbor", SeeIntoThisSimFromNeighbor);
             config.Set("RegionSizeX", RegionSizeX);
-            config.Set ("RegionSizeY", RegionSizeY);
-            config.Set ("RegionSizeZ", RegionSizeZ);
+            config.Set("RegionSizeY", RegionSizeY);
+            config.Set("RegionSizeZ", RegionSizeZ);
 
-            config.Set ("StartupType", Startup.ToString());
+            config.Set("StartupType", Startup.ToString());
 
             config.Set("NeighborPassword", Password.ToString());
         }
@@ -303,8 +303,8 @@ namespace Aurora.Framework
                 args["see_into_this_sim_from_neighbor"] = OSD.FromBoolean(SeeIntoThisSimFromNeighbor);
                 args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
-                args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
-                args["number_startup"] = OSD.FromInteger (NumberStartup);
+                args["allow_physical_prims"] = OSD.FromBoolean(AllowPhysicalPrims);
+                args["number_startup"] = OSD.FromInteger(NumberStartup);
                 args["startupType"] = OSD.FromInteger((int)Startup);
                 args["RegionSettings"] = RegionSettings.ToOSD();
             }
@@ -371,25 +371,25 @@ namespace Aurora.Framework
                 AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
             if (args.ContainsKey("allow_physical_prims"))
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
-            if(args.ContainsKey("number_startup"))
+            if (args.ContainsKey("number_startup"))
                 NumberStartup = args["number_startup"].AsInteger();
-            if (args.ContainsKey ("startupType"))
+            if (args.ContainsKey("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
-            if(args.ContainsKey("InfiniteRegion"))
+            if (args.ContainsKey("InfiniteRegion"))
                 InfiniteRegion = args["InfiniteRegion"].AsBoolean();
             if (args.ContainsKey("RegionSettings"))
             {
                 RegionSettings = new RegionSettings();
                 RegionSettings.FromOSD((OSDMap)args["RegionSettings"]);
             }
-            if (args.ContainsKey ("UDPPorts"))
+            if (args.ContainsKey("UDPPorts"))
             {
                 OSDArray ports = (OSDArray)args["UDPPorts"];
                 foreach (OSD p in ports)
-                    m_UDPPorts.Add (p.AsInteger ());
+                    m_UDPPorts.Add(p.AsInteger());
             }
-            if (!m_UDPPorts.Contains (InternalEndPoint.Port))
-                m_UDPPorts.Add (InternalEndPoint.Port);
+            if (!m_UDPPorts.Contains(InternalEndPoint.Port))
+                m_UDPPorts.Add(InternalEndPoint.Port);
         }
     }
 }

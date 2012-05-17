@@ -171,10 +171,10 @@ namespace Aurora.Framework
 
             // Use the password to generate pseudo-random bytes for the encryption
             // key. Specify the size of the key in bytes (instead of bits).
-            byte[] keyBytes = password.GetBytes(KeySize/8);
+            byte[] keyBytes = password.GetBytes(KeySize / 8);
 
             // Create uninitialized Rijndael encryption object.
-            RijndaelManaged symmetricKey = new RijndaelManaged {Mode = CipherMode.CBC};
+            RijndaelManaged symmetricKey = new RijndaelManaged { Mode = CipherMode.CBC };
 
             // It is reasonable to set encryption mode to Cipher Block Chaining
             // (CBC). Use default options for other symmetric key parameters.
@@ -283,10 +283,10 @@ namespace Aurora.Framework
 
             // Use the password to generate pseudo-random bytes for the encryption
             // key. Specify the size of the key in bytes (instead of bits).
-            byte[] keyBytes = password.GetBytes(KeySize/8);
+            byte[] keyBytes = password.GetBytes(KeySize / 8);
 
             // Create uninitialized Rijndael encryption object.
-            RijndaelManaged symmetricKey = new RijndaelManaged {Mode = CipherMode.CBC};
+            RijndaelManaged symmetricKey = new RijndaelManaged { Mode = CipherMode.CBC };
 
             // It is reasonable to set encryption mode to Cipher Block Chaining
             // (CBC). Use default options for other symmetric key parameters.
@@ -357,7 +357,7 @@ namespace Aurora.Framework
                     externalIp = utf8.GetString(webClient.DownloadData("http://checkip.dyndns.org/"));
                     //Remove the HTML stuff
                     externalIp =
-                        externalIp.Remove(0, 76).Split(new string[1] {"</body>"}, StringSplitOptions.RemoveEmptyEntries)
+                        externalIp.Remove(0, 76).Split(new string[1] { "</body>" }, StringSplitOptions.RemoveEmptyEntries)
                             [0];
                     NetworkUtils.InternetSuccess();
                 }
@@ -393,7 +393,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static Hashtable GenericXMLRPCRequest(Hashtable ReqParams, string method, string URL)
         {
-            ArrayList SendParams = new ArrayList {ReqParams};
+            ArrayList SendParams = new ArrayList { ReqParams };
 
             // Send Request
             XmlRpcResponse Resp;
@@ -426,7 +426,7 @@ namespace Aurora.Framework
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            Hashtable RespData = (Hashtable) Resp.Value;
+            Hashtable RespData = (Hashtable)Resp.Value;
             if (RespData != null)
             {
                 RespData["success"] = "true";
@@ -459,7 +459,7 @@ namespace Aurora.Framework
                 reqP.Add(kvp.Key, Encrypt(kvp.Value.ToString(), passPhrase, salt));
             }
 
-            ArrayList SendParams = new ArrayList {reqP};
+            ArrayList SendParams = new ArrayList { reqP };
 
             // Send Request
             XmlRpcResponse Resp;
@@ -492,7 +492,7 @@ namespace Aurora.Framework
                 ErrorHash["success"] = "false";
                 return ErrorHash;
             }
-            Hashtable RespData = (Hashtable) Resp.Value;
+            Hashtable RespData = (Hashtable)Resp.Value;
             if (RespData != null)
             {
                 RespData["success"] = "true";
@@ -540,7 +540,7 @@ namespace Aurora.Framework
         {
             int size = BitConverter.ToInt32(data, data.Length - 4);
             byte[] uncompressedData = new byte[size];
-            MemoryStream memStream = new MemoryStream(data, start, (data.Length - start)) {Position = 0};
+            MemoryStream memStream = new MemoryStream(data, start, (data.Length - start)) { Position = 0 };
             GZipStream gzStream = new GZipStream(memStream, CompressionMode.Decompress);
 
             try
@@ -610,7 +610,7 @@ namespace Aurora.Framework
             buttonCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 
             form.ClientSize = new Size(396, 107);
-            form.Controls.AddRange(new Control[] {label, textBox, buttonOk, buttonCancel});
+            form.Controls.AddRange(new Control[] { label, textBox, buttonOk, buttonCancel });
             form.ClientSize = new Size(Math.Max(300, label.Right + 10), form.ClientSize.Height);
             form.FormBorderStyle = FormBorderStyle.FixedDialog;
             form.StartPosition = FormStartPosition.CenterScreen;
@@ -654,7 +654,7 @@ namespace Aurora.Framework
             buttonCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
 
             form.ClientSize = new Size(396, 107);
-            form.Controls.AddRange(new Control[] {label, buttonOk, buttonCancel});
+            form.Controls.AddRange(new Control[] { label, buttonOk, buttonCancel });
             form.ClientSize = new Size(Math.Max(300, label.Right + 10), form.ClientSize.Height);
             form.FormBorderStyle = FormBorderStyle.FixedDialog;
             form.StartPosition = FormStartPosition.CenterScreen;
