@@ -119,8 +119,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
         public void CreateFromData(UUID itemID, UUID objectID,
                                    OSD data)
         {
-            OSDMap save = (OSDMap) data;
-            TimerClass ts = new TimerClass {ID = objectID, itemID = itemID, interval = save["Interval"].AsLong()};
+            OSDMap save = (OSDMap)data;
+            TimerClass ts = new TimerClass { ID = objectID, itemID = itemID, interval = save["Interval"].AsLong() };
 
             if (ts.interval == 0) // Disabling timer
                 return;
@@ -157,7 +157,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             }
 
             // Add to timer
-            TimerClass ts = new TimerClass {ID = m_ID, itemID = m_itemID, interval = (long) (sec*1000)};
+            TimerClass ts = new TimerClass { ID = m_ID, itemID = m_itemID, interval = (long)(sec * 1000) };
 
             //ts.next = DateTime.Now.ToUniversalTime().AddSeconds(ts.interval);
             ts.next = Environment.TickCount + ts.interval;

@@ -89,7 +89,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (World.Permissions.CanTerraformLand(m_host.OwnerID, new Vector3(x, y, 0)))
             {
                 ITerrainChannel heightmap = World.RequestModuleInterface<ITerrainChannel>();
-                heightmap[x, y] = (float) val;
+                heightmap[x, y] = (float)val;
                 ITerrainModule terrainModule = World.RequestModuleInterface<ITerrainModule>();
                 if (terrainModule != null) terrainModule.TaintTerrain();
                 return 1;
@@ -145,7 +145,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 List<int> times = new List<int>();
                 while (seconds > 0)
                 {
-                    times.Add((int) seconds);
+                    times.Add((int)seconds);
                     if (seconds > 300)
                         seconds -= 120;
                     else if (seconds > 30)
@@ -385,7 +385,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 UUID createdTexture =
                     textureManager.AddDynamicTextureURL(World.RegionInfo.RegionID, m_host.UUID, UUID.Zero, contentType,
                                                         url,
-                                                        extraParams, timer, true, (byte) alpha);
+                                                        extraParams, timer, true, (byte)alpha);
                 return createdTexture.ToString();
             }
             else
@@ -394,7 +394,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 UUID createdTexture =
                     textureManager.AddDynamicTextureURL(World.RegionInfo.RegionID, m_host.UUID, oldAssetID, contentType,
                                                         url,
-                                                        extraParams, timer, true, (byte) alpha);
+                                                        extraParams, timer, true, (byte)alpha);
                 return createdTexture.ToString();
             }
         }
@@ -414,7 +414,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 UUID createdTexture =
                     textureManager.AddDynamicTextureURL(World.RegionInfo.RegionID, m_host.UUID, UUID.Zero, contentType,
                                                         url,
-                                                        extraParams, timer, blend, disp, (byte) alpha, face);
+                                                        extraParams, timer, blend, disp, (byte)alpha, face);
                 return createdTexture.ToString();
             }
             else
@@ -423,7 +423,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 UUID createdTexture =
                     textureManager.AddDynamicTextureURL(World.RegionInfo.RegionID, m_host.UUID, oldAssetID, contentType,
                                                         url,
-                                                        extraParams, timer, blend, disp, (byte) alpha, face);
+                                                        extraParams, timer, blend, disp, (byte)alpha, face);
                 return createdTexture.ToString();
             }
         }
@@ -485,7 +485,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID createdTexture =
                         textureManager.AddDynamicTextureData(World.RegionInfo.RegionID, m_host.UUID, UUID.Zero,
                                                              contentType, data,
-                                                             extraParams, timer, true, (byte) alpha);
+                                                             extraParams, timer, true, (byte)alpha);
                     return createdTexture.ToString();
                 }
                 else
@@ -494,7 +494,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID createdTexture =
                         textureManager.AddDynamicTextureData(World.RegionInfo.RegionID, m_host.UUID, oldAssetID,
                                                              contentType, data,
-                                                             extraParams, timer, true, (byte) alpha);
+                                                             extraParams, timer, true, (byte)alpha);
                     return createdTexture.ToString();
                 }
             }
@@ -523,7 +523,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID createdTexture =
                         textureManager.AddDynamicTextureData(World.RegionInfo.RegionID, m_host.UUID, UUID.Zero,
                                                              contentType, data,
-                                                             extraParams, timer, blend, disp, (byte) alpha, face);
+                                                             extraParams, timer, blend, disp, (byte)alpha, face);
                     return createdTexture.ToString();
                 }
                 else
@@ -532,7 +532,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     UUID createdTexture =
                         textureManager.AddDynamicTextureData(World.RegionInfo.RegionID, m_host.UUID, oldAssetID,
                                                              contentType, data,
-                                                             extraParams, timer, blend, disp, (byte) alpha, face);
+                                                             extraParams, timer, blend, disp, (byte)alpha, face);
                     return createdTexture.ToString();
                 }
             }
@@ -587,8 +587,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 ulong regionHandle = regInfo.RegionHandle;
                 return TeleportAgent(m_host.OwnerID, regionHandle,
-                                     new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                     new Vector3((float) lookat.x, (float) lookat.y, (float) lookat.z));
+                                     new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                     new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
             return DateTime.Now;
         }
@@ -604,15 +604,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return DateTime.Now;
 
             GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID,
-                                                                       (regionX*Constants.RegionSize),
-                                                                       (regionY*Constants.RegionSize));
+                                                                       (regionX * Constants.RegionSize),
+                                                                       (regionY * Constants.RegionSize));
             // Try to link the region
             if (regInfo != null)
             {
                 ulong regionHandle = regInfo.RegionHandle;
                 return TeleportAgent(m_host.OwnerID, regionHandle,
-                                     new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                     new Vector3((float) lookat.x, (float) lookat.y, (float) lookat.z));
+                                     new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                     new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
             return DateTime.Now;
         }
@@ -637,8 +637,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     ulong regionHandle = regInfo.RegionHandle;
                     return TeleportAgent(AgentID, regionHandle,
-                                         new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                         new Vector3((float) lookat.x, (float) lookat.y, (float) lookat.z));
+                                         new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                         new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                 }
             }
             return DateTime.Now;
@@ -652,16 +652,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osTeleportAgent", m_host, "OSSL", m_itemID))
                 return DateTime.Now;
 
-            ulong regionHandle = Utils.UIntsToLong(((uint) regionX*Constants.RegionSize),
-                                                   ((uint) regionY*Constants.RegionSize));
+            ulong regionHandle = Utils.UIntsToLong(((uint)regionX * Constants.RegionSize),
+                                                   ((uint)regionY * Constants.RegionSize));
 
 
             UUID agentId = new UUID();
             if (UUID.TryParse(agent, out agentId))
             {
                 return TeleportAgent(agentId, regionHandle,
-                                     new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                     new Vector3((float) lookat.x, (float) lookat.y, (float) lookat.z));
+                                     new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                     new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
             }
             return DateTime.Now;
         }
@@ -683,7 +683,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetAgentIP", m_host, "OSSL", m_itemID))
                 return new LSL_String();
 
-            UUID avatarID = (UUID) agent;
+            UUID avatarID = (UUID)agent;
 
             IScenePresence target;
             if (World.TryGetScenePresence(avatarID, out target))
@@ -691,7 +691,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 EndPoint ep = target.ControllingClient.GetClientEP();
                 if (ep is IPEndPoint)
                 {
-                    IPEndPoint ip = (IPEndPoint) ep;
+                    IPEndPoint ip = (IPEndPoint)ep;
                     return new LSL_String(ip.Address.ToString());
                 }
             }
@@ -723,7 +723,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 !ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarPlayAnimation", m_host, "OSSL",
                                                    m_itemID)) return;
 
-            UUID avatarID = (UUID) avatar;
+            UUID avatarID = (UUID)avatar;
 
 
             IScenePresence target;
@@ -739,7 +739,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if (inv.Value.Name == animation)
                             {
-                                if (inv.Value.Type == (int) AssetType.Animation)
+                                if (inv.Value.Type == (int)AssetType.Animation)
                                     animID = inv.Value.AssetID;
                                 continue;
                             }
@@ -767,7 +767,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 !ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAvatarStopAnimation", m_host, "OSSL",
                                                    m_itemID)) return;
 
-            UUID avatarID = (UUID) avatar;
+            UUID avatarID = (UUID)avatar;
 
 
             IScenePresence target;
@@ -783,7 +783,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             if (inv.Value.Name == animation)
                             {
-                                if (inv.Value.Type == (int) AssetType.Animation)
+                                if (inv.Value.Type == (int)AssetType.Animation)
                                     animID = inv.Value.AssetID;
                                 continue;
                             }
@@ -1000,7 +1000,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             //World.Permissions.GenericEstatePermission(
             if (World.Permissions.IsGod(m_host.OwnerID))
             {
-                World.EventManager.TriggerRequestChangeWaterHeight((float) height);
+                World.EventManager.TriggerRequestChangeWaterHeight((float)height);
             }
         }
 
@@ -1034,7 +1034,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 World.RegionInfo.RegionSettings.Save();
 
                 World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle, sunFixed, useEstateSun,
-                                                               (float) sunHour);
+                                                               (float)sunHour);
             }
         }
 
@@ -1067,7 +1067,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 World.EventManager.TriggerEstateToolsSunUpdate(World.RegionInfo.RegionHandle, sunFixed,
                                                                World.RegionInfo.RegionSettings.UseEstateSun,
-                                                               (float) sunHour);
+                                                               (float)sunHour);
             }
         }
 
@@ -1151,7 +1151,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 try
                 {
-                    module.WindParamSet(plugin, param, (float) value.value);
+                    module.WindParamSet(plugin, param, (float)value.value);
                 }
                 catch (Exception)
                 {
@@ -1179,10 +1179,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osParcelJoin", m_host, "OSSL", m_itemID)) return;
 
 
-            int startx = (int) (pos1.x < pos2.x ? pos1.x : pos2.x);
-            int starty = (int) (pos1.y < pos2.y ? pos1.y : pos2.y);
-            int endx = (int) (pos1.x > pos2.x ? pos1.x : pos2.x);
-            int endy = (int) (pos1.y > pos2.y ? pos1.y : pos2.y);
+            int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
+            int starty = (int)(pos1.y < pos2.y ? pos1.y : pos2.y);
+            int endx = (int)(pos1.x > pos2.x ? pos1.x : pos2.x);
+            int endy = (int)(pos1.y > pos2.y ? pos1.y : pos2.y);
 
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
@@ -1197,10 +1197,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
 
-            int startx = (int) (pos1.x < pos2.x ? pos1.x : pos2.x);
-            int starty = (int) (pos1.y < pos2.y ? pos1.y : pos2.y);
-            int endx = (int) (pos1.x > pos2.x ? pos1.x : pos2.x);
-            int endy = (int) (pos1.y > pos2.y ? pos1.y : pos2.y);
+            int startx = (int)(pos1.x < pos2.x ? pos1.x : pos2.x);
+            int starty = (int)(pos1.y < pos2.y ? pos1.y : pos2.y);
+            int endx = (int)(pos1.x > pos2.x ? pos1.x : pos2.x);
+            int endy = (int)(pos1.y > pos2.y ? pos1.y : pos2.y);
 
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
@@ -1221,7 +1221,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                ILandObject startLandObject = parcelManagement.GetLandObject((int) pos.x, (int) pos.y);
+                ILandObject startLandObject = parcelManagement.GetLandObject((int)pos.x, (int)pos.y);
                 if (startLandObject == null)
                 {
                     OSSLShoutError("There is no land at that location");
@@ -1238,7 +1238,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 UUID uuid;
 
                 // Process the rules, not sure what the impact would be of changing owner or group
-                for (int idx = 0; idx < rules.Length;)
+                for (int idx = 0; idx < rules.Length; )
                 {
                     int code = rules.GetLSLIntegerItem(idx++);
                     string arg = rules.GetLSLStringItem(idx++);
@@ -1427,13 +1427,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             else if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
                                 // add it to the parent array
-                                ((ArrayList) objectStack.Peek()).Add(currentObject);
+                                ((ArrayList)objectStack.Peek()).Add(currentObject);
                                 objectStack.Push(currentObject);
                             }
                             else
                             {
                                 // add it to the parent hashtable
-                                if (currentKey != null) ((Hashtable) objectStack.Peek()).Add(currentKey, currentObject);
+                                if (currentKey != null) ((Hashtable)objectStack.Peek()).Add(currentKey, currentObject);
                                 objectStack.Push(currentObject);
                             }
 
@@ -1468,17 +1468,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             // ok we've got a string, if we've got an array on the top of the stack then we store it
                             if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
-                                ((ArrayList) objectStack.Peek()).Add(tokenValue);
+                                ((ArrayList)objectStack.Peek()).Add(tokenValue);
                             }
                             else if (currentKey == null)
-                                // no key stored and its not an array this must be a key so store it
+                            // no key stored and its not an array this must be a key so store it
                             {
                                 currentKey = tokenValue;
                             }
                             else
                             {
                                 // we have a key so lets store this value
-                                ((Hashtable) objectStack.Peek()).Add(currentKey, tokenValue);
+                                ((Hashtable)objectStack.Peek()).Add(currentKey, tokenValue);
                                 // now lets clear the key, we're done with it and moving on
                                 currentKey = null;
                             }
@@ -1498,11 +1498,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                             if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
-                                ((ArrayList) objectStack.Peek()).Add(currentArray);
+                                ((ArrayList)objectStack.Peek()).Add(currentArray);
                             }
                             else
                             {
-                                if (currentKey != null) ((Hashtable) objectStack.Peek()).Add(currentKey, currentArray);
+                                if (currentKey != null) ((Hashtable)objectStack.Peek()).Add(currentKey, currentArray);
                                 // clear the key
                                 currentKey = null;
                             }
@@ -1523,11 +1523,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                             if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
-                                ((ArrayList) objectStack.Peek()).Add(true);
+                                ((ArrayList)objectStack.Peek()).Add(true);
                             }
                             else
                             {
-                                if (currentKey != null) ((Hashtable) objectStack.Peek()).Add(currentKey, true);
+                                if (currentKey != null) ((Hashtable)objectStack.Peek()).Add(currentKey, true);
                                 currentKey = null;
                             }
 
@@ -1539,11 +1539,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                             if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
-                                ((ArrayList) objectStack.Peek()).Add(false);
+                                ((ArrayList)objectStack.Peek()).Add(false);
                             }
                             else
                             {
-                                if (currentKey != null) ((Hashtable) objectStack.Peek()).Add(currentKey, false);
+                                if (currentKey != null) ((Hashtable)objectStack.Peek()).Add(currentKey, false);
                                 currentKey = null;
                             }
                             //advance the counter to the letter 'e'
@@ -1576,12 +1576,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                             // ok we've got a string, if we've got an array on the top of the stack then we store it
                             if (objectStack.Peek().ToString() == "System.Collections.ArrayList")
                             {
-                                ((ArrayList) objectStack.Peek()).Add(numberValue);
+                                ((ArrayList)objectStack.Peek()).Add(numberValue);
                             }
                             else
                             {
                                 // we have a key so lets store this value
-                                if (currentKey != null) ((Hashtable) objectStack.Peek()).Add(currentKey, numberValue);
+                                if (currentKey != null) ((Hashtable)objectStack.Peek()).Add(currentKey, numberValue);
                                 // now lets clear the key, we're done with it and moving on
                                 currentKey = null;
                             }
@@ -1606,7 +1606,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
 
-            object[] resobj = new object[] {new LSL_Key(m_host.UUID.ToString()), new LSL_Key(message)};
+            object[] resobj = new object[] { new LSL_Key(m_host.UUID.ToString()), new LSL_Key(message) };
 
             ISceneChildEntity sceneOP = World.GetSceneObjectPart(objectUUID);
 
@@ -1625,8 +1625,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // Create new asset
-            AssetBase asset = new AssetBase(UUID.Random(), notecardName, AssetType.Notecard, m_host.OwnerID)
-                                  {Description = "Script Generated Notecard"};
+            AssetBase asset = new AssetBase(UUID.Random(), notecardName, AssetType.Notecard, m_host.OwnerID) { Description = "Script Generated Notecard" };
             string notecardData = String.Empty;
 
             for (int i = 0; i < contents.Length; i++)
@@ -1647,17 +1646,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             taskItem.ResetIDs(m_host.UUID);
             taskItem.ParentID = m_host.UUID;
-            taskItem.CreationDate = (uint) Util.UnixTimeSinceEpoch();
+            taskItem.CreationDate = (uint)Util.UnixTimeSinceEpoch();
             taskItem.Name = asset.Name;
             taskItem.Description = asset.Description;
-            taskItem.Type = (int) AssetType.Notecard;
-            taskItem.InvType = (int) InventoryType.Notecard;
+            taskItem.Type = (int)AssetType.Notecard;
+            taskItem.InvType = (int)InventoryType.Notecard;
             taskItem.OwnerID = m_host.OwnerID;
             taskItem.CreatorID = m_host.OwnerID;
-            taskItem.BasePermissions = (uint) PermissionMask.All;
-            taskItem.CurrentPermissions = (uint) PermissionMask.All;
+            taskItem.BasePermissions = (uint)PermissionMask.All;
+            taskItem.CurrentPermissions = (uint)PermissionMask.All;
             taskItem.EveryonePermissions = 0;
-            taskItem.NextPermissions = (uint) PermissionMask.All;
+            taskItem.NextPermissions = (uint)PermissionMask.All;
             taskItem.GroupID = m_host.GroupID;
             taskItem.GroupPermissions = 0;
             taskItem.Flags = 0;
@@ -1975,7 +1974,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 foreach (Group g in match.Groups)
                 {
-                    if(g.Success)
+                    if (g.Success)
                     {
                         result.Add(new LSL_Integer(g.Value));
                         result.Add(new LSL_Integer(g.Index));
@@ -2032,7 +2031,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISceneChildEntity part = m_host.ParentEntity.GetLinkNumPart(linknumber) as ISceneChildEntity;
 
             //Check to see if the requested part exists (NOT null) and if so, get it's rules
-            if (part != null) retVal = ((LSL_Api) m_LSL_Api).GetLinkPrimitiveParams(part, rules);
+            if (part != null) retVal = ((LSL_Api)m_LSL_Api).GetLinkPrimitiveParams(part, rules);
 
             //Will retun rules for specific part, or an empty list if part == null
             return retVal;
@@ -2113,7 +2112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (pws < 0)
                 return 0;
 
-            return (int) pws;
+            return (int)pws;
         }
 
         public void osSetSpeed(LSL_Key UUID, LSL_Float SpeedModifier)
@@ -2130,7 +2129,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (!World.Permissions.IsGod(m_host.OwnerID))
                         return;
                 }
-                avatar.SpeedModifier = (float) SpeedModifier;
+                avatar.SpeedModifier = (float)SpeedModifier;
             }
         }
 
@@ -2208,9 +2207,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             obj.Shape.ProjectionEntry = projection;
             obj.Shape.ProjectionTextureUUID = texture;
-            obj.Shape.ProjectionFOV = (float) fov;
-            obj.Shape.ProjectionFocus = (float) focus;
-            obj.Shape.ProjectionAmbiance = (float) amb;
+            obj.Shape.ProjectionFOV = (float)fov;
+            obj.Shape.ProjectionFocus = (float)focus;
+            obj.Shape.ProjectionAmbiance = (float)amb;
 
 
             obj.ParentEntity.HasGroupChanged = true;
@@ -2307,12 +2306,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                    m_itemID)) return new LSL_String();
             long baseTicks = 621355968000000000;
             long tickResolution = 10000000;
-            long epochTicks = (time*tickResolution) + baseTicks;
+            long epochTicks = (time * tickResolution) + baseTicks;
             DateTime date = new DateTime(epochTicks);
 
             return date.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ");
         }
-        
+
         /// <summary>
         /// Get the description from an inventory item
         /// </summary>
@@ -2351,7 +2350,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (parcelManagement != null)
                 {
                     LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
-                    if ((land.Flags & (uint) ParcelFlags.AllowDamage) == (uint) ParcelFlags.AllowDamage)
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
                         cp.IncurDamage(World.GetScenePresence(m_host.OwnerID), damage);
@@ -2375,12 +2374,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (parcelManagement != null)
                 {
                     LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
-                    if ((land.Flags & (uint) ParcelFlags.AllowDamage) == (uint) ParcelFlags.AllowDamage)
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
                         cp.IncurDamage(World.GetScenePresence(m_host.OwnerID), damage, regionName,
-                                       new Vector3((float) position.x, (float) position.y, (float) position.z),
-                                       new Vector3((float) lookat.x, (float) lookat.y, (float) lookat.z));
+                                       new Vector3((float)position.x, (float)position.y, (float)position.z),
+                                       new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
                     }
                 }
             }
@@ -2401,7 +2400,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (parcelManagement != null)
                 {
                     LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
-                    if ((land.Flags & (uint) ParcelFlags.AllowDamage) == (uint) ParcelFlags.AllowDamage)
+                    if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
                     {
                         ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
                         cp.IncurHealing(healing);
@@ -2471,7 +2470,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease) base.InitializeLifetimeService();
+            ILease lease = (ILease)base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {
@@ -2492,7 +2491,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (m_LSL_Api != null)
                 return;
 
-            m_LSL_Api = (ILSL_Api) m_ScriptEngine.GetApi(m_itemID, "ll");
+            m_LSL_Api = (ILSL_Api)m_ScriptEngine.GetApi(m_itemID, "ll");
         }
 
         //
@@ -2520,7 +2519,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <returns></returns>
         protected DateTime PScriptSleep(int delay)
         {
-            delay = (int) (delay*m_ScriptDelayFactor);
+            delay = (int)(delay * m_ScriptDelayFactor);
             if (delay == 0)
                 return DateTime.Now;
 
@@ -2539,7 +2538,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (World.Entities.TryGetValue(target, out entity))
             {
                 if (entity is SceneObjectGroup)
-                    ((SceneObjectGroup) entity).Rotation = rotation;
+                    ((SceneObjectGroup)entity).Rotation = rotation;
                 else if (entity is IScenePresence)
                     (entity).Rotation = rotation;
             }
@@ -2565,7 +2564,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return DateTime.Now;
                     }
                 }
-                presence.ControllingClient.SendTeleportStart((uint) TeleportFlags.ViaLocation);
+                presence.ControllingClient.SendTeleportStart((uint)TeleportFlags.ViaLocation);
 
                 IEntityTransferModule entityTransfer = World.RequestModuleInterface<IEntityTransferModule>();
                 if (entityTransfer != null)
@@ -2573,7 +2572,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     entityTransfer.RequestTeleportLocation(presence.ControllingClient,
                                                            regionHandle,
                                                            position,
-                                                           lookAt, (uint) TeleportFlags.ViaLocation);
+                                                           lookAt, (uint)TeleportFlags.ViaLocation);
                 }
 
                 return PScriptSleep(5000);

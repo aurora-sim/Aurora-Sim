@@ -43,12 +43,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public T Get<T>()
         {
-            return (T) m_instances[typeof (T)];
+            return (T)m_instances[typeof(T)];
         }
 
         public bool TryGet<T>(out T extension)
         {
-            if (!m_instances.ContainsKey(typeof (T)))
+            if (!m_instances.ContainsKey(typeof(T)))
             {
                 extension = default(T);
                 return false;
@@ -60,7 +60,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public bool Has<T>()
         {
-            return m_instances.ContainsKey(typeof (T));
+            return m_instances.ContainsKey(typeof(T));
         }
 
         #endregion

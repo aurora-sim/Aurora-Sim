@@ -126,7 +126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease) base.InitializeLifetimeService();
+            ILease lease = (ILease)base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {
