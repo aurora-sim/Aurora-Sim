@@ -108,7 +108,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         public Vector3 RotationalVelocity;
     }
 
-// Format of this structure must match the definition in the C++ code
+    // Format of this structure must match the definition in the C++ code
     [StructLayout(LayoutKind.Sequential)]
     public struct ConfigurationParameters
     {
@@ -240,7 +240,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public static extern Vector3 RecoverFromPenetration(uint worldID, uint id);
 
-// Log a debug message
+        // Log a debug message
 
         [DllImport("BulletSim", CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public static extern void SetDebugLogCallback(DebugLogCallback callback);

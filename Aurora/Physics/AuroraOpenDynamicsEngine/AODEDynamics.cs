@@ -69,12 +69,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private float m_angularDeflectionEfficiency;
         private float m_angularDeflectionTimescale;
         private Vector3 m_angularFrictionTimescale = Vector3.Zero; // body angular velocity  decay rate
-        
+
         private float m_angularMotorDecayTimescale; // motor angular velocity decay rate
         private Vector3 m_angularMotorDirection = Vector3.Zero; // angular velocity requested by LSL motor
         private float m_angularMotorTimescale; // motor angular velocity ramp up rate
         private Vector3 m_angularMotorVelocity = Vector3.Zero; // current angular motor velocity
-        
+
 
         //Banking properties
         private float m_bankingEfficiency;
@@ -112,9 +112,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         //Attractor properties
         private float m_verticalAttractionEfficiency = 1.0f; // damped
         private float m_verticalAttractionTimescale = 500f; // Timescale > 300  means no vert attractor.
-        
-       
-        
+
+
+
 
         public Vehicle Type
         {
@@ -138,19 +138,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (pValue <= timestep)
                         m_angularDeflectionTimescale = timestep;
                     else
-                        m_angularDeflectionTimescale = pValue/timestep;
+                        m_angularDeflectionTimescale = pValue / timestep;
                     break;
                 case Vehicle.ANGULAR_MOTOR_DECAY_TIMESCALE:
                     if (pValue <= timestep)
                         m_angularMotorDecayTimescale = timestep;
                     else
-                        m_angularMotorDecayTimescale = pValue/timestep;
+                        m_angularMotorDecayTimescale = pValue / timestep;
                     break;
                 case Vehicle.ANGULAR_MOTOR_TIMESCALE:
                     if (pValue <= timestep)
                         m_angularMotorTimescale = timestep;
                     else
-                        m_angularMotorTimescale = pValue/timestep;
+                        m_angularMotorTimescale = pValue / timestep;
                     break;
                 case Vehicle.BANKING_EFFICIENCY:
                     if (pValue < -1f) pValue = -1f;
@@ -165,7 +165,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (pValue <= timestep)
                         m_bankingTimescale = timestep;
                     else
-                        m_bankingTimescale = pValue/timestep;
+                        m_bankingTimescale = pValue / timestep;
                     break;
                 case Vehicle.BUOYANCY:
                     if (pValue < -1f) pValue = -1f;
@@ -184,7 +184,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (pValue <= timestep)
                         m_VhoverTimescale = timestep;
                     else
-                        m_VhoverTimescale = pValue/timestep;
+                        m_VhoverTimescale = pValue / timestep;
                     break;
                 case Vehicle.LINEAR_DEFLECTION_EFFICIENCY:
                     if (pValue < 0.01f) pValue = 0.01f;
@@ -194,21 +194,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (pValue <= timestep)
                         m_linearDeflectionTimescale = timestep;
                     else
-                        m_linearDeflectionTimescale = pValue/timestep;
+                        m_linearDeflectionTimescale = pValue / timestep;
                     break;
                 case Vehicle.LINEAR_MOTOR_DECAY_TIMESCALE:
                     if (pValue > 120)
-                        m_linearMotorDecayTimescale = 120/timestep;
+                        m_linearMotorDecayTimescale = 120 / timestep;
                     else if (pValue <= timestep)
                         m_linearMotorDecayTimescale = timestep;
                     else
-                        m_linearMotorDecayTimescale = pValue/timestep;
+                        m_linearMotorDecayTimescale = pValue / timestep;
                     break;
                 case Vehicle.LINEAR_MOTOR_TIMESCALE:
                     if (pValue <= timestep)
                         m_linearMotorTimescale = timestep;
                     else
-                        m_linearMotorTimescale = pValue/timestep;
+                        m_linearMotorTimescale = pValue / timestep;
                     break;
                 case Vehicle.VERTICAL_ATTRACTION_EFFICIENCY:
                     if (pValue < 0.1f) pValue = 0.1f; // Less goes unstable
@@ -219,11 +219,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (pValue <= timestep)
                         m_verticalAttractionTimescale = timestep;
                     else
-                        m_verticalAttractionTimescale = pValue/timestep;
+                        m_verticalAttractionTimescale = pValue / timestep;
                     break;
 
-                    // These are vector properties but the engine lets you use a single float value to
-                    // set all of the components to the same value
+                // These are vector properties but the engine lets you use a single float value to
+                // set all of the components to the same value
                 case Vehicle.ANGULAR_FRICTION_TIMESCALE:
                     if (pValue <= timestep)
                         pValue = timestep;
@@ -248,7 +248,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-//end ProcessFloatVehicleParam
+        //end ProcessFloatVehicleParam
 
         //All parts hooked up
         internal void ProcessVectorVehicleParam(Vehicle pParam, Vector3 pValue, float timestep)
@@ -262,7 +262,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         pValue.Y = timestep;
                     if (pValue.Z < timestep)
                         pValue.Z = timestep;
-                    m_angularFrictionTimescale = new Vector3(pValue.X/timestep, pValue.Y/timestep, pValue.Z/timestep);
+                    m_angularFrictionTimescale = new Vector3(pValue.X / timestep, pValue.Y / timestep, pValue.Z / timestep);
                     break;
                 case Vehicle.ANGULAR_MOTOR_DIRECTION:
                     m_angularMotorDirection = new Vector3(pValue.X, pValue.Y, pValue.Z);
@@ -282,7 +282,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         pValue.Y = timestep;
                     if (pValue.Z < timestep)
                         pValue.Z = timestep;
-                    m_linearFrictionTimescale = new Vector3(pValue.X/timestep, pValue.Y/timestep, pValue.Z/timestep);
+                    m_linearFrictionTimescale = new Vector3(pValue.X / timestep, pValue.Y / timestep, pValue.Z / timestep);
                     break;
                 case Vehicle.LINEAR_MOTOR_DIRECTION:
                     m_linearMotorDirection = pValue;
@@ -297,7 +297,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-//end ProcessVectorVehicleParam
+        //end ProcessVectorVehicleParam
 
         //All parts hooked up
         internal void ProcessRotationVehicleParam(Vehicle pParam, Quaternion pValue)
@@ -313,11 +313,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-//end ProcessRotationVehicleParam
+        //end ProcessRotationVehicleParam
 
         internal void ProcessVehicleFlags(int pParam, bool remove)
         {
-            VehicleFlag param = (VehicleFlag) pParam;
+            VehicleFlag param = (VehicleFlag)pParam;
             if (remove)
             {
                 if (pParam == -1)
@@ -331,7 +331,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_flags |= param;
         }
 
-//end ProcessVehicleFlags
+        //end ProcessVehicleFlags
 
         internal void ProcessTypeChange(AuroraODEPrim parent, Vehicle pType, float timestep)
         {
@@ -340,59 +340,59 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             switch (pType)
             {
                 case Vehicle.TYPE_NONE:
-                    m_linearFrictionTimescale = new Vector3(1000/timestep, 1000/timestep, 1000/timestep);
-                    m_angularFrictionTimescale = new Vector3(1000/timestep, 1000/timestep, 1000/timestep);
+                    m_linearFrictionTimescale = new Vector3(1000 / timestep, 1000 / timestep, 1000 / timestep);
+                    m_angularFrictionTimescale = new Vector3(1000 / timestep, 1000 / timestep, 1000 / timestep);
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 1000/timestep;
-                    m_linearMotorDecayTimescale = 1000/timestep;
+                    m_linearMotorTimescale = 1000 / timestep;
+                    m_linearMotorDecayTimescale = 1000 / timestep;
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 1000/timestep;
-                    m_angularMotorDecayTimescale = 120/timestep;
+                    m_angularMotorTimescale = 1000 / timestep;
+                    m_angularMotorDecayTimescale = 120 / timestep;
                     m_VhoverHeight = 0;
-                    m_VhoverTimescale = 1000/timestep;
+                    m_VhoverTimescale = 1000 / timestep;
                     m_VehicleBuoyancy = 0;
 
                     m_linearDeflectionEfficiency = 1;
-                    m_linearDeflectionTimescale = 1/timestep;
+                    m_linearDeflectionTimescale = 1 / timestep;
 
                     m_angularDeflectionEfficiency = 0;
-                    m_angularDeflectionTimescale = 1000/timestep;
+                    m_angularDeflectionTimescale = 1000 / timestep;
 
                     m_bankingEfficiency = 0;
                     m_bankingMix = 1;
-                    m_bankingTimescale = 1000/timestep;
+                    m_bankingTimescale = 1000 / timestep;
 
                     m_flags = 0;
                     m_referenceFrame = Quaternion.Identity;
                     break;
 
                 case Vehicle.TYPE_SLED:
-                    m_linearFrictionTimescale = new Vector3(30/timestep, 1/timestep, 1000/timestep);
+                    m_linearFrictionTimescale = new Vector3(30 / timestep, 1 / timestep, 1000 / timestep);
 
-                    m_angularFrictionTimescale = new Vector3(1000/timestep, 1000/timestep, 1000/timestep);
+                    m_angularFrictionTimescale = new Vector3(1000 / timestep, 1000 / timestep, 1000 / timestep);
 
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 1000/timestep;
-                    m_linearMotorDecayTimescale = 120/timestep;
+                    m_linearMotorTimescale = 1000 / timestep;
+                    m_linearMotorDecayTimescale = 120 / timestep;
 
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 1000/timestep;
-                    m_angularMotorDecayTimescale = 120/timestep;
+                    m_angularMotorTimescale = 1000 / timestep;
+                    m_angularMotorDecayTimescale = 120 / timestep;
 
                     m_VhoverHeight = 0;
                     m_VhoverEfficiency = 10;
-                    m_VhoverTimescale = 10/timestep;
+                    m_VhoverTimescale = 10 / timestep;
                     m_VehicleBuoyancy = 0;
 
                     m_linearDeflectionEfficiency = 1;
-                    m_linearDeflectionTimescale = 1/timestep;
+                    m_linearDeflectionTimescale = 1 / timestep;
 
                     m_angularDeflectionEfficiency = 0;
-                    m_angularDeflectionTimescale = 1000/timestep;
+                    m_angularDeflectionTimescale = 1000 / timestep;
 
                     m_bankingEfficiency = 0;
                     m_bankingMix = 1;
-                    m_bankingTimescale = 10/timestep;
+                    m_bankingTimescale = 10 / timestep;
 
                     m_referenceFrame = Quaternion.Identity;
                     m_flags &=
@@ -401,27 +401,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_flags |= (VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_ROLL_ONLY | VehicleFlag.LIMIT_MOTOR_UP);
                     break;
                 case Vehicle.TYPE_CAR:
-                    m_linearFrictionTimescale = new Vector3(100/timestep, 2/timestep, 1000/timestep);
-                    m_angularFrictionTimescale = new Vector3(1000/timestep, 1000/timestep, 1000/timestep);
+                    m_linearFrictionTimescale = new Vector3(100 / timestep, 2 / timestep, 1000 / timestep);
+                    m_angularFrictionTimescale = new Vector3(1000 / timestep, 1000 / timestep, 1000 / timestep);
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 1/timestep;
-                    m_linearMotorDecayTimescale = 60/timestep;
+                    m_linearMotorTimescale = 1 / timestep;
+                    m_linearMotorDecayTimescale = 60 / timestep;
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 1/timestep;
-                    m_angularMotorDecayTimescale = 0.8f/timestep;
+                    m_angularMotorTimescale = 1 / timestep;
+                    m_angularMotorDecayTimescale = 0.8f / timestep;
                     m_VhoverHeight = 0;
                     m_VhoverEfficiency = 0;
-                    m_VhoverTimescale = 1000/timestep;
+                    m_VhoverTimescale = 1000 / timestep;
                     m_VehicleBuoyancy = 0;
                     m_linearDeflectionEfficiency = 1;
-                    m_linearDeflectionTimescale = 2/timestep;
+                    m_linearDeflectionTimescale = 2 / timestep;
                     m_angularDeflectionEfficiency = 0;
-                    m_angularDeflectionTimescale = 10/timestep;
+                    m_angularDeflectionTimescale = 10 / timestep;
                     m_verticalAttractionEfficiency = 1f;
-                    m_verticalAttractionTimescale = 10f/timestep;
+                    m_verticalAttractionTimescale = 10f / timestep;
                     m_bankingEfficiency = -0.2f;
                     m_bankingMix = 1;
-                    m_bankingTimescale = 1/timestep;
+                    m_bankingTimescale = 1 / timestep;
                     m_referenceFrame = Quaternion.Identity;
                     m_flags &=
                         ~(VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
@@ -430,27 +430,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 VehicleFlag.LIMIT_MOTOR_UP | VehicleFlag.HOVER_UP_ONLY);
                     break;
                 case Vehicle.TYPE_BOAT:
-                    m_linearFrictionTimescale = new Vector3(10/timestep, 3/timestep, 2/timestep);
-                    m_angularFrictionTimescale = new Vector3(10/timestep, 10/timestep, 10/timestep);
+                    m_linearFrictionTimescale = new Vector3(10 / timestep, 3 / timestep, 2 / timestep);
+                    m_angularFrictionTimescale = new Vector3(10 / timestep, 10 / timestep, 10 / timestep);
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 5/timestep;
-                    m_linearMotorDecayTimescale = 60/timestep;
+                    m_linearMotorTimescale = 5 / timestep;
+                    m_linearMotorDecayTimescale = 60 / timestep;
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 4/timestep;
-                    m_angularMotorDecayTimescale = 4/timestep;
+                    m_angularMotorTimescale = 4 / timestep;
+                    m_angularMotorDecayTimescale = 4 / timestep;
                     m_VhoverHeight = 0;
                     m_VhoverEfficiency = 0.5f;
-                    m_VhoverTimescale = 2/timestep;
+                    m_VhoverTimescale = 2 / timestep;
                     m_VehicleBuoyancy = 1;
                     m_linearDeflectionEfficiency = 0.5f;
-                    m_linearDeflectionTimescale = 3/timestep;
+                    m_linearDeflectionTimescale = 3 / timestep;
                     m_angularDeflectionEfficiency = 0.5f;
-                    m_angularDeflectionTimescale = 5/timestep;
+                    m_angularDeflectionTimescale = 5 / timestep;
                     m_verticalAttractionEfficiency = 0.5f;
-                    m_verticalAttractionTimescale = 5f/timestep;
+                    m_verticalAttractionTimescale = 5f / timestep;
                     m_bankingEfficiency = -0.3f;
                     m_bankingMix = 0.8f;
-                    m_bankingTimescale = 1/timestep;
+                    m_bankingTimescale = 1 / timestep;
                     m_referenceFrame = Quaternion.Identity;
                     m_flags &= ~(VehicleFlag.LIMIT_ROLL_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
                                  VehicleFlag.HOVER_GLOBAL_HEIGHT | VehicleFlag.HOVER_UP_ONLY);
@@ -459,24 +459,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 VehicleFlag.HOVER_WATER_ONLY);
                     break;
                 case Vehicle.TYPE_AIRPLANE:
-                    m_linearFrictionTimescale = new Vector3(200/timestep, 10/timestep, 5/timestep);
-                    m_angularFrictionTimescale = new Vector3(20/timestep, 20/timestep, 20/timestep);
+                    m_linearFrictionTimescale = new Vector3(200 / timestep, 10 / timestep, 5 / timestep);
+                    m_angularFrictionTimescale = new Vector3(20 / timestep, 20 / timestep, 20 / timestep);
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 2/timestep;
-                    m_linearMotorDecayTimescale = 60/timestep;
+                    m_linearMotorTimescale = 2 / timestep;
+                    m_linearMotorDecayTimescale = 60 / timestep;
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 4/timestep;
-                    m_angularMotorDecayTimescale = 4/timestep;
+                    m_angularMotorTimescale = 4 / timestep;
+                    m_angularMotorDecayTimescale = 4 / timestep;
                     m_VhoverHeight = 0;
                     m_VhoverEfficiency = 0.5f;
-                    m_VhoverTimescale = 1000/timestep;
+                    m_VhoverTimescale = 1000 / timestep;
                     m_VehicleBuoyancy = 0;
                     m_linearDeflectionEfficiency = 0.5f;
-                    m_linearDeflectionTimescale = 3/timestep;
+                    m_linearDeflectionTimescale = 3 / timestep;
                     m_angularDeflectionEfficiency = 1;
-                    m_angularDeflectionTimescale = 2/timestep;
+                    m_angularDeflectionTimescale = 2 / timestep;
                     m_verticalAttractionEfficiency = 0.9f;
-                    m_verticalAttractionTimescale = 2f/timestep;
+                    m_verticalAttractionTimescale = 2f / timestep;
                     m_bankingEfficiency = 1;
                     m_bankingMix = 0.7f;
                     m_bankingTimescale = 2;
@@ -487,27 +487,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     m_flags |= (VehicleFlag.LIMIT_ROLL_ONLY);
                     break;
                 case Vehicle.TYPE_BALLOON:
-                    m_linearFrictionTimescale = new Vector3(5/timestep, 5/timestep, 5/timestep);
-                    m_angularFrictionTimescale = new Vector3(10/timestep, 10/timestep, 10/timestep);
+                    m_linearFrictionTimescale = new Vector3(5 / timestep, 5 / timestep, 5 / timestep);
+                    m_angularFrictionTimescale = new Vector3(10 / timestep, 10 / timestep, 10 / timestep);
                     m_linearMotorDirection = Vector3.Zero;
-                    m_linearMotorTimescale = 5/timestep;
-                    m_linearMotorDecayTimescale = 60/timestep;
+                    m_linearMotorTimescale = 5 / timestep;
+                    m_linearMotorDecayTimescale = 60 / timestep;
                     m_angularMotorDirection = Vector3.Zero;
-                    m_angularMotorTimescale = 6/timestep;
-                    m_angularMotorDecayTimescale = 10/timestep;
+                    m_angularMotorTimescale = 6 / timestep;
+                    m_angularMotorDecayTimescale = 10 / timestep;
                     m_VhoverHeight = 5;
                     m_VhoverEfficiency = 0.8f;
-                    m_VhoverTimescale = 10/timestep;
+                    m_VhoverTimescale = 10 / timestep;
                     m_VehicleBuoyancy = 1;
                     m_linearDeflectionEfficiency = 0;
-                    m_linearDeflectionTimescale = 5/timestep;
+                    m_linearDeflectionTimescale = 5 / timestep;
                     m_angularDeflectionEfficiency = 0;
-                    m_angularDeflectionTimescale = 5/timestep;
+                    m_angularDeflectionTimescale = 5 / timestep;
                     m_verticalAttractionEfficiency = 1f;
-                    m_verticalAttractionTimescale = 100f/timestep;
+                    m_verticalAttractionTimescale = 100f / timestep;
                     m_bankingEfficiency = 0;
                     m_bankingMix = 0.7f;
-                    m_bankingTimescale = 5/timestep;
+                    m_bankingTimescale = 5 / timestep;
                     m_referenceFrame = Quaternion.Identity;
                     m_flags &= ~(VehicleFlag.NO_DEFLECTION_UP | VehicleFlag.LIMIT_MOTOR_UP |
                                  VehicleFlag.HOVER_WATER_ONLY | VehicleFlag.HOVER_TERRAIN_ONLY |
@@ -517,7 +517,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-//end SetDefaultsForType
+        //end SetDefaultsForType
 
         internal void Enable(IntPtr pBody, AuroraODEPrim parent, AuroraODEPhysicsScene pParentScene)
         {
@@ -597,10 +597,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                Vector3 addAmount = (m_linearMotorDirection - m_lastLinearVelocityVector)/(m_linearMotorTimescale);
+                Vector3 addAmount = (m_linearMotorDirection - m_lastLinearVelocityVector) / (m_linearMotorTimescale);
                 m_lastLinearVelocityVector += (addAmount);
 
-                m_linearMotorDirection *= (1.0f - 1.0f/m_linearMotorDecayTimescale);
+                m_linearMotorDirection *= (1.0f - 1.0f / m_linearMotorDecayTimescale);
 
                 // convert requested object velocity to world-referenced vector
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
@@ -674,7 +674,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 pos.Z = terrainHeight + 2;
                 m_lastPositionVector = pos;
-                    //Make sure that we don't have an explosion the next frame with the posChange
+                //Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
                 underground = true;
             }
@@ -695,7 +695,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // We should hover, get the target height
                 if ((m_flags & VehicleFlag.HOVER_WATER_ONLY) != 0)
                 {
-                    m_VhoverTargetHeight = (float) _pParentScene.GetWaterLevel(pos.X, pos.Y) + m_VhoverHeight;
+                    m_VhoverTargetHeight = (float)_pParentScene.GetWaterLevel(pos.X, pos.Y) + m_VhoverHeight;
                 }
                 if ((m_flags & VehicleFlag.HOVER_TERRAIN_ONLY) != 0)
                 {
@@ -731,12 +731,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Replace Vertical speed with correction figure if significant
                     if (herr0 > 0.01f)
                     {
-                        m_newVelocity.Z = -((herr0*50.0f)/m_VhoverTimescale);
+                        m_newVelocity.Z = -((herr0 * 50.0f) / m_VhoverTimescale);
                         //KF: m_VhoverEfficiency is not yet implemented
                     }
                     else if (herr0 < -0.01f)
                     {
-                        m_newVelocity.Z = -((herr0*50f)/m_VhoverTimescale);
+                        m_newVelocity.Z = -((herr0 * 50f) / m_VhoverTimescale);
                     }
                     else
                     {
@@ -792,7 +792,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             // force to deltaV
-            m_newVelocity += TaintedForce*(pTimestep/Mass);
+            m_newVelocity += TaintedForce * (pTimestep / Mass);
 
             #endregion
 
@@ -836,9 +836,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.BodySetLinearVel(Body, m_newVelocity.X, m_newVelocity.Y, m_newVelocity.Z + grav);
             }
             // apply friction
-            m_lastLinearVelocityVector.X *= (1.0f - 1/m_linearFrictionTimescale.X);
-            m_lastLinearVelocityVector.Y *= (1.0f - 1/m_linearFrictionTimescale.Y);
-            m_lastLinearVelocityVector.Z *= (1.0f - 1/m_linearFrictionTimescale.Z);
+            m_lastLinearVelocityVector.X *= (1.0f - 1 / m_linearFrictionTimescale.X);
+            m_lastLinearVelocityVector.Y *= (1.0f - 1 / m_linearFrictionTimescale.Y);
+            m_lastLinearVelocityVector.Z *= (1.0f - 1 / m_linearFrictionTimescale.Z);
         }
 
         // end MoveLinear()
@@ -863,10 +863,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (m_angularMotorDirection.LengthSquared() > 1e-6f)
             {
-                m_angularMotorVelocity.X = (m_angularMotorDirection.X - angularVelocity.X)/(m_angularMotorTimescale);
-                m_angularMotorVelocity.Y = (m_angularMotorDirection.Y - angularVelocity.Y)/(m_angularMotorTimescale);
-                m_angularMotorVelocity.Z = (m_angularMotorDirection.Z - angularVelocity.Z)/(m_angularMotorTimescale);
-                m_angularMotorDirection *= (1.0f - 1.0f/m_angularMotorDecayTimescale);
+                m_angularMotorVelocity.X = (m_angularMotorDirection.X - angularVelocity.X) / (m_angularMotorTimescale);
+                m_angularMotorVelocity.Y = (m_angularMotorDirection.Y - angularVelocity.Y) / (m_angularMotorTimescale);
+                m_angularMotorVelocity.Z = (m_angularMotorDirection.Z - angularVelocity.Z) / (m_angularMotorTimescale);
+                m_angularMotorDirection *= (1.0f - 1.0f / m_angularMotorDecayTimescale);
             }
             else
             {
@@ -929,7 +929,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             //Forward is the prefered direction, but if the reference frame has changed, we need to take this into account as well
             Vector3 PreferredAxisOfMotion =
-                new Vector3((10*(m_angularDeflectionEfficiency/m_angularDeflectionTimescale)), 0, 0);
+                new Vector3((10 * (m_angularDeflectionEfficiency / m_angularDeflectionTimescale)), 0, 0);
             PreferredAxisOfMotion *= Quaternion.Add(rotq, m_referenceFrame);
 
             //Multiply it so that it scales linearly
@@ -943,12 +943,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (m_bankingEfficiency != 0)
             {
-                Vector3 dir = Vector3.One*rotq;
-                float mult = (m_bankingMix*m_bankingMix)*-1*(m_bankingMix < 0 ? -1 : 1);
-                    //Changes which way it banks in and out of turns
+                Vector3 dir = Vector3.One * rotq;
+                float mult = (m_bankingMix * m_bankingMix) * -1 * (m_bankingMix < 0 ? -1 : 1);
+                //Changes which way it banks in and out of turns
 
                 //Use the square of the efficiency, as it looks much more how SL banking works
-                float effSquared = (m_bankingEfficiency*m_bankingEfficiency);
+                float effSquared = (m_bankingEfficiency * m_bankingEfficiency);
                 if (m_bankingEfficiency < 0)
                     effSquared *= -1; //Keep the negative!
 
@@ -968,17 +968,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }*/
                 }
                 else
-                    banking.Z += (effSquared*(mult*mix))*(m_angularMotorVelocity.X) * 4;
+                    banking.Z += (effSquared * (mult * mix)) * (m_angularMotorVelocity.X) * 4;
                 if (!parent.LinkSetIsColliding && Math.Abs(m_angularMotorVelocity.X) > mix)
-                    //If they are colliding, we probably shouldn't shove the prim around... probably
+                //If they are colliding, we probably shouldn't shove the prim around... probably
                 {
-                    float angVelZ = m_angularMotorVelocity.X*-1;
+                    float angVelZ = m_angularMotorVelocity.X * -1;
                     /*if(angVelZ > mix)
                         angVelZ = mix;
                     else if(angVelZ < -mix)
                         angVelZ = -mix;*/
                     //This controls how fast and how far the banking occurs
-                    Vector3 bankingRot = new Vector3(angVelZ*(effSquared*mult), 0, 0);
+                    Vector3 bankingRot = new Vector3(angVelZ * (effSquared * mult), 0, 0);
                     if (bankingRot.X > 3)
                         bankingRot.X = 3;
                     else if (bankingRot.X < -3)
@@ -1004,7 +1004,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         Zchange = -0.3f;
                     //Requires idea of 'up', so use reference frame to rotate it
                     //Add to the X, because that will normally tilt the vehicle downward (if its rotated, it'll be rotated by the ref. frame
-                    downForce = (new Vector3(0, ((float) Math.Abs(Zchange)*(pTimestep*_pParentScene.PID_P/4)), 0));
+                    downForce = (new Vector3(0, ((float)Math.Abs(Zchange) * (pTimestep * _pParentScene.PID_P / 4)), 0));
                     downForce *= rotq;
                 }
             }
@@ -1032,7 +1032,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // The torque created is the linear velocity crossed with the offset
 
                 //Note: we use the motor, otherwise you will just spin around and we divide by 10 since otherwise we go crazy
-                Vector3 torqueFromOffset = (m_linearMotorDirectionLASTSET/m_linearMotorOffset);
+                Vector3 torqueFromOffset = (m_linearMotorDirectionLASTSET / m_linearMotorOffset);
                 if (float.IsNaN(torqueFromOffset.X))
                     torqueFromOffset.X = 0;
                 if (float.IsNaN(torqueFromOffset.Y))
@@ -1067,54 +1067,54 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.BodySetAngularVel(Body, m_lastAngularVelocity.X, m_lastAngularVelocity.Y, m_lastAngularVelocity.Z);
                 m_angularZeroFlag = false;
 
-                m_lastAngularVelocity.X *= (1.0f - 1.0f/m_angularFrictionTimescale.X);
-                m_lastAngularVelocity.Y *= (1.0f - 1.0f/m_angularFrictionTimescale.Y);
-                m_lastAngularVelocity.Z *= (1.0f - 1.0f/m_angularFrictionTimescale.Z);
+                m_lastAngularVelocity.X *= (1.0f - 1.0f / m_angularFrictionTimescale.X);
+                m_lastAngularVelocity.Y *= (1.0f - 1.0f / m_angularFrictionTimescale.Y);
+                m_lastAngularVelocity.Z *= (1.0f - 1.0f / m_angularFrictionTimescale.Z);
             }
         }
 
 
         private Vector3 ToEuler(Quaternion m_lastCameraRotation)
         {
-            Quaternion t = new Quaternion(m_lastCameraRotation.X*m_lastCameraRotation.X,
-                                          m_lastCameraRotation.Y*m_lastCameraRotation.Y,
-                                          m_lastCameraRotation.Z*m_lastCameraRotation.Z,
-                                          m_lastCameraRotation.W*m_lastCameraRotation.W);
+            Quaternion t = new Quaternion(m_lastCameraRotation.X * m_lastCameraRotation.X,
+                                          m_lastCameraRotation.Y * m_lastCameraRotation.Y,
+                                          m_lastCameraRotation.Z * m_lastCameraRotation.Z,
+                                          m_lastCameraRotation.W * m_lastCameraRotation.W);
             double m = (m_lastCameraRotation.X + m_lastCameraRotation.Y + m_lastCameraRotation.Z +
                         m_lastCameraRotation.W);
             if (m == 0) return Vector3.Zero;
-            double n = 2*(m_lastCameraRotation.Y*m_lastCameraRotation.W + m_lastCameraRotation.X*m_lastCameraRotation.Y);
-            double p = m*m - n*n;
+            double n = 2 * (m_lastCameraRotation.Y * m_lastCameraRotation.W + m_lastCameraRotation.X * m_lastCameraRotation.Y);
+            double p = m * m - n * n;
             if (p > 0)
                 return
                     new Vector3(
                         (float)
                         NormalizeAngle(
                             Math.Atan2(
-                                2.0*
-                                (m_lastCameraRotation.X*m_lastCameraRotation.W -
-                                 m_lastCameraRotation.Y*m_lastCameraRotation.Z), (-t.X - t.Y + t.Z + t.W))),
-                        (float) NormalizeAngle(Math.Atan2(n, Math.Sqrt(p))),
+                                2.0 *
+                                (m_lastCameraRotation.X * m_lastCameraRotation.W -
+                                 m_lastCameraRotation.Y * m_lastCameraRotation.Z), (-t.X - t.Y + t.Z + t.W))),
+                        (float)NormalizeAngle(Math.Atan2(n, Math.Sqrt(p))),
                         (float)
                         NormalizeAngle(
                             Math.Atan2(
-                                2.0*
-                                (m_lastCameraRotation.Z*m_lastCameraRotation.W -
-                                 m_lastCameraRotation.X*m_lastCameraRotation.Y), (t.X - t.Y - t.Z + t.W))));
+                                2.0 *
+                                (m_lastCameraRotation.Z * m_lastCameraRotation.W -
+                                 m_lastCameraRotation.X * m_lastCameraRotation.Y), (t.X - t.Y - t.Z + t.W))));
             else if (n > 0)
-                return new Vector3(0, (float) (Math.PI*0.5),
+                return new Vector3(0, (float)(Math.PI * 0.5),
                                    (float)
                                    NormalizeAngle(
                                        Math.Atan2(
-                                           (m_lastCameraRotation.Z*m_lastCameraRotation.W +
-                                            m_lastCameraRotation.X*m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
+                                           (m_lastCameraRotation.Z * m_lastCameraRotation.W +
+                                            m_lastCameraRotation.X * m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
             else
-                return new Vector3(0, (float) (-Math.PI*0.5),
+                return new Vector3(0, (float)(-Math.PI * 0.5),
                                    (float)
                                    NormalizeAngle(
                                        Math.Atan2(
-                                           (m_lastCameraRotation.Z*m_lastCameraRotation.W +
-                                            m_lastCameraRotation.X*m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
+                                           (m_lastCameraRotation.Z * m_lastCameraRotation.W +
+                                            m_lastCameraRotation.X * m_lastCameraRotation.Y), 0.5 - t.X - t.Z)));
         }
 
         protected double NormalizeAngle(double angle)
@@ -1122,9 +1122,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (angle > -Math.PI && angle < Math.PI)
                 return angle;
 
-            int numPis = (int) (Math.PI/angle);
-            double remainder = angle - Math.PI*numPis;
-            if (numPis%2 == 1)
+            int numPis = (int)(Math.PI / angle);
+            double remainder = angle - Math.PI * numPis;
+            if (numPis % 2 == 1)
                 return Math.PI - angle;
             return remainder;
         }
@@ -1138,16 +1138,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
                 d.Quaternion m_rot = rot;
                 if (rot.X >= m_RollreferenceFrame.X)
-                    m_rot.X = rot.X - (m_RollreferenceFrame.X/2);
+                    m_rot.X = rot.X - (m_RollreferenceFrame.X / 2);
 
                 if (rot.Y >= m_RollreferenceFrame.Y)
-                    m_rot.Y = rot.Y - (m_RollreferenceFrame.Y/2);
+                    m_rot.Y = rot.Y - (m_RollreferenceFrame.Y / 2);
 
                 if (rot.X <= -m_RollreferenceFrame.X)
-                    m_rot.X = rot.X + (m_RollreferenceFrame.X/2);
+                    m_rot.X = rot.X + (m_RollreferenceFrame.X / 2);
 
                 if (rot.Y <= -m_RollreferenceFrame.Y)
-                    m_rot.Y = rot.Y + (m_RollreferenceFrame.Y/2);
+                    m_rot.Y = rot.Y + (m_RollreferenceFrame.Y / 2);
 
                 if ((m_flags & VehicleFlag.LOCK_ROTATION) != 0)
                 {
@@ -1185,7 +1185,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 a.Normalize();
                 b.Normalize();
-                double dotProduct = (a.X*b.X) + (a.Y*b.Y) + (a.Z*b.Z);
+                double dotProduct = (a.X * b.X) + (a.Y * b.Y) + (a.Z * b.Z);
                 // There are two degenerate cases possible. These are for vectors 180 or
                 // 0 degrees apart. These have to be detected and handled individually.
                 //
@@ -1195,14 +1195,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     // First assume X axis is orthogonal to the vectors.
                     Vector3 orthoVector = new Vector3(1.0f, 0.0f, 0.0f);
-                    orthoVector = orthoVector - a*(a.X/(a.X*a.X) + (a.Y*a.Y) + (a.Z*a.Z));
+                    orthoVector = orthoVector - a * (a.X / (a.X * a.X) + (a.Y * a.Y) + (a.Z * a.Z));
                     // Check for near zero vector. A very small non-zero number here will create
                     // a rotation in an undesired direction.
-                    rotBetween = Math.Sqrt(orthoVector.X*orthoVector.X + orthoVector.Y*orthoVector.Y +
-                                           orthoVector.Z*orthoVector.Z) > 0.0001 ? new Quaternion(orthoVector.X, orthoVector.Y, orthoVector.Z, 0.0f) : new Quaternion(0.0f, 0.0f, 1.0f, 0.0f);
+                    rotBetween = Math.Sqrt(orthoVector.X * orthoVector.X + orthoVector.Y * orthoVector.Y +
+                                           orthoVector.Z * orthoVector.Z) > 0.0001 ? new Quaternion(orthoVector.X, orthoVector.Y, orthoVector.Z, 0.0f) : new Quaternion(0.0f, 0.0f, 1.0f, 0.0f);
                 }
-                    // Check for parallel vectors.
-                    // A dot product of 1 would mean the angle between vectors is 0 degrees.
+                // Check for parallel vectors.
+                // A dot product of 1 would mean the angle between vectors is 0 degrees.
                 else if (dotProduct > 0.9999999f)
                 {
                     // Set zero rotation.
@@ -1213,25 +1213,25 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // All special checks have been performed so get the axis of rotation.
                     Vector3 crossProduct = new Vector3
                         (
-                        a.Y*b.Z - a.Z*b.Y,
-                        a.Z*b.X - a.X*b.Z,
-                        a.X*b.Y - a.Y*b.X
+                        a.Y * b.Z - a.Z * b.Y,
+                        a.Z * b.X - a.X * b.Z,
+                        a.X * b.Y - a.Y * b.X
                         );
                     // Quarternion s value is the length of the unit vector + dot product.
                     double qs = 1.0 + dotProduct;
-                    rotBetween = new Quaternion(crossProduct.X, crossProduct.Y, crossProduct.Z, (float) qs);
+                    rotBetween = new Quaternion(crossProduct.X, crossProduct.Y, crossProduct.Z, (float)qs);
                     // Normalize the rotation.
                     double mag =
-                        Math.Sqrt(rotBetween.X*rotBetween.X + rotBetween.Y*rotBetween.Y + rotBetween.Z*rotBetween.Z +
-                                  rotBetween.W*rotBetween.W);
+                        Math.Sqrt(rotBetween.X * rotBetween.X + rotBetween.Y * rotBetween.Y + rotBetween.Z * rotBetween.Z +
+                                  rotBetween.W * rotBetween.W);
                     // We shouldn't have to worry about a divide by zero here. The qs value will be
                     // non-zero because we already know if we're here, then the dotProduct is not -1 so
                     // qs will not be zero. Also, we've already handled the input vectors being zero so the
                     // crossProduct vector should also not be zero.
-                    rotBetween.X = (float) (rotBetween.X/mag);
-                    rotBetween.Y = (float) (rotBetween.Y/mag);
-                    rotBetween.Z = (float) (rotBetween.Z/mag);
-                    rotBetween.W = (float) (rotBetween.W/mag);
+                    rotBetween.X = (float)(rotBetween.X / mag);
+                    rotBetween.Y = (float)(rotBetween.Y / mag);
+                    rotBetween.Z = (float)(rotBetween.Z / mag);
+                    rotBetween.W = (float)(rotBetween.W / mag);
                     // Check for undefined values and set zero rotation if any found. This code might not actually be required
                     // any longer since zero vectors are checked for at the top.
                     if (Double.IsNaN(rotBetween.X) || Double.IsNaN(rotBetween.Y) || Double.IsNaN(rotBetween.Y) ||

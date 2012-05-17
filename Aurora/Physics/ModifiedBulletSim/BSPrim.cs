@@ -298,7 +298,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Prim; }
+            get { return (int)ActorTypes.Prim; }
         }
 
         public override bool IsPhysical
@@ -439,11 +439,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override int VehicleType
         {
-            get { return (int) _vehicle.Type; // if we are a vehicle, return that type
+            get
+            {
+                return (int)_vehicle.Type; // if we are a vehicle, return that type
             }
             set
             {
-                Vehicle type = (Vehicle) value;
+                Vehicle type = (Vehicle)value;
                 _vehicle.ProcessTypeChange(type);
                 _scene.TaintedObject(delegate
                                          {
@@ -463,17 +465,17 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override void VehicleFloatParam(int param, float value)
         {
-            _vehicle.ProcessFloatVehicleParam((Vehicle) param, value);
+            _vehicle.ProcessFloatVehicleParam((Vehicle)param, value);
         }
 
         public override void VehicleVectorParam(int param, Vector3 value)
         {
-            _vehicle.ProcessVectorVehicleParam((Vehicle) param, value);
+            _vehicle.ProcessVectorVehicleParam((Vehicle)param, value);
         }
 
         public override void VehicleRotationParam(int param, Quaternion rotation)
         {
-            _vehicle.ProcessRotationVehicleParam((Vehicle) param, rotation);
+            _vehicle.ProcessRotationVehicleParam((Vehicle)param, rotation);
         }
 
         public override void VehicleFlags(int param, bool remove)
@@ -513,7 +515,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         // link me to the specified parent
         public override void link(PhysicsObject obj)
         {
-            BSPrim parent = (BSPrim) obj;
+            BSPrim parent = (BSPrim)obj;
             // MainConsole.Instance.DebugFormat("{0}: link {1}/{2} to {3}", LogHeader, _avName, _localID, obj.LocalID);
             // TODO: decide if this parent checking needs to happen at taint time
             if (_parentPrim == null)
@@ -687,7 +689,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             if (_mesh == null)
             {
                 // the mesher thought this was too simple to mesh. Use a native Bullet collision shape.
-                if (_pbs.ProfileShape == ProfileShape.HalfCircle && _pbs.PathCurve == (byte) Extrusion.Curve1)
+                if (_pbs.ProfileShape == ProfileShape.HalfCircle && _pbs.PathCurve == (byte)Extrusion.Curve1)
                 {
                     if (_size.X == _size.Y && _size.Y == _size.Z && _size.X == _size.Z)
                     {
@@ -714,12 +716,12 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         private void GenerateHullMesh()
         {
             float[] convHulls;
-            _hullKey = (ulong) _pbs.GetHashCode();
+            _hullKey = (ulong)_pbs.GetHashCode();
             if (_hullMeshDictionary.TryGetValue(_hullKey, out convHulls))
             {
                 // create the hull definition in Bullet
                 // MainConsole.Instance.DebugFormat("{0}: CreateGeom: calling CreateHull. lid={1}, key={2}, hulls={3}", LogHeader, _localID, _hullKey, hullCount);
-                BulletSimAPI.CreateHull(_scene.WorldID, _hullKey, (int) convHulls[0], convHulls);
+                BulletSimAPI.CreateHull(_scene.WorldID, _hullKey, (int)convHulls[0], convHulls);
                 _shapeType = ShapeData.PhysicsShapeType.SHAPE_HULL;
                 // Let the object be scaled by Bullet (the mesh was created as a unit mesh)
                 _scale = _size;
@@ -744,7 +746,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
             // setup and do convex hull conversion
             _hulls = new List<ConvexResult>();
-            DecompDesc dcomp = new DecompDesc {mIndices = convIndices, mVertices = convVertices};
+            DecompDesc dcomp = new DecompDesc { mIndices = convIndices, mVertices = convVertices };
             ConvexBuilder convexBuilder = new ConvexBuilder(HullReturn);
             // create the hull into the _hulls variable
             convexBuilder.process(dcomp);
@@ -774,7 +776,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             foreach (ConvexResult cr in _hulls)
             {
                 totalVertices += 4; // add four for the vertex count and centroid
-                totalVertices += cr.HullIndices.Count*3; // we pass just triangles
+                totalVertices += cr.HullIndices.Count * 3; // we pass just triangles
             }
             convHulls = new float[totalVertices];
 
@@ -902,10 +904,10 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 prim.ZeroMotion();
 
                 // relative position normalized to the root prim
-                Vector3 childRelativePosition = (prim._position - this._position)*Quaternion.Inverse(this._orientation);
+                Vector3 childRelativePosition = (prim._position - this._position) * Quaternion.Inverse(this._orientation);
 
                 // relative rotation of the child to the parent
-                Quaternion relativeRotation = Quaternion.Inverse(prim._orientation)*this._orientation;
+                Quaternion relativeRotation = Quaternion.Inverse(prim._orientation) * this._orientation;
 
                 // this is a constraint that allows no freedom of movement between the two objects
                 // http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=4818
@@ -1048,9 +1050,9 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override void SetMaterial(int material, bool forceMaterialSettings)
         {
-            Material oldMaterial = (Material) _material;
+            Material oldMaterial = (Material)_material;
             _material = material;
-            Material m = (Material) material;
+            Material m = (Material)material;
             if (!forceMaterialSettings || oldMaterial == m)
                 return;
             //Fix restitution and friction values as well
@@ -1140,19 +1142,19 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         private float CalculateMass()
         {
-            float volume = _size.X*_size.Y*_size.Z; // default
+            float volume = _size.X * _size.Y * _size.Z; // default
             float tmp;
 
             float returnMass = 0;
-            float hollowAmount = _pbs.ProfileHollow*2.0e-5f;
-            float hollowVolume = hollowAmount*hollowAmount;
+            float hollowAmount = _pbs.ProfileHollow * 2.0e-5f;
+            float hollowVolume = hollowAmount * hollowAmount;
 
             switch (_pbs.ProfileShape)
             {
                 case ProfileShape.Square:
                     // default box
 
-                    if (_pbs.PathCurve == (byte) Extrusion.Straight)
+                    if (_pbs.PathCurve == (byte)Extrusion.Straight)
                     {
                         if (hollowAmount > 0.0)
                         {
@@ -1169,7 +1171,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
                                 case HollowShape.Triangle:
 
-                                    hollowVolume *= (0.5f*.5f);
+                                    hollowVolume *= (0.5f * .5f);
                                     break;
 
                                 default:
@@ -1180,13 +1182,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                         }
                     }
 
-                    else if (_pbs.PathCurve == (byte) Extrusion.Curve1)
+                    else if (_pbs.PathCurve == (byte)Extrusion.Curve1)
                     {
                         //a tube 
 
-                        volume *= 0.78539816339e-2f*(200 - _pbs.PathScaleX);
-                        tmp = 1.0f - 2.0e-2f*(200 - _pbs.PathScaleY);
-                        volume -= volume*tmp*tmp;
+                        volume *= 0.78539816339e-2f * (200 - _pbs.PathScaleX);
+                        tmp = 1.0f - 2.0e-2f * (200 - _pbs.PathScaleY);
+                        volume -= volume * tmp * tmp;
 
                         if (hollowAmount > 0.0)
                         {
@@ -1204,7 +1206,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                     break;
 
                                 case HollowShape.Triangle:
-                                    hollowVolume *= 0.5f*0.5f;
+                                    hollowVolume *= 0.5f * 0.5f;
                                     break;
                                 default:
                                     hollowVolume = 0;
@@ -1218,7 +1220,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
                 case ProfileShape.Circle:
 
-                    if (_pbs.PathCurve == (byte) Extrusion.Straight)
+                    if (_pbs.PathCurve == (byte)Extrusion.Straight)
                     {
                         volume *= 0.78539816339f; // elipse base
 
@@ -1231,11 +1233,11 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                     break;
 
                                 case HollowShape.Square:
-                                    hollowVolume *= 0.5f*2.5984480504799f;
+                                    hollowVolume *= 0.5f * 2.5984480504799f;
                                     break;
 
                                 case HollowShape.Triangle:
-                                    hollowVolume *= .5f*1.27323954473516f;
+                                    hollowVolume *= .5f * 1.27323954473516f;
                                     break;
 
                                 default:
@@ -1246,11 +1248,11 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                         }
                     }
 
-                    else if (_pbs.PathCurve == (byte) Extrusion.Curve1)
+                    else if (_pbs.PathCurve == (byte)Extrusion.Curve1)
                     {
-                        volume *= 0.61685027506808491367715568749226e-2f*(200 - _pbs.PathScaleX);
-                        tmp = 1.0f - .02f*(200 - _pbs.PathScaleY);
-                        volume *= (1.0f - tmp*tmp);
+                        volume *= 0.61685027506808491367715568749226e-2f * (200 - _pbs.PathScaleX);
+                        tmp = 1.0f - .02f * (200 - _pbs.PathScaleY);
+                        volume *= (1.0f - tmp * tmp);
 
                         if (hollowAmount > 0.0)
                         {
@@ -1264,11 +1266,11 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                     break;
 
                                 case HollowShape.Square:
-                                    hollowVolume *= 0.5f*2.5984480504799f;
+                                    hollowVolume *= 0.5f * 2.5984480504799f;
                                     break;
 
                                 case HollowShape.Triangle:
-                                    hollowVolume *= .5f*1.27323954473516f;
+                                    hollowVolume *= .5f * 1.27323954473516f;
                                     break;
 
                                 default:
@@ -1281,7 +1283,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     break;
 
                 case ProfileShape.HalfCircle:
-                    if (_pbs.PathCurve == (byte) Extrusion.Curve1)
+                    if (_pbs.PathCurve == (byte)Extrusion.Curve1)
                     {
                         volume *= 0.52359877559829887307710723054658f;
                     }
@@ -1289,7 +1291,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
                 case ProfileShape.EquilateralTriangle:
 
-                    if (_pbs.PathCurve == (byte) Extrusion.Straight)
+                    if (_pbs.PathCurve == (byte)Extrusion.Straight)
                     {
                         volume *= 0.32475953f;
 
@@ -1304,14 +1306,14 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                     break;
 
                                 case HollowShape.Square:
-                                    hollowVolume *= 0.499849f*3.07920140172638f;
+                                    hollowVolume *= 0.499849f * 3.07920140172638f;
                                     break;
 
                                 case HollowShape.Circle:
                                     // Hollow shape is a perfect cyllinder in respect to the cube's scale
                                     // Cyllinder hollow volume calculation
 
-                                    hollowVolume *= 0.1963495f*3.07920140172638f;
+                                    hollowVolume *= 0.1963495f * 3.07920140172638f;
                                     break;
 
                                 default:
@@ -1321,12 +1323,12 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                             volume *= (1.0f - hollowVolume);
                         }
                     }
-                    else if (_pbs.PathCurve == (byte) Extrusion.Curve1)
+                    else if (_pbs.PathCurve == (byte)Extrusion.Curve1)
                     {
                         volume *= 0.32475953f;
-                        volume *= 0.01f*(200 - _pbs.PathScaleX);
-                        tmp = 1.0f - .02f*(200 - _pbs.PathScaleY);
-                        volume *= (1.0f - tmp*tmp);
+                        volume *= 0.01f * (200 - _pbs.PathScaleX);
+                        tmp = 1.0f - .02f * (200 - _pbs.PathScaleY);
+                        volume *= (1.0f - tmp * tmp);
 
                         if (hollowAmount > 0.0)
                         {
@@ -1340,12 +1342,12 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                     break;
 
                                 case HollowShape.Square:
-                                    hollowVolume *= 0.499849f*3.07920140172638f;
+                                    hollowVolume *= 0.499849f * 3.07920140172638f;
                                     break;
 
                                 case HollowShape.Circle:
 
-                                    hollowVolume *= 0.1963495f*3.07920140172638f;
+                                    hollowVolume *= 0.1963495f * 3.07920140172638f;
                                     break;
 
                                 default:
@@ -1371,44 +1373,44 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             float profileBegin;
             float profileEnd;
 
-            if (_pbs.PathCurve == (byte) Extrusion.Straight || _pbs.PathCurve == (byte) Extrusion.Flexible)
+            if (_pbs.PathCurve == (byte)Extrusion.Straight || _pbs.PathCurve == (byte)Extrusion.Flexible)
             {
-                taperX1 = _pbs.PathScaleX*0.01f;
+                taperX1 = _pbs.PathScaleX * 0.01f;
                 if (taperX1 > 1.0f)
                     taperX1 = 2.0f - taperX1;
                 taperX = 1.0f - taperX1;
 
-                taperY1 = _pbs.PathScaleY*0.01f;
+                taperY1 = _pbs.PathScaleY * 0.01f;
                 if (taperY1 > 1.0f)
                     taperY1 = 2.0f - taperY1;
                 taperY = 1.0f - taperY1;
             }
             else
             {
-                taperX = _pbs.PathTaperX*0.01f;
+                taperX = _pbs.PathTaperX * 0.01f;
                 if (taperX < 0.0f)
                     taperX = -taperX;
                 taperX1 = 1.0f - taperX;
 
-                taperY = _pbs.PathTaperY*0.01f;
+                taperY = _pbs.PathTaperY * 0.01f;
                 if (taperY < 0.0f)
                     taperY = -taperY;
                 taperY1 = 1.0f - taperY;
             }
 
 
-            volume *= (taperX1*taperY1 + 0.5f*(taperX1*taperY + taperX*taperY1) + 0.3333333333f*taperX*taperY);
+            volume *= (taperX1 * taperY1 + 0.5f * (taperX1 * taperY + taperX * taperY1) + 0.3333333333f * taperX * taperY);
 
-            pathBegin = _pbs.PathBegin*2.0e-5f;
-            pathEnd = 1.0f - _pbs.PathEnd*2.0e-5f;
+            pathBegin = _pbs.PathBegin * 2.0e-5f;
+            pathEnd = 1.0f - _pbs.PathEnd * 2.0e-5f;
             volume *= (pathEnd - pathBegin);
 
             // this is crude aproximation
-            profileBegin = _pbs.ProfileBegin*2.0e-5f;
-            profileEnd = 1.0f - _pbs.ProfileEnd*2.0e-5f;
+            profileBegin = _pbs.ProfileBegin * 2.0e-5f;
+            profileEnd = 1.0f - _pbs.ProfileEnd * 2.0e-5f;
             volume *= (profileEnd - profileBegin);
 
-            returnMass = _parent_entity.Density*volume;
+            returnMass = _parent_entity.Density * volume;
 
             if (IsRootOfLinkset)
             {
@@ -1431,7 +1433,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             return returnMass;
         }
 
-// end CalculateMass
+        // end CalculateMass
 
         #endregion Mass Calculation
 

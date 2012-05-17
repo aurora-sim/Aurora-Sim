@@ -64,8 +64,8 @@ public class Vertex : IComparable<Vertex>
         float tlength = vector.Length();
         if (tlength != 0f)
         {
-            float mul = 1.0f/tlength;
-            return new Vertex(vector.X*mul, vector.Y*mul, vector.Z*mul);
+            float mul = 1.0f / tlength;
+            return new Vertex(vector.X * mul, vector.Y * mul, vector.Z * mul);
         }
         else
         {
@@ -75,7 +75,7 @@ public class Vertex : IComparable<Vertex>
 
     public Vertex cross(Vertex v)
     {
-        return new Vertex(vector.Y*v.Z - vector.Z*v.Y, vector.Z*v.X - vector.X*v.Z, vector.X*v.Y - vector.Y*v.X);
+        return new Vertex(vector.Y * v.Z - vector.Z * v.Y, vector.Z * v.X - vector.X * v.Z, vector.X * v.Y - vector.Y * v.X);
     }
 
     // disable warning: mono compiler moans about overloading
@@ -88,30 +88,30 @@ public class Vertex : IComparable<Vertex>
 
         Vertex v2 = new Vertex(0f, 0f, 0f)
                         {
-                            X = q.W*q.W*v.X +
-                                2f*q.Y*q.W*v.Z -
-                                2f*q.Z*q.W*v.Y +
-                                q.X*q.X*v.X +
-                                2f*q.Y*q.X*v.Y +
-                                2f*q.Z*q.X*v.Z -
-                                q.Z*q.Z*v.X -
-                                q.Y*q.Y*v.X,
-                            Y = 2f*q.X*q.Y*v.X +
-                                q.Y*q.Y*v.Y +
-                                2f*q.Z*q.Y*v.Z +
-                                2f*q.W*q.Z*v.X -
-                                q.Z*q.Z*v.Y +
-                                q.W*q.W*v.Y -
-                                2f*q.X*q.W*v.Z -
-                                q.X*q.X*v.Y,
-                            Z = 2f*q.X*q.Z*v.X +
-                                2f*q.Y*q.Z*v.Y +
-                                q.Z*q.Z*v.Z -
-                                2f*q.W*q.Y*v.X -
-                                q.Y*q.Y*v.Z +
-                                2f*q.W*q.X*v.Y -
-                                q.X*q.X*v.Z +
-                                q.W*q.W*v.Z
+                            X = q.W * q.W * v.X +
+                                2f * q.Y * q.W * v.Z -
+                                2f * q.Z * q.W * v.Y +
+                                q.X * q.X * v.X +
+                                2f * q.Y * q.X * v.Y +
+                                2f * q.Z * q.X * v.Z -
+                                q.Z * q.Z * v.X -
+                                q.Y * q.Y * v.X,
+                            Y = 2f * q.X * q.Y * v.X +
+                                q.Y * q.Y * v.Y +
+                                2f * q.Z * q.Y * v.Z +
+                                2f * q.W * q.Z * v.X -
+                                q.Z * q.Z * v.Y +
+                                q.W * q.W * v.Y -
+                                2f * q.X * q.W * v.Z -
+                                q.X * q.X * v.Y,
+                            Z = 2f * q.X * q.Z * v.X +
+                                2f * q.Y * q.Z * v.Y +
+                                q.Z * q.Z * v.Z -
+                                2f * q.W * q.Y * v.X -
+                                q.Y * q.Y * v.Z +
+                                2f * q.W * q.X * v.Y -
+                                q.X * q.X * v.Z +
+                                q.W * q.W * v.Z
                         };
 
 
@@ -132,7 +132,7 @@ public class Vertex : IComparable<Vertex>
 
     public static Vertex operator *(Vertex v1, Vertex v2)
     {
-        return new Vertex(v1.X*v2.X, v1.Y*v2.Y, v1.Z*v2.Z);
+        return new Vertex(v1.X * v2.X, v1.Y * v2.Y, v1.Z * v2.Z);
     }
 
     public static Vertex operator +(Vertex v1, float am)
@@ -165,7 +165,7 @@ public class Vertex : IComparable<Vertex>
         {
             return new Vertex(0f, 0f, 0f);
         }
-        float mul = 1.0f/am;
+        float mul = 1.0f / am;
         v1.X *= mul;
         v1.Y *= mul;
         v1.Z *= mul;
@@ -176,7 +176,7 @@ public class Vertex : IComparable<Vertex>
 
     public float dot(Vertex v)
     {
-        return X*v.X + Y*v.Y + Z*v.Z;
+        return X * v.X + Y * v.Y + Z * v.Z;
     }
 
     public Vertex(Vector3 v)
@@ -191,7 +191,7 @@ public class Vertex : IComparable<Vertex>
 
     public static Vertex FromAngle(double angle)
     {
-        return new Vertex((float) Math.Cos(angle), (float) Math.Sin(angle), 0.0f);
+        return new Vertex((float)Math.Cos(angle), (float)Math.Sin(angle), 0.0f);
     }
 
     public float Length()
@@ -251,7 +251,7 @@ public class Vertex : IComparable<Vertex>
         // The german notation uses these characters exactly vice versa!
         // The Float.ToString() routine is a localized one, giving different results depending on the country
         // settings your machine works with. Unusable for a machine readable file format :-(
-        NumberFormatInfo nfi = new NumberFormatInfo {NumberDecimalSeparator = ".", NumberDecimalDigits = 3};
+        NumberFormatInfo nfi = new NumberFormatInfo { NumberDecimalSeparator = ".", NumberDecimalDigits = 3 };
 
         String s1 = X.ToString("N2", nfi) + " " + Y.ToString("N2", nfi) + " " + Z.ToString("N2", nfi);
 
@@ -285,7 +285,7 @@ public class Triangle
         dx = x - cx;
         dy = y - cy;
 
-        dd = dx*dx + dy*dy;
+        dd = dx * dx + dy * dy;
         if (dd < radius_square)
             return true;
         else
@@ -337,8 +337,8 @@ public class Triangle
         p3y = v3.Y;
 
         /* calc helping values first */
-        c1 = (p1x*p1x + p1y*p1y - p2x*p2x - p2y*p2y)/2;
-        c2 = (p1x*p1x + p1y*p1y - p3x*p3x - p3y*p3y)/2;
+        c1 = (p1x * p1x + p1y * p1y - p2x * p2x - p2y * p2y) / 2;
+        c2 = (p1x * p1x + p1y * p1y - p3x * p3x - p3y * p3y) / 2;
 
         v1x = p1x - p2x;
         v1y = p1y - p2y;
@@ -346,8 +346,8 @@ public class Triangle
         v2x = p1x - p3x;
         v2y = p1y - p3y;
 
-        z = (c1*v2x - c2*v1x);
-        n = (v1y*v2x - v2y*v1x);
+        z = (c1 * v2x - c2 * v1x);
+        n = (v1y * v2x - v2y * v1x);
 
         if (n == 0.0) // This is no triangle, i.e there are (at least) two points at the same location
         {
@@ -355,15 +355,15 @@ public class Triangle
             return;
         }
 
-        cy = (float) (z/n);
+        cy = (float)(z / n);
 
         if (v2x != 0.0)
         {
-            cx = (float) ((c2 - v2y*cy)/v2x);
+            cx = (float)((c2 - v2y * cy) / v2x);
         }
         else if (v1x != 0.0)
         {
-            cx = (float) ((c1 - v1y*cy)/v1x);
+            cx = (float)((c1 - v1y * cy) / v1x);
         }
         else
         {
@@ -373,12 +373,12 @@ public class Triangle
         rx = (p1x - cx);
         ry = (p1y - cy);
 
-        radius_square = (float) (rx*rx + ry*ry);
+        radius_square = (float)(rx * rx + ry * ry);
     }
 
     public override String ToString()
     {
-        NumberFormatInfo nfi = new NumberFormatInfo {CurrencyDecimalDigits = 2, CurrencyDecimalSeparator = "."};
+        NumberFormatInfo nfi = new NumberFormatInfo { CurrencyDecimalDigits = 2, CurrencyDecimalSeparator = "." };
 
         String s1 = "<" + v1.X.ToString(nfi) + "," + v1.Y.ToString(nfi) + "," + v1.Z.ToString(nfi) + ">";
         String s2 = "<" + v2.X.ToString(nfi) + "," + v2.Y.ToString(nfi) + "," + v2.Z.ToString(nfi) + ">";
@@ -405,7 +405,7 @@ public class Triangle
         float l = n.Length();
 
         // Normalized "normal"
-        n = n/l;
+        n = n / l;
 
         return n;
     }

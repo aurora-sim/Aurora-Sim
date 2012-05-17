@@ -62,8 +62,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             for (i = 0; i < 3; i++)
             {
-                int i1 = (i + 1)%3;
-                int i2 = (i + 2)%3;
+                int i1 = (i + 1) % 3;
+                int i2 = (i + 2) % 3;
                 if ((this)[i] == a && (this)[i1] == b)
                     return n[i2];
                 if ((this)[i] == b && (this)[i1] == a)
@@ -80,8 +80,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             for (i = 0; i < 3; i++)
             {
-                int i1 = (i + 1)%3;
-                int i2 = (i + 2)%3;
+                int i1 = (i + 1) % 3;
+                int i2 = (i + 2) % 3;
                 if ((this)[i] == a && (this)[i1] == b)
                 {
                     n[i2] = value;

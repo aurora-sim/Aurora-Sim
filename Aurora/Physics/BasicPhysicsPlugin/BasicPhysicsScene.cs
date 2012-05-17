@@ -72,7 +72,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override PhysicsCharacter AddAvatar(string avName, Vector3 position, Quaternion rotation, Vector3 size,
                                                    bool isFlying, uint localID, UUID UUID)
         {
-            BasicCharacterActor act = new BasicCharacterActor {Position = position, Flying = isFlying};
+            BasicCharacterActor act = new BasicCharacterActor { Position = position, Flying = isFlying };
             _actors.Add(act);
             return act;
         }
@@ -87,19 +87,19 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
-            BasicCharacterActor act = (BasicCharacterActor) actor;
+            BasicCharacterActor act = (BasicCharacterActor)actor;
             if (_actors.Contains(act))
             {
                 _actors.Remove(act);
             }
         }
 
-/*
-        public override PhysicsActor AddPrim(Vector3 position, Vector3 size, Quaternion rotation)
-        {
-            return null;
-        }
-*/
+        /*
+                public override PhysicsActor AddPrim(Vector3 position, Vector3 size, Quaternion rotation)
+                {
+                    return null;
+                }
+        */
 
         public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
@@ -117,8 +117,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 Vector3 actorPosition = actor.Position;
                 Vector3 actorVelocity = actor.Velocity;
 
-                actorPosition.X += actor.Velocity.X*timeStep;
-                actorPosition.Y += actor.Velocity.Y*timeStep;
+                actorPosition.X += actor.Velocity.X * timeStep;
+                actorPosition.Y += actor.Velocity.Y * timeStep;
 
                 if (actor.Position.Y < 0)
                 {
@@ -138,12 +138,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                     actorPosition.X = (m_region.RegionSizeX - 0.1f);
                 }
 
-                float height = _heightMap[(int) actor.Position.Y*m_region.RegionSizeX + (int) actor.Position.X] +
+                float height = _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] +
                                actor.Size.Z;
                 if (actor.Flying)
                 {
-                    if (actor.Position.Z + (actor.Velocity.Z*timeStep) <
-                        _heightMap[(int) actor.Position.Y*m_region.RegionSizeX + (int) actor.Position.X] + 2)
+                    if (actor.Position.Z + (actor.Velocity.Z * timeStep) <
+                        _heightMap[(int)actor.Position.Y * m_region.RegionSizeX + (int)actor.Position.X] + 2)
                     {
                         actorPosition.Z = height;
                         actorVelocity.Z = 0;
@@ -151,7 +151,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                     }
                     else
                     {
-                        actorPosition.Z += actor.Velocity.Z*timeStep;
+                        actorPosition.Z += actor.Velocity.Z * timeStep;
                         actor.IsColliding = false;
                     }
                 }

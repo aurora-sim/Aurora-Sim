@@ -84,10 +84,10 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                     masterVolume = volume;
                 }
 
-                float percent = (c*100.0f)/masterVolume;
+                float percent = (c * 100.0f) / masterVolume;
 
                 if (percent > concavePercent)
-                    // if great than 5% of the total volume is concave, go ahead and keep splitting.
+                // if great than 5% of the total volume is concave, go ahead and keep splitting.
                 {
                     split = true;
                 }
@@ -120,11 +120,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             VertexPool vback = new VertexPool();
 
             // ok..now we are going to 'split' all of the input triangles against this plane!
-            for (int i = 0; i < indices.Count/3; i++)
+            for (int i = 0; i < indices.Count / 3; i++)
             {
-                int i1 = indices[i*3 + 0];
-                int i2 = indices[i*3 + 1];
-                int i3 = indices[i*3 + 2];
+                int i1 = indices[i * 3 + 0];
+                int i2 = indices[i * 3 + 1];
+                int i3 = indices[i * 3 + 2];
 
                 FaceTri t = new FaceTri(vertices, i1, i2, i3);
 
@@ -181,7 +181,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 List<float3> vertices2 = vfront.GetVertices();
                 for (int i = 0; i < vertices2.Count; i++)
                     vertices2[i] = new float3(vertices2[i]);
-                int tcount = ifront.Count/3;
+                int tcount = ifront.Count / 3;
 
                 calcConvexDecomposition(vertices2, ifront, callback, masterVolume, depth + 1, maxDepth, concavePercent,
                                         mergePercent);
@@ -194,7 +194,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             {
                 int vcount = vback.GetSize();
                 List<float3> vertices2 = vback.GetVertices();
-                int tcount = iback.Count/3;
+                int tcount = iback.Count / 3;
 
                 calcConvexDecomposition(vertices2, iback, callback, masterVolume, depth + 1, maxDepth, concavePercent,
                                         mergePercent);

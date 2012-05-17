@@ -40,7 +40,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
     {
         private static float DistToPt(float3 p, float4 plane)
         {
-            return p.x*plane.x + p.y*plane.y + p.z*plane.z + plane.w;
+            return p.x * plane.x + p.y * plane.y + p.z * plane.z + plane.w;
         }
 
         private static PlaneTriResult getSidePlane(float3 p, float4 plane, float epsilon)
@@ -69,14 +69,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             dir[1] = p2[1] - p1[1];
             dir[2] = p2[2] - p1[2];
 
-            float dot1 = dir[0]*plane[0] + dir[1]*plane[1] + dir[2]*plane[2];
+            float dot1 = dir[0] * plane[0] + dir[1] * plane[1] + dir[2] * plane[2];
             float dot2 = dp1 - plane[3];
 
-            float t = -(plane[3] + dot2)/dot1;
+            float t = -(plane[3] + dot2) / dot1;
 
-            split.x = (dir[0]*t) + p1[0];
-            split.y = (dir[1]*t) + p1[1];
-            split.z = (dir[2]*t) + p1[2];
+            split.x = (dir[0] * t) + p1[0];
+            split.y = (dir[1] * t) + p1[1];
+            split.z = (dir[2] * t) + p1[2];
         }
 
         public static PlaneTriResult planeTriIntersection(float4 plane, FaceTri triangle, float epsilon,
@@ -98,7 +98,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             if (r1 == r2 && r1 == r3) // if all three vertices are on the same side of the plane.
             {
                 if (r1 == PlaneTriResult.PTR_FRONT)
-                    // if all three are in front of the plane, then copy to the 'front' output triangle.
+                // if all three are in front of the plane, then copy to the 'front' output triangle.
                 {
                     add(p1, front, ref fcount);
                     add(p2, front, ref fcount);

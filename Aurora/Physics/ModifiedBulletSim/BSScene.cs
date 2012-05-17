@@ -271,7 +271,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             m_meshLOD = 32;
 
             m_maxSubSteps = 10;
-            m_fixedTimeStep = 1f/60f;
+            m_fixedTimeStep = 1f / 60f;
             m_maxCollisionsPerFrame = 2048;
             m_maxUpdatesPerFrame = 2048;
             _maximumObjectMass = 10000.01f;
@@ -369,7 +369,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         {
             // MainConsole.Instance.DebugFormat("{0}: RemoveAvatar", LogHeader);
             if (actor is BSCharacter)
-                ((BSCharacter) actor).Destroy();
+                ((BSCharacter)actor).Destroy();
 
             try
             {
@@ -385,7 +385,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         {
             // MainConsole.Instance.DebugFormat("{0}: RemovePrim", LogHeader);
             if (prim is BSPrim)
-                ((BSPrim) prim).Destroy();
+                ((BSPrim)prim).Destroy();
 
             try
             {
@@ -567,7 +567,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                                        float[] t = new float[heightMap.Length];
                                        for (int i = 0; i < heightMap.Length; i++)
                                        {
-                                           t[i] = (heightMap[i])/Constants.TerrainCompression;
+                                           t[i] = (heightMap[i]) / Constants.TerrainCompression;
                                        }
                                        BulletSimAPI.SetHeightmap(m_worldID, t);
                                    });
@@ -575,7 +575,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public float GetTerrainHeightAtXY(float tX, float tY)
         {
-            return m_heightMap[(int) tX, (int) tY];
+            return m_heightMap[(int)tX, (int)tY];
         }
 
         public override void SetWaterLevel(double baseheight, short[] map)
@@ -622,8 +622,8 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             if (!_forceSimplePrimMeshing)
             {
                 // MainConsole.Instance.DebugFormat("{0}: NeedsMeshing: simple mesh: profshape={1}, curve={2}", LogHeader, pbs.ProfileShape, pbs.PathCurve);
-                if ((pbs.ProfileShape == ProfileShape.Square && pbs.PathCurve == (byte) Extrusion.Straight)
-                    || (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte) Extrusion.Curve1
+                if ((pbs.ProfileShape == ProfileShape.Square && pbs.PathCurve == (byte)Extrusion.Straight)
+                    || (pbs.ProfileShape == ProfileShape.HalfCircle && pbs.PathCurve == (byte)Extrusion.Curve1
                         && pbs.Scale.X == pbs.Scale.Y && pbs.Scale.Y == pbs.Scale.Z))
                 {
                     if (pbs.ProfileBegin == 0 && pbs.ProfileEnd == 0
