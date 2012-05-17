@@ -42,8 +42,8 @@ namespace OpenSim.Region.Framework.Scenes
 {
     #region Delegates
 
-    public delegate void NewScene (IScene scene);
-    public delegate void NoParam ();
+    public delegate void NewScene(IScene scene);
+    public delegate void NoParam();
 
     #endregion
 
@@ -54,7 +54,7 @@ namespace OpenSim.Region.Framework.Scenes
         Immediate,
         Delayed
     }
-    
+
     #endregion
 
     /// <summary>
@@ -88,7 +88,7 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_config; }
         }
 
-        private readonly List<IScene> m_localScenes = new List<IScene> ();
+        private readonly List<IScene> m_localScenes = new List<IScene>();
         public List<IScene> Scenes
         {
             get { return m_localScenes; }
@@ -136,7 +136,7 @@ namespace OpenSim.Region.Framework.Scenes
                 name = simConfig.GetString("DatabaseLoaderName", "FileBasedDatabase");
             }
 
-            ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore> ().ToArray ();
+            ISimulationDataStore[] stores = AuroraModuleLoader.PickupModules<ISimulationDataStore>().ToArray();
             List<string> storeNames = new List<string>();
             foreach (ISimulationDataStore store in stores)
             {
@@ -151,7 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_simulationDataService == null)
             {
                 MainConsole.Instance.ErrorFormat("[SceneManager]: FAILED TO LOAD THE SIMULATION SERVICE AT '{0}', ONLY OPTIONS ARE {1}, QUITING...", name, string.Join(", ", storeNames.ToArray()));
-                Console.Read ();//Wait till they see
+                Console.Read();//Wait till they see
                 Environment.Exit(0);
             }
             m_simulationDataService.Initialise();
@@ -210,7 +210,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (IScene t in scenes)
             {
                 // close scene/region
-                CloseRegion (t, ShutdownType.Immediate, 0);
+                CloseRegion(t, ShutdownType.Immediate, 0);
             }
         }
 
@@ -237,12 +237,12 @@ namespace OpenSim.Region.Framework.Scenes
 
             TimeSpan timeTaken = DateTime.Now - m_OpenSimBase.StartupTime;
 
-            MainConsole.Instance.InfoFormat ("[SceneManager]: All regions are started. This took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
-            AuroraModuleLoader.ClearCache ();
+            MainConsole.Instance.InfoFormat("[SceneManager]: All regions are started. This took {0}m {1}.{2}s", timeTaken.Minutes, timeTaken.Seconds, timeTaken.Milliseconds);
+            AuroraModuleLoader.ClearCache();
             // In 99.9% of cases it is a bad idea to manually force garbage collection. However,
             // this is a rare case where we know we have just went through a long cycle of heap
             // allocations, and there is no more work to be done until someone logs in
-            GC.Collect ();
+            GC.Collect();
         }
 
         #endregion
@@ -257,7 +257,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                func (MainConsole.Instance.ConsoleScene);
+                func(MainConsole.Instance.ConsoleScene);
             }
         }
 
@@ -311,14 +311,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!TrySetConsoleScene(newRegionName))
             {
-                MainConsole.Instance.Info (String.Format ("Couldn't select region {0}", newRegionName));
+                MainConsole.Instance.Info(String.Format("Couldn't select region {0}", newRegionName));
                 return false;
             }
 
             string regionName = (MainConsole.Instance.ConsoleScene == null ?
                 "root" : MainConsole.Instance.ConsoleScene.RegionInfo.RegionName);
             if (MainConsole.Instance != null)
-                MainConsole.Instance.DefaultPrompt = String.Format ("Region ({0}) ", regionName);
+                MainConsole.Instance.DefaultPrompt = String.Format("Region ({0}) ", regionName);
             return true;
         }
 
@@ -332,7 +332,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="regionName"></param>
         /// <param name="scene"></param>
         /// <returns></returns>
-        public bool TryGetScene (string regionName, out IScene scene)
+        public bool TryGetScene(string regionName, out IScene scene)
         {
             foreach (IScene mscene in m_localScenes)
             {
@@ -399,24 +399,24 @@ namespace OpenSim.Region.Framework.Scenes
         public bool TryGetScene(ulong RegionHandle, out IScene scene)
         {
             int X, Y;
-            Util.UlongToInts (RegionHandle, out X, out Y);
-            return TryGetScene (X, Y, out scene);
+            Util.UlongToInts(RegionHandle, out X, out Y);
+            return TryGetScene(X, Y, out scene);
         }
 
         #endregion
 
         #region Add a region
 
-        public IScene StartNewRegion (RegionInfo regionInfo)
+        public IScene StartNewRegion(RegionInfo regionInfo)
         {
             MainConsole.Instance.InfoFormat("[SceneManager]: Starting region \"{0}\" at @ {1},{2}", regionInfo.RegionName,
                 regionInfo.RegionLocX / 256, regionInfo.RegionLocY / 256);
-            ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader> ();
+            ISceneLoader sceneLoader = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<ISceneLoader>();
             if (sceneLoader == null)
-                throw new Exception ("No Scene Loader Interface!");
+                throw new Exception("No Scene Loader Interface!");
 
             //Get the new scene from the interface
-            IScene scene = sceneLoader.CreateScene (regionInfo);
+            IScene scene = sceneLoader.CreateScene(regionInfo);
 #if (!ISWIN)
             foreach (IScene loadedScene in m_localScenes)
             {
@@ -432,7 +432,7 @@ namespace OpenSim.Region.Framework.Scenes
                 throw new Exception("Duplicate region!");
             }
 #endif
-            StartNewRegion (scene);
+            StartNewRegion(scene);
             return scene;
         }
 
@@ -444,9 +444,9 @@ namespace OpenSim.Region.Framework.Scenes
         public void StartNewRegion(IScene scene)
         {
             //Do this here so that we don't have issues later when startup complete messages start coming in
-            m_localScenes.Add (scene);
+            m_localScenes.Add(scene);
 
-            StartModules (scene);
+            StartModules(scene);
 
             //Start the heartbeats
             scene.StartHeartbeat();
@@ -468,7 +468,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Reset a region
 
-        public void ResetRegion (IScene scene)
+        public void ResetRegion(IScene scene)
         {
             if (scene == null)
             {
@@ -476,10 +476,10 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            IBackupModule backup = scene.RequestModuleInterface<IBackupModule> ();
-            if(backup != null)
+            IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
+            if (backup != null)
                 backup.DeleteAllSceneObjects();//Remove all the objects from the region
-            ITerrainModule module = scene.RequestModuleInterface<ITerrainModule> ();
+            ITerrainModule module = scene.RequestModuleInterface<ITerrainModule>();
             if (module != null)
                 module.ResetTerrain();//Then remove the terrain
             //Then reset the textures
@@ -487,18 +487,18 @@ namespace OpenSim.Region.Framework.Scenes
             scene.RegionInfo.RegionSettings.TerrainTexture2 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_2;
             scene.RegionInfo.RegionSettings.TerrainTexture3 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_3;
             scene.RegionInfo.RegionSettings.TerrainTexture4 = RegionSettings.DEFAULT_TERRAIN_TEXTURE_4;
-            scene.RegionInfo.RegionSettings.Save ();
-            MainConsole.Instance.Warn ("Region " + scene.RegionInfo.RegionName + " was reset");
+            scene.RegionInfo.RegionSettings.Save();
+            MainConsole.Instance.Warn("Region " + scene.RegionInfo.RegionName + " was reset");
         }
 
         #endregion
 
         #region Restart a region
 
-        public void RestartRegion (IScene scene)
+        public void RestartRegion(IScene scene)
         {
-            CloseRegion (scene, ShutdownType.Immediate, 0);
-            StartNewRegion (scene.RegionInfo);
+            CloseRegion(scene, ShutdownType.Immediate, 0);
+            StartNewRegion(scene.RegionInfo);
         }
 
         #endregion
@@ -510,13 +510,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="scene"></param>
         /// <param name="cleanup"></param>
-        public void RemoveRegion (IScene scene, bool cleanup)
+        public void RemoveRegion(IScene scene, bool cleanup)
         {
             IBackupModule backup = scene.RequestModuleInterface<IBackupModule>();
             if (backup != null)
                 backup.DeleteAllSceneObjects();
 
-            CloseRegion (scene, ShutdownType.Immediate, 0);
+            CloseRegion(scene, ShutdownType.Immediate, 0);
 
             if (!cleanup)
                 return;
@@ -535,15 +535,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="type"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public void CloseRegion (IScene scene, ShutdownType type, int seconds)
+        public void CloseRegion(IScene scene, ShutdownType type, int seconds)
         {
             if (type == ShutdownType.Immediate)
             {
-                InnerCloseRegion (scene);
+                InnerCloseRegion(scene);
             }
             else
             {
-                Timer t = new Timer (seconds * 1000);//Millisecond conversion
+                Timer t = new Timer(seconds * 1000);//Millisecond conversion
 #if (!ISWIN)
                 t.Elapsed +=
                     delegate(object sender, ElapsedEventArgs e)
@@ -554,21 +554,21 @@ namespace OpenSim.Region.Framework.Scenes
                 t.Elapsed += (sender, e) => CloseRegion(scene, ShutdownType.Immediate, 0);
 #endif
                 t.AutoReset = false;
-                t.Start ();
+                t.Start();
             }
         }
 
-        private void InnerCloseRegion (IScene scene)
+        private void InnerCloseRegion(IScene scene)
         {
             //Make sure that if we are set on the console, that we are removed from it
             if ((MainConsole.Instance.ConsoleScene != null) &&
                 (MainConsole.Instance.ConsoleScene.RegionInfo.RegionID == scene.RegionInfo.RegionID))
-                ChangeConsoleRegion ("root");
+                ChangeConsoleRegion("root");
 
-            m_localScenes.Remove (scene);
-            scene.Close ();
+            m_localScenes.Remove(scene);
+            scene.Close();
 
-            CloseModules (scene);
+            CloseModules(scene);
         }
 
         #endregion
@@ -581,13 +581,13 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
-        public void UpdateRegionInfo (RegionInfo oldRegion, RegionInfo region)
+        public void UpdateRegionInfo(RegionInfo oldRegion, RegionInfo region)
         {
-            foreach(IScene scene in m_localScenes)
+            foreach (IScene scene in m_localScenes)
             {
-                if(scene.RegionInfo.RegionID == region.RegionID)
+                if (scene.RegionInfo.RegionID == region.RegionID)
                 {
-                    bool needsGridUpdate = 
+                    bool needsGridUpdate =
                         scene.RegionInfo.RegionName != region.RegionName ||
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
                         scene.RegionInfo.RegionLocY != region.RegionLocY ||
@@ -598,8 +598,8 @@ namespace OpenSim.Region.Framework.Scenes
                         //scene.RegionInfo.RegionSizeY != region.RegionSizeY
                         //scene.RegionInfo.RegionSizeZ != region.RegionSizeZ
                     ;
-                    bool needsRegistration = 
-                        scene.RegionInfo.RegionName != region.RegionName || 
+                    bool needsRegistration =
+                        scene.RegionInfo.RegionName != region.RegionName ||
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
                         scene.RegionInfo.RegionLocY != region.RegionLocY
                     ;
@@ -608,13 +608,13 @@ namespace OpenSim.Region.Framework.Scenes
                     region.EstateSettings = scene.RegionInfo.EstateSettings;
                     region.GridSecureSessionID = scene.RegionInfo.GridSecureSessionID;
                     scene.RegionInfo = region;
-                    if(needsRegistration)
+                    if (needsRegistration)
                         scene.RequestModuleInterface<IGridRegisterModule>().RegisterRegionWithGrid(scene, false, false);
-                    else if(needsGridUpdate)
+                    else if (needsGridUpdate)
                         scene.RequestModuleInterface<IGridRegisterModule>().UpdateGridRegion(scene);
                     //Tell clients about the changes
                     IEstateModule es = scene.RequestModuleInterface<IEstateModule>();
-                    if(es != null)
+                    if (es != null)
                         es.sendRegionHandshakeToAll();
                 }
             }
@@ -624,7 +624,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region ISharedRegionStartupModule plugins
 
-        protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule> ();
+        protected List<ISharedRegionStartupModule> m_startupPlugins = new List<ISharedRegionStartupModule>();
 
         protected void StartModules(IScene scene)
         {
@@ -635,14 +635,14 @@ namespace OpenSim.Region.Framework.Scenes
                 module.Initialise(scene, m_config, m_OpenSimBase);
             }
             //Then do the ISharedRegionModule and INonSharedRegionModules
-            MainConsole.Instance.Debug ("[Modules]: Loading region modules");
+            MainConsole.Instance.Debug("[Modules]: Loading region modules");
             IRegionModulesController controller;
-            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface (out controller))
+            if (m_OpenSimBase.ApplicationRegistry.TryRequestModuleInterface(out controller))
             {
-                controller.AddRegionToModules (scene);
+                controller.AddRegionToModules(scene);
             }
             else
-                MainConsole.Instance.Error ("[Modules]: The new RegionModulesController is missing...");
+                MainConsole.Instance.Error("[Modules]: The new RegionModulesController is missing...");
             //Then finish the rest of the SharedRegionStartupModules
             foreach (ISharedRegionStartupModule module in m_startupPlugins)
             {
@@ -657,7 +657,7 @@ namespace OpenSim.Region.Framework.Scenes
                 module.PostFinishStartup(scene, m_config, m_OpenSimBase);
             }
             if (OnAddedScene != null)
-                OnAddedScene (scene);
+                OnAddedScene(scene);
         }
 
         protected void StartupCompleteModules()
@@ -709,11 +709,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (MainConsole.Instance == null)
                 return;
-            MainConsole.Instance.Commands.AddCommand ("show users", "show users [full]", "Shows users in the given region (if full is added, child agents are shown as well)", HandleShowUsers);
-            MainConsole.Instance.Commands.AddCommand ("show regions", "show regions", "Show information about all regions in this instance", HandleShowRegions);
-            MainConsole.Instance.Commands.AddCommand ("show maturity", "show maturity", "Show all region's maturity levels", HandleShowMaturity);
+            MainConsole.Instance.Commands.AddCommand("show users", "show users [full]", "Shows users in the given region (if full is added, child agents are shown as well)", HandleShowUsers);
+            MainConsole.Instance.Commands.AddCommand("show regions", "show regions", "Show information about all regions in this instance", HandleShowRegions);
+            MainConsole.Instance.Commands.AddCommand("show maturity", "show maturity", "Show all region's maturity levels", HandleShowMaturity);
 
-            MainConsole.Instance.Commands.AddCommand ("force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
+            MainConsole.Instance.Commands.AddCommand("force update", "force update", "Force the update of all objects on clients", HandleForceUpdate);
 
             MainConsole.Instance.Commands.AddCommand("debug packet", "debug packet [level]", "Turn on packet debugging", Debug);
             MainConsole.Instance.Commands.AddCommand("debug scene", "debug scene [scripting] [collisions] [physics]", "Turn on scene debugging", Debug);
@@ -752,9 +752,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             MainConsole.Instance.Commands.AddCommand("delete-region", "delete-region [name]", "Delete a region from disk", RunCommand);
 
-            MainConsole.Instance.Commands.AddCommand ("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
+            MainConsole.Instance.Commands.AddCommand("modules list", "modules list", "Lists all simulator modules", HandleModulesList);
 
-            MainConsole.Instance.Commands.AddCommand ("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
+            MainConsole.Instance.Commands.AddCommand("modules unload", "modules unload [module]", "Unload the given simulator module", HandleModulesUnload);
         }
 
         /// <summary>
@@ -764,7 +764,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void KickUserCommand(string[] cmdparams)
         {
             string alert = null;
-            IList agents = new List<IScenePresence>(CurrentOrFirstScene.GetScenePresences ());
+            IList agents = new List<IScenePresence>(CurrentOrFirstScene.GetScenePresences());
 
             if (cmdparams.Length < 4)
             {
@@ -777,7 +777,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                        MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                        MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 
                         // kick client...
                         if (alert != null)
@@ -786,12 +786,12 @@ namespace OpenSim.Region.Framework.Scenes
                             presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                         // ...and close on our side
-                        IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
-                        if(transferModule != null)
-                            transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                        IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule>();
+                        if (transferModule != null)
+                            transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                     }
                 }
-                else if(UUID.TryParse(cmdparams[2], out avID))
+                else if (UUID.TryParse(cmdparams[2], out avID))
                 {
                     foreach (IScenePresence presence in agents)
                     {
@@ -799,18 +799,18 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             RegionInfo regionInfo = presence.Scene.RegionInfo;
 
-                            MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                            MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 
                             // kick client...
                             if (alert != null)
-                                presence.ControllingClient.Kick (alert);
+                                presence.ControllingClient.Kick(alert);
                             else
-                                presence.ControllingClient.Kick ("\nThe Aurora manager kicked you out.\n");
+                                presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                             // ...and close on our side
-                            IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                            IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule>();
                             if (transferModule != null)
-                                transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                                transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                         }
                     }
                 }
@@ -822,11 +822,11 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (IScenePresence presence in agents)
             {
                 RegionInfo regionInfo = presence.Scene.RegionInfo;
-                string param = Util.CombineParams (cmdparams, 2);
-                if (presence.Name.ToLower().Contains (param.ToLower ()) ||
-                    (presence.Firstname.ToLower ().Contains (cmdparams[2].ToLower ()) && presence.Lastname.ToLower ().Contains (cmdparams[3].ToLower ())))
+                string param = Util.CombineParams(cmdparams, 2);
+                if (presence.Name.ToLower().Contains(param.ToLower()) ||
+                    (presence.Firstname.ToLower().Contains(cmdparams[2].ToLower()) && presence.Lastname.ToLower().Contains(cmdparams[3].ToLower())))
                 {
-                    MainConsole.Instance.Info (String.Format ("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
+                    MainConsole.Instance.Info(String.Format("Kicking user: {0,-16}{1,-37} in region: {2,-16}", presence.Name, presence.UUID, regionInfo.RegionName));
 
                     // kick client...
                     if (alert != null)
@@ -835,12 +835,12 @@ namespace OpenSim.Region.Framework.Scenes
                         presence.ControllingClient.Kick("\nThe Aurora manager kicked you out.\n");
 
                     // ...and close on our side
-                    IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule> ();
+                    IEntityTransferModule transferModule = presence.Scene.RequestModuleInterface<IEntityTransferModule>();
                     if (transferModule != null)
-                        transferModule.IncomingCloseAgent (presence.Scene, presence.UUID);
+                        transferModule.IncomingCloseAgent(presence.Scene, presence.UUID);
                 }
             }
-            MainConsole.Instance.Info ("");
+            MainConsole.Instance.Info("");
         }
 
         /// <summary>
@@ -850,22 +850,22 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="args"></param>
         private void HandleForceUpdate(string[] args)
         {
-            MainConsole.Instance.Info ("Updating all clients");
+            MainConsole.Instance.Info("Updating all clients");
             ForEachCurrentScene(delegate(IScene scene)
             {
-                ISceneEntity[] EntityList = scene.Entities.GetEntities ();
+                ISceneEntity[] EntityList = scene.Entities.GetEntities();
 
                 foreach (ISceneEntity ent in EntityList)
                 {
                     if (ent is SceneObjectGroup)
                     {
-                        ((SceneObjectGroup)ent).ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
+                        ((SceneObjectGroup)ent).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
-                List<IScenePresence> presences = scene.Entities.GetPresences ();
-                foreach(IScenePresence presence in presences)
+                List<IScenePresence> presences = scene.Entities.GetPresences();
+                foreach (IScenePresence presence in presences)
                 {
-                    if(!presence.IsChildAgent)
+                    if (!presence.IsChildAgent)
                         scene.ForEachClient(delegate(IClientAPI client)
                         {
                             client.SendAvatarDataImmediate(presence);
@@ -881,21 +881,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cmd"></param>
         private void HandleModulesUnload(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            string[] cmdparams = args.ToArray ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] cmdparams = args.ToArray();
 
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
             if (cmdparams.Length > 1)
             {
                 foreach (IRegionModuleBase irm in controller.AllModules)
                 {
-                    if (irm.Name.ToLower () == cmdparams[1].ToLower ())
+                    if (irm.Name.ToLower() == cmdparams[1].ToLower())
                     {
-                        MainConsole.Instance.Info (String.Format ("Unloading module: {0}", irm.Name));
+                        MainConsole.Instance.Info(String.Format("Unloading module: {0}", irm.Name));
                         foreach (IScene scene in Scenes)
-                            irm.RemoveRegion (scene);
-                        irm.Close ();
+                            irm.RemoveRegion(scene);
+                        irm.Close();
                     }
                 }
             }
@@ -906,20 +906,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="module"></param>
         /// <param name="cmd"></param>
-        private void HandleModulesList (string[] cmd)
+        private void HandleModulesList(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            
-            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController> ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+
+            IRegionModulesController controller = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<IRegionModulesController>();
             foreach (IRegionModuleBase irm in controller.AllModules)
             {
                 if (irm is ISharedRegionModule)
-                    MainConsole.Instance.Info (String.Format ("Shared region module: {0}", irm.Name));
+                    MainConsole.Instance.Info(String.Format("Shared region module: {0}", irm.Name));
                 else if (irm is INonSharedRegionModule)
-                    MainConsole.Instance.Info (String.Format ("Nonshared region module: {0}", irm.Name));
+                    MainConsole.Instance.Info(String.Format("Nonshared region module: {0}", irm.Name));
                 else
-                    MainConsole.Instance.Info (String.Format ("Unknown type " + irm.GetType ().ToString () + " region module: {0}", irm.Name));
+                    MainConsole.Instance.Info(String.Format("Unknown type " + irm.GetType().ToString() + " region module: {0}", irm.Name));
             }
         }
 
@@ -947,7 +947,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="command">The first argument of the parameter (the command)</param>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        private void RunCommand (string[] cmdparams)
+        private void RunCommand(string[] cmdparams)
         {
             List<string> args = new List<string>(cmdparams);
             if (args.Count < 1)
@@ -964,9 +964,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (cmdparams.Length > 0)
                         if (cmdparams[0] == "region")
                         {
-                            if (MainConsole.Instance.Prompt ("Are you sure you want to reset the region?", "yes") != "yes")
+                            if (MainConsole.Instance.Prompt("Are you sure you want to reset the region?", "yes") != "yes")
                                 return;
-                            ResetRegion (MainConsole.Instance.ConsoleScene);
+                            ResetRegion(MainConsole.Instance.ConsoleScene);
                         }
                     break;
                 case "command-script":
@@ -983,7 +983,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (TryGetScene(regRemoveName, out removeScene))
                         RemoveRegion(removeScene, false);
                     else
-                        MainConsole.Instance.Info ("no region with that name");
+                        MainConsole.Instance.Info("no region with that name");
                     break;
 
                 case "delete-region":
@@ -993,7 +993,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (TryGetScene(regDeleteName, out killScene))
                         RemoveRegion(killScene, true);
                     else
-                        MainConsole.Instance.Info ("no region with that name");
+                        MainConsole.Instance.Info("no region with that name");
                     break;
                 case "restart-instance":
                     //This kills the instance and restarts it
@@ -1015,7 +1015,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                MainConsole.Instance.Info ("Usage: change region <region name>");
+                MainConsole.Instance.Info("Usage: change region <region name>");
             }
         }
 
@@ -1040,15 +1040,15 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         else
                         {
-                            MainConsole.Instance.Info ("packet debug should be 0..255");
+                            MainConsole.Instance.Info("packet debug should be 0..255");
                         }
-                        MainConsole.Instance.Info (String.Format ("New packet debug: {0}", newDebug));
+                        MainConsole.Instance.Info(String.Format("New packet debug: {0}", newDebug));
                     }
 
                     break;
                 default:
 
-                    MainConsole.Instance.Info ("Unknown debug");
+                    MainConsole.Instance.Info("Unknown debug");
                     break;
             }
         }
@@ -1063,7 +1063,7 @@ namespace OpenSim.Region.Framework.Scenes
             ForEachCurrentScene(
                 delegate(IScene scene)
                 {
-                    scene.ForEachScenePresence (delegate (IScenePresence scenePresence)
+                    scene.ForEachScenePresence(delegate(IScenePresence scenePresence)
                     {
                         if (!scenePresence.IsChildAgent)
                         {
@@ -1078,18 +1078,18 @@ namespace OpenSim.Region.Framework.Scenes
             );
         }
 
-        private void HandleShowUsers (string[] cmd)
+        private void HandleShowUsers(string[] cmd)
         {
-            List<string> args = new List<string> (cmd);
-            args.RemoveAt (0);
-            string[] showParams = args.ToArray ();
+            List<string> args = new List<string>(cmd);
+            args.RemoveAt(0);
+            string[] showParams = args.ToArray();
 
             List<IScenePresence> agents = new List<IScenePresence>();
-            if(showParams.Length > 1 && showParams[1] == "full")
+            if (showParams.Length > 1 && showParams[1] == "full")
             {
-                if(MainConsole.Instance.ConsoleScene == null)
+                if (MainConsole.Instance.ConsoleScene == null)
                 {
-                    foreach(IScene scene in m_localScenes)
+                    foreach (IScene scene in m_localScenes)
                     {
                         agents.AddRange(scene.GetScenePresences());
                     }
@@ -1099,9 +1099,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                if(MainConsole.Instance.ConsoleScene == null)
+                if (MainConsole.Instance.ConsoleScene == null)
                 {
-                    foreach(IScene scene in m_localScenes)
+                    foreach (IScene scene in m_localScenes)
                     {
                         agents.AddRange(scene.GetScenePresences());
                     }
@@ -1114,9 +1114,9 @@ namespace OpenSim.Region.Framework.Scenes
                 });
             }
 
-            MainConsole.Instance.Info (String.Format ("\nAgents connected: {0}\n", agents.Count));
+            MainConsole.Instance.Info(String.Format("\nAgents connected: {0}\n", agents.Count));
 
-            MainConsole.Instance.Info (String.Format ("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
+            MainConsole.Instance.Info(String.Format("{0,-16}{1,-16}{2,-37}{3,-11}{4,-16}{5,-30}", "Firstname", "Lastname", "Agent ID", "Root/Child", "Region", "Position"));
 
             foreach (IScenePresence presence in agents)
             {
@@ -1132,24 +1132,24 @@ namespace OpenSim.Region.Framework.Scenes
                     regionName = regionInfo.RegionName;
                 }
 
-                MainConsole.Instance.Info (String.Format ("{0,-16}{1,-37}{2,-11}{3,-16}{4,-30}", presence.Name, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString ()));
+                MainConsole.Instance.Info(String.Format("{0,-16}{1,-37}{2,-11}{3,-16}{4,-30}", presence.Name, presence.UUID, presence.IsChildAgent ? "Child" : "Root", regionName, presence.AbsolutePosition.ToString()));
             }
 
-            MainConsole.Instance.Info (String.Empty);
-            MainConsole.Instance.Info (String.Empty);
+            MainConsole.Instance.Info(String.Empty);
+            MainConsole.Instance.Info(String.Empty);
         }
 
-        private void HandleShowRegions (string[] cmd)
+        private void HandleShowRegions(string[] cmd)
         {
-            ForEachScene (delegate (IScene scene)
+            ForEachScene(delegate(IScene scene)
             {
-                MainConsole.Instance.Info (scene.ToString ());
+                MainConsole.Instance.Info(scene.ToString());
             });
         }
 
-        private void HandleShowMaturity (string[] cmd)
+        private void HandleShowMaturity(string[] cmd)
         {
-            ForEachCurrentScene (delegate (IScene scene)
+            ForEachCurrentScene(delegate(IScene scene)
             {
                 string rating = "";
                 if (scene.RegionInfo.RegionSettings.Maturity == 1)
@@ -1164,16 +1164,16 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     rating = "PG";
                 }
-                MainConsole.Instance.Info (String.Format ("Region Name: {0}, Region Rating {1}", scene.RegionInfo.RegionName, rating));
+                MainConsole.Instance.Info(String.Format("Region Name: {0}, Region Rating {1}", scene.RegionInfo.RegionName, rating));
             });
         }
 
-        private void SendCommandToPluginModules (string[] cmdparams)
+        private void SendCommandToPluginModules(string[] cmdparams)
         {
             ForEachCurrentScene(delegate(IScene scene) { scene.EventManager.TriggerOnPluginConsole(cmdparams); });
         }
 
-        private void SetBypassPermissionsOnCurrentScene (bool bypassPermissions)
+        private void SetBypassPermissionsOnCurrentScene(bool bypassPermissions)
         {
             ForEachCurrentScene(delegate(IScene scene) { scene.Permissions.SetBypassPermissions(bypassPermissions); });
         }
@@ -1195,7 +1195,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (FileNotFoundException)
                 {
-                    MainConsole.Instance.Info ("Specified xml not found. Usage: load xml2 <filename>");
+                    MainConsole.Instance.Info("Specified xml not found. Usage: load xml2 <filename>");
                 }
             }
             else
@@ -1218,7 +1218,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (Exception e)
             {
-                MainConsole.Instance.Error (e.ToString ());
+                MainConsole.Instance.Error(e.ToString());
             }
         }
 

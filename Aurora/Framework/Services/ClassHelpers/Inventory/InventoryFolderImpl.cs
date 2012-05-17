@@ -99,7 +99,7 @@ namespace Aurora.Framework
                                                       {
                                                           Name = folderName,
                                                           ID = folderID,
-                                                          Type = (short) type,
+                                                          Type = (short)type,
                                                           ParentID = this.ID,
                                                           Owner = Owner
                                                       };
@@ -386,7 +386,7 @@ namespace Aurora.Framework
             if (path == PATH_DELIMITER)
                 return this;
 
-            string[] components = path.Split(new[] {PATH_DELIMITER}, 2, StringSplitOptions.None);
+            string[] components = path.Split(new[] { PATH_DELIMITER }, 2, StringSplitOptions.None);
 
             lock (m_childFolders)
             {
@@ -432,7 +432,7 @@ namespace Aurora.Framework
         ///<returns>null if the item is not found</returns>
         public InventoryItemBase FindItemByPath(string path)
         {
-            string[] components = path.Split(new[] {PATH_DELIMITER}, 2, StringSplitOptions.None);
+            string[] components = path.Split(new[] { PATH_DELIMITER }, 2, StringSplitOptions.None);
 
             if (components.Length == 1)
             {

@@ -260,7 +260,7 @@ namespace Aurora.Modules.Estate
         {
             client.OnGodlikeMessage += GodlikeMessage;
             client.OnEstateTelehubRequest += GodlikeMessage;
-                //This is ok, we do estate checks and check to make sure that only telehubs are dealt with here
+            //This is ok, we do estate checks and check to make sure that only telehubs are dealt with here
         }
 
         private void OnClosingClient(IClientAPI client)
@@ -466,7 +466,7 @@ namespace Aurora.Modules.Estate
                 }
             }
             //Move them out of banned parcels
-            ParcelFlags parcelflags = (ParcelFlags) ILO.LandData.Flags;
+            ParcelFlags parcelflags = (ParcelFlags)ILO.LandData.Flags;
             if ((parcelflags & ParcelFlags.UseAccessGroup) == ParcelFlags.UseAccessGroup &&
                 (parcelflags & ParcelFlags.UseAccessList) == ParcelFlags.UseAccessList &&
                 (parcelflags & ParcelFlags.UsePassList) == ParcelFlags.UsePassList)
@@ -523,7 +523,7 @@ namespace Aurora.Modules.Estate
             }
 
             EstateSettings ES = scene.RegionInfo.EstateSettings;
-            TeleportFlags tpflags = (TeleportFlags) TeleportFlags;
+            TeleportFlags tpflags = (TeleportFlags)TeleportFlags;
             const TeleportFlags allowableFlags = OpenMetaverse.TeleportFlags.ViaLandmark | OpenMetaverse.TeleportFlags.ViaHome |
                                                  OpenMetaverse.TeleportFlags.ViaLure |
                                                  OpenMetaverse.TeleportFlags.ForceRedirect |
@@ -564,12 +564,12 @@ namespace Aurora.Modules.Estate
                 }
             }
             else if (!((tpflags & allowableFlags) != 0) && !isCrossing &&
-                     !scene.Permissions.GenericParcelPermission(userID, ILO, (ulong) GroupPowers.None))
-                //Telehubs override parcels
+                     !scene.Permissions.GenericParcelPermission(userID, ILO, (ulong)GroupPowers.None))
+            //Telehubs override parcels
             {
                 if (Sp != null)
                     Sp.ClearSavedVelocity(); //If we are moving the agent, clear their velocity
-                if (ILO.LandData.LandingType == (int) LandingType.None) //Blocked, force this person off this land
+                if (ILO.LandData.LandingType == (int)LandingType.None) //Blocked, force this person off this land
                 {
                     //Find a new parcel for them
                     List<ILandObject> Parcels = parcelManagement.ParcelsNearPoint(Position);
@@ -587,9 +587,9 @@ namespace Aurora.Modules.Estate
                             if (!Parcel.IsBannedFromLand(userID))
                             {
                                 //Now we have to check their userloc
-                                if (ILO.LandData.LandingType == (int) LandingType.None)
+                                if (ILO.LandData.LandingType == (int)LandingType.None)
                                     continue; //Blocked, check next one
-                                else if (ILO.LandData.LandingType == (int) LandingType.LandingPoint)
+                                else if (ILO.LandData.LandingType == (int)LandingType.LandingPoint)
                                     //Use their landing spot
                                     newPosition = Parcel.LandData.UserLocation;
                                 else //They allow for anywhere, so dump them in the center at the ground
@@ -623,7 +623,7 @@ namespace Aurora.Modules.Estate
                         }
                     }
                 }
-                else if (ILO.LandData.LandingType == (int) LandingType.LandingPoint) //Move to tp spot
+                else if (ILO.LandData.LandingType == (int)LandingType.LandingPoint) //Move to tp spot
                     newPosition = ILO.LandData.UserLocation != Vector3.Zero
                                       ? ILO.LandData.UserLocation
                                       : parcelManagement.GetNearestRegionEdgePosition(Sp);
@@ -644,7 +644,7 @@ namespace Aurora.Modules.Estate
                     else
                     {
                         agentInfo.OtherAgentInformation.Add("Prelude" + scene.RegionInfo.RegionID,
-                                                            OSD.FromInteger((int) IAgentFlags.PastPrelude));
+                                                            OSD.FromInteger((int)IAgentFlags.PastPrelude));
                         AgentConnector.UpdateAgent(agentInfo);
                     }
                 }
@@ -660,18 +660,18 @@ namespace Aurora.Modules.Estate
             }
 
 
-            if ((ILO.LandData.Flags & (int) ParcelFlags.DenyAnonymous) != 0)
+            if ((ILO.LandData.Flags & (int)ParcelFlags.DenyAnonymous) != 0)
             {
                 if (account != null &&
-                    (account.UserFlags & (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) ==
-                    (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile)
+                    (account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) ==
+                    (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile)
                 {
                     reason = "You may not enter this region.";
                     return false;
                 }
             }
 
-            if ((ILO.LandData.Flags & (uint) ParcelFlags.DenyAgeUnverified) != 0 && agentInfo != null)
+            if ((ILO.LandData.Flags & (uint)ParcelFlags.DenyAgeUnverified) != 0 && agentInfo != null)
             {
                 if ((agentInfo.Flags & IAgentFlags.Minor) == IAgentFlags.Minor)
                 {
@@ -684,7 +684,7 @@ namespace Aurora.Modules.Estate
             ITerrainChannel chan = scene.RequestModuleInterface<ITerrainChannel>();
             if (chan != null)
             {
-                float posZLimit = chan[(int) newPosition.X, (int) newPosition.Y] + (float) 1.25;
+                float posZLimit = chan[(int)newPosition.X, (int)newPosition.Y] + (float)1.25;
 
                 if (posZLimit >= (newPosition.Z) && !(Single.IsInfinity(posZLimit) || Single.IsNaN(posZLimit)))
                 {
@@ -729,7 +729,7 @@ namespace Aurora.Modules.Estate
                     }
                 }
                 TimeSinceLastTeleport[Sp.Scene.RegionInfo.RegionID] = Util.UnixTimeSinceEpoch() +
-                                                                      ((int) (SecondsBeforeNextTeleport));
+                                                                      ((int)(SecondsBeforeNextTeleport));
             }
 
             //Gods tp freely
@@ -749,7 +749,7 @@ namespace Aurora.Modules.Estate
                         reason = "You have been banned from this region.";
                         return false;
                     }
-                    else if (((IPEndPoint) Sp.ControllingClient.GetClientEP()).Address.ToString().Contains(banstr))
+                    else if (((IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString().Contains(banstr))
                     {
                         reason = "You have been banned from this region.";
                         return false;
@@ -769,7 +769,7 @@ namespace Aurora.Modules.Estate
                 UserInfo pinfo = presence.GetUserInfo(agent.AgentID.ToString());
 
                 if (!foreign &&
-                    (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint) TeleportFlags.ViaLogin) == 0))))
+                    (pinfo == null || (!pinfo.IsOnline && ((agent.teleportFlags & (uint)TeleportFlags.ViaLogin) == 0))))
                 {
                     reason =
                         String.Format(
@@ -798,7 +798,7 @@ namespace Aurora.Modules.Estate
                 {
                     if (Sp != null)
                     {
-                        string banIP = ((IPEndPoint) Sp.ControllingClient.GetClientEP()).Address.ToString();
+                        string banIP = ((IPEndPoint)Sp.ControllingClient.GetClientEP()).Address.ToString();
 
                         if (ban.BannedHostIPMask != banIP) //If it changed, ban them again
                         {
@@ -865,32 +865,32 @@ namespace Aurora.Modules.Estate
             }
 
             if (account != null && ES.DenyAnonymous &&
-                ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) ==
-                 (int) IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
+                ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile) ==
+                 (int)IUserProfileInfo.ProfileFlags.NoPaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
             if (account != null && ES.DenyIdentified &&
-                ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) ==
-                 (int) IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
+                ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile) ==
+                 (int)IUserProfileInfo.ProfileFlags.PaymentInfoOnFile))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
             if (account != null && ES.DenyTransacted &&
-                ((account.UserFlags & (int) IUserProfileInfo.ProfileFlags.PaymentInfoInUse) ==
-                 (int) IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
+                ((account.UserFlags & (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse) ==
+                 (int)IUserProfileInfo.ProfileFlags.PaymentInfoInUse))
             {
                 reason = "You may not enter this region.";
                 return false;
             }
 
-            const long m_Day = 25*60*60; //Find out day length in seconds
+            const long m_Day = 25 * 60 * 60; //Find out day length in seconds
             if (account != null && scene.RegionInfo.RegionSettings.MinimumAge != 0 &&
-                (account.Created - Util.UnixTimeSinceEpoch()) < (scene.RegionInfo.RegionSettings.MinimumAge*m_Day))
+                (account.Created - Util.UnixTimeSinceEpoch()) < (scene.RegionInfo.RegionSettings.MinimumAge * m_Day))
             {
                 reason = "You may not enter this region.";
                 return false;
@@ -916,7 +916,7 @@ namespace Aurora.Modules.Estate
 
 
             if (agentInfo != null &&
-                scene.RegionInfo.AccessLevel > Util.ConvertMaturityToAccessLevel((uint) agentInfo.MaturityRating))
+                scene.RegionInfo.AccessLevel > Util.ConvertMaturityToAccessLevel((uint)agentInfo.MaturityRating))
             {
                 reason = "The region has too high of a maturity level. Blocking teleport.";
                 return false;

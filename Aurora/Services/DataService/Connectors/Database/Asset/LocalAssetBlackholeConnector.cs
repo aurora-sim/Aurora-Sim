@@ -511,7 +511,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 {
                     Dictionary<string, object> where = new Dictionary<string, object>(1);
                     where["id"] = asset.ID;
-                    if(m_Gd.Query(new string[]{ "id" }, "auroraassets_" + asset.ID.ToString().Substring(0, 1), new QueryFilter{
+                    if (m_Gd.Query(new string[] { "id" }, "auroraassets_" + asset.ID.ToString().Substring(0, 1), new QueryFilter
+                    {
                         andFilters = where
                     }, null, null, null).Count == 0)
                     {

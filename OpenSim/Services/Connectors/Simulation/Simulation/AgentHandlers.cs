@@ -78,7 +78,7 @@ namespace OpenSim.Services
             UUID regionID;
             string action;
             string other;
-            string uri = ((string) request["uri"]);
+            string uri = ((string)request["uri"]);
             if (m_secure)
                 uri = uri.Remove(0, 37); //Remove the secure UUID from the uri
             if (!WebUtils.GetParams(uri, out agentID, out regionID, out action, out other))
@@ -91,7 +91,7 @@ namespace OpenSim.Services
             }
 
             // Next, let's parse the verb
-            string method = (string) request["http-method"];
+            string method = (string)request["http-method"];
             if (method.Equals("PUT"))
             {
                 DoAgentPut(request, responsedata);
@@ -103,7 +103,7 @@ namespace OpenSim.Services
                 try
                 {
                     string data = request["body"].ToString();
-                    map = (OSDMap) OSDParser.DeserializeJson(data);
+                    map = (OSDMap)OSDParser.DeserializeJson(data);
                 }
                 catch
                 {
@@ -154,7 +154,7 @@ namespace OpenSim.Services
 
         private void DoMakeChildAgent(UUID agentID, UUID regionID)
         {
-            m_SimulationService.MakeChildAgent(agentID, new GridRegion {RegionID = regionID});
+            m_SimulationService.MakeChildAgent(agentID, new GridRegion { RegionID = regionID });
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -164,7 +164,7 @@ namespace OpenSim.Services
 
         protected void DoAgentPost(Hashtable request, Hashtable responsedata, UUID id)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
@@ -197,7 +197,7 @@ namespace OpenSim.Services
             {
                 try
                 {
-                    OSDMap agentDataMap = (OSDMap) args["agent_data"];
+                    OSDMap agentDataMap = (OSDMap)args["agent_data"];
                     agent = new AgentData();
                     agent.Unpack(agentDataMap);
                 }
@@ -207,8 +207,7 @@ namespace OpenSim.Services
                 }
             }
 
-            GridRegion destination = new GridRegion
-                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
+            GridRegion destination = new GridRegion { RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname };
 
             AgentCircuitData aCircuit = new AgentCircuitData();
             try
@@ -247,10 +246,10 @@ namespace OpenSim.Services
                 return NetworkUtils.GetCallerIP(request);
 
             // We're behind a proxy
-            Hashtable headers = (Hashtable) request["headers"];
+            Hashtable headers = (Hashtable)request["headers"];
             if (headers.ContainsKey("X-Forwarded-For") && headers["X-Forwarded-For"] != null)
             {
-                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string) headers["X-Forwarded-For"]);
+                IPEndPoint ep = NetworkUtils.GetClientIPFromXFF((string)headers["X-Forwarded-For"]);
                 if (ep != null)
                     return ep.Address.ToString();
             }
@@ -269,7 +268,7 @@ namespace OpenSim.Services
 
         protected void DoAgentPut(Hashtable request, Hashtable responsedata)
         {
-            OSDMap args = WebUtils.GetOSDMap((string) request["body"]);
+            OSDMap args = WebUtils.GetOSDMap((string)request["body"]);
             if (args == null)
             {
                 responsedata["int_response_code"] = HttpStatusCode.BadRequest;
@@ -290,8 +289,7 @@ namespace OpenSim.Services
             if (args.ContainsKey("destination_name") && args["destination_name"] != null)
                 regionname = args["destination_name"].ToString();
 
-            GridRegion destination = new GridRegion
-                                         {RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname};
+            GridRegion destination = new GridRegion { RegionID = uuid, RegionLocX = x, RegionLocY = y, RegionName = regionname };
 
             string messageType;
             if (args["message_type"] != null)
@@ -363,7 +361,7 @@ namespace OpenSim.Services
                 return;
             }
 
-            GridRegion destination = new GridRegion {RegionID = regionID};
+            GridRegion destination = new GridRegion { RegionID = regionID };
 
             AgentData agent = null;
             AgentCircuitData circuitData;
@@ -409,7 +407,7 @@ namespace OpenSim.Services
         {
             MainConsole.Instance.Debug(" >>> DoDelete action:" + action + "; RegionID:" + regionID);
 
-            GridRegion destination = new GridRegion {RegionID = regionID};
+            GridRegion destination = new GridRegion { RegionID = regionID };
 
             if (action.Equals("release"))
             {

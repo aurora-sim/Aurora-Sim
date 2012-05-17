@@ -96,15 +96,15 @@ namespace Aurora.Framework
 
         public void FromOSD(OSD o)
         {
-            OSDMap values = (OSDMap) o;
-            EstateID = (uint) values["EstateID"].AsInteger();
+            OSDMap values = (OSDMap)o;
+            EstateID = (uint)values["EstateID"].AsInteger();
             BannedUserID = values["BannedUserID"].AsUUID();
         }
 
         public OSD ToOSD()
         {
             OSDMap kvp = new OSDMap();
-            kvp["EstateID"] = (int) EstateID;
+            kvp["EstateID"] = (int)EstateID;
             kvp["BannedUserID"] = BannedUserID;
             return kvp;
         }

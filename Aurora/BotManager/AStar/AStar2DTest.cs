@@ -125,8 +125,8 @@ namespace Games.Pathfinding.AStar2DTest
             {
                 return false;
             }
-            return ((((AStarNode2D) ANode).X == FX) &&
-                    (((AStarNode2D) ANode).Y == FY));
+            return ((((AStarNode2D)ANode).X == FX) &&
+                    (((AStarNode2D)ANode).Y == FY));
         }
 
         /// <summary>
@@ -136,8 +136,8 @@ namespace Games.Pathfinding.AStar2DTest
         {
             if (GoalNode != null)
             {
-                double xd = Math.Abs(FX - ((AStarNode2D) GoalNode).X);
-                double yd = Math.Abs(FY - ((AStarNode2D) GoalNode).Y);
+                double xd = Math.Abs(FX - ((AStarNode2D)GoalNode).X);
+                double yd = Math.Abs(FY - ((AStarNode2D)GoalNode).Y);
 
                 // "Euclidean distance" - Used when search can move at any angle.
                 //GoalEstimate = Math.Sqrt((xd * xd) + (yd * yd));//was using this one
@@ -262,7 +262,7 @@ namespace Games.Pathfinding.AStar2DTest
             // This works because each character is internally represented by a number. 
             // The characters '0' to '9' are represented by consecutive numbers, so finding 
             // the difference between the characters '0' and '2' results in the number 2.if char = 2 or whatever.
-            int[,] mapArray = new int[mapx,mapy];
+            int[,] mapArray = new int[mapx, mapy];
             xLimit = mapx;
             yLimit = mapy;
 
@@ -299,7 +299,7 @@ namespace Games.Pathfinding.AStar2DTest
             AStar astar = new AStar();
 
             AStarNode2D GoalNode = new AStarNode2D(null, null, 0, endx, endy);
-            AStarNode2D StartNode = new AStarNode2D(null, GoalNode, 0, startx, starty) {GoalNode = GoalNode};
+            AStarNode2D StartNode = new AStarNode2D(null, GoalNode, 0, startx, starty) { GoalNode = GoalNode };
 
             // Prepare the final List that will become the waypoints for him to leaf through
             List<string> botPoint = new List<string>();
@@ -323,7 +323,7 @@ namespace Games.Pathfinding.AStar2DTest
             int X1 = startx; //startx
             int Y1 = starty; //starty     
             int Z = endz;
-                //startz - we need this to make a vector but will override with current z in Botme enabling him to walk up hills
+            //startz - we need this to make a vector but will override with current z in Botme enabling him to walk up hills
 
             int xtemp = 0;
             int ytemp = 0;
@@ -333,7 +333,7 @@ namespace Games.Pathfinding.AStar2DTest
             ArrayList Nodes = new ArrayList(astar.Solution);
             foreach (AStarNode nn in Nodes)
             {
-                AStarNode2D n = (AStarNode2D) nn;
+                AStarNode2D n = (AStarNode2D)nn;
                 // Return x and y from printinfo
                 int[] XYreturn = new int[2];
                 XYreturn = n.PrintNodeInfo();
@@ -379,7 +379,7 @@ namespace Games.Pathfinding.AStar2DTest
             {
                 return 88;
             }
-            return (Y2 - Y1)/(X2 - X1);
+            return (Y2 - Y1) / (X2 - X1);
         }
 
         #endregion

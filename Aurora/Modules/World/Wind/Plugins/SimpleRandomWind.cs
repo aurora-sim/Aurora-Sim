@@ -38,7 +38,7 @@ namespace Aurora.Modules.Wind.Plugins
     {
         private readonly Random m_rndnums = new Random(Environment.TickCount);
         private float m_strength = 1.0f;
-        private Vector2[] m_windSpeeds = new Vector2[16*16];
+        private Vector2[] m_windSpeeds = new Vector2[16 * 16];
 
         public string Version
         {
@@ -76,10 +76,10 @@ namespace Aurora.Modules.Wind.Plugins
                 {
                     for (int x = 0; x < 16; x++)
                     {
-                        m_windSpeeds[y*16 + x].X = (float) (m_rndnums.NextDouble()*2d - 1d); // -1 to 1
-                        m_windSpeeds[y*16 + x].Y = (float) (m_rndnums.NextDouble()*2d - 1d); // -1 to 1
-                        m_windSpeeds[y*16 + x].X *= m_strength;
-                        m_windSpeeds[y*16 + x].Y *= m_strength;
+                        m_windSpeeds[y * 16 + x].X = (float)(m_rndnums.NextDouble() * 2d - 1d); // -1 to 1
+                        m_windSpeeds[y * 16 + x].Y = (float)(m_rndnums.NextDouble() * 2d - 1d); // -1 to 1
+                        m_windSpeeds[y * 16 + x].X *= m_strength;
+                        m_windSpeeds[y * 16 + x].Y *= m_strength;
                     }
                 }
             }
@@ -89,8 +89,8 @@ namespace Aurora.Modules.Wind.Plugins
         {
             Vector3 windVector = new Vector3(0.0f, 0.0f, 0.0f);
 
-            int x = (int) fX/16;
-            int y = (int) fY/16;
+            int x = (int)fX / 16;
+            int y = (int)fY / 16;
 
             if (x < 0) x = 0;
             if (x > 15) x = 15;
@@ -99,8 +99,8 @@ namespace Aurora.Modules.Wind.Plugins
 
             if (m_windSpeeds != null)
             {
-                windVector.X = m_windSpeeds[y*16 + x].X;
-                windVector.Y = m_windSpeeds[y*16 + x].Y;
+                windVector.X = m_windSpeeds[y * 16 + x].X;
+                windVector.Y = m_windSpeeds[y * 16 + x].Y;
             }
 
             return windVector;
@@ -118,7 +118,7 @@ namespace Aurora.Modules.Wind.Plugins
 
         public Dictionary<string, string> WindParams()
         {
-            Dictionary<string, string> Params = new Dictionary<string, string> {{"strength", "wind strength"}};
+            Dictionary<string, string> Params = new Dictionary<string, string> { { "strength", "wind strength" } };
 
             return Params;
         }

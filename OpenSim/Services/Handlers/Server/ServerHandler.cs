@@ -193,7 +193,7 @@ namespace OpenSim.Services
                 if (args != null)
                     return HandleMap(args);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
             }

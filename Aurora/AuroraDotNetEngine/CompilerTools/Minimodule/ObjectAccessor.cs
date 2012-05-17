@@ -93,7 +93,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 
         public IObject this[int index]
         {
-            get { return new SOPObject(m_scene, (uint) index, m_security); }
+            get { return new SOPObject(m_scene, (uint)index, m_security); }
         }
 
         public IObject this[uint index]

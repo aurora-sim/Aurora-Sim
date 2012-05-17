@@ -143,7 +143,7 @@ namespace Aurora.Services.DataService
 
             uint now = Utils.DateTimeToUnixTime(DateTime.Now);
             Dictionary<string, object> values = new Dictionary<string, object>(1);
-            values["validity"] = now + (lifetime * 60) ;
+            values["validity"] = now + (lifetime * 60);
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = principalID;

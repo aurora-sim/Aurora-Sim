@@ -108,7 +108,7 @@ namespace OpenSim.Services.MessagingService
                 LogOutAllAgentsForRegion(requestingRegion);
             }
             else if (message["Method"] == "RegionIsOnline")
-                //This gets fired when the scene is fully finished starting up
+            //This gets fired when the scene is fully finished starting up
             {
                 //Log out all the agents first, then add any child agents that should be in this region
                 LogOutAllAgentsForRegion(requestingRegion);
@@ -145,13 +145,13 @@ namespace OpenSim.Services.MessagingService
                 regionCaps.Disabled = false;
 
                 //The agent is getting here for the first time (eg. login)
-                OSDMap body = ((OSDMap) message["Message"]);
+                OSDMap body = ((OSDMap)message["Message"]);
 
                 //Parse the OSDMap
                 int DrawDistance = body["DrawDistance"].AsInteger();
 
                 AgentCircuitData circuitData = new AgentCircuitData();
-                circuitData.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                circuitData.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
 
                 //Now do the creation
                 EnableChildAgents(AgentID, requestingRegion, DrawDistance, circuitData);
@@ -187,10 +187,10 @@ namespace OpenSim.Services.MessagingService
                 IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService();
                 if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle) //Has to be root
                 {
-                    OSDMap body = ((OSDMap) message["Message"]);
+                    OSDMap body = ((OSDMap)message["Message"]);
 
                     AgentPosition pos = new AgentPosition();
-                    pos.Unpack((OSDMap) body["AgentPos"]);
+                    pos.Unpack((OSDMap)body["AgentPos"]);
 
                     SendChildAgentUpdate(pos, regionCaps);
                     regionCaps.Disabled = false;
@@ -203,19 +203,19 @@ namespace OpenSim.Services.MessagingService
                 IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService();
                 if (rootCaps != null && rootCaps.RegionHandle == regionCaps.RegionHandle)
                 {
-                    OSDMap body = ((OSDMap) message["Message"]);
+                    OSDMap body = ((OSDMap)message["Message"]);
 
                     GridRegion destination = new GridRegion();
-                    destination.FromOSD((OSDMap) body["Region"]);
+                    destination.FromOSD((OSDMap)body["Region"]);
 
                     uint TeleportFlags = body["TeleportFlags"].AsUInteger();
                     int DrawDistance = body["DrawDistance"].AsInteger();
 
                     AgentCircuitData Circuit = new AgentCircuitData();
-                    Circuit.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                    Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
 
                     AgentData AgentData = new AgentData();
-                    AgentData.Unpack((OSDMap) body["AgentData"]);
+                    AgentData.Unpack((OSDMap)body["AgentData"]);
                     regionCaps.Disabled = false;
 
                     OSDMap result = new OSDMap();
@@ -236,16 +236,16 @@ namespace OpenSim.Services.MessagingService
                 if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
                 {
                     //This is a simulator message that tells us to cross the agent
-                    OSDMap body = ((OSDMap) message["Message"]);
+                    OSDMap body = ((OSDMap)message["Message"]);
 
                     Vector3 pos = body["Pos"].AsVector3();
                     Vector3 Vel = body["Vel"].AsVector3();
                     GridRegion Region = new GridRegion();
-                    Region.FromOSD((OSDMap) body["Region"]);
+                    Region.FromOSD((OSDMap)body["Region"]);
                     AgentCircuitData Circuit = new AgentCircuitData();
-                    Circuit.UnpackAgentCircuitData((OSDMap) body["Circuit"]);
+                    Circuit.UnpackAgentCircuitData((OSDMap)body["Circuit"]);
                     AgentData AgentData = new AgentData();
-                    AgentData.Unpack((OSDMap) body["AgentData"]);
+                    AgentData.Unpack((OSDMap)body["AgentData"]);
                     regionCaps.Disabled = false;
 
                     OSDMap result = new OSDMap();
@@ -368,7 +368,7 @@ namespace OpenSim.Services.MessagingService
                     string reason; //Tell the region about it
                     bool useCallbacks = false;
                     if (!InformClientOfNeighbor(regionClientCaps.AgentID, regionClientCaps.RegionHandle,
-                                                regionCircuitData, ref requestingRegion, (uint) TeleportFlags.Default,
+                                                regionCircuitData, ref requestingRegion, (uint)TeleportFlags.Default,
                                                 null, out reason, out useCallbacks))
                         informed = false;
                     else
@@ -401,7 +401,7 @@ namespace OpenSim.Services.MessagingService
                                        ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
                                        IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
                                        clientCaps.GetRootCapsService().CircuitData.DrawDistance = DrawDistance;
-                                           //Fix the root agents dd
+                                       //Fix the root agents dd
                                        foreach (GridRegion neighbor in neighbors)
                                        {
                                            if (neighbor.RegionHandle != requestingRegion &&
@@ -418,7 +418,7 @@ namespace OpenSim.Services.MessagingService
                                                bool useCallbacks = false;
                                                InformClientOfNeighbor(AgentID, requestingRegion, regionCircuitData,
                                                                       ref nCopy,
-                                                                      (uint) TeleportFlags.Default, null, out reason,
+                                                                      (uint)TeleportFlags.Default, null, out reason,
                                                                       out useCallbacks);
                                            }
                                            count++;
@@ -433,9 +433,9 @@ namespace OpenSim.Services.MessagingService
                                        int count = 0;
                                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                                        int xMin = (caps.Region.RegionLocX) + (int)(position.X) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeX);
-                                       int xMax = (caps.Region.RegionLocX) + (int) (position.X) + 256;
+                                       int xMax = (caps.Region.RegionLocX) + (int)(position.X) + 256;
                                        int yMin = (caps.Region.RegionLocY) + (int)(position.Y) - ((gridService != null ? gridService.GetRegionViewSize() : 1) * caps.Region.RegionSizeY);
-                                       int yMax = (caps.Region.RegionLocY) + (int) (position.Y) + 256;
+                                       int yMax = (caps.Region.RegionLocY) + (int)(position.Y) + 256;
 
                                        //Ask the grid service about the range
                                        List<GridRegion> neighbors =
@@ -459,7 +459,7 @@ namespace OpenSim.Services.MessagingService
                                                bool useCallbacks = false;
                                                InformClientOfNeighbor(caps.AgentID, caps.RegionHandle, regionCircuitData,
                                                                       ref nCopy,
-                                                                      (uint) TeleportFlags.Default, null, out reason,
+                                                                      (uint)TeleportFlags.Default, null, out reason,
                                                                       out useCallbacks);
                                            }
                                            count++;
@@ -548,7 +548,7 @@ namespace OpenSim.Services.MessagingService
                 ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
                 if (commsService != null)
                     commsService.GetUrlsForUser(neighbor, circuitData.AgentID);
-                        //Make sure that we make userURLs if we need to
+                //Make sure that we make userURLs if we need to
 
                 circuitData.CapsPath = CapsUtil.GetCapsPathFromCapsSeed(otherRegionService.CapsUrl); //For OpenSim
                 circuitData.firstname = clientCaps.AccountInfo.FirstName;
@@ -565,8 +565,8 @@ namespace OpenSim.Services.MessagingService
                     //If the region accepted us, we should get a CAPS url back as the reason, if not, its not updated or not an Aurora region, so don't touch it.
                     if (reason != "")
                     {
-                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
-                        OSDMap SimSeedCaps = (OSDMap) responseMap["CapsUrls"];
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                        OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
@@ -800,8 +800,7 @@ namespace OpenSim.Services.MessagingService
                                            List<GridRegion> NeighborsOfDestinationRegion =
                                                service.GetNeighbors(destination);
 
-                                           List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion)
-                                                                                {oldRegion};
+                                           List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion) { oldRegion };
                                            //Add the old region, because it might need closed too
 
                                            byebyeRegions.RemoveAll(delegate(GridRegion r)
@@ -1147,7 +1146,7 @@ namespace OpenSim.Services.MessagingService
         {
 #if(!ISWIN)
             List<GridRegion> regions = new List<GridRegion>();
-            foreach(IRegionClientCapsService rcc in iClientCapsService.GetCapsServices())
+            foreach (IRegionClientCapsService rcc in iClientCapsService.GetCapsServices())
                 regions.Add(rcc.Region);
             return regions;
 #else
@@ -1187,7 +1186,7 @@ namespace OpenSim.Services.MessagingService
                 ICommunicationService commsService = m_registry.RequestModuleInterface<ICommunicationService>();
                 if (commsService != null)
                     commsService.GetUrlsForUser(region, aCircuit.AgentID);
-                        //Make sure that we make userURLs if we need to
+                //Make sure that we make userURLs if we need to
 
                 int requestedUDPPort = 0;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
@@ -1225,15 +1224,15 @@ namespace OpenSim.Services.MessagingService
                 {
                     try
                     {
-                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
-                        OSDMap SimSeedCaps = (OSDMap) responseMap["CapsUrls"];
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
+                        OSDMap SimSeedCaps = (OSDMap)responseMap["CapsUrls"];
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
                             ipAddress = IPAddress.Parse(ip);
                         }
                         region.ExternalEndPoint.Address = ipAddress;
-                            //Fix this so that it gets sent to the client that way
+                        //Fix this so that it gets sent to the client that way
                         regionClientCaps.AddCAPS(SimSeedCaps);
                         regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
                         regionClientCaps.LoopbackRegionIP = ipAddress;

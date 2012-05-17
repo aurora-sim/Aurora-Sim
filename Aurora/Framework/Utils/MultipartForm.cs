@@ -99,7 +99,7 @@ namespace Aurora.Framework
                 {
                     if (param is File)
                     {
-                        File file = (File) param;
+                        File file = (File)param;
 
                         // Add just the first part of this param, since we will write the file data directly to the Stream
                         string header =
@@ -115,7 +115,7 @@ namespace Aurora.Framework
                     }
                     else
                     {
-                        Parameter parameter = (Parameter) param;
+                        Parameter parameter = (Parameter)param;
 
                         string postData =
                             string.Format("--{0}\r\nContent-Disposition: form-data; name=\"{1}\"\r\n\r\n{2}\r\n",
@@ -135,7 +135,7 @@ namespace Aurora.Framework
                 // Copy the temporary stream to the network stream
                 formDataStream.Seek(0, SeekOrigin.Begin);
                 using (Stream requestStream = request.GetRequestStream())
-                    formDataStream.CopyTo(requestStream, (int) formDataStream.Length);
+                    formDataStream.CopyTo(requestStream, (int)formDataStream.Length);
             }
 
             #endregion Stream Writing

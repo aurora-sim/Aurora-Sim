@@ -195,7 +195,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
                                 if (target > heightF + talus)
                                 {
-                                    float calc = duration*((target - heightF) - talus)*z;
+                                    float calc = duration * ((target - heightF) - talus) * z;
                                     heightF += calc;
                                     target -= calc;
                                 }

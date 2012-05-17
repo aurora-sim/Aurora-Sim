@@ -270,7 +270,7 @@ For more information, see <a href='http://openid.net/'>http://openid.net/</a>.
                 {
                     if (!provider.Request.IsResponseReady && provider.Request is IAuthenticationRequest)
                     {
-                        IAuthenticationRequest authRequest = (IAuthenticationRequest) provider.Request;
+                        IAuthenticationRequest authRequest = (IAuthenticationRequest)provider.Request;
                         string[] passwordValues = postQuery.GetValues("pass");
 
                         UserAccount account;
@@ -310,7 +310,7 @@ For more information, see <a href='http://openid.net/'>http://openid.net/</a>.
                         m_contentType = contentTypeValues[0];
 
                     // Set the response code and document body based on the OpenID result
-                    httpResponse.StatusCode = (int) provider.Request.Response.Code;
+                    httpResponse.StatusCode = (int)provider.Request.Response.Code;
                     response.Write(provider.Request.Response.Body, 0, provider.Request.Response.Body.Length);
                     response.Close();
                 }
@@ -343,7 +343,7 @@ For more information, see <a href='http://openid.net/'>http://openid.net/</a>.
             }
             catch (Exception ex)
             {
-                httpResponse.StatusCode = (int) HttpStatusCode.InternalServerError;
+                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                 using (StreamWriter writer = new StreamWriter(response))
                     writer.Write(ex.Message);
             }

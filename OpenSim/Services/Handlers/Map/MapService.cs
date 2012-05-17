@@ -52,62 +52,62 @@ namespace OpenSim.Services.Handlers.Map
         private bool m_cacheEnabled = true;
         private float m_cacheExpires = 24;
 
-        public void Initialize (IConfigSource config, IRegistryCore registry)
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
             IConfig mapConfig = config.Configs["MapService"];
             if (mapConfig != null)
             {
-                m_enabled = mapConfig.GetBoolean ("Enabled", m_enabled);
-                m_port = mapConfig.GetUInt ("Port", m_port);
-                m_cacheEnabled = mapConfig.GetBoolean ("CacheEnabled", m_cacheEnabled);
-                m_cacheExpires = mapConfig.GetFloat ("CacheExpires", m_cacheExpires);
+                m_enabled = mapConfig.GetBoolean("Enabled", m_enabled);
+                m_port = mapConfig.GetUInt("Port", m_port);
+                m_cacheEnabled = mapConfig.GetBoolean("CacheEnabled", m_cacheEnabled);
+                m_cacheExpires = mapConfig.GetFloat("CacheExpires", m_cacheExpires);
             }
-            if(!m_enabled)
+            if (!m_enabled)
                 return;
 
             if (m_cacheEnabled)
-                CreateCacheDirectories ();
+                CreateCacheDirectories();
 
-            registry.RegisterModuleInterface<IMapService> (this);
-            m_server = registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_port);
-            m_server.AddHTTPHandler ("/MapService/", MapRequest);
+            registry.RegisterModuleInterface<IMapService>(this);
+            m_server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
+            m_server.AddHTTPHandler("/MapService/", MapRequest);
         }
 
-        private void CreateCacheDirectories ()
+        private void CreateCacheDirectories()
         {
-            if (!Directory.Exists ("assetcache"))
-                Directory.CreateDirectory ("assetcache");
-            if(!Directory.Exists("assetcache/mapzoomlevels"))
-                Directory.CreateDirectory ("assetcache/mapzoomlevels");
+            if (!Directory.Exists("assetcache"))
+                Directory.CreateDirectory("assetcache");
+            if (!Directory.Exists("assetcache/mapzoomlevels"))
+                Directory.CreateDirectory("assetcache/mapzoomlevels");
         }
 
-        public void Start (IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void FinishedStartup ()
+        public void Start(IConfigSource config, IRegistryCore registry)
         {
         }
 
-        public string GetURLOfMap ()
+        public void FinishedStartup()
+        {
+        }
+
+        public string GetURLOfMap()
         {
             return m_server.ServerURI + "/MapService/";
         }
 
-        public Hashtable MapRequest (Hashtable request)
+        public Hashtable MapRequest(Hashtable request)
         {
-            Hashtable reply = new Hashtable ();
-            string uri = request["uri"].ToString ();
+            Hashtable reply = new Hashtable();
+            string uri = request["uri"].ToString();
             //Remove the /MapService/
-            uri = uri.Remove (0, 12);
-            if (!uri.StartsWith ("map"))
+            uri = uri.Remove(0, 12);
+            if (!uri.StartsWith("map"))
                 return null;
-            string[] splitUri = uri.Split ('-');
+            string[] splitUri = uri.Split('-');
             byte[] jpeg = FindCachedImage(uri);
             if (jpeg.Length != 0)
             {
-                reply["str_response_string"] = Convert.ToBase64String (jpeg);
+                reply["str_response_string"] = Convert.ToBase64String(jpeg);
                 reply["int_response_code"] = 200;
                 reply["content_type"] = "image/jpeg";
 
@@ -115,22 +115,22 @@ namespace OpenSim.Services.Handlers.Map
             }
             try
             {
-                int mapLayer = int.Parse (uri.Substring (4, 1));
+                int mapLayer = int.Parse(uri.Substring(4, 1));
                 int mapView = (int)Math.Pow(2, (mapLayer - 1));
-                int regionX = int.Parse (splitUri[2]);
-                int regionY = int.Parse (splitUri[3]);
+                int regionX = int.Parse(splitUri[2]);
+                int regionY = int.Parse(splitUri[3]);
 
-                List<GridRegion> regions = m_registry.RequestModuleInterface<IGridService> ().GetRegionRange (UUID.Zero,
+                List<GridRegion> regions = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(UUID.Zero,
                         (regionX * Constants.RegionSize) - (mapView * Constants.RegionSize),
                         (regionX * Constants.RegionSize) + (mapView * Constants.RegionSize),
                         (regionY * Constants.RegionSize) - (mapView * Constants.RegionSize),
                         (regionY * Constants.RegionSize) + (mapView * Constants.RegionSize));
-                List<AssetBase> textures = new List<AssetBase> ();
-                List<Image> bitImages = new List<Image> ();
-                List<GridRegion> badRegions = new List<GridRegion> ();
+                List<AssetBase> textures = new List<AssetBase>();
+                List<Image> bitImages = new List<Image>();
+                List<GridRegion> badRegions = new List<GridRegion>();
                 foreach (GridRegion r in regions)
                 {
-                    AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService> ().Get (r.TerrainMapImage.ToString ());
+                    AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService>().Get(r.TerrainMapImage.ToString());
 
                     if (texAsset != null)
                     {
@@ -146,14 +146,14 @@ namespace OpenSim.Services.Handlers.Map
                         badRegions.Add(r);
                 }
                 foreach (GridRegion r in badRegions)
-                    regions.Remove (r);
+                    regions.Remove(r);
 
                 const int SizeOfImage = 256;
 
-                Bitmap mapTexture = new Bitmap (SizeOfImage, SizeOfImage);
-                Graphics g = Graphics.FromImage (mapTexture);
-                SolidBrush sea = new SolidBrush (Color.FromArgb (29, 71, 95));
-                g.FillRectangle (sea, 0, 0, SizeOfImage, SizeOfImage);
+                Bitmap mapTexture = new Bitmap(SizeOfImage, SizeOfImage);
+                Graphics g = Graphics.FromImage(mapTexture);
+                SolidBrush sea = new SolidBrush(Color.FromArgb(29, 71, 95));
+                g.FillRectangle(sea, 0, 0, SizeOfImage, SizeOfImage);
 
                 for (int i = 0; i < regions.Count; i++)
                 {
@@ -163,20 +163,20 @@ namespace OpenSim.Services.Handlers.Map
                     y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
                     float xx = (float)(x * (SizeOfImage / mapView));
                     float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
-                    g.DrawImage (bitImages[i], xx, yy,
+                    g.DrawImage(bitImages[i], xx, yy,
                         (int)(SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / Constants.RegionSize)), (int)(SizeOfImage / (float)mapView * (regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
                 }
 
-                EncoderParameters myEncoderParameters = new EncoderParameters ();
-                myEncoderParameters.Param[0] = new EncoderParameter (Encoder.Quality, 95L);
+                EncoderParameters myEncoderParameters = new EncoderParameters();
+                myEncoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, 95L);
 
-                MemoryStream imgstream = new MemoryStream ();
+                MemoryStream imgstream = new MemoryStream();
                 // Save bitmap to stream
-                mapTexture.Save (imgstream, GetEncoderInfo ("image/jpeg"), myEncoderParameters);
+                mapTexture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
 
                 // Write the stream to a byte array for output
-                jpeg = imgstream.ToArray ();
-                SaveCachedImage (uri, jpeg);
+                jpeg = imgstream.ToArray();
+                SaveCachedImage(uri, jpeg);
             }
             catch
             {
@@ -211,7 +211,7 @@ namespace OpenSim.Services.Handlers.Map
                 jpeg = imgstream.ToArray();
                 SaveCachedImage(uri, jpeg);
             }
-            reply["str_response_string"] = Convert.ToBase64String (jpeg);
+            reply["str_response_string"] = Convert.ToBase64String(jpeg);
             reply["int_response_code"] = 200;
             reply["content_type"] = "image/jpeg";
 
@@ -219,9 +219,9 @@ namespace OpenSim.Services.Handlers.Map
         }
 
         // From msdn
-        private static ImageCodecInfo GetEncoderInfo (String mimeType)
+        private static ImageCodecInfo GetEncoderInfo(String mimeType)
         {
-            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders ();
+            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
 #if (!ISWIN)
             foreach (ImageCodecInfo t in encoders)
             {
@@ -233,28 +233,28 @@ namespace OpenSim.Services.Handlers.Map
 #endif
         }
 
-        private byte[] FindCachedImage (string name)
+        private byte[] FindCachedImage(string name)
         {
             if (!m_cacheEnabled)
                 return new byte[0];
 
-            string fullPath = Path.Combine ("assetcache", Path.Combine ("mapzoomlevels", name));
-            if (File.Exists (fullPath))
+            string fullPath = Path.Combine("assetcache", Path.Combine("mapzoomlevels", name));
+            if (File.Exists(fullPath))
             {
                 //Make sure the time is ok
-                if(DateTime.Now < File.GetLastWriteTime (fullPath).AddHours(m_cacheExpires))
-                    return File.ReadAllBytes (fullPath);
+                if (DateTime.Now < File.GetLastWriteTime(fullPath).AddHours(m_cacheExpires))
+                    return File.ReadAllBytes(fullPath);
             }
             return new byte[0];
         }
 
-        private void SaveCachedImage (string name, byte[] data)
+        private void SaveCachedImage(string name, byte[] data)
         {
             if (!m_cacheEnabled)
                 return;
 
-            string fullPath = Path.Combine ("assetcache", Path.Combine ("mapzoomlevels", name));
-            File.WriteAllBytes (fullPath, data);
+            string fullPath = Path.Combine("assetcache", Path.Combine("mapzoomlevels", name));
+            File.WriteAllBytes(fullPath, data);
         }
     }
 }

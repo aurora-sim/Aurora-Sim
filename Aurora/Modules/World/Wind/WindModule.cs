@@ -38,7 +38,7 @@ namespace Aurora.Modules.Wind
     public class WindModule : IWindModule, INonSharedRegionModule
     {
         private const string m_dWindPluginName = "SimpleRandomWind";
-        
+
         private readonly Dictionary<string, IWindModelPlugin> m_availableWindPlugins =
             new Dictionary<string, IWindModelPlugin>();
 
@@ -54,7 +54,7 @@ namespace Aurora.Modules.Wind
         private IScene m_scene;
 
         private IConfig windConfig;
-        private Vector2[] windSpeeds = new Vector2[16*16];
+        private Vector2[] windSpeeds = new Vector2[16 * 16];
 
         #region IRegion Methods
 
@@ -392,7 +392,7 @@ namespace Aurora.Modules.Wind
         /// </summary>
         public void WindUpdate()
         {
-            if (((m_frame++%m_frameUpdateRate) != 0) || !m_ready)
+            if (((m_frame++ % m_frameUpdateRate) != 0) || !m_ready)
             {
                 return;
             }

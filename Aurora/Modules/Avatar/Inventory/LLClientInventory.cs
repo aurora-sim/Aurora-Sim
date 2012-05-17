@@ -67,7 +67,7 @@ namespace Aurora.Modules.Inventory
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
 
@@ -78,11 +78,11 @@ namespace Aurora.Modules.Inventory
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             scene.UnregisterModuleInterface<ILLClientInventory>(this);
 
@@ -332,7 +332,7 @@ namespace Aurora.Modules.Inventory
             // First, see of we can perform the requested action and
             // build a list of eligible objects
             List<uint> deleteIDs = new List<uint>();
-            List<ISceneEntity> deleteGroups = new List<ISceneEntity> ();
+            List<ISceneEntity> deleteGroups = new List<ISceneEntity>();
 
             #region Permission Check
 
@@ -345,7 +345,7 @@ namespace Aurora.Modules.Inventory
             foreach (uint localID in localIDs)
             {
                 // Invalid id
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
                 if (part == null)
                     continue;
 
@@ -362,7 +362,7 @@ namespace Aurora.Modules.Inventory
                 deleteIDs.Add(localID);
                 deleteGroups.Add(grp);
 
-                IScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence (remoteClient.AgentId);
+                IScenePresence SP = remoteClient == null ? null : m_scene.GetScenePresence(remoteClient.AgentId);
 
                 if (SP == null)
                 {
@@ -514,9 +514,9 @@ namespace Aurora.Modules.Inventory
                                          };
             if (AddInventoryItem(item))
             {
-                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory> ();
+                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
                 if (avFactory != null)
-                    avFactory.NewAppearanceLink (item);
+                    avFactory.NewAppearanceLink(item);
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
             }
             else
@@ -556,7 +556,7 @@ namespace Aurora.Modules.Inventory
                 return;
 
             InventoryFolderBase f = new InventoryFolderBase(folderID, remoteClient.AgentId);
-            
+
             if (transactionID == UUID.Zero)
             {
                 IScenePresence presence;
@@ -568,18 +568,18 @@ namespace Aurora.Modules.Inventory
                     {
                         if (m_scene.Permissions.CanTakeLandmark(remoteClient.AgentId))
                         {
-                            data = BuildLandmark (presence, ref name);
+                            data = BuildLandmark(presence, ref name);
                         }
                         else
                         {
                             remoteClient.SendAlertMessage("You cannot create a landmark here.");
                         }
                     }
-                    if(invType == (sbyte)InventoryType.LSL)
+                    if (invType == (sbyte)InventoryType.LSL)
                     {
                         data = Encoding.ASCII.GetBytes(DefaultLSLScript);
                     }
-                    if(invType == (sbyte)InventoryType.CallingCard)
+                    if (invType == (sbyte)InventoryType.CallingCard)
                     {
                         return;
                     }
@@ -593,7 +593,7 @@ namespace Aurora.Modules.Inventory
                     }
 
                     AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType)assetType,
-                                                    remoteClient.AgentId) {Data = data, Description = description};
+                                                    remoteClient.AgentId) { Data = data, Description = description };
                     asset.ID = m_scene.AssetService.Store(asset);
 
                     CreateNewInventoryItem(
@@ -619,28 +619,28 @@ namespace Aurora.Modules.Inventory
             }
         }
 
-        private byte[] BuildLandmark (IScenePresence presence, ref string name)
+        private byte[] BuildLandmark(IScenePresence presence, ref string name)
         {
             //See whether we have a gatekeeperURL
-            IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService> ();
-            List<string> mainGridURLs = configService.FindValueOf ("MainGridURL");
+            IConfigurationService configService = m_scene.RequestModuleInterface<IConfigurationService>();
+            List<string> mainGridURLs = configService.FindValueOf("MainGridURL");
             string gatekeeperURL = MainServer.Instance.ServerURI + "/";//Assume the default
             if (mainGridURLs.Count > 0)//Then check whether we were given one
                 gatekeeperURL = mainGridURLs[0];
             //We have one!
-            UserAccount account = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, presence.UUID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, presence.UUID);
             if (account == null)
                 name = "HG " + name;//We don't have an account for them, add the HG ref 
             name += " @ " + gatekeeperURL;
-            string gatekeeperdata = string.Format ("gatekeeper {0}\n", gatekeeperURL);
+            string gatekeeperdata = string.Format("gatekeeper {0}\n", gatekeeperURL);
             Vector3 pos = presence.AbsolutePosition;
-            string strdata = String.Format (
+            string strdata = String.Format(
                 "Landmark version 2\nregion_id {0}\nlocal_pos {1} {2} {3}\nregion_handle {4}\n{5}",
                 presence.Scene.RegionInfo.RegionID,
                 pos.X, pos.Y, pos.Z,
                 presence.Scene.RegionInfo.RegionHandle,
                 gatekeeperdata);
-            return Encoding.ASCII.GetBytes (strdata);
+            return Encoding.ASCII.GetBytes(strdata);
         }
 
         /// <summary>
@@ -677,7 +677,7 @@ namespace Aurora.Modules.Inventory
                 {
                     return;
                 }
-                AssetBase asset = new AssetBase {ID = olditemID, Type = type, Name = name, Description = description};
+                AssetBase asset = new AssetBase { ID = olditemID, Type = type, Name = name, Description = description };
 
                 CreateNewInventoryItem(
                     remoteClient, remoteClient.AgentId.ToString(), "", folderID, name, 0, callbackID, asset, invType,
@@ -865,14 +865,14 @@ namespace Aurora.Modules.Inventory
         /// <param name="primLocalID"></param>
         protected void RequestTaskInventory(IClientAPI remoteClient, uint primLocalID)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalID);
             if (part != null)
             {
-                part.Inventory.RequestInventoryFile (remoteClient);
+                part.Inventory.RequestInventoryFile(remoteClient);
             }
             else
             {
-                MainConsole.Instance.ErrorFormat (
+                MainConsole.Instance.ErrorFormat(
                     "[PRIM INVENTORY]: " +
                     "Couldn't find part {0} to request inventory data",
                     primLocalID);
@@ -888,7 +888,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="localID"></param>
         protected void RemoveTaskInventory(IClientAPI remoteClient, UUID itemID, uint localID)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
             if (m_scene.Permissions.CanDeleteObjectInventory(itemID, part.UUID, remoteClient.AgentId))
             {
                 ISceneEntity group = part.ParentEntity;
@@ -923,7 +923,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="itemId">The UUID of the item to move</param>
         protected void ClientMoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, uint primLocalId, UUID itemId)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalId);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalId);
 
             if (null == part)
             {
@@ -972,7 +972,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="part"></param>
         /// <param name="itemId"></param>
         /// <param name="checkPermissions"></param>
-        protected InventoryItemBase MoveTaskInventoryItemToUserInventory (IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
+        protected InventoryItemBase MoveTaskInventoryItemToUserInventory(IClientAPI remoteClient, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(remoteClient.AgentId, part, itemId);
             if (!checkPermissions || m_scene.Permissions.CanCopyObjectInventory(itemId, part.UUID, remoteClient.AgentId))
@@ -1029,7 +1029,7 @@ namespace Aurora.Modules.Inventory
             UUID itemID = itemInfo.ItemID;
 
             // Find the prim we're dealing with
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (primLocalID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(primLocalID);
 
             if (part != null)
             {
@@ -1056,7 +1056,7 @@ namespace Aurora.Modules.Inventory
                         // If we've found the item in the user's inventory or in the library
                         if (item != null)
                         {
-                            part.ParentEntity.AddInventoryItem (remoteClient, primLocalID, item, copyID);
+                            part.ParentEntity.AddInventoryItem(remoteClient, primLocalID, item, copyID);
                             MainConsole.Instance.InfoFormat(
                                 "[PRIM INVENTORY]: Update with item {0} requested of prim {1} for {2}",
                                 item.Name, primLocalID, remoteClient.Name);
@@ -1065,7 +1065,7 @@ namespace Aurora.Modules.Inventory
                             {
                                 if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                                 {
-                                    List<UUID> uuids = new List<UUID> {itemID};
+                                    List<UUID> uuids = new List<UUID> { itemID };
                                     RemoveInventoryItem(remoteClient, uuids);
                                 }
                             }
@@ -1159,13 +1159,13 @@ namespace Aurora.Modules.Inventory
 
                 if (item != null)
                 {
-                    ISceneChildEntity part = m_scene.GetSceneObjectPart (localID);
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart(localID);
                     if (part != null)
                     {
                         if (!m_scene.Permissions.CanEditObjectInventory(part.UUID, remoteClient.AgentId))
                             return;
 
-                        part.ParentEntity.AddInventoryItem (remoteClient, localID, item, copyID);
+                        part.ParentEntity.AddInventoryItem(remoteClient, localID, item, copyID);
                         part.Inventory.CreateScriptInstance(copyID, 0, false, 0);
 
                         //                        MainConsole.Instance.InfoFormat("[PRIMINVENTORY]: " +
@@ -1191,7 +1191,7 @@ namespace Aurora.Modules.Inventory
             }
             else  // script has been rezzed directly into a prim's inventory
             {
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (itemBase.Folder);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(itemBase.Folder);
                 if (part == null)
                     return;
 
@@ -1251,7 +1251,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="part">The object that the item is in</param>
         /// <param name="itemId">The item to convert</param>
         /// <returns></returns>
-        private InventoryItemBase CreateAgentInventoryItemFromTask (UUID destAgent, ISceneChildEntity part, UUID itemId)
+        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1295,7 +1295,7 @@ namespace Aurora.Modules.Inventory
                     agentItem.CurrentPermissions = agentItem.BasePermissions & (((taskItem.CurrentPermissions & 7) << 13) | (taskItem.CurrentPermissions & (uint)PermissionMask.Move));
                 else
                     agentItem.CurrentPermissions = agentItem.BasePermissions & taskItem.CurrentPermissions;
-                
+
                 agentItem.CurrentPermissions |= 16; // Slam
                 agentItem.NextPermissions = taskItem.NextPermissions;
                 agentItem.EveryOnePermissions = taskItem.EveryonePermissions & (taskItem.NextPermissions | (uint)PermissionMask.Move);
@@ -1370,7 +1370,7 @@ namespace Aurora.Modules.Inventory
         /// in which the item is to be placed.</param>
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
-            if(AddInventoryItem(item))
+            if (AddInventoryItem(item))
                 remoteClient.SendInventoryItemCreateUpdate(item, 0);
         }
 
@@ -1387,10 +1387,10 @@ namespace Aurora.Modules.Inventory
         /// <returns>
         /// The inventory item copy given, null if the give was unsuccessful
         /// </returns>
-        public InventoryItemBase GiveInventoryItem (
+        public InventoryItemBase GiveInventoryItem(
             UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId)
         {
-            return GiveInventoryItem (recipient, senderId, itemId, recipientFolderId, true);
+            return GiveInventoryItem(recipient, senderId, itemId, recipientFolderId, true);
         }
 
         /// <summary>
@@ -1407,15 +1407,15 @@ namespace Aurora.Modules.Inventory
         /// <returns>
         /// The inventory item copy given, null if the give was unsuccessful
         /// </returns>
-        public InventoryItemBase GiveInventoryItem (
+        public InventoryItemBase GiveInventoryItem(
             UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck)
         {
-            InventoryItemBase item = new InventoryItemBase (itemId, senderId);
-            item = m_scene.InventoryService.GetItem (item);
-            return InnerGiveInventoryItem (recipient, senderId, item, recipientFolderId, doOwnerCheck);
+            InventoryItemBase item = new InventoryItemBase(itemId, senderId);
+            item = m_scene.InventoryService.GetItem(item);
+            return InnerGiveInventoryItem(recipient, senderId, item, recipientFolderId, doOwnerCheck);
         }
 
-        public InventoryItemBase InnerGiveInventoryItem (
+        public InventoryItemBase InnerGiveInventoryItem(
             UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
         {
             if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
@@ -1426,9 +1426,9 @@ namespace Aurora.Modules.Inventory
                         return null;
                 }
 
-                IUserManagement uman = m_scene.RequestModuleInterface<IUserManagement> ();
+                IUserManagement uman = m_scene.RequestModuleInterface<IUserManagement>();
                 if (uman != null)
-                    uman.AddUser (item.CreatorIdAsUuid, item.CreatorData);
+                    uman.AddUser(item.CreatorIdAsUuid, item.CreatorData);
 
                 // Insert a copy of the item into the recipient
                 InventoryItemBase itemCopy = new InventoryItemBase
@@ -1556,7 +1556,7 @@ namespace Aurora.Modules.Inventory
 
                 if (itemCopy.Folder == UUID.Zero)
                 {
-                    InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType (recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
+                    InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType(recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
 
                     if (folder != null)
                     {
@@ -1570,11 +1570,11 @@ namespace Aurora.Modules.Inventory
                 itemCopy.SalePrice = item.SalePrice;
                 itemCopy.SaleType = item.SaleType;
 
-                if (AddInventoryItem (itemCopy))
+                if (AddInventoryItem(itemCopy))
                 {
-                    IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule> ();
+                    IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                     if (invAccess != null)
-                        invAccess.TransferInventoryAssets (itemCopy, senderId, recipient);
+                        invAccess.TransferInventoryAssets(itemCopy, senderId, recipient);
                 }
                 else
                     return null;
@@ -1583,7 +1583,7 @@ namespace Aurora.Modules.Inventory
                 {
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
                     {
-                        List<UUID> items = new List<UUID> {item.ID};
+                        List<UUID> items = new List<UUID> { item.ID };
                         m_scene.InventoryService.DeleteItems(senderId, items);
                     }
                 }
@@ -1649,7 +1649,7 @@ namespace Aurora.Modules.Inventory
             // Give all the items
             foreach (InventoryItemBase item in contents.Items)
             {
-                InnerGiveInventoryItem (recipientId, senderId, item, newFolder.ID, true);
+                InnerGiveInventoryItem(recipientId, senderId, item, newFolder.ID, true);
             }
 
             return newFolder;
@@ -1665,7 +1665,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="pin">The ScriptAccessPin of the prim</param>
         /// <param name="running">Whether the script should be running when it is started</param>
         /// <param name="start_param">The start param to pass to the script</param>
-        public void RezScript (UUID srcId, ISceneChildEntity srcPart, UUID destId, int pin, int running, int start_param)
+        public void RezScript(UUID srcId, ISceneChildEntity srcPart, UUID destId, int pin, int running, int start_param)
         {
             TaskInventoryItem srcTaskItem = srcPart.Inventory.GetInventoryItem(srcId);
 
@@ -1678,7 +1678,7 @@ namespace Aurora.Modules.Inventory
                 return;
             }
 
-            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart(destId);
 
             if (destPart == null)
             {
@@ -1800,7 +1800,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="destId"></param>
         /// <param name="part"></param>
         /// <param name="itemId"></param>
-        public void MoveTaskInventoryItemToObject (UUID destId, ISceneChildEntity part, UUID itemId)
+        public void MoveTaskInventoryItemToObject(UUID destId, ISceneChildEntity part, UUID itemId)
         {
             TaskInventoryItem srcTaskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1814,7 +1814,7 @@ namespace Aurora.Modules.Inventory
                 return;
             }
 
-            ISceneChildEntity destPart = m_scene.GetSceneObjectPart (destId);
+            ISceneChildEntity destPart = m_scene.GetSceneObjectPart(destId);
 
             if (destPart == null)
             {
@@ -1910,13 +1910,13 @@ namespace Aurora.Modules.Inventory
         /// <param name="part"></param>
         /// <param name="itemId"></param>
         /// <param name="checkPermissions"></param>
-        public InventoryItemBase MoveTaskInventoryItemToUserInventory (UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
+        public InventoryItemBase MoveTaskInventoryItemToUserInventory(UUID avatarId, UUID folderId, ISceneChildEntity part, UUID itemId, bool checkPermissions)
         {
             IScenePresence avatar;
 
             if (m_scene.TryGetScenePresence(avatarId, out avatar))
             {
-                return MoveTaskInventoryItemToUserInventory (avatar.ControllingClient, folderId, part, itemId, checkPermissions);
+                return MoveTaskInventoryItemToUserInventory(avatar.ControllingClient, folderId, part, itemId, checkPermissions);
             }
             InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(avatarId, part, itemId);
 
@@ -1938,7 +1938,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="host"></param>
         /// <param name="items"></param>
         /// <returns></returns>
-        public UUID MoveTaskInventoryItemsToUserInventory (UUID destID, string name, ISceneChildEntity host, List<UUID> items)
+        public UUID MoveTaskInventoryItemsToUserInventory(UUID destID, string name, ISceneChildEntity host, List<UUID> items)
         {
             InventoryFolderBase rootFolder = m_scene.InventoryService.GetRootFolder(destID);
 
@@ -2123,7 +2123,7 @@ namespace Aurora.Modules.Inventory
             private readonly UUID agentID;
             private readonly IScene m_scene;
 
-            public ItemUpdater (UUID AgentID, IScene scene, UUID inventoryItem, string path, IHttpServer httpServer)
+            public ItemUpdater(UUID AgentID, IScene scene, UUID inventoryItem, string path, IHttpServer httpServer)
             {
                 inventoryItemID = inventoryItem;
                 uploaderPath = path;
@@ -2254,8 +2254,8 @@ namespace Aurora.Modules.Inventory
                 }
 
                 // Retrieve group
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (primId);
-                if(null == part || null == part.ParentEntity)
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(primId);
+                if (null == part || null == part.ParentEntity)
                 {
                     MainConsole.Instance.ErrorFormat(
                         "[PRIM INVENTORY]: " +
@@ -2294,7 +2294,7 @@ namespace Aurora.Modules.Inventory
                     item.AssetID = newID;
 
                     part.Inventory.UpdateInventoryItem(item);
-                    
+
                     if (isScriptRunning2)
                     {
                         // Needs to determine which engine was running it and use that

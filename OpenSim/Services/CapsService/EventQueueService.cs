@@ -345,8 +345,7 @@ namespace OpenSim.Services.CapsService
                 {
                     //return NoEvents(requestID, pAgentId);
                     // Send it a fake event to keep the client polling!   It doesn't like 502s like the proxys say!
-                    OSDMap keepAliveEvent = new OSDMap(2)
-                                                {{"body", new OSDMap()}, {"message", new OSDString("FAKEEVENT")}};
+                    OSDMap keepAliveEvent = new OSDMap(2) { { "body", new OSDMap() }, { "message", new OSDString("FAKEEVENT") } };
                     element = keepAliveEvent;
                     array.Add(keepAliveEvent);
                     //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: adding fake event for {0} in region {1}", pAgentId, m_scene.RegionInfo.RegionName);
@@ -370,7 +369,7 @@ namespace OpenSim.Services.CapsService
                     {
                         if (ev.Type == OSDType.Map)
                         {
-                            OSDMap map = (OSDMap) ev;
+                            OSDMap map = (OSDMap)ev;
                             if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                             {
                                 MainConsole.Instance.Debug("[EQService]: Sim Request to Disable Simulator " + m_service.RegionHandle);
@@ -449,7 +448,7 @@ namespace OpenSim.Services.CapsService
                 return NoEvents(UUID.Zero, agentID);
             }
 
-            OSDArray array = new OSDArray {element};
+            OSDArray array = new OSDArray { element };
             lock (queue)
             {
                 while (queue.Count > 0)
@@ -457,7 +456,7 @@ namespace OpenSim.Services.CapsService
                     OSD item = queue.Dequeue();
                     if (item != null)
                     {
-                        OSDMap map = (OSDMap) item;
+                        OSDMap map = (OSDMap)item;
                         if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                         {
                             continue;
@@ -472,7 +471,7 @@ namespace OpenSim.Services.CapsService
             {
                 try
                 {
-                    OSDMap map = (OSDMap) ev;
+                    OSDMap map = (OSDMap)ev;
                     if (map.ContainsKey("message") && map["message"] == "DisableSimulator")
                     {
                         //Disabled above
@@ -485,7 +484,7 @@ namespace OpenSim.Services.CapsService
                 }
             }
 
-            OSDMap events = new OSDMap {{"events", array}, {"id", new OSDInteger(m_ids)}};
+            OSDMap events = new OSDMap { { "events", array }, { "id", new OSDInteger(m_ids) } };
 
             m_ids++;
 

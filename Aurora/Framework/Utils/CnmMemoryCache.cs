@@ -245,7 +245,7 @@ namespace Aurora.Framework
             if (maximalSize < 8)
                 maximalSize = 8;
             if (maximalCount > maximalSize)
-                maximalCount = (int) maximalSize;
+                maximalCount = (int)maximalSize;
 
             Comparer = comparer;
             m_expirationTime = expirationTime;
@@ -893,7 +893,7 @@ namespace Aurora.Framework
         /// </remarks>
         protected virtual int GetBucketIndex(TKey key)
         {
-            return (Comparer.GetHashCode(key) & 0x7FFFFFFF)%m_generationBucketCount;
+            return (Comparer.GetHashCode(key) & 0x7FFFFFFF) % m_generationBucketCount;
         }
 
         /// <summary>
@@ -927,9 +927,9 @@ namespace Aurora.Framework
         {
             m_version++;
 
-            m_generationMaxSize = MaxSize/2;
-            MaxElementSize = MaxSize/8;
-            m_generationElementCount = MaxCount/2;
+            m_generationMaxSize = MaxSize / 2;
+            MaxElementSize = MaxSize / 8;
+            m_generationElementCount = MaxCount / 2;
 
             // Buckets need to be prime number to get better spread of hash values
             m_generationBucketCount = PrimeNumberHelper.GetPrime(m_generationElementCount);

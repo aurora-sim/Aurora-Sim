@@ -219,8 +219,8 @@ namespace Aurora.Modules.Archivers
                         break;
                 }
 
-                bool canCopy = (perm & (uint) PermissionMask.Copy) != 0;
-                bool canTransfer = (perm & (uint) PermissionMask.Transfer) != 0;
+                bool canCopy = (perm & (uint)PermissionMask.Copy) != 0;
+                bool canTransfer = (perm & (uint)PermissionMask.Transfer) != 0;
 
                 // Special case: if Everyone can copy the object then this implies it can also be
                 // Transferred.
@@ -229,7 +229,7 @@ namespace Aurora.Modules.Archivers
                 // does NOT show that the object has Everyone-Copy permissions, and doesn't allow it to be copied.
                 if (permissionClass != PermissionClass.Owner)
                 {
-                    canTransfer |= (obj.EveryoneMask & (uint) PermissionMask.Copy) != 0;
+                    canTransfer |= (obj.EveryoneMask & (uint)PermissionMask.Copy) != 0;
                 }
 
 

@@ -179,7 +179,7 @@ namespace OpenSim.Services
 #endif
 
                     m_logLevel = assetConfig.GetInt("LogLevel", 0);
-                    m_HitRateDisplay = (ulong) assetConfig.GetInt("HitRateDisplay", 1000);
+                    m_HitRateDisplay = (ulong)assetConfig.GetInt("HitRateDisplay", 1000);
 
                     m_FileExpiration =
                         TimeSpan.FromHours(assetConfig.GetDouble("FileCacheTimeout", m_DefaultFileExpiration));
@@ -187,7 +187,7 @@ namespace OpenSim.Services
                         TimeSpan.FromHours(assetConfig.GetDouble("FileCleanupTimer", m_DefaultFileExpiration));
                     if ((m_FileExpiration > TimeSpan.Zero) && (m_FileExpirationCleanupTimer > TimeSpan.Zero))
                     {
-                        m_CacheCleanTimer = new Timer(m_FileExpirationCleanupTimer.TotalMilliseconds) {AutoReset = true};
+                        m_CacheCleanTimer = new Timer(m_FileExpirationCleanupTimer.TotalMilliseconds) { AutoReset = true };
                         m_CacheCleanTimer.Elapsed += CleanupExpiredFiles;
                         lock (m_CacheCleanTimer)
                             m_CacheCleanTimer.Start();
@@ -249,7 +249,7 @@ namespace OpenSim.Services
         public void FinishedStartup()
         {
             IMonitorModule monitor = m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>();
-            if(monitor != null)
+            if (monitor != null)
                 _assetMonitor = (IAssetMonitor)monitor.GetMonitor("", MonitorModuleHelper.AssetMonitor);
         }
 
@@ -424,7 +424,7 @@ namespace OpenSim.Services
 
             if (((m_logLevel >= 1)) && (m_HitRateDisplay != 0) && (m_Requests % m_HitRateDisplay == 0))
             {
-                m_HitRateFile = (double) m_DiskHits/m_Requests*100.0;
+                m_HitRateFile = (double)m_DiskHits / m_Requests * 100.0;
 
                 MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: Cache Get :: {0} :: {1}", id, asset == null ? "Miss" : "Hit");
                 MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: File Hit Rate {0}% for {1} requests",
@@ -432,7 +432,7 @@ namespace OpenSim.Services
 
                 if (m_MemoryCacheEnabled)
                 {
-                    m_HitRateMemory = (double) m_MemoryHits/m_Requests*100.0;
+                    m_HitRateMemory = (double)m_MemoryHits / m_Requests * 100.0;
                     MainConsole.Instance.InfoFormat("[FLOTSAM ASSET CACHE]: Memory Hit Rate {0}% for {1} requests",
                                      m_HitRateMemory.ToString("0.00"), m_Requests);
                 }
@@ -624,7 +624,7 @@ namespace OpenSim.Services
             string path = m_CacheDirectory;
             for (int p = 1; p <= m_CacheDirectoryTiers; p++)
             {
-                string pathPart = id.Substring((p - 1)*m_CacheDirectoryTierLen, m_CacheDirectoryTierLen);
+                string pathPart = id.Substring((p - 1) * m_CacheDirectoryTierLen, m_CacheDirectoryTierLen);
                 path = Path.Combine(path, pathPart);
             }
 
@@ -692,10 +692,10 @@ namespace OpenSim.Services
 
         private static void LogException(Exception e)
         {
-            string[] text = e.ToString().Split(new[] {'\n'});
+            string[] text = e.ToString().Split(new[] { '\n' });
             foreach (string t in text)
             {
-                if(t.Trim() != "")
+                if (t.Trim() != "")
                     MainConsole.Instance.ErrorFormat("[FLOTSAM ASSET CACHE]: {0} ", t);
             }
         }

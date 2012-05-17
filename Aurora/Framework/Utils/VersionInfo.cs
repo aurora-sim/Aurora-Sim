@@ -100,7 +100,7 @@ namespace Aurora.Framework
                 {
                     string[] lines = File.ReadAllLines(gitFile);
                     string lastLine = lines[lines.Length - 1];
-                    string[] splitLastLine = lastLine.Split(new string[2] {" ", "\t"},
+                    string[] splitLastLine = lastLine.Split(new string[2] { " ", "\t" },
                                                             StringSplitOptions.RemoveEmptyEntries);
                     versionString = "Aurora-" + splitLastLine[1].Substring(0, 6) /*First 6 digits of the commit hash*/+
                                     " " + splitLastLine[5] /*Time zone info*/;

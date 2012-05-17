@@ -251,7 +251,7 @@ namespace Aurora.Modules
             List<GridRegion> neighbors = m_localService.GetNeighbors(r);
             List<GridRegion> remoteNeighbors = (List<GridRegion>)DoRemoteForced(r);
             UpdateGridRegionsForIWC(ref remoteNeighbors);
-            if(remoteNeighbors != null)
+            if (remoteNeighbors != null)
                 neighbors.AddRange(remoteNeighbors);
             return neighbors;
         }
@@ -306,7 +306,7 @@ namespace Aurora.Modules
             if (r == null)
                 return r;
             InterWorldCommunications comms = m_registry.RequestModuleInterface<InterWorldCommunications>();
-            r.Flags |= (int) RegionFlags.Foreign;
+            r.Flags |= (int)RegionFlags.Foreign;
             //if (r.GenericMap["GridUrl"] == "")
             //    r.GenericMap["ThreatLevel"] = comms.m_untrustedConnectionsDefaultTrust.ToString();
             //else

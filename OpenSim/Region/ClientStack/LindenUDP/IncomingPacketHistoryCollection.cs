@@ -55,11 +55,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (m_hashSet.Add(ack))
                 {
                     m_items[m_next] = ack;
-                    m_next = (m_next + 1)%m_capacity;
+                    m_next = (m_next + 1) % m_capacity;
                     if (m_next == m_first)
                     {
                         m_hashSet.Remove(m_items[m_first]);
-                        m_first = (m_first + 1)%m_capacity;
+                        m_first = (m_first + 1) % m_capacity;
                     }
 
                     return true;

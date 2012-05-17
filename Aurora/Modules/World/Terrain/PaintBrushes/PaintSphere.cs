@@ -53,10 +53,10 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
             int x, y;
 
-            int xFrom = (int) (rx - BrushSize + 0.5);
-            int xTo = (int) (rx + BrushSize + 0.5) + 1;
-            int yFrom = (int) (ry - BrushSize + 0.5);
-            int yTo = (int) (ry + BrushSize + 0.5) + 1;
+            int xFrom = (int)(rx - BrushSize + 0.5);
+            int xTo = (int)(rx + BrushSize + 0.5) + 1;
+            int yFrom = (int)(ry - BrushSize + 0.5);
+            int yTo = (int)(ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -77,7 +77,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
             {
                 paintAsset = new AssetBase(map.Scene.RegionInfo.RegionSettings.PaintableTerrainTexture,
                                            "PaintableTerrainTexture-" + map.Scene.RegionInfo.RegionID, AssetType.Texture,
-                                           UUID.Zero) {Flags = AssetFlags.Deletable};
+                                           UUID.Zero) { Flags = AssetFlags.Deletable };
                 AssetBase defaultTexture =
                     map.Scene.AssetService.Get(RegionSettings.DEFAULT_TERRAIN_TEXTURE_2.ToString()); //Nice grass
                 if (defaultTexture == null)
@@ -85,11 +85,11 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                     return;
 
                 paintAsset.Data = defaultTexture.Data;
-                    //Eventually we need to replace this with an interpolation of the existing textures!
+                //Eventually we need to replace this with an interpolation of the existing textures!
             }
 
             AssetBase textureToApply = map.Scene.AssetService.Get(m_textureToPaint.ToString());
-                //The texture the client wants to paint
+            //The texture the client wants to paint
             if (textureToApply == null)
                 return;
 
@@ -105,8 +105,8 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                 return;
             }
 
-            FastBitmap paintTexture = new FastBitmap((Bitmap) paintiTexture);
-            FastBitmap textureToAddTexture = new FastBitmap((Bitmap) textureToAddiTexture);
+            FastBitmap paintTexture = new FastBitmap((Bitmap)paintiTexture);
+            FastBitmap textureToAddTexture = new FastBitmap((Bitmap)textureToAddiTexture);
 
             paintTexture.LockBitmap();
             textureToAddTexture.LockBitmap();
@@ -121,18 +121,18 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
                     Color c =
                         textureToAddTexture.GetPixel(
-                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
-                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
+                            (int)((x / (float)map.Scene.RegionInfo.RegionSizeX * textureToAddiTexture.Width)),
+                            (int)((y / (float)map.Scene.RegionInfo.RegionSizeX) * textureToAddiTexture.Height));
                     Color cc =
                         paintTexture.GetPixel(
-                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Width),
-                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
-                    paintTexture.SetPixel((int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Width),
-                                          (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Height), c);
+                            (int)((x / (float)map.Scene.RegionInfo.RegionSizeX) * textureToAddiTexture.Width),
+                            (int)((y / (float)map.Scene.RegionInfo.RegionSizeX) * textureToAddiTexture.Height));
+                    paintTexture.SetPixel((int)((x / (float)map.Scene.RegionInfo.RegionSizeX) * paintiTexture.Width),
+                                          (int)((y / (float)map.Scene.RegionInfo.RegionSizeX) * paintiTexture.Height), c);
                     cc =
                         paintTexture.GetPixel(
-                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
-                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
+                            (int)((x / (float)map.Scene.RegionInfo.RegionSizeX * textureToAddiTexture.Width)),
+                            (int)((y / (float)map.Scene.RegionInfo.RegionSizeX) * textureToAddiTexture.Height));
                 }
             }
             map.Scene.AssetService.Delete(paintAsset.ID);

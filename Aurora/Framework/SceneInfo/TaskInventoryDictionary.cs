@@ -45,7 +45,7 @@ namespace Aurora.Framework
     {
         // private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly XmlSerializer tiiSerializer = new XmlSerializer(typeof (TaskInventoryItem));
+        private static readonly XmlSerializer tiiSerializer = new XmlSerializer(typeof(TaskInventoryItem));
 
         #region ICloneable Members
 
@@ -57,7 +57,7 @@ namespace Aurora.Framework
             {
                 foreach (UUID uuid in Keys)
                 {
-                    clone.Add(uuid, (TaskInventoryItem) this[uuid].Clone());
+                    clone.Add(uuid, (TaskInventoryItem)this[uuid].Clone());
                 }
             }
 
@@ -83,7 +83,7 @@ namespace Aurora.Framework
                 reader.Read();
                 while (tiiSerializer.CanDeserialize(reader))
                 {
-                    TaskInventoryItem item = (TaskInventoryItem) tiiSerializer.Deserialize(reader);
+                    TaskInventoryItem item = (TaskInventoryItem)tiiSerializer.Deserialize(reader);
                     Add(item.ItemID, item);
 
                     //MainConsole.Instance.DebugFormat("[TASK INVENTORY]: Instanted prim item {0}, {1} from xml", item.Name, item.ItemID);

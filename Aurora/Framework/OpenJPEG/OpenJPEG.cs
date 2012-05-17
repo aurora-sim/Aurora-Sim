@@ -208,8 +208,7 @@ namespace Aurora.Framework
                 throw new ArgumentException("JPEG2000 encoding is not supported for this channel combination");
 
             byte[] encoded = null;
-            MarshalledImage marshalled = new MarshalledImage
-                                             {width = image.Width, height = image.Height, components = 3};
+            MarshalledImage marshalled = new MarshalledImage { width = image.Width, height = image.Height, components = 3 };
 
             // allocate and copy to input buffer
             if ((image.Channels & ManagedImage.ImageChannels.Alpha) != 0) marshalled.components++;
@@ -224,19 +223,19 @@ namespace Aurora.Framework
                 if (!allocSuccess)
                     throw new Exception("DotNetAllocDecoded failed");
 
-                int n = image.Width*image.Height;
+                int n = image.Width * image.Height;
 
                 if ((image.Channels & ManagedImage.ImageChannels.Color) != 0)
                 {
                     Marshal.Copy(image.Red, 0, marshalled.decoded, n);
-                    Marshal.Copy(image.Green, 0, (IntPtr) (marshalled.decoded.ToInt64() + n), n);
-                    Marshal.Copy(image.Blue, 0, (IntPtr) (marshalled.decoded.ToInt64() + n*2), n);
+                    Marshal.Copy(image.Green, 0, (IntPtr)(marshalled.decoded.ToInt64() + n), n);
+                    Marshal.Copy(image.Blue, 0, (IntPtr)(marshalled.decoded.ToInt64() + n * 2), n);
                 }
 
                 if ((image.Channels & ManagedImage.ImageChannels.Alpha) != 0)
-                    Marshal.Copy(image.Alpha, 0, (IntPtr) (marshalled.decoded.ToInt64() + n*3), n);
+                    Marshal.Copy(image.Alpha, 0, (IntPtr)(marshalled.decoded.ToInt64() + n * 3), n);
                 if ((image.Channels & ManagedImage.ImageChannels.Bump) != 0)
-                    Marshal.Copy(image.Bump, 0, (IntPtr) (marshalled.decoded.ToInt64() + n*4), n);
+                    Marshal.Copy(image.Bump, 0, (IntPtr)(marshalled.decoded.ToInt64() + n * 4), n);
 
                 // codec will allocate output buffer                
                 bool encodeSuccess = (IntPtr.Size == 8)
@@ -308,7 +307,7 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static bool DecodeToImage(byte[] encoded, out ManagedImage managedImage)
         {
-            MarshalledImage marshalled = new MarshalledImage {length = encoded.Length};
+            MarshalledImage marshalled = new MarshalledImage { length = encoded.Length };
 
             // Allocate and copy to input buffer
 
@@ -327,7 +326,7 @@ namespace Aurora.Framework
                 else
                     DotNetDecode(ref marshalled);
 
-                int n = marshalled.width*marshalled.height;
+                int n = marshalled.width * marshalled.height;
 
                 switch (marshalled.components)
                 {
@@ -346,15 +345,15 @@ namespace Aurora.Framework
                         Marshal.Copy(marshalled.decoded, managedImage.Red, 0, n);
                         Buffer.BlockCopy(managedImage.Red, 0, managedImage.Green, 0, n);
                         Buffer.BlockCopy(managedImage.Red, 0, managedImage.Blue, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + n), managedImage.Alpha, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + n), managedImage.Alpha, 0, n);
                         break;
 
                     case 3: // RGB
                         managedImage = new ManagedImage(marshalled.width, marshalled.height,
                                                         ManagedImage.ImageChannels.Color);
                         Marshal.Copy(marshalled.decoded, managedImage.Red, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*2)), managedImage.Blue, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 2)), managedImage.Blue, 0, n);
                         break;
 
                     case 4: // RGBA
@@ -362,9 +361,9 @@ namespace Aurora.Framework
                                                         ManagedImage.ImageChannels.Color |
                                                         ManagedImage.ImageChannels.Alpha);
                         Marshal.Copy(marshalled.decoded, managedImage.Red, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*2)), managedImage.Blue, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*3)), managedImage.Alpha, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 2)), managedImage.Blue, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 3)), managedImage.Alpha, 0, n);
                         break;
 
                     case 5: // RGBAB
@@ -373,10 +372,10 @@ namespace Aurora.Framework
                                                         ManagedImage.ImageChannels.Alpha |
                                                         ManagedImage.ImageChannels.Bump);
                         Marshal.Copy(marshalled.decoded, managedImage.Red, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*2)), managedImage.Blue, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*3)), managedImage.Alpha, 0, n);
-                        Marshal.Copy((IntPtr) (marshalled.decoded.ToInt64() + (n*4)), managedImage.Bump, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + n), managedImage.Green, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 2)), managedImage.Blue, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 3)), managedImage.Alpha, 0, n);
+                        Marshal.Copy((IntPtr)(marshalled.decoded.ToInt64() + (n * 4)), managedImage.Bump, 0, n);
                         break;
 
                     default:
@@ -412,7 +411,7 @@ namespace Aurora.Framework
             bool success = false;
             layerInfo = null;
             components = 0;
-            MarshalledImage marshalled = new MarshalledImage {length = encoded.Length};
+            MarshalledImage marshalled = new MarshalledImage { length = encoded.Length };
 
             // Allocate and copy to input buffer
 
@@ -434,7 +433,7 @@ namespace Aurora.Framework
                     components = marshalled.components;
 
                     // Sanity check
-                    if (marshalled.layers*marshalled.resolutions*marshalled.components == marshalled.packet_count)
+                    if (marshalled.layers * marshalled.resolutions * marshalled.components == marshalled.packet_count)
                     {
                         // Manually marshal the array of opj_packet_info structs
                         MarshalledPacket[] packets = new MarshalledPacket[marshalled.packet_count];
@@ -459,9 +458,9 @@ namespace Aurora.Framework
 
                         for (int i = 0; i < marshalled.layers; i++)
                         {
-                            int packetsPerLayer = marshalled.packet_count/marshalled.layers;
-                            MarshalledPacket startPacket = packets[packetsPerLayer*i];
-                            MarshalledPacket endPacket = packets[(packetsPerLayer*(i + 1)) - 1];
+                            int packetsPerLayer = marshalled.packet_count / marshalled.layers;
+                            MarshalledPacket startPacket = packets[packetsPerLayer * i];
+                            MarshalledPacket endPacket = packets[(packetsPerLayer * (i + 1)) - 1];
                             layerInfo[i].Start = startPacket.start_pos;
                             layerInfo[i].End = endPacket.end_pos;
                         }
@@ -557,7 +556,7 @@ namespace Aurora.Framework
 
             int bitmapWidth = bitmap.Width;
             int bitmapHeight = bitmap.Height;
-            int pixelCount = bitmapWidth*bitmapHeight;
+            int pixelCount = bitmapWidth * bitmapHeight;
             int i;
 
             if ((bitmap.PixelFormat & PixelFormat.Alpha) != 0 || (bitmap.PixelFormat & PixelFormat.PAlpha) != 0)
@@ -567,7 +566,7 @@ namespace Aurora.Framework
                                            ManagedImage.ImageChannels.Color | ManagedImage.ImageChannels.Alpha);
                 bd = bitmap.LockBits(new Rectangle(0, 0, bitmapWidth, bitmapHeight),
                                      ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-                byte* pixel = (byte*) bd.Scan0;
+                byte* pixel = (byte*)bd.Scan0;
 
                 for (i = 0; i < pixelCount; i++)
                 {
@@ -585,13 +584,13 @@ namespace Aurora.Framework
                                            ManagedImage.ImageChannels.Color);
                 bd = bitmap.LockBits(new Rectangle(0, 0, bitmapWidth, bitmapHeight),
                                      ImageLockMode.ReadOnly, PixelFormat.Format16bppGrayScale);
-                byte* pixel = (byte*) bd.Scan0;
+                byte* pixel = (byte*)bd.Scan0;
 
                 for (i = 0; i < pixelCount; i++)
                 {
                     // Normalize 16-bit data down to 8-bit
-                    ushort origVal = (byte) (*(pixel) + (*(pixel + 1) << 8));
-                    byte val = (byte) ((origVal/(double) UInt32.MaxValue)*Byte.MaxValue);
+                    ushort origVal = (byte)(*(pixel) + (*(pixel + 1) << 8));
+                    byte val = (byte)((origVal / (double)UInt32.MaxValue) * Byte.MaxValue);
 
                     decoded.Red[i] = val;
                     decoded.Green[i] = val;
@@ -606,7 +605,7 @@ namespace Aurora.Framework
                                            ManagedImage.ImageChannels.Color);
                 bd = bitmap.LockBits(new Rectangle(0, 0, bitmapWidth, bitmapHeight),
                                      ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-                byte* pixel = (byte*) bd.Scan0;
+                byte* pixel = (byte*)bd.Scan0;
 
                 for (i = 0; i < pixelCount; i++)
                 {

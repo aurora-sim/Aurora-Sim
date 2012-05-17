@@ -46,7 +46,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Key", ColumnTypes.String50),
                 ColDef("Value", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[2]{ "ID", "Key" }, IndexType.Primary)
+                IndexDef(new string[2] { "ID", "Key" }, IndexType.Primary)
             ));
 
             AddSchema("userclassifieds", ColDefs(
@@ -57,7 +57,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ClassifiedUUID", ColumnTypes.String50),
                 ColDef("Classified", ColumnTypes.String8196)
             ), IndexDefs(
-                IndexDef(new string[1]{ "ClassifiedUUID" }, IndexType.Primary)
+                IndexDef(new string[1] { "ClassifiedUUID" }, IndexType.Primary)
             ));
 
             AddSchema("userpicks", ColDefs(
@@ -67,7 +67,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("PickUUID", ColumnTypes.String50),
                 ColDef("Pick", ColumnTypes.String8196)
             ), IndexDefs(
-                IndexDef(new string[1]{ "PickUUID" }, IndexType.Primary)
+                IndexDef(new string[1] { "PickUUID" }, IndexType.Primary)
             ));
 
             AddSchema("macban", ColDefs(
@@ -79,7 +79,7 @@ namespace Aurora.DataManager.Migration.Migrators
             AddSchema("bannedviewers", ColDefs(
                 ColDef("Client", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "Client" }, IndexType.Primary )
+                IndexDef(new string[1] { "Client" }, IndexType.Primary)
             ));
         }
 

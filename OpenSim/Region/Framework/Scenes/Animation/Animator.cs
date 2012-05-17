@@ -189,7 +189,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                     IAttachmentsModule attMod = m_scenePresence.Scene.RequestModuleInterface<IAttachmentsModule>();
                     if (attMod != null)
                         attMod.SendScriptEventToAttachments(m_scenePresence.UUID, "changed",
-                                                            new Object[] {(int) Changed.ANIMATION});
+                                                            new Object[] { (int)Changed.ANIMATION });
                     SendAnimPack();
                 }
                 else if (sendTerseUpdateIfNotSending)
@@ -213,12 +213,12 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             {
                 return "SIT_GROUND_CONSTRAINED";
             }
-            AgentManager.ControlFlags controlFlags = (AgentManager.ControlFlags) m_scenePresence.AgentControlFlags;
+            AgentManager.ControlFlags controlFlags = (AgentManager.ControlFlags)m_scenePresence.AgentControlFlags;
             PhysicsCharacter actor = m_scenePresence.PhysicsActor;
 
             // Create forward and left vectors from the current avatar rotation
-            Vector3 fwd = Vector3.UnitX*m_scenePresence.Rotation;
-            Vector3 left = Vector3.UnitY*m_scenePresence.Rotation;
+            Vector3 fwd = Vector3.UnitX * m_scenePresence.Rotation;
+            Vector3 left = Vector3.UnitY * m_scenePresence.Rotation;
 
             // Check control flags
             bool heldForward =
@@ -303,7 +303,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Standup
 
-            float standupElapsed = (Util.EnvironmentTickCount() - m_animTickStandup)/1000f;
+            float standupElapsed = (Util.EnvironmentTickCount() - m_animTickStandup) / 1000f;
             if (m_scenePresence.PhysicsActor != null && standupElapsed < STANDUP_TIME &&
                 m_useSplatAnimation)
             {
@@ -328,10 +328,10 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #region Flying
 
-//            if (actor != null && actor.Flying)
+            //            if (actor != null && actor.Flying)
             if (actor != null &&
-                (m_scenePresence.AgentControlFlags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY) ==
-                (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY)
+                (m_scenePresence.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) ==
+                (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY)
             {
                 m_animTickFall = 0;
                 if (move.X != 0f || move.Y != 0f)
@@ -391,8 +391,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         if (channel != null)
                         {
                             float groundHeight =
-                                channel.GetNormalizedGroundHeight((int) m_scenePresence.AbsolutePosition.X,
-                                                                  (int) m_scenePresence.AbsolutePosition.Y);
+                                channel.GetNormalizedGroundHeight((int)m_scenePresence.AbsolutePosition.X,
+                                                                  (int)m_scenePresence.AbsolutePosition.Y);
                             if (actor != null && (m_scenePresence.AbsolutePosition.Z - groundHeight) < 2)
                                 return "LAND";
                             else
@@ -443,7 +443,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             if (m_movementAnimation == "FALLDOWN")
             {
-                float fallElapsed = (Util.EnvironmentTickCount() - m_animTickFall)/1000f;
+                float fallElapsed = (Util.EnvironmentTickCount() - m_animTickFall) / 1000f;
                 if (fallElapsed < 0.75)
                 {
                     m_animTickFall = Util.EnvironmentTickCount();

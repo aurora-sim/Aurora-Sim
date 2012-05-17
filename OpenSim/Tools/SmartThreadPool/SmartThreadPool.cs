@@ -87,7 +87,7 @@ namespace Amib.Threading
         /// <summary>
         ///   Default idle timeout in milliseconds. (One minute)
         /// </summary>
-        public const int DefaultIdleTimeout = 60*1000; // One minute
+        public const int DefaultIdleTimeout = 60 * 1000; // One minute
 
         /// <summary>
         ///   Indicate to copy the security context of the caller and then use it in the call. (false)
@@ -234,13 +234,15 @@ namespace Amib.Threading
         ///   With this variable a thread can know whatever it belongs to a 
         ///   SmartThreadPool.
         /// </summary>
-        [ThreadStatic] private static SmartThreadPool _smartThreadPool;
+        [ThreadStatic]
+        private static SmartThreadPool _smartThreadPool;
 
         /// <summary>
         ///   A reference to the current work item a thread from the thread pool 
         ///   is executing.
         /// </summary>
-        [ThreadStatic] private static WorkItem _currentWorkItem;
+        [ThreadStatic]
+        private static WorkItem _currentWorkItem;
 
         /// <summary>
         ///   STP performance counters
@@ -920,7 +922,7 @@ namespace Amib.Threading
         /// </summary>
         public bool WaitForIdle(TimeSpan timeout)
         {
-            return WaitForIdle((int) timeout.TotalMilliseconds);
+            return WaitForIdle((int)timeout.TotalMilliseconds);
         }
 
         /// <summary>
@@ -976,7 +978,7 @@ namespace Amib.Threading
 
         public void Shutdown(bool forceAbort, TimeSpan timeout)
         {
-            Shutdown(forceAbort, (int) timeout.TotalMilliseconds);
+            Shutdown(forceAbort, (int)timeout.TotalMilliseconds);
         }
 
         /// <summary>
@@ -1038,7 +1040,7 @@ namespace Amib.Threading
                 {
                     // Update the time left to wait
                     TimeSpan ts = DateTime.Now - start;
-                    millisecondsLeft = millisecondsTimeout - (int) ts.TotalMilliseconds;
+                    millisecondsLeft = millisecondsTimeout - (int)ts.TotalMilliseconds;
                 }
             }
 
@@ -1120,7 +1122,7 @@ namespace Amib.Threading
             TimeSpan timeout,
             bool exitContext)
         {
-            return WaitAll(workItemResults, (int) timeout.TotalMilliseconds, exitContext);
+            return WaitAll(workItemResults, (int)timeout.TotalMilliseconds, exitContext);
         }
 
         /// <summary>
@@ -1141,7 +1143,7 @@ namespace Amib.Threading
             bool exitContext,
             WaitHandle cancelWaitHandle)
         {
-            return WaitAll(workItemResults, (int) timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
+            return WaitAll(workItemResults, (int)timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
         }
 
         /// <summary>
@@ -1214,7 +1216,7 @@ namespace Amib.Threading
             TimeSpan timeout,
             bool exitContext)
         {
-            return WaitAny(workItemResults, (int) timeout.TotalMilliseconds, exitContext);
+            return WaitAny(workItemResults, (int)timeout.TotalMilliseconds, exitContext);
         }
 
         /// <summary>
@@ -1235,7 +1237,7 @@ namespace Amib.Threading
             bool exitContext,
             WaitHandle cancelWaitHandle)
         {
-            return WaitAny(workItemResults, (int) timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
+            return WaitAny(workItemResults, (int)timeout.TotalMilliseconds, exitContext, cancelWaitHandle);
         }
 
         /// <summary>
@@ -1422,10 +1424,10 @@ namespace Amib.Threading
 
         #region IDisposable Members
 
-//        ~SmartThreadPool()
-//        {
-//            Dispose();
-//        }
+        //        ~SmartThreadPool()
+        //        {
+        //            Dispose();
+        //        }
 
         public void Dispose()
         {

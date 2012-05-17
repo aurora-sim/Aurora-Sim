@@ -172,7 +172,7 @@ namespace Aurora.Modules.SimProtection
         {
             if (m_physicsStatTimer == null)
             {
-                m_physicsStatTimer = new Timer {Interval = 10000};
+                m_physicsStatTimer = new Timer { Interval = 10000 };
                 m_physicsStatTimer.Elapsed += PhysicsStatsHeartbeat;
             }
         }
@@ -296,7 +296,7 @@ namespace Aurora.Modules.SimProtection
             Culture.SetCurrentCulture();
             try
             {
-                List<IScene> scenesToRun = (List<IScene>) scenes;
+                List<IScene> scenesToRun = (List<IScene>)scenes;
                 Application.Run(new PhysicsProfilerForm(this, scenesToRun));
             }
             catch (Exception ex)

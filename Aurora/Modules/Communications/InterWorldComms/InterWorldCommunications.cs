@@ -195,7 +195,7 @@ namespace Aurora.Modules
 
         public OSDMap GetUrlsForUser(GridRegion region, UUID userID)
         {
-            if ((((RegionFlags) region.Flags) & RegionFlags.Foreign) != RegionFlags.Foreign)
+            if ((((RegionFlags)region.Flags) & RegionFlags.Foreign) != RegionFlags.Foreign)
             {
                 MainConsole.Instance.Debug("[IWC]: Not a foreign region");
                 return null;
@@ -241,7 +241,7 @@ namespace Aurora.Modules
                                                                   m_allowUntrustedConnections);
                 m_untrustedConnectionsDefaultTrust =
                     (ThreatLevel)
-                    Enum.Parse(typeof (ThreatLevel),
+                    Enum.Parse(typeof(ThreatLevel),
                                m_config.GetString("UntrustedConnectionsDefaultTrust",
                                                   m_untrustedConnectionsDefaultTrust.ToString()));
                 registry.RegisterModuleInterface(this);

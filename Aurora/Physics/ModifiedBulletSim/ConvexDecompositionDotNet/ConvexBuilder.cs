@@ -125,7 +125,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float dy = bmax[1] - bmin[1];
             float dz = bmax[2] - bmin[2];
 
-            return (float) Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
         // return true if the two AABB's overlap.
@@ -188,11 +188,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             List<int> src = cr.HullIndices;
 
-            for (int i = 0; i < src.Count/3; i++)
+            for (int i = 0; i < src.Count / 3; i++)
             {
-                int i1 = src[i*3 + 0];
-                int i2 = src[i*3 + 1];
-                int i3 = src[i*3 + 2];
+                int i1 = src[i * 3 + 0];
+                int i2 = src[i * 3 + 1];
+                int i3 = src[i * 3 + 2];
 
                 float3 p1 = cr.HullVertices[i1];
                 float3 p2 = cr.HullVertices[i2];
@@ -223,7 +223,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
             int vcount = vc.GetSize();
             List<float3> vertices = vc.GetVertices();
-            int tcount = indices.Count/3;
+            int tcount = indices.Count / 3;
 
             //don't do anything if hull is empty
             if (tcount == 0)
@@ -245,7 +245,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 float combineVolume = Concavity.computeMeshVolume(hresult.OutputVertices, hresult.Indices);
                 float sumVolume = a.mVolume + b.mVolume;
 
-                float percent = (sumVolume*100)/combineVolume;
+                float percent = (sumVolume * 100) / combineVolume;
                 if (percent >= (100.0f - MERGE_PERCENT))
                 {
                     ConvexResult cr = new ConvexResult(hresult.OutputVertices, hresult.Indices);
@@ -326,7 +326,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         {
             int ret = 0;
 
-            MAXDEPTH = (int) desc.mDepth;
+            MAXDEPTH = (int)desc.mDepth;
             CONCAVE_PERCENT = desc.mCpercent;
             MERGE_PERCENT = desc.mPpercent;
 

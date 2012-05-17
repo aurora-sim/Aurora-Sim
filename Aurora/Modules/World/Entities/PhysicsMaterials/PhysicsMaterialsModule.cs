@@ -107,9 +107,9 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
 
         private Hashtable GetObjectPhysicsData(UUID agentID, Hashtable mDhttpMethod)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
 
-            OSDArray keys = (OSDArray) rm["object_ids"];
+            OSDArray keys = (OSDArray)rm["object_ids"];
 
             IEventQueueService eqs = m_scene.RequestModuleInterface<IEventQueueService>();
             if (eqs != null)

@@ -160,7 +160,7 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> row = new Dictionary<string, object>(10);
                 row["GroupID"] = groupID;
                 row["NoticeID"] = noticeID == UUID.Zero ? UUID.Random() : noticeID;
-                row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
+                row["Timestamp"] = ((uint)Util.UnixTimeSinceEpoch());
                 row["FromName"] = fromName.MySqlEscape(50);
                 row["Subject"] = subject.MySqlEscape(50);
                 row["Message"] = message.MySqlEscape(1024);
@@ -182,7 +182,8 @@ namespace Aurora.Services.DataService
                 return (bool)remoteValue;
             }
 
-            if(!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices)){
+            if (!agentsCanBypassGroupNoticePermsCheck.Contains(requestingAgentID) && !CheckGroupPermissions(requestingAgentID, groupID, (ulong)GroupPowers.SendNotices))
+            {
                 MainConsole.Instance.TraceFormat("Permission check failed when trying to edit group notice {0}.", noticeID);
                 return false;
             }
@@ -198,7 +199,7 @@ namespace Aurora.Services.DataService
                 MainConsole.Instance.TraceFormat("Group notice {0} group ID {1} does not match supplied group ID {2}", noticeID, GNI.GroupID, groupID);
                 return false;
             }
-            else if(subject.Trim() == string.Empty || message.Trim() == string.Empty)
+            else if (subject.Trim() == string.Empty || message.Trim() == string.Empty)
             {
                 MainConsole.Instance.TraceFormat("Could not edit group notice {0}, message or subject was empty", noticeID);
                 return false;
@@ -208,7 +209,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["GroupID"] = groupID;
             filter.andFilters["NoticeID"] = noticeID;
 
-            Dictionary<string, object> update = new Dictionary<string,object>(2);
+            Dictionary<string, object> update = new Dictionary<string, object>(2);
             update["Subject"] = subject.Trim();
             update["Message"] = message.Trim();
 
@@ -365,7 +366,7 @@ namespace Aurora.Services.DataService
                 filter.andFilters["AgentID"] = AgentID;
                 filter.andFilters["ActiveGroupID"] = GroupID;
 
-                Dictionary<string, object> values = new Dictionary<string,object>(1);
+                Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["ActiveGroupID"] = UUID.Zero;
 
                 // 1. If group is agent's active group, change active group to uuidZero
@@ -471,10 +472,10 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMember))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMember))
             {
                 //This isn't an open and shut case, they could be setting the agent to their role, which would allow for AssignMemberLimited
-                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.AssignMemberLimited))
+                if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.AssignMemberLimited))
                 {
                     MainConsole.Instance.Warn("[AGM]: User " + requestingAgentID + " attempted to add user " + AgentID +
                                " to group " + GroupID + ", but did not have permissions to do so!");
@@ -754,8 +755,10 @@ namespace Aurora.Services.DataService
             return uint.Parse(data.Query(new string[1] { "COUNT(GroupID)" }, "osgroup", filter, null, null, null)[0]);
         }
 
-        private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result){
-            return new GroupRecord{
+        private static GroupRecord GroupRecordQueryResult2GroupRecord(List<String> result)
+        {
+            return new GroupRecord
+            {
                 GroupID = UUID.Parse(result[0]),
                 GroupName = result[1],
                 Charter = result[2],
@@ -814,7 +817,7 @@ namespace Aurora.Services.DataService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GroupRecord> GetGroupRecords(UUID requestingAgentID, uint start, uint count, Dictionary<string, bool> sort, Dictionary<string, bool> boolFields)
         {
-//            List<string> filter = new List<string>();
+            //            List<string> filter = new List<string>();
 
             object remoteValue = DoRemote(requestingAgentID, start, count, boolFields);
             if (remoteValue != null || m_doRemoteOnly)
@@ -862,7 +865,7 @@ namespace Aurora.Services.DataService
             {
                 return Reply;
             }
-            for (int i = 0; i < osgroupsData.Count; i+= 11)
+            for (int i = 0; i < osgroupsData.Count; i += 11)
             {
                 Reply.Add(GroupRecordQueryResult2GroupRecord(osgroupsData.GetRange(i, 11)));
             }
@@ -921,7 +924,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GroupProfileData)remoteValue;
 
-            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong) GroupPowers.MemberVisible))
+            if (!CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.MemberVisible))
                 return new GroupProfileData();
 
             GroupProfileData GPD = new GroupProfileData();
@@ -1117,7 +1120,8 @@ namespace Aurora.Services.DataService
             where["AgentID"] = requestingAgentID;
             where["InviteID"] = inviteID;
 
-            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", new QueryFilter{
+            List<string> groupInvite = data.Query(new string[1] { "*" }, "osgroupinvite", new QueryFilter
+            {
                 andFilters = where
             }, null, null, null);
 
@@ -1302,7 +1306,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < retVal.Count; i += 5)
             {
                 if (retVal[i + 2] == "0")// (ShowInList param) They don't want to be shown in search.. respect this
-                { 
+                {
                     continue;
                 }
 
@@ -1542,7 +1546,7 @@ namespace Aurora.Services.DataService
             if (GND.HasAttachment)
             {
                 GND.ItemID = UUID.Parse(notice[4]);
-                GND.AssetType = (byte) int.Parse(notice[7]);
+                GND.AssetType = (byte)int.Parse(notice[7]);
                 GND.ItemName = notice[8];
             }
 
@@ -1621,14 +1625,14 @@ namespace Aurora.Services.DataService
                     filter.orMultiFilters["GroupID"].Add(groupID);
                 }
 
-                Dictionary<string, bool> sort = new Dictionary<string,bool>(1);
+                Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
                 sort["Timestamp"] = false;
-                
+
                 uint? s = null;
-                if(start != 0)
+                if (start != 0)
                     s = start;
                 uint? c = null;
-                if(count != 0)
+                if (count != 0)
                     c = count;
 
                 List<string> notice = data.Query(new string[]{

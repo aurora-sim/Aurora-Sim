@@ -128,8 +128,8 @@ namespace Aurora.Addon.Hypergrid
                 permissions["owner_id"] = item["agent_id"];
                 permissions["last_owner_id"] = item["agent_id"];
 
-                item["type"] = Utils.AssetTypeToString((AssetType) retVal.AssetType);
-                item["inv_type"] = Utils.InventoryTypeToString((InventoryType) retVal.InvType);
+                item["type"] = Utils.AssetTypeToString((AssetType)retVal.AssetType);
+                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)retVal.InvType);
 
                 item["permissions"] = permissions;
                 array.Add(item);
@@ -149,7 +149,7 @@ namespace Aurora.Addon.Hypergrid
             foreach (OSD m in fetchRequest)
             {
                 contents.WriteStartMap("internalContents"); //Start internalContents kvp
-                OSDMap invFetch = (OSDMap) m;
+                OSDMap invFetch = (OSDMap)m;
 
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
@@ -175,7 +175,7 @@ namespace Aurora.Addon.Hypergrid
                     fretVal = GetForeignInventory(AgentID, folder_id, invServer);
                 string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
                                              "avatarID", AgentID, "avatarID", libraryOwnerID);
-                redoQuery:
+            redoQuery:
                 using (IDataReader retVal = isForeign ? fretVal : GD.QueryData(query, m_itemsrealm, "*"))
                 {
                     try
@@ -240,11 +240,11 @@ namespace Aurora.Addon.Hypergrid
                                                 : forceOwnerID;
                             contents["agent_id"] = avatarID;
 
-                            AssetType assetType = (AssetType) int.Parse(retVal["assetType"].ToString());
+                            AssetType assetType = (AssetType)int.Parse(retVal["assetType"].ToString());
                             if (assetType == AssetType.Link)
                                 moreLinkedItems.Add(assetID);
                             contents["type"] = Utils.AssetTypeToString(assetType);
-                            InventoryType invType = (InventoryType) int.Parse(retVal["invType"].ToString());
+                            InventoryType invType = (InventoryType)int.Parse(retVal["invType"].ToString());
                             contents["inv_type"] = Utils.InventoryTypeToString(invType);
 
                             if (addToCount)
@@ -299,7 +299,7 @@ namespace Aurora.Addon.Hypergrid
                         XInventoryServicesConnector xinv = new XInventoryServicesConnector(invServer + "xinventory");
                         foreach (UUID t in moreLinkedItems)
                         {
-                            ((FakeDataReader) fretVal).items.Add(xinv.GetItem(new InventoryItemBase(t)));
+                            ((FakeDataReader)fretVal).items.Add(xinv.GetItem(new InventoryItemBase(t)));
                         }
                     }
                     moreLinkedItems.Clear();
@@ -316,9 +316,9 @@ namespace Aurora.Addon.Hypergrid
                 if (versionRetVal.Count > 0)
                 {
                     version = int.Parse(versionRetVal[0]);
-                    if (int.Parse(versionRetVal[1]) == (int) AssetType.TrashFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.CurrentOutfitFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.LinkFolder)
+                    if (int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder ||
+                        int.Parse(versionRetVal[1]) == (int)AssetType.CurrentOutfitFolder ||
+                        int.Parse(versionRetVal[1]) == (int)AssetType.LinkFolder)
                     {
                         //If it is the trash folder, we need to send its descendents, because the viewer wants it
                         query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,

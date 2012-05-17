@@ -76,7 +76,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["PrincipalID"] = PrincipalID;
             GD.Delete(m_realm, filter);
             List<object[]> insertList = new List<object[]>();
-            foreach(KeyValuePair<string, string> kvp in data.Data)
+            foreach (KeyValuePair<string, string> kvp in data.Data)
             {
                 insertList.Add(new object[3]{
                     PrincipalID,
@@ -109,7 +109,8 @@ namespace Aurora.Services.DataService
                 "Name",
                 "`Value`"
             }, realm, filter, null, null, null);
-            AvatarData retVal = new AvatarData {
+            AvatarData retVal = new AvatarData
+            {
                 AvatarType = 1,
                 Data = new Dictionary<string, string>()
             };

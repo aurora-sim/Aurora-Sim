@@ -215,14 +215,14 @@ namespace Aurora.Modules.Chat
         {
             bool successful = false;
             GridInstantMessage gim = new GridInstantMessage();
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
 
             if (requestData.ContainsKey("message"))
             {
                 try
                 {
                     //Deserialize it
-                    gim.FromOSD((OSDMap) OSDParser.DeserializeJson(requestData["message"].ToString()));
+                    gim.FromOSD((OSDMap)OSDParser.DeserializeJson(requestData["message"].ToString()));
                 }
                 catch
                 {
@@ -232,7 +232,7 @@ namespace Aurora.Modules.Chat
                     uint timestamp = 0;
                     string fromAgentName = "";
                     string message = "";
-                    byte dialog = (byte) 0;
+                    byte dialog = (byte)0;
                     bool fromGroup = false;
                     byte offline = 0;
                     uint ParentEstateID = 0;
@@ -254,14 +254,14 @@ namespace Aurora.Modules.Chat
                         && requestData.ContainsKey("binary_bucket"))
                     {
                         // Do the easy way of validating the UUIDs
-                        UUID.TryParse((string) requestData["from_agent_id"], out fromAgentID);
-                        UUID.TryParse((string) requestData["to_agent_id"], out toAgentID);
-                        UUID.TryParse((string) requestData["im_session_id"], out imSessionID);
-                        UUID.TryParse((string) requestData["region_id"], out RegionID);
+                        UUID.TryParse((string)requestData["from_agent_id"], out fromAgentID);
+                        UUID.TryParse((string)requestData["to_agent_id"], out toAgentID);
+                        UUID.TryParse((string)requestData["im_session_id"], out imSessionID);
+                        UUID.TryParse((string)requestData["region_id"], out RegionID);
 
                         try
                         {
-                            timestamp = (uint) Convert.ToInt32((string) requestData["timestamp"]);
+                            timestamp = (uint)Convert.ToInt32((string)requestData["timestamp"]);
                         }
                         catch (ArgumentException)
                         {
@@ -273,13 +273,13 @@ namespace Aurora.Modules.Chat
                         {
                         }
 
-                        fromAgentName = (string) requestData["from_agent_name"];
-                        message = (string) requestData["message"];
+                        fromAgentName = (string)requestData["from_agent_name"];
+                        message = (string)requestData["message"];
                         if (message == null)
                             message = string.Empty;
 
                         // Bytes don't transfer well over XMLRPC, so, we Base64 Encode them.
-                        string requestData1 = (string) requestData["dialog"];
+                        string requestData1 = (string)requestData["dialog"];
                         if (string.IsNullOrEmpty(requestData1))
                         {
                             dialog = 0;
@@ -290,10 +290,10 @@ namespace Aurora.Modules.Chat
                             dialog = dialogdata[0];
                         }
 
-                        if ((string) requestData["from_group"] == "TRUE")
+                        if ((string)requestData["from_group"] == "TRUE")
                             fromGroup = true;
 
-                        string requestData2 = (string) requestData["offline"];
+                        string requestData2 = (string)requestData["offline"];
                         if (String.IsNullOrEmpty(requestData2))
                         {
                             offline = 0;
@@ -306,7 +306,7 @@ namespace Aurora.Modules.Chat
 
                         try
                         {
-                            ParentEstateID = (uint) Convert.ToInt32((string) requestData["parent_estate_id"]);
+                            ParentEstateID = (uint)Convert.ToInt32((string)requestData["parent_estate_id"]);
                         }
                         catch (ArgumentException)
                         {
@@ -320,7 +320,7 @@ namespace Aurora.Modules.Chat
 
                         try
                         {
-                            pos_x = (uint) Convert.ToInt32((string) requestData["position_x"]);
+                            pos_x = (uint)Convert.ToInt32((string)requestData["position_x"]);
                         }
                         catch (ArgumentException)
                         {
@@ -333,7 +333,7 @@ namespace Aurora.Modules.Chat
                         }
                         try
                         {
-                            pos_y = (uint) Convert.ToInt32((string) requestData["position_y"]);
+                            pos_y = (uint)Convert.ToInt32((string)requestData["position_y"]);
                         }
                         catch (ArgumentException)
                         {
@@ -346,7 +346,7 @@ namespace Aurora.Modules.Chat
                         }
                         try
                         {
-                            pos_z = (uint) Convert.ToInt32((string) requestData["position_z"]);
+                            pos_z = (uint)Convert.ToInt32((string)requestData["position_z"]);
                         }
                         catch (ArgumentException)
                         {
@@ -360,7 +360,7 @@ namespace Aurora.Modules.Chat
 
                         Position = new Vector3(pos_x, pos_y, pos_z);
 
-                        string requestData3 = (string) requestData["binary_bucket"];
+                        string requestData3 = (string)requestData["binary_bucket"];
                         binaryBucket = string.IsNullOrEmpty(requestData3) ? new byte[0] : Convert.FromBase64String(requestData3);
 
                         // Create a New GridInstantMessageObject the the data
@@ -380,8 +380,8 @@ namespace Aurora.Modules.Chat
                     }
                 }
 
-                if (gim.dialog == (byte) InstantMessageDialog.GodLikeRequestTeleport)
-                    gim.dialog = (byte) InstantMessageDialog.RequestTeleport;
+                if (gim.dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport)
+                    gim.dialog = (byte)InstantMessageDialog.RequestTeleport;
 
                 // Trigger the Instant message in the scene.
                 foreach (IScene scene in m_Scenes)
@@ -425,7 +425,7 @@ namespace Aurora.Modules.Chat
         protected virtual void GridInstantMessageCompleted(IAsyncResult iar)
         {
             GridInstantMessageDelegate icon =
-                (GridInstantMessageDelegate) iar.AsyncState;
+                (GridInstantMessageDelegate)iar.AsyncState;
             icon.EndInvoke(iar);
         }
 
@@ -708,17 +708,17 @@ namespace Aurora.Modules.Chat
         /// <returns>Bool if the message was successfully delivered at the other side.</returns>
         protected virtual bool doIMSending(string httpInfo, Hashtable xmlrpcdata)
         {
-            ArrayList SendParams = new ArrayList {xmlrpcdata};
+            ArrayList SendParams = new ArrayList { xmlrpcdata };
             XmlRpcRequest GridReq = new XmlRpcRequest("grid_instant_message", SendParams);
             try
             {
                 XmlRpcResponse GridResp = GridReq.Send(httpInfo, 7000);
 
-                Hashtable responseData = (Hashtable) GridResp.Value;
+                Hashtable responseData = (Hashtable)GridResp.Value;
 
                 if (responseData.ContainsKey("success"))
                 {
-                    if ((string) responseData["success"] == "TRUE")
+                    if ((string)responseData["success"] == "TRUE")
                         return true;
                     return false;
                 }

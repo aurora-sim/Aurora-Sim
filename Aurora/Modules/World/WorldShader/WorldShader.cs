@@ -132,7 +132,7 @@ namespace Aurora.Modules.WorldShader
                             AssetBase a = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
                             if (a != null)
                             {
-                                Bitmap texture = (Bitmap) j2kDecoder.DecodeToImage(a.Data);
+                                Bitmap texture = (Bitmap)j2kDecoder.DecodeToImage(a.Data);
                                 if (texture == null)
                                     continue;
                                 a.ID = UUID.Random();
@@ -164,14 +164,14 @@ namespace Aurora.Modules.WorldShader
                 if (face != null)
                     if (face.TextureID == oldID)
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = newID;
                         newShape.FaceTextures[i] = f;
                     }
                     else
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = oldShape.FaceTextures[i].TextureID;
                         newShape.FaceTextures[i] = f;
@@ -227,15 +227,15 @@ namespace Aurora.Modules.WorldShader
                     Color c = b.GetPixel(x, y);
                     if (greyScale)
                     {
-                        int luma = (int) (c.R*0.3 + c.G*0.59 + c.B*0.11);
+                        int luma = (int)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
                         b.SetPixel(x, y, Color.FromArgb(c.A, luma, luma, luma));
                     }
                     else
                     {
                         float amtFrom = 1 - percent;
-                        int lumaR = (int) (c.R*amtFrom + shade.R*percent);
-                        int lumaG = (int) (c.G*amtFrom + shade.G*percent);
-                        int lumaB = (int) (c.B*amtFrom + shade.B*percent);
+                        int lumaR = (int)(c.R * amtFrom + shade.R * percent);
+                        int lumaG = (int)(c.G * amtFrom + shade.G * percent);
+                        int lumaB = (int)(c.B * amtFrom + shade.B * percent);
                         b.SetPixel(x, y, Color.FromArgb(c.A, lumaR, lumaG, lumaB));
                     }
                 }

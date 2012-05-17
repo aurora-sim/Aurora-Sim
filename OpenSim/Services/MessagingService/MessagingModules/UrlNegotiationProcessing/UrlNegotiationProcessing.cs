@@ -120,7 +120,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
 
                 IConfigurationService service = m_registry.RequestModuleInterface<IConfigurationService>();
                 if (service != null)
-                    service.AddNewUrls("default", (OSDMap) OSDParser.DeserializeJson(value));
+                    service.AddNewUrls("default", (OSDMap)OSDParser.DeserializeJson(value));
             }
             return null;
         }

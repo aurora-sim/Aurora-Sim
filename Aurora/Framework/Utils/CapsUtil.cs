@@ -53,7 +53,7 @@ namespace Aurora.Framework.Capabilities
         public static string GetCapsPathFromCapsSeed(string capsSeedPath)
         {
             capsSeedPath = !capsSeedPath.StartsWith("/CAPS/")
-                               ? capsSeedPath.Split(new string[1] {"/CAPS/"}, StringSplitOptions.RemoveEmptyEntries)[1]
+                               ? capsSeedPath.Split(new string[1] { "/CAPS/" }, StringSplitOptions.RemoveEmptyEntries)[1]
                                : capsSeedPath.Remove(0, 6);
             //Now remove the trailing /
             capsSeedPath = capsSeedPath.Remove(capsSeedPath.Length - 5, 5);

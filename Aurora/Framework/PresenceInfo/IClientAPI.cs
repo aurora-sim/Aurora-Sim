@@ -270,9 +270,9 @@ namespace Aurora.Framework
 
     public delegate void RequestTaskInventory(IClientAPI remoteClient, uint localID);
 
-/*    public delegate void UpdateInventoryItem(
-        IClientAPI remoteClient, UUID transactionID, UUID itemID, string name, string description,
-        uint nextOwnerMask);*/
+    /*    public delegate void UpdateInventoryItem(
+            IClientAPI remoteClient, UUID transactionID, UUID itemID, string name, string description,
+            uint nextOwnerMask);*/
 
     public delegate void UpdateInventoryItem(
         IClientAPI remoteClient, UUID transactionID, UUID itemID, InventoryItemBase itemUpd);

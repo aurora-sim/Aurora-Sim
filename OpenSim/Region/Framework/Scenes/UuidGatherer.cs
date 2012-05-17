@@ -117,14 +117,14 @@ namespace OpenSim.Region.Framework.Scenes
         public void GatherAssetUuids(ISceneEntity sceneObject, IDictionary<UUID, AssetType> assetUuids,
                                      IRegistryCore scene)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[ASSET GATHERER]: Getting assets for object {0}, {1}", sceneObject.Name, sceneObject.UUID);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[ASSET GATHERER]: Getting assets for object {0}, {1}", sceneObject.Name, sceneObject.UUID);
 
             ISceneChildEntity[] parts = sceneObject.ChildrenEntities().ToArray();
             foreach (ISceneChildEntity part in parts)
             {
-//                MainConsole.Instance.DebugFormat(
-//                    "[ARCHIVER]: Getting part {0}, {1} for object {2}", part.Name, part.UUID, sceneObject.UUID);
+                //                MainConsole.Instance.DebugFormat(
+                //                    "[ARCHIVER]: Getting part {0}, {1} for object {2}", part.Name, part.UUID, sceneObject.UUID);
 
                 try
                 {
@@ -159,7 +159,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (part.Shape.SculptTexture != UUID.Zero)
                         assetUuids[part.Shape.SculptTexture] = AssetType.Texture;
 
-                    TaskInventoryDictionary taskDictionary = (TaskInventoryDictionary) part.TaskInventory.Clone();
+                    TaskInventoryDictionary taskDictionary = (TaskInventoryDictionary)part.TaskInventory.Clone();
 
                     // Now analyze this prim's inventory items to preserve all the uuids that they reference
 #if (!ISWIN)
@@ -167,7 +167,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (!assetUuids.ContainsKey(tii.AssetID))
                         {
-                            GatherAssetUuids(tii.AssetID, (AssetType) tii.Type, assetUuids, scene);
+                            GatherAssetUuids(tii.AssetID, (AssetType)tii.Type, assetUuids, scene);
                         }
                     }
 #else

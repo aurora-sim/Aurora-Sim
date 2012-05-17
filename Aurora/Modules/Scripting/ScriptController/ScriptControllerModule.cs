@@ -89,7 +89,7 @@ namespace Aurora.Modules.Scripting
         private void EventManager_OnRemovePresence(IScenePresence presence)
         {
             ScriptControllerPresenceModule m =
-                (ScriptControllerPresenceModule) presence.RequestModuleInterface<IScriptControllerModule>();
+                (ScriptControllerPresenceModule)presence.RequestModuleInterface<IScriptControllerModule>();
             if (m != null)
             {
                 m.Close();
@@ -142,20 +142,20 @@ namespace Aurora.Modules.Scripting
 
                 if (pass_on == 0 && accept == 0)
                 {
-                    IgnoredControls |= (ScriptControlled) controls;
-                    obj.ignoreControls = (ScriptControlled) controls;
+                    IgnoredControls |= (ScriptControlled)controls;
+                    obj.ignoreControls = (ScriptControlled)controls;
                 }
 
                 if (pass_on == 0 && accept == 1)
                 {
-                    IgnoredControls |= (ScriptControlled) controls;
-                    obj.ignoreControls = (ScriptControlled) controls;
-                    obj.eventControls = (ScriptControlled) controls;
+                    IgnoredControls |= (ScriptControlled)controls;
+                    obj.ignoreControls = (ScriptControlled)controls;
+                    obj.eventControls = (ScriptControlled)controls;
                 }
                 if (pass_on == 1 && accept == 1)
                 {
                     IgnoredControls = ScriptControlled.CONTROL_ZERO;
-                    obj.eventControls = (ScriptControlled) controls;
+                    obj.eventControls = (ScriptControlled)controls;
                     obj.ignoreControls = ScriptControlled.CONTROL_ZERO;
                 }
 
@@ -163,7 +163,7 @@ namespace Aurora.Modules.Scripting
                 {
                     if (pass_on == 1 && accept == 0)
                     {
-                        IgnoredControls &= ~(ScriptControlled) controls;
+                        IgnoredControls &= ~(ScriptControlled)controls;
                         if (scriptedcontrols.ContainsKey(Script_item_UUID))
                             scriptedcontrols.Remove(Script_item_UUID);
                     }
@@ -181,7 +181,7 @@ namespace Aurora.Modules.Scripting
                 {
                     scriptedcontrols[SC.itemID] = SC;
                 }
-                m_sp.ControllingClient.SendTakeControls((int) SC.eventControls, true, true);
+                m_sp.ControllingClient.SendTakeControls((int)SC.eventControls, true, true);
             }
 
             public void UnRegisterControlEventsToScript(uint Obj_localID, UUID Script_item_UUID)
@@ -194,8 +194,8 @@ namespace Aurora.Modules.Scripting
                     {
                         ScriptControlled sctc = takecontrols.eventControls;
 
-                        m_sp.ControllingClient.SendTakeControls((int) sctc, false, false);
-                        m_sp.ControllingClient.SendTakeControls((int) sctc, true, false);
+                        m_sp.ControllingClient.SendTakeControls((int)sctc, false, false);
+                        m_sp.ControllingClient.SendTakeControls((int)sctc, true, false);
 
                         scriptedcontrols.Remove(Script_item_UUID);
                         IgnoredControls = ScriptControlled.CONTROL_ZERO;
@@ -213,7 +213,7 @@ namespace Aurora.Modules.Scripting
                 {
                     if (scriptedcontrols.Count > 0)
                     {
-                        SendControlToScripts((uint) flags);
+                        SendControlToScripts((uint)flags);
                         flags = RemoveIgnoredControls(flags, IgnoredControls);
                     }
                 }
@@ -230,8 +230,8 @@ namespace Aurora.Modules.Scripting
                         {
                             UnRegisterControlEventsToScript(m_sp.LocalId, taskID);
                             taskIDict[taskID].PermsMask &= ~(
-                                                                (int) ScriptPermission.ControlCamera |
-                                                                (int) ScriptPermission.TakeControls);
+                                                                (int)ScriptPermission.ControlCamera |
+                                                                (int)ScriptPermission.TakeControls);
                         }
                     }
                 }
@@ -246,8 +246,8 @@ namespace Aurora.Modules.Scripting
 
                     foreach (ScriptControllers c in scriptedcontrols.Values)
                     {
-                        controls[i++] = new ControllerData(c.itemID, c.part.UUID, (uint) c.ignoreControls,
-                                                           (uint) c.eventControls);
+                        controls[i++] = new ControllerData(c.itemID, c.part.UUID, (uint)c.ignoreControls,
+                                                           (uint)c.eventControls);
                     }
                     return controls;
                 }
@@ -266,8 +266,8 @@ namespace Aurora.Modules.Scripting
                                                    {
                                                        itemID = c.ItemID,
                                                        part = m_sp.Scene.GetSceneObjectPart(c.ObjectID),
-                                                       ignoreControls = (ScriptControlled) c.IgnoreControls,
-                                                       eventControls = (ScriptControlled) c.EventControls
+                                                       ignoreControls = (ScriptControlled)c.IgnoreControls,
+                                                       eventControls = (ScriptControlled)c.EventControls
                                                    };
                         if (sc.part != null)
                         {
@@ -323,61 +323,61 @@ namespace Aurora.Modules.Scripting
                 if (MouseDown)
                 {
                     allflags = LastCommands & (ScriptControlled.CONTROL_ML_LBUTTON | ScriptControlled.CONTROL_LBUTTON);
-                    if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_UP) != 0 ||
-                        (flags & unchecked ((uint) AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_UP)) != 0)
+                    if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_UP) != 0 ||
+                        (flags & unchecked((uint)AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_UP)) != 0)
                     {
                         allflags = ScriptControlled.CONTROL_ZERO;
                         MouseDown = true;
                     }
                 }
 
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_DOWN) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_ML_LBUTTON_DOWN) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_ML_LBUTTON;
                     MouseDown = true;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_DOWN) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LBUTTON_DOWN) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_LBUTTON;
                     MouseDown = true;
                 }
 
                 // find all activated controls, whether the scripts are interested in them or not
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_POS) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_FWD;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_AT_NEG) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_BACK;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_POS) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_POS) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_UP;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_UP_NEG) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_DOWN;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_POS) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_POS) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_LEFT;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) != 0 ||
-                    (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_LEFT_NEG) != 0 ||
+                    (flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_NUDGE_LEFT_NEG) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_RIGHT;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_ROT_RIGHT;
                 }
-                if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS) != 0)
+                if ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS) != 0)
                 {
                     allflags |= ScriptControlled.CONTROL_ROT_LEFT;
                 }
@@ -392,17 +392,17 @@ namespace Aurora.Modules.Scripting
                             ScriptControllers scriptControlData = kvp.Value;
 
                             ScriptControlled localHeld = allflags & scriptControlData.eventControls;
-                                // the flags interesting for us
+                            // the flags interesting for us
                             ScriptControlled localLast = LastCommands & scriptControlData.eventControls;
-                                // the activated controls in the last cycle
+                            // the activated controls in the last cycle
                             ScriptControlled localChange = localHeld ^ localLast; // the changed bits
                             if (localHeld != ScriptControlled.CONTROL_ZERO ||
                                 localChange != ScriptControlled.CONTROL_ZERO)
                             {
                                 // only send if still pressed or just changed
                                 m_sp.Scene.EventManager.TriggerControlEvent(scriptControlData.part, scriptUUID,
-                                                                            m_sp.UUID, (uint) localHeld,
-                                                                            (uint) localChange);
+                                                                            m_sp.UUID, (uint)localHeld,
+                                                                            (uint)localChange);
                             }
                         }
                     }

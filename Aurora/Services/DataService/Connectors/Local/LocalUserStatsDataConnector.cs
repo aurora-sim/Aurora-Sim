@@ -39,7 +39,7 @@ using OpenMetaverse.Messages.Linden;
 namespace Aurora.Services.DataService
 {
     public class LocalUserStatsDataConnector : IUserStatsDataConnector
-	{
+    {
         private IGenericData GD = null;
         private const string m_realm = "statsdata";
 
@@ -179,5 +179,5 @@ namespace Aurora.Services.DataService
             }
             return message;
         }
-	}
+    }
 }

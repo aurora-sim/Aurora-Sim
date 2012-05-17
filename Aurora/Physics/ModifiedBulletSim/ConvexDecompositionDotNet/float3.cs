@@ -94,12 +94,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float dx = a.x - x;
             float dy = a.y - y;
             float dz = a.z - z;
-            return dx*dx + dy*dy + dz*dz;
+            return dx * dx + dy * dy + dz * dz;
         }
 
         public float Length()
         {
-            return (float) Math.Sqrt(x*x + y*y + z*z);
+            return (float)Math.Sqrt(x * x + y * y + z * z);
         }
 
         public float Area(float3 p1, float3 p2)
@@ -107,12 +107,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float A = Partial(p1);
             A += p1.Partial(p2);
             A += p2.Partial(this);
-            return A*0.5f;
+            return A * 0.5f;
         }
 
         public float Partial(float3 p)
         {
-            return (x*p.y) - (p.x*y);
+            return (x * p.y) - (p.x * y);
         }
 
         // Given a point and a line (defined by two points), compute the closest point
@@ -129,8 +129,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
             else
             {
-                float delta = dot(point - line0, lineDelta)/dot(lineDelta, lineDelta);
-                nearestPoint = line0 + lineDelta*delta;
+                float delta = dot(point - line0, lineDelta) / dot(lineDelta, lineDelta);
+                nearestPoint = line0 + lineDelta * delta;
             }
 
             this.x = nearestPoint.x;
@@ -152,7 +152,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
             else
             {
-                float delta = dot(point - line0, lineDelta)/dot(lineDelta, lineDelta);
+                float delta = dot(point - line0, lineDelta) / dot(lineDelta, lineDelta);
 
                 // Clamp the point to conform to the segment's endpoints
                 if (delta < 0)
@@ -160,7 +160,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 else if (delta > 1)
                     delta = 1;
 
-                nearestPoint = line0 + lineDelta*delta;
+                nearestPoint = line0 + lineDelta * delta;
             }
 
             this.x = nearestPoint.x;
@@ -188,7 +188,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
             else
             {
-                float3[] axis = new float3[3] {new float3(), new float3(), new float3()};
+                float3[] axis = new float3[3] { new float3(), new float3(), new float3() };
                 axis[0].NearestPointInLine(triangle0, triangle1, triangle2);
                 axis[1].NearestPointInLine(triangle1, triangle0, triangle2);
                 axis[2].NearestPointInLine(triangle2, triangle0, triangle1);
@@ -249,9 +249,9 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                     normal = cross(lineDelta0, lineDelta1);
 
                     float3 pointDelta = point - triangle0;
-                    float delta = dot(normal, pointDelta)/dot(normal, normal);
+                    float delta = dot(normal, pointDelta) / dot(normal, normal);
 
-                    nearestPoint = point - normal*delta;
+                    nearestPoint = point - normal * delta;
                 }
             }
 
@@ -282,18 +282,18 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float3 operator *(float3 v, float s)
         {
-            return new float3(v.x*s, v.y*s, v.z*s);
+            return new float3(v.x * s, v.y * s, v.z * s);
         }
 
         public static float3 operator *(float s, float3 v)
         {
-            return new float3(v.x*s, v.y*s, v.z*s);
+            return new float3(v.x * s, v.y * s, v.z * s);
         }
 
         public static float3 operator *(float3 v, float3x3 m)
         {
-            return new float3((m.x.x*v.x + m.y.x*v.y + m.z.x*v.z), (m.x.y*v.x + m.y.y*v.y + m.z.y*v.z),
-                              (m.x.z*v.x + m.y.z*v.y + m.z.z*v.z));
+            return new float3((m.x.x * v.x + m.y.x * v.y + m.z.x * v.z), (m.x.y * v.x + m.y.y * v.y + m.z.y * v.z),
+                              (m.x.z * v.x + m.y.z * v.y + m.z.z * v.z));
         }
 
         public static float3 operator *(float3x3 m, float3 v)
@@ -303,8 +303,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float3 operator /(float3 v, float s)
         {
-            float sinv = 1.0f/s;
-            return new float3(v.x*sinv, v.y*sinv, v.z*sinv);
+            float sinv = 1.0f / s;
+            return new float3(v.x * sinv, v.y * sinv, v.z * sinv);
         }
 
         public override bool Equals(object obj)
@@ -327,7 +327,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             if (ReferenceEquals(a, b))
                 return true;
             // If one is null, but not both, return false.
-            if (((object) a == null) || ((object) b == null))
+            if (((object)a == null) || ((object)b == null))
                 return false;
 
             return (a.x == b.x && a.y == b.y && a.z == b.z);
@@ -340,28 +340,28 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float dot(float3 a, float3 b)
         {
-            return a.x*b.x + a.y*b.y + a.z*b.z;
+            return a.x * b.x + a.y * b.y + a.z * b.z;
         }
 
         public static float3 cmul(float3 v1, float3 v2)
         {
-            return new float3(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
+            return new float3(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z);
         }
 
         public static float3 cross(float3 a, float3 b)
         {
-            return new float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
+            return new float3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
         }
 
         public static float3 Interpolate(float3 v0, float3 v1, float alpha)
         {
-            return v0*(1 - alpha) + v1*alpha;
+            return v0 * (1 - alpha) + v1 * alpha;
         }
 
         public static float3 Round(float3 a, int digits)
         {
-            return new float3((float) Math.Round(a.x, digits), (float) Math.Round(a.y, digits),
-                              (float) Math.Round(a.z, digits));
+            return new float3((float)Math.Round(a.x, digits), (float)Math.Round(a.y, digits),
+                              (float)Math.Round(a.z, digits));
         }
 
         public static float3 VectorMax(float3 a, float3 b)
@@ -381,7 +381,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float magnitude(float3 v)
         {
-            return (float) Math.Sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+            return (float)Math.Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
         }
 
         public static float3 normalize(float3 v)
@@ -389,8 +389,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             float d = magnitude(v);
             if (d == 0)
                 d = 0.1f;
-            d = 1/d;
-            return new float3(v.x*d, v.y*d, v.z*d);
+            d = 1 / d;
+            return new float3(v.x * d, v.y * d, v.z * d);
         }
 
         public static float3 safenormalize(float3 v)
@@ -403,12 +403,12 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public static float Yaw(float3 v)
         {
-            return (v.y == 0.0 && v.x == 0.0) ? 0.0f : (float) Math.Atan2(-v.x, v.y)*(180.0f/3.14159264f);
+            return (v.y == 0.0 && v.x == 0.0) ? 0.0f : (float)Math.Atan2(-v.x, v.y) * (180.0f / 3.14159264f);
         }
 
         public static float Pitch(float3 v)
         {
-            return (float) Math.Atan2(v.z, Math.Sqrt(v.x*v.x + v.y*v.y))*(180.0f/3.14159264f);
+            return (float)Math.Atan2(v.z, Math.Sqrt(v.x * v.x + v.y * v.y)) * (180.0f / 3.14159264f);
         }
 
         public float ComputePlane(float3 A, float3 B, float3 C)
@@ -423,11 +423,11 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             wy = (A.y - B.y);
             wz = (A.z - B.z);
 
-            vw_x = vy*wz - vz*wy;
-            vw_y = vz*wx - vx*wz;
-            vw_z = vx*wy - vy*wx;
+            vw_x = vy * wz - vz * wy;
+            vw_y = vz * wx - vx * wz;
+            vw_z = vx * wy - vy * wx;
 
-            mag = (float) Math.Sqrt((vw_x*vw_x) + (vw_y*vw_y) + (vw_z*vw_z));
+            mag = (float)Math.Sqrt((vw_x * vw_x) + (vw_y * vw_y) + (vw_z * vw_z));
 
             if (mag < 0.000001f)
             {
@@ -435,14 +435,14 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             }
             else
             {
-                mag = 1.0f/mag;
+                mag = 1.0f / mag;
             }
 
-            x = vw_x*mag;
-            y = vw_y*mag;
-            z = vw_z*mag;
+            x = vw_x * mag;
+            y = vw_y * mag;
+            z = vw_z * mag;
 
-            float D = 0.0f - ((x*A.x) + (y*A.y) + (z*A.z));
+            float D = 0.0f - ((x * A.x) + (y * A.y) + (z * A.z));
             return D;
         }
 

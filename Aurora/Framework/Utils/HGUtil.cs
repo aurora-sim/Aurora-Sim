@@ -70,7 +70,7 @@ namespace Aurora.Framework
                 // in the agent circuit data for foreigners
                 if (acircuit.lastname.Contains("@"))
                 {
-                    string[] parts = acircuit.firstname.Split(new[] {'.'});
+                    string[] parts = acircuit.firstname.Split(new[] { '.' });
                     if (parts.Length == 2)
                         return acircuit.AgentID.ToString() + ";" + agentsURI + ";" + parts[0] + " " + parts[1];
                 }

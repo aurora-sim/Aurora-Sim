@@ -150,7 +150,7 @@ namespace Aurora.Modules.Terrain
 
             m_queueTimer.Enabled = false;
             m_queueTimer.AutoReset = true;
-            m_queueTimer.Interval = m_savetime*1000;
+            m_queueTimer.Interval = m_savetime * 1000;
             m_queueTimer.Elapsed += TerrainUpdateTimer;
         }
 
@@ -836,7 +836,7 @@ namespace Aurora.Modules.Terrain
 
         public void QueueTerrainUpdate()
         {
-            m_queueNextSave = DateTime.Now.Ticks + Convert.ToInt64(m_savetime*1000*10000);
+            m_queueNextSave = DateTime.Now.Ticks + Convert.ToInt64(m_savetime * 1000 * 10000);
             m_queueTimer.Start();
         }
 
@@ -907,14 +907,14 @@ namespace Aurora.Modules.Terrain
         {
             if (FunctionName == "DrawDistanceChanged" || FunctionName == "SignficantCameraMovement")
             {
-                SendTerrainUpdatesForClient((IScenePresence) parameters);
+                SendTerrainUpdatesForClient((IScenePresence)parameters);
             }
             return null;
         }
 
         private void EventManager_OnSignificantClientMovement(IScenePresence presence)
         {
-            if (Vector3.DistanceSquared(presence.AbsolutePosition, m_previousCheckedPosition) > 16*16)
+            if (Vector3.DistanceSquared(presence.AbsolutePosition, m_previousCheckedPosition) > 16 * 16)
             {
                 m_previousCheckedPosition = presence.AbsolutePosition;
                 SendTerrainUpdatesForClient(presence);
@@ -943,12 +943,12 @@ namespace Aurora.Modules.Terrain
             if (terrainarray == null)
             {
                 int xSize = m_scene.RegionInfo.RegionSizeX != int.MaxValue
-                                ? m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize
-                                : Constants.RegionSize/Constants.TerrainPatchSize;
+                                ? m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize
+                                : Constants.RegionSize / Constants.TerrainPatchSize;
                 int ySize = m_scene.RegionInfo.RegionSizeX != int.MaxValue
-                                ? m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize
-                                : Constants.RegionSize/Constants.TerrainPatchSize;
-                terrainarray = new bool[xSize,ySize];
+                                ? m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize
+                                : Constants.RegionSize / Constants.TerrainPatchSize;
+                terrainarray = new bool[xSize, ySize];
                 fillLater = true;
             }
 
@@ -956,36 +956,36 @@ namespace Aurora.Modules.Terrain
             List<int> ys = new List<int>();
             List<int> waterxs = new List<int>();
             List<int> waterys = new List<int>();
-            int startX = (((int) (presence.AbsolutePosition.X - presence.DrawDistance))/Constants.TerrainPatchSize) - 2;
+            int startX = (((int)(presence.AbsolutePosition.X - presence.DrawDistance)) / Constants.TerrainPatchSize) - 2;
             startX = Math.Max(startX, 0);
-            startX = Math.Min(startX, m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize);
-            int startY = (((int) (presence.AbsolutePosition.Y - presence.DrawDistance))/Constants.TerrainPatchSize) - 2;
+            startX = Math.Min(startX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
+            int startY = (((int)(presence.AbsolutePosition.Y - presence.DrawDistance)) / Constants.TerrainPatchSize) - 2;
             startY = Math.Max(startY, 0);
-            startY = Math.Min(startY, m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize);
-            int endX = (((int) (presence.AbsolutePosition.X + presence.DrawDistance))/Constants.TerrainPatchSize) + 2;
+            startY = Math.Min(startY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
+            int endX = (((int)(presence.AbsolutePosition.X + presence.DrawDistance)) / Constants.TerrainPatchSize) + 2;
             endX = Math.Max(endX, 0);
-            endX = Math.Min(endX, m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize);
-            int endY = (((int) (presence.AbsolutePosition.Y + presence.DrawDistance))/Constants.TerrainPatchSize) + 2;
+            endX = Math.Min(endX, m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize);
+            int endY = (((int)(presence.AbsolutePosition.Y + presence.DrawDistance)) / Constants.TerrainPatchSize) + 2;
             endY = Math.Max(endY, 0);
-            endY = Math.Min(endY, m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize);
+            endY = Math.Min(endY, m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize);
             for (int x = startX; x < endX; x++)
             {
                 for (int y = startY; y < endY; y++)
                 {
-                    if (x < 0 || y < 0 || x >= m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize ||
-                        y >= m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize)
+                    if (x < 0 || y < 0 || x >= m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize ||
+                        y >= m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize)
                         continue;
                     //Need to make sure we don't send the same ones over and over
                     if (!terrainarray[x, y])
                     {
                         //Check which has less distance, camera or avatar position, both have to be done
                         if (Util.DistanceLessThan(presence.AbsolutePosition,
-                                                  new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,
+                                                  new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize,
                                                               0), presence.DrawDistance + 50) ||
                             Util.DistanceLessThan(presence.CameraPosition,
-                                                  new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,
+                                                  new Vector3(x * Constants.TerrainPatchSize, y * Constants.TerrainPatchSize,
                                                               0), presence.DrawDistance + 50))
-                            //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
+                        //Its not a radius, its a diameter and we add 35 so that it doesn't look like it cuts off
                         {
                             //They can see it, send it to them
                             terrainarray[x, y] = true;
@@ -1118,7 +1118,7 @@ namespace Aurora.Modules.Terrain
                         {
                             for (int y = 0; y < m_waterChannel.Height; y++)
                             {
-                                m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+                                m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                             }
                         }
 
@@ -1142,7 +1142,7 @@ namespace Aurora.Modules.Terrain
                     {
                         for (int y = 0; y < m_waterChannel.Height; y++)
                         {
-                            m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+                            m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                         }
                     }
 
@@ -1157,7 +1157,7 @@ namespace Aurora.Modules.Terrain
                 {
                     for (int y = 0; y < m_waterChannel.Height; y++)
                     {
-                        m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                     }
                 }
 
@@ -1171,7 +1171,7 @@ namespace Aurora.Modules.Terrain
                 {
                     for (int y = 0; y < m_waterChannel.Height; y++)
                     {
-                        m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                     }
                 }
 
@@ -1185,7 +1185,7 @@ namespace Aurora.Modules.Terrain
                 {
                     for (int y = 0; y < m_waterChannel.Height; y++)
                     {
-                        m_waterChannel[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+                        m_waterChannel[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
                     }
                 }
 
@@ -1348,7 +1348,7 @@ namespace Aurora.Modules.Terrain
 
         private static Stream URIFetch(Uri uri)
         {
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(uri);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 
             // request.Credentials = credentials;
 
@@ -1434,8 +1434,8 @@ namespace Aurora.Modules.Terrain
         /// <param name = "fileStartY">Where to begin our slice</param>
         public void LoadFromFile(string filename, int fileWidth, int fileHeight, int fileStartX, int fileStartY)
         {
-            int offsetX = (m_scene.RegionInfo.RegionLocX/Constants.RegionSize) - fileStartX;
-            int offsetY = (m_scene.RegionInfo.RegionLocY/Constants.RegionSize) - fileStartY;
+            int offsetX = (m_scene.RegionInfo.RegionLocX / Constants.RegionSize) - fileStartX;
+            int offsetY = (m_scene.RegionInfo.RegionLocY / Constants.RegionSize) - fileStartY;
 
             if (offsetX >= 0 && offsetX < fileWidth && offsetY >= 0 && offsetY < fileHeight)
             {
@@ -1540,8 +1540,8 @@ namespace Aurora.Modules.Terrain
                 {
                     if (channel.Tainted(x, y) || forceSendOfTerrainInfo)
                     {
-                        xs.Add(x/Constants.TerrainPatchSize);
-                        ys.Add(y/Constants.TerrainPatchSize);
+                        xs.Add(x / Constants.TerrainPatchSize);
+                        ys.Add(y / Constants.TerrainPatchSize);
                         shouldTaint = true;
                     }
                 }
@@ -1578,9 +1578,9 @@ namespace Aurora.Modules.Terrain
 
             // loop through the height map for this patch and compare it against
             // the revert map
-            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
             {
-                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/+Constants.TerrainPatchSize; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / +Constants.TerrainPatchSize; y++)
                 {
                     float requestedHeight = channel[x, y];
 
@@ -1608,14 +1608,14 @@ namespace Aurora.Modules.Terrain
         private bool LimitChannelChanges(ITerrainChannel channel, ITerrainChannel revert)
         {
             bool changesLimited = false;
-            float minDelta = (float) m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
-            float maxDelta = (float) m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
+            float minDelta = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
+            float maxDelta = (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
 
             // loop through the height map for this patch and compare it against
             // the revert map
-            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize; x++)
+            for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize; x++)
             {
-                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize; y++)
+                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize; y++)
                 {
                     float requestedHeight = channel[x, y];
                     float bakedHeight = revert[x, y];
@@ -1658,10 +1658,10 @@ namespace Aurora.Modules.Terrain
             const byte WATER_CONST = 128;
             if (north == south && east == west)
             {
-                if (m_painteffects.ContainsKey((StandardTerrainEffects) action))
+                if (m_painteffects.ContainsKey((StandardTerrainEffects)action))
                 {
                     StoreUndoState();
-                    m_painteffects[(StandardTerrainEffects) action].PaintEffect(
+                    m_painteffects[(StandardTerrainEffects)action].PaintEffect(
                         m_channel, user, west, south, height, size, seconds, BrushSize, m_scenes);
 
                     //revert changes outside estate limits
@@ -1669,10 +1669,10 @@ namespace Aurora.Modules.Terrain
                 }
                 else
                 {
-                    if (m_painteffects.ContainsKey((StandardTerrainEffects) (action - WATER_CONST)))
+                    if (m_painteffects.ContainsKey((StandardTerrainEffects)(action - WATER_CONST)))
                     {
                         StoreUndoState();
-                        m_painteffects[(StandardTerrainEffects) action - WATER_CONST].PaintEffect(
+                        m_painteffects[(StandardTerrainEffects)action - WATER_CONST].PaintEffect(
                             m_waterChannel, user, west, south, height, size, seconds, BrushSize, m_scenes);
 
                         //revert changes outside estate limits
@@ -1684,10 +1684,10 @@ namespace Aurora.Modules.Terrain
             }
             else
             {
-                if (m_floodeffects.ContainsKey((StandardTerrainEffects) action))
+                if (m_floodeffects.ContainsKey((StandardTerrainEffects)action))
                 {
                     StoreUndoState();
-                    m_floodeffects[(StandardTerrainEffects) action].FloodEffect(
+                    m_floodeffects[(StandardTerrainEffects)action].FloodEffect(
                         m_channel, user, north, west, south, east, size);
 
                     //revert changes outside estate limits
@@ -1695,10 +1695,10 @@ namespace Aurora.Modules.Terrain
                 }
                 else
                 {
-                    if (m_floodeffects.ContainsKey((StandardTerrainEffects) (action - WATER_CONST)))
+                    if (m_floodeffects.ContainsKey((StandardTerrainEffects)(action - WATER_CONST)))
                     {
                         StoreUndoState();
-                        m_floodeffects[(StandardTerrainEffects) action - WATER_CONST].FloodEffect(
+                        m_floodeffects[(StandardTerrainEffects)action - WATER_CONST].FloodEffect(
                             m_waterChannel, user, north, west, south, east, size);
 
                         //revert changes outside estate limits
@@ -1874,7 +1874,7 @@ namespace Aurora.Modules.Terrain
                 {
                     for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
                     {
-                        for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/2; y++)
+                        for (int y = 0; y < m_scene.RegionInfo.RegionSizeY / 2; y++)
                         {
                             float height = tmodule.m_channel[x, y];
                             float flippedHeight = tmodule.m_channel[x, m_scene.RegionInfo.RegionSizeY - 1 - y];
@@ -1887,7 +1887,7 @@ namespace Aurora.Modules.Terrain
                 {
                     for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                     {
-                        for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/2; x++)
+                        for (int x = 0; x < m_scene.RegionInfo.RegionSizeX / 2; x++)
                         {
                             float height = tmodule.m_channel[x, y];
                             float flippedHeight = tmodule.m_channel[m_scene.RegionInfo.RegionSizeX - 1 - x, y];
@@ -1950,7 +1950,7 @@ namespace Aurora.Modules.Terrain
                     }
 
                     float currRange = currMax - currMin;
-                    float scale = desiredRange/currRange;
+                    float scale = desiredRange / currRange;
 
                     //MainConsole.Instance.InfoFormat("Current {0}, {1} = {2}", new Object[] { currMin, currMax, currRange });
                     //MainConsole.Instance.InfoFormat("Scale = {0}", scale);
@@ -1961,7 +1961,7 @@ namespace Aurora.Modules.Terrain
                         for (int y = 0; y < height; y++)
                         {
                             float currHeight = tmodule.m_channel[x, y] - currMin;
-                            tmodule.m_channel[x, y] = desiredMin + (currHeight*scale);
+                            tmodule.m_channel[x, y] = desiredMin + (currHeight * scale);
                         }
                     }
 
@@ -2051,7 +2051,7 @@ namespace Aurora.Modules.Terrain
                     }
                 }
 
-                double avg = sum/(tmodule.m_channel.Height*tmodule.m_channel.Width);
+                double avg = sum / (tmodule.m_channel.Height * tmodule.m_channel.Width);
 
                 MainConsole.Instance.Info("Channel " + tmodule.m_channel.Width + "x" + tmodule.m_channel.Height);
                 MainConsole.Instance.Info("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);

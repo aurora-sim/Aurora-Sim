@@ -206,7 +206,7 @@ namespace Aurora.Modules.Chat
                             //Always send this so it fires on typing start and end
                             IAttachmentsModule attMod = scene.RequestModuleInterface<IAttachmentsModule>();
                             if (attMod != null)
-                                attMod.SendScriptEventToAttachments(avatar.UUID, "changed", new object[] {Changed.STATE});
+                                attMod.SendScriptEventToAttachments(avatar.UUID, "changed", new object[] { Changed.STATE });
                         }
                         else
                             fromID = c.SenderUUID;
@@ -256,7 +256,7 @@ namespace Aurora.Modules.Chat
                                       new Vector3(presence.Scene.RegionInfo.RegionLocX,
                                                   presence.Scene.RegionInfo.RegionLocY, 0);
 
-                int dis = (int) Util.GetDistanceTo(toRegionPos, fromRegionPos);
+                int dis = (int)Util.GetDistanceTo(toRegionPos, fromRegionPos);
                 //Set the best fitting setting for custom
                 if (dis < m_whisperdistance)
                     type = ChatTypeEnum.Whisper;
@@ -267,8 +267,8 @@ namespace Aurora.Modules.Chat
             }
 
             // TODO: should change so the message is sent through the avatar rather than direct to the ClientView
-            presence.ControllingClient.SendChatMessage(message, (byte) type, fromPos, fromName,
-                                                       fromAgentID, (byte) src, (byte) ChatAudibleLevel.Fully);
+            presence.ControllingClient.SendChatMessage(message, (byte)type, fromPos, fromName,
+                                                       fromAgentID, (byte)src, (byte)ChatAudibleLevel.Fully);
         }
 
         #endregion
@@ -515,7 +515,7 @@ namespace Aurora.Modules.Chat
             c = FixPositionOfChatMessage(c);
 
             // redistribute to interested subscribers
-            if(c.Message != "")
+            if (c.Message != "")
                 c.Scene.EventManager.TriggerOnChatFromClient(sender, c);
 
             // early return if not on public or debug channel
@@ -606,36 +606,36 @@ namespace Aurora.Modules.Chat
 
             c.Scene.ForEachScenePresence(
                 delegate(IScenePresence presence)
-                    {
-                        // ignore chat from child agents
-                        if (presence.IsChildAgent) return;
+                {
+                    // ignore chat from child agents
+                    if (presence.IsChildAgent) return;
 
-                        IClientAPI client = presence.ControllingClient;
+                    IClientAPI client = presence.ControllingClient;
 
-                        // don't forward SayOwner chat from objects to
-                        // non-owner agents
-                        if ((c.Type == ChatTypeEnum.Owner) &&
-                            (null != c.SenderObject) &&
-                            (c.SenderObject.OwnerID != client.AgentId))
+                    // don't forward SayOwner chat from objects to
+                    // non-owner agents
+                    if ((c.Type == ChatTypeEnum.Owner) &&
+                        (null != c.SenderObject) &&
+                        (c.SenderObject.OwnerID != client.AgentId))
+                        return;
+
+                    // don't forward SayTo chat from objects to
+                    // non-targeted agents
+                    if ((c.Type == ChatTypeEnum.SayTo) &&
+                        (c.ToAgentID != client.AgentId))
+                        return;
+                    bool cached = false;
+                    MuteList[] mutes = GetMutes(client.AgentId, out cached);
+                    foreach (MuteList m in mutes)
+                        if (m.MuteID == c.SenderUUID ||
+                            (c.SenderObject != null && m.MuteID == c.SenderObject.ParentEntity.UUID))
                             return;
-
-                        // don't forward SayTo chat from objects to
-                        // non-targeted agents
-                        if ((c.Type == ChatTypeEnum.SayTo) &&
-                            (c.ToAgentID != client.AgentId))
-                            return;
-                        bool cached = false;
-                        MuteList[] mutes = GetMutes(client.AgentId, out cached);
-                        foreach(MuteList m in mutes)
-                            if (m.MuteID == c.SenderUUID ||
-                                (c.SenderObject != null && m.MuteID == c.SenderObject.ParentEntity.UUID))
-                                return;
-                        client.SendChatMessage(c.Message, (byte) cType,
-                                               new Vector3(client.Scene.RegionInfo.RegionSizeX*0.5f,
-                                                           client.Scene.RegionInfo.RegionSizeY*0.5f, 30), fromName,
-                                               fromID,
-                                               (byte) sourceType, (byte) ChatAudibleLevel.Fully);
-                    });
+                    client.SendChatMessage(c.Message, (byte)cType,
+                                           new Vector3(client.Scene.RegionInfo.RegionSizeX * 0.5f,
+                                                       client.Scene.RegionInfo.RegionSizeY * 0.5f, 30), fromName,
+                                           fromID,
+                                           (byte)sourceType, (byte)ChatAudibleLevel.Fully);
+                });
         }
 
 
@@ -737,7 +737,7 @@ namespace Aurora.Modules.Chat
 
         private Hashtable ProcessChatSessionRequest(Hashtable mDhttpMethod, UUID Agent)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
 
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
@@ -766,7 +766,7 @@ namespace Aurora.Modules.Chat
                                       Name = SP.Name + " Conference"
                                   });
 
-                OSDArray parameters = (OSDArray) rm["params"];
+                OSDArray parameters = (OSDArray)rm["params"];
                 //Add other invited members.
                 foreach (OSD param in parameters)
                 {
@@ -796,7 +796,7 @@ namespace Aurora.Modules.Chat
                             MuteVoice = false,
                             Transition = "ENTER"
                         };
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, Agent, "ENTER",
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, Agent, "ENTER",
                                                      findScene(Agent).RegionInfo.RegionHandle);
 
                 ChatterBoxSessionStartReplyMessage cs = new ChatterBoxSessionStartReplyMessage
@@ -870,9 +870,9 @@ namespace Aurora.Modules.Chat
                     return "";
                 }
 
-                OSDMap parameters = (OSDMap) rm["params"];
+                OSDMap parameters = (OSDMap)rm["params"];
                 UUID AgentID = parameters["agent_id"].AsUUID();
-                OSDMap muteInfoMap = (OSDMap) parameters["mute_info"];
+                OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
 
                 ChatSessionMember thismember = FindMember(sessionid, AgentID);
                 if (muteInfoMap.ContainsKey("text"))
@@ -892,7 +892,7 @@ namespace Aurora.Modules.Chat
                         };
 
                 // Send an update to the affected user
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "",
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, AgentID, "",
                                                      findScene(Agent).RegionInfo.RegionHandle);
 
                 return "Accepted";
@@ -945,10 +945,10 @@ namespace Aurora.Modules.Chat
         {
             byte dialog = im.dialog;
             //We only deal with friend IM sessions here, groups module handles group IM sessions
-            if (dialog == (byte) InstantMessageDialog.SessionSend)
+            if (dialog == (byte)InstantMessageDialog.SessionSend)
                 SendChatToSession(client, im);
 
-            if (dialog == (byte) InstantMessageDialog.SessionDrop)
+            if (dialog == (byte)InstantMessageDialog.SessionDrop)
                 DropMemberFromSession(client, im);
         }
 
@@ -964,7 +964,7 @@ namespace Aurora.Modules.Chat
             ChatSessions.TryGetValue(sessionid, out session);
             if (session == null)
                 return null;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
+            ChatSessionMember thismember = new ChatSessionMember { AvatarKey = UUID.Zero };
 #if (!ISWIN)
             foreach (ChatSessionMember testmember in session.Members)
             {
@@ -994,7 +994,7 @@ namespace Aurora.Modules.Chat
             ChatSessions.TryGetValue(sessionid, out session);
             if (session == null)
                 return false;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
+            ChatSessionMember thismember = new ChatSessionMember { AvatarKey = UUID.Zero };
 #if (!ISWIN)
             foreach (ChatSessionMember testmember in session.Members)
             {
@@ -1025,7 +1025,7 @@ namespace Aurora.Modules.Chat
             ChatSessions.TryGetValue(im.imSessionID, out session);
             if (session == null)
                 return;
-            ChatSessionMember member = new ChatSessionMember {AvatarKey = UUID.Zero};
+            ChatSessionMember member = new ChatSessionMember { AvatarKey = UUID.Zero };
 #if (!ISWIN)
             foreach (ChatSessionMember testmember in session.Members)
             {
@@ -1063,7 +1063,7 @@ namespace Aurora.Modules.Chat
             IEventQueueService eq = client.Scene.RequestModuleInterface<IEventQueueService>();
             foreach (ChatSessionMember sessionMember in session.Members)
             {
-                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] {block}, sessionMember.AvatarKey, "LEAVE",
+                eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey, "LEAVE",
                                                      findScene(sessionMember.AvatarKey).RegionInfo.RegionHandle);
             }
         }
@@ -1104,7 +1104,7 @@ namespace Aurora.Modules.Chat
                         , im.dialog
                         , im.timestamp
                         , im.offline == 1
-                        , (int) im.ParentEstateID
+                        , (int)im.ParentEstateID
                         , im.Position
                         , 1
                         , im.imSessionID

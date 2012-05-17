@@ -71,7 +71,7 @@ namespace Aurora.Services.DataService
         /// </summary>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        [CanBeReflected(ThreatLevel=OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public IAgentInfo GetAgent(UUID agentID)
         {
             IAgentInfo agent = new IAgentInfo();
@@ -105,7 +105,7 @@ namespace Aurora.Services.DataService
                 return null; //Couldn't find it, return null then.
             }
 
-            OSDMap agentInfo = (OSDMap) OSDParser.DeserializeLLSDXml(query[0]);
+            OSDMap agentInfo = (OSDMap)OSDParser.DeserializeLLSDXml(query[0]);
 
             agent.FromOSD(agentInfo);
             agent.PrincipalID = agentID;
@@ -148,8 +148,8 @@ namespace Aurora.Services.DataService
         /// <param name = "agentID"></param>
         public void CreateNewAgent(UUID agentID)
         {
-            List<object> values = new List<object> {agentID, "AgentInfo"};
-            IAgentInfo info = new IAgentInfo {PrincipalID = agentID};
+            List<object> values = new List<object> { agentID, "AgentInfo" };
+            IAgentInfo info = new IAgentInfo { PrincipalID = agentID };
             values.Add(OSDParser.SerializeLLSDXmlString(info.ToOSD())); //Value which is a default Profile
             GD.Insert("userdata", values.ToArray());
         }

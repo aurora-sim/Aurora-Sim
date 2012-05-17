@@ -45,7 +45,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("AgentID", ColumnTypes.String50),
                 ColDef("ActiveGroupID", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" }, IndexType.Primary)
+                IndexDef(new string[1] { "AgentID" }, IndexType.Primary)
             ));
 
             AddSchema("osgroup", ColDefs(
@@ -61,7 +61,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("MaturePublish", ColumnTypes.String50),
                 ColDef("OwnerRoleID", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "GroupID" }, IndexType.Primary)
+                IndexDef(new string[1] { "GroupID" }, IndexType.Primary)
             ));
 
             AddSchema("osgroupinvite", ColDefs(
@@ -72,7 +72,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("TMStamp", ColumnTypes.String50),
                 ColDef("FromAgentName", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[4]{ "InviteID", "GroupID", "RoleID", "AgentID" }, IndexType.Primary)
+                IndexDef(new string[4] { "InviteID", "GroupID", "RoleID", "AgentID" }, IndexType.Primary)
             ));
 
             AddSchema("osgroupmembership", ColDefs(
@@ -83,7 +83,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ListInProfile", ColumnTypes.String45),
                 ColDef("AcceptNotices", ColumnTypes.String45)
             ), IndexDefs(
-                IndexDef(new string[2]{ "GroupID", "AgentID" }, IndexType.Primary)
+                IndexDef(new string[2] { "GroupID", "AgentID" }, IndexType.Primary)
             ));
 
             AddSchema("osgroupnotice", ColDefs(
@@ -98,7 +98,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("AssetType", ColumnTypes.String50),
                 ColDef("ItemName", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[3]{ "GroupID", "NoticeID", "Timestamp" }, IndexType.Primary)
+                IndexDef(new string[3] { "GroupID", "NoticeID", "Timestamp" }, IndexType.Primary)
             ));
 
             AddSchema("osgrouprolemembership", ColDefs(
@@ -106,7 +106,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RoleID", ColumnTypes.String50),
                 ColDef("AgentID", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[3]{ "GroupID", "RoleID", "AgentID" }, IndexType.Primary)
+                IndexDef(new string[3] { "GroupID", "RoleID", "AgentID" }, IndexType.Primary)
             ));
 
             AddSchema("osrole", ColDefs(
@@ -117,7 +117,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Title", ColumnTypes.String512),
                 ColDef("Powers", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[2]{ "GroupID", "RoleID" }, IndexType.Primary)            
+                IndexDef(new string[2] { "GroupID", "RoleID" }, IndexType.Primary)
             ));
         }
 

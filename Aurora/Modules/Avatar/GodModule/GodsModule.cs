@@ -66,7 +66,7 @@ namespace Aurora.Modules.Gods
                 {
                     //Unconditionally remove god levels
                     sp.GodLevel = 0;
-                    sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
+                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                     return;
                 }
 
@@ -78,7 +78,7 @@ namespace Aurora.Modules.Gods
                         sp.GodLevel = 250;
 
                     MainConsole.Instance.Info("[GODS]: God level set for " + sp.Name + ", level " + sp.GodLevel.ToString());
-                    sp.ControllingClient.SendAdminResponse(token, (uint) sp.GodLevel);
+                    sp.ControllingClient.SendAdminResponse(token, (uint)sp.GodLevel);
                 }
                 else
                 {
@@ -106,10 +106,10 @@ namespace Aurora.Modules.Gods
                         {
                             m_scene.ForEachClient(
                                 delegate(IClientAPI controller)
-                                    {
-                                        if (controller.AgentId != godID)
-                                            controller.Kick(reason);
-                                    }
+                                {
+                                    if (controller.AgentId != godID)
+                                        controller.Kick(reason);
+                                }
                                 );
 
                             //This does modify this list, but we make a copy of it
@@ -235,11 +235,11 @@ namespace Aurora.Modules.Gods
 
         private Hashtable UntrustedSimulatorMessage(UUID AgentID, Hashtable mDhttpMethod)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             if (rm["message"] == "GodKickUser")
             {
-                OSDArray innerArray = ((OSDArray) ((OSDMap) rm["body"])["UserInfo"]);
-                OSDMap innerMap = (OSDMap) innerArray[0];
+                OSDArray innerArray = ((OSDArray)((OSDMap)rm["body"])["UserInfo"]);
+                OSDMap innerMap = (OSDMap)innerArray[0];
                 UUID toKick = innerMap["AgentID"].AsUUID();
                 UUID sessionID = innerMap["GodSessionID"].AsUUID();
                 string reason = innerMap["Reason"].AsString();

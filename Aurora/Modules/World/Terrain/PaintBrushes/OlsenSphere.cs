@@ -160,10 +160,10 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
             int x;
 
-            int xFrom = (int) (rx - BrushSize + 0.5);
-            int xTo = (int) (rx + BrushSize + 0.5) + 1;
-            int yFrom = (int) (ry - BrushSize + 0.5);
-            int yTo = (int) (ry + BrushSize + 0.5) + 1;
+            int xFrom = (int)(rx - BrushSize + 0.5);
+            int xTo = (int)(rx + BrushSize + 0.5) + 1;
+            int yFrom = (int)(ry - BrushSize + 0.5);
+            int yTo = (int)(ry + BrushSize + 0.5) + 1;
 
             if (xFrom < 0)
                 xFrom = 0;
@@ -223,12 +223,12 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                             }
                         }
 
-                        float T = nConst/((map.Width + map.Height)/2);
+                        float T = nConst / ((map.Width + map.Height) / 2);
                         // Apply results
                         if (0 < max && max <= T)
                         {
                             int[] maxCoords = Neighbours(type, loc);
-                            float heightDelta = 0.5f*max*z*duration;
+                            float heightDelta = 0.5f * max * z * duration;
                             map[x, y] -= heightDelta;
                             map[x + maxCoords[0], y + maxCoords[1]] += heightDelta;
                         }

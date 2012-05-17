@@ -99,7 +99,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             if (ReferenceEquals(a, b))
                 return true;
             // If one is null, but not both, return false.
-            if (((object) a == null) || ((object) b == null))
+            if (((object)a == null) || ((object)b == null))
                 return false;
 
             for (int i = 0; i < 3; i++)

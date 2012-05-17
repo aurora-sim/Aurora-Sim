@@ -83,14 +83,15 @@ namespace Aurora.Framework
             // Set this culture for the thread 
             // to en-US to avoid number parsing issues
             Culture.SetCurrentCulture();
-            /*string line = */ReadLine(m_defaultPrompt + "# ", true, true);
+            /*string line = */
+            ReadLine(m_defaultPrompt + "# ", true, true);
 
-//            result.AsyncWaitHandle.WaitOne(-1);
+            //            result.AsyncWaitHandle.WaitOne(-1);
 
-//            if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
-//            {
-//                MainConsole.Instance.Info("[GUICONSOLE] Invalid command");
-//            }
+            //            if (line != String.Empty && line.Replace(" ", "") != String.Empty) //If there is a space, its fine
+            //            {
+            //                MainConsole.Instance.Info("[GUICONSOLE] Invalid command");
+            //            }
         }
 
         public void RunCommand(string cmd)
@@ -111,13 +112,13 @@ namespace Aurora.Framework
         {
             string oldDefaultPrompt = m_defaultPrompt;
             m_defaultPrompt = p;
-//            System.Console.Write("{0}", p);
+            //            System.Console.Write("{0}", p);
             string cmdinput = Console.ReadLine();
 
-//            while (cmdinput.Equals(null))
-//            {
-//                ;
-//            }
+            //            while (cmdinput.Equals(null))
+            //            {
+            //                ;
+            //            }
 
             if (isCommand)
             {
@@ -375,7 +376,7 @@ namespace Aurora.Framework
             {
                 wHandles[0] = result.AsyncWaitHandle;
             }
-            Timer t = new Timer {Interval = 0.5};
+            Timer t = new Timer { Interval = 0.5 };
             t.Elapsed += t_Elapsed;
             t.Start();
             while (true)
@@ -422,7 +423,7 @@ namespace Aurora.Framework
         private void t_Elapsed(object sender, ElapsedEventArgs e)
         {
             //Tell the GUI that we are still here and it needs to keep checking
-            Console.Write((char) 0);
+            Console.Write((char)0);
         }
     }
 }

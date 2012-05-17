@@ -86,9 +86,9 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             _buoyancy = 0f; // characters return a buoyancy of zero
             _scale = new Vector3(1f, 1f, 1f);
             float AVvolume =
-                (float) (Math.PI*Math.Pow(_scene.Params.avatarCapsuleRadius, 2)*_scene.Params.avatarCapsuleHeight);
+                (float)(Math.PI * Math.Pow(_scene.Params.avatarCapsuleRadius, 2) * _scene.Params.avatarCapsuleHeight);
             _density = _scene.Params.avatarDensity;
-            _mass = _density*AVvolume;
+            _mass = _density * AVvolume;
             _isPhysical = true;
 
             ShapeData shapeData = new ShapeData
@@ -225,7 +225,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Agent; }
+            get { return (int)ActorTypes.Agent; }
         }
 
         public override bool IsPhysical
@@ -445,7 +445,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             else if (_jumping && Util.EnvironmentTickCountSubtract(_preJumpTime) > _scene.PreJumpTime + 500)
             {
                 _targetVelocityIsDecaying = false;
-                Velocity -= _preJumpForce/100; //Cut down on going up
+                Velocity -= _preJumpForce / 100; //Cut down on going up
                 TriggerMovementUpdate();
             }
 
@@ -463,13 +463,13 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 Velocity = new Vector3(
                     _targetVelocity.X == 0
                         ? Velocity.X
-                        : (_targetVelocity.X*0.25f) + (Velocity.X*0.75f),
+                        : (_targetVelocity.X * 0.25f) + (Velocity.X * 0.75f),
                     _targetVelocity.Y == 0
                         ? Velocity.Y
-                        : (_targetVelocity.Y*0.25f) + (Velocity.Y*0.75f),
+                        : (_targetVelocity.Y * 0.25f) + (Velocity.Y * 0.75f),
                     _targetVelocity.Z == 0
                         ? Velocity.Z
-                        : (_targetVelocity.Z*0.25f) + (Velocity.Z*0.75f));
+                        : (_targetVelocity.Z * 0.25f) + (Velocity.Z * 0.75f));
             else if (Velocity.X != 0 || Velocity.Y != 0 || Velocity.Z > 0)
                 Velocity *= _scene.DelayingVelocityMultiplier;
             if (Velocity.ApproxEquals(Vector3.Zero, 0.3f))
@@ -490,9 +490,9 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                     {
                         _preJumping = true;
                         if (force.X == 0 && force.Y == 0)
-                            _preJumpForce = force*_scene.PreJumpForceMultiplier*2;
+                            _preJumpForce = force * _scene.PreJumpForceMultiplier * 2;
                         else
-                            _preJumpForce = force*_scene.PreJumpForceMultiplier*3.5f;
+                            _preJumpForce = force * _scene.PreJumpForceMultiplier * 3.5f;
                         _preJumpTime = Util.EnvironmentTickCount();
                         TriggerMovementUpdate();
                         return;
@@ -502,7 +502,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                         _jumping = true;
                         _preJumpTime = Util.EnvironmentTickCountAdd(_scene.PreJumpTime);
                         TriggerMovementUpdate();
-                        Velocity += force*_scene.PreJumpForceMultiplier;
+                        Velocity += force * _scene.PreJumpForceMultiplier;
                     }
                 }
             }
@@ -516,12 +516,12 @@ namespace OpenSim.Region.Physics.BulletSPlugin
                 float multiplier;
                 multiplier = !_setAlwaysRun ? _scene.AvWalkingSpeed : _scene.AvRunningSpeed;
 
-                multiplier *= SpeedModifier*5;
-                multiplier *= (1/_scene.TimeDilation); //Factor in Time Dilation
+                multiplier *= SpeedModifier * 5;
+                multiplier *= (1 / _scene.TimeDilation); //Factor in Time Dilation
                 if (Flying)
                     multiplier *= _scene.AvFlyingSpeed; //Add flying speeds
 
-                _targetVelocity = force*multiplier;
+                _targetVelocity = force * multiplier;
                 _targetVelocityIsDecaying = false; //We arn't decaying yet
                 if (!_flying)
                     _targetVelocity.Z = Velocity.Z;

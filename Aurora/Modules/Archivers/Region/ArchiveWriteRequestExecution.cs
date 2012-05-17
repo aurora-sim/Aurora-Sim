@@ -96,9 +96,9 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.DebugFormat("[ARCHIVER]: Could not find asset {0}", uuid);
             }
 
-//            MainConsole.Instance.InfoFormat(
-//                "[ARCHIVER]: Received {0} of {1} assets requested",
-//                assetsFoundUuids.Count, assetsFoundUuids.Count + assetsNotFoundUuids.Count);
+            //            MainConsole.Instance.InfoFormat(
+            //                "[ARCHIVER]: Received {0} of {1} assets requested",
+            //                assetsFoundUuids.Count, assetsFoundUuids.Count + assetsNotFoundUuids.Count);
 
             MainConsole.Instance.InfoFormat("[ARCHIVER]: Creating archive file.  This may take some time.");
 
@@ -159,7 +159,7 @@ namespace Aurora.Modules.Archivers
         public static string Create0p2ControlFile()
         {
             StringWriter sw = new StringWriter();
-            XmlTextWriter xtw = new XmlTextWriter(sw) {Formatting = Formatting.Indented};
+            XmlTextWriter xtw = new XmlTextWriter(sw) { Formatting = Formatting.Indented };
             xtw.WriteStartDocument();
             xtw.WriteStartElement("archive");
             xtw.WriteAttributeString("major_version", "0");
@@ -168,7 +168,7 @@ namespace Aurora.Modules.Archivers
             xtw.WriteStartElement("creation_info");
             DateTime now = DateTime.UtcNow;
             TimeSpan t = now - new DateTime(1970, 1, 1);
-            xtw.WriteElementString("datetime", ((int) t.TotalSeconds).ToString());
+            xtw.WriteElementString("datetime", ((int)t.TotalSeconds).ToString());
             xtw.WriteElementString("id", UUID.Random().ToString());
             xtw.WriteEndElement();
             xtw.WriteEndElement();

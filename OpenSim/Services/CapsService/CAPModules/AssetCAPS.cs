@@ -217,8 +217,7 @@ namespace OpenSim.Services.CapsService
                             return true;
                         }
                         AssetBase newTexture = new AssetBase(texture.ID + "-" + format, texture.Name, AssetType.Texture,
-                                                             texture.CreatorID)
-                                                   {Data = ConvertTextureData(texture, format)};
+                                                             texture.CreatorID) { Data = ConvertTextureData(texture, format) };
                         if (newTexture.Data.Length == 0)
                             return false; // !!! Caller try another codec, please!
 
@@ -253,7 +252,7 @@ namespace OpenSim.Services.CapsService
         private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
             m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
-                "AssetRequested", new object[] {m_service.Registry, texture, m_service.AgentID});
+                "AssetRequested", new object[] { m_service.Registry, texture, m_service.AgentID });
 
             string range = request.Headers.GetOne("Range");
             //MainConsole.Instance.DebugFormat("[GETTEXTURE]: Range {0}", range);
@@ -484,8 +483,7 @@ namespace OpenSim.Services.CapsService
         public void BakedTextureUploaded(byte[] data, out UUID newAssetID)
         {
             //MainConsole.Instance.InfoFormat("[AssetCAPS]: Received baked texture {0}", assetID.ToString());
-            AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID)
-                                  {Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temporary};
+            AssetBase asset = new AssetBase(UUID.Random(), "Baked Texture", AssetType.Texture, m_service.AgentID) { Data = data, Flags = AssetFlags.Deletable | AssetFlags.Temporary };
             newAssetID = m_assetService.Store(asset);
             MainConsole.Instance.DebugFormat("[AssetCAPS]: Baked texture new id {0}", asset.ID.ToString());
             asset.ID = newAssetID;

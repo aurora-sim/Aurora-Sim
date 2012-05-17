@@ -75,7 +75,7 @@ namespace Aurora.Framework
             {
                 if (source.Configs["Console"].GetString("Console", String.Empty) != Name)
                     return;
-                m_consolePort = (uint) source.Configs["Console"].GetInt("remote_console_port", 0);
+                m_consolePort = (uint)source.Configs["Console"].GetInt("remote_console_port", 0);
                 m_UserName = source.Configs["Console"].GetString("RemoteConsoleUser", String.Empty);
                 m_Password = source.Configs["Console"].GetString("RemoteConsolePass", String.Empty);
             }
@@ -200,7 +200,7 @@ namespace Aurora.Framework
                 return reply;
             }
 
-            ConsoleConnection c = new ConsoleConnection {last = Environment.TickCount, lastLineSeen = 0};
+            ConsoleConnection c = new ConsoleConnection { last = Environment.TickCount, lastLineSeen = 0 };
 
             UUID sessionID = UUID.Random();
 
@@ -355,11 +355,11 @@ namespace Aurora.Framework
         {
             Hashtable result = new Hashtable();
 
-            string[] terms = data.Split(new[] {'&'});
+            string[] terms = data.Split(new[] { '&' });
 
             foreach (string term in terms)
             {
-                string[] elems = term.Split(new[] {'='});
+                string[] elems = term.Split(new[] { '=' });
                 if (elems.Length == 0)
                     continue;
 
@@ -446,7 +446,7 @@ namespace Aurora.Framework
                     XmlElement res = xmldoc.CreateElement("", "Line", "");
                     long line = i + 1;
                     res.SetAttribute("Number", line.ToString());
-                    res.AppendChild(xmldoc.CreateTextNode(m_Scrollback[(int) (i - startLine)]));
+                    res.AppendChild(xmldoc.CreateTextNode(m_Scrollback[(int)(i - startLine)]));
 
                     rootElement.AppendChild(res);
                 }

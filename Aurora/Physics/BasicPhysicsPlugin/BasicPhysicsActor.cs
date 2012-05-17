@@ -52,7 +52,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Agent; }
+            get { return (int)ActorTypes.Agent; }
         }
 
         public override Vector3 RotationalVelocity { get; set; }
@@ -104,7 +104,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set
             {
                 _size = value;
-                _size.Z = _size.Z/2.0f;
+                _size.Z = _size.Z / 2.0f;
             }
         }
 
@@ -181,7 +181,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override int PhysicsActorType
         {
-            get { return (int) ActorTypes.Agent; }
+            get { return (int)ActorTypes.Agent; }
         }
 
         public override Vector3 RotationalVelocity { get; set; }
@@ -233,7 +233,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set
             {
                 _size = value;
-                _size.Z = _size.Z/2.0f;
+                _size.Z = _size.Z / 2.0f;
             }
         }
 

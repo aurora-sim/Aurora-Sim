@@ -202,21 +202,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                     try
                     {
-                        limitDef.Type = (LimitType) Enum.Parse(typeof (LimitType), limitType, true);
+                        limitDef.Type = (LimitType)Enum.Parse(typeof(LimitType), limitType, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Alert = (LimitAlert) Enum.Parse(typeof (LimitAlert), limitAlert, true);
+                        limitDef.Alert = (LimitAlert)Enum.Parse(typeof(LimitAlert), limitAlert, true);
                     }
                     catch
                     {
                     }
                     try
                     {
-                        limitDef.Action = (LimitAction) Enum.Parse(typeof (LimitAction), limitAction, true);
+                        limitDef.Action = (LimitAction)Enum.Parse(typeof(LimitAction), limitAction, true);
                     }
                     catch
                     {
@@ -599,13 +599,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         if (bool.TryParse(perm, out allowed))
                         {
                             // Boolean given
-                            FunctionPerms = allowed ? new List<UUID> {UUID.Zero} : new List<UUID>();
+                            FunctionPerms = allowed ? new List<UUID> { UUID.Zero } : new List<UUID>();
                         }
                         else
                         {
                             FunctionPerms = new List<UUID>();
 
-                            string[] ids = perm.Split(new[] {','});
+                            string[] ids = perm.Split(new[] { ',' });
 #if (!ISWIN)
                             foreach (string id in ids)
                             {

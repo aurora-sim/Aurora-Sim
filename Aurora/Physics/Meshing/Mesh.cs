@@ -74,8 +74,8 @@ namespace OpenSim.Region.Physics.Meshing
         {
             if (_centroidDiv > 0)
             {
-                float tmp = 1.0f/_centroidDiv;
-                return new Vector3(_centroid.X*tmp, _centroid.Y*tmp, _centroid.Z*tmp);
+                float tmp = 1.0f / _centroidDiv;
+                return new Vector3(_centroid.X * tmp, _centroid.Y * tmp, _centroid.Z * tmp);
             }
             else
                 return Vector3.Zero;
@@ -94,7 +94,7 @@ namespace OpenSim.Region.Physics.Meshing
         public float[] getVertexListAsFloatLocked()
         {
             if (m_pinnedVertexes.IsAllocated)
-                return (float[]) (m_pinnedVertexes.Target);
+                return (float[])(m_pinnedVertexes.Target);
 
             float[] result = getVertexListAsFloat();
             m_pinnedVertexes = GCHandle.Alloc(result, GCHandleType.Pinned);
@@ -108,19 +108,19 @@ namespace OpenSim.Region.Physics.Meshing
         public void getVertexListAsPtrToFloatArray(out IntPtr vertices, out int vertexStride, out int vertexCount)
         {
             // A vertex is 3 floats
-            vertexStride = 3*sizeof (float);
+            vertexStride = 3 * sizeof(float);
 
             // If there isn't an unmanaged array allocated yet, do it now
             if (m_verticesPtr == IntPtr.Zero)
             {
                 float[] vertexList = getVertexListAsFloat();
                 // Each vertex is 3 elements (floats)
-                m_vertexCount = vertexList.Length/3;
-                int byteCount = m_vertexCount*vertexStride;
+                m_vertexCount = vertexList.Length / 3;
+                int byteCount = m_vertexCount * vertexStride;
                 m_verticesPtr = Marshal.AllocHGlobal(byteCount);
-                Marshal.Copy(vertexList, 0, m_verticesPtr, m_vertexCount*3);
+                Marshal.Copy(vertexList, 0, m_verticesPtr, m_vertexCount * 3);
                 if (m_vertexCount > 0)
-                    GC.AddMemoryPressure((long) m_vertexCount*3);
+                    GC.AddMemoryPressure((long)m_vertexCount * 3);
             }
             vertices = m_verticesPtr;
             vertexCount = m_vertexCount;
@@ -130,13 +130,13 @@ namespace OpenSim.Region.Physics.Meshing
         {
             if (m_triangles == null)
                 throw new NotSupportedException();
-            int[] result = new int[m_triangles.Count*3];
+            int[] result = new int[m_triangles.Count * 3];
             for (int i = 0; i < m_triangles.Count; i++)
             {
                 Triangle t = m_triangles[i];
-                result[3*i + 0] = m_vertices[t.v1];
-                result[3*i + 1] = m_vertices[t.v2];
-                result[3*i + 2] = m_vertices[t.v3];
+                result[3 * i + 0] = m_vertices[t.v1];
+                result[3 * i + 1] = m_vertices[t.v2];
+                result[3 * i + 2] = m_vertices[t.v3];
             }
             return result;
         }
@@ -148,7 +148,7 @@ namespace OpenSim.Region.Physics.Meshing
         public int[] getIndexListAsIntLocked()
         {
             if (m_pinnedIndex.IsAllocated)
-                return (int[]) (m_pinnedIndex.Target);
+                return (int[])(m_pinnedIndex.Target);
 
             int[] result = getIndexListAsInt();
             m_pinnedIndex = GCHandle.Alloc(result, GCHandleType.Pinned);
@@ -166,14 +166,14 @@ namespace OpenSim.Region.Physics.Meshing
             {
                 int[] indexList = getIndexListAsInt();
                 m_indexCount = indexList.Length;
-                int byteCount = m_indexCount*sizeof (int);
+                int byteCount = m_indexCount * sizeof(int);
                 m_indicesPtr = Marshal.AllocHGlobal(byteCount);
                 Marshal.Copy(indexList, 0, m_indicesPtr, m_indexCount);
                 if (byteCount > 0)
                     GC.AddMemoryPressure(byteCount);
             }
             // A triangle is 3 ints (indices)
-            triStride = 3*sizeof (int);
+            triStride = 3 * sizeof(int);
             indices = m_indicesPtr;
             indexCount = m_indexCount;
         }
@@ -218,7 +218,7 @@ namespace OpenSim.Region.Physics.Meshing
             if (!(newMesh is Mesh))
                 return;
 
-            foreach (Triangle t in ((Mesh) newMesh).m_triangles)
+            foreach (Triangle t in ((Mesh)newMesh).m_triangles)
                 Add(t);
         }
 
@@ -234,9 +234,9 @@ namespace OpenSim.Region.Physics.Meshing
             {
                 if (v != null)
                 {
-                    float x = v.X*matrix[0, 0] + v.Y*matrix[1, 0] + v.Z*matrix[2, 0];
-                    float y = v.X*matrix[0, 1] + v.Y*matrix[1, 1] + v.Z*matrix[2, 1];
-                    float z = v.X*matrix[0, 2] + v.Y*matrix[1, 2] + v.Z*matrix[2, 2];
+                    float x = v.X * matrix[0, 0] + v.Y * matrix[1, 0] + v.Z * matrix[2, 0];
+                    float y = v.X * matrix[0, 1] + v.Y * matrix[1, 1] + v.Z * matrix[2, 1];
+                    float z = v.X * matrix[0, 2] + v.Y * matrix[1, 2] + v.Z * matrix[2, 2];
                     v.X = x + offset[0];
                     v.Y = y + offset[1];
                     v.Z = z + offset[2];
@@ -326,7 +326,7 @@ namespace OpenSim.Region.Physics.Meshing
         {
             int iTriangles = m_triangles.Count;
 
-            this.m_normals = new float[iTriangles*3];
+            this.m_normals = new float[iTriangles * 3];
 
             int i = 0;
             foreach (Triangle t in m_triangles)
@@ -363,22 +363,22 @@ namespace OpenSim.Region.Physics.Meshing
 
                 // Cross product for normal
                 float nx, ny, nz;
-                nx = e1y*e2z - e1z*e2y;
-                ny = e1z*e2x - e1x*e2z;
-                nz = e1x*e2y - e1y*e2x;
+                nx = e1y * e2z - e1z * e2y;
+                ny = e1z * e2x - e1x * e2z;
+                nz = e1x * e2y - e1y * e2x;
 
                 // Length
-                float l = (float) Math.Sqrt(nx*nx + ny*ny + nz*nz);
-                float lReciprocal = 1.0f/l;
+                float l = (float)Math.Sqrt(nx * nx + ny * ny + nz * nz);
+                float lReciprocal = 1.0f / l;
 
                 // Normalized "normal"
                 //nx /= l;
                 //ny /= l;
                 //nz /= l;
 
-                m_normals[i] = nx*lReciprocal;
-                m_normals[i + 1] = ny*lReciprocal;
-                m_normals[i + 2] = nz*lReciprocal;
+                m_normals[i] = nx * lReciprocal;
+                m_normals[i + 1] = ny * lReciprocal;
+                m_normals[i + 2] = nz * lReciprocal;
 
                 i += 3;
             }
@@ -388,14 +388,14 @@ namespace OpenSim.Region.Physics.Meshing
         {
             if (m_vertices == null)
                 throw new NotSupportedException();
-            float[] result = new float[m_vertices.Count*3];
+            float[] result = new float[m_vertices.Count * 3];
             foreach (KeyValuePair<Vertex, int> kvp in m_vertices)
             {
                 Vertex v = kvp.Key;
                 int i = kvp.Value;
-                result[3*i + 0] = v.X;
-                result[3*i + 1] = v.Y;
-                result[3*i + 2] = v.Z;
+                result[3 * i + 0] = v.X;
+                result[3 * i + 1] = v.Y;
+                result[3 * i + 2] = v.Z;
             }
             return result;
         }

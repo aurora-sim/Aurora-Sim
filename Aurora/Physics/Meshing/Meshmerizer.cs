@@ -80,7 +80,7 @@ namespace OpenSim.Region.Physics.Meshing
         private readonly bool UseMeshesPhysicsMesh;
 
         private float minSizeForComplexMesh = 0.2f;
-                      // prims with all dimensions smaller than this will have a bounding box mesh
+        // prims with all dimensions smaller than this will have a bounding box mesh
 
         private readonly Dictionary<ulong, Mesh> m_uniqueMeshes = new Dictionary<ulong, Mesh>();
 
@@ -97,7 +97,7 @@ namespace OpenSim.Region.Physics.Meshing
                 cacheSculptAlphaMaps = false;
             }
             else
-                cacheSculptAlphaMaps = cacheSculptMaps; 
+                cacheSculptAlphaMaps = cacheSculptMaps;
 
             try
             {
@@ -206,20 +206,20 @@ namespace OpenSim.Region.Physics.Meshing
             ulong hash = 5381;
 
             hash = djb2(hash, pbs.PathCurve);
-            hash = djb2(hash, (byte) ((byte) pbs.HollowShape | (byte) pbs.ProfileShape));
+            hash = djb2(hash, (byte)((byte)pbs.HollowShape | (byte)pbs.ProfileShape));
             hash = djb2(hash, pbs.PathBegin);
             hash = djb2(hash, pbs.PathEnd);
             hash = djb2(hash, pbs.PathScaleX);
             hash = djb2(hash, pbs.PathScaleY);
             hash = djb2(hash, pbs.PathShearX);
             hash = djb2(hash, pbs.PathShearY);
-            hash = djb2(hash, (byte) pbs.PathTwist);
-            hash = djb2(hash, (byte) pbs.PathTwistBegin);
-            hash = djb2(hash, (byte) pbs.PathRadiusOffset);
-            hash = djb2(hash, (byte) pbs.PathTaperX);
-            hash = djb2(hash, (byte) pbs.PathTaperY);
+            hash = djb2(hash, (byte)pbs.PathTwist);
+            hash = djb2(hash, (byte)pbs.PathTwistBegin);
+            hash = djb2(hash, (byte)pbs.PathRadiusOffset);
+            hash = djb2(hash, (byte)pbs.PathTaperX);
+            hash = djb2(hash, (byte)pbs.PathTaperY);
             hash = djb2(hash, pbs.PathRevolutions);
-            hash = djb2(hash, (byte) pbs.PathSkew);
+            hash = djb2(hash, (byte)pbs.PathSkew);
             hash = djb2(hash, pbs.ProfileBegin);
             hash = djb2(hash, pbs.ProfileEnd);
             hash = djb2(hash, pbs.ProfileHollow);
@@ -255,8 +255,8 @@ namespace OpenSim.Region.Physics.Meshing
 
         private ulong djb2(ulong hash, ushort c)
         {
-            hash = ((hash << 5) + hash) + ((byte) c);
-            return ((hash << 5) + hash) + (ulong) (c >> 8);
+            hash = ((hash << 5) + hash) + ((byte)c);
+            return ((hash << 5) + hash) + (ulong)(c >> 8);
         }
 
 
@@ -305,7 +305,7 @@ namespace OpenSim.Region.Physics.Meshing
 
                     if (meshOsd is OSDMap)
                     {
-                        OSDMap map = (OSDMap) meshOsd;
+                        OSDMap map = (OSDMap)meshOsd;
                         OSDMap physicsParms = new OSDMap();
 
                         if (map.ContainsKey("physics_cached"))
@@ -323,9 +323,9 @@ namespace OpenSim.Region.Physics.Meshing
                         if (physicsParms.Count == 0 && map.ContainsKey("physics_convex"))
                             // convex hull format, which we can't read, so instead
                             // read the highest lod that exists, and use it instead
-                            physicsParms = (OSDMap)map["high_lod"]; 
+                            physicsParms = (OSDMap)map["high_lod"];
 
-                        int physOffset = physicsParms["offset"].AsInteger() + (int) start;
+                        int physOffset = physicsParms["offset"].AsInteger() + (int)start;
                         int physSize = physicsParms["size"].AsInteger();
 
                         if (physOffset < 0 || physSize == 0)
@@ -369,12 +369,12 @@ namespace OpenSim.Region.Physics.Meshing
                         // physics_shape is an array of OSDMaps, one for each submesh
                         if (decodedMeshOsd is OSDArray)
                         {
-                            decodedMeshOsdArray = (OSDArray) decodedMeshOsd;
+                            decodedMeshOsdArray = (OSDArray)decodedMeshOsd;
                             foreach (OSD subMeshOsd in decodedMeshOsdArray)
                             {
                                 if (subMeshOsd is OSDMap)
                                 {
-                                    OSDMap subMeshMap = (OSDMap) subMeshOsd;
+                                    OSDMap subMeshMap = (OSDMap)subMeshOsd;
 
                                     // As per http://wiki.secondlife.com/wiki/Mesh/Mesh_Asset_Format, some Mesh Level
                                     // of Detail Blocks (maps) contain just a NoGeometry key to signal there is no
@@ -389,7 +389,7 @@ namespace OpenSim.Region.Physics.Meshing
                                         posMax = ((OSDMap)subMeshMap["PositionDomain"])["Max"].AsVector3();
                                         posMin = ((OSDMap)subMeshMap["PositionDomain"])["Min"].AsVector3();
                                     }
-                                    ushort faceIndexOffset = (ushort) coords.Count;
+                                    ushort faceIndexOffset = (ushort)coords.Count;
 
                                     byte[] posBytes = subMeshMap["Position"].AsBinary();
                                     for (int i = 0; i < posBytes.Length; i += 6)
@@ -399,9 +399,9 @@ namespace OpenSim.Region.Physics.Meshing
                                         ushort uZ = Utils.BytesToUInt16(posBytes, i + 4);
 
                                         Coord c = new Coord(
-                                            Utils.UInt16ToFloat(uX, posMin.X, posMax.X)*size.X,
-                                            Utils.UInt16ToFloat(uY, posMin.Y, posMax.Y)*size.Y,
-                                            Utils.UInt16ToFloat(uZ, posMin.Z, posMax.Z)*size.Z);
+                                            Utils.UInt16ToFloat(uX, posMin.X, posMax.X) * size.X,
+                                            Utils.UInt16ToFloat(uY, posMin.Y, posMax.Y) * size.Y,
+                                            Utils.UInt16ToFloat(uZ, posMin.Z, posMax.Z) * size.Z);
 
                                         coords.Add(c);
                                     }
@@ -409,11 +409,11 @@ namespace OpenSim.Region.Physics.Meshing
                                     byte[] triangleBytes = subMeshMap["TriangleList"].AsBinary();
                                     for (int i = 0; i < triangleBytes.Length; i += 6)
                                     {
-                                        ushort v1 = (ushort) (Utils.BytesToUInt16(triangleBytes, i) + faceIndexOffset);
+                                        ushort v1 = (ushort)(Utils.BytesToUInt16(triangleBytes, i) + faceIndexOffset);
                                         ushort v2 =
-                                            (ushort) (Utils.BytesToUInt16(triangleBytes, i + 2) + faceIndexOffset);
+                                            (ushort)(Utils.BytesToUInt16(triangleBytes, i + 2) + faceIndexOffset);
                                         ushort v3 =
-                                            (ushort) (Utils.BytesToUInt16(triangleBytes, i + 4) + faceIndexOffset);
+                                            (ushort)(Utils.BytesToUInt16(triangleBytes, i + 4) + faceIndexOffset);
                                         Face f = new Face(v1, v2, v3);
                                         faces.Add(f);
                                     }
@@ -458,7 +458,7 @@ namespace OpenSim.Region.Physics.Meshing
                             {
                                 try
                                 {
-                                    if(idata != null)
+                                    if (idata != null)
                                         idata.Save(decodedSculptFileName, ImageFormat.MemoryBmp);
                                 }
                                 catch (Exception e)
@@ -489,7 +489,7 @@ namespace OpenSim.Region.Physics.Meshing
                     }
 
                     SculptMesh.SculptType sculptType;
-                    switch ((SculptType) primShape.SculptType)
+                    switch ((SculptType)primShape.SculptType)
                     {
                         case SculptType.Cylinder:
                             sculptType = SculptMesh.SculptType.cylinder;
@@ -514,7 +514,7 @@ namespace OpenSim.Region.Physics.Meshing
                     if (idata == null)
                         return null;
 
-                    sculptMesh = new SculptMesh((Bitmap) idata, sculptType, (int) lod, false, mirror, invert);
+                    sculptMesh = new SculptMesh((Bitmap)idata, sculptType, (int)lod, false, mirror, invert);
 
                     idata.Dispose();
                     idata = null;
@@ -530,40 +530,40 @@ namespace OpenSim.Region.Physics.Meshing
             else
             {
                 float pathShearX = primShape.PathShearX < 128
-                                       ? primShape.PathShearX*0.01f
-                                       : (primShape.PathShearX - 256)*0.01f;
+                                       ? primShape.PathShearX * 0.01f
+                                       : (primShape.PathShearX - 256) * 0.01f;
                 float pathShearY = primShape.PathShearY < 128
-                                       ? primShape.PathShearY*0.01f
-                                       : (primShape.PathShearY - 256)*0.01f;
-                float pathBegin = primShape.PathBegin*2.0e-5f;
-                float pathEnd = 1.0f - primShape.PathEnd*2.0e-5f;
-                float pathScaleX = (primShape.PathScaleX - 100)*0.01f;
-                float pathScaleY = (primShape.PathScaleY - 100)*0.01f;
+                                       ? primShape.PathShearY * 0.01f
+                                       : (primShape.PathShearY - 256) * 0.01f;
+                float pathBegin = primShape.PathBegin * 2.0e-5f;
+                float pathEnd = 1.0f - primShape.PathEnd * 2.0e-5f;
+                float pathScaleX = (primShape.PathScaleX - 100) * 0.01f;
+                float pathScaleY = (primShape.PathScaleY - 100) * 0.01f;
 
-                float profileBegin = primShape.ProfileBegin*2.0e-5f;
-                float profileEnd = 1.0f - primShape.ProfileEnd*2.0e-5f;
-                float profileHollow = primShape.ProfileHollow*2.0e-5f;
+                float profileBegin = primShape.ProfileBegin * 2.0e-5f;
+                float profileEnd = 1.0f - primShape.ProfileEnd * 2.0e-5f;
+                float profileHollow = primShape.ProfileHollow * 2.0e-5f;
                 if (profileHollow > 0.95f)
                 {
                     if (profileHollow > 0.99f)
                         profileHollow = 0.99f;
-                    float sizeX = primShape.Scale.X - (primShape.Scale.X*profileHollow);
+                    float sizeX = primShape.Scale.X - (primShape.Scale.X * profileHollow);
                     if (sizeX < 0.1f) //If its > 0.1, its fine to mesh at the small hollow
-                        profileHollow = 0.95f + (sizeX/2); //Scale the rest by how large the size of the prim is
+                        profileHollow = 0.95f + (sizeX / 2); //Scale the rest by how large the size of the prim is
                 }
 
                 int sides = 4;
-                if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.EquilateralTriangle)
+                if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.EquilateralTriangle)
                     sides = 3;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.Circle)
+                else if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.Circle)
                     sides = 24;
-                else if ((primShape.ProfileCurve & 0x07) == (byte) ProfileShape.HalfCircle)
+                else if ((primShape.ProfileCurve & 0x07) == (byte)ProfileShape.HalfCircle)
                 {
                     // half circle, prim is a sphere
                     sides = 24;
 
-                    profileBegin = 0.5f*profileBegin + 0.5f;
-                    profileEnd = 0.5f*profileEnd + 0.5f;
+                    profileBegin = 0.5f * profileBegin + 0.5f;
+                    profileEnd = 0.5f * profileEnd + 0.5f;
                 }
 
                 int hollowSides = sides;
@@ -585,10 +585,10 @@ namespace OpenSim.Region.Physics.Meshing
                 primMesh.pathCutBegin = pathBegin;
                 primMesh.pathCutEnd = pathEnd;
 
-                if (primShape.PathCurve == (byte) Extrusion.Straight || primShape.PathCurve == (byte) Extrusion.Flexible)
+                if (primShape.PathCurve == (byte)Extrusion.Straight || primShape.PathCurve == (byte)Extrusion.Flexible)
                 {
-                    primMesh.twistBegin = primShape.PathTwistBegin*18/10;
-                    primMesh.twistEnd = primShape.PathTwist*18/10;
+                    primMesh.twistBegin = primShape.PathTwistBegin * 18 / 10;
+                    primMesh.twistEnd = primShape.PathTwist * 18 / 10;
                     primMesh.taperX = pathScaleX;
                     primMesh.taperY = pathScaleY;
 
@@ -603,7 +603,7 @@ namespace OpenSim.Region.Physics.Meshing
 #endif
                     try
                     {
-                        primMesh.Extrude(primShape.PathCurve == (byte) Extrusion.Straight
+                        primMesh.Extrude(primShape.PathCurve == (byte)Extrusion.Straight
                                              ? PathType.Linear
                                              : PathType.Flexible);
                     }
@@ -615,15 +615,15 @@ namespace OpenSim.Region.Physics.Meshing
                 }
                 else
                 {
-                    primMesh.holeSizeX = (200 - primShape.PathScaleX)*0.01f;
-                    primMesh.holeSizeY = (200 - primShape.PathScaleY)*0.01f;
-                    primMesh.radius = 0.01f*primShape.PathRadiusOffset;
-                    primMesh.revolutions = 1.0f + 0.015f*primShape.PathRevolutions;
-                    primMesh.skew = 0.01f*primShape.PathSkew;
-                    primMesh.twistBegin = primShape.PathTwistBegin*36/10;
-                    primMesh.twistEnd = primShape.PathTwist*36/10;
-                    primMesh.taperX = primShape.PathTaperX*0.01f;
-                    primMesh.taperY = primShape.PathTaperY*0.01f;
+                    primMesh.holeSizeX = (200 - primShape.PathScaleX) * 0.01f;
+                    primMesh.holeSizeY = (200 - primShape.PathScaleY) * 0.01f;
+                    primMesh.radius = 0.01f * primShape.PathRadiusOffset;
+                    primMesh.revolutions = 1.0f + 0.015f * primShape.PathRevolutions;
+                    primMesh.skew = 0.01f * primShape.PathSkew;
+                    primMesh.twistBegin = primShape.PathTwistBegin * 36 / 10;
+                    primMesh.twistEnd = primShape.PathTwist * 36 / 10;
+                    primMesh.taperX = primShape.PathTaperX * 0.01f;
+                    primMesh.taperY = primShape.PathTaperY * 0.01f;
 
                     if (profileBegin < 0.0f || profileBegin >= profileEnd || profileEnd > 1.0f)
                     {

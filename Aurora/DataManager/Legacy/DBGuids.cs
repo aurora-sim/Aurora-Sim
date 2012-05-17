@@ -44,31 +44,31 @@ namespace Aurora.DataManager
             if ((id == null) || (id == DBNull.Value))
                 return UUID.Zero;
 
-            if (id.GetType() == typeof (Guid))
-                return new UUID((Guid) id);
+            if (id.GetType() == typeof(Guid))
+                return new UUID((Guid)id);
 
-            if (id.GetType() == typeof (byte[]))
+            if (id.GetType() == typeof(byte[]))
             {
-                if (((byte[]) id).Length == 0)
+                if (((byte[])id).Length == 0)
                     return UUID.Zero;
-                else if (((byte[]) id).Length == 16)
-                    return new UUID((byte[]) id, 0);
+                else if (((byte[])id).Length == 16)
+                    return new UUID((byte[])id, 0);
                 else
                 {
-                    string sid = Utils.BytesToString(((byte[]) id));
+                    string sid = Utils.BytesToString(((byte[])id));
                     string[] split = sid.Split(';');
                     return new UUID(split[0]); //Old HyperGrid object
                 }
             }
-            else if (id.GetType() == typeof (string))
+            else if (id.GetType() == typeof(string))
             {
-                if (((string) id).Length == 0)
+                if (((string)id).Length == 0)
                     return UUID.Zero;
-                else if (((string) id).Length == 36)
-                    return new UUID((string) id);
+                else if (((string)id).Length == 36)
+                    return new UUID((string)id);
                 else
                 {
-                    string[] split = ((string) id).Split(';');
+                    string[] split = ((string)id).Split(';');
                     return new UUID(split[0]); //Old HyperGrid object
                 }
             }

@@ -64,7 +64,7 @@ namespace Aurora.Modules
                 RegionNameSelector.Items.Add(scene.RegionInfo.RegionName);
             }
             RegionNameSelector.SelectedIndex = 0;
-            m_updateStats = new Timer {Interval = 10000, Enabled = true};
+            m_updateStats = new Timer { Interval = 10000, Enabled = true };
             m_updateStats.Elapsed += m_updateStats_Elapsed;
             m_updateStats.Start();
 
@@ -157,13 +157,13 @@ namespace Aurora.Modules
                 Max6.Text = MaxVal.ToString();
                 Max7.Text = MaxVal.ToString();
 
-                HMax1.Text = (MaxVal/2).ToString();
-                HMax2.Text = (MaxVal/2).ToString();
-                HMax3.Text = (MaxVal/2).ToString();
-                HMax4.Text = (MaxVal/2).ToString();
-                HMax5.Text = (MaxVal/2).ToString();
-                HMax6.Text = (MaxVal/2).ToString();
-                HMax7.Text = (MaxVal/2).ToString();
+                HMax1.Text = (MaxVal / 2).ToString();
+                HMax2.Text = (MaxVal / 2).ToString();
+                HMax3.Text = (MaxVal / 2).ToString();
+                HMax4.Text = (MaxVal / 2).ToString();
+                HMax5.Text = (MaxVal / 2).ToString();
+                HMax6.Text = (MaxVal / 2).ToString();
+                HMax7.Text = (MaxVal / 2).ToString();
 
                 UpdateStatsBars();
             }

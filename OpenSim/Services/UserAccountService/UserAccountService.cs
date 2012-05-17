@@ -147,20 +147,20 @@ namespace OpenSim.Services.UserAccountService
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                    new[] {"ScopeID", "FirstName", "LastName"},
-                    new[] {scopeID.ToString(), firstName, lastName});
+                    new[] { "ScopeID", "FirstName", "LastName" },
+                    new[] { scopeID.ToString(), firstName, lastName });
                 if (d.Length < 1)
                 {
                     d = m_Database.Get(
-                        new[] {"ScopeID", "FirstName", "LastName"},
-                        new[] {UUID.Zero.ToString(), firstName, lastName});
+                        new[] { "ScopeID", "FirstName", "LastName" },
+                        new[] { UUID.Zero.ToString(), firstName, lastName });
                 }
             }
             else
             {
                 d = m_Database.Get(
-                    new[] {"FirstName", "LastName"},
-                    new[] {firstName, lastName});
+                    new[] { "FirstName", "LastName" },
+                    new[] { firstName, lastName });
             }
 
             if (d.Length < 1)
@@ -199,14 +199,14 @@ namespace OpenSim.Services.UserAccountService
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                    new[] {"ScopeID", "Name"},
-                    new[] {scopeID.ToString(), name});
+                    new[] { "ScopeID", "Name" },
+                    new[] { scopeID.ToString(), name });
             }
             else
             {
                 d = m_Database.Get(
-                    new[] {"Name"},
-                    new[] {name});
+                    new[] { "Name" },
+                    new[] { name });
             }
 
             if (d.Length < 1)
@@ -222,7 +222,7 @@ namespace OpenSim.Services.UserAccountService
             return d[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod = "GetUserAccountUUID")]
         public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
         {
             UserAccount account;
@@ -244,20 +244,20 @@ namespace OpenSim.Services.UserAccountService
             if (scopeID != UUID.Zero)
             {
                 d = m_Database.Get(
-                    new[] {"ScopeID", "PrincipalID"},
-                    new[] {scopeID.ToString(), principalID.ToString()});
+                    new[] { "ScopeID", "PrincipalID" },
+                    new[] { scopeID.ToString(), principalID.ToString() });
                 if (d.Length < 1)
                 {
                     d = m_Database.Get(
-                        new[] {"ScopeID", "PrincipalID"},
-                        new[] {UUID.Zero.ToString(), principalID.ToString()});
+                        new[] { "ScopeID", "PrincipalID" },
+                        new[] { UUID.Zero.ToString(), principalID.ToString() });
                 }
             }
             else
             {
                 d = m_Database.Get(
-                    new[] {"PrincipalID"},
-                    new[] {principalID.ToString()});
+                    new[] { "PrincipalID" },
+                    new[] { principalID.ToString() });
             }
 
             if (d.Length < 1)
@@ -391,7 +391,7 @@ namespace OpenSim.Services.UserAccountService
                 return;
             }
 
-            if(wipeFromDatabase)
+            if (wipeFromDatabase)
                 m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("DeleteUserInformation", userID);
         }
 

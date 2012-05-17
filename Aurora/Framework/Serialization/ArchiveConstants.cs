@@ -101,36 +101,36 @@ namespace Aurora.Framework.Serialization
 
         static ArchiveConstants()
         {
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Animation] = ASSET_EXTENSION_SEPARATOR + "animation.bvh";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Bodypart] = ASSET_EXTENSION_SEPARATOR + "bodypart.txt";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.CallingCard] = ASSET_EXTENSION_SEPARATOR + "callingcard.txt";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Clothing] = ASSET_EXTENSION_SEPARATOR + "clothing.txt";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Folder] = ASSET_EXTENSION_SEPARATOR + "folder.txt";
-                // Not sure if we'll ever see this
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Gesture] = ASSET_EXTENSION_SEPARATOR + "gesture.txt";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.ImageJPEG] = ASSET_EXTENSION_SEPARATOR + "image.jpg";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.ImageTGA] = ASSET_EXTENSION_SEPARATOR + "image.tga";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Landmark] = ASSET_EXTENSION_SEPARATOR + "landmark.txt";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.LostAndFoundFolder] = ASSET_EXTENSION_SEPARATOR +
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Animation] = ASSET_EXTENSION_SEPARATOR + "animation.bvh";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Bodypart] = ASSET_EXTENSION_SEPARATOR + "bodypart.txt";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.CallingCard] = ASSET_EXTENSION_SEPARATOR + "callingcard.txt";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Clothing] = ASSET_EXTENSION_SEPARATOR + "clothing.txt";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Folder] = ASSET_EXTENSION_SEPARATOR + "folder.txt";
+            // Not sure if we'll ever see this
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Gesture] = ASSET_EXTENSION_SEPARATOR + "gesture.txt";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.ImageJPEG] = ASSET_EXTENSION_SEPARATOR + "image.jpg";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.ImageTGA] = ASSET_EXTENSION_SEPARATOR + "image.tga";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Landmark] = ASSET_EXTENSION_SEPARATOR + "landmark.txt";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.LostAndFoundFolder] = ASSET_EXTENSION_SEPARATOR +
                                                                           "lostandfoundfolder.txt";
-                // Not sure if we'll ever see this
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.LSLBytecode] = ASSET_EXTENSION_SEPARATOR + "bytecode.lso";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.LSLText] = ASSET_EXTENSION_SEPARATOR + "script.lsl";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Mesh] = ASSET_EXTENSION_SEPARATOR + "mesh.llmesh";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Notecard] = ASSET_EXTENSION_SEPARATOR + "notecard.txt";
-            ASSET_TYPE_TO_EXTENSION[(sbyte) AssetType.Object] = ASSET_EXTENSION_SEPARATOR + "object.xml";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.RootFolder] = ASSET_EXTENSION_SEPARATOR + "rootfolder.txt";
-                // Not sure if we'll ever see this
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Simstate] = ASSET_EXTENSION_SEPARATOR + "simstate.bin";
-                // Not sure if we'll ever see this
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.SnapshotFolder] = ASSET_EXTENSION_SEPARATOR + "snapshotfolder.txt";
-                // Not sure if we'll ever see this
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Sound] = ASSET_EXTENSION_SEPARATOR + "sound.ogg";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.SoundWAV] = ASSET_EXTENSION_SEPARATOR + "sound.wav";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.Texture] = ASSET_EXTENSION_SEPARATOR + "texture.jp2";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.TextureTGA] = ASSET_EXTENSION_SEPARATOR + "texture.tga";
-            ASSET_TYPE_TO_EXTENSION[(int) AssetType.TrashFolder] = ASSET_EXTENSION_SEPARATOR + "trashfolder.txt";
-                // Not sure if we'll ever see this
+            // Not sure if we'll ever see this
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.LSLBytecode] = ASSET_EXTENSION_SEPARATOR + "bytecode.lso";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.LSLText] = ASSET_EXTENSION_SEPARATOR + "script.lsl";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Mesh] = ASSET_EXTENSION_SEPARATOR + "mesh.llmesh";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Notecard] = ASSET_EXTENSION_SEPARATOR + "notecard.txt";
+            ASSET_TYPE_TO_EXTENSION[(sbyte)AssetType.Object] = ASSET_EXTENSION_SEPARATOR + "object.xml";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.RootFolder] = ASSET_EXTENSION_SEPARATOR + "rootfolder.txt";
+            // Not sure if we'll ever see this
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Simstate] = ASSET_EXTENSION_SEPARATOR + "simstate.bin";
+            // Not sure if we'll ever see this
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.SnapshotFolder] = ASSET_EXTENSION_SEPARATOR + "snapshotfolder.txt";
+            // Not sure if we'll ever see this
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Sound] = ASSET_EXTENSION_SEPARATOR + "sound.ogg";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.SoundWAV] = ASSET_EXTENSION_SEPARATOR + "sound.wav";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.Texture] = ASSET_EXTENSION_SEPARATOR + "texture.jp2";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.TextureTGA] = ASSET_EXTENSION_SEPARATOR + "texture.tga";
+            ASSET_TYPE_TO_EXTENSION[(int)AssetType.TrashFolder] = ASSET_EXTENSION_SEPARATOR + "trashfolder.txt";
+            // Not sure if we'll ever see this
 
             EXTENSION_TO_ASSET_TYPE[ASSET_EXTENSION_SEPARATOR + "animation.bvh"] = AssetType.Animation;
             EXTENSION_TO_ASSET_TYPE[ASSET_EXTENSION_SEPARATOR + "bodypart.txt"] = AssetType.Bodypart;
@@ -193,7 +193,7 @@ namespace Aurora.Framework.Serialization
         {
             List<string> plainDirs = new List<string>();
 
-            string[] iarDirs = iarPath.Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+            string[] iarDirs = iarPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string iarDir in iarDirs)
             {

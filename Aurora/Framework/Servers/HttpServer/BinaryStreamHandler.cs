@@ -55,7 +55,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private static byte[] ReadFully(Stream stream)
         {
             byte[] buffer = new byte[1024];
-            using (MemoryStream ms = new MemoryStream(1024*256))
+            using (MemoryStream ms = new MemoryStream(1024 * 256))
             {
                 while (true)
                 {

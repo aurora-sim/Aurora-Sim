@@ -142,11 +142,11 @@ namespace Aurora.Modules.Chat
         {
             byte dialog = im.dialog;
 
-            if (dialog != (byte) InstantMessageDialog.MessageFromAgent
-                && dialog != (byte) InstantMessageDialog.StartTyping
-                && dialog != (byte) InstantMessageDialog.StopTyping
-                && dialog != (byte) InstantMessageDialog.BusyAutoResponse
-                && dialog != (byte) InstantMessageDialog.MessageFromObject)
+            if (dialog != (byte)InstantMessageDialog.MessageFromAgent
+                && dialog != (byte)InstantMessageDialog.StartTyping
+                && dialog != (byte)InstantMessageDialog.StopTyping
+                && dialog != (byte)InstantMessageDialog.BusyAutoResponse
+                && dialog != (byte)InstantMessageDialog.MessageFromObject)
             {
                 return;
             }
@@ -176,10 +176,10 @@ namespace Aurora.Modules.Chat
         {
             byte dialog = msg.dialog;
 
-            if (dialog != (byte) InstantMessageDialog.MessageFromAgent
-                && dialog != (byte) InstantMessageDialog.StartTyping
-                && dialog != (byte) InstantMessageDialog.StopTyping
-                && dialog != (byte) InstantMessageDialog.MessageFromObject)
+            if (dialog != (byte)InstantMessageDialog.MessageFromAgent
+                && dialog != (byte)InstantMessageDialog.StartTyping
+                && dialog != (byte)InstantMessageDialog.StopTyping
+                && dialog != (byte)InstantMessageDialog.MessageFromObject)
             {
                 return;
             }
@@ -202,9 +202,9 @@ namespace Aurora.Modules.Chat
                         return;
                     }
                 }
-                if (dialog == (uint) InstantMessageDialog.StartTyping ||
-                    dialog == (uint) InstantMessageDialog.StopTyping ||
-                    dialog == (uint) InstantMessageDialog.MessageFromObject)
+                if (dialog == (uint)InstantMessageDialog.StartTyping ||
+                    dialog == (uint)InstantMessageDialog.StopTyping ||
+                    dialog == (uint)InstantMessageDialog.MessageFromObject)
                 {
                     return;
                 }

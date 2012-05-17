@@ -81,7 +81,7 @@ namespace OpenSim.Services.MessagingService
                 if (asyncPoster != null && friendsService != null && capsService != null && gridService != null)
                 {
                     //Get all friends
-                    object[] info = (object[]) parameters;
+                    object[] info = (object[])parameters;
                     UUID us = UUID.Parse(info[0].ToString());
                     bool isOnline = bool.Parse(info[1].ToString());
 
@@ -170,7 +170,7 @@ namespace OpenSim.Services.MessagingService
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")
             {
-                OSDMap innerMessage = (OSDMap) message["Message"];
+                OSDMap innerMessage = (OSDMap)message["Message"];
                 //We got a message, now pass it on to the clients that need it
                 UUID AgentID = innerMessage["AgentID"].AsUUID();
                 UUID FriendToInformID = innerMessage["FriendToInformID"].AsUUID();
@@ -190,7 +190,7 @@ namespace OpenSim.Services.MessagingService
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendGrantRights")
             {
-                OSDMap body = (OSDMap) message["Message"];
+                OSDMap body = (OSDMap)message["Message"];
                 UUID targetID = body["Target"].AsUUID();
                 UserInfo friendSession =
                     m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
@@ -203,7 +203,7 @@ namespace OpenSim.Services.MessagingService
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
             {
-                OSDMap body = (OSDMap) message["Message"];
+                OSDMap body = (OSDMap)message["Message"];
                 UUID targetID = body["Friend"].AsUUID();
                 UserInfo friendSession =
                     m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
@@ -216,7 +216,7 @@ namespace OpenSim.Services.MessagingService
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
             {
-                OSDMap body = (OSDMap) message["Message"];
+                OSDMap body = (OSDMap)message["Message"];
                 UUID targetID = body["ExFriend"].AsUUID();
                 UserInfo friendSession =
                     m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
@@ -229,7 +229,7 @@ namespace OpenSim.Services.MessagingService
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
             {
-                OSDMap body = (OSDMap) message["Message"];
+                OSDMap body = (OSDMap)message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
                 UserInfo friendSession =
                     m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
@@ -242,7 +242,7 @@ namespace OpenSim.Services.MessagingService
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
             {
-                OSDMap body = (OSDMap) message["Message"];
+                OSDMap body = (OSDMap)message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
                 UserInfo friendSession =
                     m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());

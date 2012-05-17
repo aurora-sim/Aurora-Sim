@@ -72,57 +72,57 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 if (m_default)
                     MainConsole.Instance.Commands.AddCommand("create region", "create region", "Create a new region.", AddRegion);
             }
-            
+
             m_openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
         public RegionInfo[] LoadRegions()
         {
-            return InternalLoadRegions (false);
+            return InternalLoadRegions(false);
         }
 
-        public RegionInfo[] InternalLoadRegions (bool checkOnly)
+        public RegionInfo[] InternalLoadRegions(bool checkOnly)
         {
-            if (!Directory.Exists (m_regionConfigPath))
+            if (!Directory.Exists(m_regionConfigPath))
                 if (checkOnly)
                     return null;
                 else
-                    Directory.CreateDirectory (m_regionConfigPath);
+                    Directory.CreateDirectory(m_regionConfigPath);
 
-            string[] configFiles = Directory.GetFiles (m_regionConfigPath, "*.xml");
-            string[] iniFiles = Directory.GetFiles (m_regionConfigPath, "*.ini");
+            string[] configFiles = Directory.GetFiles(m_regionConfigPath, "*.xml");
+            string[] iniFiles = Directory.GetFiles(m_regionConfigPath, "*.ini");
 
             if (configFiles.Length == 0 && iniFiles.Length == 0)
             {
                 if (!m_default || checkOnly)
                     return null;
-                LoadRegionFromFile ("DEFAULT REGION CONFIG", Path.Combine (m_regionConfigPath, "Regions.ini"), false, m_configSource, "");
-                iniFiles = Directory.GetFiles (m_regionConfigPath, "*.ini");
+                LoadRegionFromFile("DEFAULT REGION CONFIG", Path.Combine(m_regionConfigPath, "Regions.ini"), false, m_configSource, "");
+                iniFiles = Directory.GetFiles(m_regionConfigPath, "*.ini");
             }
 
-            List<RegionInfo> regionInfos = new List<RegionInfo> ();
+            List<RegionInfo> regionInfos = new List<RegionInfo>();
 
             int i = 0;
             foreach (string file in iniFiles)
             {
-                IConfigSource source = new IniConfigSource (file, Nini.Ini.IniFileType.AuroraStyle);
+                IConfigSource source = new IniConfigSource(file, Nini.Ini.IniFileType.AuroraStyle);
 
                 foreach (IConfig config in source.Configs)
                 {
-                    RegionInfo regionInfo = LoadRegionFromFile ("REGION CONFIG #" + (i + 1), file, false, m_configSource, config.Name);
-                    regionInfos.Add (regionInfo);
+                    RegionInfo regionInfo = LoadRegionFromFile("REGION CONFIG #" + (i + 1), file, false, m_configSource, config.Name);
+                    regionInfos.Add(regionInfo);
                     i++;
                 }
             }
 
             foreach (string file in configFiles)
             {
-                RegionInfo regionInfo = LoadRegionFromFile ("REGION CONFIG #" + (i + 1), file, false, m_configSource, string.Empty);
-                regionInfos.Add (regionInfo);
+                RegionInfo regionInfo = LoadRegionFromFile("REGION CONFIG #" + (i + 1), file, false, m_configSource, string.Empty);
+                regionInfos.Add(regionInfo);
                 i++;
             }
 
-            return regionInfos.ToArray ();
+            return regionInfos.ToArray();
         }
 
         // File based loading
@@ -187,11 +187,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             if (name == String.Empty || source.Configs.Count == 0)
             {
-                MainConsole.Instance.Info ("=====================================\n");
-                MainConsole.Instance.Info ("We are now going to ask a couple of questions about your region.\n");
-                MainConsole.Instance.Info ("You can press 'enter' without typing anything to use the default\n");
-                MainConsole.Instance.Info ("the default is displayed between [ ] brackets.\n");
-                MainConsole.Instance.Info ("=====================================\n");
+                MainConsole.Instance.Info("=====================================\n");
+                MainConsole.Instance.Info("We are now going to ask a couple of questions about your region.\n");
+                MainConsole.Instance.Info("You can press 'enter' without typing anything to use the default\n");
+                MainConsole.Instance.Info("the default is displayed between [ ] brackets.\n");
+                MainConsole.Instance.Info("=====================================\n");
             }
 
             bool NeedsUpdate = false;
@@ -264,9 +264,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             if (regionSizeY == 0 || ((region.RegionSizeY % Constants.MinRegionSize) != 0))
             {
                 NeedsUpdate = true;
-                while(true)
+                while (true)
                 {
-                    if(int.TryParse(MainConsole.Instance.Prompt("Region Y Size for region " + name, "256"), out regionSizeY))
+                    if (int.TryParse(MainConsole.Instance.Prompt("Region Y Size for region " + name, "256"), out regionSizeY))
                         break;
                 }
                 config.Set("RegionSizeY", regionSizeY);
@@ -308,7 +308,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 port = Convert.ToInt32(MainConsole.Instance.Prompt("Internal port for region " + name, "9000"));
                 config.Set("InternalPort", port);
             }
-            region.UDPPorts.Add (port);
+            region.UDPPorts.Add(port);
             region.InternalEndPoint = new IPEndPoint(address, port);
 
             // External IP
@@ -345,9 +345,9 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
             region.SeeIntoThisSimFromNeighbor = config.GetBoolean("SeeIntoThisSimFromNeighbor", region.SeeIntoThisSimFromNeighbor);
 
-            region.ObjectCapacity = config.GetInt ("MaxPrims", region.ObjectCapacity);
+            region.ObjectCapacity = config.GetInt("MaxPrims", region.ObjectCapacity);
 
-            region.Startup = (StartupType)Enum.Parse(typeof(StartupType), config.GetString ("StartupType", region.Startup.ToString()));
+            region.Startup = (StartupType)Enum.Parse(typeof(StartupType), config.GetString("StartupType", region.Startup.ToString()));
 
 
             // Multi-tenancy
@@ -372,24 +372,24 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
         /// <param name="cmd">0,1,region name, region XML file</param>
         public void AddRegion(string[] cmd)
         {
-            string fileName = MainConsole.Instance.Prompt ("File Name", "Regions.ini");
-            string regionName = MainConsole.Instance.Prompt ("Region Name", "New Region");
+            string fileName = MainConsole.Instance.Prompt("File Name", "Regions.ini");
+            string regionName = MainConsole.Instance.Prompt("Region Name", "New Region");
 
-            if (fileName.EndsWith (".ini"))
+            if (fileName.EndsWith(".ini"))
             {
-                string regionFile = String.Format ("{0}/{1}", m_regionConfigPath, fileName);
+                string regionFile = String.Format("{0}/{1}", m_regionConfigPath, fileName);
                 // Allow absolute and relative specifiers
-                if (fileName.StartsWith ("/") || fileName.StartsWith ("\\") || fileName.StartsWith (".."))
+                if (fileName.StartsWith("/") || fileName.StartsWith("\\") || fileName.StartsWith(".."))
                     regionFile = fileName;
 
-                MainConsole.Instance.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
+                MainConsole.Instance.Debug("[LOADREGIONS]: Creating Region: " + regionName);
                 SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
                 manager.AllRegions++;
                 manager.StartNewRegion(LoadRegionFromFile(regionName, regionFile, false, m_configSource, regionName));
             }
             else
             {
-                MainConsole.Instance.Info ("The file name must end with .ini");
+                MainConsole.Instance.Info("The file name must end with .ini");
             }
         }
 
@@ -482,15 +482,15 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             }
         }
 
-        public void DeleteAllRegionFiles ()
+        public void DeleteAllRegionFiles()
         {
-            string regionConfigPath = Path.Combine (Util.configDir (), "Regions");
+            string regionConfigPath = Path.Combine(Util.configDir(), "Regions");
             IConfig config = m_configSource.Configs["RegionStartup"];
             if (config != null)
-                regionConfigPath = config.GetString ("RegionsDirectory", regionConfigPath).Trim ();
-            if (!Directory.Exists (regionConfigPath))
+                regionConfigPath = config.GetString("RegionsDirectory", regionConfigPath).Trim();
+            if (!Directory.Exists(regionConfigPath))
                 return;
-            Directory.Delete (regionConfigPath);
+            Directory.Delete(regionConfigPath);
         }
 
         public bool FailedToStartRegions(string reason)

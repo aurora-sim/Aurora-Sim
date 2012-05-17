@@ -82,7 +82,7 @@ namespace Aurora.Modules.ActivityDetectors
             m_scenes.Add(scene);
             if (m_presenceUpdateTimer == null)
             {
-                m_presenceUpdateTimer = new Timer {Interval = 1000*60*28};
+                m_presenceUpdateTimer = new Timer { Interval = 1000 * 60 * 28 };
                 //As agents move around, they could get to regions that won't update them in time, so we cut 
                 // the time in half, and then a bit less so that they are updated consistantly
                 m_presenceUpdateTimer.Elapsed += m_presenceUpdateTimer_Elapsed;
@@ -144,7 +144,7 @@ namespace Aurora.Modules.ActivityDetectors
 
         public object OnGenericEvent(string functionName, object parameters)
         {
-            m_zombieAgents.Add((UUID) parameters);
+            m_zombieAgents.Add((UUID)parameters);
             return null;
         }
 

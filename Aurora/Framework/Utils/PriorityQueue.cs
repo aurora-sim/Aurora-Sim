@@ -132,7 +132,7 @@ namespace Mischel.Collections
 
         public void CopyTo(Array array, int index)
         {
-            this.CopyTo((PriorityQueueItem<TValue, TPriority>[]) array, index);
+            this.CopyTo((PriorityQueueItem<TValue, TPriority>[])array, index);
         }
 
         public bool IsSynchronized
@@ -198,15 +198,15 @@ namespace Mischel.Collections
             {
                 // need to increase capacity
                 // grow by 50 percent
-                SetCapacity((3*Capacity)/2);
+                SetCapacity((3 * Capacity) / 2);
             }
 
             int i = numItems;
             ++numItems;
-            while ((i > 0) && (compareFunc(items[(i - 1)/2].Priority, newItem.Priority) < 0))
+            while ((i > 0) && (compareFunc(items[(i - 1) / 2].Priority, newItem.Priority) < 0))
             {
-                items[i] = items[(i - 1)/2];
-                i = (i - 1)/2;
+                items[i] = items[(i - 1) / 2];
+                i = (i - 1) / 2;
             }
             items[i] = newItem;
             //if (!VerifyQueue())
@@ -232,21 +232,21 @@ namespace Mischel.Collections
             {
                 // If the new item is greater than its parent, bubble up.
                 int i = index;
-                int parent = (i - 1)/2;
+                int parent = (i - 1) / 2;
                 while (compareFunc(tmp.Priority, items[parent].Priority) > 0)
                 {
                     items[i] = items[parent];
                     i = parent;
-                    parent = (i - 1)/2;
+                    parent = (i - 1) / 2;
                 }
 
                 // if i == index, then we didn't move the item up
                 if (i == index)
                 {
                     // bubble down ...
-                    while (i < (numItems)/2)
+                    while (i < (numItems) / 2)
                     {
-                        int j = (2*i) + 1;
+                        int j = (2 * i) + 1;
                         if ((j < numItems - 1) && (compareFunc(items[j].Priority, items[j + 1].Priority) < 0))
                         {
                             ++j;
@@ -273,9 +273,9 @@ namespace Mischel.Collections
         public bool VerifyQueue()
         {
             int i = 0;
-            while (i < numItems/2)
+            while (i < numItems / 2)
             {
-                int leftChild = (2*i) + 1;
+                int leftChild = (2 * i) + 1;
                 int rightChild = leftChild + 1;
                 if (compareFunc(items[i].Priority, items[leftChild].Priority) < 0)
                 {
@@ -381,7 +381,7 @@ namespace Mischel.Collections
         /// </summary>
         public void TrimExcess()
         {
-            if (numItems < (float) 0.9*capacity)
+            if (numItems < (float)0.9 * capacity)
             {
                 SetCapacity(numItems);
             }
@@ -524,7 +524,7 @@ namespace Mischel.Collections
                 // Use the DefaultComparer.
                 this.comparer = new DefaultComparer();
             }
-                // Else a comparer was provided.
+            // Else a comparer was provided.
             else
             {
                 // Use the provided comparer.
@@ -748,7 +748,7 @@ namespace Mischel.Collections
             {
                 found = true;
             }
-                // Else the element is not in the PriorityQueue.
+            // Else the element is not in the PriorityQueue.
             else
             {
                 found = false;

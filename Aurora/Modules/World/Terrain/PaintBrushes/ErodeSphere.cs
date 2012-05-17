@@ -169,7 +169,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
             for (x = 0; x < water.Width; x++)
                 for (y = 0; y < water.Height; y++)
                     water[x, y] =
-                        (float) Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength)*rainHeight*duration);
+                        (float)Math.Max(0.0, TerrainUtil.SphericalFactor(x, y, rx, ry, strength) * rainHeight * duration);
 
             for (int i = 0; i < rounds; i++)
             {
@@ -178,8 +178,8 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        const float solConst = (1.0f/rounds);
-                        float sedDelta = water[x, y]*solConst;
+                        const float solConst = (1.0f / rounds);
+                        float sedDelta = water[x, y] * solConst;
                         map[x, y] -= sedDelta;
                         sediment[x, y] += sedDelta;
                     }
@@ -236,7 +236,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                         if (neighbours == 0)
                             continue;
 
-                        float altitudeAvg = altitudeTotal/neighbours;
+                        float altitudeAvg = altitudeTotal / neighbours;
 
                         // Step 2. Allocate water to neighbours.
                         for (int j = 0; j < NEIGHBOUR_MAX; j++)
@@ -269,10 +269,10 @@ namespace Aurora.Modules.Terrain.PaintBrushes
 
                                 // Calculate how much water we can move
                                 float waterMin = Math.Min(water[x, y], altitudeDelta);
-                                float waterDelta = waterMin*((water[coords[0], coords[1]] + map[coords[0], coords[1]])
-                                                             /altitudeTotal);
+                                float waterDelta = waterMin * ((water[coords[0], coords[1]] + map[coords[0], coords[1]])
+                                                             / altitudeTotal);
 
-                                float sedimentDelta = sediment[x, y]*(waterDelta/water[x, y]);
+                                float sedimentDelta = sediment[x, y] * (waterDelta / water[x, y]);
 
                                 if (sedimentDelta > 0)
                                 {
@@ -290,9 +290,9 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                 {
                     for (y = 0; y < water.Height; y++)
                     {
-                        water[x, y] *= 1.0f - (rainHeight/rounds);
+                        water[x, y] *= 1.0f - (rainHeight / rounds);
 
-                        float waterCapacity = waterSaturation*water[x, y];
+                        float waterCapacity = waterSaturation * water[x, y];
 
                         float sedimentDeposit = sediment[x, y] - waterCapacity;
                         if (sedimentDeposit > 0)
@@ -312,7 +312,7 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(rx + x, ry + y, 0)))
                         continue;
                     if (sediment[x, y] > 0)
-                        map[(int) rx + x, (int) ry + y] += sediment[x, y];
+                        map[(int)rx + x, (int)ry + y] += sediment[x, y];
                 }
             }
         }

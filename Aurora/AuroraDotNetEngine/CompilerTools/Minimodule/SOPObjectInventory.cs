@@ -88,7 +88,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
 #if (!ISWIN)
             foreach (TaskInventoryItem privateItem in m_privateInventory.Values)
             {
-                if (!m_publicInventory.ContainsKey(privateItem.ItemID)) 
+                if (!m_publicInventory.ContainsKey(privateItem.ItemID))
                     m_publicInventory.Add(privateItem.ItemID, new InventoryItem(m_rootScene, privateItem));
             }
 #else

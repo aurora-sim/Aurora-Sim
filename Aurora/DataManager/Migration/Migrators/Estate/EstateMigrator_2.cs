@@ -48,7 +48,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("RegionID", ColumnTypes.String36),
                 ColDef("EstateID", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[]{ "RegionID"}, IndexType.Primary)
+                IndexDef(new string[] { "RegionID" }, IndexType.Primary)
             ));
 
             AddSchema("estatesettings", ColDefs(
@@ -58,8 +58,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("ParentEstateID", ColumnTypes.Integer11),
                 ColDef("Settings", ColumnTypes.Text)
             ), IndexDefs(
-                IndexDef(new string[]{ "EstateID" }, IndexType.Primary),
-                IndexDef(new string[]{ "EstateOwner"}, IndexType.Index)
+                IndexDef(new string[] { "EstateID" }, IndexType.Primary),
+                IndexDef(new string[] { "EstateOwner" }, IndexType.Index)
             ));
         }
 

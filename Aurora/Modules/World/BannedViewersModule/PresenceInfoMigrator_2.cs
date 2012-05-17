@@ -55,7 +55,7 @@ namespace Aurora.Modules.Ban
                 ColDef("LastKnownViewer", /*"LastKnownViewer"*/ ColumnTypes.String255),
                 ColDef("Platform", /*"Platform"*/ ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "AgentID" } , IndexType.Primary)
+                IndexDef(new string[1] { "AgentID" }, IndexType.Primary)
             ));
 
             RemoveSchema("presenceinfo");

@@ -35,11 +35,13 @@ namespace Aurora.Modules.Terrain
         {
         }
 
-        public TerrainException(string msg) : base(msg)
+        public TerrainException(string msg)
+            : base(msg)
         {
         }
 
-        public TerrainException(string msg, Exception e) : base(msg, e)
+        public TerrainException(string msg, Exception e)
+            : base(msg, e)
         {
         }
     }

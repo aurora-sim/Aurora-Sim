@@ -51,7 +51,7 @@ namespace OpenSim.Services.LLLoginService
         public static string OptionalUpdate = "optional"; //Informs the client that they have an optional update
 
         public static string PresenceIssue = "presence";
-                             //Used by opensim to tell the viewer that the agent is already logged in
+        //Used by opensim to tell the viewer that the agent is already logged in
 
         public static string OK = "true"; //Login went fine
         public static string Indeterminant = "indeterminate"; //Unknown exactly what this does
@@ -207,7 +207,7 @@ namespace OpenSim.Services.LLLoginService
 
             FillOutActiveGestures(gestures);
 
-            CircuitCode = (int) aCircuit.circuitcode;
+            CircuitCode = (int)aCircuit.circuitcode;
             Lastname = account.LastName;
             Firstname = account.FirstName;
             this.DisplayName = DisplayName;
@@ -256,7 +256,7 @@ namespace OpenSim.Services.LLLoginService
 
                 Hashtable InventoryRootHash = new Hashtable();
                 InventoryRootHash["folder_id"] = inventData.RootFolderID.ToString();
-                InventoryRoot = new ArrayList {InventoryRootHash};
+                InventoryRoot = new ArrayList { InventoryRootHash };
                 InventorySkeleton = AgentInventoryArray;
             }
 
@@ -294,7 +294,7 @@ namespace OpenSim.Services.LLLoginService
 
         private void FillOutHomeData(Interfaces.UserInfo pinfo, GridRegion home)
         {
-            int x = 1000*Constants.RegionSize, y = 1000*Constants.RegionSize;
+            int x = 1000 * Constants.RegionSize, y = 1000 * Constants.RegionSize;
             if (home != null)
             {
                 x = home.RegionLocX;
@@ -315,9 +315,9 @@ namespace OpenSim.Services.LLLoginService
             //We don't need this anymore, we set this from what we get from the region
             //endPoint = Util.ResolveAddressForClient (endPoint, circuitData.ClientIPEndPoint);
             SimAddress = endPoint.Address.ToString();
-            SimPort = (uint) circuitData.RegionUDPPort;
-            RegionX = (uint) destination.RegionLocX;
-            RegionY = (uint) destination.RegionLocY;
+            SimPort = (uint)circuitData.RegionUDPPort;
+            RegionX = (uint)destination.RegionLocX;
+            RegionY = (uint)destination.RegionLocY;
             RegionSizeX = destination.RegionSizeX;
             RegionSizeY = destination.RegionSizeY;
         }
@@ -385,15 +385,15 @@ namespace OpenSim.Services.LLLoginService
                     uiConfigHash["allow_first_life"] = AllowFirstLife;
                 uiConfig.Add(uiConfigHash);
 
-                responseData["sim_port"] = (Int32) SimPort;
+                responseData["sim_port"] = (Int32)SimPort;
                 responseData["sim_ip"] = SimAddress;
-                responseData["http_port"] = (Int32) SimHttpPort;
+                responseData["http_port"] = (Int32)SimHttpPort;
 
                 responseData["agent_id"] = AgentID.ToString();
                 responseData["session_id"] = SessionID.ToString();
                 responseData["secure_session_id"] = SecureSessionID.ToString();
                 responseData["circuit_code"] = CircuitCode;
-                responseData["seconds_since_epoch"] = (Int32) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+                responseData["seconds_since_epoch"] = (Int32)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
                 responseData["login-flags"] = loginFlags;
                 responseData["seed_capability"] = seedCapability;
 
@@ -418,8 +418,8 @@ namespace OpenSim.Services.LLLoginService
                 responseData["home"] = home;
                 responseData["look_at"] = lookAt;
                 responseData["message"] = Message;
-                responseData["region_x"] = (Int32) (RegionX);
-                responseData["region_y"] = (Int32) (RegionY);
+                responseData["region_x"] = (Int32)(RegionX);
+                responseData["region_y"] = (Int32)(RegionY);
                 responseData["region_size_x"] = (RegionSizeX);
                 responseData["region_size_y"] = (RegionSizeY);
 
@@ -469,7 +469,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     Hashtable voice_config = new Hashtable();
                     voice_config["VoiceServerType"] = VoiceServerType;
-                    ArrayList list = new ArrayList {voice_config};
+                    ArrayList list = new ArrayList { voice_config };
                     responseData["voice-config"] = list;
                 }
 
@@ -554,7 +554,7 @@ namespace OpenSim.Services.LLLoginService
                 map["secure_session_id"] = OSD.FromUUID(SecureSessionID);
                 map["circuit_code"] = OSD.FromInteger(CircuitCode);
                 map["seconds_since_epoch"] =
-                    OSD.FromInteger((int) (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
+                    OSD.FromInteger((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds);
 
                 #region Login Flags
 
@@ -677,7 +677,7 @@ namespace OpenSim.Services.LLLoginService
                 OSDMap mp = new OSDMap();
                 foreach (DictionaryEntry deHt in ht)
                 {
-                    mp.Add((string) deHt.Key, OSD.FromObject(deHt.Value));
+                    mp.Add((string)deHt.Key, OSD.FromObject(deHt.Value));
                 }
                 llsdBack.Add(mp);
             }
@@ -686,7 +686,7 @@ namespace OpenSim.Services.LLLoginService
 
         private static OSDArray WrapOSDMap(OSDMap wrapMe)
         {
-            OSDArray array = new OSDArray {wrapMe};
+            OSDArray array = new OSDArray { wrapMe };
             return array;
         }
 
@@ -698,12 +698,14 @@ namespace OpenSim.Services.LLLoginService
         private static BuddyList ConvertFriendListItem(FriendInfo[] friendsList)
         {
             BuddyList buddylistreturn = new BuddyList();
-            foreach (BuddyList.BuddyInfo buddyitem in from finfo in friendsList where finfo.TheirFlags != -1 select new BuddyList.BuddyInfo(finfo.Friend)
-                                                                                                              {
-                                                                                                                  BuddyID = finfo.Friend,
-                                                                                                                  BuddyRightsHave = finfo.TheirFlags,
-                                                                                                                  BuddyRightsGiven = finfo.MyFlags
-                                                                                                              })
+            foreach (BuddyList.BuddyInfo buddyitem in from finfo in friendsList
+                                                      where finfo.TheirFlags != -1
+                                                      select new BuddyList.BuddyInfo(finfo.Friend)
+                                                       {
+                                                           BuddyID = finfo.Friend,
+                                                           BuddyRightsHave = finfo.TheirFlags,
+                                                           BuddyRightsGiven = finfo.MyFlags
+                                                       })
             {
                 buddylistreturn.AddNewBuddy(buddyitem);
             }
@@ -723,8 +725,8 @@ namespace OpenSim.Services.LLLoginService
                 TempHash = new Hashtable();
                 TempHash["name"] = InvFolder.Name;
                 TempHash["parent_id"] = InvFolder.ParentID.ToString();
-                TempHash["version"] = (Int32) InvFolder.Version;
-                TempHash["type_default"] = (Int32) InvFolder.Type;
+                TempHash["version"] = (Int32)InvFolder.Version;
+                TempHash["type_default"] = (Int32)InvFolder.Type;
                 TempHash["folder_id"] = InvFolder.ID.ToString();
                 AgentInventoryArray.Add(TempHash);
             }
@@ -789,7 +791,7 @@ namespace OpenSim.Services.LLLoginService
             //for now create random inventory library owner
             Hashtable TempHash = new Hashtable();
             TempHash["agent_id"] = libService.LibraryOwner.ToString(); // libFolder.Owner
-            ArrayList inventoryLibOwner = new ArrayList {TempHash};
+            ArrayList inventoryLibOwner = new ArrayList { TempHash };
             return inventoryLibOwner;
         }
 
@@ -929,79 +931,79 @@ namespace OpenSim.Services.LLLoginService
 
         public string SunTexture
         {
-            get { return (string) LLLoginResponseRegister.GetValue("SunTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SunTexture"); }
         }
 
         public string CloudTexture
         {
-            get { return (string) LLLoginResponseRegister.GetValue("CloudTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("CloudTexture"); }
         }
 
         public string MoonTexture
         {
-            get { return (string) LLLoginResponseRegister.GetValue("MoonTexture"); }
+            get { return (string)LLLoginResponseRegister.GetValue("MoonTexture"); }
         }
 
         public string AllowFirstLife
         {
-            get { return (string) LLLoginResponseRegister.GetValue("AllowFirstLife"); }
+            get { return (string)LLLoginResponseRegister.GetValue("AllowFirstLife"); }
         }
 
         public bool AllowExportPermission
         {
-            get { return (bool) LLLoginResponseRegister.GetValue("AllowExportPermission"); }
+            get { return (bool)LLLoginResponseRegister.GetValue("AllowExportPermission"); }
         }
 
         public string OpenIDURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("OpenIDURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("OpenIDURL"); }
         }
 
         public string SnapshotConfigURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("SnapshotConfigURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SnapshotConfigURL"); }
         }
 
         public string HelpURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("HelpURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("HelpURL"); }
         }
 
         public int MaxAgentGroups
         {
-            get { return (int) LLLoginResponseRegister.GetValue("MaxAgentGroups"); }
+            get { return (int)LLLoginResponseRegister.GetValue("MaxAgentGroups"); }
         }
 
         public string VoiceServerType
         {
-            get { return (string) LLLoginResponseRegister.GetValue("VoiceServerType"); }
+            get { return (string)LLLoginResponseRegister.GetValue("VoiceServerType"); }
         }
 
         public string TutorialURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("TutorialURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("TutorialURL"); }
         }
 
         public string MapTileURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("MapTileURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("MapTileURL"); }
         }
 
         public string SearchURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("SearchURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("SearchURL"); }
         }
 
         public string WebProfileURL
         {
-            get { return (string) LLLoginResponseRegister.GetValue("WebProfileURL"); }
+            get { return (string)LLLoginResponseRegister.GetValue("WebProfileURL"); }
         }
 
         public string Message
         {
             get
             {
-                string retVal = (string) LLLoginResponseRegister.GetValue("Message");
+                string retVal = (string)LLLoginResponseRegister.GetValue("Message");
                 if (retVal.Contains("<USERNAME>"))
                     retVal = retVal.Replace("<USERNAME>", firstname + " " + lastname);
                 return retVal;

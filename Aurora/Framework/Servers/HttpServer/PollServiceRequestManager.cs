@@ -89,15 +89,14 @@ namespace Aurora.Framework.Servers.HttpServer
                     m_PollServiceWorkerThreads[i] = new PollServiceWorkerThread(m_server, m_timeOut);
                     m_PollServiceWorkerThreads[i].ReQueue += ReQueueEvent;
 
-                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart)
-                                             {Name = String.Format("PollServiceWorkerThread{0}", i)};
+                    m_workerThreads[i] = new Thread(m_PollServiceWorkerThreads[i].ThreadStart) { Name = String.Format("PollServiceWorkerThread{0}", i) };
                     //Can't add to thread Tracker here Referencing Aurora.Framework creates circular reference
                     m_workerThreads[i].Start();
                 }
             }
 
             //start watcher threads
-            m_watcherThread = new Thread(ThreadStart) {Name = "PollServiceWatcherThread"};
+            m_watcherThread = new Thread(ThreadStart) { Name = "PollServiceWatcherThread" };
             m_watcherThread.Start();
         }
 
@@ -127,7 +126,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (m_requests.Count == 0)
                     return false;
 
-                int reqperthread = (int) (m_requests.Count/m_WorkerThreadCount) + 1;
+                int reqperthread = (int)(m_requests.Count / m_WorkerThreadCount) + 1;
                 // For Each WorkerThread
                 for (int tc = 0; tc < m_WorkerThreadCount && m_requests.Count > 0; tc++)
                 {
@@ -136,7 +135,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         try
                         {
-                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest) m_requests.Dequeue());
+                            m_PollServiceWorkerThreads[tc].Enqueue((PollServiceHttpRequest)m_requests.Dequeue());
                         }
                         catch (InvalidOperationException)
                         {

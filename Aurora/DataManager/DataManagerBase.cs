@@ -71,7 +71,7 @@ namespace Aurora.DataManager
             }, null, null, null);
             if (results.Count > 0)
             {
-                Version[] highestVersion = {null};
+                Version[] highestVersion = { null };
 #if (!ISWIN)
                 foreach (string result in results)
                 {
@@ -110,7 +110,7 @@ namespace Aurora.DataManager
             filter.andFilters[COLUMN_NAME] = MigrationName;
             Delete(VERSION_TABLE_NAME, filter);
             //Add the new version
-            Insert(VERSION_TABLE_NAME, new[] {version.ToString(), MigrationName});
+            Insert(VERSION_TABLE_NAME, new[] { version.ToString(), MigrationName });
         }
 
         public void CopyTableToTable(string sourceTableName, string destinationTableName, ColumnDefinition[] columnDefinitions, IndexDefinition[] indexDefinitions)
@@ -207,7 +207,8 @@ namespace Aurora.DataManager
 
             Dictionary<string, IndexDefinition> ei = ExtractIndicesFromTable(tableName);
             List<IndexDefinition> extractedIndices = new List<IndexDefinition>(ei.Count);
-            foreach(KeyValuePair<string, IndexDefinition> kvp in ei){
+            foreach (KeyValuePair<string, IndexDefinition> kvp in ei)
+            {
                 extractedIndices.Add(kvp.Value);
             }
             List<IndexDefinition> newIndices = new List<IndexDefinition>(indexDefinitions);

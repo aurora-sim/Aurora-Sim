@@ -172,7 +172,7 @@ namespace Aurora.Services.DataService
             List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, filter, null, null, null);
 
 
-            return (q != null && q.Count > 0) ? q[0] :  "";
+            return (q != null && q.Count > 0) ? q[0] : "";
         }
 
         public virtual byte[] FetchInventoryReply(OSDArray fetchRequest, UUID AgentID, UUID forceOwnerID, UUID libraryOwnerID)
@@ -186,7 +186,7 @@ namespace Aurora.Services.DataService
             foreach (OSD m in fetchRequest)
             {
                 contents.WriteStartMap("internalContents"); //Start internalContents kvp
-                OSDMap invFetch = (OSDMap) m;
+                OSDMap invFetch = (OSDMap)m;
 
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
@@ -207,7 +207,7 @@ namespace Aurora.Services.DataService
                 bool addToCount = true;
                 string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
                                              "avatarID", AgentID, "avatarID", libraryOwnerID);
-                redoQuery:
+            redoQuery:
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))
                 {
                     try
@@ -272,11 +272,11 @@ namespace Aurora.Services.DataService
                                                 : forceOwnerID;
                             contents["agent_id"] = avatarID;
 
-                            AssetType assetType = (AssetType) int.Parse(retVal["assetType"].ToString());
+                            AssetType assetType = (AssetType)int.Parse(retVal["assetType"].ToString());
                             if (assetType == AssetType.Link)
                                 moreLinkedItems.Add(assetID);
-                            contents["type"] = Utils.AssetTypeToString((AssetType) Util.CheckMeshType((sbyte) assetType));
-                            InventoryType invType = (InventoryType) int.Parse(retVal["invType"].ToString());
+                            contents["type"] = Utils.AssetTypeToString((AssetType)Util.CheckMeshType((sbyte)assetType));
+                            InventoryType invType = (InventoryType)int.Parse(retVal["invType"].ToString());
                             contents["inv_type"] = Utils.InventoryTypeToString(invType);
 
                             if (addToCount)
@@ -333,9 +333,9 @@ namespace Aurora.Services.DataService
                 if (versionRetVal.Count > 0)
                 {
                     version = int.Parse(versionRetVal[0]);
-                    if (int.Parse(versionRetVal[1]) == (int) AssetType.TrashFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.CurrentOutfitFolder ||
-                        int.Parse(versionRetVal[1]) == (int) AssetType.LinkFolder)
+                    if (int.Parse(versionRetVal[1]) == (int)AssetType.TrashFolder ||
+                        int.Parse(versionRetVal[1]) == (int)AssetType.CurrentOutfitFolder ||
+                        int.Parse(versionRetVal[1]) == (int)AssetType.LinkFolder)
                     {
                         //If it is the trash folder, we need to send its descendents, because the viewer wants it
                         query = String.Format("where {0} = '{1}' and {2} = '{3}'", "parentFolderID", folder_id,
@@ -510,7 +510,7 @@ namespace Aurora.Services.DataService
         public virtual InventoryItemBase[] GetActiveGestures(UUID principalID)
         {
             string query = String.Format("where {0} = '{1}' and {2} = '{3}'", "avatarID", principalID, "assetType",
-                                         (int) AssetType.Gesture);
+                                         (int)AssetType.Gesture);
 
             using (IDataReader reader = GD.QueryData(query, m_itemsrealm, "*"))
             {
@@ -605,8 +605,8 @@ namespace Aurora.Services.DataService
                 permissions["owner_id"] = item["agent_id"];
                 permissions["last_owner_id"] = item["agent_id"];
 
-                item["type"] = Utils.AssetTypeToString((AssetType) int.Parse(retVal["assetType"].ToString()));
-                item["inv_type"] = Utils.InventoryTypeToString((InventoryType) int.Parse(retVal["invType"].ToString()));
+                item["type"] = Utils.AssetTypeToString((AssetType)int.Parse(retVal["assetType"].ToString()));
+                item["inv_type"] = Utils.InventoryTypeToString((InventoryType)int.Parse(retVal["invType"].ToString()));
 
                 item["permissions"] = permissions;
 
@@ -628,7 +628,7 @@ namespace Aurora.Services.DataService
                                                  {
                                                      Name = retVal["folderName"][i],
                                                      Type = short.Parse(retVal["type"][i]),
-                                                     Version = (ushort) int.Parse(retVal["version"][i]),
+                                                     Version = (ushort)int.Parse(retVal["version"][i]),
                                                      ID = UUID.Parse(retVal["folderID"][i]),
                                                      Owner = UUID.Parse(retVal["agentID"][i]),
                                                      ParentID = UUID.Parse(retVal["parentFolderID"][i])
@@ -699,67 +699,67 @@ namespace Aurora.Services.DataService
                     writer.WriteString(name);
                     writer.WriteEndElement();
                     Type t = value.GetType();
-                    if (t == typeof (bool))
+                    if (t == typeof(bool))
                     {
                         writer.WriteStartElement(String.Empty, "boolean", String.Empty);
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (int))
+                    else if (t == typeof(int))
                     {
                         writer.WriteStartElement(String.Empty, "integer", String.Empty);
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (uint))
+                    else if (t == typeof(uint))
                     {
                         writer.WriteStartElement(String.Empty, "integer", String.Empty);
                         writer.WriteValue(value.ToString());
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (float))
+                    else if (t == typeof(float))
                     {
                         writer.WriteStartElement(String.Empty, "real", String.Empty);
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (double))
+                    else if (t == typeof(double))
                     {
                         writer.WriteStartElement(String.Empty, "real", String.Empty);
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (string))
+                    else if (t == typeof(string))
                     {
                         writer.WriteStartElement(String.Empty, "string", String.Empty);
                         writer.WriteValue(value);
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (UUID))
+                    else if (t == typeof(UUID))
                     {
                         writer.WriteStartElement(String.Empty, "uuid", String.Empty);
                         writer.WriteValue(value.ToString()); //UUID has to be string!
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (DateTime))
+                    else if (t == typeof(DateTime))
                     {
                         writer.WriteStartElement(String.Empty, "date", String.Empty);
-                        writer.WriteValue(AsString((DateTime) value));
+                        writer.WriteValue(AsString((DateTime)value));
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (Uri))
+                    else if (t == typeof(Uri))
                     {
                         writer.WriteStartElement(String.Empty, "uri", String.Empty);
                         writer.WriteValue((value).ToString()); //URI has to be string
                         writer.WriteEndElement();
                     }
-                    else if (t == typeof (byte[]))
+                    else if (t == typeof(byte[]))
                     {
                         writer.WriteStartElement(String.Empty, "binary", String.Empty);
                         writer.WriteStartAttribute(String.Empty, "encoding", String.Empty);
                         writer.WriteString("base64");
                         writer.WriteEndAttribute();
-                        writer.WriteValue(Convert.ToBase64String((byte[]) value)); //Has to be base64
+                        writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
                         writer.WriteEndElement();
                     }
                     t = null;
@@ -796,67 +796,67 @@ namespace Aurora.Services.DataService
             public void WriteElement(object value)
             {
                 Type t = value.GetType();
-                if (t == typeof (bool))
+                if (t == typeof(bool))
                 {
                     writer.WriteStartElement(String.Empty, "boolean", String.Empty);
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (int))
+                else if (t == typeof(int))
                 {
                     writer.WriteStartElement(String.Empty, "integer", String.Empty);
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (uint))
+                else if (t == typeof(uint))
                 {
                     writer.WriteStartElement(String.Empty, "integer", String.Empty);
                     writer.WriteValue(value.ToString());
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (float))
+                else if (t == typeof(float))
                 {
                     writer.WriteStartElement(String.Empty, "real", String.Empty);
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (double))
+                else if (t == typeof(double))
                 {
                     writer.WriteStartElement(String.Empty, "real", String.Empty);
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (string))
+                else if (t == typeof(string))
                 {
                     writer.WriteStartElement(String.Empty, "string", String.Empty);
                     writer.WriteValue(value);
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (UUID))
+                else if (t == typeof(UUID))
                 {
                     writer.WriteStartElement(String.Empty, "uuid", String.Empty);
                     writer.WriteValue(value.ToString()); //UUID has to be string!
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (DateTime))
+                else if (t == typeof(DateTime))
                 {
                     writer.WriteStartElement(String.Empty, "date", String.Empty);
-                    writer.WriteValue(AsString((DateTime) value));
+                    writer.WriteValue(AsString((DateTime)value));
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (Uri))
+                else if (t == typeof(Uri))
                 {
                     writer.WriteStartElement(String.Empty, "uri", String.Empty);
                     writer.WriteValue((value).ToString()); //URI has to be string
                     writer.WriteEndElement();
                 }
-                else if (t == typeof (byte[]))
+                else if (t == typeof(byte[]))
                 {
                     writer.WriteStartElement(String.Empty, "binary", String.Empty);
                     writer.WriteStartAttribute(String.Empty, "encoding", String.Empty);
                     writer.WriteString("base64");
                     writer.WriteEndAttribute();
-                    writer.WriteValue(Convert.ToBase64String((byte[]) value)); //Has to be base64
+                    writer.WriteValue(Convert.ToBase64String((byte[])value)); //Has to be base64
                     writer.WriteEndElement();
                 }
                 t = null;

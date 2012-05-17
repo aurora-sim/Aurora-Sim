@@ -101,7 +101,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
             {
                 return r;
             }
-#endif  
+#endif
             return new OSD();
         }
 

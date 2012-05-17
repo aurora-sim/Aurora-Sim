@@ -52,7 +52,7 @@ namespace Aurora.Simulation.Base
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
-        
+
         private static int m_requestNumber;
         private const int m_defaultTimeout = 20000;
 
@@ -62,13 +62,13 @@ namespace Aurora.Simulation.Base
         public static byte[] SerializeResult(XmlSerializer xs, object data)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8) {Formatting = Formatting.Indented};
+            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8) { Formatting = Formatting.Indented };
             xs.Serialize(xw, data);
             xw.Flush();
 
             ms.Seek(0, SeekOrigin.Begin);
             byte[] ret = ms.GetBuffer();
-            Array.Resize(ref ret, (int) ms.Length);
+            Array.Resize(ref ret, (int)ms.Length);
 
             return ret;
         }
@@ -76,14 +76,14 @@ namespace Aurora.Simulation.Base
         public static Dictionary<string, object> ParseQueryString(string query)
         {
             Dictionary<string, object> result = new Dictionary<string, object>();
-            string[] terms = query.Split(new[] {'&'});
+            string[] terms = query.Split(new[] { '&' });
 
             if (terms.Length == 0)
                 return result;
 
             foreach (string t in terms)
             {
-                string[] elems = t.Split(new[] {'='});
+                string[] elems = t.Split(new[] { '=' });
                 if (elems.Length == 0)
                     continue;
 
@@ -101,13 +101,13 @@ namespace Aurora.Simulation.Base
                         if (!(result[cleanName] is List<string>))
                             continue;
 
-                        List<string> l = (List<string>) result[cleanName];
+                        List<string> l = (List<string>)result[cleanName];
 
                         l.Add(value);
                     }
                     else
                     {
-                        List<string> newList = new List<string> {value};
+                        List<string> newList = new List<string> { value };
 
                         result[cleanName] = newList;
                     }
@@ -131,7 +131,7 @@ namespace Aurora.Simulation.Base
                 string part;
                 if (kvp.Value is List<string>)
                 {
-                    List<string> l = (List<String>) kvp.Value;
+                    List<string> l = (List<String>)kvp.Value;
 
                     foreach (string s in l)
                     {
@@ -173,7 +173,7 @@ namespace Aurora.Simulation.Base
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
                                              "", "");
             // Set the encoding declaration.
-            ((XmlDeclaration) xmlnode).Encoding = "UTF-8";
+            ((XmlDeclaration)xmlnode).Encoding = "UTF-8";
             doc.AppendChild(xmlnode);
 
             XmlElement rootElement = doc.CreateElement("", "ServerResponse",
@@ -206,7 +206,7 @@ namespace Aurora.Simulation.Base
 
                         elem.Attributes.Append(type);
 
-                        BuildXmlData(elem, (Dictionary<string, object>) kvp.Value);
+                        BuildXmlData(elem, (Dictionary<string, object>)kvp.Value);
                     }
                     else if (kvp.Value is Dictionary<string, string>)
                     {
@@ -217,7 +217,7 @@ namespace Aurora.Simulation.Base
                         elem.Attributes.Append(type);
 #if (!ISWIN)
                         Dictionary<string, object> value = new Dictionary<string, object>();
-                        foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>) kvp.Value))
+                        foreach (KeyValuePair<string, string> pair in ((Dictionary<string, string>)kvp.Value))
                             value.Add(pair.Key, pair.Value);
 #else
                         Dictionary<string, object> value = ((Dictionary<string, string>) kvp.Value).ToDictionary<KeyValuePair<string, string>, string, object>(pair => pair.Key, pair => pair.Value);
@@ -345,12 +345,12 @@ namespace Aurora.Simulation.Base
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = method;
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout/4;
+                request.ReadWriteTimeout = timeout / 4;
                 request.Headers[OSHeaderRequestID] = reqnum.ToString();
 
                 // If there is some input, write it into the request
@@ -399,7 +399,7 @@ namespace Aurora.Simulation.Base
                 errorMessage = we.Message;
                 if (we.Status == WebExceptionStatus.ProtocolError)
                 {
-                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
+                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
                     errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                 }
             }
@@ -447,7 +447,7 @@ namespace Aurora.Simulation.Base
             {
                 OSD responseOSD = OSDParser.Deserialize(response);
                 if (responseOSD.Type == OSDType.Map)
-                    result = (OSDMap) responseOSD;
+                    result = (OSDMap)responseOSD;
                 return result;
             }
 
@@ -500,12 +500,12 @@ namespace Aurora.Simulation.Base
 
             try
             {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
                 request.Timeout = timeout;
                 request.KeepAlive = false;
                 request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout/4;
+                request.ReadWriteTimeout = timeout / 4;
                 request.Headers[OSHeaderRequestID] = reqnum.ToString();
 
                 if (data != null)
@@ -532,7 +532,7 @@ namespace Aurora.Simulation.Base
                         responseStr = responseStream.GetStreamString();
                         OSD responseOSD = OSDParser.Deserialize(responseStr);
                         if (responseOSD.Type == OSDType.Map)
-                            return (OSDMap) responseOSD;
+                            return (OSDMap)responseOSD;
                     }
                 }
             }
@@ -541,7 +541,7 @@ namespace Aurora.Simulation.Base
                 errorMessage = we.Message;
                 if (we.Status == WebExceptionStatus.ProtocolError)
                 {
-                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
+                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
                     errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                 }
             }
@@ -605,7 +605,7 @@ namespace Aurora.Simulation.Base
             if (string.IsNullOrEmpty(accept))
                 return new string[0];
 
-            string[] types = accept.Split(new[] {','});
+            string[] types = accept.Split(new[] { ',' });
             if (types.Length > 0)
             {
                 List<string> list = new List<string>(types);
@@ -620,9 +620,9 @@ namespace Aurora.Simulation.Base
                 string[] result = new string[tlist.Count];
                 for (int i = 0; i < tlist.Count; i++)
                 {
-                    string mime = (string) tlist[i];
-                    string[] parts = mime.Split(new[] {';'});
-                    string[] pair = parts[0].Split(new[] {'/'});
+                    string mime = (string)tlist[i];
+                    string[] parts = mime.Split(new[] { ';' });
+                    string[] pair = parts[0].Split(new[] { '/' });
                     if (pair.Length == 2)
                         result[i] = pair[1].ToLower();
                     else // oops, we don't know what this is...
@@ -649,7 +649,7 @@ namespace Aurora.Simulation.Base
             action = "";
             other = "";
 
-            uri = uri.Trim(new[] {'/'});
+            uri = uri.Trim(new[] { '/' });
             string[] parts = uri.Split('/');
             if (parts.Length <= 1)
             {
@@ -681,7 +681,7 @@ namespace Aurora.Simulation.Base
             regionID = UUID.Zero;
             action = "";
 
-            uri = uri.Trim(new[] {'/'});
+            uri = uri.Trim(new[] { '/' });
             string[] parts = uri.Split('/');
             if (parts.Length <= 1)
             {
@@ -713,11 +713,11 @@ namespace Aurora.Simulation.Base
                 OSD buffer = OSDParser.DeserializeJson(data);
                 if (buffer.Type == OSDType.Map)
                 {
-                    OSDMap args = (OSDMap) buffer;
+                    OSDMap args = (OSDMap)buffer;
                     return args;
                 }
                 // uh?
-                if(doLogMessages)
+                if (doLogMessages)
                     MainConsole.Instance.Warn(("[WebUtils]: Got OSD of unexpected type " + buffer.Type.ToString()));
                 return null;
             }
@@ -757,11 +757,11 @@ namespace Aurora.Simulation.Base
 
                 if (o is String)
                 {
-                    string mime = (string) o;
-                    string[] parts = mime.Split(new[] {';'});
+                    string mime = (string)o;
+                    string[] parts = mime.Split(new[] { ';' });
                     if (parts.Length > 1)
                     {
-                        string[] kvp = parts[1].Split(new[] {'='});
+                        string[] kvp = parts[1].Split(new[] { '=' });
                         if (kvp.Length == 2 && kvp[0] == "q")
                         {
                             float qvalue = 1F;
@@ -811,7 +811,7 @@ namespace Aurora.Simulation.Base
         /// <returns><c>XmlRpcResponse</c> The response generated.</returns>
         public XmlRpcResponse Send(String url)
         {
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             if (request == null)
                 throw new XmlRpcException(XmlRpcErrorCodes.TRANSPORT_ERROR,
                                           XmlRpcErrorCodes.TRANSPORT_ERROR_MSG + ": Could not create request with " +
@@ -827,14 +827,14 @@ namespace Aurora.Simulation.Base
             xml.Flush();
             xml.Close();
 
-            HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             StreamReader input = new StreamReader(response.GetResponseStream());
 
             string inputXml = input.ReadToEnd();
             XmlRpcResponse resp;
             try
             {
-                resp = (XmlRpcResponse) _deserializer.Deserialize(inputXml);
+                resp = (XmlRpcResponse)_deserializer.Deserialize(inputXml);
             }
             catch (Exception)
             {

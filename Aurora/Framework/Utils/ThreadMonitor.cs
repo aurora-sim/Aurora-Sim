@@ -53,7 +53,7 @@ namespace Aurora.Framework
         {
             lock (m_lock)
             {
-                m_heartbeats.Add(new InternalHeartbeat {heartBeat = hb, millisecondTimeOut = millisecondTimeOut});
+                m_heartbeats.Add(new InternalHeartbeat { heartBeat = hb, millisecondTimeOut = millisecondTimeOut });
             }
         }
 
@@ -76,8 +76,7 @@ namespace Aurora.Framework
             m_timesToIterate = timesToIterate;
             m_sleepTime = sleepTime;
 
-            Thread thread = new Thread(Run)
-                                {IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal};
+            Thread thread = new Thread(Run) { IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal };
             thread.Start();
         }
 

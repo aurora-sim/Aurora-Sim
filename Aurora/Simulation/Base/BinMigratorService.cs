@@ -68,7 +68,7 @@ namespace Aurora.Simulation.Base
             if (File.Exists("Aurora.Protection.dll"))
                 File.Delete("Aurora.Protection.dll");
 
-            foreach(string path in Directory.GetDirectories("ScriptEngines//"))
+            foreach (string path in Directory.GetDirectories("ScriptEngines//"))
             {
                 Directory.Delete(path, true);
             }
@@ -116,8 +116,8 @@ namespace Aurora.Simulation.Base
         public void RunMigration5()
         {
             IniMigrator.UpdateIniFile("AuroraServerConfiguration/Main.ini", "RegionPermissions",
-                new[] { "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium", "Threat_Level_High","Threat_Level_Full" },
-                new[] { "", "", "", "", ""},
+                new[] { "Threat_Level_None", "Threat_Level_Low", "Threat_Level_Medium", "Threat_Level_High", "Threat_Level_Full" },
+                new[] { "", "", "", "", "" },
                 new[] { MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add, MigratorAction.Add });
         }
 

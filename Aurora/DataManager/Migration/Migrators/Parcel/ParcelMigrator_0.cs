@@ -47,7 +47,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("Flags", ColumnTypes.String50),
                 ColDef("Time", ColumnTypes.String50)
             ), IndexDefs(
-                IndexDef(new string[1]{ "ParcelID" }, IndexType.Primary)
+                IndexDef(new string[1] { "ParcelID" }, IndexType.Primary)
             ));
         }
 

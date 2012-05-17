@@ -199,7 +199,7 @@ namespace Aurora.Modules.Profiles
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI remoteClient = (IClientAPI) sender;
+            IClientAPI remoteClient = (IClientAPI)sender;
             UUID requestedUUID = new UUID(args[0]);
 
             Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
@@ -269,9 +269,9 @@ namespace Aurora.Modules.Profiles
                 }
             }
 
-            uint creationdate = (uint) Util.UnixTimeSinceEpoch();
+            uint creationdate = (uint)Util.UnixTimeSinceEpoch();
 
-            uint expirationdate = (uint) Util.UnixTimeSinceEpoch() + (365*24*60*60);
+            uint expirationdate = (uint)Util.UnixTimeSinceEpoch() + (365 * 24 * 60 * 60);
 
             Classified classified = new Classified
                                         {
@@ -318,7 +318,7 @@ namespace Aurora.Modules.Profiles
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI remoteClient = (IClientAPI) sender;
+            IClientAPI remoteClient = (IClientAPI)sender;
             UUID requestedUUID = new UUID(args[0]);
 
 #if (!ISWIN)
@@ -336,7 +336,7 @@ namespace Aurora.Modules.Profiles
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI remoteClient = (IClientAPI) sender;
+            IClientAPI remoteClient = (IClientAPI)sender;
             UUID PickUUID = UUID.Parse(args[1]);
 
             ProfilePickInfo pick = ProfileFrontend.GetPick(PickUUID);
@@ -362,8 +362,8 @@ namespace Aurora.Modules.Profiles
                 remoteClient.Scene.RequestModuleInterface<IParcelManagementModule>();
             if (parcelManagement != null)
             {
-                ILandObject targetlandObj = parcelManagement.GetLandObject(pos_global.X/Constants.RegionSize,
-                                                                           pos_global.Y/Constants.RegionSize);
+                ILandObject targetlandObj = parcelManagement.GetLandObject(pos_global.X / Constants.RegionSize,
+                                                                           pos_global.Y / Constants.RegionSize);
 
                 if (targetlandObj != null)
                 {
@@ -425,7 +425,7 @@ namespace Aurora.Modules.Profiles
                 return;
             }
 
-            IClientAPI remoteClient = (IClientAPI) sender;
+            IClientAPI remoteClient = (IClientAPI)sender;
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(remoteClient.AgentId);
             if (UPI == null)
                 return;
@@ -510,7 +510,7 @@ namespace Aurora.Modules.Profiles
                 if (UPI.MembershipGroup == "")
                 {
                     charterMember = new Byte[1];
-                    charterMember[0] = (Byte) ((TargetAccount.UserFlags & 0xf00) >> 8);
+                    charterMember[0] = (Byte)((TargetAccount.UserFlags & 0xf00) >> 8);
                 }
                 else
                 {
@@ -520,7 +520,7 @@ namespace Aurora.Modules.Profiles
                                                   Util.ToDateTime(UPI.Created).ToString("M/d/yyyy",
                                                                                         CultureInfo.InvariantCulture),
                                                   charterMember, UPI.FirstLifeAboutText,
-                                                  (uint) (TargetAccount.UserFlags & agentOnline),
+                                                  (uint)(TargetAccount.UserFlags & agentOnline),
                                                   UPI.FirstLifeImage, UPI.Image, UPI.WebURL, UPI.Partner);
             }
         }
@@ -559,7 +559,7 @@ namespace Aurora.Modules.Profiles
             if (Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
-                charterMember[0] = (Byte) ((account.UserFlags & 0xf00) >> 8);
+                charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
             }
             else
                 charterMember = Utils.StringToBytes(Profile.MembershipGroup);
@@ -569,7 +569,7 @@ namespace Aurora.Modules.Profiles
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) +
-                         membershipGroupINT + agentOnline + (uint) account.UserFlags;
+                         membershipGroupINT + agentOnline + (uint)account.UserFlags;
             remoteClient.SendAvatarInterestsReply(account.PrincipalID, Convert.ToUInt32(Profile.Interests.WantToMask),
                                                   Profile.Interests.WantToText,
                                                   Convert.ToUInt32(Profile.Interests.CanDoMask),
@@ -620,7 +620,7 @@ namespace Aurora.Modules.Profiles
                 if (module != null)
                 {
                     int perms = module.GetFriendPerms(hunter, target);
-                    if ((perms & (int) FriendRights.CanSeeOnMap) == (int) FriendRights.CanSeeOnMap)
+                    if ((perms & (int)FriendRights.CanSeeOnMap) == (int)FriendRights.CanSeeOnMap)
                     {
                         UserInfo GUI =
                             client.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
@@ -675,7 +675,7 @@ namespace Aurora.Modules.Profiles
 #if (!ISWIN)
             foreach (IScene s in m_Scenes)
             {
-                IScenePresence SP = s.GetScenePresence (avID);
+                IScenePresence SP = s.GetScenePresence(avID);
                 if (SP != null)
                 {
                     return SP;

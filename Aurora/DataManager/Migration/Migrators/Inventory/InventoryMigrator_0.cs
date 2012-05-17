@@ -49,7 +49,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("type", ColumnTypes.Integer11),
                 ColDef("version", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[3]{ "folderID", "agentID", "parentFolderID" }, IndexType.Primary)
+                IndexDef(new string[3] { "folderID", "agentID", "parentFolderID" }, IndexType.Primary)
             ));
 
             AddSchema("inventoryitems", ColDefs(
@@ -74,7 +74,7 @@ namespace Aurora.DataManager.Migration.Migrators
                 ColDef("parentFolderID", ColumnTypes.Char36),
                 ColDef("inventoryGroupPermissions", ColumnTypes.Integer11)
             ), IndexDefs(
-                IndexDef(new string[5]{ "assetType", "flags", "inventoryID", "avatarID", "parentFolderID" }, IndexType.Primary)
+                IndexDef(new string[5] { "assetType", "flags", "inventoryID", "avatarID", "parentFolderID" }, IndexType.Primary)
             ));
         }
 

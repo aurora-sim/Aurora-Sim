@@ -52,7 +52,7 @@ namespace Aurora.Framework
         public GridInstantMessage()
         {
             binaryBucket = new byte[0];
-            timestamp = (uint) Util.UnixTimeSinceEpoch();
+            timestamp = (uint)Util.UnixTimeSinceEpoch();
         }
 
         public GridInstantMessage(IScene scene, UUID _fromAgentID,
@@ -77,15 +77,16 @@ namespace Aurora.Framework
                 ParentEstateID = scene.RegionInfo.EstateSettings.ParentEstateID;
                 RegionID = scene.RegionInfo.RegionSettings.RegionUUID;
             }
-            timestamp = (uint) Util.UnixTimeSinceEpoch();
+            timestamp = (uint)Util.UnixTimeSinceEpoch();
         }
 
         public GridInstantMessage(IScene scene, UUID _fromAgentID,
                                   string _fromAgentName, UUID _toAgentID, byte _dialog,
                                   string _message, bool _offline,
-                                  Vector3 _position) : this(scene, _fromAgentID, _fromAgentName,
-                                                            _toAgentID, _dialog, false, _message,
-                                                            _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
+                                  Vector3 _position)
+            : this(scene, _fromAgentID, _fromAgentName,
+                   _toAgentID, _dialog, false, _message,
+                   _fromAgentID ^ _toAgentID, _offline, _position, new byte[0])
         {
         }
 
@@ -115,10 +116,10 @@ namespace Aurora.Framework
             fromAgentID = map["fromAgentID"].AsUUID();
             fromAgentName = map["fromAgentName"].AsString();
             toAgentID = map["toAgentID"].AsUUID();
-            dialog = (byte) map["dialog"].AsInteger();
+            dialog = (byte)map["dialog"].AsInteger();
             fromGroup = map["fromGroup"].AsBoolean();
             message = map["message"].ToString();
-            offline = (byte) map["offline"].AsInteger();
+            offline = (byte)map["offline"].AsInteger();
             Position = map["Position"].AsVector3();
             binaryBucket = map["binaryBucket"].AsBinary();
             ParentEstateID = map["ParentEstateID"].AsUInteger();

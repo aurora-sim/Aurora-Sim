@@ -62,7 +62,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (FunctionName == "DeleteToInventory")
             {
                 //Resave all the state saves for this object
-                ISceneEntity entity = (ISceneEntity) parameters;
+                ISceneEntity entity = (ISceneEntity)parameters;
                 foreach (ISceneChildEntity child in entity.ChildrenEntities())
                 {
                     m_module.SaveStateSaves(child.UUID);
@@ -141,7 +141,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         {
             instance.State = save.State;
             instance.Running = save.Running;
-            instance.EventDelayTicks = (long) save.MinEventDelay;
+            instance.EventDelayTicks = (long)save.MinEventDelay;
             instance.AssemblyName = save.AssemblyName;
             instance.Disabled = save.Disabled;
             instance.UserInventoryItemID = save.UserInventoryID;
@@ -183,7 +183,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                 }
                 StateSave save = new StateSave();
-                save.FromOSD((OSDMap) o);
+                save.FromOSD((OSDMap)o);
                 return save;
             }
             return null;

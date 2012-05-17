@@ -53,8 +53,8 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                 ColDef("last_history_id", ColumnTypes.String36),
                 ColDef("create_time", ColumnTypes.Integer30),
                 ColDef("enabled", ColumnTypes.TinyInt1)
-            ),  IndexDefs(
-                IndexDef(new string[3]{ "id", "runs_next", "enabled" }, IndexType.Primary)
+            ), IndexDefs(
+                IndexDef(new string[3] { "id", "runs_next", "enabled" }, IndexType.Primary)
             ));
 
             AddSchema("scheduler_history", ColDefs(
@@ -66,7 +66,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
                 ColDef("is_complete", ColumnTypes.TinyInt1),
                 ColDef("complete_time", ColumnTypes.Integer30)
             ), IndexDefs(
-                IndexDef(new string[2]{ "id", "scheduler_id" }, IndexType.Primary)
+                IndexDef(new string[2] { "id", "scheduler_id" }, IndexType.Primary)
             ));
         }
 

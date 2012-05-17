@@ -322,7 +322,7 @@ namespace Aurora.Modules.Scripting
 
             lock (m_pending.SyncRoot)
             {
-                li = (ListenerInfo) m_pending.Dequeue();
+                li = (ListenerInfo)m_pending.Dequeue();
             }
 
             return li;
@@ -395,7 +395,7 @@ namespace Aurora.Modules.Scripting
                     if (sPart.UUID != toID &&
                         sPart.AttachedAvatar != toID)
                         continue;
-                            //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
+                //Only allow the message to go on if it is an attachment with the given avatars ID or the part ID is right
 
                 double dis = Util.GetDistanceTo(sPart.AbsolutePosition, position);
                 switch (type)
@@ -671,10 +671,10 @@ namespace Aurora.Modules.Scripting
         public void AddFromData(UUID itemID, UUID hostID,
                                 OSD data)
         {
-            OSDMap save = (OSDMap) data;
+            OSDMap save = (OSDMap)data;
             foreach (KeyValuePair<string, OSD> kvp in save)
             {
-                OSDMap item = (OSDMap) kvp.Value;
+                OSDMap item = (OSDMap)kvp.Value;
                 ListenerInfo info = ListenerInfo.FromData(itemID, hostID, item);
                 AddListener(info.GetItemID(), info.GetHostID(), info.GetChannel(), info.GetName(), info.GetID(),
                             info.GetMessage());
@@ -796,7 +796,7 @@ namespace Aurora.Modules.Scripting
 
             ListenerInfo linfo = new ListenerInfo(Handle,
                                                   ItemID, hostID, Channel, Name,
-                                                  ID, Message) {m_active = Active};
+                                                  ID, Message) { m_active = Active };
 
             return linfo;
         }

@@ -19,7 +19,8 @@ namespace Amib.Threading.Internal
         /// <summary>
         ///   Each thread in the thread pool keeps its own waiter entry.
         /// </summary>
-        [ThreadStatic] private static WaiterEntry _waiterEntry;
+        [ThreadStatic]
+        private static WaiterEntry _waiterEntry;
 
         /// <summary>
         ///   Waiters queue (implemented as stack).
@@ -168,7 +169,7 @@ namespace Amib.Threading.Internal
                     workItem = _workItems.Dequeue() as WorkItem;
                     return workItem;
                 }
-                    // No waiting work items ...
+                // No waiting work items ...
                 else
                 {
                     // Get the wait entry for the waiters queue
@@ -318,8 +319,8 @@ namespace Amib.Threading.Internal
                 _headWaiterEntry._nextWaiterEntry = newWaiterEntry;
                 newWaiterEntry._prevWaiterEntry = _headWaiterEntry;
             }
-                // If the stack is not empty then put newWaiterEntry as the new head 
-                // of the stack.
+            // If the stack is not empty then put newWaiterEntry as the new head 
+            // of the stack.
             else
             {
                 // Save the old first waiter entry
@@ -415,7 +416,7 @@ namespace Amib.Threading.Internal
 
         #endregion
 
-        #region WaiterEntry class 
+        #region WaiterEntry class
 
         // A waiter entry in the _waiters queue.
         public class WaiterEntry : IDisposable

@@ -94,7 +94,7 @@ namespace Aurora.Modules.Groups
             param["AllowPublish"] = allowPublish ? 1 : 0;
             param["MaturePublish"] = maturePublish ? 1 : 0;
             param["FounderID"] = founderID.ToString();
-            param["EveryonePowers"] = ((ulong) m_DefaultEveryonePowers).ToString();
+            param["EveryonePowers"] = ((ulong)m_DefaultEveryonePowers).ToString();
             param["OwnerRoleID"] = OwnerRoleID.ToString();
 
             // Would this be cleaner as (GroupPowers)ulong.MaxValue;
@@ -143,7 +143,7 @@ namespace Aurora.Modules.Groups
                                       | GroupPowers.SetLandingPoint
                                       | GroupPowers.StartProposal
                                       | GroupPowers.VoteOnProposal;
-            param["OwnersPowers"] = ((ulong) OwnerPowers).ToString();
+            param["OwnersPowers"] = ((ulong)OwnerPowers).ToString();
 
 
             Hashtable respData = XmlRpcCall(requestingAgentID, "groups.createGroup", param);
@@ -155,7 +155,7 @@ namespace Aurora.Modules.Groups
                 return UUID.Zero;
             }
 
-            return UUID.Parse((string) respData["GroupID"]);
+            return UUID.Parse((string)respData["GroupID"]);
         }
 
         public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, bool showInList,
@@ -303,9 +303,9 @@ namespace Aurora.Modules.Groups
             GroupInviteInfo inviteInfo = new GroupInviteInfo
                                              {
                                                  InviteID = inviteID,
-                                                 GroupID = UUID.Parse((string) respData["GroupID"]),
-                                                 RoleID = UUID.Parse((string) respData["RoleID"]),
-                                                 AgentID = UUID.Parse((string) respData["AgentID"])
+                                                 GroupID = UUID.Parse((string)respData["GroupID"]),
+                                                 RoleID = UUID.Parse((string)respData["RoleID"]),
+                                                 AgentID = UUID.Parse((string)respData["AgentID"])
                                              };
 
             return inviteInfo;
@@ -371,13 +371,13 @@ namespace Aurora.Modules.Groups
 
             if (!respData.Contains("error"))
             {
-                Hashtable results = (Hashtable) respData["results"];
+                Hashtable results = (Hashtable)respData["results"];
                 foreach (Hashtable groupFind in results.Values)
                 {
-                    DirGroupsReplyData data = new DirGroupsReplyData {groupID = new UUID((string) groupFind["GroupID"])};
+                    DirGroupsReplyData data = new DirGroupsReplyData { groupID = new UUID((string)groupFind["GroupID"]) };
                     ;
-                    data.groupName = (string) groupFind["Name"];
-                    data.members = int.Parse((string) groupFind["Members"]);
+                    data.groupName = (string)groupFind["Name"];
+                    data.members = int.Parse((string)groupFind["Members"]);
                     // data.searchOrder = order;
 
                     findings.Add(data);
@@ -431,7 +431,7 @@ namespace Aurora.Modules.Groups
 
             if (!respData.Contains("error"))
             {
-                memberships.AddRange(from object membership in respData.Values select HashTableToGroupMembershipData((Hashtable) membership));
+                memberships.AddRange(from object membership in respData.Values select HashTableToGroupMembershipData((Hashtable)membership));
             }
 
             return memberships;
@@ -455,7 +455,11 @@ namespace Aurora.Modules.Groups
             Roles.AddRange(from Hashtable role in respData.Values
                            select new GroupRolesData
                                       {
-                                          RoleID = new UUID((string) role["RoleID"]), Name = (string) role["Name"], Description = (string) role["Description"], Powers = ulong.Parse((string) role["Powers"]), Title = (string) role["Title"]
+                                          RoleID = new UUID((string)role["RoleID"]),
+                                          Name = (string)role["Name"],
+                                          Description = (string)role["Description"],
+                                          Powers = ulong.Parse((string)role["Powers"]),
+                                          Title = (string)role["Title"]
                                       });
 
             return Roles;
@@ -478,7 +482,12 @@ namespace Aurora.Modules.Groups
             Roles.AddRange(from Hashtable role in respData.Values
                            select new GroupRolesData
                                       {
-                                          Description = (string) role["Description"], Members = int.Parse((string) role["Members"]), Name = (string) role["Name"], Powers = ulong.Parse((string) role["Powers"]), RoleID = new UUID((string) role["RoleID"]), Title = (string) role["Title"]
+                                          Description = (string)role["Description"],
+                                          Members = int.Parse((string)role["Members"]),
+                                          Name = (string)role["Name"],
+                                          Powers = ulong.Parse((string)role["Powers"]),
+                                          RoleID = new UUID((string)role["RoleID"]),
+                                          Title = (string)role["Title"]
                                       });
 
             return Roles;
@@ -501,7 +510,13 @@ namespace Aurora.Modules.Groups
             members.AddRange(from Hashtable membership in respData.Values
                              select new GroupMembersData
                                         {
-                                            AcceptNotices = ((string) membership["AcceptNotices"]) == "1", AgentID = new UUID((string) membership["AgentID"]), Contribution = int.Parse((string) membership["Contribution"]), IsOwner = ((string) membership["IsOwner"]) == "1", ListInProfile = ((string) membership["ListInProfile"]) == "1", AgentPowers = ulong.Parse((string) membership["AgentPowers"]), Title = (string) membership["Title"]
+                                            AcceptNotices = ((string)membership["AcceptNotices"]) == "1",
+                                            AgentID = new UUID((string)membership["AgentID"]),
+                                            Contribution = int.Parse((string)membership["Contribution"]),
+                                            IsOwner = ((string)membership["IsOwner"]) == "1",
+                                            ListInProfile = ((string)membership["ListInProfile"]) == "1",
+                                            AgentPowers = ulong.Parse((string)membership["AgentPowers"]),
+                                            Title = (string)membership["Title"]
                                         });
 
             return members;
@@ -521,7 +536,8 @@ namespace Aurora.Modules.Groups
                 members.AddRange(from Hashtable membership in respData.Values
                                  select new GroupRoleMembersData
                                             {
-                                                MemberID = new UUID((string) membership["AgentID"]), RoleID = new UUID((string) membership["RoleID"])
+                                                MemberID = new UUID((string)membership["AgentID"]),
+                                                RoleID = new UUID((string)membership["RoleID"])
                                             });
             }
             return members;
@@ -541,7 +557,12 @@ namespace Aurora.Modules.Groups
                 values.AddRange(from Hashtable value in respData.Values
                                 select new GroupNoticeData
                                            {
-                                               NoticeID = UUID.Parse((string) value["NoticeID"]), Timestamp = uint.Parse((string) value["Timestamp"]), FromName = (string) value["FromName"], Subject = (string) value["Subject"], HasAttachment = false, AssetType = 0
+                                               NoticeID = UUID.Parse((string)value["NoticeID"]),
+                                               Timestamp = uint.Parse((string)value["Timestamp"]),
+                                               FromName = (string)value["FromName"],
+                                               Subject = (string)value["Subject"],
+                                               HasAttachment = false,
+                                               AssetType = 0
                                            });
             }
             return values;
@@ -562,16 +583,16 @@ namespace Aurora.Modules.Groups
 
             GroupNoticeInfo data = new GroupNoticeInfo
                                        {
-                                           GroupID = UUID.Parse((string) respData["GroupID"]),
-                                           Message = (string) respData["Message"],
+                                           GroupID = UUID.Parse((string)respData["GroupID"]),
+                                           Message = (string)respData["Message"],
                                            BinaryBucket =
-                                               Utils.HexStringToBytes((string) respData["BinaryBucket"], true),
+                                               Utils.HexStringToBytes((string)respData["BinaryBucket"], true),
                                            noticeData =
                                                {
-                                                   NoticeID = UUID.Parse((string) respData["NoticeID"]),
-                                                   Timestamp = uint.Parse((string) respData["Timestamp"]),
-                                                   FromName = (string) respData["FromName"],
-                                                   Subject = (string) respData["Subject"],
+                                                   NoticeID = UUID.Parse((string)respData["NoticeID"]),
+                                                   Timestamp = uint.Parse((string)respData["Timestamp"]),
+                                                   FromName = (string)respData["FromName"],
+                                                   Subject = (string)respData["Subject"],
                                                    HasAttachment = false,
                                                    AssetType = 0
                                                }
@@ -597,7 +618,7 @@ namespace Aurora.Modules.Groups
             param["Subject"] = subject;
             param["Message"] = message;
             param["BinaryBucket"] = binBucket;
-            param["TimeStamp"] = ((uint) Util.UnixTimeSinceEpoch()).ToString();
+            param["TimeStamp"] = ((uint)Util.UnixTimeSinceEpoch()).ToString();
 
             XmlRpcCall(requestingAgentID, "groups.addGroupNotice", param);
         }
@@ -610,16 +631,16 @@ namespace Aurora.Modules.Groups
             if (!respData.Contains("error"))
             {
                 List<GroupInviteInfo> GroupInvites = new List<GroupInviteInfo>();
-                Hashtable results = (Hashtable) respData["results"];
+                Hashtable results = (Hashtable)respData["results"];
                 if (results != null)
                 {
                     GroupInvites.AddRange(from Hashtable invite in results.Values
                                           select new GroupInviteInfo
                                                      {
-                                                         AgentID = new UUID((string) invite["AgentID"]),
-                                                         GroupID = new UUID((string) invite["GroupID"]),
-                                                         InviteID = new UUID((string) invite["InviteID"]),
-                                                         RoleID = new UUID((string) invite["RoleID"])
+                                                         AgentID = new UUID((string)invite["AgentID"]),
+                                                         GroupID = new UUID((string)invite["GroupID"]),
+                                                         InviteID = new UUID((string)invite["InviteID"]),
+                                                         RoleID = new UUID((string)invite["RoleID"])
                                                      });
                 }
                 return GroupInvites;
@@ -661,25 +682,25 @@ namespace Aurora.Modules.Groups
         private GroupProfileData GroupProfileHashtableToGroupProfileData(Hashtable groupProfile)
         {
             GroupProfileData group = new GroupProfileData();
-            group.GroupID = UUID.Parse((string) groupProfile["GroupID"]);
-            group.Name = (string) groupProfile["Name"];
+            group.GroupID = UUID.Parse((string)groupProfile["GroupID"]);
+            group.Name = (string)groupProfile["Name"];
 
             if (groupProfile["Charter"] != null)
             {
-                group.Charter = (string) groupProfile["Charter"];
+                group.Charter = (string)groupProfile["Charter"];
             }
 
-            group.ShowInList = ((string) groupProfile["ShowInList"]) == "1";
-            group.InsigniaID = UUID.Parse((string) groupProfile["InsigniaID"]);
-            group.MembershipFee = int.Parse((string) groupProfile["MembershipFee"]);
-            group.OpenEnrollment = ((string) groupProfile["OpenEnrollment"]) == "1";
-            group.AllowPublish = ((string) groupProfile["AllowPublish"]) == "1";
-            group.MaturePublish = ((string) groupProfile["MaturePublish"]) == "1";
-            group.FounderID = UUID.Parse((string) groupProfile["FounderID"]);
-            group.OwnerRole = UUID.Parse((string) groupProfile["OwnerRoleID"]);
+            group.ShowInList = ((string)groupProfile["ShowInList"]) == "1";
+            group.InsigniaID = UUID.Parse((string)groupProfile["InsigniaID"]);
+            group.MembershipFee = int.Parse((string)groupProfile["MembershipFee"]);
+            group.OpenEnrollment = ((string)groupProfile["OpenEnrollment"]) == "1";
+            group.AllowPublish = ((string)groupProfile["AllowPublish"]) == "1";
+            group.MaturePublish = ((string)groupProfile["MaturePublish"]) == "1";
+            group.FounderID = UUID.Parse((string)groupProfile["FounderID"]);
+            group.OwnerRole = UUID.Parse((string)groupProfile["OwnerRoleID"]);
 
-            group.GroupMembershipCount = int.Parse((string) groupProfile["GroupMembershipCount"]);
-            group.GroupRolesCount = int.Parse((string) groupProfile["GroupRolesCount"]);
+            group.GroupMembershipCount = int.Parse((string)groupProfile["GroupMembershipCount"]);
+            group.GroupRolesCount = int.Parse((string)groupProfile["GroupRolesCount"]);
 
             return group;
         }
@@ -687,20 +708,20 @@ namespace Aurora.Modules.Groups
         private GroupRecord GroupProfileHashtableToGroupRecord(Hashtable groupProfile)
         {
             GroupRecord group = new GroupRecord();
-            group.GroupID = UUID.Parse((string) groupProfile["GroupID"]);
+            group.GroupID = UUID.Parse((string)groupProfile["GroupID"]);
             group.GroupName = groupProfile["Name"].ToString();
             if (groupProfile["Charter"] != null)
             {
-                group.Charter = (string) groupProfile["Charter"];
+                group.Charter = (string)groupProfile["Charter"];
             }
-            group.ShowInList = ((string) groupProfile["ShowInList"]) == "1";
-            group.GroupPicture = UUID.Parse((string) groupProfile["InsigniaID"]);
-            group.MembershipFee = int.Parse((string) groupProfile["MembershipFee"]);
-            group.OpenEnrollment = ((string) groupProfile["OpenEnrollment"]) == "1";
-            group.AllowPublish = ((string) groupProfile["AllowPublish"]) == "1";
-            group.MaturePublish = ((string) groupProfile["MaturePublish"]) == "1";
-            group.FounderID = UUID.Parse((string) groupProfile["FounderID"]);
-            group.OwnerRoleID = UUID.Parse((string) groupProfile["OwnerRoleID"]);
+            group.ShowInList = ((string)groupProfile["ShowInList"]) == "1";
+            group.GroupPicture = UUID.Parse((string)groupProfile["InsigniaID"]);
+            group.MembershipFee = int.Parse((string)groupProfile["MembershipFee"]);
+            group.OpenEnrollment = ((string)groupProfile["OpenEnrollment"]) == "1";
+            group.AllowPublish = ((string)groupProfile["AllowPublish"]) == "1";
+            group.MaturePublish = ((string)groupProfile["MaturePublish"]) == "1";
+            group.FounderID = UUID.Parse((string)groupProfile["FounderID"]);
+            group.OwnerRoleID = UUID.Parse((string)groupProfile["OwnerRoleID"]);
 
             return group;
         }
@@ -709,13 +730,13 @@ namespace Aurora.Modules.Groups
         {
             GroupMembershipData data = new GroupMembershipData
                                            {
-                                               AcceptNotices = ((string) respData["AcceptNotices"] == "1"),
-                                               Contribution = int.Parse((string) respData["Contribution"]),
-                                               ListInProfile = ((string) respData["ListInProfile"] == "1"),
-                                               ActiveRole = new UUID((string) respData["SelectedRoleID"]),
-                                               GroupTitle = (string) respData["Title"],
-                                               GroupPowers = ulong.Parse((string) respData["GroupPowers"]),
-                                               GroupID = new UUID((string) respData["GroupID"])
+                                               AcceptNotices = ((string)respData["AcceptNotices"] == "1"),
+                                               Contribution = int.Parse((string)respData["Contribution"]),
+                                               ListInProfile = ((string)respData["ListInProfile"] == "1"),
+                                               ActiveRole = new UUID((string)respData["SelectedRoleID"]),
+                                               GroupTitle = (string)respData["Title"],
+                                               GroupPowers = ulong.Parse((string)respData["GroupPowers"]),
+                                               GroupID = new UUID((string)respData["GroupID"])
                                            };
 
 
@@ -723,22 +744,22 @@ namespace Aurora.Modules.Groups
             // Is this group the agent's active group
 
 
-            UUID ActiveGroup = new UUID((string) respData["ActiveGroupID"]);
+            UUID ActiveGroup = new UUID((string)respData["ActiveGroupID"]);
             data.Active = data.GroupID.Equals(ActiveGroup);
 
-            data.AllowPublish = ((string) respData["AllowPublish"] == "1");
+            data.AllowPublish = ((string)respData["AllowPublish"] == "1");
             if (respData["Charter"] != null)
             {
-                data.Charter = (string) respData["Charter"];
+                data.Charter = (string)respData["Charter"];
             }
-            data.FounderID = new UUID((string) respData["FounderID"]);
-            data.GroupID = new UUID((string) respData["GroupID"]);
-            data.GroupName = (string) respData["GroupName"];
-            data.GroupPicture = new UUID((string) respData["InsigniaID"]);
-            data.MaturePublish = ((string) respData["MaturePublish"] == "1");
-            data.MembershipFee = int.Parse((string) respData["MembershipFee"]);
-            data.OpenEnrollment = ((string) respData["OpenEnrollment"] == "1");
-            data.ShowInList = ((string) respData["ShowInList"] == "1");
+            data.FounderID = new UUID((string)respData["FounderID"]);
+            data.GroupID = new UUID((string)respData["GroupID"]);
+            data.GroupName = (string)respData["GroupName"];
+            data.GroupPicture = new UUID((string)respData["InsigniaID"]);
+            data.MaturePublish = ((string)respData["MaturePublish"] == "1");
+            data.MembershipFee = int.Parse((string)respData["MembershipFee"]);
+            data.OpenEnrollment = ((string)respData["OpenEnrollment"] == "1");
+            data.ShowInList = ((string)respData["ShowInList"] == "1");
 
             return data;
         }
@@ -1018,7 +1039,7 @@ namespace Aurora.Modules.Groups
 
                     foreach (
                         string ResponseLine in
-                            req.RequestResponse.Split(new[] {Environment.NewLine}, StringSplitOptions.None))
+                            req.RequestResponse.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
                     {
                         MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} ", ResponseLine);
                     }
@@ -1028,14 +1049,14 @@ namespace Aurora.Modules.Groups
                         MainConsole.Instance.WarnFormat("[XMLRPC-GROUPS-CONNECTOR]: {0} :: {1}", key, param[key]);
                     }
 
-                    Hashtable respData = new Hashtable {{"error", e.ToString()}};
+                    Hashtable respData = new Hashtable { { "error", e.ToString() } };
                     return respData;
                 }
             }
 
             if (resp.Value is Hashtable)
             {
-                Hashtable respData = (Hashtable) resp.Value;
+                Hashtable respData = (Hashtable)resp.Value;
                 if (respData.Contains("error") && !respData.Contains("succeed"))
                 {
                     LogRespDataToConsoleError(respData);
@@ -1050,7 +1071,7 @@ namespace Aurora.Modules.Groups
 
             if (resp.Value is ArrayList)
             {
-                ArrayList al = (ArrayList) resp.Value;
+                ArrayList al = (ArrayList)resp.Value;
                 MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Contains {0} elements", al.Count);
 
                 foreach (object o in al)
@@ -1063,7 +1084,7 @@ namespace Aurora.Modules.Groups
                 MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Function returned: {0}", resp.Value);
             }
 
-            Hashtable error = new Hashtable {{"error", "invalid return value"}};
+            Hashtable error = new Hashtable { { "error", "invalid return value" } };
             return error;
         }
 
@@ -1075,7 +1096,7 @@ namespace Aurora.Modules.Groups
             {
                 MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: Key: {0}", key);
 
-                string[] lines = respData[key].ToString().Split(new[] {'\n'});
+                string[] lines = respData[key].ToString().Split(new[] { '\n' });
                 foreach (string line in lines)
                 {
                     MainConsole.Instance.ErrorFormat("[XMLRPC-GROUPS-CONNECTOR]: {0}", line);

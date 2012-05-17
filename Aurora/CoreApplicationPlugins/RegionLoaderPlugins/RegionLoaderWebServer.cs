@@ -83,11 +83,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     //MainConsole.Instance.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;
                 }
-                HttpWebRequest webRequest = (HttpWebRequest) WebRequest.Create(url);
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
                 webRequest.Timeout = 30000; //30 Second Timeout
 
                 MainConsole.Instance.Debug("[WEBLOADER]: Sending Download Request...");
-                HttpWebResponse webResponse = (HttpWebResponse) webRequest.GetResponse();
+                HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
 
                 MainConsole.Instance.Info("[WEBLOADER]: Downloading Region Information From Remote Server...");
                 StreamReader reader = new StreamReader(webResponse.GetResponseStream());

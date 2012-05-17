@@ -61,7 +61,7 @@ namespace OpenSim.Services
 
             IHttpServer server =
                 registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint) handlerConfig.GetInt("LLLoginHandlerPort"));
+                    (uint)handlerConfig.GetInt("LLLoginHandlerPort"));
             MainConsole.Instance.Debug("[LLLOGIN IN CONNECTOR]: Starting...");
             ReadLocalServiceFromConfig(config);
             m_loginService = registry.RequestModuleInterface<ILoginService>();

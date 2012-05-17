@@ -50,7 +50,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly HttpServerLogWriter httpserverlog = new HttpServerLogWriter();
 
         private volatile int NotSocketErrors = 0;
-        
+
         public volatile bool HTTPDRunning = false;
 
         protected HttpListener m_httpListener;
@@ -709,7 +709,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             try
             {
-                if(requestBody.StartsWith("<?xml"))
+                if (requestBody.StartsWith("<?xml"))
                     xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
             }
             catch (XmlException)

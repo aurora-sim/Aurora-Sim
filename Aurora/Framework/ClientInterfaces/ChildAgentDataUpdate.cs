@@ -124,7 +124,7 @@ namespace Aurora.Framework
                 Vector3.TryParse(args["up_axis"].AsString(), out UpAxis);
 
             if (args["far"] != null)
-                Far = (float) (args["far"].AsReal());
+                Far = (float)(args["far"].AsReal());
 
             if (args["user_going_offline"] != null)
                 UserGoingOffline = args["user_going_offline"];
@@ -172,9 +172,9 @@ namespace Aurora.Framework
             if (args["object"] != null)
                 ObjectID = args["object"].AsUUID();
             if (args["ignore"] != null)
-                IgnoreControls = (uint) args["ignore"].AsInteger();
+                IgnoreControls = (uint)args["ignore"].AsInteger();
             if (args["event"] != null)
-                EventControls = (uint) args["event"].AsInteger();
+                EventControls = (uint)args["event"].AsInteger();
         }
     }
 
@@ -401,10 +401,10 @@ namespace Aurora.Framework
                 Vector3.TryParse(args["up_axis"].AsString(), out AtAxis);
 
             if (args["far"] != null)
-                Far = (float) (args["far"].AsReal());
+                Far = (float)(args["far"].AsReal());
 
             if (args["aspect"] != null)
-                Aspect = (float) args["aspect"].AsReal();
+                Aspect = (float)args["aspect"].AsReal();
 
             if (args["throttles"] != null)
                 Throttles = args["throttles"].AsBinary();
@@ -422,7 +422,7 @@ namespace Aurora.Framework
                 UInt32.TryParse(args["control_flags"].AsString(), out ControlFlags);
 
             if (args["energy_level"] != null)
-                EnergyLevel = (float) (args["energy_level"].AsReal());
+                EnergyLevel = (float)(args["energy_level"].AsReal());
 
             //This IS checked later
             if (args["god_level"] != null)
@@ -464,7 +464,7 @@ namespace Aurora.Framework
 
             if ((args["animations"] != null) && (args["animations"]).Type == OSDType.Array)
             {
-                OSDArray anims = (OSDArray) (args["animations"]);
+                OSDArray anims = (OSDArray)(args["animations"]);
                 Anims = new Animation[anims.Count];
                 int i = 0;
 #if (!ISWIN)
@@ -472,7 +472,7 @@ namespace Aurora.Framework
                 {
                     if (o.Type == OSDType.Map)
                     {
-                        Anims[i++] = new Animation((OSDMap) o);
+                        Anims[i++] = new Animation((OSDMap)o);
                     }
                 }
 #else
@@ -488,8 +488,8 @@ namespace Aurora.Framework
             try
             {
                 if (args.ContainsKey("packed_appearance") && (args["packed_appearance"]).Type == OSDType.Map)
-                    Appearance = new AvatarAppearance(AgentID, (OSDMap) args["packed_appearance"]);
-                    // DEBUG ON
+                    Appearance = new AvatarAppearance(AgentID, (OSDMap)args["packed_appearance"]);
+                // DEBUG ON
                 else
                     MainConsole.Instance.WarnFormat("[CHILDAGENTDATAUPDATE] No packed appearance");
                 // DEBUG OFF
@@ -500,7 +500,7 @@ namespace Aurora.Framework
 
             if ((args["controllers"] != null) && (args["controllers"]).Type == OSDType.Array)
             {
-                OSDArray controls = (OSDArray) (args["controllers"]);
+                OSDArray controls = (OSDArray)(args["controllers"]);
                 Controllers = new ControllerData[controls.Count];
                 int i = 0;
 #if (!ISWIN)
@@ -508,7 +508,7 @@ namespace Aurora.Framework
                 {
                     if (o.Type == OSDType.Map)
                     {
-                        Controllers[i++] = new ControllerData((OSDMap) o);
+                        Controllers[i++] = new ControllerData((OSDMap)o);
                     }
                 }
 #else
@@ -520,7 +520,7 @@ namespace Aurora.Framework
             }
 
             if (args["SittingObjects"] != null && args["SittingObjects"].Type == OSDType.Map)
-                SittingObjects = new SittingObjectData((OSDMap) args["SittingObjects"]);
+                SittingObjects = new SittingObjectData((OSDMap)args["SittingObjects"]);
         }
 
         #endregion

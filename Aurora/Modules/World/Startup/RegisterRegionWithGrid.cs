@@ -79,7 +79,7 @@ namespace Aurora.Modules.Startup
 
             if (s == null)
             {
-                s = new GridSessionID {SessionID = scene.RegionInfo.GridSecureSessionID};
+                s = new GridSessionID { SessionID = scene.RegionInfo.GridSecureSessionID };
                 //Set it from the regionInfo if it knows anything
             }
 
@@ -118,8 +118,8 @@ namespace Aurora.Modules.Startup
                     int.TryParse(MainConsole.Instance.Prompt("New Region Location X", "1000"), out X);
                     int.TryParse(MainConsole.Instance.Prompt("New Region Location Y", "1000"), out Y);
 
-                    scene.RegionInfo.RegionLocX = X*Constants.RegionSize;
-                    scene.RegionInfo.RegionLocY = Y*Constants.RegionSize;
+                    scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
+                    scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;
 
                     IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
                     foreach (IRegionLoader loader in loaders)
@@ -134,13 +134,13 @@ namespace Aurora.Modules.Startup
                     int X = 0, Y = 0;
                     int.TryParse(
                         MainConsole.Instance.Prompt("New Region Location X",
-                                                       (scene.RegionInfo.RegionLocX/256).ToString()), out X);
+                                                       (scene.RegionInfo.RegionLocX / 256).ToString()), out X);
                     int.TryParse(
                         MainConsole.Instance.Prompt("New Region Location Y",
-                                                       (scene.RegionInfo.RegionLocY/256).ToString()), out Y);
+                                                       (scene.RegionInfo.RegionLocY / 256).ToString()), out Y);
 
-                    scene.RegionInfo.RegionLocX = X*Constants.RegionSize;
-                    scene.RegionInfo.RegionLocY = Y*Constants.RegionSize;
+                    scene.RegionInfo.RegionLocX = X * Constants.RegionSize;
+                    scene.RegionInfo.RegionLocY = Y * Constants.RegionSize;
 
                     IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
                     foreach (IRegionLoader loader in loaders)
@@ -157,8 +157,8 @@ namespace Aurora.Modules.Startup
                     {
                         string[] position = error.Error.Split(',');
 
-                        scene.RegionInfo.RegionLocX = int.Parse(position[1])*Constants.RegionSize;
-                        scene.RegionInfo.RegionLocY = int.Parse(position[2])*Constants.RegionSize;
+                        scene.RegionInfo.RegionLocX = int.Parse(position[1]) * Constants.RegionSize;
+                        scene.RegionInfo.RegionLocY = int.Parse(position[2]) * Constants.RegionSize;
 
                         IRegionLoader[] loaders = scene.RequestModuleInterfaces<IRegionLoader>();
                         foreach (IRegionLoader loader in loaders)
@@ -269,7 +269,7 @@ namespace Aurora.Modules.Startup
 
             public override OSDMap ToOSD()
             {
-                OSDMap map = new OSDMap {{"SessionID", SessionID}};
+                OSDMap map = new OSDMap { { "SessionID", SessionID } };
                 return map;
             }
 
@@ -352,7 +352,7 @@ namespace Aurora.Modules.Startup
 
             if (message["Method"] == "NeighborChange")
             {
-                OSDMap innerMessage = (OSDMap) message["Message"];
+                OSDMap innerMessage = (OSDMap)message["Message"];
                 bool down = innerMessage["Down"].AsBoolean();
                 UUID regionID = innerMessage["Region"].AsUUID();
                 UUID targetregionID = innerMessage["TargetRegion"].AsUUID();

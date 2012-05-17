@@ -110,7 +110,7 @@ namespace Aurora.Modules.Agent.Xfer
                 }
                 else
                 {
-                    FileData fd = new FileData {Count = 1, Data = data};
+                    FileData fd = new FileData { Count = 1, Data = data };
                     NewFiles.Add(fileName, fd);
                 }
             }

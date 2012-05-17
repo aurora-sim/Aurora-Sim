@@ -40,11 +40,11 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                                 float west, float south, float east, float strength)
         {
             float area = strength;
-            float step = strength/4;
+            float step = strength / 4;
 
-            for (int x = (int) west; x < (int) east; x++)
+            for (int x = (int)west; x < (int)east; x++)
             {
-                for (int y = (int) south; y < (int) north; y++)
+                for (int y = (int)south; y < (int)north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;
@@ -63,7 +63,7 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                         }
                     }
 
-                    map[x, y] = average/avgsteps;
+                    map[x, y] = average / avgsteps;
                 }
             }
         }

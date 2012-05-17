@@ -47,7 +47,7 @@ namespace Aurora.Framework.Servers.HttpServer
         ///  the request.  You'll want to make sure you deal with this as they're not uncommon</exception>
         public static TResponse MakeRequest<TRequest, TResponse>(string verb, string requestUrl, TRequest obj)
         {
-            Type type = typeof (TRequest);
+            Type type = typeof(TRequest);
             TResponse deserial = default(TResponse);
 
             WebRequest request = WebRequest.Create(requestUrl);
@@ -59,7 +59,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 MemoryStream buffer = new MemoryStream();
 
-                XmlWriterSettings settings = new XmlWriterSettings {Encoding = Encoding.UTF8};
+                XmlWriterSettings settings = new XmlWriterSettings { Encoding = Encoding.UTF8 };
 
                 using (XmlWriter writer = XmlWriter.Create(buffer, settings))
                 {
@@ -68,7 +68,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     writer.Flush();
                 }
 
-                int length = (int) buffer.Length;
+                int length = (int)buffer.Length;
                 request.ContentLength = length;
 
                 Stream requestStream = null;
@@ -97,10 +97,10 @@ namespace Aurora.Framework.Servers.HttpServer
                         Stream respStream = resp.GetResponseStream();
                         if (resp.ContentType.EndsWith("/gzip"))
                             respStream = Util.DecompressStream(respStream);
-                        XmlSerializer deserializer = new XmlSerializer(typeof (TResponse));
+                        XmlSerializer deserializer = new XmlSerializer(typeof(TResponse));
                         if (respStream != null)
                         {
-                            deserial = (TResponse) deserializer.Deserialize(respStream);
+                            deserial = (TResponse)deserializer.Deserialize(respStream);
                             respStream.Close();
                         }
                     }

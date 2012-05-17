@@ -109,7 +109,7 @@ namespace OpenSim.Services.Interfaces
             LastLogin = retVal["LastLogin"].AsDate();
             LastLogout = retVal["LastLogout"].AsDate();
             if (retVal["Info"].Type == OSDType.Map)
-                Info = (OSDMap) retVal["Info"];
+                Info = (OSDMap)retVal["Info"];
         }
 
         public override Dictionary<string, object> ToKVP()

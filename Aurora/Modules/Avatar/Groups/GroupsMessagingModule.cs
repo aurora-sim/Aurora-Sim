@@ -66,7 +66,7 @@ namespace Aurora.Modules.Groups
                                              imSessionID = groupID,
                                              fromAgentName = im.fromAgentName,
                                              message = im.message,
-                                             dialog = (byte) InstantMessageDialog.SessionSend,
+                                             dialog = (byte)InstantMessageDialog.SessionSend,
                                              offline = 0,
                                              ParentEstateID = 0,
                                              Position = Vector3.Zero,
@@ -74,7 +74,7 @@ namespace Aurora.Modules.Groups
                                          };
             ChatSession session = m_groupData.GetSession(im.imSessionID);
             msg.binaryBucket = Utils.StringToBytes(session.Name);
-            msg.timestamp = (uint) Util.UnixTimeSinceEpoch();
+            msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
 
             msg.fromAgentID = im.fromAgentID;
             msg.fromGroup = true;
@@ -238,7 +238,7 @@ namespace Aurora.Modules.Groups
                             , im.dialog
                             , im.timestamp
                             , im.offline == 1
-                            , (int) im.ParentEstateID
+                            , (int)im.ParentEstateID
                             , im.Position
                             , 1
                             , im.imSessionID
@@ -269,10 +269,10 @@ namespace Aurora.Modules.Groups
         private void DebugGridInstantMessage(GridInstantMessage im)
         {
             // Don't log any normal IMs (privacy!)
-            if (m_debugEnabled && im.dialog != (byte) InstantMessageDialog.MessageFromAgent)
+            if (m_debugEnabled && im.dialog != (byte)InstantMessageDialog.MessageFromAgent)
             {
                 MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: fromGroup({0})", im.fromGroup ? "True" : "False");
-                MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: Dialog({0})", ((InstantMessageDialog) im.dialog).ToString());
+                MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: Dialog({0})", ((InstantMessageDialog)im.dialog).ToString());
                 MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: fromAgentID({0})", im.fromAgentID.ToString());
                 MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: fromAgentName({0})", im.fromAgentName);
                 MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: IM: imSessionID({0})", im.imSessionID.ToString());
@@ -345,8 +345,8 @@ namespace Aurora.Modules.Groups
                 UUID ownerID = record.FounderID; //Requires that the founder is still in the group
                 List<ChatSessionMember> members = (from gmd in m_groupData.GetGroupMembers(ownerID, groupID)
                                                    where
-                                                       (gmd.AgentPowers & (ulong) GroupPowers.JoinChat) ==
-                                                       (ulong) GroupPowers.JoinChat
+                                                       (gmd.AgentPowers & (ulong)GroupPowers.JoinChat) ==
+                                                       (ulong)GroupPowers.JoinChat
                                                    select new ChatSessionMember
                                                               {
                                                                   AvatarKey = gmd.AgentID
@@ -400,9 +400,9 @@ namespace Aurora.Modules.Groups
 
             // Incoming message from a group
             if (msg.fromGroup &&
-                ((msg.dialog == (byte) InstantMessageDialog.SessionSend)
-                 || (msg.dialog == (byte) InstantMessageDialog.SessionAdd)
-                 || (msg.dialog == (byte) InstantMessageDialog.SessionDrop)
+                ((msg.dialog == (byte)InstantMessageDialog.SessionSend)
+                 || (msg.dialog == (byte)InstantMessageDialog.SessionAdd)
+                 || (msg.dialog == (byte)InstantMessageDialog.SessionDrop)
                  || (msg.dialog == 212)
                  || (msg.dialog == 213)))
             {
@@ -421,7 +421,7 @@ namespace Aurora.Modules.Groups
 
             switch (msg.dialog)
             {
-                case (byte) InstantMessageDialog.SessionAdd:
+                case (byte)InstantMessageDialog.SessionAdd:
                     ChatSession chatSession = m_groupData.GetSession(msg.imSessionID);
                     if (chatSession != null)
                     {
@@ -437,7 +437,7 @@ namespace Aurora.Modules.Groups
                     }
                     break;
 
-                case (byte) InstantMessageDialog.SessionDrop:
+                case (byte)InstantMessageDialog.SessionDrop:
                 case 212:
                     DropMemberFromSession(GetActiveClient(AgentID), msg, false);
                     break;
@@ -457,7 +457,7 @@ namespace Aurora.Modules.Groups
                     MuteUser(msg.imSessionID, eq, AgentID, thismember, false);
                     break;
 
-                case (byte) InstantMessageDialog.SessionSend:
+                case (byte)InstantMessageDialog.SessionSend:
                     EnsureGroupChatIsStarted(msg.imSessionID); //Make sure one exists
                     ChatSession session = m_groupData.GetSession(msg.imSessionID);
                     if (session != null)
@@ -479,7 +479,7 @@ namespace Aurora.Modules.Groups
                                         , msg.dialog
                                         , msg.timestamp
                                         , msg.offline == 1
-                                        , (int) msg.ParentEstateID
+                                        , (int)msg.ParentEstateID
                                         , msg.Position
                                         , 1
                                         , msg.imSessionID
@@ -498,7 +498,7 @@ namespace Aurora.Modules.Groups
 
                 default:
                     MainConsole.Instance.WarnFormat("[GROUPS-MESSAGING]: I don't know how to proccess a {0} message.",
-                                     ((InstantMessageDialog) msg.dialog).ToString());
+                                     ((InstantMessageDialog)msg.dialog).ToString());
                     break;
             }
         }
@@ -588,9 +588,9 @@ namespace Aurora.Modules.Groups
                 if (!GetIsModerator(Agent, sessionid))
                     return "";
 
-                OSDMap parameters = (OSDMap) rm["params"];
+                OSDMap parameters = (OSDMap)rm["params"];
                 UUID AgentID = parameters["agent_id"].AsUUID();
-                OSDMap muteInfoMap = (OSDMap) parameters["mute_info"];
+                OSDMap muteInfoMap = (OSDMap)parameters["mute_info"];
 
                 ChatSessionMember thismember = m_groupData.FindMember(sessionid, AgentID);
                 if (muteInfoMap.ContainsKey("text"))
@@ -625,7 +625,7 @@ namespace Aurora.Modules.Groups
             // Send an update to the affected user
             IClientAPI affectedUser = GetActiveClient(thismember.AvatarKey);
             if (affectedUser != null)
-                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] {block}, AgentID, "ENTER",
+                eq.ChatterBoxSessionAgentListUpdates(sessionid, new[] { block }, AgentID, "ENTER",
                                                      affectedUser.Scene.RegionInfo.RegionHandle);
             else if (forward)
                 SendMutedUserIM(thismember, sessionid);
@@ -662,7 +662,7 @@ namespace Aurora.Modules.Groups
             }
 
             // Start group IM session
-            if ((im.dialog == (byte) InstantMessageDialog.SessionGroupStart))
+            if ((im.dialog == (byte)InstantMessageDialog.SessionGroupStart))
             {
                 if (m_debugEnabled)
                     MainConsole.Instance.InfoFormat("[GROUPS-MESSAGING]: imSessionID({0}) toAgentID({1})", im.imSessionID, im.toAgentID);
@@ -700,7 +700,7 @@ namespace Aurora.Modules.Groups
                         {
                             if (gmd.AgentID != AgentID)
                             {
-                                if ((gmd.AgentPowers & (ulong) GroupPowers.JoinChat) == (ulong) GroupPowers.JoinChat)
+                                if ((gmd.AgentPowers & (ulong)GroupPowers.JoinChat) == (ulong)GroupPowers.JoinChat)
                                 {
                                     m_groupData.AddMemberToGroup(new ChatSessionMember
                                                                      {
@@ -819,12 +819,12 @@ namespace Aurora.Modules.Groups
                                 MuteVoice = false,
                                 Transition = "ENTER"
                             };
-                    queue.ChatterBoxSessionAgentListUpdates(GroupID, new[] {ourblock}, AgentID, "ENTER",
+                    queue.ChatterBoxSessionAgentListUpdates(GroupID, new[] { ourblock }, AgentID, "ENTER",
                                                             remoteClient.Scene.RegionInfo.RegionHandle);
                 }
             }
-                // Send a message from locally connected client to a group
-            else if ((im.dialog == (byte) InstantMessageDialog.SessionSend) && im.message != "")
+            // Send a message from locally connected client to a group
+            else if ((im.dialog == (byte)InstantMessageDialog.SessionSend) && im.message != "")
             {
                 UUID GroupID = im.imSessionID;
                 UUID AgentID = im.fromAgentID;
@@ -838,7 +838,7 @@ namespace Aurora.Modules.Groups
                     return; //Not in the chat or muted
                 SendMessageToGroup(im, GroupID);
             }
-            else if (im.dialog == (byte) InstantMessageDialog.SessionDrop)
+            else if (im.dialog == (byte)InstantMessageDialog.SessionDrop)
                 DropMemberFromSession(remoteClient, im, true);
             else if (im.dialog == 212) //Forwarded sessionDrop
                 DropMemberFromSession(remoteClient, im, false);
@@ -861,12 +861,11 @@ namespace Aurora.Modules.Groups
             foreach (ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block in agentUpdatesBlock)
             {
                 infoDetail = new OSDMap();
-                mutes = new OSDMap
-                            {{"text", OSD.FromBoolean(block.MuteText)}, {"voice", OSD.FromBoolean(block.MuteVoice)}};
+                mutes = new OSDMap { { "text", OSD.FromBoolean(block.MuteText) }, { "voice", OSD.FromBoolean(block.MuteVoice) } };
                 infoDetail.Add("can_voice_chat", OSD.FromBoolean(block.CanVoiceChat));
                 infoDetail.Add("is_moderator", OSD.FromBoolean(block.IsModerator));
                 infoDetail.Add("mutes", mutes);
-                OSDMap info = new OSDMap {{"info", infoDetail}};
+                OSDMap info = new OSDMap { { "info", infoDetail } };
                 if (Transition != string.Empty)
                     info.Add("transition", OSD.FromString(Transition));
                 agentUpdates.Add(block.AgentID.ToString(), info);
@@ -897,7 +896,7 @@ namespace Aurora.Modules.Groups
             ChatSession session = m_groupData.GetSession(im.imSessionID);
             if (session == null)
                 return;
-            ChatSessionMember member = new ChatSessionMember {AvatarKey = UUID.Zero};
+            ChatSessionMember member = new ChatSessionMember { AvatarKey = UUID.Zero };
 #if (!ISWIN)
             foreach (ChatSessionMember testmember in session.Members)
             {
@@ -940,7 +939,7 @@ namespace Aurora.Modules.Groups
             {
                 IClientAPI user = GetActiveClient(sessionMember.AvatarKey);
                 if (user != null)
-                    eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] {block}, sessionMember.AvatarKey,
+                    eq.ChatterBoxSessionAgentListUpdates(session.SessionID, new[] { block }, sessionMember.AvatarKey,
                                                          "LEAVE", user.Scene.RegionInfo.RegionHandle);
                 else
                     usersToForwardTo.Add(sessionMember.AvatarKey);

@@ -101,7 +101,7 @@ namespace Aurora.Modules.Chat
             if (!(sender is IClientAPI))
                 return;
 
-            IClientAPI client = (IClientAPI) sender;
+            IClientAPI client = (IClientAPI)sender;
             MainConsole.Instance.DebugFormat("[PRESENCE MODULE]: OnlineNotification requested by {0}", client.Name);
 
             List<UserInfo> status = m_Scenes[0].RequestModuleInterface<IAgentInfoService>().GetUserInfos(args);

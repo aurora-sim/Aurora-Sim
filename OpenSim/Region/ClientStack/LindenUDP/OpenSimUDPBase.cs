@@ -125,7 +125,7 @@ namespace OpenMetaverse
                 {
                     // This udp socket flag is not supported under mono, 
                     // so we'll catch the exception and continue
-                    m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] {0}, null);
+                    m_udpSocket.IOControl(SIO_UDP_CONNRESET, new byte[] { 0 }, null);
                     //MainConsole.Instance.Debug("[UDPBASE]: SIO_UDP_CONNRESET flag set");
                 }
                 catch (SocketException)
@@ -243,7 +243,7 @@ namespace OpenMetaverse
                 // this is the received data
                 //WrappedObject<UDPPacketBuffer> wrappedBuffer = (WrappedObject<UDPPacketBuffer>)iar.AsyncState;
                 //UDPPacketBuffer buffer = wrappedBuffer.Instance;
-                UDPPacketBuffer buffer = (UDPPacketBuffer) iar.AsyncState;
+                UDPPacketBuffer buffer = (UDPPacketBuffer)iar.AsyncState;
 
                 try
                 {
@@ -261,7 +261,7 @@ namespace OpenMetaverse
                 catch (ObjectDisposedException)
                 {
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MainConsole.Instance.Error("[UDPBase]: Hit error: " + ex.ToString());
                 }
@@ -300,38 +300,38 @@ namespace OpenMetaverse
             }
         }
 
-/* not in use Send Sync now
-        public void AsyncBeginSend(UDPPacketBuffer buf)
-        {
-            if (!m_shutdownFlag)
-            {
-                try
+        /* not in use Send Sync now
+                public void AsyncBeginSend(UDPPacketBuffer buf)
                 {
-                    m_udpSocket.BeginSendTo(
-                        buf.Data,
-                        0,
-                        buf.DataLength,
-                        SocketFlags.None,
-                        buf.RemoteEndPoint,
-                        AsyncEndSend,
-                        buf);
+                    if (!m_shutdownFlag)
+                    {
+                        try
+                        {
+                            m_udpSocket.BeginSendTo(
+                                buf.Data,
+                                0,
+                                buf.DataLength,
+                                SocketFlags.None,
+                                buf.RemoteEndPoint,
+                                AsyncEndSend,
+                                buf);
  
+                        }
+                        catch (SocketException) { }
+                        catch (ObjectDisposedException) { }
+                    }
                 }
-                catch (SocketException) { }
-                catch (ObjectDisposedException) { }
-            }
-        }
 
-        void AsyncEndSend(IAsyncResult result)
-        {
-            try
-            {
-//                UDPPacketBuffer buf = (UDPPacketBuffer)result.AsyncState;
-                m_udpSocket.EndSendTo(result);
-            }
-            catch (SocketException) { }
-            catch (ObjectDisposedException) { }
-        }
- */
+                void AsyncEndSend(IAsyncResult result)
+                {
+                    try
+                    {
+        //                UDPPacketBuffer buf = (UDPPacketBuffer)result.AsyncState;
+                        m_udpSocket.EndSendTo(result);
+                    }
+                    catch (SocketException) { }
+                    catch (ObjectDisposedException) { }
+                }
+         */
     }
 }

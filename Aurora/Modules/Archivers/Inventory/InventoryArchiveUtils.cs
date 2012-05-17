@@ -39,7 +39,7 @@ namespace Aurora.Modules.Archivers
     /// </summary>
     public static class InventoryArchiveUtils
     {
-//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // Character used for escaping the path delimter ("\/") and itself ("\\") in human escaped strings
         public static readonly char ESCAPE_CHARACTER = '\\';
@@ -116,9 +116,9 @@ namespace Aurora.Modules.Archivers
             }
 
             // If the path isn't just / then trim any starting extraneous slashes
-            path = path.TrimStart(new[] {PATH_DELIMITER});
+            path = path.TrimStart(new[] { PATH_DELIMITER });
 
-//            MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Adjusted path in FindFolderByPath() is [{0}]", path);
+            //            MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Adjusted path in FindFolderByPath() is [{0}]", path);
 
             string[] components = SplitEscapedPath(path);
             components[0] = UnescapePath(components[0]);
@@ -207,7 +207,7 @@ namespace Aurora.Modules.Archivers
             IInventoryService inventoryService, InventoryFolderBase startFolder, string path)
         {
             // If the path isn't just / then trim any starting extraneous slashes
-            path = path.TrimStart(new[] {PATH_DELIMITER});
+            path = path.TrimStart(new[] { PATH_DELIMITER });
 
             string[] components = SplitEscapedPath(path);
             components[0] = UnescapePath(components[0]);
@@ -216,13 +216,13 @@ namespace Aurora.Modules.Archivers
 
             if (components.Length == 1)
             {
-//                MainConsole.Instance.DebugFormat(
-//                    "FOUND SINGLE COMPONENT [{0}].  Looking for this in [{1}] {2}", 
-//                    components[0], startFolder.Name, startFolder.ID);
+                //                MainConsole.Instance.DebugFormat(
+                //                    "FOUND SINGLE COMPONENT [{0}].  Looking for this in [{1}] {2}", 
+                //                    components[0], startFolder.Name, startFolder.ID);
 
                 List<InventoryItemBase> items = inventoryService.GetFolderItems(startFolder.Owner, startFolder.ID);
 
-//                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
+                //                MainConsole.Instance.DebugFormat("[INVENTORY ARCHIVE UTILS]: Found {0} items in FindItemByPath()", items.Count);
 
 #if (!ISWIN)
                 foreach (InventoryItemBase item in items)
@@ -236,7 +236,7 @@ namespace Aurora.Modules.Archivers
             }
             else
             {
-//                MainConsole.Instance.DebugFormat("FOUND COMPONENTS [{0}] and [{1}]", components[0], components[1]);
+                //                MainConsole.Instance.DebugFormat("FOUND COMPONENTS [{0}] and [{1}]", components[0], components[1]);
 
                 InventoryCollection contents = inventoryService.GetFolderContent(startFolder.Owner, startFolder.ID);
 
@@ -257,7 +257,7 @@ namespace Aurora.Modules.Archivers
         /// </returns>
         public static string[] SplitEscapedPath(string path)
         {
-//            MainConsole.Instance.DebugFormat("SPLITTING PATH {0}", path);
+            //            MainConsole.Instance.DebugFormat("SPLITTING PATH {0}", path);
 
             bool singleEscapeChar = false;
 
@@ -270,14 +270,14 @@ namespace Aurora.Modules.Archivers
                 else
                 {
                     if (PATH_DELIMITER == path[i] && !singleEscapeChar)
-                        return new string[2] {path.Remove(i), path.Substring(i + 1)};
+                        return new string[2] { path.Remove(i), path.Substring(i + 1) };
                     else
                         singleEscapeChar = false;
                 }
             }
 
             // We didn't find a delimiter
-            return new string[1] {path};
+            return new string[1] { path };
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace Aurora.Modules.Archivers
         /// <returns></returns>
         public static string UnescapePath(string path)
         {
-//            MainConsole.Instance.DebugFormat("ESCAPING PATH {0}", path);
+            //            MainConsole.Instance.DebugFormat("ESCAPING PATH {0}", path);
 
             StringBuilder sb = new StringBuilder();
 
@@ -310,7 +310,7 @@ namespace Aurora.Modules.Archivers
                 }
             }
 
-//            MainConsole.Instance.DebugFormat("ESCAPED PATH TO {0}", sb);
+            //            MainConsole.Instance.DebugFormat("ESCAPED PATH TO {0}", sb);
 
             return sb.ToString();
         }

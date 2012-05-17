@@ -39,7 +39,7 @@ namespace Aurora.Framework
     /// </summary>
     public class LocalConsole : CommandConsole
     {
-//        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //        private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         // private readonly object m_syncRoot = new object();
 
@@ -94,7 +94,7 @@ namespace Aurora.Framework
         private static ConsoleColor DeriveColor(string input)
         {
             // it is important to do Abs, hash values can be negative
-            return Colors[(Math.Abs(input.ToUpper().Length)%Colors.Length)];
+            return Colors[(Math.Abs(input.ToUpper().Length) % Colors.Length)];
         }
 
         private void AddToHistory(string text)
@@ -208,10 +208,10 @@ namespace Aurora.Framework
                     return;
 
                 int xc = prompt.Length + cp;
-                int new_x = xc%Console.BufferWidth;
-                int new_y = y + xc/Console.BufferWidth;
-                int end_y = y + (cmdline.Length + prompt.Length)/Console.BufferWidth;
-                if (end_y/Console.BufferWidth >= h)
+                int new_x = xc % Console.BufferWidth;
+                int new_y = y + xc / Console.BufferWidth;
+                int end_y = y + (cmdline.Length + prompt.Length) / Console.BufferWidth;
+                if (end_y / Console.BufferWidth >= h)
                     h++;
                 if (end_y >= Console.BufferHeight) // wrap
                 {
@@ -300,11 +300,11 @@ namespace Aurora.Framework
             if (text != "")
             {
                 int CurrentLine = 0;
-                string[] Lines = text.Split(new char[2] {'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
+                string[] Lines = text.Split(new char[2] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
                 //This exists so that we don't have issues with multiline stuff, since something is messed up with the Regex
                 foreach (string line in Lines)
                 {
-                    string[] split = line.Split(new string[2] {"[", "]"}, StringSplitOptions.None);
+                    string[] split = line.Split(new string[2] { "[", "]" }, StringSplitOptions.None);
                     int currentPos = 0;
                     int boxNum = 0;
                     foreach (string s in split)

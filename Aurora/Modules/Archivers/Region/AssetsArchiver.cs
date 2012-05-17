@@ -64,46 +64,46 @@ namespace Aurora.Modules.Archivers
         }
 
         //        protected void WriteMetadata(TarArchiveWriter archive)
-//        {
-//            StringWriter sw = new StringWriter();
-//            XmlTextWriter xtw = new XmlTextWriter(sw);
-//
-//            xtw.Formatting = Formatting.Indented;
-//            xtw.WriteStartDocument();
-//
-//            xtw.WriteStartElement("assets");
-//
-//            foreach (UUID uuid in m_assets.Keys)
-//            {
-//                AssetBase asset = m_assets[uuid];
-//
-//                if (asset != null)
-//                {
-//                    xtw.WriteStartElement("asset");
-//
-//                    string extension = string.Empty;
-//
-//                    if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(asset.Type))
-//                    {
-//                        extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.Type];
-//                    }
-//
-//                    xtw.WriteElementString("filename", uuid.ToString() + extension);
-//
-//                    xtw.WriteElementString("name", asset.Name);
-//                    xtw.WriteElementString("description", asset.Description);
-//                    xtw.WriteElementString("asset-type", asset.Type.ToString());
-//
-//                    xtw.WriteEndElement();
-//                }
-//            }
-//
-//            xtw.WriteEndElement();
-//
-//            xtw.WriteEndDocument();
-//
-//            archive.WriteFile("assets.xml", sw.ToString());
-//        }
+        //        {
+        //            StringWriter sw = new StringWriter();
+        //            XmlTextWriter xtw = new XmlTextWriter(sw);
+        //
+        //            xtw.Formatting = Formatting.Indented;
+        //            xtw.WriteStartDocument();
+        //
+        //            xtw.WriteStartElement("assets");
+        //
+        //            foreach (UUID uuid in m_assets.Keys)
+        //            {
+        //                AssetBase asset = m_assets[uuid];
+        //
+        //                if (asset != null)
+        //                {
+        //                    xtw.WriteStartElement("asset");
+        //
+        //                    string extension = string.Empty;
+        //
+        //                    if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(asset.Type))
+        //                    {
+        //                        extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.Type];
+        //                    }
+        //
+        //                    xtw.WriteElementString("filename", uuid.ToString() + extension);
+        //
+        //                    xtw.WriteElementString("name", asset.Name);
+        //                    xtw.WriteElementString("description", asset.Description);
+        //                    xtw.WriteElementString("asset-type", asset.Type.ToString());
+        //
+        //                    xtw.WriteEndElement();
+        //                }
+        //            }
+        //
+        //            xtw.WriteEndElement();
+        //
+        //            xtw.WriteEndDocument();
+        //
+        //            archive.WriteFile("assets.xml", sw.ToString());
+        //        }
         /// <summary>
         ///   Write an assets metadata file to the given archive
         /// </summary>
@@ -119,9 +119,9 @@ namespace Aurora.Modules.Archivers
 
             string extension = string.Empty;
 
-            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey((sbyte) asset.TypeAsset))
+            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey((sbyte)asset.TypeAsset))
             {
-                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[(sbyte) asset.TypeAsset];
+                extension = ArchiveConstants.ASSET_TYPE_TO_EXTENSION[(sbyte)asset.TypeAsset];
             }
             else
             {
@@ -138,7 +138,7 @@ namespace Aurora.Modules.Archivers
 
             //MainConsole.Instance.DebugFormat("[ARCHIVER]: Added asset {0}", m_assetsWritten);
 
-            if (m_assetsWritten%LOG_ASSET_LOAD_NOTIFICATION_INTERVAL == 0)
+            if (m_assetsWritten % LOG_ASSET_LOAD_NOTIFICATION_INTERVAL == 0)
                 MainConsole.Instance.InfoFormat("[ARCHIVER]: Added {0} assets to archive", m_assetsWritten);
         }
 

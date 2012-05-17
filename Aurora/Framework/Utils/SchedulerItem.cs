@@ -32,7 +32,7 @@ using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework
 {
-    public enum RepeatType 
+    public enum RepeatType
     {
         second = 1,
         minute = 2,
@@ -49,7 +49,7 @@ namespace Aurora.Framework
         Megaannum = 13
     }
 
-    public class SchedulerItem: IDataTransferable
+    public class SchedulerItem : IDataTransferable
     {
         public SchedulerItem()
         {
@@ -158,7 +158,7 @@ namespace Aurora.Framework
                                          {"RunEveryType", (int)RunEveryType},
                                          {"StartTime",StartTime}
                                      };
-            
+
             return returnvalue;
         }
 

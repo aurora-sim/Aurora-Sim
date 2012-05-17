@@ -74,7 +74,7 @@ namespace Aurora.Modules.Scripting
 
         private IHttpServer m_HttpServer = null;
 
-        public Type ReplaceableInterface 
+        public Type ReplaceableInterface
         {
             get { return null; }
         }
@@ -97,7 +97,7 @@ namespace Aurora.Modules.Scripting
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             if (m_HttpServer == null)
             {
@@ -109,18 +109,18 @@ namespace Aurora.Modules.Scripting
             scene.RegisterModuleInterface<IUrlModule>(this);
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
         public void Close()
         {
         }
-        public UUID RequestURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
+        public UUID RequestURL(IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 
@@ -145,11 +145,11 @@ namespace Aurora.Modules.Scripting
 
 
                 m_UrlMap[url] = urlData;
-                
+
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
-               
-                m_HttpServer.AddPollServiceHTTPHandler(uri,HandleHttpPoll,
-                        new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents,
+
+                m_HttpServer.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
+                        new PollServiceEventArgs(HttpRequestHandler, HasEvents, GetEvents, NoEvents,
                             urlcode));
 
                 engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
@@ -158,7 +158,7 @@ namespace Aurora.Modules.Scripting
             return urlcode;
         }
 
-        public UUID RequestSecureURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
+        public UUID RequestSecureURL(IScriptModule engine, ISceneChildEntity host, UUID itemID)
         {
             UUID urlcode = UUID.Random();
 
@@ -186,15 +186,15 @@ namespace Aurora.Modules.Scripting
             }
         }
 
-        public void SetContentType (UUID request, string content_type)
+        public void SetContentType(UUID request, string content_type)
         {
-            if(m_RequestMap.ContainsKey(request))
+            if (m_RequestMap.ContainsKey(request))
             {
                 UrlData urlData = m_RequestMap[request];
                 urlData.requests[request].contentType = content_type;
             }
         }
-        
+
         public void HttpResponse(UUID request, int status, string body)
         {
             if (m_RequestMap.ContainsKey(request))
@@ -203,7 +203,7 @@ namespace Aurora.Modules.Scripting
                 urlData.requests[request].responseCode = status;
                 urlData.requests[request].responseBody = body;
                 //urlData.requests[request].ev.Set();
-                urlData.requests[request].requestDone =true;
+                urlData.requests[request].requestDone = true;
             }
             else
             {
@@ -215,9 +215,9 @@ namespace Aurora.Modules.Scripting
         {
             if (m_RequestMap.ContainsKey(requestId))
             {
-                UrlData urlData=m_RequestMap[requestId];
+                UrlData urlData = m_RequestMap[requestId];
                 string value;
-                if (urlData.requests[requestId].headers.TryGetValue(header,out value))
+                if (urlData.requests[requestId].headers.TryGetValue(header, out value))
                     return value;
             }
             else
@@ -279,7 +279,7 @@ namespace Aurora.Modules.Scripting
 
         private void RemoveUrl(UrlData data)
         {
-            m_HttpServer.RemoveHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
+            m_HttpServer.RemoveHTTPHandler("", "/lslhttp/" + data.urlcode.ToString() + "/");
         }
 
         private Hashtable NoEvents(UUID requestID, UUID sessionID)
@@ -311,14 +311,14 @@ namespace Aurora.Modules.Scripting
                 return response;
             }
 
-            
+
             return response;
         }
 
         private bool HasEvents(UUID requestID, UUID sessionID)
         {
-            UrlData url=null;
-            
+            UrlData url = null;
+
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
@@ -332,7 +332,7 @@ namespace Aurora.Modules.Scripting
                 }
             }
 
-            if (Environment.TickCount-url.requests[requestID].startTime>25000)
+            if (Environment.TickCount - url.requests[requestID].startTime > 25000)
             {
                 return true;
             }
@@ -349,14 +349,14 @@ namespace Aurora.Modules.Scripting
             lock (m_RequestMap)
             {
                 if (!m_RequestMap.ContainsKey(requestID))
-                    return NoEvents(requestID,sessionID);
+                    return NoEvents(requestID, sessionID);
                 url = m_RequestMap[requestID];
                 requestData = url.requests[requestID];
             }
 
             if (!requestData.requestDone)
-                return NoEvents(requestID,sessionID);
-            
+                return NoEvents(requestID, sessionID);
+
             Hashtable response = new Hashtable();
 
             if (Environment.TickCount - requestData.startTime > 25000)
@@ -374,7 +374,7 @@ namespace Aurora.Modules.Scripting
             response["content_type"] = requestData.contentType;
             response["keepalive"] = false;
             response["reusecontext"] = false;
-            
+
             //remove from map
             lock (url)
             {
@@ -389,11 +389,11 @@ namespace Aurora.Modules.Scripting
             lock (request)
             {
                 string uri = request["uri"].ToString();
-                
+
                 try
                 {
                     Hashtable headers = (Hashtable)request["headers"];
-                    
+
                     int pos1 = uri.IndexOf("/");// /lslhttp
                     int pos2 = uri.IndexOf("/", pos1 + 1);// /lslhttp/
                     int pos3 = uri.IndexOf("/", pos2 + 1);// /lslhttp/<UUID>/
@@ -466,7 +466,7 @@ namespace Aurora.Modules.Scripting
                     url.engine.PostScriptEvent(url.itemID, url.hostID, "http_request", new Object[] { requestID.ToString(), request["http-method"].ToString(), request["body"].ToString() });
 
                     //send initial response?
-//                    Hashtable response = new Hashtable();
+                    //                    Hashtable response = new Hashtable();
 
                     return;
 

@@ -90,7 +90,7 @@ namespace OpenSim.Services.CapsService.CAPModules
                     dc.GetCount("s_gpuvendor", new KeyValuePair<string, object>("s_gpuvendor", "Intel"))));
 
                 List<float> fps = dc.Get("fps").ConvertAll<float>((s) => float.Parse(s));
-                if(fps.Count > 0)
+                if (fps.Count > 0)
                     MainConsole.Instance.Info(string.Format("Average fps: {0}", fps.Average()));
 
                 List<float> run_time = dc.Get("run_time").ConvertAll<float>((s) => float.Parse(s));
