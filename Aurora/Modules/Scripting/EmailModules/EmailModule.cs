@@ -64,6 +64,7 @@ namespace Aurora.Modules.Scripting
         private string m_InterObjectHostname = "lsl.opensim.local";
         private const int m_MaxQueueSize = 50; // maximum size of an object mail queue
         private bool m_localOnly = true;
+        private int m_MaxEmailSize = 4096;  // largest email allowed by default, as per lsl docs.
 
         public bool IsSharedModule
         {
@@ -100,9 +101,9 @@ namespace Aurora.Modules.Scripting
                 return;
             }
             //FIXME:Check if subject + body = 4096 Byte
-            if ((subject.Length + body.Length) > 1024)
+            if ((subject.Length + body.Length) > m_MaxEmailSize)
             {
-                MainConsole.Instance.Error("[EMAIL] subject + body > 1024 Byte");
+                MainConsole.Instance.Error("[EMAIL] subject + body larger than limit of " + m_MaxEmailSize + " bytes");
                 return;
             }
 
@@ -456,6 +457,7 @@ namespace Aurora.Modules.Scripting
                 SMTP_SERVER_PORT = SMTPConfig.GetInt("SMTP_SERVER_PORT", SMTP_SERVER_PORT);
                 SMTP_SERVER_LOGIN = SMTPConfig.GetString("SMTP_SERVER_LOGIN", SMTP_SERVER_LOGIN);
                 SMTP_SERVER_PASSWORD = SMTPConfig.GetString("SMTP_SERVER_PASSWORD", SMTP_SERVER_PASSWORD);
+                m_MaxEmailSize = SMTPConfig.GetInt("email_max_size", m_MaxEmailSize);
 
                 registry.RegisterModuleInterface<IEmailModule>(this);
             }
