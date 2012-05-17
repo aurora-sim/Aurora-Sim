@@ -42,7 +42,7 @@ namespace Amib.Threading
 
     #endregion
 
-    #region IHasWorkItemPriority interface 
+    #region IHasWorkItemPriority interface
 
     public interface IHasWorkItemPriority
     {
@@ -51,7 +51,7 @@ namespace Amib.Threading
 
     #endregion
 
-    #region IWorkItemsGroup interface 
+    #region IWorkItemsGroup interface
 
     /// <summary>
     ///   IWorkItemsGroup interface

@@ -57,8 +57,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_map = import;
-            m_Width = (int) Math.Sqrt(import.Length);
-            taint = new bool[m_Width,m_Width];
+            m_Width = (int)Math.Sqrt(import.Length);
+            taint = new bool[m_Width, m_Width];
             if ((m_Width != scene.RegionInfo.RegionSizeX ||
                  m_Width != scene.RegionInfo.RegionSizeY) &&
                 (scene.RegionInfo.RegionSizeX != int.MaxValue) && //Child regions of a mega-region
@@ -79,8 +79,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if (createMap)
             {
-                m_map = new short[m_Width*m_Width];
-                taint = new bool[m_Width/Constants.TerrainPatchSize,m_Width/Constants.TerrainPatchSize];
+                m_map = new short[m_Width * m_Width];
+                taint = new bool[m_Width / Constants.TerrainPatchSize, m_Width / Constants.TerrainPatchSize];
             }
         }
 
@@ -88,8 +88,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_scene = scene;
             m_Width = w;
-            m_map = new short[w*h];
-            taint = new bool[w/Constants.TerrainPatchSize,h/Constants.TerrainPatchSize];
+            m_map = new short[w * h];
+            taint = new bool[w / Constants.TerrainPatchSize, h / Constants.TerrainPatchSize];
         }
 
         #region ITerrainChannel Members
@@ -120,36 +120,36 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (x >= 0 && x < m_Width && y >= 0 && y < m_Width)
-                    return (m_map[y*m_Width + x])/Constants.TerrainCompression;
+                    return (m_map[y * m_Width + x]) / Constants.TerrainCompression;
                 else
                 {
                     //Get the nearest one so that things don't get screwed up near borders
                     int betterX = x < 0 ? 0 : x >= m_Width ? m_Width - 1 : x;
                     int betterY = y < 0 ? 0 : y >= m_Width ? m_Width - 1 : y;
-                    return (m_map[betterY*m_Width + betterX])/Constants.TerrainCompression;
+                    return (m_map[betterY * m_Width + betterX]) / Constants.TerrainCompression;
                 }
             }
             set
             {
                 // Will "fix" terrain hole problems. Although not fantastically.
-                if (value*Constants.TerrainCompression > short.MaxValue)
+                if (value * Constants.TerrainCompression > short.MaxValue)
                     value = short.MaxValue;
-                if (value*Constants.TerrainCompression < short.MinValue)
+                if (value * Constants.TerrainCompression < short.MinValue)
                     value = short.MinValue;
 
-                if (m_map[y*m_Width + x] != value*Constants.TerrainCompression)
+                if (m_map[y * m_Width + x] != value * Constants.TerrainCompression)
                 {
-                    taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize] = true;
-                    m_map[y*m_Width + x] = (short) (value*Constants.TerrainCompression);
+                    taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = true;
+                    m_map[y * m_Width + x] = (short)(value * Constants.TerrainCompression);
                 }
             }
         }
 
         public bool Tainted(int x, int y)
         {
-            if (taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize])
+            if (taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize])
             {
-                taint[x/Constants.TerrainPatchSize, y/Constants.TerrainPatchSize] = false;
+                taint[x / Constants.TerrainPatchSize, y / Constants.TerrainPatchSize] = false;
                 return true;
             }
             return false;
@@ -157,8 +157,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public ITerrainChannel MakeCopy()
         {
-            TerrainChannel copy = new TerrainChannel(false, m_scene)
-                                      {m_map = (short[]) m_map.Clone(), taint = (bool[,]) taint.Clone()};
+            TerrainChannel copy = new TerrainChannel(false, m_scene) { m_map = (short[])m_map.Clone(), taint = (bool[,])taint.Clone() };
             return copy;
         }
 
@@ -185,11 +184,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             p1.X += 1.0f;
             if (p1.X < m_Width)
-                p1.Z = this[(int) p1.X, (int) p1.Y];
+                p1.Z = this[(int)p1.X, (int)p1.Y];
 
             p2.Y += 1.0f;
             if (p2.Y < m_Width)
-                p2.Z = this[(int) p2.X, (int) p2.Y];
+                p2.Z = this[(int)p2.X, (int)p2.Y];
 
             Vector3 v0 = new Vector3(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
             Vector3 v1 = new Vector3(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
@@ -199,13 +198,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 vsn = new Vector3
                               {
-                                  X = (v0.Y*v1.Z) - (v0.Z*v1.Y),
-                                  Y = (v0.Z*v1.X) - (v0.X*v1.Z),
-                                  Z = (v0.X*v1.Y) - (v0.Y*v1.X)
+                                  X = (v0.Y * v1.Z) - (v0.Z * v1.Y),
+                                  Y = (v0.Z * v1.X) - (v0.X * v1.Z),
+                                  Z = (v0.X * v1.Y) - (v0.Y * v1.X)
                               };
             vsn.Normalize();
 
-            return ((vsn.X + vsn.Y)/(-1*vsn.Z)) + p0.Z;
+            return ((vsn.X + vsn.Y) / (-1 * vsn.Z)) + p0.Z;
         }
 
         #endregion
@@ -214,10 +213,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_map = null;
             taint = null;
-            m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
+            m_map = new short[m_scene.RegionInfo.RegionSizeX * m_scene.RegionInfo.RegionSizeX];
             taint =
-                new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
-                    m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize];
+                new bool[m_scene.RegionInfo.RegionSizeX / Constants.TerrainPatchSize,
+                    m_scene.RegionInfo.RegionSizeY / Constants.TerrainPatchSize];
             m_Width = m_scene.RegionInfo.RegionSizeX;
 
             int x;
@@ -226,7 +225,7 @@ namespace OpenSim.Region.Framework.Scenes
                 int y;
                 for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
                 {
-                    this[x, y] = (float) m_scene.RegionInfo.RegionSettings.WaterHeight + 1;
+                    this[x, y] = (float)m_scene.RegionInfo.RegionSettings.WaterHeight + 1;
                 }
             }
         }

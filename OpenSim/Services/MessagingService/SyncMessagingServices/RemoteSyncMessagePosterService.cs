@@ -119,7 +119,7 @@ namespace OpenSim.Services.MessagingService
                 return null;
             try
             {
-                return (OSDMap) OSDParser.DeserializeJson(request["_RawResult"]);
+                return (OSDMap)OSDParser.DeserializeJson(request["_RawResult"]);
             }
             catch
             {

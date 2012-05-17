@@ -47,7 +47,7 @@ namespace OpenSim.Region.Framework.Scenes
         #region Declares
 
         private const double MINVIEWDSTEP = 16;
-        private const double MINVIEWDSTEPSQ = MINVIEWDSTEP*MINVIEWDSTEP;
+        private const double MINVIEWDSTEPSQ = MINVIEWDSTEP * MINVIEWDSTEP;
 
         protected IScenePresence m_presence;
         protected IScene m_scene;
@@ -140,7 +140,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_culler != null && m_culler.UseCulling && FunctionName == "DrawDistanceChanged")
             {
-                IScenePresence sp = (IScenePresence) parameters;
+                IScenePresence sp = (IScenePresence)parameters;
                 if (sp.UUID != m_presence.UUID)
                     return null; //Only want our av
 
@@ -151,7 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_drawDistanceChangedTimer != null)
                         m_drawDistanceChangedTimer.Stop(); //Stop any old timers
-                    m_drawDistanceChangedTimer = new Timer {Interval = 3000};
+                    m_drawDistanceChangedTimer = new Timer { Interval = 3000 };
                     //Fire this again in 3 seconds so that we do send prims to children agents
                     m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
                     m_drawDistanceChangedTimer.Start();
@@ -167,7 +167,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_drawDistanceChangedTimer != null)
                         m_drawDistanceChangedTimer.Stop(); //Stop any old timers
-                    m_drawDistanceChangedTimer = new Timer {Interval = 3000};
+                    m_drawDistanceChangedTimer = new Timer { Interval = 3000 };
                     //Fire this again in 3 seconds so that we do send prims to children agents
                     m_drawDistanceChangedTimer.Elapsed += m_drawDistanceChangedTimer_Elapsed;
                     m_drawDistanceChangedTimer.Start();
@@ -284,7 +284,7 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_lastPresencesInViewLock)
                     if (lastPresencesDInView.ContainsKey(presence.UUID))
                         AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
-                            //Only send updates if they are in view
+                //Only send updates if they are in view
             }
             else
                 AddPresenceUpdate(presence, PrimUpdateFlags.TerseUpdate);
@@ -350,7 +350,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name = "update"></param>
         private void QueueEntityUpdate(EntityUpdate update)
         {
-            EntityUpdate o = (EntityUpdate) m_objectUpdatesToSend[update.Entity.UUID];
+            EntityUpdate o = (EntityUpdate)m_objectUpdatesToSend[update.Entity.UUID];
             if (o == null)
                 o = update;
             else
@@ -465,7 +465,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Vector3 pos = m_presence.CameraPosition;
                 float distsq = Vector3.DistanceSquared(pos, m_lastUpdatePos);
-                distsq += 0.2f*m_presence.Velocity.LengthSquared();
+                distsq += 0.2f * m_presence.Velocity.LengthSquared();
                 if (distsq < MINVIEWDSTEPSQ && !m_forceCullCheck)
                     //They havn't moved enough to trigger another update, so just quit
                     return;
@@ -480,7 +480,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             public int Compare(object x, object y)
             {
-                return Compare((PriorityQueueItem<EntityUpdate, int>) x, (PriorityQueueItem<EntityUpdate, int>) y);
+                return Compare((PriorityQueueItem<EntityUpdate, int>)x, (PriorityQueueItem<EntityUpdate, int>)y);
             }
 
             #endregion
@@ -565,7 +565,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendPrimUpdates(int numPrimUpdates, int numAvaUpdates)
         {
             if (m_numberOfLoops < NUMBER_OF_LOOPS_TO_WAIT)
-                //Wait for the client to finish connecting fully before sending out bunches of updates
+            //Wait for the client to finish connecting fully before sending out bunches of updates
             {
                 m_numberOfLoops++;
                 return;
@@ -622,7 +622,7 @@ namespace OpenSim.Region.Framework.Scenes
                             EntityUpdate update = e.Current.Value;
                             entitiesToRemove.Add(update.Entity.LocalId); //Remove it later
                             if (update.Flags == PrimUpdateFlags.ForcedFullUpdate)
-                                SendFullUpdateForPresence((IScenePresence) update.Entity);
+                                SendFullUpdateForPresence((IScenePresence)update.Entity);
                             else
                                 updates.Add(update);
                             e.MoveNext();
@@ -707,7 +707,7 @@ namespace OpenSim.Region.Framework.Scenes
                                         : m_objectPropertiesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            ISceneChildEntity entity = ((ISceneChildEntity) m_objectPropertiesToSend[0]);
+                            ISceneChildEntity entity = ((ISceneChildEntity)m_objectPropertiesToSend[0]);
                             /*if (m_PropertiesInPacketQueue.Contains (entity.UUID))
                             {
                                 m_objectPropertiesToSend.RemoveAt (0);
@@ -743,7 +743,7 @@ namespace OpenSim.Region.Framework.Scenes
                                         : m_objectUpdatesToSend.Count;
                         for (int i = 0; i < count; i++)
                         {
-                            EntityUpdate update = ((EntityUpdate) m_objectUpdatesToSend[0]);
+                            EntityUpdate update = ((EntityUpdate)m_objectUpdatesToSend[0]);
                             /*if (m_EntitiesInPacketQueue.Contains (update.Entity.UUID))
                             {
                                 m_objectUpdatesToSend.RemoveAt (0);
@@ -755,7 +755,7 @@ namespace OpenSim.Region.Framework.Scenes
                             //Fix the CRC for this update
                             //Increment the CRC code so that the client won't be sent a cached update for this
                             if (update.Flags != PrimUpdateFlags.PrimFlags)
-                                ((ISceneChildEntity) update.Entity).CRC++;
+                                ((ISceneChildEntity)update.Entity).CRC++;
 
                             updates.Add(update);
                             m_objectUpdatesToSend.RemoveAt(0);
@@ -886,12 +886,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         private int sortPriority(ISceneEntity a, ISceneEntity b)
         {
-            int prioA = (int) m_prioritizer.GetUpdatePriority(m_presence, a);
-            int prioB = (int) m_prioritizer.GetUpdatePriority(m_presence, b);
+            int prioA = (int)m_prioritizer.GetUpdatePriority(m_presence, a);
+            int prioB = (int)m_prioritizer.GetUpdatePriority(m_presence, b);
             return prioB.CompareTo(prioA);
         }
 
-        #endregion
+            #endregion
 
         #endregion
 

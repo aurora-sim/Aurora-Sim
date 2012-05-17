@@ -9,7 +9,7 @@ using System.Threading;
 namespace Amib.Threading.Internal
 {
 
-    #region WorkItemsGroup class 
+    #region WorkItemsGroup class
 
     /// <summary>
     ///   Summary description for WorkItemsGroup.
@@ -314,7 +314,7 @@ namespace Amib.Threading.Internal
         /// </summary>
         public bool WaitForIdle(TimeSpan timeout)
         {
-            return WaitForIdle((int) timeout.TotalMilliseconds);
+            return WaitForIdle((int)timeout.TotalMilliseconds);
         }
 
         /// <summary>
@@ -413,7 +413,7 @@ namespace Amib.Threading.Internal
                 {
                     eh(this);
                 }
-                    // Ignore exceptions
+                // Ignore exceptions
                 catch
                 {
                 }

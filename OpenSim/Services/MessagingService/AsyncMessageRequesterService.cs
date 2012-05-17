@@ -79,7 +79,7 @@ namespace OpenSim.Services.MessagingService
                 m_timer = new Timer();
                 //Start the request timer
                 m_timer.Elapsed += requestAsyncMessages;
-                m_timer.Interval = 60*1000; //60 secs
+                m_timer.Interval = 60 * 1000; //60 secs
                 m_timer.Start();
             }
         }
@@ -122,15 +122,15 @@ namespace OpenSim.Services.MessagingService
                 {
                     if (response["Messages"].Type == OSDType.Map)
                     {
-                        OSDMap messages = (OSDMap) response["Messages"];
+                        OSDMap messages = (OSDMap)response["Messages"];
                         foreach (KeyValuePair<string, OSD> kvp in messages)
                         {
-                            OSDArray array = (OSDArray) kvp.Value;
+                            OSDArray array = (OSDArray)kvp.Value;
                             IAsyncMessageRecievedService service =
                                 GetScene(ulong.Parse(kvp.Key)).RequestModuleInterface<IAsyncMessageRecievedService>();
                             foreach (OSD asyncMessage in array)
                             {
-                                service.FireMessageReceived(kvp.Key, (OSDMap) asyncMessage);
+                                service.FireMessageReceived(kvp.Key, (OSDMap)asyncMessage);
                             }
                         }
                     }

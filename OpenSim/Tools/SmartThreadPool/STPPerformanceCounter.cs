@@ -207,7 +207,7 @@ namespace Amib.Threading.Internal
             STPPerformanceCounters counters = STPPerformanceCounters.Instance;
             _pcs = new PerformanceCounter(
                 STPPerformanceCounters._stpCategoryName,
-                counters._stpPerformanceCounters[(int) spcType].Name,
+                counters._stpPerformanceCounters[(int)spcType].Name,
                 instance,
                 false);
             _pcs.RawValue = _pcs.RawValue;
@@ -294,7 +294,7 @@ namespace Amib.Threading.Internal
 
         public STPInstancePerformanceCounters(string instance)
         {
-            _pcs = new STPInstancePerformanceCounter[(int) STPPerformanceCounterType.LastCounter];
+            _pcs = new STPInstancePerformanceCounter[(int)STPPerformanceCounterType.LastCounter];
             // STPPerformanceCounters counters = STPPerformanceCounters.Instance;
             for (int i = 0; i < _pcs.Length; i++)
             {
@@ -302,7 +302,7 @@ namespace Amib.Threading.Internal
                 {
                     _pcs[i] = new STPInstancePerformanceCounter(
                         instance,
-                        (STPPerformanceCounterType) i);
+                        (STPPerformanceCounterType)i);
                 }
                 else
                 {
@@ -362,14 +362,14 @@ namespace Amib.Threading.Internal
         public void SampleWorkItemsWaitTime(TimeSpan workItemWaitTime)
         {
             GetCounter(STPPerformanceCounterType.AvgWorkItemWaitTime).IncrementBy(
-                (long) workItemWaitTime.TotalMilliseconds);
+                (long)workItemWaitTime.TotalMilliseconds);
             GetCounter(STPPerformanceCounterType.AvgWorkItemWaitTimeBase).Increment();
         }
 
         public void SampleWorkItemsProcessTime(TimeSpan workItemProcessTime)
         {
             GetCounter(STPPerformanceCounterType.AvgWorkItemProcessTime).IncrementBy(
-                (long) workItemProcessTime.TotalMilliseconds);
+                (long)workItemProcessTime.TotalMilliseconds);
             GetCounter(STPPerformanceCounterType.AvgWorkItemProcessTimeBase).Increment();
         }
 
@@ -382,7 +382,7 @@ namespace Amib.Threading.Internal
 
         private STPInstancePerformanceCounter GetCounter(STPPerformanceCounterType spcType)
         {
-            return _pcs[(int) spcType];
+            return _pcs[(int)spcType];
         }
     }
 

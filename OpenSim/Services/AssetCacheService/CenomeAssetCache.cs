@@ -167,7 +167,7 @@ namespace OpenSim.Services
         {
             if (asset != null)
             {
-//                MainConsole.Instance.DebugFormat("[CENOME ASSET CACHE]: Caching asset {0}", asset.IDString);
+                //                MainConsole.Instance.DebugFormat("[CENOME ASSET CACHE]: Caching asset {0}", asset.IDString);
 
                 long size = asset.Data != null ? asset.Data.Length : 1;
                 m_cache.Set(asset.IDString, asset, size);
@@ -237,16 +237,16 @@ namespace OpenSim.Services
                     "[ASSET CACHE]: Cached = {0}, Get = {1}, Hits = {2}%, Size = {3} bytes, Avg. A. Size = {4} bytes",
                     m_cachedCount,
                     m_getCount,
-                    ((double) m_hitCount/m_getCount)*100.0,
+                    ((double)m_hitCount / m_getCount) * 100.0,
                     m_cache.Size,
-                    m_cache.Size/m_cache.Count);
+                    m_cache.Size / m_cache.Count);
                 m_getCount = 0;
                 m_hitCount = 0;
                 m_cachedCount = 0;
             }
 
-//            if (null == assetBase)
-//                MainConsole.Instance.DebugFormat("[CENOME ASSET CACHE]: Asset {0} not in cache", id);
+            //            if (null == assetBase)
+            //                MainConsole.Instance.DebugFormat("[CENOME ASSET CACHE]: Asset {0} not in cache", id);
 
             return assetBase;
         }
@@ -280,7 +280,7 @@ namespace OpenSim.Services
                 maxSize = assetConfig.GetLong("MaxSize", DefaultMaxSize);
                 maxCount = assetConfig.GetInt("MaxCount", DefaultMaxCount);
                 expirationTime =
-                    TimeSpan.FromMinutes(assetConfig.GetInt("ExpirationTime", (int) DefaultExpirationTime.TotalMinutes));
+                    TimeSpan.FromMinutes(assetConfig.GetInt("ExpirationTime", (int)DefaultExpirationTime.TotalMinutes));
 
                 // Debugging purposes only
                 m_debugEpoch = assetConfig.GetInt("DebugEpoch", 0);

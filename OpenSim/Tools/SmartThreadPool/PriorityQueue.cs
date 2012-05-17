@@ -70,7 +70,7 @@ namespace Amib.Threading.Internal
         {
             Debug.Assert(null != workItem);
 
-            int queueIndex = _queuesCount - (int) workItem.WorkItemPriority - 1;
+            int queueIndex = _queuesCount - (int)workItem.WorkItemPriority - 1;
             Debug.Assert(queueIndex >= 0);
             Debug.Assert(queueIndex < _queuesCount);
 

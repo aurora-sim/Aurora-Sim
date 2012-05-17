@@ -138,7 +138,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     try
                     {
                         //We send the CapsURLs through, so we need these
-                        OSDMap responseMap = (OSDMap) OSDParser.DeserializeJson(reason);
+                        OSDMap responseMap = (OSDMap)OSDParser.DeserializeJson(reason);
                         if (responseMap.ContainsKey("Reason"))
                             reason = responseMap["Reason"].AsString();
                         if (responseMap.ContainsKey("requestedUDPPort"))
@@ -166,12 +166,12 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public bool UpdateAgent(GridRegion destination, AgentData data)
         {
-            return UpdateAgent(destination, (IAgentData) data);
+            return UpdateAgent(destination, (IAgentData)data);
         }
 
         public bool UpdateAgent(GridRegion destination, AgentPosition data)
         {
-            return UpdateAgent(destination, (IAgentData) data);
+            return UpdateAgent(destination, (IAgentData)data);
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
@@ -239,7 +239,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     OSDMap result = WebUtils.GetFromService(uri, true, false, false);
                     if (result["Success"].AsBoolean())
                     {
-                        OSDMap r = (OSDMap) OSDParser.DeserializeJson(result["_RawResult"]);
+                        OSDMap r = (OSDMap)OSDParser.DeserializeJson(result["_RawResult"]);
                         if (r["Result"] == "Not Found")
                             return false;
                         agent = new AgentData();
@@ -247,9 +247,9 @@ namespace OpenSim.Services.Connectors.Simulation
                         if (!r.ContainsKey("AgentData"))
                             return false; //Disable old simulators
 
-                        agent.Unpack((OSDMap) r["AgentData"]);
+                        agent.Unpack((OSDMap)r["AgentData"]);
                         circuitData = new AgentCircuitData();
-                        circuitData.UnpackAgentCircuitData((OSDMap) r["CircuitData"]);
+                        circuitData.UnpackAgentCircuitData((OSDMap)r["CircuitData"]);
                         return true;
                     }
                 }
@@ -300,12 +300,12 @@ namespace OpenSim.Services.Connectors.Simulation
             // Try local first
             if (cAgentData is AgentData)
             {
-                if (m_localBackend.UpdateAgent(destination, (AgentData) cAgentData))
+                if (m_localBackend.UpdateAgent(destination, (AgentData)cAgentData))
                     return true;
             }
             else if (cAgentData is AgentPosition)
             {
-                if (m_localBackend.UpdateAgent(destination, (AgentPosition) cAgentData))
+                if (m_localBackend.UpdateAgent(destination, (AgentPosition)cAgentData))
                     return true;
             }
 
@@ -343,7 +343,7 @@ namespace OpenSim.Services.Connectors.Simulation
                             if (m_blackListedRegions[uri] == 3)
                             {
                                 //add it to the blacklist as the request completely failed 3 times
-                                m_blackListedRegions[uri] = Util.EnvironmentTickCount() + 60*1000; //60 seconds
+                                m_blackListedRegions[uri] = Util.EnvironmentTickCount() + 60 * 1000; //60 seconds
                             }
                             else if (m_blackListedRegions[uri] == 0)
                                 m_blackListedRegions[uri]++;
@@ -355,7 +355,7 @@ namespace OpenSim.Services.Connectors.Simulation
                     //Clear out the blacklist if it went through
                     m_blackListedRegions.Remove(uri);
 
-                    OSDMap innerResult = (OSDMap) result["_Result"];
+                    OSDMap innerResult = (OSDMap)result["_Result"];
                     return innerResult["Updated"].AsBoolean();
                 }
                 catch (Exception e)

@@ -65,7 +65,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD buildEvent(string eventName, OSD eventBody)
         {
-            OSDMap llsdEvent = new OSDMap(2) {{"body", eventBody}, {"message", new OSDString(eventName)}};
+            OSDMap llsdEvent = new OSDMap(2) { { "body", eventBody }, { "message", new OSDString(eventName) } };
 
             return llsdEvent;
         }
@@ -81,9 +81,9 @@ namespace OpenSim.Services.CapsService
                                          {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
                                      };
 
-            OSDArray arr = new OSDArray(1) {llsdSimInfo};
+            OSDArray arr = new OSDArray(1) { llsdSimInfo };
 
-            OSDMap llsdBody = new OSDMap(1) {{"SimulatorInfo", arr}};
+            OSDMap llsdBody = new OSDMap(1) { { "SimulatorInfo", arr } };
 
             return buildEvent("EnableSimulator", llsdBody);
         }
@@ -115,7 +115,7 @@ namespace OpenSim.Services.CapsService
                                                                  GravityMultiplier = entity.GravityMultiplier,
                                                                  LocalID = entity.LocalId,
                                                                  PhysicsShapeType =
-                                                                     (PhysicsShapeType) entity.PhysicsType,
+                                                                     (PhysicsShapeType)entity.PhysicsType,
                                                                  Restitution = entity.Restitution
                                                              };
                     i++;
@@ -137,7 +137,7 @@ namespace OpenSim.Services.CapsService
             }
 #endif
 
-            OSDMap m = new OSDMap {{"message", OSD.FromString("ObjectPhysicsProperties")}};
+            OSDMap m = new OSDMap { { "message", OSD.FromString("ObjectPhysicsProperties") } };
             OSD message_body = message.Serialize();
             m.Add("body", message_body);
             return m;
@@ -153,19 +153,17 @@ namespace OpenSim.Services.CapsService
                                       IPAddress address, int port,
                                       string capsURL, UUID agentID, UUID sessionID, int RegionSizeX, int RegionSizeY)
         {
-            OSDArray lookAtArr = new OSDArray(3)
-                                     {OSD.FromReal(lookAt.X), OSD.FromReal(lookAt.Y), OSD.FromReal(lookAt.Z)};
+            OSDArray lookAtArr = new OSDArray(3) { OSD.FromReal(lookAt.X), OSD.FromReal(lookAt.Y), OSD.FromReal(lookAt.Z) };
 
-            OSDArray positionArr = new OSDArray(3) {OSD.FromReal(pos.X), OSD.FromReal(pos.Y), OSD.FromReal(pos.Z)};
+            OSDArray positionArr = new OSDArray(3) { OSD.FromReal(pos.X), OSD.FromReal(pos.Y), OSD.FromReal(pos.Z) };
 
-            OSDMap infoMap = new OSDMap(2) {{"LookAt", lookAtArr}, {"Position", positionArr}};
+            OSDMap infoMap = new OSDMap(2) { { "LookAt", lookAtArr }, { "Position", positionArr } };
 
-            OSDArray infoArr = new OSDArray(1) {infoMap};
+            OSDArray infoArr = new OSDArray(1) { infoMap };
 
-            OSDMap agentDataMap = new OSDMap(2)
-                                      {{"AgentID", OSD.FromUUID(agentID)}, {"SessionID", OSD.FromUUID(sessionID)}};
+            OSDMap agentDataMap = new OSDMap(2) { { "AgentID", OSD.FromUUID(agentID) }, { "SessionID", OSD.FromUUID(sessionID) } };
 
-            OSDArray agentDataArr = new OSDArray(1) {agentDataMap};
+            OSDArray agentDataArr = new OSDArray(1) { agentDataMap };
 
             OSDMap regionDataMap = new OSDMap(4)
                                        {
@@ -177,10 +175,9 @@ namespace OpenSim.Services.CapsService
                                            {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
                                        };
 
-            OSDArray regionDataArr = new OSDArray(1) {regionDataMap};
+            OSDArray regionDataArr = new OSDArray(1) { regionDataMap };
 
-            OSDMap llsdBody = new OSDMap(3)
-                                  {{"Info", infoArr}, {"AgentData", agentDataArr}, {"RegionData", regionDataArr}};
+            OSDMap llsdBody = new OSDMap(3) { { "Info", infoArr }, { "AgentData", agentDataArr }, { "RegionData", regionDataArr } };
 
             return buildEvent("CrossedRegion", llsdBody);
         }
@@ -203,9 +200,9 @@ namespace OpenSim.Services.CapsService
                                   {"RegionSizeY", OSD.FromUInteger((uint) RegionSizeY)}
                               };
 
-            OSDArray infoArr = new OSDArray {info};
+            OSDArray infoArr = new OSDArray { info };
 
-            OSDMap body = new OSDMap {{"Info", infoArr}};
+            OSDMap body = new OSDMap { { "Info", infoArr } };
 
             return buildEvent("TeleportFinish", body);
         }
@@ -220,9 +217,9 @@ namespace OpenSim.Services.CapsService
                                     {"Mono", OSD.FromBoolean(mono)}
                                 };
 
-            OSDArray scriptArr = new OSDArray {script};
+            OSDArray scriptArr = new OSDArray { script };
 
-            OSDMap body = new OSDMap {{"Script", scriptArr}};
+            OSDMap body = new OSDMap { { "Script", scriptArr } };
 
             return buildEvent("ScriptRunningReply", body);
         }
@@ -262,25 +259,24 @@ namespace OpenSim.Services.CapsService
                                                Vector3 position, uint ttl, UUID transactionID, bool fromGroup,
                                                byte[] binaryBucket)
         {
-            OSDMap messageParams = new OSDMap(15) {{"type", new OSDInteger(dialog)}};
+            OSDMap messageParams = new OSDMap(15) { { "type", new OSDInteger(dialog) } };
 
-            OSDArray positionArray = new OSDArray(3)
-                                         {OSD.FromReal(position.X), OSD.FromReal(position.Y), OSD.FromReal(position.Z)};
+            OSDArray positionArray = new OSDArray(3) { OSD.FromReal(position.X), OSD.FromReal(position.Y), OSD.FromReal(position.Z) };
             messageParams.Add("position", positionArray);
 
             messageParams.Add("region_id", new OSDUUID(UUID.Zero));
             messageParams.Add("to_id", new OSDUUID(toAgent));
             messageParams.Add("source", new OSDInteger(0));
 
-            OSDMap data = new OSDMap(1) {{"binary_bucket", OSD.FromBinary(binaryBucket)}};
+            OSDMap data = new OSDMap(1) { { "binary_bucket", OSD.FromBinary(binaryBucket) } };
             messageParams.Add("data", data);
             messageParams.Add("message", new OSDString(message));
             messageParams.Add("id", new OSDUUID(transactionID));
             messageParams.Add("from_name", new OSDString(fromName));
-            messageParams.Add("timestamp", new OSDInteger((int) timeStamp));
+            messageParams.Add("timestamp", new OSDInteger((int)timeStamp));
             messageParams.Add("offline", new OSDInteger(offline ? 1 : 0));
             messageParams.Add("parent_estate_id", new OSDInteger(parentEstateID));
-            messageParams.Add("ttl", new OSDInteger((int) ttl));
+            messageParams.Add("ttl", new OSDInteger((int)ttl));
             messageParams.Add("from_id", new OSDUUID(fromAgent));
             messageParams.Add("from_group", new OSDInteger(fromGroup ? 1 : 0));
 
@@ -310,7 +306,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD ChatterBoxSessionStartReply(string groupName, UUID groupID)
         {
-            OSDMap moderatedMap = new OSDMap(4) {{"voice", OSD.FromBoolean(false)}};
+            OSDMap moderatedMap = new OSDMap(4) { { "voice", OSD.FromBoolean(false) } };
 
             OSDMap sessionMap = new OSDMap(4)
                                     {
@@ -352,8 +348,7 @@ namespace OpenSim.Services.CapsService
                                       }
                               };
 
-            OSDMap chatterboxInvitation = new OSDMap(2)
-                                              {{"message", new OSDString("ChatterBoxInvitation")}, {"body", body}};
+            OSDMap chatterboxInvitation = new OSDMap(2) { { "message", new OSDString("ChatterBoxInvitation") }, { "body", body } };
             return chatterboxInvitation;
         }
 
@@ -364,12 +359,12 @@ namespace OpenSim.Services.CapsService
             OSDMap body = new OSDMap();
             OSDMap agentUpdates = new OSDMap();
             OSDMap infoDetail = new OSDMap();
-            OSDMap mutes = new OSDMap {{"text", OSD.FromBoolean(textMute)}};
+            OSDMap mutes = new OSDMap { { "text", OSD.FromBoolean(textMute) } };
 
             infoDetail.Add("can_voice_chat", OSD.FromBoolean(canVoiceChat));
             infoDetail.Add("is_moderator", OSD.FromBoolean(isModerator));
             infoDetail.Add("mutes", mutes);
-            OSDMap info = new OSDMap {{"info", infoDetail}};
+            OSDMap info = new OSDMap { { "info", infoDetail } };
             agentUpdates.Add(agentID.ToString(), info);
             body.Add("agent_updates", agentUpdates);
             body.Add("session_id", OSD.FromUUID(sessionID));
@@ -392,7 +387,7 @@ namespace OpenSim.Services.CapsService
             OSDMap body = new OSDMap();
             OSDMap sessionInfo = new OSDMap();
             //OSDMap infoDetail = new OSDMap();
-            OSDMap moderatedMode = new OSDMap {{"voice", OSD.FromBoolean(true)}};
+            OSDMap moderatedMode = new OSDMap { { "voice", OSD.FromBoolean(true) } };
 
             sessionInfo.Add("moderated_mode", sessionInfo);
             sessionInfo.Add("session_name", OSD.FromString(SessionName));
@@ -425,12 +420,11 @@ namespace OpenSim.Services.CapsService
             foreach (ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock block in agentUpdatesBlock)
             {
                 infoDetail = new OSDMap();
-                mutes = new OSDMap
-                            {{"text", OSD.FromBoolean(block.MuteText)}, {"voice", OSD.FromBoolean(block.MuteVoice)}};
+                mutes = new OSDMap { { "text", OSD.FromBoolean(block.MuteText) }, { "voice", OSD.FromBoolean(block.MuteVoice) } };
                 infoDetail.Add("can_voice_chat", OSD.FromBoolean(block.CanVoiceChat));
                 infoDetail.Add("is_moderator", OSD.FromBoolean(block.IsModerator));
                 infoDetail.Add("mutes", mutes);
-                OSDMap info = new OSDMap {{"info", infoDetail}};
+                OSDMap info = new OSDMap { { "info", infoDetail } };
                 if (Transition != string.Empty)
                     info.Add("transition", OSD.FromString(Transition));
                 agentUpdates.Add(block.AgentID.ToString(), info);
@@ -453,11 +447,11 @@ namespace OpenSim.Services.CapsService
 
         public static OSD GroupMembership(AgentGroupDataUpdatePacket groupUpdatePacket)
         {
-            OSDMap groupUpdate = new OSDMap {{"message", OSD.FromString("AgentGroupDataUpdate")}};
+            OSDMap groupUpdate = new OSDMap { { "message", OSD.FromString("AgentGroupDataUpdate") } };
 
             OSDMap body = new OSDMap();
             OSDArray agentData = new OSDArray();
-            OSDMap agentDataMap = new OSDMap {{"AgentID", OSD.FromUUID(groupUpdatePacket.AgentData.AgentID)}};
+            OSDMap agentDataMap = new OSDMap { { "AgentID", OSD.FromUUID(groupUpdatePacket.AgentData.AgentID) } };
             agentData.Add(agentDataMap);
             body.Add("AgentData", agentData);
 
@@ -505,7 +499,7 @@ namespace OpenSim.Services.CapsService
             message.QueryID = PlacesReply.AgentData.QueryID;
             message.TransactionID = PlacesReply.TransactionData.TransactionID;
             message.QueryDataBlocks = new PlacesReplyMessage.QueryData[PlacesReply.QueryData.Length];
-            OSDMap placesReply = new OSDMap {{"message", OSD.FromString("PlacesReplyMessage")}};
+            OSDMap placesReply = new OSDMap { { "message", OSD.FromString("PlacesReplyMessage") } };
 
             OSDArray QueryData = new OSDArray();
 #if(!ISWIN)
@@ -561,7 +555,7 @@ namespace OpenSim.Services.CapsService
 
         public static OSD ParcelProperties(ParcelPropertiesMessage parcelPropertiesMessage)
         {
-            OSDMap message = new OSDMap {{"message", OSD.FromString("ParcelProperties")}};
+            OSDMap message = new OSDMap { { "message", OSD.FromString("ParcelProperties") } };
             OSD message_body = parcelPropertiesMessage.Serialize();
             message.Add("body", message_body);
             return message;
@@ -569,16 +563,16 @@ namespace OpenSim.Services.CapsService
 
         public static OSD ParcelObjectOwnersReply(ParcelObjectOwnersReplyMessage parcelPropertiesMessage)
         {
-            OSDMap message = new OSDMap {{"message", OSD.FromString("ParcelObjectOwnersReply")}};
+            OSDMap message = new OSDMap { { "message", OSD.FromString("ParcelObjectOwnersReply") } };
             OSD message_body = parcelPropertiesMessage.Serialize();
-            if (((OSDMap) message_body).ContainsKey("DataExtended"))
+            if (((OSDMap)message_body).ContainsKey("DataExtended"))
             {
-                OSDArray m = (OSDArray) ((OSDMap) message_body)["DataExtended"];
+                OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
                 int num = 0;
                 foreach (OSDMap innerMap in m.Cast<OSDMap>())
                 {
                     innerMap["TimeStamp"] =
-                        OSD.FromUInteger((uint) Util.ToUnixTime(parcelPropertiesMessage.PrimOwnersBlock[num].TimeStamp));
+                        OSD.FromUInteger((uint)Util.ToUnixTime(parcelPropertiesMessage.PrimOwnersBlock[num].TimeStamp));
                     num++;
                 }
             }
@@ -588,14 +582,14 @@ namespace OpenSim.Services.CapsService
 
         public static OSD LandStatReply(LandStatReplyMessage statReplyMessage)
         {
-            OSDMap message = new OSDMap {{"message", OSD.FromString("LandStatReply")}};
+            OSDMap message = new OSDMap { { "message", OSD.FromString("LandStatReply") } };
             OSD message_body = statReplyMessage.Serialize();
-            OSDArray m = (OSDArray) ((OSDMap) message_body)["DataExtended"];
+            OSDArray m = (OSDArray)((OSDMap)message_body)["DataExtended"];
             int num = 0;
             foreach (OSDMap innerMap in m.Cast<OSDMap>())
             {
                 innerMap["TimeStamp"] =
-                    OSD.FromUInteger((uint) Util.ToUnixTime(statReplyMessage.ReportDataBlocks[num].TimeStamp));
+                    OSD.FromUInteger((uint)Util.ToUnixTime(statReplyMessage.ReportDataBlocks[num].TimeStamp));
                 num++;
             }
             message.Add("body", message_body);

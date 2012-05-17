@@ -117,14 +117,14 @@ namespace OpenSim.Services.CapsService
 #else
             int count = m_RegionCapsServices.Values.SelectMany(regionCaps => regionCaps.GetClients()).Count(clientCaps => (clientCaps.RootAgent || showChildAgents));
 #endif
-            MainConsole.Instance.WarnFormat ("{0} agents found: ", count);
+            MainConsole.Instance.WarnFormat("{0} agents found: ", count);
             foreach (IClientCapsService clientCaps in m_ClientCapsServices.Values)
             {
-                foreach(IRegionClientCapsService caps in clientCaps.GetCapsServices())
+                foreach (IRegionClientCapsService caps in clientCaps.GetCapsServices())
                 {
-                    if((caps.RootAgent || showChildAgents))
+                    if ((caps.RootAgent || showChildAgents))
                     {
-                        MainConsole.Instance.InfoFormat("Region - {0}, User {1}, {2}, {3}", 
+                        MainConsole.Instance.InfoFormat("Region - {0}, User {1}, {2}, {3}",
                             caps.Region.RegionName, clientCaps.AccountInfo.Name,
                             caps.RootAgent ? "Root Agent" : "Child Agent",
                             caps.Disabled ? "Disabled" : "Not Disabled");
@@ -145,7 +145,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="AgentID"></param>
         public void RemoveCAPS(UUID AgentID)
         {
-            if(m_ClientCapsServices.ContainsKey(AgentID))
+            if (m_ClientCapsServices.ContainsKey(AgentID))
             {
                 IClientCapsService perClient = m_ClientCapsServices[AgentID];
                 perClient.Close();
@@ -165,15 +165,15 @@ namespace OpenSim.Services.CapsService
         /// <returns></returns>
         public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
         {
-            return CreateCAPS (AgentID, CAPSBase, regionHandle, IsRootAgent, circuitData, 0);
+            return CreateCAPS(AgentID, CAPSBase, regionHandle, IsRootAgent, circuitData, 0);
         }
 
-        public string CreateCAPS (UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData, uint port)
+        public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData, uint port)
         {
             //Now make sure we didn't use an old one or something
             IClientCapsService service = GetOrCreateClientCapsService(AgentID);
             IRegionClientCapsService clientService = service.GetOrCreateCapsService(regionHandle, CAPSBase, circuitData, port);
-            
+
             //Fix the root agent status
             clientService.RootAgent = IsRootAgent;
 

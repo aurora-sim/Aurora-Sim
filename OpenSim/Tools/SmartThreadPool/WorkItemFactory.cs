@@ -6,7 +6,7 @@ using System;
 namespace Amib.Threading.Internal
 {
 
-    #region WorkItemFactory class 
+    #region WorkItemFactory class
 
     public class WorkItemFactory
     {

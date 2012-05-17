@@ -106,7 +106,7 @@ namespace OpenSim.Services.MessagingService
 
                     if (message.ContainsKey("RegionHandles"))
                     {
-                        OSDArray handles = (OSDArray) message["RegionHandles"];
+                        OSDArray handles = (OSDArray)message["RegionHandles"];
 
                         for (int i = 0; i < handles.Count; i += 2)
                         {
