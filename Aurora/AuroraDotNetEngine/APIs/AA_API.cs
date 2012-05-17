@@ -71,7 +71,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ICloudModule CloudModule = World.RequestModuleInterface<ICloudModule>();
             if (CloudModule == null)
                 return;
-            CloudModule.SetCloudDensity((float) density);
+            CloudModule.SetCloudDensity((float)density);
         }
 
         public void aaUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
@@ -288,12 +288,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (chatModule != null)
                 chatModule.SimChat(text, ChatTypeEnum.Custom, channelID,
                                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name,
-                                   m_host.UUID, false, false, (float) Distance.value, UUID.Zero, World);
+                                   m_host.UUID, false, false, (float)Distance.value, UUID.Zero, World);
 
             IWorldComm wComm = World.RequestModuleInterface<IWorldComm>();
             if (wComm != null)
                 wComm.DeliverMessage(ChatTypeEnum.Custom, channelID, m_host.Name, m_host.UUID, text,
-                                     (float) Distance.value);
+                                     (float)Distance.value);
         }
 
         public void aaSayTo(string userID, string text)
@@ -329,7 +329,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void aaRaiseError(string message)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARaiseError", m_host, "AA", m_itemID)) return;
-            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] {message});
+            m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] { message });
             throw new EventAbortException();
         }
 
@@ -548,19 +548,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, (float) f.value, grav[1], grav[2]);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, (float)f.value, grav[1], grav[2]);
             }
             else if (name == ScriptBaseClass.GRAVITY_FORCE_Y)
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], (float) f.value, grav[2]);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], (float)f.value, grav[2]);
             }
             else if (name == ScriptBaseClass.GRAVITY_FORCE_Z)
             {
                 LSL_Float f = value.GetLSLFloatItem(0);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
-                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], grav[1], (float) f.value);
+                m_host.ParentEntity.Scene.PhysicsScene.SetGravityForce(true, grav[0], grav[1], (float)f.value);
             }
             else if (name == ScriptBaseClass.ADD_GRAVITY_POINT)
             {
@@ -570,10 +570,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Integer ident = value.GetLSLIntegerItem(3);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint(false,
-                                                                       new Vector3((float) pos.x, (float) pos.y,
-                                                                                   (float) pos.z),
-                                                                       0, 0, 0, (float) gravForce.value,
-                                                                       (float) radius.value, ident.value);
+                                                                       new Vector3((float)pos.x, (float)pos.y,
+                                                                                   (float)pos.z),
+                                                                       0, 0, 0, (float)gravForce.value,
+                                                                       (float)radius.value, ident.value);
             }
             else if (name == ScriptBaseClass.ADD_GRAVITY_FORCE)
             {
@@ -585,10 +585,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 LSL_Integer ident = value.GetLSLIntegerItem(5);
                 float[] grav = m_host.ParentEntity.Scene.PhysicsScene.GetGravityForce();
                 m_host.ParentEntity.Scene.PhysicsScene.AddGravityPoint(true,
-                                                                       new Vector3((float) pos.x, (float) pos.y,
-                                                                                   (float) pos.z),
-                                                                       (float) xForce, (float) yForce, (float) zForce, 0,
-                                                                       (float) radius.value, ident.value);
+                                                                       new Vector3((float)pos.x, (float)pos.y,
+                                                                                   (float)pos.z),
+                                                                       (float)xForce, (float)yForce, (float)zForce, 0,
+                                                                       (float)radius.value, ident.value);
             }
             else if (name == ScriptBaseClass.START_TIME_REVERSAL_SAVING)
             {
@@ -728,7 +728,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public override Object InitializeLifetimeService()
         {
-            ILease lease = (ILease) base.InitializeLifetimeService();
+            ILease lease = (ILease)base.InitializeLifetimeService();
 
             if (lease.CurrentState == LeaseState.Initial)
             {

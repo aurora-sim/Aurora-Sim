@@ -91,7 +91,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     [Serializable]
     public class ScriptPermissionsException : Exception
     {
-        public ScriptPermissionsException(string message) : base(message)
+        public ScriptPermissionsException(string message)
+            : base(message)
         {
         }
 

@@ -122,7 +122,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 MethodInfo[] members = api.GetType().GetMethods();
                 foreach (MethodInfo info in members)
                     if (info.ReturnType == typeof(DateTime))
-                        if(!DTFunctions.Contains(info.Name))
+                        if (!DTFunctions.Contains(info.Name))
                             DTFunctions.Add(info.Name);
             }
             m_scriptApis = m_compiler.ScriptEngine.GetAllFunctionNamesAPIs();
@@ -134,7 +134,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             //bool success = RunTest1();
         }
 
-        #region Tests 
+        #region Tests
 
         public bool RunTest1()
         {
@@ -227,7 +227,7 @@ state testing
                             out object PositionMap)
         {
             // Its LSL, convert it to C#
-            Dictionary<int, int>  map = new Dictionary<int, int>();
+            Dictionary<int, int> map = new Dictionary<int, int>();
             List<string> csClass = new List<string>();
             Script = Script.Replace("\n", "\r\n");
 
@@ -317,7 +317,7 @@ state testing
                     else
                     {
                         bracketInsideMethod--;
-                        if(ProtectedBracketLoops.Contains(bracketInsideMethod))
+                        if (ProtectedBracketLoops.Contains(bracketInsideMethod))
                         {
                             ProtectedBracketLoops.Remove(bracketInsideMethod);
                             AddToClass(csClass, GenerateTimeCheck("", true), split, breaksplit, lineSplit, i, ref map);
@@ -331,7 +331,7 @@ state testing
                         if (bracketInsideMethod == 0)
                             InState = false;
                     }
-                    if(addToClass)
+                    if (addToClass)
                         AddToClass(csClass, word,
                             split, breaksplit, lineSplit, i, ref map);
                 }
@@ -354,7 +354,7 @@ state testing
                     foreach (string call in ProtectedCalls)
                         if (csLine.StartsWith(call))
                         {
-                            if (!GetNextWord(split, skipUntil-1).StartsWith("{"))//Someone is trying to do while(TRUE) X();
+                            if (!GetNextWord(split, skipUntil - 1).StartsWith("{"))//Someone is trying to do while(TRUE) X();
                             {
                                 csLine += " { ";
                                 csLine = GenerateTimeCheck(csLine, false);
@@ -468,7 +468,7 @@ state testing
 
             string Mname = Aurora.Framework.StringUtils.RandomString(10, true);
             string Exname = Aurora.Framework.StringUtils.RandomString(10, true);
-                    
+
             string newLine = "string " + Exname + " =  \"\";" +
                                                   "System.Collections.IEnumerator " + Mname + " = " +
                                                   functionName + parameters +
@@ -489,7 +489,7 @@ state testing
                                                   "   yield return " + Mname + ".Current;" +
                                                   " else break;" +
                                                   " }";
-            if(retType != "void")
+            if (retType != "void")
                 newLine += "\n" + line.Replace(functionName + parameters, "(" + retType + ")" + Mname + ".Current");
             return newLine;
         }
@@ -553,7 +553,7 @@ state testing
             }
         }
 
-        private void AddToClass(List<string> csline, string line, string[] split, 
+        private void AddToClass(List<string> csline, string line, string[] split,
             string[] breaksplit, string[] lineSplit, int i, ref Dictionary<int, int> PositionMap)
         {
             if (line != "{" && line != "}")
@@ -601,7 +601,7 @@ state testing
                     Script = Script.Replace(vectorMatches.Value, "new list(" + vectorMatches.Value.Substring(1, vectorMatches.Value.Length - 2) + ")");
                 vectorMatches = vectorMatches.NextMatch();
             }
-            
+
             RegexContains(Script, ".*\\..*", out vectorMatches);
             while (vectorMatches.Success)
             {
@@ -673,7 +673,7 @@ state testing
                         {
                             //Float, 0.05, valid
                         }
-                        startValue = index+1;
+                        startValue = index + 1;
                     }
                 }
                 vectorMatches = vectorMatches.NextMatch();
@@ -761,7 +761,7 @@ state testing
 
         private bool RemoveR(string r)
         {
-            return r.Replace("\r","") == "";
+            return r.Replace("\r", "") == "";
         }
 
         private string GenerateEvent(string currentState, string[] split, string[] breaksplit, int i, out int skipUntil, ref List<string> GlobalFunctions)
@@ -885,7 +885,7 @@ state testing
         {
             Dictionary<int, int> PositionMapp = (Dictionary<int, int>)PositionMap;
             LineN = CompErr.Line;
-            if(CompErr.Line > CSCodeGenerator.GetHeaderCount(m_compiler))
+            if (CompErr.Line > CSCodeGenerator.GetHeaderCount(m_compiler))
                 LineN = CompErr.Line - CSCodeGenerator.GetHeaderCount(m_compiler) - 1;
             CharN = 1;
             LineN = PositionMapp[LineN];//LSL is zero based, so subtract one
