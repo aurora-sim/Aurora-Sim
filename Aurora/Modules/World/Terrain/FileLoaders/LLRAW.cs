@@ -68,8 +68,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
             while (currFileYOffset > offsetY)
             {
                 // read a whole strip of regions
-                int heightsToRead = sectionHeight*(fileWidth*sectionWidth);
-                bs.ReadBytes(heightsToRead*13); // because there are 13 fun channels
+                int heightsToRead = sectionHeight * (fileWidth * sectionWidth);
+                bs.ReadBytes(heightsToRead * 13); // because there are 13 fun channels
                 currFileYOffset--;
             }
 
@@ -86,7 +86,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 // i.e. eat X upto where we start
                 while (currFileXOffset < offsetX)
                 {
-                    bs.ReadBytes(sectionWidth*13);
+                    bs.ReadBytes(sectionWidth * 13);
                     currFileXOffset++;
                 }
 
@@ -95,7 +95,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 for (x = 0; x < sectionWidth; x++)
                 {
                     // Read a strip and continue
-                    retval[x, y] = bs.ReadByte()*(bs.ReadByte()/128);
+                    retval[x, y] = bs.ReadByte() * (bs.ReadByte() / 128);
                     bs.ReadBytes(11);
                 }
                 // record that we wrote it
@@ -106,7 +106,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 while (currFileXOffset < fileWidth)
                 {
                     // eat the next regions x line
-                    bs.ReadBytes(sectionWidth*13); //The 13 channels again
+                    bs.ReadBytes(sectionWidth * 13); //The 13 channels again
                     currFileXOffset++;
                 }
             }
@@ -119,7 +119,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
 
         public ITerrainChannel LoadStream(Stream s, IScene scene)
         {
-            int size = (int) Math.Sqrt(s.Length/13);
+            int size = (int)Math.Sqrt(s.Length / 13);
             TerrainChannel retval = new TerrainChannel(size, size, scene);
 
             BinaryReader bs = new BinaryReader(s);
@@ -129,7 +129,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
                 int x;
                 for (x = 0; x < retval.Width; x++)
                 {
-                    retval[x, (retval.Width - 1) - y] = bs.ReadByte()*(bs.ReadByte()/128f);
+                    retval[x, (retval.Width - 1) - y] = bs.ReadByte() * (bs.ReadByte() / 128f);
                     bs.ReadBytes(11); // Advance the stream to next bytes.
                 }
             }
@@ -152,15 +152,15 @@ namespace Aurora.Modules.Terrain.FileLoaders
         {
             if (LookupHeightTable == null)
             {
-                LookupHeightTable = new HeightmapLookupValue[map.Height*map.Width];
+                LookupHeightTable = new HeightmapLookupValue[map.Height * map.Width];
 
                 for (int i = 0; i < map.Height; i++)
                 {
                     for (int j = 0; j < map.Width; j++)
                     {
-                        LookupHeightTable[i + (j*map.Width)] = new HeightmapLookupValue((ushort) (i + (j*map.Width)),
+                        LookupHeightTable[i + (j * map.Width)] = new HeightmapLookupValue((ushort)(i + (j * map.Width)),
                                                                                         (float)
-                                                                                        (i*((double) j/(map.Width/2))));
+                                                                                        (i * ((double)j / (map.Width / 2))));
                     }
                 }
                 Array.Sort(LookupHeightTable);
@@ -184,14 +184,14 @@ namespace Aurora.Modules.Terrain.FileLoaders
 
                     // The lookup table is pre-sorted, so we either find an exact match or
                     // the next closest (smaller) match with a binary search
-                    index = Array.BinarySearch(LookupHeightTable, new HeightmapLookupValue(0, (float) t));
+                    index = Array.BinarySearch(LookupHeightTable, new HeightmapLookupValue(0, (float)t));
                     if (index < 0)
                         index = ~index - 1;
 
                     index = LookupHeightTable[index].Index;
 
-                    byte red = (byte) (index & 0xFF);
-                    byte green = (byte) ((index >> 8) & 0xFF);
+                    byte red = (byte)(index & 0xFF);
+                    byte green = (byte)((index >> 8) & 0xFF);
                     const byte blue = 20;
                     const byte alpha1 = 0;
                     const byte alpha2 = 0;

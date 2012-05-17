@@ -117,14 +117,13 @@ namespace Aurora.Modules.Monitoring
 
         private void LogSimStats(SimStats stats)
         {
-            SimStatsPacket pack = new SimStatsPacket
-                                      {Region = stats.RegionBlock, Stat = stats.StatsBlock, Header = {Reliable = false}};
+            SimStatsPacket pack = new SimStatsPacket { Region = stats.RegionBlock, Stat = stats.StatsBlock, Header = { Reliable = false } };
 
             // note that we are inside the reporter lock when called
             DateTime now = DateTime.Now;
 
             // hide some time information into the packet
-            pack.Header.Sequence = (uint) now.Ticks;
+            pack.Header.Sequence = (uint)now.Ticks;
 
             lock (m_statLockObject) // m_statLog is shared so make sure there is only executer here
             {

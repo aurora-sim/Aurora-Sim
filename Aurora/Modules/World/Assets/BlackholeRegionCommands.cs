@@ -103,7 +103,7 @@ namespace Aurora.Modules.Assets
                                 totalBytes += ass.Data.Length;
                                 allAssetIDLookup.Add(ass.ID);
                                 ass.Description = ass.Data.Length.ToString();
-                                ass.Data = new byte[] {};
+                                ass.Data = new byte[] { };
                                 allAssets.Add(ass);
                                 allAssetCount.Add(ass.ID.ToString(), "1");
                                 counter++;
@@ -136,12 +136,12 @@ namespace Aurora.Modules.Assets
                     }
                 }
 
-            AssetBase[] SortResults = new AssetBase[] {};
+            AssetBase[] SortResults = new AssetBase[] { };
             SortResults = SortAssetArray(allAssets.ToArray(), SortResults, 0);
 
             MainConsole.Instance.Info("[BlkHolAssets] Total Texture Bytes " + totalBytes);
-            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes/1024.0));
-            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes/1048576.0));
+            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Kilobyte " + (totalBytes / 1024.0));
+            MainConsole.Instance.Info("[BlkHolAssets] Total Texture Megabyte " + (totalBytes / 1048576.0));
             MainConsole.Instance.Info("[BlkHolAssets] " + totalTextures + " textures on region");
             MainConsole.Instance.Info("[BlkHolAssets] " + totalChagnesTextures + " textures could be optimised");
             MainConsole.Instance.Info("[BlkHolAssets] " + totalInventory + " item in object inventory");
@@ -155,7 +155,7 @@ namespace Aurora.Modules.Assets
                 loopTo = SortResults.Count();
             for (int looper = 0; looper <= loopTo; looper++)
             {
-                double mbsize = Math.Round((int.Parse(SortResults[looper].Description)/1048576.0)*100.0)/100.0;
+                double mbsize = Math.Round((int.Parse(SortResults[looper].Description) / 1048576.0) * 100.0) / 100.0;
 
                 MainConsole.Instance.Info(SortResults[looper].ID + " " + mbsize + "MB");
             }
@@ -246,7 +246,7 @@ namespace Aurora.Modules.Assets
                             child.Inventory.UpdateInventoryItem(inventoryItem);
                             entity.HasGroupChanged = true;
                         }
-                        if (inventoryItem.InvType == (int) InventoryType.LSL)
+                        if (inventoryItem.InvType == (int)InventoryType.LSL)
                         {
                             // search for assets keys and replace if needed ??
                         }
@@ -254,8 +254,8 @@ namespace Aurora.Modules.Assets
                 }
             }
             MainConsole.Instance.Info("[BlkHolAssets] Bytes Saved " + savedBytes);
-            MainConsole.Instance.Info("[BlkHolAssets] Kilobyte Saved " + (savedBytes/1024.0f));
-            MainConsole.Instance.Info("[BlkHolAssets] Megabyte Saved " + (savedBytes/1048576.0f));
+            MainConsole.Instance.Info("[BlkHolAssets] Kilobyte Saved " + (savedBytes / 1024.0f));
+            MainConsole.Instance.Info("[BlkHolAssets] Megabyte Saved " + (savedBytes / 1048576.0f));
             MainConsole.Instance.Info("[BlkHolAssets] " + totalChagnesTextures + " out of " + totalTextures + " textures changed");
             MainConsole.Instance.Info("[BlkHolAssets] " + totalChangesInventory + " out of " + totalInventory +
                        " inventory items changed");
@@ -277,14 +277,14 @@ namespace Aurora.Modules.Assets
                 if (face != null)
                     if (face.TextureID == oldID)
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = newID;
                         newShape.FaceTextures[i] = f;
                     }
                     else
                     {
-                        Primitive.TextureEntryFace f = newShape.CreateFace((uint) i);
+                        Primitive.TextureEntryFace f = newShape.CreateFace((uint)i);
                         CopyFace(oldShape.FaceTextures[i], f);
                         f.TextureID = oldShape.FaceTextures[i].TextureID;
                         newShape.FaceTextures[i] = f;

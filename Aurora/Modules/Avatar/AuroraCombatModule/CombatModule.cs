@@ -185,7 +185,7 @@ namespace Aurora.Modules.Combat
 
         private void EventManager_OnRemovePresence(IScenePresence presence)
         {
-            CombatPresence m = (CombatPresence) presence.RequestModuleInterface<ICombatPresence>();
+            CombatPresence m = (CombatPresence)presence.RequestModuleInterface<ICombatPresence>();
             if (m != null)
             {
                 presence.UnregisterModuleInterface<ICombatPresence>(m);
@@ -252,7 +252,7 @@ namespace Aurora.Modules.Combat
 
             try
             {
-                if ((obj.LandData.Flags & (uint) ParcelFlags.AllowDamage) != 0)
+                if ((obj.LandData.Flags & (uint)ParcelFlags.AllowDamage) != 0)
                 {
                     ICombatPresence CP = avatar.RequestModuleInterface<ICombatPresence>();
                     CP.Health = MaximumHealth;
@@ -336,8 +336,8 @@ namespace Aurora.Modules.Combat
                 */
                 if (e == null)
                     return;
-                
-                CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
+
+                CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
                 /*Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 UUID killerObj = UUID.Zero;
@@ -396,7 +396,7 @@ namespace Aurora.Modules.Combat
                 if (damage > MaximumDamageToInflict)
                     damage = MaximumDamageToInflict;
                 float health = Health;
-                health -= (float) damage;
+                health -= (float)damage;
                 if (health <= 0)
                     Die(OwnerID);
             }
@@ -410,7 +410,7 @@ namespace Aurora.Modules.Combat
                 if (damage > MaximumDamageToInflict)
                     damage = MaximumDamageToInflict;
                 float health = Health;
-                health -= (float) damage;
+                health -= (float)damage;
                 if (health <= 0)
                     Die(OwnerID);
             }
@@ -421,7 +421,7 @@ namespace Aurora.Modules.Combat
                     return;
 
                 float health = Health;
-                health += (float) healing;
+                health += (float)healing;
                 if (health >= MaximumHealth)
                     health = MaximumHealth;
             }
@@ -430,7 +430,7 @@ namespace Aurora.Modules.Combat
             {
                 foreach (IScriptModule m in m_part.Scene.RequestModuleInterfaces<IScriptModule>())
                 {
-                    m.PostObjectEvent(m_part.UUID, "dead_object", new object[] {OwnerID});
+                    m.PostObjectEvent(m_part.UUID, "dead_object", new object[] { OwnerID });
                 }
             }
 
@@ -537,7 +537,7 @@ namespace Aurora.Modules.Combat
                 if (m_SP == null || m_SP.Scene == null || m_SP.Invulnerable || HasLeftCombat || e == null)
                     return;
 
-                CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
+                CollisionEventUpdate collisionData = (CollisionEventUpdate)e;
                 Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 float starthealth = Health;
@@ -587,13 +587,13 @@ namespace Aurora.Modules.Combat
                     }
                     else
                     {
-                        float Z = m_SP.Velocity.Length()/20;
+                        float Z = m_SP.Velocity.Length() / 20;
                         if (coldata[localid].PenetrationDepth >= 0.05f && m_SP.Velocity.Z < -5 &&
                             !m_SP.PhysicsActor.Flying)
                         {
                             Z = Math.Min(Z, 1.5f);
                             float damage = Math.Min(coldata[localid].PenetrationDepth, 15f);
-                            Health -= damage*Z;
+                            Health -= damage * Z;
                         }
                     }
 
@@ -625,7 +625,7 @@ namespace Aurora.Modules.Combat
                     {
                         if (deadAvatarMessage != "")
                             m_SP.ControllingClient.SendAgentAlertMessage(deadAvatarMessage, true);
-                                //Send it as a blue box at the bottom of the screen rather than as a full popup
+                        //Send it as a blue box at the bottom of the screen rather than as a full popup
                         if (killingAvatar != null && killingAvatarMessage != "")
                             killingAvatar.ControllingClient.SendAlertMessage(killingAvatarMessage);
                     }
@@ -643,8 +643,7 @@ namespace Aurora.Modules.Combat
                         {
                             m_SP.AllowMovement = false;
                             this.HasLeftCombat = true;
-                            Timer t = new Timer
-                                          {Interval = m_combatModule.m_SecondsBeforeRespawn*1000, AutoReset = false};
+                            Timer t = new Timer { Interval = m_combatModule.m_SecondsBeforeRespawn * 1000, AutoReset = false };
                             //Use this to reenable movement and combat
                             //Only once
                             t.Elapsed += respawn_Elapsed;
@@ -661,8 +660,8 @@ namespace Aurora.Modules.Combat
                             {
                                 if (m_SP.PhysicsActor != null)
                                     m_SP.PhysicsActor.Flying = true;
-                                m_SP.Teleport(new Vector3(m_SP.Scene.RegionInfo.RegionSizeX/2,
-                                                          m_SP.Scene.RegionInfo.RegionSizeY/2, 128));
+                                m_SP.Teleport(new Vector3(m_SP.Scene.RegionInfo.RegionSizeX / 2,
+                                                          m_SP.Scene.RegionInfo.RegionSizeY / 2, 128));
                             }
                     }
                 }
@@ -739,7 +738,7 @@ namespace Aurora.Modules.Combat
                     IEntityTransferModule entityTransfer = m_SP.Scene.RequestModuleInterface<IEntityTransferModule>();
                     if (entityTransfer != null)
                         entityTransfer.RequestTeleportLocation(m_SP.ControllingClient, RegionName, pos, lookat,
-                                                               (uint) TeleportFlags.ViaHome);
+                                                               (uint)TeleportFlags.ViaHome);
                 }
             }
 
@@ -749,7 +748,7 @@ namespace Aurora.Modules.Combat
                     return;
                 if (!this.HasLeftCombat || !m_combatModule.ForceRequireCombatPermission)
                 {
-                    m_health += (float) healing;
+                    m_health += (float)healing;
                     if (m_health >= m_combatModule.MaximumHealth)
                         m_health = m_combatModule.MaximumHealth;
 
@@ -766,7 +765,7 @@ namespace Aurora.Modules.Combat
                 {
                     if (damage > m_combatModule.MaximumDamageToInflict)
                         damage = m_combatModule.MaximumDamageToInflict;
-                    m_health -= (float) damage;
+                    m_health -= (float)damage;
                     m_SP.ControllingClient.SendHealth(Health);
                     if (Health <= 0)
                     {

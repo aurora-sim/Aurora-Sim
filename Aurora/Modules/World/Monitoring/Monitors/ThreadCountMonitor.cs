@@ -46,7 +46,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int) GetValue() + " Thread(s) (Global)";
+            return (int)GetValue() + " Thread(s) (Global)";
         }
 
         public void ResetStats()

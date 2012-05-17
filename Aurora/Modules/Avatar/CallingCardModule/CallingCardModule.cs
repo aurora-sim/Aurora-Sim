@@ -139,28 +139,28 @@ namespace Aurora.Modules.CallingCards
             InventoryItemBase item = new InventoryItemBase
                                          {
                                              AssetID = UUID.Zero,
-                                             AssetType = (int) AssetType.CallingCard,
-                                             BasePermissions = (uint) (PermissionMask.Copy | PermissionMask.Modify),
-                                             CurrentPermissions = (uint) (PermissionMask.Copy | PermissionMask.Modify),
+                                             AssetType = (int)AssetType.CallingCard,
+                                             BasePermissions = (uint)(PermissionMask.Copy | PermissionMask.Modify),
+                                             CurrentPermissions = (uint)(PermissionMask.Copy | PermissionMask.Modify),
                                              NextPermissions = (uint)PermissionMask.None,
                                              CreationDate = Util.UnixTimeSinceEpoch(),
                                              CreatorId = creator.ToString(),
                                              Description = "",
-                                             EveryOnePermissions = (uint) PermissionMask.None,
+                                             EveryOnePermissions = (uint)PermissionMask.None,
                                              Flags = 0,
                                              Folder = folder,
                                              GroupID = UUID.Zero,
                                              GroupOwned = false,
                                              ID = UUID.Random(),
-                                             InvType = (int) InventoryType.CallingCard,
+                                             InvType = (int)InventoryType.CallingCard,
                                              Name = name,
                                              Owner = client.AgentId,
                                              SalePrice = 10,
-                                             SaleType = (byte) SaleType.Not
+                                             SaleType = (byte)SaleType.Not
                                          };
 
 
-            
+
             ILLClientInventory inventory = client.Scene.RequestModuleInterface<ILLClientInventory>();
             if (inventory != null)
                 inventory.AddInventoryItem(client, item);

@@ -116,7 +116,7 @@ namespace Aurora.Modules.Groups
 
             GroupsConnector.CreateGroup(GroupID, name, charter, showInList,
                                         insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID,
-                                        ((ulong) m_DefaultEveryonePowers), OwnerRoleID, ((ulong) OwnerPowers));
+                                        ((ulong)m_DefaultEveryonePowers), OwnerRoleID, ((ulong)OwnerPowers));
 
             return GroupID;
         }
@@ -226,7 +226,7 @@ namespace Aurora.Modules.Groups
         public GroupMembershipData GetAgentActiveMembership(UUID requestingAgentID, UUID AgentID)
         {
             return GroupsConnector.GetGroupMembershipData(requestingAgentID,
-                                                          UUID.Zero, 
+                                                          UUID.Zero,
                                                           AgentID);
         }
 
@@ -383,7 +383,7 @@ namespace Aurora.Modules.Groups
             ChatSessions.TryGetValue(sessionid, out session);
             if (session == null)
                 return null;
-            ChatSessionMember thismember = new ChatSessionMember {AvatarKey = UUID.Zero};
+            ChatSessionMember thismember = new ChatSessionMember { AvatarKey = UUID.Zero };
 #if (!ISWIN)
             foreach (ChatSessionMember testmember in session.Members)
             {

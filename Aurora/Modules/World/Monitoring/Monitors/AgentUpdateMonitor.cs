@@ -52,7 +52,7 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Monitors
 
         public string GetFriendlyValue()
         {
-            return (int) GetValue() + " updates/sec";
+            return (int)GetValue() + " updates/sec";
         }
 
         #endregion

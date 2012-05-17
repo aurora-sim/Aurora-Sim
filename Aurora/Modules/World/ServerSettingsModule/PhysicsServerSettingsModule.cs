@@ -11,15 +11,15 @@ namespace Aurora.Modules.World.ServerSettingsModule
 {
     public class PhysicsServerSettingsModule : INonSharedRegionModule
     {
-        public void Initialise (IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
         }
 
-        public void RegionLoaded (IScene scene)
+        public void RegionLoaded(IScene scene)
         {
             IServerSettings serverSettings = scene.RequestModuleInterface<IServerSettings>();
             ServerSetting gravitySetting = new ServerSetting()
@@ -43,11 +43,11 @@ namespace Aurora.Modules.World.ServerSettingsModule
             serverSettings.RegisterSetting(gravitySetting);
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
         }
 
-        public void Close ()
+        public void Close()
         {
         }
 

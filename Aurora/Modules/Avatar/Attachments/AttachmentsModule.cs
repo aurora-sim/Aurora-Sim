@@ -63,7 +63,7 @@ namespace Aurora.Modules.Attachments
             }
         }
 
-        public void AddRegion (IScene scene)
+        public void AddRegion(IScene scene)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IAttachmentsModule>(this);
@@ -74,7 +74,7 @@ namespace Aurora.Modules.Attachments
             m_scene.EventManager.OnSetAgentLeaving += AgentIsLeaving;
         }
 
-        public void RemoveRegion (IScene scene)
+        public void RemoveRegion(IScene scene)
         {
             m_scene.UnregisterModuleInterface<IAttachmentsModule>(this);
             m_scene.EventManager.OnNewClient -= SubscribeToClientEvents;
@@ -84,7 +84,7 @@ namespace Aurora.Modules.Attachments
             m_scene.EventManager.OnSetAgentLeaving -= AgentIsLeaving;
         }
 
-        public void RegionLoaded (IScene scene) 
+        public void RegionLoaded(IScene scene)
         {
             AvatarFactory = scene.RequestModuleInterface<IAvatarFactory>();
         }
@@ -97,7 +97,7 @@ namespace Aurora.Modules.Attachments
         protected void AgentIsLeaving(IScenePresence presence, OpenSim.Services.Interfaces.GridRegion destination)
         {
             //If its a root agent, we need to save all attachments as well
-            if(!presence.IsChildAgent)
+            if (!presence.IsChildAgent)
                 SuspendAvatar(presence, destination);
         }
 
@@ -110,42 +110,42 @@ namespace Aurora.Modules.Attachments
         {
             Util.FireAndForget(delegate
                                    {
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                if (null == appearance || null == appearance.Appearance)
-                {
-                    MainConsole.Instance.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
-                    return;
-                }
+                                       IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                                       if (null == appearance || null == appearance.Appearance)
+                                       {
+                                           MainConsole.Instance.WarnFormat("[ATTACHMENT]: Appearance has not been initialized for agent {0}", presence.UUID);
+                                           return;
+                                       }
 
-                //Create the avatar attachments plugin for the av
-                AvatarAttachments attachmentsPlugin = new AvatarAttachments(presence);
-                presence.RegisterModuleInterface(attachmentsPlugin);
+                                       //Create the avatar attachments plugin for the av
+                                       AvatarAttachments attachmentsPlugin = new AvatarAttachments(presence);
+                                       presence.RegisterModuleInterface(attachmentsPlugin);
 
-                List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments();
-                foreach (AvatarAttachment attach in attachments)
-                {
-                    try
-                    {
-                        RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, attach.AssetID, 0, false);
-                    }
-                    catch (Exception e)
-                    {
-                        MainConsole.Instance.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e);
-                    }
-                }
-                presence.AttachmentsLoaded = true;
-                lock (_usersToSendAttachmentsToWhenLoaded)
-                {
-                    if (_usersToSendAttachmentsToWhenLoaded.ContainsKey(presence.UUID))
-                    {
-                        foreach (var id in _usersToSendAttachmentsToWhenLoaded[presence.UUID])
-                        {
-                            SendAttachmentsToPresence(id, presence);
-                        }
-                        _usersToSendAttachmentsToWhenLoaded.Remove(presence.UUID);
-                    }
-                }
-            });
+                                       List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments();
+                                       foreach (AvatarAttachment attach in attachments)
+                                       {
+                                           try
+                                           {
+                                               RezSingleAttachmentFromInventory(presence.ControllingClient, attach.ItemID, attach.AssetID, 0, false);
+                                           }
+                                           catch (Exception e)
+                                           {
+                                               MainConsole.Instance.ErrorFormat("[ATTACHMENT]: Unable to rez attachment: {0}", e);
+                                           }
+                                       }
+                                       presence.AttachmentsLoaded = true;
+                                       lock (_usersToSendAttachmentsToWhenLoaded)
+                                       {
+                                           if (_usersToSendAttachmentsToWhenLoaded.ContainsKey(presence.UUID))
+                                           {
+                                               foreach (var id in _usersToSendAttachmentsToWhenLoaded[presence.UUID])
+                                               {
+                                                   SendAttachmentsToPresence(id, presence);
+                                               }
+                                               _usersToSendAttachmentsToWhenLoaded.Remove(presence.UUID);
+                                           }
+                                       }
+                                   });
         }
 
         public void SendAttachmentsToPresence(IScenePresence receiver, IScenePresence sender)
@@ -288,7 +288,7 @@ namespace Aurora.Modules.Attachments
 
         protected void ClientDropObject(uint objectLocalID, IClientAPI remoteClient)
         {
-            ISceneEntity group = m_scene.GetGroupByPrim (objectLocalID);
+            ISceneEntity group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
                 DetachSingleAttachmentToGround(group.UUID, remoteClient);
         }
@@ -300,7 +300,7 @@ namespace Aurora.Modules.Attachments
             try
             {
                 // If we can't take it, we can't attach it!
-                ISceneChildEntity part = m_scene.GetSceneObjectPart (objectLocalID);
+                ISceneChildEntity part = m_scene.GetSceneObjectPart(objectLocalID);
                 if (part == null)
                     return;
 
@@ -315,7 +315,7 @@ namespace Aurora.Modules.Attachments
 
         protected void ClientUpdateAttachmentPosition(uint objectLocalID, Vector3 pos, IClientAPI remoteClient, bool SaveUpdate)
         {
-            ISceneEntity group = m_scene.GetGroupByPrim (objectLocalID);
+            ISceneEntity group = m_scene.GetGroupByPrim(objectLocalID);
             if (group != null)
             {
                 if (group.IsAttachment || (group.RootChild.Shape.PCode == 9 && group.RootChild.Shape.State != 0))
@@ -352,7 +352,7 @@ namespace Aurora.Modules.Attachments
             return true;
         }
 
-        public ISceneEntity RezSingleAttachmentFromInventory (
+        public ISceneEntity RezSingleAttachmentFromInventory(
             IClientAPI remoteClient, UUID itemID, UUID assetID, int AttachmentPt, bool updateUUIDs)
         {
             MainConsole.Instance.DebugFormat(
@@ -385,7 +385,7 @@ namespace Aurora.Modules.Attachments
 
                     List<SceneObjectPart> partList = new List<SceneObjectPart>(objatt.ChildrenList);
 
-                    foreach(SceneObjectPart part in partList)
+                    foreach (SceneObjectPart part in partList)
                         part.AttachedAvatar = remoteClient.AgentId;
 
                     objatt.SetGroup(remoteClient.ActiveGroupId, remoteClient.AgentId, false);
@@ -491,13 +491,13 @@ namespace Aurora.Modules.Attachments
 
         #region Detach
 
-        public void DetachSingleAttachmentToInventory (UUID itemID, IClientAPI remoteClient)
+        public void DetachSingleAttachmentToInventory(UUID itemID, IClientAPI remoteClient)
         {
-            ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
+            ISceneEntity[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
             IScenePresence presence;
-            if (m_scene.TryGetScenePresence (remoteClient.AgentId, out presence))
+            if (m_scene.TryGetScenePresence(remoteClient.AgentId, out presence))
             {
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
                 if (!appearance.Appearance.DetachAttachment(itemID))
                 {
                     bool found = false;
@@ -510,28 +510,28 @@ namespace Aurora.Modules.Attachments
                         return; //Its not attached! What are we doing!
                 }
 
-                MainConsole.Instance.Debug ("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
+                MainConsole.Instance.Debug("[ATTACHMENTS MODULE]: Detaching from UserID: " + remoteClient.AgentId + ", ItemID: " + itemID);
                 if (AvatarFactory != null)
-                    AvatarFactory.QueueAppearanceSave (remoteClient.AgentId);
+                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
-            DetachSingleAttachmentToInventoryInternal (itemID, remoteClient, true);
+            DetachSingleAttachmentToInventoryInternal(itemID, remoteClient, true);
             //Find the attachment we are trying to edit by ItemID
             foreach (ISceneEntity grp in attachments)
             {
                 if (grp.RootChild.FromUserInventoryItemID == itemID)
                 {
                     //And from storage as well
-                    IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule> ();
+                    IBackupModule backup = presence.Scene.RequestModuleInterface<IBackupModule>();
                     if (backup != null)
-                        backup.DeleteSceneObjects (new[]{grp}, false, true);
+                        backup.DeleteSceneObjects(new[] { grp }, false, true);
                 }
             }
         }
 
         public void DetachSingleAttachmentToGround(UUID itemID, IClientAPI remoteClient)
         {
-            ISceneChildEntity part = m_scene.GetSceneObjectPart (itemID);
+            ISceneChildEntity part = m_scene.GetSceneObjectPart(itemID);
             if (part == null || part.ParentEntity == null)
                 return;
 
@@ -548,14 +548,14 @@ namespace Aurora.Modules.Attachments
                     part.ParentEntity.PrimCount, remoteClient.AgentId, presence.AbsolutePosition, out reason))
                     return;
 
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule> ();
-                appearance.Appearance.DetachAttachment (itemID);
+                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
+                appearance.Appearance.DetachAttachment(itemID);
 
                 AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
 
                 part.ParentEntity.DetachToGround();
 
-                List<UUID> uuids = new List<UUID> {inventoryID};
+                List<UUID> uuids = new List<UUID> { inventoryID };
                 m_scene.InventoryService.DeleteItems(remoteClient.AgentId, uuids);
                 remoteClient.SendRemoveInventoryItem(inventoryID);
             }
@@ -607,11 +607,11 @@ namespace Aurora.Modules.Attachments
         /// </summary>
         /// <param name="avatarID">The avatar whose attachments will be returned</param>
         /// <returns>The avatar's attachments as SceneObjectGroups</returns>
-        public ISceneEntity[] GetAttachmentsForAvatar (UUID avatarID)
+        public ISceneEntity[] GetAttachmentsForAvatar(UUID avatarID)
         {
             ISceneEntity[] attachments = new ISceneEntity[0];
 
-            IScenePresence presence = m_scene.GetScenePresence (avatarID);
+            IScenePresence presence = m_scene.GetScenePresence(avatarID);
             if (presence != null)
             {
                 AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
@@ -630,7 +630,7 @@ namespace Aurora.Modules.Attachments
         /// <param name="args">The arguments for the event</param>
         public void SendScriptEventToAttachments(UUID avatarID, string eventName, Object[] args)
         {
-            ISceneEntity[] attachments = GetAttachmentsForAvatar (avatarID);
+            ISceneEntity[] attachments = GetAttachmentsForAvatar(avatarID);
             IScriptModule[] scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
             foreach (ISceneEntity grp in attachments)
             {
@@ -661,11 +661,11 @@ namespace Aurora.Modules.Attachments
         /// This is the Item that the object is in (if it is in one yet)</param>
         /// <param name="assetID"/>
         /// <param name="forceUpdatePrim">Force updating of the prim the next time the user attempts to deattach it</param>
-        protected void FindAttachmentPoint (IClientAPI remoteClient, uint localID, ISceneEntity group,
+        protected void FindAttachmentPoint(IClientAPI remoteClient, uint localID, ISceneEntity group,
             int AttachmentPt, UUID assetID, bool forceUpdatePrim)
         {
             //Make sure that we arn't over the limit of attachments
-            ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
+            ISceneEntity[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
             if (attachments.Length + 1 > m_maxNumberOfAttachments)
             {
                 //Too many
@@ -676,7 +676,7 @@ namespace Aurora.Modules.Attachments
             }
             Vector3 attachPos = group.GetAttachmentPos();
             bool hasMultipleAttachmentsSet = (AttachmentPt & 0x7f) != 0 || AttachmentPt == 0;
-            if(!m_allowMultipleAttachments)
+            if (!m_allowMultipleAttachments)
                 hasMultipleAttachmentsSet = false;
             AttachmentPt &= 0x7f; //Disable it! Its evil!
 
@@ -732,12 +732,12 @@ namespace Aurora.Modules.Attachments
             group.AbsolutePosition = attachPos;
 
             // Remove any previous attachments
-            IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
             if (presence == null)
                 return;
             UUID itemID = UUID.Zero;
             //Check for multiple attachment bits and whether we should remove the old
-            if(!hasMultipleAttachmentsSet) 
+            if (!hasMultipleAttachmentsSet)
             {
                 foreach (ISceneEntity grp in attachments)
                 {
@@ -760,7 +760,7 @@ namespace Aurora.Modules.Attachments
 
             if (group.RootChild.PhysActor != null)
             {
-                m_scene.PhysicsScene.DeletePrim (group.RootChild.PhysActor);
+                m_scene.PhysicsScene.DeletePrim(group.RootChild.PhysActor);
                 group.RootChild.PhysActor = null;
             }
 
@@ -768,13 +768,13 @@ namespace Aurora.Modules.Attachments
             group.RootChild.IsAttachment = true;
             group.AbsolutePosition = attachPos;
 
-            group.RootChild.SetParentLocalId (presence.LocalId);
+            group.RootChild.SetParentLocalId(presence.LocalId);
             group.SetAttachmentPoint(Convert.ToByte(AttachmentPt));
 
             AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
             if (attPlugin != null)
             {
-                attPlugin.AddAttachment (group);
+                attPlugin.AddAttachment(group);
                 presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
 
@@ -806,7 +806,7 @@ namespace Aurora.Modules.Attachments
             {
                 //Delete the object inworld to inventory
 
-                List<ISceneEntity> groups = new List<ISceneEntity> (1) { group };
+                List<ISceneEntity> groups = new List<ISceneEntity>(1) { group };
 
                 IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
                 if (inventoryAccess != null)
@@ -877,37 +877,37 @@ namespace Aurora.Modules.Attachments
 
             // We can NOT use the dictionaries here, as we are looking
             // for an entity by the fromAssetID, which is NOT the prim UUID
-            ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
+            ISceneEntity[] attachments = GetAttachmentsForAvatar(remoteClient.AgentId);
 
             foreach (ISceneEntity group in attachments)
             {
                 if (group.RootChild.FromUserInventoryItemID == itemID)
                 {
-                    DetachSingleAttachmentGroupToInventoryInternal (itemID, remoteClient, fireEvent, group);
+                    DetachSingleAttachmentGroupToInventoryInternal(itemID, remoteClient, fireEvent, group);
                     return;
                 }
             }
         }
 
-        private void DetachSingleAttachmentGroupToInventoryInternal (UUID itemID, IClientAPI remoteClient, bool fireEvent, ISceneEntity group)
+        private void DetachSingleAttachmentGroupToInventoryInternal(UUID itemID, IClientAPI remoteClient, bool fireEvent, ISceneEntity group)
         {
             if (fireEvent)
             {
-                m_scene.EventManager.TriggerOnAttach (group.LocalId, itemID, UUID.Zero);
+                m_scene.EventManager.TriggerOnAttach(group.LocalId, itemID, UUID.Zero);
 
-                group.DetachToInventoryPrep ();
+                group.DetachToInventoryPrep();
             }
 
-            IScenePresence presence = m_scene.GetScenePresence (remoteClient.AgentId);
+            IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
             if (presence != null)
             {
-                AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments> ();
+                AvatarAttachments attModule = presence.RequestModuleInterface<AvatarAttachments>();
                 if (attModule != null)
-                    attModule.RemoveAttachment (group);
+                    attModule.RemoveAttachment(group);
                 if (attModule != null) presence.SetAttachments(attModule.Get());
             }
 
-            MainConsole.Instance.Debug ("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint ()).ToString ());
+            MainConsole.Instance.Debug("[ATTACHMENTS MODULE]: Saving attachpoint: " + ((uint)group.GetAttachmentPoint()).ToString());
 
             //Update the saved attach points
             if (group.RootChild.AttachedPos != group.RootChild.SavedAttachedPos ||
@@ -921,16 +921,16 @@ namespace Aurora.Modules.Attachments
 
             // If an item contains scripts, it's always changed.
             // This ensures script state is saved on detach
-            foreach (ISceneChildEntity p in group.ChildrenEntities ())
+            foreach (ISceneChildEntity p in group.ChildrenEntities())
             {
-                if (p.Inventory.ContainsScripts ())
+                if (p.Inventory.ContainsScripts())
                 {
                     group.HasGroupChanged = true;
                     break;
                 }
             }
-            if(group.HasGroupChanged)
-                UpdateKnownItem (remoteClient, group, group.RootChild.FromUserInventoryItemID, group.OwnerID);
+            if (group.HasGroupChanged)
+                UpdateKnownItem(remoteClient, group, group.RootChild.FromUserInventoryItemID, group.OwnerID);
         }
 
         /// <summary>
@@ -944,7 +944,7 @@ namespace Aurora.Modules.Attachments
         /// <param name="grp"></param>
         /// <param name="itemID"></param>
         /// <param name="agentID"></param>
-        protected UUID UpdateKnownItem (IClientAPI remoteClient, ISceneEntity grp, UUID itemID, UUID agentID)
+        protected UUID UpdateKnownItem(IClientAPI remoteClient, ISceneEntity grp, UUID itemID, UUID agentID)
         {
             if (grp != null)
             {
@@ -988,13 +988,13 @@ namespace Aurora.Modules.Attachments
 
         private class AvatarAttachments
         {
-            private readonly List<ISceneEntity> m_attachments = new List<ISceneEntity> ();
+            private readonly List<ISceneEntity> m_attachments = new List<ISceneEntity>();
 
-            public AvatarAttachments (IScenePresence SP)
+            public AvatarAttachments(IScenePresence SP)
             {
             }
 
-            public void AddAttachment (ISceneEntity attachment)
+            public void AddAttachment(ISceneEntity attachment)
             {
                 lock (m_attachments)
                 {
@@ -1003,7 +1003,7 @@ namespace Aurora.Modules.Attachments
                 }
             }
 
-            public void RemoveAttachment (ISceneEntity attachment)
+            public void RemoveAttachment(ISceneEntity attachment)
             {
                 lock (m_attachments)
                 {
@@ -1011,7 +1011,7 @@ namespace Aurora.Modules.Attachments
                 }
             }
 
-            public ISceneEntity[] Get ()
+            public ISceneEntity[] Get()
             {
                 ISceneEntity[] attachments = new ISceneEntity[m_attachments.Count];
                 lock (m_attachments)

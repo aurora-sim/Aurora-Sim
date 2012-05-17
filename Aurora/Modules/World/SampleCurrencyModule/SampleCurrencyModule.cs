@@ -220,7 +220,7 @@ namespace Aurora.Modules.SampleCurrencyModule
 
         protected XmlRpcResponse quote_func(XmlRpcRequest request, IPEndPoint ep)
         {
-            Hashtable requestData = (Hashtable) request.Params[0];
+            Hashtable requestData = (Hashtable)request.Params[0];
             UUID agentId = UUID.Zero;
             int amount = 0;
             Hashtable quoteResponse = new Hashtable();
@@ -228,15 +228,15 @@ namespace Aurora.Modules.SampleCurrencyModule
 
             if (requestData.ContainsKey("agentId") && requestData.ContainsKey("currencyBuy"))
             {
-                UUID.TryParse((string) requestData["agentId"], out agentId);
+                UUID.TryParse((string)requestData["agentId"], out agentId);
                 try
                 {
-                    amount = (Int32) requestData["currencyBuy"];
+                    amount = (Int32)requestData["currencyBuy"];
                 }
                 catch (InvalidCastException)
                 {
                 }
-                Hashtable currencyResponse = new Hashtable {{"estimatedCost", 0}, {"currencyBuy", amount}};
+                Hashtable currencyResponse = new Hashtable { { "estimatedCost", 0 }, { "currencyBuy", amount } };
 
                 quoteResponse.Add("success", true);
                 quoteResponse.Add("currency", currencyResponse);
@@ -282,7 +282,7 @@ namespace Aurora.Modules.SampleCurrencyModule
                 }
             }*/
             XmlRpcResponse returnval = new XmlRpcResponse();
-            Hashtable returnresp = new Hashtable {{"success", true}};
+            Hashtable returnresp = new Hashtable { { "success", true } };
             returnval.Value = returnresp;
             return returnval;
         }
@@ -297,9 +297,9 @@ namespace Aurora.Modules.SampleCurrencyModule
 
             Hashtable landuse = new Hashtable();
 
-            Hashtable level = new Hashtable {{"id", "00000000-0000-0000-0000-000000000000"}, {"", "Premium Membership"}};
+            Hashtable level = new Hashtable { { "id", "00000000-0000-0000-0000-000000000000" }, { "", "Premium Membership" } };
 
-            Hashtable currencytable = new Hashtable {{"estimatedCost", 0}};
+            Hashtable currencytable = new Hashtable { { "estimatedCost", 0 } };
 
             retparam.Add("success", true);
             retparam.Add("currency", currencytable);
@@ -313,7 +313,7 @@ namespace Aurora.Modules.SampleCurrencyModule
         protected XmlRpcResponse landBuy_func(XmlRpcRequest request, IPEndPoint ep)
         {
             XmlRpcResponse ret = new XmlRpcResponse();
-            Hashtable retparam = new Hashtable {{"success", true}};
+            Hashtable retparam = new Hashtable { { "success", true } };
             ret.Value = retparam;
             return ret;
         }

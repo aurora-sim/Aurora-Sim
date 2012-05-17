@@ -197,9 +197,9 @@ namespace Aurora.Modules.PhysicsState
             {
                 physicsObject.Position = physicsState.Position;
                 physicsObject.Orientation = physicsState.Rotation;
-                physicsObject.RotationalVelocity = physicsState.AngularVelocity*direction;
-                physicsObject.Velocity = physicsState.LinearVelocity*direction;
-                physicsObject.ForceSetVelocity(physicsState.LinearVelocity*direction);
+                physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
+                physicsObject.Velocity = physicsState.LinearVelocity * direction;
+                physicsObject.ForceSetVelocity(physicsState.LinearVelocity * direction);
                 physicsObject.RequestPhysicsterseUpdate();
             }
 
@@ -208,9 +208,9 @@ namespace Aurora.Modules.PhysicsState
                 physicsObject.Position = physicsState.Position;
                 physicsObject.ForceSetPosition(physicsState.Position);
                 physicsObject.Orientation = physicsState.Rotation;
-                physicsObject.RotationalVelocity = physicsState.AngularVelocity*direction;
-                physicsObject.Velocity = physicsState.LinearVelocity*direction;
-                physicsObject.ForceSetVelocity(physicsState.LinearVelocity*direction);
+                physicsObject.RotationalVelocity = physicsState.AngularVelocity * direction;
+                physicsObject.Velocity = physicsState.LinearVelocity * direction;
+                physicsObject.ForceSetVelocity(physicsState.LinearVelocity * direction);
                 physicsObject.RequestPhysicsterseUpdate();
             }
 

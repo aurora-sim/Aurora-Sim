@@ -48,12 +48,12 @@ namespace OpenSim.Region.CoreModules.Framework.Monitoring.Alerts
 
         public void Test()
         {
-            if (m_monitor.GetValue() > 60*1000)
+            if (m_monitor.GetValue() > 60 * 1000)
             {
                 if (OnTriggerAlert != null)
                 {
-                    OnTriggerAlert(typeof (DeadlockAlert),
-                                   (int) (m_monitor.GetValue()/1000) + " second(s) since last frame processed.", true);
+                    OnTriggerAlert(typeof(DeadlockAlert),
+                                   (int)(m_monitor.GetValue() / 1000) + " second(s) since last frame processed.", true);
                 }
             }
         }

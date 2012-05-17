@@ -89,7 +89,7 @@ namespace Aurora.Modules.Estate
 
                 LastEstateOwner = account.Name;
 
-                List<EstateSettings> ownerEstates = EstateConnector.GetEstates (account.PrincipalID);
+                List<EstateSettings> ownerEstates = EstateConnector.GetEstates(account.PrincipalID);
                 string response = (ownerEstates != null && ownerEstates.Count > 0) ? "yes" : "no";
                 if (ownerEstates != null && ownerEstates.Count > 0)
                 {
@@ -99,7 +99,7 @@ namespace Aurora.Modules.Estate
                     {
                         MainConsole.Instance.Warn(t.EstateName);
                     }
-                    response = MainConsole.Instance.Prompt ("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
+                    response = MainConsole.Instance.Prompt("Do you wish to join one of these existing estates? (Options are {yes, no, cancel})", response, new List<string> { "yes", "no", "cancel" });
                 }
                 else
                 {
@@ -138,8 +138,8 @@ namespace Aurora.Modules.Estate
 #else
                         List<string> responses = ownerEstates.Select(settings => settings.EstateName).ToList();
 #endif
-                        responses.Add ("None");
-                        responses.Add ("Cancel");
+                        responses.Add("None");
+                        responses.Add("Cancel");
                         response = MainConsole.Instance.Prompt("Estate name to join", LastEstateName, responses);
                         if (response == "None" || response == "Cancel")
                             continue;
@@ -186,7 +186,7 @@ namespace Aurora.Modules.Estate
             if (EstateConnector != null)
             {
                 EstateSettings ES = EstateConnector.GetEstateSettings(scene.RegionInfo.RegionID);
-                if(ES == null)
+                if (ES == null)
                 {
                     //It could not find the estate service, wait until it can find it
                     MainConsole.Instance.Warn("We could not find the estate service for this sim. Please make sure that your URLs are correct in grid mode.");
@@ -201,7 +201,7 @@ namespace Aurora.Modules.Estate
                         if (ES != null)
                             break;
                     }
-                } 
+                }
                 else if (ES.EstateID == 0)
                 {
                     //It found the estate service, but found no estates for this region, make a new one
@@ -219,8 +219,8 @@ namespace Aurora.Modules.Estate
         public void StartupComplete()
         {
             if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand ("change estate", "change estate",
-                    "change info about the estate for the given region", ChangeEstate); 
+                MainConsole.Instance.Commands.AddCommand("change estate", "change estate",
+                    "change info about the estate for the given region", ChangeEstate);
         }
 
         public void Close(IScene scene)

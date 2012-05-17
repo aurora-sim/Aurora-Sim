@@ -332,25 +332,25 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
                 return responsedata; // No permissions
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
 
             m_settings.DefaultDrawDistance = rm["draw_distance"].AsInteger();
             m_settings.ForceDrawDistance = rm["force_draw_distance"].AsBoolean();
             m_settings.DisplayMinimap = rm["allow_minimap"].AsBoolean();
             m_settings.AllowPhysicalPrims = rm["allow_physical_prims"].AsBoolean();
-            m_settings.MaxDragDistance = (float) rm["max_drag_distance"].AsReal();
-            m_settings.MinimumHoleSize = (float) rm["min_hole_size"].AsReal();
-            m_settings.MaximumHollowSize = (float) rm["max_hollow_size"].AsReal();
+            m_settings.MaxDragDistance = (float)rm["max_drag_distance"].AsReal();
+            m_settings.MinimumHoleSize = (float)rm["min_hole_size"].AsReal();
+            m_settings.MaximumHollowSize = (float)rm["max_hollow_size"].AsReal();
             m_settings.MaximumInventoryItemsTransfer = rm["max_inventory_items_transfer"].AsInteger();
-            m_settings.MaximumLinkCount = (int) rm["max_link_count"].AsReal();
-            m_settings.MaximumLinkCountPhys = (int) rm["max_link_count_phys"].AsReal();
-            m_settings.MaximumPhysPrimScale = (float) rm["max_phys_prim_scale"].AsReal();
-            m_settings.MaximumPrimScale = (float) rm["max_prim_scale"].AsReal();
-            m_settings.MinimumPrimScale = (float) rm["min_prim_scale"].AsReal();
+            m_settings.MaximumLinkCount = (int)rm["max_link_count"].AsReal();
+            m_settings.MaximumLinkCountPhys = (int)rm["max_link_count_phys"].AsReal();
+            m_settings.MaximumPhysPrimScale = (float)rm["max_phys_prim_scale"].AsReal();
+            m_settings.MaximumPrimScale = (float)rm["max_prim_scale"].AsReal();
+            m_settings.MinimumPrimScale = (float)rm["min_prim_scale"].AsReal();
             m_settings.RenderWater = rm["render_water"].AsBoolean();
-            m_settings.TerrainDetailScale = (float) rm["terrain_detail_scale"].AsReal();
-            m_settings.ShowTags = (int) rm["show_tags"].AsReal();
-            m_settings.MaxGroups = (int) rm["max_groups"].AsReal();
+            m_settings.TerrainDetailScale = (float)rm["terrain_detail_scale"].AsReal();
+            m_settings.ShowTags = (int)rm["show_tags"].AsReal();
+            m_settings.MaxGroups = (int)rm["max_groups"].AsReal();
             m_settings.AllowParcelWindLight = rm["allow_parcel_windlight"].AsBoolean();
             m_settings.EnableTeenMode = rm["enable_teen_mode"].AsBoolean();
             m_settings.ClampPrimSizes = rm["enforce_max_build"].AsBoolean();

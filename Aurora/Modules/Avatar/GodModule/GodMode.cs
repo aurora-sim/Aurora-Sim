@@ -38,7 +38,7 @@ namespace Aurora.Modules.Gods
 {
     public class GodModifiers : ISharedRegionModule
     {
-        #region Declares 
+        #region Declares
 
         //private static readonly ILog MainConsole.Instance = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly List<IScene> m_scenes = new List<IScene>();
@@ -144,7 +144,7 @@ namespace Aurora.Modules.Gods
                 {
                     //Rebuild the map tile
                     IMapImageGenerator mapModule = client.Scene.RequestModuleInterface<IMapImageGenerator>();
-                    if(mapModule != null)
+                    if (mapModule != null)
                         mapModule.CreateTerrainTexture();
                 }
             }
@@ -195,9 +195,9 @@ namespace Aurora.Modules.Gods
 
             //Set the region loc X and Y
             if (RedirectX != 0)
-                client.Scene.RegionInfo.RegionLocX = RedirectX*Constants.RegionSize;
+                client.Scene.RegionInfo.RegionLocX = RedirectX * Constants.RegionSize;
             if (RedirectY != 0)
-                client.Scene.RegionInfo.RegionLocY = RedirectY*Constants.RegionSize;
+                client.Scene.RegionInfo.RegionLocY = RedirectY * Constants.RegionSize;
 
             //Update the estate ID
             if (client.Scene.RegionInfo.EstateSettings.EstateID != EstateID)
@@ -219,26 +219,26 @@ namespace Aurora.Modules.Gods
             client.Scene.RegionInfo.EstateSettings.SetFromFlags(RegionFlags);
 
             client.Scene.RegionInfo.RegionSettings.AllowDamage = ((RegionFlags &
-                                                                   (ulong) OpenMetaverse.RegionFlags.AllowDamage) ==
-                                                                  (ulong) OpenMetaverse.RegionFlags.AllowDamage);
-            client.Scene.RegionInfo.RegionSettings.FixedSun = ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SunFixed) ==
-                                                               (ulong) OpenMetaverse.RegionFlags.SunFixed);
+                                                                   (ulong)OpenMetaverse.RegionFlags.AllowDamage) ==
+                                                                  (ulong)OpenMetaverse.RegionFlags.AllowDamage);
+            client.Scene.RegionInfo.RegionSettings.FixedSun = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SunFixed) ==
+                                                               (ulong)OpenMetaverse.RegionFlags.SunFixed);
             client.Scene.RegionInfo.RegionSettings.BlockTerraform = ((RegionFlags &
-                                                                      (ulong) OpenMetaverse.RegionFlags.BlockTerraform) ==
-                                                                     (ulong) OpenMetaverse.RegionFlags.BlockTerraform);
-            client.Scene.RegionInfo.RegionSettings.Sandbox = ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.Sandbox) ==
-                                                              (ulong) OpenMetaverse.RegionFlags.Sandbox);
+                                                                      (ulong)OpenMetaverse.RegionFlags.BlockTerraform) ==
+                                                                     (ulong)OpenMetaverse.RegionFlags.BlockTerraform);
+            client.Scene.RegionInfo.RegionSettings.Sandbox = ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.Sandbox) ==
+                                                              (ulong)OpenMetaverse.RegionFlags.Sandbox);
 
             //Update skipping scripts/physics/collisions
             IEstateModule mod = client.Scene.RequestModuleInterface<IEstateModule>();
             if (mod != null)
                 mod.SetSceneCoreDebug(
-                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipScripts) ==
-                     (ulong) OpenMetaverse.RegionFlags.SkipScripts),
-                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipCollisions) ==
-                     (ulong) OpenMetaverse.RegionFlags.SkipCollisions),
-                    ((RegionFlags & (ulong) OpenMetaverse.RegionFlags.SkipPhysics) ==
-                     (ulong) OpenMetaverse.RegionFlags.SkipPhysics));
+                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipScripts) ==
+                     (ulong)OpenMetaverse.RegionFlags.SkipScripts),
+                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipCollisions) ==
+                     (ulong)OpenMetaverse.RegionFlags.SkipCollisions),
+                    ((RegionFlags & (ulong)OpenMetaverse.RegionFlags.SkipPhysics) ==
+                     (ulong)OpenMetaverse.RegionFlags.SkipPhysics));
 
             //Save the changes
             client.Scene.RegionInfo.EstateSettings.Save();
@@ -307,8 +307,8 @@ namespace Aurora.Modules.Gods
                     if (check == null) //Is the new name non existant as well?
                     {
                         cnf.Set("Location",
-                                (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                (regionInfo.RegionLocY/Constants.RegionSize));
+                                (regionInfo.RegionLocX / Constants.RegionSize) + "," +
+                                (regionInfo.RegionLocY / Constants.RegionSize));
                         cnf.Name = regionInfo.RegionName;
                         source.Save();
                     }
@@ -316,8 +316,8 @@ namespace Aurora.Modules.Gods
                     {
                         //The new region exists too, no name change
                         check.Set("Location",
-                                  (regionInfo.RegionLocX/Constants.RegionSize) + "," +
-                                  (regionInfo.RegionLocY/Constants.RegionSize));
+                                  (regionInfo.RegionLocX / Constants.RegionSize) + "," +
+                                  (regionInfo.RegionLocY / Constants.RegionSize));
                     }
                 }
                 i++;
@@ -346,9 +346,9 @@ namespace Aurora.Modules.Gods
                                                    {
                                                        billableFactor = m_scene.RegionInfo.EstateSettings.BillableFactor,
                                                        estateID = m_scene.RegionInfo.EstateSettings.EstateID,
-                                                       maxAgents = (byte) m_scene.RegionInfo.RegionSettings.AgentLimit,
+                                                       maxAgents = (byte)m_scene.RegionInfo.RegionSettings.AgentLimit,
                                                        objectBonusFactor =
-                                                           (float) m_scene.RegionInfo.RegionSettings.ObjectBonus,
+                                                           (float)m_scene.RegionInfo.RegionSettings.ObjectBonus,
                                                        parentEstateID = m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                        pricePerMeter = m_scene.RegionInfo.EstateSettings.PricePerMeter,
                                                        redirectGridX = m_scene.RegionInfo.EstateSettings.RedirectGridX,
@@ -359,11 +359,11 @@ namespace Aurora.Modules.Gods
             args.regionFlags = estate == null ? 0 : estate.GetRegionFlags();
 
             args.simAccess = m_scene.RegionInfo.AccessLevel;
-            args.sunHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition;
-            args.terrainLowerLimit = (float) m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
-            args.terrainRaiseLimit = (float) m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
+            args.sunHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
+            args.terrainLowerLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainLowerLimit;
+            args.terrainRaiseLimit = (float)m_scene.RegionInfo.RegionSettings.TerrainRaiseLimit;
             args.useEstateSun = m_scene.RegionInfo.RegionSettings.UseEstateSun;
-            args.waterHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight;
+            args.waterHeight = (float)m_scene.RegionInfo.RegionSettings.WaterHeight;
             args.simName = m_scene.RegionInfo.RegionName;
             args.regionType = m_scene.RegionInfo.RegionType;
 

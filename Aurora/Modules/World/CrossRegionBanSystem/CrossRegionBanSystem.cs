@@ -176,13 +176,13 @@ namespace Aurora.Modules.CrossRegionBanSystem
         {
             foreach (object f in replyData)
             {
-                KeyValuePair<string, object> value = (KeyValuePair<string, object>) f;
+                KeyValuePair<string, object> value = (KeyValuePair<string, object>)f;
                 if (value.Value is Dictionary<string, object>)
                 {
                     Dictionary<string, object> valuevalue = value.Value as Dictionary<string, object>;
                     foreach (object banUUID in valuevalue.Values)
                     {
-                        UUID BanID = (UUID) banUUID;
+                        UUID BanID = (UUID)banUUID;
                         foreach (IScene scene in m_scenes)
                         {
                             bool found = false;
@@ -373,7 +373,7 @@ namespace Aurora.Modules.CrossRegionBanSystem
         private byte[] DocToBytes(XmlDocument doc)
         {
             MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, null) {Formatting = Formatting.Indented};
+            XmlTextWriter xw = new XmlTextWriter(ms, null) { Formatting = Formatting.Indented };
             doc.WriteTo(xw);
             xw.Flush();
 

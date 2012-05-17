@@ -161,12 +161,12 @@ namespace Aurora.Modules
 
         #endregion
 
-        private IEnumerable<UserAccount> FixRemoteAccounts (List<UserAccount> list)
+        private IEnumerable<UserAccount> FixRemoteAccounts(List<UserAccount> list)
         {
-            List<UserAccount> accounts = new List<UserAccount> ();
+            List<UserAccount> accounts = new List<UserAccount>();
             foreach (UserAccount account in list)
             {
-                accounts.Add (FixRemoteAccount (account));
+                accounts.Add(FixRemoteAccount(account));
             }
             return accounts;
         }

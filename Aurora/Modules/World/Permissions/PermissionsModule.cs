@@ -137,7 +137,7 @@ namespace Aurora.Modules.Permissions
             if (null == m_groupsModule)
                 return false;
 
-            return m_groupsModule.GroupPermissionCheck(userID, groupID, (GroupPowers) powers);
+            return m_groupsModule.GroupPermissionCheck(userID, groupID, (GroupPowers)powers);
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Aurora.Modules.Permissions
             if (friendPerms == -1) //Not a friend
                 return false;
 
-            if ((friendPerms & (int) FriendRights.CanModifyObjects) != 0)
+            if ((friendPerms & (int)FriendRights.CanModifyObjects) != 0)
                 return true;
 
             return false;
@@ -528,8 +528,8 @@ namespace Aurora.Modules.Permissions
             m_moapModule = m_scene.RequestModuleInterface<IMoapModule>();
 
             // This log line will be commented out when no longer required for debugging
-//            if (m_moapModule == null)
-//                MainConsole.Instance.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");
+            //            if (m_moapModule == null)
+            //                MainConsole.Instance.Warn("[PERMISSIONS]: Media on a prim module not found, media on a prim permissions will not work");
 
             m_parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
         }
@@ -701,7 +701,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            if ((int) InventoryType.LSL == invType)
+            if ((int)InventoryType.LSL == invType)
             {
                 if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator(userID))
                     return false;
@@ -714,7 +714,7 @@ namespace Aurora.Modules.Permissions
             if (part.OwnerID == userID)
                 return true;
 
-            if (IsGroupMember(part.GroupID, userID, (ulong) GroupPowers.ObjectManipulate))
+            if (IsGroupMember(part.GroupID, userID, (ulong)GroupPowers.ObjectManipulate))
                 return true;
 
             return false;
@@ -731,7 +731,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            if ((int) InventoryType.LSL == invType)
+            if ((int)InventoryType.LSL == invType)
             {
                 if (m_allowedScriptCreators == UserSet.Administrators && !IsAdministrator(userID))
                     return false;
@@ -740,16 +740,16 @@ namespace Aurora.Modules.Permissions
                     return false;
             }
 
-            if ((int) InventoryType.Landmark == invType)
+            if ((int)InventoryType.Landmark == invType)
             {
                 IScenePresence SP = m_scene.GetScenePresence(userID);
                 if (m_parcelManagement == null)
                     return true;
                 ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
-                if ((parcel.LandData.Flags & (int) ParcelFlags.AllowLandmark) != 0)
+                if ((parcel.LandData.Flags & (int)ParcelFlags.AllowLandmark) != 0)
                     return true;
                 else
-                    return GenericParcelPermission(userID, parcel, (uint) GroupPowers.AllowLandmark);
+                    return GenericParcelPermission(userID, parcel, (uint)GroupPowers.AllowLandmark);
             }
 
             return true;
@@ -881,38 +881,38 @@ namespace Aurora.Modules.Permissions
             //This is used to check who is pusing objects in the parcel
             //When this is called, the AllowPushObject flag has already been checked
 
-            return GenericParcelPermission(userID, parcel, (ulong) GroupPowers.ObjectManipulate);
+            return GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ObjectManipulate);
         }
 
         private bool CanViewObjectOwners(UUID userID, ILandObject parcel)
         {
             //If you have none of the three return flags, you cannot view object owners in the return menu
-            if (!GenericParcelPermission(userID, parcel, (ulong) GroupPowers.ReturnNonGroup))
-                if (!GenericParcelPermission(userID, parcel, (ulong) GroupPowers.ReturnGroupSet))
-                    if (!GenericParcelPermission(userID, parcel, (ulong) GroupPowers.ReturnGroupOwned))
+            if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnNonGroup))
+                if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupSet))
+                    if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.ReturnGroupOwned))
                         return false;
             return true;
         }
 
         private bool CanEditParcelAccessList(UUID userID, ILandObject parcel, uint flags)
         {
-            AccessList AccessFlag = (AccessList) flags;
+            AccessList AccessFlag = (AccessList)flags;
             if (AccessFlag == AccessList.Access)
-                if (!GenericParcelPermission(userID, parcel, (ulong) GroupPowers.LandManageAllowed))
+                if (!GenericParcelPermission(userID, parcel, (ulong)GroupPowers.LandManageAllowed))
                     return false;
                 else if (AccessFlag == AccessList.Ban)
                     if (
                         !GenericParcelPermission(userID, parcel,
-                                                 (ulong) (GroupPowers.LandManageAllowed | GroupPowers.LandManageBanned)))
+                                                 (ulong)(GroupPowers.LandManageAllowed | GroupPowers.LandManageBanned)))
                         return false;
             return true;
         }
 
         private bool CanControlPrimMedia(UUID agentID, UUID primID, int face)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[PERMISSONS]: Performing CanControlPrimMedia check with agentID {0}, primID {1}, face {2}",
-//                agentID, primID, face);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[PERMISSONS]: Performing CanControlPrimMedia check with agentID {0}, primID {1}, face {2}",
+            //                agentID, primID, face);
 
             if (null == m_moapModule)
                 return false;
@@ -927,18 +927,18 @@ namespace Aurora.Modules.Permissions
             if (null == me)
                 return true;
 
-//            MainConsole.Instance.DebugFormat(
-//                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
-//                agentID, primID, face, me.ControlPermissions);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[PERMISSIONS]: Checking CanControlPrimMedia for {0} on {1} face {2} with control permissions {3}", 
+            //                agentID, primID, face, me.ControlPermissions);
 
             return GenericObjectPermission(part.UUID, agentID, true);
         }
 
         private bool CanInteractWithPrimMedia(UUID agentID, UUID primID, int face)
         {
-//            MainConsole.Instance.DebugFormat(
-//                "[PERMISSONS]: Performing CanInteractWithPrimMedia check with agentID {0}, primID {1}, face {2}",
-//                agentID, primID, face);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[PERMISSONS]: Performing CanInteractWithPrimMedia check with agentID {0}, primID {1}, face {2}",
+            //                agentID, primID, face);
 
             if (null == m_moapModule)
                 return false;
@@ -953,17 +953,17 @@ namespace Aurora.Modules.Permissions
             if (null == me)
                 return true;
 
-//            MainConsole.Instance.DebugFormat(
-//                "[PERMISSIONS]: Checking CanInteractWithPrimMedia for {0} on {1} face {2} with interact permissions {3}", 
-//                agentID, primID, face, me.InteractPermissions);
+            //            MainConsole.Instance.DebugFormat(
+            //                "[PERMISSIONS]: Checking CanInteractWithPrimMedia for {0} on {1} face {2} with interact permissions {3}", 
+            //                agentID, primID, face, me.InteractPermissions);
 
             return GenericPrimMediaPermission(part, agentID, me.InteractPermissions);
         }
 
         private bool GenericPrimMediaPermission(ISceneChildEntity part, UUID agentID, MediaPermission perms)
         {
-//            if (IsAdministrator(agentID))
-//                return true;
+            //            if (IsAdministrator(agentID))
+            //                return true;
 
             if ((perms & MediaPermission.Anyone) == MediaPermission.Anyone)
                 return true;
@@ -1055,18 +1055,18 @@ namespace Aurora.Modules.Permissions
 
             // libomv will moan about PrimFlags.ObjectYouOfficer being
             // deprecated
-#pragma warning disable 0612 
+#pragma warning disable 0612
             objflags &= (uint)
                         ~(PrimFlags.ObjectCopy | // Tells client you can copy the object
                           PrimFlags.ObjectModify | // tells client you can modify the object
                           PrimFlags.ObjectMove | // tells client that you can move the object (only, no mod)
                           PrimFlags.ObjectTransfer |
-                          // tells the client that you can /take/ the object if you don't own it
+                // tells the client that you can /take/ the object if you don't own it
                           PrimFlags.ObjectYouOwner | // Tells client that you're the owner of the object
                           PrimFlags.ObjectAnyOwner | // Tells client that someone owns the object
                           PrimFlags.ObjectOwnerModify | // Tells client that you're the owner of the object
                           PrimFlags.ObjectYouOfficer
-                         // Tells client that you've got group object editing permission. Used when ObjectGroupOwned is set
+                // Tells client that you've got group object editing permission. Used when ObjectGroupOwned is set
                          );
 #pragma warning restore 0612
 
@@ -1074,8 +1074,8 @@ namespace Aurora.Modules.Permissions
             // Creating the three ObjectFlags options for this method to choose from.
             // Customize the OwnerMask
             uint objectOwnerMask = ApplyObjectModifyMasks(task.OwnerMask, objflags);
-            objectOwnerMask |= (uint) PrimFlags.ObjectYouOwner | (uint) PrimFlags.ObjectAnyOwner |
-                               (uint) PrimFlags.ObjectOwnerModify;
+            objectOwnerMask |= (uint)PrimFlags.ObjectYouOwner | (uint)PrimFlags.ObjectAnyOwner |
+                               (uint)PrimFlags.ObjectOwnerModify;
 
             // Customize the GroupMask
             uint objectGroupMask = ApplyObjectModifyMasks(task.GroupMask, objflags);
@@ -1083,7 +1083,7 @@ namespace Aurora.Modules.Permissions
             // Customize the EveryoneMask
             uint objectEveryoneMask = ApplyObjectModifyMasks(task.EveryoneMask, objflags);
             if (objectOwner != UUID.Zero)
-                objectEveryoneMask |= (uint) PrimFlags.ObjectAnyOwner;
+                objectEveryoneMask |= (uint)PrimFlags.ObjectAnyOwner;
 
             PermissionClass permissionClass = GetPermissionClass(user, task);
             switch (permissionClass)
@@ -1103,24 +1103,24 @@ namespace Aurora.Modules.Permissions
             // We are adding the temporary objectflags to the object's objectflags based on the
             // permission flag given.  These change the F flags on the client.
 
-            if ((setPermissionMask & (uint) PermissionMask.Copy) != 0)
+            if ((setPermissionMask & (uint)PermissionMask.Copy) != 0)
             {
-                objectFlagsMask |= (uint) PrimFlags.ObjectCopy;
+                objectFlagsMask |= (uint)PrimFlags.ObjectCopy;
             }
 
-            if ((setPermissionMask & (uint) PermissionMask.Move) != 0)
+            if ((setPermissionMask & (uint)PermissionMask.Move) != 0)
             {
-                objectFlagsMask |= (uint) PrimFlags.ObjectMove;
+                objectFlagsMask |= (uint)PrimFlags.ObjectMove;
             }
 
-            if ((setPermissionMask & (uint) PermissionMask.Modify) != 0)
+            if ((setPermissionMask & (uint)PermissionMask.Modify) != 0)
             {
-                objectFlagsMask |= (uint) PrimFlags.ObjectModify;
+                objectFlagsMask |= (uint)PrimFlags.ObjectModify;
             }
 
-            if ((setPermissionMask & (uint) PermissionMask.Transfer) != 0)
+            if ((setPermissionMask & (uint)PermissionMask.Transfer) != 0)
             {
-                objectFlagsMask |= (uint) PrimFlags.ObjectTransfer;
+                objectFlagsMask |= (uint)PrimFlags.ObjectTransfer;
             }
 
             return objectFlagsMask;
@@ -1145,16 +1145,16 @@ namespace Aurora.Modules.Permissions
             {
                 if (!m_scene.Entities.TryGetChildPrimParent(objId, out entity))
                     return false;
-                    
-                group = (SceneObjectGroup) entity;
+
+                group = (SceneObjectGroup)entity;
             }
             else
             {
                 // If it's not an object, we cant edit it.
                 if (!(entity is SceneObjectGroup))
                     return false;
-                    
-                group = (SceneObjectGroup) entity;
+
+                group = (SceneObjectGroup)entity;
             }
 
             UUID objectOwner = group.OwnerID;
@@ -1169,7 +1169,7 @@ namespace Aurora.Modules.Permissions
 
             if (locked && (!IsAdministrator(currentUser)) && denyOnLocked)
                 return false;
-                
+
             // Object owners should be able to edit their own content
             if (currentUser == objectOwner)
                 return true;
@@ -1181,8 +1181,8 @@ namespace Aurora.Modules.Permissions
             // Group members should be able to edit group objects
             ISceneChildEntity part = m_scene.GetSceneObjectPart(objId);
             if ((group.GroupID != UUID.Zero)
-                && (part != null && (part.GroupMask & (uint) PermissionMask.Modify) != 0)
-                && IsGroupMember(group.GroupID, currentUser, (ulong) GroupPowers.ObjectManipulate))
+                && (part != null && (part.GroupMask & (uint)PermissionMask.Modify) != 0)
+                && IsGroupMember(group.GroupID, currentUser, (ulong)GroupPowers.ObjectManipulate))
             {
                 // Return immediately, so that the administrator can shares group objects
                 return true;
@@ -1204,7 +1204,7 @@ namespace Aurora.Modules.Permissions
             if (IsAdministrator(objectOwner))
             {
                 bool permission = (IsFriendWithPerms(currentUser, objectOwner) && m_allowAdminFriendEditRights);
-                if(permission)
+                if (permission)
                     return true;
             }
 
@@ -1285,7 +1285,7 @@ namespace Aurora.Modules.Permissions
             ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
             if (parcel == null) return false;
 
-            if (GenericParcelPermission(userID, parcel, (ulong) GroupPowers.AllowSetHome))
+            if (GenericParcelPermission(userID, parcel, (ulong)GroupPowers.AllowSetHome))
                 return true;
 
             return false;
@@ -1312,10 +1312,10 @@ namespace Aurora.Modules.Permissions
             ILandObject parcel = m_parcelManagement.GetLandObject(SP.AbsolutePosition.X, SP.AbsolutePosition.Y);
             if (parcel == null) return false;
 
-            if (GenericParcelPermission(userID, parcel, (ulong) GroupPowers.AllowLandmark))
+            if (GenericParcelPermission(userID, parcel, (ulong)GroupPowers.AllowLandmark))
                 return true;
 
-            if ((parcel.LandData.Flags & (uint) ParcelFlags.AllowLandmark) == 0)
+            if ((parcel.LandData.Flags & (uint)ParcelFlags.AllowLandmark) == 0)
                 return false;
 
             return true;
@@ -1326,7 +1326,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) p);
+            return GenericParcelPermission(user, parcel, (ulong)p);
         }
 
         protected bool GenericParcelPermission(UUID user, Vector3 pos, ulong groupPowers)
@@ -1347,7 +1347,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandRelease);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandRelease);
         }
 
         private bool CanReclaimParcel(UUID user, ILandObject parcel, IScene scene)
@@ -1355,7 +1355,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandRelease);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandRelease);
         }
 
         private bool CanDeedParcel(UUID user, ILandObject parcel, IScene scene)
@@ -1366,7 +1366,7 @@ namespace Aurora.Modules.Permissions
             if (parcel.LandData.OwnerID != user) // Only the owner can deed!
                 return false;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandDeed);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandDeed);
         }
 
         private bool CanDeedObject(UUID user, UUID group, IScene scene)
@@ -1412,7 +1412,7 @@ namespace Aurora.Modules.Permissions
                 if ((part.GroupMask & PERM_COPY) == 0)
                     return false;
 
-                if (!IsGroupMember(part.GroupID, owner, (ulong) GroupPowers.ObjectManipulate))
+                if (!IsGroupMember(part.GroupID, owner, (ulong)GroupPowers.ObjectManipulate))
                     return false;
             }
 
@@ -1473,7 +1473,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandChangeIdentity);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandChangeIdentity);
         }
 
         private bool CanSubdivideParcel(UUID user, ILandObject parcel, IScene scene)
@@ -1481,7 +1481,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandDivideJoin);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandDivideJoin);
         }
 
         /// <summary>
@@ -1541,7 +1541,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            if(IsGod(user, m_scene))
+            if (IsGod(user, m_scene))
             {
                 if (IsGod(target, m_scene)) //if they are an admin
                     return false;
@@ -1612,7 +1612,7 @@ namespace Aurora.Modules.Permissions
                     return false;
                 }
 
-                ISceneEntity task = (ISceneEntity) ent;
+                ISceneEntity task = (ISceneEntity)ent;
 
 
                 // UUID taskOwner = null;
@@ -1643,7 +1643,7 @@ namespace Aurora.Modules.Permissions
                     return false;
                 }
 
-                ISceneEntity group = (ISceneEntity) ent;
+                ISceneEntity group = (ISceneEntity)ent;
 
                 UUID objectOwner = group.OwnerID;
                 locked = ((group.RootChild.OwnerMask & PERM_LOCKED) == 0);
@@ -1692,7 +1692,7 @@ namespace Aurora.Modules.Permissions
                 return false;
             }
 
-            if ((land.LandData.Flags & ((int) ParcelFlags.AllowAPrimitiveEntry)) != 0)
+            if ((land.LandData.Flags & ((int)ParcelFlags.AllowAPrimitiveEntry)) != 0)
             {
                 return true;
             }
@@ -1703,9 +1703,9 @@ namespace Aurora.Modules.Permissions
             }
 
             //Check for group permissions
-            if (((land.LandData.Flags & ((int) ParcelFlags.AllowGroupObjectEntry)) != 0) &&
+            if (((land.LandData.Flags & ((int)ParcelFlags.AllowGroupObjectEntry)) != 0) &&
                 (land.LandData.GroupID != UUID.Zero)
-                && IsGroupMember(land.LandData.GroupID, OwnerID, (ulong) GroupPowers.None))
+                && IsGroupMember(land.LandData.GroupID, OwnerID, (ulong)GroupPowers.None))
             {
                 return true;
             }
@@ -1922,14 +1922,14 @@ namespace Aurora.Modules.Permissions
                 return false;
             }
 
-            if ((land.LandData.Flags & ((int) ParcelFlags.CreateObjects)) ==
-                (int) ParcelFlags.CreateObjects)
+            if ((land.LandData.Flags & ((int)ParcelFlags.CreateObjects)) ==
+                (int)ParcelFlags.CreateObjects)
                 permission = true;
 
-            if ((land.LandData.Flags & ((int) ParcelFlags.CreateGroupObjects)) ==
-                (int) ParcelFlags.CreateGroupObjects &&
+            if ((land.LandData.Flags & ((int)ParcelFlags.CreateGroupObjects)) ==
+                (int)ParcelFlags.CreateGroupObjects &&
                 land.LandData.GroupID != UUID.Zero &&
-                IsGroupMember(land.LandData.GroupID, attemptedRezzer, (ulong) GroupPowers.AllowRez))
+                IsGroupMember(land.LandData.GroupID, attemptedRezzer, (ulong)GroupPowers.AllowRez))
                 permission = true;
 
             if (IsAdministrator(attemptedRezzer))
@@ -1980,16 +1980,16 @@ namespace Aurora.Modules.Permissions
             if (parcel == null)
                 return false;
 
-            if ((parcel.LandData.Flags & (int) ParcelFlags.AllowOtherScripts) != 0)
+            if ((parcel.LandData.Flags & (int)ParcelFlags.AllowOtherScripts) != 0)
                 return true;
 
-            if ((parcel.LandData.Flags & (int) ParcelFlags.AllowGroupScripts) == 0)
+            if ((parcel.LandData.Flags & (int)ParcelFlags.AllowGroupScripts) == 0)
             {
                 //Only owner can run then
                 return GenericParcelPermission(user, parcel, 0);
             }
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.None);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.None);
         }
 
         private bool CanSellParcel(UUID user, ILandObject parcel, IScene scene)
@@ -1997,7 +1997,7 @@ namespace Aurora.Modules.Permissions
             DebugPermissionInformation(MethodBase.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericParcelPermission(user, parcel, (ulong) GroupPowers.LandSetSale);
+            return GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandSetSale);
         }
 
         private bool CanTakeObject(UUID objectID, UUID stealer, IScene scene)
@@ -2028,7 +2028,7 @@ namespace Aurora.Modules.Permissions
                     return false;
                 }
 
-                SceneObjectGroup task = (SceneObjectGroup) ent;
+                SceneObjectGroup task = (SceneObjectGroup)ent;
                 // UUID taskOwner = null;
                 // Added this because at this point in time it wouldn't be wise for
                 // the administrator object permissions to take effect.
@@ -2053,7 +2053,7 @@ namespace Aurora.Modules.Permissions
                 IEntity ent;
                 if (m_scene.Entities.TryGetValue(objectID, out ent) && ent is SceneObjectGroup)
                 {
-                    SceneObjectGroup task = (SceneObjectGroup) ent;
+                    SceneObjectGroup task = (SceneObjectGroup)ent;
 
                     if ((task.GetEffectivePermissions() & (PERM_COPY | PERM_TRANS)) != (PERM_COPY | PERM_TRANS))
                         permission = false;
@@ -2094,11 +2094,11 @@ namespace Aurora.Modules.Permissions
                 return false;
 
             // Others allowed to terraform?
-            if ((parcel.LandData.Flags & ((int) ParcelFlags.AllowTerraform)) != 0)
+            if ((parcel.LandData.Flags & ((int)ParcelFlags.AllowTerraform)) != 0)
                 return true;
 
             // Land owner can terraform too
-            if (parcel != null && GenericParcelPermission(user, parcel, (ulong) GroupPowers.AllowEditLand))
+            if (parcel != null && GenericParcelPermission(user, parcel, (ulong)GroupPowers.AllowEditLand))
                 return true;
 
             return false;
@@ -2142,12 +2142,12 @@ namespace Aurora.Modules.Permissions
                 // readable only if it's really full perms
                 //
                 if ((assetRequestItem.CurrentPermissions &
-                     ((uint) PermissionMask.Modify |
-                      (uint) PermissionMask.Copy |
-                      (uint) PermissionMask.Transfer)) !=
-                    ((uint) PermissionMask.Modify |
-                     (uint) PermissionMask.Copy |
-                     (uint) PermissionMask.Transfer))
+                     ((uint)PermissionMask.Modify |
+                      (uint)PermissionMask.Copy |
+                      (uint)PermissionMask.Transfer)) !=
+                    ((uint)PermissionMask.Modify |
+                     (uint)PermissionMask.Copy |
+                     (uint)PermissionMask.Transfer))
                     return false;
             }
             else // Prim inventory
@@ -2167,13 +2167,13 @@ namespace Aurora.Modules.Permissions
                         if (!IsGroupMember(part.GroupID, user, 0))
                             return false;
 
-                        if ((part.GroupMask & (uint) PermissionMask.Modify) == 0)
+                        if ((part.GroupMask & (uint)PermissionMask.Modify) == 0)
                             return false;
                     }
                 }
                 else
                 {
-                    if ((part.OwnerMask & (uint) PermissionMask.Modify) == 0)
+                    if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
                         return false;
                 }
 
@@ -2193,12 +2193,12 @@ namespace Aurora.Modules.Permissions
 
                 // Require full perms
                 if ((ti.CurrentPermissions &
-                     ((uint) PermissionMask.Modify |
-                      (uint) PermissionMask.Copy |
-                      (uint) PermissionMask.Transfer)) !=
-                    ((uint) PermissionMask.Modify |
-                     (uint) PermissionMask.Copy |
-                     (uint) PermissionMask.Transfer))
+                     ((uint)PermissionMask.Modify |
+                      (uint)PermissionMask.Copy |
+                      (uint)PermissionMask.Transfer)) !=
+                    ((uint)PermissionMask.Modify |
+                     (uint)PermissionMask.Copy |
+                     (uint)PermissionMask.Transfer))
                     return false;
             }
 
@@ -2246,12 +2246,12 @@ namespace Aurora.Modules.Permissions
                 // readable only if it's really full perms
                 //
                 if ((assetRequestItem.CurrentPermissions &
-                     ((uint) PermissionMask.Modify |
-                      (uint) PermissionMask.Copy |
-                      (uint) PermissionMask.Transfer)) !=
-                    ((uint) PermissionMask.Modify |
-                     (uint) PermissionMask.Copy |
-                     (uint) PermissionMask.Transfer))
+                     ((uint)PermissionMask.Modify |
+                      (uint)PermissionMask.Copy |
+                      (uint)PermissionMask.Transfer)) !=
+                    ((uint)PermissionMask.Modify |
+                     (uint)PermissionMask.Copy |
+                     (uint)PermissionMask.Transfer))
                     return false;
             }
             else // Prim inventory
@@ -2271,13 +2271,13 @@ namespace Aurora.Modules.Permissions
                         if (!IsGroupMember(part.GroupID, user, 0))
                             return false;
 
-                        if ((part.GroupMask & (uint) PermissionMask.Modify) == 0)
+                        if ((part.GroupMask & (uint)PermissionMask.Modify) == 0)
                             return false;
                     }
                 }
                 else
                 {
-                    if ((part.OwnerMask & (uint) PermissionMask.Modify) == 0)
+                    if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
                         return false;
                 }
 
@@ -2297,12 +2297,12 @@ namespace Aurora.Modules.Permissions
 
                 // Require full perms
                 if ((ti.CurrentPermissions &
-                     ((uint) PermissionMask.Modify |
-                      (uint) PermissionMask.Copy |
-                      (uint) PermissionMask.Transfer)) !=
-                    ((uint) PermissionMask.Modify |
-                     (uint) PermissionMask.Copy |
-                     (uint) PermissionMask.Transfer))
+                     ((uint)PermissionMask.Modify |
+                      (uint)PermissionMask.Copy |
+                      (uint)PermissionMask.Transfer)) !=
+                    ((uint)PermissionMask.Modify |
+                     (uint)PermissionMask.Copy |
+                     (uint)PermissionMask.Transfer))
                     return false;
             }
 

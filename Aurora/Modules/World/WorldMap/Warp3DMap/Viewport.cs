@@ -33,7 +33,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 {
     public class Viewport
     {
-        private const float DEG_TO_RAD = (float) Math.PI/180f;
+        private const float DEG_TO_RAD = (float)Math.PI / 180f;
         private static readonly Vector3 UP_DIRECTION = Vector3.UnitZ;
 
         public float FarPlaneDistance;
@@ -78,8 +78,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
         public Point VectorToScreen(Vector3 v)
         {
             Matrix4 m = GetWorldToViewportMatrix();
-            Vector3 screenPoint = v*m;
-            return new Point((int) screenPoint.X, (int) screenPoint.Y);
+            Vector3 screenPoint = v * m;
+            return new Point((int)screenPoint.X, (int)screenPoint.Y);
         }
 
         public Matrix4 GetWorldToViewportMatrix()
@@ -115,16 +115,16 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 
         public Matrix4 GetPerspectiveProjectionMatrix()
         {
-            float aspectRatio = Width/(float) Height;
+            float aspectRatio = Width / (float)Height;
 
-            float hFoV = FieldOfView*DEG_TO_RAD;
+            float hFoV = FieldOfView * DEG_TO_RAD;
             float zn = NearPlaneDistance;
             float zf = FarPlaneDistance;
 
-            float xScale = 1f/(float) Math.Tan(hFoV/2f);
-            float yScale = aspectRatio*xScale;
-            float m33 = (zf == double.PositiveInfinity) ? -1 : (zf/(zn - zf));
-            float m43 = zn*m33;
+            float xScale = 1f / (float)Math.Tan(hFoV / 2f);
+            float yScale = aspectRatio * xScale;
+            float m33 = (zf == double.PositiveInfinity) ? -1 : (zf / (zn - zf));
+            float m43 = zn * m33;
 
             return new Matrix4(
                 xScale, 0f, 0f, 0f,
@@ -140,20 +140,20 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
             float zn = NearPlaneDistance;
             float zf = FarPlaneDistance;
 
-            float m33 = 1/(zn - zf);
-            float m43 = zn*m33;
+            float m33 = 1 / (zn - zf);
+            float m43 = zn * m33;
 
             return new Matrix4(
-                2f/w, 0f, 0f, 0f,
-                0f, 2f/h, 0f, 0f,
+                2f / w, 0f, 0f, 0f,
+                0f, 2f / h, 0f, 0f,
                 0f, 0f, m33, 0f,
                 0f, 0f, m43, 1f);
         }
 
         public Matrix4 GetViewportMatrix()
         {
-            float scaleX = Width*0.5f;
-            float scaleY = Height*0.5f;
+            float scaleX = Width * 0.5f;
+            float scaleY = Height * 0.5f;
             float offsetX = 0f + scaleX;
             float offsetY = 0f + scaleY;
 

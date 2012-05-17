@@ -155,8 +155,7 @@ namespace Aurora.Modules.Archivers
 
                 MainConsole.Instance.DebugFormat("[ARCHIVER]: Importing asset {0}", filename);
 
-                AssetBase asset = new AssetBase(filename, metadata.Name, (AssetType) metadata.AssetType, UUID.Zero)
-                                      {Description = metadata.Description, Data = data, MetaOnly = false};
+                AssetBase asset = new AssetBase(filename, metadata.Name, (AssetType)metadata.AssetType, UUID.Zero) { Description = metadata.Description, Data = data, MetaOnly = false };
                 asset.ID = m_cache.Store(asset);
             }
             else

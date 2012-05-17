@@ -36,7 +36,7 @@ using Aurora.Framework;
 namespace Aurora.Modules.Ban
 {
     public class LocalPresenceInfoConnector : IPresenceInfo, IAuroraDataPlugin
-	{
+    {
         private IGenericData GD = null;
         private string DatabaseToAuthTable = "auth";
 
@@ -66,7 +66,7 @@ namespace Aurora.Modules.Ban
         }
 
         public PresenceInfo GetPresenceInfo(UUID agentID)
-		{
+        {
             PresenceInfo agent = new PresenceInfo();
             Dictionary<string, object> where = new Dictionary<string, object>(1);
             where["AgentID"] = agentID;
@@ -95,12 +95,12 @@ namespace Aurora.Modules.Ban
             agent.LastKnownMac = query[9];
             agent.LastKnownViewer = query[10];
             agent.Platform = query[11];
-            
-			return agent;
-		}
+
+            return agent;
+        }
 
         public void UpdatePresenceInfo(PresenceInfo agent)
-		{
+        {
             Dictionary<string, object> row = new Dictionary<string, object>(12);
             row["AgentID"] = agent.AgentID;
             row["Flags"] = agent.Flags;
@@ -127,7 +127,7 @@ namespace Aurora.Modules.Ban
             }
         }
 
-        public void Check (PresenceInfo info, List<string> viewers, bool includeList)
+        public void Check(PresenceInfo info, List<string> viewers, bool includeList)
         {
             //
             //Check passwords
@@ -157,7 +157,7 @@ namespace Aurora.Modules.Ban
                         continue;
                     }
 
-                    CoralateLists (info, suspectedInfo);
+                    CoralateLists(info, suspectedInfo);
 
                     needsUpdated = true;
                 }
@@ -189,7 +189,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownID0s.Contains(ID0))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -197,7 +197,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownIPs.Contains(IP.Split(':')[0]))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -205,7 +205,7 @@ namespace Aurora.Modules.Ban
                 {
                     if (info.KnownMacs.Contains(Mac))
                     {
-                        CoralateLists (info, suspectedInfo);
+                        CoralateLists(info, suspectedInfo);
                         needsUpdated = true;
                     }
                 }
@@ -218,7 +218,7 @@ namespace Aurora.Modules.Ban
                     if ((info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
                     {
                         //Update them to suspected for their viewer
-                        AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Suspected);
+                        AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Suspected);
                         //And update them later
                         needsUpdated = true;
                     }
@@ -281,7 +281,7 @@ namespace Aurora.Modules.Ban
             return update;
         }
 
-        private void CoralateLists (PresenceInfo info, PresenceInfo suspectedInfo)
+        private void CoralateLists(PresenceInfo info, PresenceInfo suspectedInfo)
         {
             bool addedFlag = false;
             PresenceInfo.PresenceInfoFlags Flag = 0;
@@ -296,21 +296,21 @@ namespace Aurora.Modules.Ban
             {
                 //Suspected, update them both
                 addedFlag = true;
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Suspected);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Suspected);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Suspected);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Suspected);
             }
             else if ((suspectedInfo.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
                 (info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known)
             {
                 //Known, update them both
                 addedFlag = true;
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.Known);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Known);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.Known);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.Known);
             }
 
             //Add the alt account flag
-            AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
-            AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+            AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+            AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
 
             if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Suspected ||
                 suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected ||
@@ -318,8 +318,8 @@ namespace Aurora.Modules.Ban
                 info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected)
             {
                 //They might be an alt, but the other is clean, so don't bother them too much
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
             }
             else if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Known ||
                 suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
@@ -327,25 +327,25 @@ namespace Aurora.Modules.Ban
                 info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
             {
                 //Flag 'em
-                AddFlag (ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
-                AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                AddFlag(ref info, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                AddFlag(ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
             }
 
             //Add each user to the list of alts, then add the lists of both together
-            info.KnownAlts.Add (suspectedInfo.AgentID.ToString ());
-            suspectedInfo.KnownAlts.Add (info.AgentID.ToString ());
+            info.KnownAlts.Add(suspectedInfo.AgentID.ToString());
+            suspectedInfo.KnownAlts.Add(info.AgentID.ToString());
 
             //Add the lists together
-            List<string> alts = new List<string> ();
+            List<string> alts = new List<string>();
             foreach (string alt in info.KnownAlts)
             {
-                if (!alts.Contains (alt))
-                    alts.Add (alt);
+                if (!alts.Contains(alt))
+                    alts.Add(alt);
             }
             foreach (string alt in suspectedInfo.KnownAlts)
             {
-                if (!alts.Contains (alt))
-                    alts.Add (alt);
+                if (!alts.Contains(alt))
+                    alts.Add(alt);
             }
 
             //If we have added a flag, we need to update ALL alts as well
@@ -353,14 +353,14 @@ namespace Aurora.Modules.Ban
             {
                 foreach (string alt in alts)
                 {
-                    PresenceInfo altInfo = GetPresenceInfo (UUID.Parse (alt));
+                    PresenceInfo altInfo = GetPresenceInfo(UUID.Parse(alt));
                     if (altInfo != null)
                     {
                         //Give them the flag as well
-                        AddFlag (ref altInfo, Flag);
+                        AddFlag(ref altInfo, Flag);
 
                         //Add the alt account flag
-                        AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
+                        AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccount);
 
                         //Also give them the flags for alts
                         if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Suspected ||
@@ -369,7 +369,7 @@ namespace Aurora.Modules.Ban
                             info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected)
                         {
                             //They might be an alt, but the other is clean, so don't bother them too much
-                            AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
+                            AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfSuspected);
                         }
                         else if (suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.Known ||
                             suspectedInfo.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
@@ -377,11 +377,11 @@ namespace Aurora.Modules.Ban
                             info.Flags == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown)
                         {
                             //Flag 'em
-                            AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
+                            AddFlag(ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
                         }
 
                         //And update them in the db
-                        UpdatePresenceInfo (suspectedInfo);
+                        UpdatePresenceInfo(suspectedInfo);
                     }
                 }
             }
@@ -391,10 +391,10 @@ namespace Aurora.Modules.Ban
             suspectedInfo.KnownAlts = alts;
 
             //Update them, as we changed their info, we get updated below
-            UpdatePresenceInfo (suspectedInfo);
+            UpdatePresenceInfo(suspectedInfo);
         }
 
-        private void AddFlag (ref PresenceInfo info, PresenceInfo.PresenceInfoFlags presenceInfoFlags)
+        private void AddFlag(ref PresenceInfo info, PresenceInfo.PresenceInfoFlags presenceInfoFlags)
         {
             if (presenceInfoFlags == 0)
                 return;

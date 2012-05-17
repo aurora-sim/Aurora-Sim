@@ -48,7 +48,7 @@ namespace Aurora.Modules.Scripting
         private readonly Dictionary<UUID, List<Email>> m_MailQueues = new Dictionary<UUID, List<Email>>();
 
         private readonly TimeSpan m_QueueTimeout = new TimeSpan(2, 0, 0);
-                                  // 2 hours without llGetNextEmail drops the queue
+        // 2 hours without llGetNextEmail drops the queue
 
         // Scenes by Region Handle
 
@@ -131,8 +131,8 @@ namespace Aurora.Modules.Scripting
                         EmailMessage emailMessage = new EmailMessage
                                                {
                                                    FromAddress =
-                                                       new EmailAddress(fromEmailAddress), 
-                                                       Subject = subject
+                                                       new EmailAddress(fromEmailAddress),
+                                                   Subject = subject
                                                };
 
                         //To - Only One
@@ -191,7 +191,7 @@ namespace Aurora.Modules.Scripting
                     InsertEmail(toID, new Email
                                   {
                                       time =
-                                          ((int) ((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
+                                          ((int)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds)).
                                           ToString(CultureInfo.InvariantCulture),
                                       subject = subject,
                                       sender = objectID.ToString() + "@" + m_InterObjectHostname,
@@ -408,9 +408,9 @@ namespace Aurora.Modules.Scripting
             ISceneChildEntity part = findPrim(objectID, out m_ObjectRegionName, scene);
             if (part != null)
             {
-                int objectLocX = (int) part.AbsolutePosition.X;
-                int objectLocY = (int) part.AbsolutePosition.Y;
-                int objectLocZ = (int) part.AbsolutePosition.Z;
+                int objectLocX = (int)part.AbsolutePosition.X;
+                int objectLocY = (int)part.AbsolutePosition.Y;
+                int objectLocZ = (int)part.AbsolutePosition.Z;
                 ObjectAbsolutePosition = "(" + objectLocX + ", " + objectLocY + ", " + objectLocZ + ")";
                 ObjectName = part.Name;
                 ObjectRegionName = m_ObjectRegionName;

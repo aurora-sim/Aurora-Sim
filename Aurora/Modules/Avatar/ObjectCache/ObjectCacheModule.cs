@@ -132,7 +132,7 @@ namespace Aurora.Modules.ObjectCache
         /// <param name = "o"></param>
         public void LoadFileOnNewClient(object o)
         {
-            UUID agentID = (UUID) o;
+            UUID agentID = (UUID)o;
             LoadFromFileForClient(agentID);
         }
 
@@ -170,7 +170,7 @@ namespace Aurora.Modules.ObjectCache
             Dictionary<uint, uint> cache = new Dictionary<uint, uint>();
             try
             {
-                OSDMap cachedMap = (OSDMap) OSDParser.DeserializeJson(osdMap);
+                OSDMap cachedMap = (OSDMap)OSDParser.DeserializeJson(osdMap);
                 foreach (KeyValuePair<string, OSD> kvp in cachedMap)
                 {
                     cache[uint.Parse(kvp.Key)] = kvp.Value.AsUInteger();

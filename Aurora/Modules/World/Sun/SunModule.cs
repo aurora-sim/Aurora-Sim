@@ -41,10 +41,10 @@ namespace Aurora.Modules.Sun
         //
         // Global Constants used to determine where in the sky the sun is
         //
-        private const double m_SeasonalTilt = 0.03*Math.PI; // A daily shift of approximately 1.7188 degrees
-        private const double m_AverageTilt = -0.25*Math.PI; // A 45 degree tilt
-        private const double m_SunCycle = 2.0D*Math.PI; // A perfect circle measured in radians
-        private const double m_SeasonalCycle = 2.0D*Math.PI; // Ditto
+        private const double m_SeasonalTilt = 0.03 * Math.PI; // A daily shift of approximately 1.7188 degrees
+        private const double m_AverageTilt = -0.25 * Math.PI; // A 45 degree tilt
+        private const double m_SunCycle = 2.0D * Math.PI; // A perfect circle measured in radians
+        private const double m_SeasonalCycle = 2.0D * Math.PI; // Ditto
         private const int TICKS_PER_SECOND = 10000000;
 
         private double HorizonShift; // Axis offset to skew day and night
@@ -73,7 +73,7 @@ namespace Aurora.Modules.Sun
         private double d_day_length = 4; // A VW day is 4 RW hours long
 
         private double d_day_night = 0.5;
-                       // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
+        // axis offset: Default Hoizon shift to try and closely match the sun model in LL Viewer
 
         private int d_frame_mod = 25; // Every 2 seconds (actually less)
         private string d_mode = "SL";
@@ -105,7 +105,7 @@ namespace Aurora.Modules.Sun
         // Current time in elapsed seconds since Jan 1st 1970
         private ulong CurrentTime
         {
-            get { return (ulong) (((DateTime.Now.Ticks) - TicksToEpoch + TicksUTCOffset)/TICKS_PER_SECOND); }
+            get { return (ulong)(((DateTime.Now.Ticks) - TicksToEpoch + TicksUTCOffset) / TICKS_PER_SECOND); }
         }
 
         // Time in seconds since UTC to use to calculate sun position.
@@ -148,15 +148,15 @@ namespace Aurora.Modules.Sun
 
         public void SetSunParameter(string param, double value)
         {
-            HandleSunConsoleCommand(new[] {param, value.ToString()});
+            HandleSunConsoleCommand(new[] { param, value.ToString() });
         }
 
         public float GetCurrentSunHour()
         {
-            float ticksleftover = CurrentTime%SecondsPerSunCycle;
+            float ticksleftover = CurrentTime % SecondsPerSunCycle;
 
 
-            return (24.0f*(ticksleftover/SecondsPerSunCycle));
+            return (24.0f * (ticksleftover / SecondsPerSunCycle));
         }
 
         #endregion
@@ -261,8 +261,8 @@ namespace Aurora.Modules.Sun
                 case "SL":
                     // Time taken to complete a cycle (day and season)
 
-                    SecondsPerSunCycle = (uint) (m_DayLengthHours*60*60);
-                    SecondsPerYear = (uint) (SecondsPerSunCycle*m_YearLengthDays);
+                    SecondsPerSunCycle = (uint)(m_DayLengthHours * 60 * 60);
+                    SecondsPerYear = (uint)(SecondsPerSunCycle * m_YearLengthDays);
 
                     // Ration of real-to-virtual time
 
@@ -271,8 +271,8 @@ namespace Aurora.Modules.Sun
                     // Speed of rotation needed to complete a cycle in the
                     // designated period (day and season)
 
-                    SunSpeed = m_SunCycle/SecondsPerSunCycle;
-                    SeasonSpeed = m_SeasonalCycle/SecondsPerYear;
+                    SunSpeed = m_SunCycle / SecondsPerSunCycle;
+                    SeasonSpeed = m_SeasonalCycle / SecondsPerYear;
 
                     // Horizon translation
 
@@ -338,12 +338,12 @@ namespace Aurora.Modules.Sun
             //Get the old sun data
             if (m_scene.RegionInfo.RegionSettings.UseEstateSun)
             {
-                m_SunFixedHour = (float) m_scene.RegionInfo.EstateSettings.SunPosition;
+                m_SunFixedHour = (float)m_scene.RegionInfo.EstateSettings.SunPosition;
                 m_SunFixed = m_scene.RegionInfo.EstateSettings.FixedSun;
             }
             else
             {
-                m_SunFixedHour = (float) m_scene.RegionInfo.RegionSettings.SunPosition;
+                m_SunFixedHour = (float)m_scene.RegionInfo.RegionSettings.SunPosition;
                 m_SunFixed = m_scene.RegionInfo.RegionSettings.FixedSun;
             }
             m_sunIsReadyToRun = true;
@@ -368,7 +368,7 @@ namespace Aurora.Modules.Sun
 
         public void SunUpdate()
         {
-            if (((m_frame++%m_UpdateInterval) != 0) || !ready || m_SunFixed /* || !receivedEstateToolsSunUpdate*/)
+            if (((m_frame++ % m_UpdateInterval) != 0) || !ready || m_SunFixed /* || !receivedEstateToolsSunUpdate*/)
             {
                 return;
             }
@@ -447,59 +447,59 @@ namespace Aurora.Modules.Sun
 
                 // Integer math rounded is on purpose to drop fractional day, determines number 
                 // of virtual days since Epoch
-                PosTime = CurrentTime/SecondsPerSunCycle;
+                PosTime = CurrentTime / SecondsPerSunCycle;
 
                 // Since we want number of seconds since Epoch, multiply back up
                 PosTime *= SecondsPerSunCycle;
 
                 // Then offset by the current Fixed Sun Hour
                 // Fixed Sun Hour needs to be scaled to reflect the user configured Seconds Per Sun Cycle
-                PosTime += (ulong) ((m_SunFixedHour/24.0)*SecondsPerSunCycle);
+                PosTime += (ulong)((m_SunFixedHour / 24.0) * SecondsPerSunCycle);
             }
             else
             {
                 if (m_DayTimeSunHourScale != 0.5f)
                 {
-                    ulong CurDaySeconds = CurrentTime%SecondsPerSunCycle;
-                    double CurDayPercentage = (double) CurDaySeconds/SecondsPerSunCycle;
+                    ulong CurDaySeconds = CurrentTime % SecondsPerSunCycle;
+                    double CurDayPercentage = (double)CurDaySeconds / SecondsPerSunCycle;
 
-                    ulong DayLightSeconds = (ulong) (m_DayTimeSunHourScale*SecondsPerSunCycle);
+                    ulong DayLightSeconds = (ulong)(m_DayTimeSunHourScale * SecondsPerSunCycle);
                     ulong NightSeconds = SecondsPerSunCycle - DayLightSeconds;
 
-                    PosTime = CurrentTime/SecondsPerSunCycle;
+                    PosTime = CurrentTime / SecondsPerSunCycle;
                     PosTime *= SecondsPerSunCycle;
 
                     if (CurDayPercentage < 0.5)
                     {
-                        PosTime += (ulong) ((CurDayPercentage/.5)*DayLightSeconds);
+                        PosTime += (ulong)((CurDayPercentage / .5) * DayLightSeconds);
                     }
                     else
                     {
                         PosTime += DayLightSeconds;
-                        PosTime += (ulong) (((CurDayPercentage - 0.5)/.5)*NightSeconds);
+                        PosTime += (ulong)(((CurDayPercentage - 0.5) / .5) * NightSeconds);
                     }
                 }
             }
 
-            TotalDistanceTravelled = SunSpeed*PosTime; // distance measured in radians
+            TotalDistanceTravelled = SunSpeed * PosTime; // distance measured in radians
 
-            OrbitalPosition = (float) (TotalDistanceTravelled%m_SunCycle); // position measured in radians
+            OrbitalPosition = (float)(TotalDistanceTravelled % m_SunCycle); // position measured in radians
 
             // TotalDistanceTravelled += HoursToRadians-(0.25*Math.PI)*Math.Cos(HoursToRadians)-OrbitalPosition;
             // OrbitalPosition         = (float) (TotalDistanceTravelled%SunCycle);
 
-            SeasonalOffset = SeasonSpeed*PosTime;
-                // Present season determined as total radians travelled around season cycle
-            Tilt.W = (float) (m_AverageTilt + (m_SeasonalTilt*Math.Sin(SeasonalOffset)));
-                // Calculate seasonal orbital N/S tilt
+            SeasonalOffset = SeasonSpeed * PosTime;
+            // Present season determined as total radians travelled around season cycle
+            Tilt.W = (float)(m_AverageTilt + (m_SeasonalTilt * Math.Sin(SeasonalOffset)));
+            // Calculate seasonal orbital N/S tilt
 
             // MainConsole.Instance.Debug("[SUN] Total distance travelled = "+TotalDistanceTravelled+", present position = "+OrbitalPosition+".");
             // MainConsole.Instance.Debug("[SUN] Total seasonal progress = "+SeasonalOffset+", present tilt = "+Tilt.W+".");
 
             // The sun rotates about the Z axis
 
-            Position.X = (float) Math.Cos(-TotalDistanceTravelled);
-            Position.Y = (float) Math.Sin(-TotalDistanceTravelled);
+            Position.X = (float)Math.Cos(-TotalDistanceTravelled);
+            Position.Y = (float)Math.Sin(-TotalDistanceTravelled);
             Position.Z = 0;
 
             // For interest we rotate it slightly about the X access.
@@ -512,14 +512,14 @@ namespace Aurora.Modules.Sun
             // makes the nights shorter than the days.
 
             Position = Vector3.Normalize(Position);
-            Position.Z = Position.Z + (float) HorizonShift;
+            Position.Z = Position.Z + (float)HorizonShift;
             Position = Vector3.Normalize(Position);
 
             // MainConsole.Instance.Debug("[SUN] Position("+Position.X+","+Position.Y+","+Position.Z+")");
 
             Velocity.X = 0;
             Velocity.Y = 0;
-            Velocity.Z = (float) SunSpeed;
+            Velocity.Z = (float)SunSpeed;
 
             // Correct angular velocity to reflect the seasonal rotation
 
@@ -532,7 +532,7 @@ namespace Aurora.Modules.Sun
             }
             else
             {
-                Velocity = (Velocity*Tilt)*(1.0f/Magnitude);
+                Velocity = (Velocity * Tilt) * (1.0f / Magnitude);
             }
             m_scene.RegionInfo.RegionSettings.SunVector = Position;
             m_scene.RegionInfo.RegionSettings.SunPosition = GetCurrentTimeAsLindenSunHour();
@@ -626,7 +626,7 @@ namespace Aurora.Modules.Sun
                 switch (args[1].ToLower())
                 {
                     case "year_length":
-                        m_YearLengthDays = (int) value;
+                        m_YearLengthDays = (int)value;
                         break;
 
                     case "day_length":
@@ -642,7 +642,7 @@ namespace Aurora.Modules.Sun
                         break;
 
                     case "update_interval":
-                        m_UpdateInterval = (int) value;
+                        m_UpdateInterval = (int)value;
                         break;
 
                     default:

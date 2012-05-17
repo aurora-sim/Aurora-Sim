@@ -40,8 +40,8 @@ namespace Aurora.Modules.Ban
 {
     public class GridWideViewerBan : IService
     {
-        private List<string> m_bannedViewers = new List<string> ();
-        private List<string> m_allowedViewers = new List<string> ();
+        private List<string> m_bannedViewers = new List<string>();
+        private List<string> m_allowedViewers = new List<string>();
         private bool m_enabled = true;
         private bool m_useIncludeList = false;
         private OSDMap m_map = null;
@@ -54,15 +54,15 @@ namespace Aurora.Modules.Ban
             IConfig config = source.Configs["GrieferProtection"];
             if (config != null)
             {
-                string bannedViewers = config.GetString ("ViewersToBan", "");
+                string bannedViewers = config.GetString("ViewersToBan", "");
                 m_bannedViewers = Util.ConvertToList(bannedViewers);
-                string allowedViewers = config.GetString ("ViewersToAllow", "");
+                string allowedViewers = config.GetString("ViewersToAllow", "");
                 m_allowedViewers = Util.ConvertToList(allowedViewers);
-                m_viewerTagURL = config.GetString ("ViewerXMLURL", m_viewerTagURL);
-                m_enabled = config.GetBoolean ("Enabled", true);
-                m_useIncludeList = config.GetBoolean ("UseAllowListInsteadOfBanList", false);
+                m_viewerTagURL = config.GetString("ViewerXMLURL", m_viewerTagURL);
+                m_enabled = config.GetBoolean("Enabled", true);
+                m_useIncludeList = config.GetBoolean("UseAllowListInsteadOfBanList", false);
                 if (m_enabled)
-                    registry.RequestModuleInterface<ISimulationBase> ().EventManager.RegisterEventHandler("SetAppearance", EventManager_OnGenericEvent);
+                    registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("SetAppearance", EventManager_OnGenericEvent);
             }
         }
 
@@ -82,8 +82,8 @@ namespace Aurora.Modules.Ban
                 UUID avatarID = (UUID)p[0];
                 AvatarData avatarData = (AvatarData)p[1];
 
-                AvatarAppearance app = avatarData.ToAvatarAppearance (avatarID);
-                CheckForBannedViewer (avatarID, app.Texture);
+                AvatarAppearance app = avatarData.ToAvatarAppearance(avatarID);
+                CheckForBannedViewer(avatarID, app.Texture);
             }
             return null;
         }
@@ -100,7 +100,7 @@ namespace Aurora.Modules.Ban
                 //Read the website once!
                 if (m_map == null)
                     m_map = OSDParser.Deserialize(Utilities.ReadExternalWebsite(m_viewerTagURL)) as OSDMap;
-                if(m_map == null)
+                if (m_map == null)
                     return;//Can't find it
 
                 //This is the givaway texture!
@@ -108,15 +108,15 @@ namespace Aurora.Modules.Ban
                 {
                     if (textureEntry.FaceTextures[i] != null)
                     {
-                        if (m_map.ContainsKey (textureEntry.FaceTextures[i].TextureID.ToString ()))
+                        if (m_map.ContainsKey(textureEntry.FaceTextures[i].TextureID.ToString()))
                         {
-                            OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString ()];
+                            OSDMap viewerMap = (OSDMap)m_map[textureEntry.FaceTextures[i].TextureID.ToString()];
                             //Check the names
-                            if (IsViewerBanned (viewerMap["name"].ToString ()))
+                            if (IsViewerBanned(viewerMap["name"].ToString()))
                             {
-                                IGridWideMessageModule messageModule = m_registry.RequestModuleInterface<IGridWideMessageModule> ();
+                                IGridWideMessageModule messageModule = m_registry.RequestModuleInterface<IGridWideMessageModule>();
                                 if (messageModule != null)
-                                    messageModule.KickUser (avatarID, "You cannot use " + viewerMap["name"] + " in this grid.");
+                                    messageModule.KickUser(avatarID, "You cannot use " + viewerMap["name"] + " in this grid.");
                                 break;
                             }
                             break;
@@ -131,12 +131,12 @@ namespace Aurora.Modules.Ban
         {
             if (m_useIncludeList)
             {
-                if (!m_allowedViewers.Contains (name))
+                if (!m_allowedViewers.Contains(name))
                     return true;
             }
             else
             {
-                if (m_bannedViewers.Contains (name))
+                if (m_bannedViewers.Contains(name))
                     return true;
             }
             return false;

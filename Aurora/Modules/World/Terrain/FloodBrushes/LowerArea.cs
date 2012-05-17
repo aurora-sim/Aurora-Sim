@@ -38,9 +38,9 @@ namespace Aurora.Modules.Terrain.FloodBrushes
                                 float west, float south, float east, float strength)
         {
             int x, y;
-            for (x = (int) west; x < (int) east; x++)
+            for (x = (int)west; x < (int)east; x++)
             {
-                for (y = (int) south; y < (int) north; y++)
+                for (y = (int)south; y < (int)north; y++)
                 {
                     if (!map.Scene.Permissions.CanTerraformLand(userID, new Vector3(x, y, 0)))
                         continue;

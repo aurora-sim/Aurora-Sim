@@ -289,16 +289,16 @@ namespace Aurora.Modules.AbuseReports
         private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
         {
             IScenePresence SP = findScenePresence(agentID);
-            string RegionName = (string) m_dhttpMethod["abuse-region-name"];
-            UUID AbuserID = UUID.Parse((string) m_dhttpMethod["abuser-id"]);
-            byte Category = byte.Parse((string) m_dhttpMethod["category"]);
-            byte CheckFlags = byte.Parse((string) m_dhttpMethod["check-flags"]);
-            string details = (string) m_dhttpMethod["details"];
-            UUID objectID = UUID.Parse((string) m_dhttpMethod["object-id"]);
+            string RegionName = (string)m_dhttpMethod["abuse-region-name"];
+            UUID AbuserID = UUID.Parse((string)m_dhttpMethod["abuser-id"]);
+            byte Category = byte.Parse((string)m_dhttpMethod["category"]);
+            byte CheckFlags = byte.Parse((string)m_dhttpMethod["check-flags"]);
+            string details = (string)m_dhttpMethod["details"];
+            UUID objectID = UUID.Parse((string)m_dhttpMethod["object-id"]);
             Vector3 position = Vector3.Zero; //(string)m_dhttpMethod["position"];
-            byte ReportType = byte.Parse((string) m_dhttpMethod["report-type"]);
-            UUID ScreenShotID = UUID.Parse((string) m_dhttpMethod["screenshot-id"]);
-            string summary = (string) m_dhttpMethod["summary"];
+            byte ReportType = byte.Parse((string)m_dhttpMethod["report-type"]);
+            UUID ScreenShotID = UUID.Parse((string)m_dhttpMethod["screenshot-id"]);
+            string summary = (string)m_dhttpMethod["summary"];
             UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
                        details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
             //TODO: Figure this out later

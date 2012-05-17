@@ -92,11 +92,11 @@ namespace Aurora.Modules.WindlightSettings
                 return responsedata; //They don't exist
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
-                m_info = OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+                m_info = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                     gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                  (new DatabaseWrapper {Info = m_info}).ToOSD());
+                                  (new DatabaseWrapper { Info = m_info }).ToOSD());
                 SP.ControllingClient.SendAlertMessage("Windlight Settings saved successfully");
             }
             else
@@ -140,7 +140,7 @@ namespace Aurora.Modules.WindlightSettings
 
             public override void FromOSD(OSDMap map)
             {
-                if(map != null)
+                if (map != null)
                     Info = map["Info"];
             }
 
