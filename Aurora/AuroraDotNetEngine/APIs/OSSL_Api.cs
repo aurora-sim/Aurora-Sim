@@ -506,14 +506,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osForceAttachToAvatar(int attachmentPoint)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
             InitLSL();
             ((LSL_Api)m_LSL_Api).AttachToAvatar(attachmentPoint);
         }
 
         public void osForceDetachFromAvatar()
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID)) return;
             InitLSL();
             ((LSL_Api)m_LSL_Api).DetachFromAvatar();
         }
@@ -1288,6 +1288,55 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        /// <summary>
+        /// Sets terrain estate texture
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="texture"></param>
+        /// <returns></returns>
+        public void osSetTerrainTexture(int level, LSL_Key texture)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetParcelDetails", m_host,"OSSL", m_itemID)) return;
+            //Check to make sure that the script's owner is the estate manager/master
+            //World.Permissions.GenericEstatePermission(
+            if (World.Permissions.IsGod(m_host.OwnerID))
+           {
+                if (level < 0 || level > 3)
+                    return;
+                UUID textureID = new UUID();
+                if (!UUID.TryParse(texture, out textureID))
+                   return;
+                // estate module is required
+                 IEstateModule estate = World.RequestModuleInterface<IEstateModule>();
+                if (estate != null)
+                    estate.setEstateTerrainBaseTexture(level, textureID);
+           }
+        }
+
+       /// <summary>
+        /// Sets terrain heights of estate
+        /// </summary>
+       /// <param name="corner"></param>
+        /// <param name="low"></param>
+        /// <param name="high"></param>
+        /// <returns></returns>
+        public void osSetTerrainTextureHeight(int corner, double low, double high)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osSetParcelDetails", m_host,"OSSL", m_itemID)) return;
+ 
+            //Check to make sure that the script's owner is the estate manager/master
+            //World.Permissions.GenericEstatePermission(
+            if (World.Permissions.IsGod(m_host.OwnerID))
+           {
+               if (corner < 0 || corner > 3)
+                    return;
+                // estate module is required
+                IEstateModule estate = World.RequestModuleInterface<IEstateModule>();
+                if (estate != null)
+                   estate.setEstateTerrainTextureHeights(corner, (float)low, (float)high);
+            }
+        }
+ 
         public double osList2Double(LSL_List src, int index)
         {
             // There is really no double type in OSSL. C# and other

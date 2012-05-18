@@ -81,6 +81,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osAvatarPlayAnimation(string avatar, string animation);
         void osAvatarStopAnimation(string avatar, string animation);
         
+        void osSetTerrainTexture(int level, LSL_Key texture);
+        void osSetTerrainTextureHeight(int corner, double low, double high);
+
         // Attachment commands
         /// <summary>
         /// Attach the object containing this script to the avatar that owns it without checking for PERMISSION_ATTACH
