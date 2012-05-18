@@ -200,7 +200,7 @@ namespace Aurora.Services.DataService
             List<string> query = GD.Query(new string[1] { "*" }, "userclassifieds", filter, null, null, null);
 
             List<Classified> classifieds = new List<Classified>();
-            for (int i = 0; i < query.Count; i += 6)
+            for (int i = 0; i < query.Count; i += 7)
             {
                 Classified classified = new Classified();
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 5]));
