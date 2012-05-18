@@ -503,7 +503,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return UUID.Zero.ToString();
         }
 
-
+        public string osGetGridGatekeeperURI()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridGatekeeperURI", m_host, "OSSL", m_itemID)) return "";
+            string gatekeeperURI = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+           if (config.Configs["GridService"] != null)
+               gatekeeperURI = config.Configs["GridService"].GetString("Gatekeeper", gatekeeperURI);
+            return gatekeeperURI;
+        }
+ 
         public void osForceAttachToAvatar(int attachmentPoint)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;

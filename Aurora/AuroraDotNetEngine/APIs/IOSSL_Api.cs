@@ -174,7 +174,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb);
         void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb);
-
+        string osGetGridGatekeeperURI();
         LSL_List osGetAvatarList();
 
         void osReturnObject(LSL_Key userID);
