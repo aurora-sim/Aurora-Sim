@@ -508,9 +508,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridGatekeeperURI", m_host, "OSSL", m_itemID)) return "";
             string gatekeeperURI = String.Empty;
             IConfigSource config = m_ScriptEngine.ConfigSource;
-           if (config.Configs["GridService"] != null)
-               gatekeeperURI = config.Configs["GridService"].GetString("Gatekeeper", gatekeeperURI);
-            return gatekeeperURI;
+            if (config.Configs["GridService"] != null)
+               gatekeeperURI = MainServer.Instance.ServerURI + "/"; 
+               return gatekeeperURI;
         }
  
         public void osForceAttachToAvatar(int attachmentPoint)
