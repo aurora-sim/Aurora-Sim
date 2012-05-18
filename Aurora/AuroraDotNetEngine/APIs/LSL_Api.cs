@@ -3765,7 +3765,42 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 m_UrlModule.ReleaseURL(url);
         }
 
-        public void llAttachToAvatar(int attachment)
+        /// <summary>
+        /// Attach the object containing this script to the avatar that owns it.
+        /// </summary>
+        /// <returns>true if the attach suceeded, false if it did not</returns>
+        public bool AttachToAvatar(int attachmentPoint)
+        {
+          var grp = (SceneObjectGroup) m_host.ParentEntity;
+          ScenePresence presence = (ScenePresence) World.GetScenePresence(m_host.OwnerID);
+          IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+             if (attachmentsModule != null)
+                return attachmentsModule.AttachObjectFromInworldObject(m_localID, presence.ControllingClient, grp, attachmentPoint);
+            else
+                return false;
+        }
+        /// <summary>
+        /// Detach the object containing this script from the avatar it is attached to.
+        /// </summary>
+        /// <remarks>
+        /// Nothing happens if the object is not attached.
+        /// </remarks>
+        public void DetachFromAvatar()
+        {
+            Util.FireAndForget(DetachWrapper, m_host);
+        }
+        private void DetachWrapper(object o)
+        {
+           SceneObjectPart host = (SceneObjectPart)o;
+           SceneObjectGroup grp = host.ParentGroup;
+           UUID itemID = grp.GroupID;
+           ScenePresence presence = (ScenePresence) World.GetScenePresence(host.OwnerID);
+           IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+          if (attachmentsModule != null)
+                attachmentsModule.DetachSingleAttachmentToInventory(itemID, presence.ControllingClient);
+         }
+
+        public void llAttachToAvatar(int attachmentPoint)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
@@ -3787,15 +3822,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
             {
-                ISceneEntity grp = m_host.ParentEntity;
-
-                IScenePresence presence = World.GetScenePresence(m_host.OwnerID);
-
-                IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
-                if (attachmentsModule != null)
-                    attachmentsModule.AttachObjectFromInworldObject(m_host.LocalId,
-                        presence.ControllingClient, grp,
-                        attachment);
+                AttachToAvatar(attachmentPoint);
             }
         }
 
@@ -3819,21 +3846,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return;
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
-            {
-                IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
-                if (attachmentsModule != null)
-                    Util.FireAndForget(DetachWrapper);
-            }
-        }
-
-        private void DetachWrapper(object o)
-        {
-            UUID itemID = m_host.ParentEntity.RootChild.FromUserInventoryItemID;
-            IScenePresence presence = World.GetScenePresence(m_host.OwnerID);
-
-            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
-            if (attachmentsModule != null)
-                attachmentsModule.DetachSingleAttachmentToInventory(itemID, presence.ControllingClient);
+                DetachFromAvatar();
         }
 
         public void llTakeCamera(string avatar)
