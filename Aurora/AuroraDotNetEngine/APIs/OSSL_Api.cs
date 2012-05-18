@@ -506,14 +506,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void osForceAttachToAvatar(int attachmentPoint)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
             InitLSL();
             ((LSL_Api)m_LSL_Api).AttachToAvatar(attachmentPoint);
         }
 
         public void osForceDetachFromAvatar()
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID)) return;
             InitLSL();
             ((LSL_Api)m_LSL_Api).DetachFromAvatar();
         }
