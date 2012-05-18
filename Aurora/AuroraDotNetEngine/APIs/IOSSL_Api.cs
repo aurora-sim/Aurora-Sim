@@ -180,5 +180,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osCauseHealing(string avatar, double healing);
         void osCauseDamage(string avatar, double damage);
         LSL_String osGetInventoryDesc(string item);
+
+        LSL_Integer osInviteToGroup(LSL_Key agentId);
+        LSL_Integer osEjectFromGroup(LSL_Key agentId);
     }
 }
