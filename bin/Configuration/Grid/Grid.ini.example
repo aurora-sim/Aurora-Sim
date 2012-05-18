@@ -31,7 +31,7 @@
 [Configuration]
     UseRegistrationService = false
 	OSDRequestTimeout = 10000
-	OSDRequestTryCount = 5;
+	OSDRequestTryCount = 5
 [Handlers]
 
     AbuseReportHandler = AbuseReportsService
