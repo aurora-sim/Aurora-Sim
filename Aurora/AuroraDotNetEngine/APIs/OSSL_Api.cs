@@ -2579,5 +2579,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
             return DateTime.Now;
         }
+
+        /// <summary>
+        /// Invite user to the group this object is set to
+        /// </summary>
+        /// <param name="agentId"></param>
+        /// <returns></returns>
+        public LSL_Integer osInviteToGroup(LSL_Key agentId)
+        {
+            return 1;
+        }
+
+        /// <summary>
+        /// Eject user from the group this object is set to
+        /// </summary>
+        /// <param name="agentId"></param>
+        /// <returns></returns>
+        public LSL_Integer osEjectFromGroup(LSL_Key agentId)
+        {
+            return 1;
+        }
     }
 }
