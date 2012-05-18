@@ -177,6 +177,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osGetGridGatekeeperURI();
         LSL_List osGetAvatarList();
 
+        // Grid Info Functions
+        string osGetGridHomeURI();
+        string osGetGridCustom(string key);
+
         void osReturnObject(LSL_Key userID);
         void osReturnObjects(LSL_Float Parameter);
         void osShutDown();

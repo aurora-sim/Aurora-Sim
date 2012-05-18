@@ -40,6 +40,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -501,6 +502,103 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
 
             return UUID.Zero.ToString();
+        }
+
+        private enum InfoType
+        {
+            Nick,
+            Name,
+            Login,
+            Home,
+            Custom
+        };
+
+        private string GridUserInfo(InfoType type)
+        {
+            return GridUserInfo(type, "");
+        }
+
+        private string GridUserInfo(InfoType type, string key)
+        {
+            string retval = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+            string url = config.Configs["GridInfo"].GetString("GridInfoURI", String.Empty);
+
+            if (String.IsNullOrEmpty(url))
+                return "Configuration Error!";
+
+            string verb = "/json_grid_info";
+            OSDMap json = new OSDMap();
+
+            OSDMap info = (OSDMap) Util.CombineParams(new[] {String.Format("{0}{1}", url, verb)}, 3000);
+
+            if (info["Success"] != true)
+                return "Get GridInfo Failed!";
+
+            json = (OSDMap)OSDParser.DeserializeJson(info["_RawResult"].AsString());
+
+            switch (type)
+            {
+                case InfoType.Nick:
+                    retval = json["gridnick"];
+                    break;
+
+                case InfoType.Name:
+                    retval = json["gridname"];
+                    break;
+
+                case InfoType.Login:
+                    retval = json["login"];
+                    break;
+
+                case InfoType.Home:
+                    retval = json["home"];
+                    break;
+
+                case InfoType.Custom:
+                    retval = json[key];
+                    break;
+
+                default:
+                    retval = "error";
+                    break;
+            }
+
+            return retval;
+        }
+
+        public string osGetGridHomeURI()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridHomeURI", m_host, "OSSL",
+                                                   m_itemID)) return "";
+
+            string HomeURI = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+
+            if (config.Configs["LoginService"] != null)
+                HomeURI = config.Configs["LoginService"].GetString("SRV_HomeURI", HomeURI);
+
+            if (String.IsNullOrEmpty(HomeURI))
+                HomeURI = GridUserInfo(InfoType.Home);
+
+            return HomeURI;
+        }
+
+        public string osGetGridCustom(string key)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridCustom", m_host, "OSSL",
+                                                   m_itemID)) return "";
+
+            string retval = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+
+            if (config.Configs["GridInfo"] != null)
+                retval = config.Configs["GridInfo"].GetString(key, retval);
+
+            if (String.IsNullOrEmpty(retval))
+                retval = GridUserInfo(InfoType.Custom, key);
+
+            return retval;
         }
 
         public string osGetGridGatekeeperURI()
