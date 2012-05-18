@@ -29,6 +29,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Runtime.Remoting.Lifetime;
@@ -502,6 +503,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return UUID.Zero.ToString();
         }
 
+
+        public void osForceAttachToAvatar(int attachmentPoint)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
+            InitLSL();
+            ((LSL_Api)m_LSL_Api).AttachToAvatar(attachmentPoint);
+        }
+
+        public void osForceDetachFromAvatar()
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osForceDetachFromAvatar", m_host, "OSSL", m_itemID)) return;
+            InitLSL();
+            ((LSL_Api)m_LSL_Api).DetachFromAvatar();
+        }
+
         public string osSetDynamicTextureDataBlendFace(string dynamicID, string contentType, string data,
                                                        string extraParams,
                                                        bool blend, int disp, int timer, int alpha, int face)
@@ -578,12 +594,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID))
                 return DateTime.Now;
 
-            GridRegion regInfo;
             List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
             // Try to link the region
             if (regions != null && regions.Count > 0)
             {
-                regInfo = regions[0];
+                GridRegion regInfo = regions[0];
 
                 ulong regionHandle = regInfo.RegionHandle;
                 return TeleportAgent(m_host.OwnerID, regionHandle,
@@ -628,12 +643,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID;
             if (UUID.TryParse(agent, out AgentID))
             {
-                GridRegion regInfo;
                 List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
                 // Try to link the region
                 if (regions != null && regions.Count > 0)
                 {
-                    regInfo = regions[0];
+                    GridRegion regInfo = regions[0];
 
                     ulong regionHandle = regInfo.RegionHandle;
                     return TeleportAgent(AgentID, regionHandle,
@@ -709,10 +723,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate(IScenePresence sp)
-                                           {
-                                               if (!sp.IsChildAgent)
-                                                   result.Add(new LSL_String(sp.Name));
-                                           });
+            {
+                if (!sp.IsChildAgent)
+                    result.Add(new LSL_String(sp.Name));
+            });
             return result;
         }
 
@@ -1235,13 +1249,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 }
 
                 // Create a new land data object we can modify
-                UUID uuid;
 
                 // Process the rules, not sure what the impact would be of changing owner or group
                 for (int idx = 0; idx < rules.Length; )
                 {
                     int code = rules.GetLSLIntegerItem(idx++);
                     string arg = rules.GetLSLStringItem(idx++);
+                    UUID uuid;
                     switch (code)
                     {
                         case 0:
@@ -1361,7 +1375,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!String.IsNullOrEmpty(m_ScriptEngine.ScriptEngineName))
             {
                 // parse off the "ScriptEngine."
-                scriptEngineNameIndex = m_ScriptEngine.ScriptEngineName.IndexOf(".", scriptEngineNameIndex);
+                scriptEngineNameIndex = m_ScriptEngine.ScriptEngineName.IndexOf(".", scriptEngineNameIndex, System.StringComparison.Ordinal);
                 scriptEngineNameIndex++; // get past delimiter
 
                 int scriptEngineNameLength = m_ScriptEngine.ScriptEngineName.Length - scriptEngineNameIndex;
@@ -1406,11 +1420,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string currentKey = null;
             Stack objectStack = new Stack(); // objects in JSON can be nested so we need to keep a track of this
             Hashtable jsondata = new Hashtable(); // the hashtable to be returned
-            int i = 0;
             try
             {
                 // iterate through the serialised stream of tokens and store at the right depth in the hashtable
                 // the top level hashtable may contain more nested hashtables within it each containing an objects representation
+                int i = 0;
                 for (i = 0; i < JSON.Length; i++)
                 {
                     // MainConsole.Instance.Debug(""+JSON[i]);
@@ -1635,7 +1649,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             int textLength = notecardData.Length;
             notecardData = "Linden text version 2\n{\nLLEmbeddedItems version 1\n{\ncount 0\n}\nText length "
-                           + textLength.ToString() + "\n" + notecardData + "}\n";
+                           + textLength.ToString(CultureInfo.InvariantCulture) + "\n" + notecardData + "}\n";
 
             asset.Data = Util.UTF8.GetBytes(notecardData);
             asset.FillHash();
@@ -1724,7 +1738,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return "ERROR!";
                 }
             }
-            ;
 
             return NotecardCache.GetLine(assetID, line, 255);
         }
@@ -1784,7 +1797,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return "ERROR!";
                 }
             }
-            ;
 
             for (int count = 0; count < NotecardCache.GetLines(assetID); count++)
             {
@@ -1849,7 +1861,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     return -1;
                 }
             }
-            ;
 
             return NotecardCache.GetLines(assetID);
         }
@@ -2059,12 +2070,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return new LSL_Key();
             IScene scene = m_host.ParentEntity.Scene;
             UUID key = UUID.Zero;
-            GridRegion region;
 
             //If string is a key, use it. Otherwise, try to locate region by name.
-            region = UUID.TryParse(regionName, out key)
-                         ? scene.GridService.GetRegionByUUID(UUID.Zero, key)
-                         : scene.GridService.GetRegionByName(UUID.Zero, regionName);
+            GridRegion region = UUID.TryParse(regionName, out key)
+                                    ? scene.GridService.GetRegionByUUID(UUID.Zero, key)
+                                    : scene.GridService.GetRegionByName(UUID.Zero, regionName);
 
             // If region was found, return the regions map texture key.
             if (region != null)
@@ -2138,21 +2148,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Severe, "osKickAvatar", m_host, "OSSL", m_itemID))
                 return;
             World.ForEachScenePresence(delegate(IScenePresence sp)
-                                           {
-                                               if (!sp.IsChildAgent &&
-                                                   sp.Firstname == FirstName &&
-                                                   sp.Lastname == SurName)
-                                               {
-                                                   // kick client...
-                                                   sp.ControllingClient.Kick(alert);
+            {
+                if (!sp.IsChildAgent &&
+                    sp.Firstname == FirstName &&
+                    sp.Lastname == SurName)
+                {
+                    // kick client...
+                    sp.ControllingClient.Kick(alert);
 
-                                                   // ...and close on our side
-                                                   IEntityTransferModule transferModule =
-                                                       sp.Scene.RequestModuleInterface<IEntityTransferModule>();
-                                                   if (transferModule != null)
-                                                       transferModule.IncomingCloseAgent(sp.Scene, sp.UUID);
-                                               }
-                                           });
+                    // ...and close on our side
+                    IEntityTransferModule transferModule =
+                        sp.Scene.RequestModuleInterface<IEntityTransferModule>();
+                    if (transferModule != null)
+                        transferModule.IncomingCloseAgent(sp.Scene, sp.UUID);
+                }
+            });
         }
 
         public LSL_List osGetPrimitiveParams(LSL_Key prim, LSL_List rules)
@@ -2227,19 +2237,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_List result = new LSL_List();
             World.ForEachScenePresence(delegate(IScenePresence avatar)
-                                           {
-                                               if (avatar != null && avatar.UUID != m_host.OwnerID)
-                                               {
-                                                   if (!avatar.IsChildAgent)
-                                                   {
-                                                       result.Add(new LSL_Key(avatar.UUID.ToString()));
-                                                       result.Add(new LSL_Vector(avatar.AbsolutePosition.X,
-                                                                                 avatar.AbsolutePosition.Y,
-                                                                                 avatar.AbsolutePosition.Z));
-                                                       result.Add(new LSL_String(avatar.Name));
-                                                   }
-                                               }
-                                           });
+            {
+                if (avatar != null && avatar.UUID != m_host.OwnerID)
+                {
+                    if (!avatar.IsChildAgent)
+                    {
+                        result.Add(new LSL_Key(avatar.UUID.ToString()));
+                        result.Add(new LSL_Vector(avatar.AbsolutePosition.X,
+                                                  avatar.AbsolutePosition.Y,
+                                                  avatar.AbsolutePosition.Z));
+                        result.Add(new LSL_String(avatar.Name));
+                    }
+                }
+            });
             return result;
         }
 
@@ -2298,14 +2308,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <summary>
         ///   Convert a unix time to a llGetTimestamp() like string
         /// </summary>
-        /// <param name = "unixTime"></param>
         /// <returns></returns>
         public LSL_String osUnixTimeToTimestamp(long time)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "osUnixTimeToTimestamp", m_host, "OSSL",
                                                    m_itemID)) return new LSL_String();
-            long baseTicks = 621355968000000000;
-            long tickResolution = 10000000;
+            const long baseTicks = 621355968000000000;
+            const long tickResolution = 10000000;
             long epochTicks = (time * tickResolution) + baseTicks;
             DateTime date = new DateTime(epochTicks);
 
@@ -2315,7 +2324,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// <summary>
         /// Get the description from an inventory item
         /// </summary>
-        /// <param name="inventoryName"></param>
         /// <returns>Item description</returns>
         public LSL_String osGetInventoryDesc(string item)
         {
@@ -2328,7 +2336,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     if (inv.Value.Name == item)
                     {
-                        return inv.Value.Description.ToString();
+                        return inv.Value.Description.ToString(CultureInfo.InvariantCulture);
                     }
                 }
             }
