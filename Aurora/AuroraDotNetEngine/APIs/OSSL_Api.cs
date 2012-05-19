@@ -68,7 +68,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal ISceneChildEntity m_host;
         internal UUID m_itemID;
         internal uint m_localID;
-
+        private IScene m_scene;
         public IScene World
         {
             get { return m_host.ParentEntity.Scene; }
@@ -2202,6 +2202,55 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             //Will retun rules for specific part, or an empty list if part == null
             return retVal;
+        }
+
+        /// <summary>
+        /// Save the current appearance of the script owner permanently to the named notecard.
+        /// </summary>
+        /// <param name="notecardName">The name of the notecard to which to save the appearance.</param>
+        /// <returns>The asset ID of the notecard saved.</returns>
+        public LSL_Key osOwnerSaveAppearance(string notecardName)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osOwnerSaveAppearance", m_host, "OSSL", m_itemID))
+                return "";
+
+            return SaveAppearanceToNotecard(m_host.OwnerID, notecardName);
+        }
+
+        public LSL_Key osAgentSaveAppearance(LSL_Key avatarId, string notecardName)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "osAgentSaveAppearance", m_host, "OSSL", m_itemID))
+                return "";
+
+            return SaveAppearanceToNotecard(avatarId, notecardName);
+        }
+
+        protected LSL_Key SaveAppearanceToNotecard(UUID avatarId, string notecardName)
+        {
+            ScenePresence sp = (ScenePresence) World.GetScenePresence(avatarId);
+
+            if (sp == null || sp.IsChildAgent)
+                return new LSL_Key(UUID.Zero.ToString());
+
+            return SaveAppearanceToNotecard(sp, notecardName);
+        }
+
+        private LSL_Key SaveAppearanceToNotecard(ScenePresence rawAvatarId, string notecardName)
+        {
+            UUID avatarId;
+            if (!UUID.TryParse(rawAvatarId.ToString(), out avatarId))
+                return new LSL_Key(UUID.Zero.ToString());
+
+            return SaveAppearanceToNotecard(avatarId, notecardName);
+        }
+
+        protected LSL_Key SaveAppearanceToNotecard(LSL_Key rawAvatarId, string notecardName)
+        {
+            UUID avatarId;
+            if (!UUID.TryParse(rawAvatarId, out avatarId))
+                return new LSL_Key(UUID.Zero.ToString());
+
+            return SaveAppearanceToNotecard(avatarId, notecardName);
         }
 
         /// <summary>
