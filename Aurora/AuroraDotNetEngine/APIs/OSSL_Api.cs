@@ -575,8 +575,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string HomeURI = String.Empty;
             IConfigSource config = m_ScriptEngine.ConfigSource;
 
-            if (config.Configs["LoginService"] != null)
-                HomeURI = config.Configs["LoginService"].GetString("SRV_HomeURI", HomeURI);
+            if (config.Configs["GridInfoService"] != null)
+                HomeURI = MainServer.Instance.ServerURI + "/";
 
             if (String.IsNullOrEmpty(HomeURI))
                 HomeURI = GridUserInfo(InfoType.Home);
@@ -592,8 +592,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             string retval = String.Empty;
             IConfigSource config = m_ScriptEngine.ConfigSource;
 
-            if (config.Configs["GridInfo"] != null)
-                retval = config.Configs["GridInfo"].GetString(key, retval);
+            if (config.Configs["GridInfoService"] != null)
+                retval = config.Configs["gridnick"].GetString(key, retval);
 
             if (String.IsNullOrEmpty(retval))
                 retval = GridUserInfo(InfoType.Custom, key);
