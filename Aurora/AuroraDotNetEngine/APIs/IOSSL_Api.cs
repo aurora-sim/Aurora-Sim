@@ -166,9 +166,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules);
         
-        LSL_Key osOwnerSaveAppearance(string notecardName);
-        LSL_Key osAgentSaveAppearance(key agentId, string notecardName);
-
         key osGetMapTexture();
         key osGetRegionMapTexture(string regionName);
         LSL_List osGetRegionStats();
