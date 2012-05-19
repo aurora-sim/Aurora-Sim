@@ -1599,12 +1599,79 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return "";
         }
 
+        private Hashtable osdToHashtable(OSDMap map)
+        {
+            Hashtable result = new Hashtable();
+            foreach (KeyValuePair<string, OSD> item in map)
+            {
+                result.Add(item.Key, osdToObject(item.Value));
+            }
+            return result;
+        }
+
+        private ArrayList osdToArray(OSDArray list)
+        {
+            ArrayList result = new ArrayList();
+            foreach (OSD item in list)
+            {
+                result.Add(osdToObject(item));
+            }
+            return result;
+        }
+
+        private Object osdToObject(OSD decoded)
+        {
+            if (decoded is OSDString)
+            {
+                return (string)decoded.AsString();
+            }
+            else if (decoded is OSDInteger)
+            {
+                return (int)decoded.AsInteger();
+            }
+            else if (decoded is OSDReal)
+            {
+                return (float)decoded.AsReal();
+            }
+            else if (decoded is OSDBoolean)
+            {
+                return (bool)decoded.AsBoolean();
+            }
+            else if (decoded is OSDMap)
+            {
+                return osdToHashtable((OSDMap)decoded);
+            }
+            else if (decoded is OSDArray)
+            {
+                return osdToArray((OSDArray)decoded);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
+        public Object osParseJSONNew(string JSON)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSONNew", m_host, "OSSL", m_itemID))
+                return new object();
+            try
+            {
+                OSD decoded = OSDParser.DeserializeJson(JSON);
+                return osdToObject(decoded);
+            }
+            catch (Exception e)
+            {
+                OSSLError("osParseJSONNew: Problems decoding JSON string " + JSON + " : " + e.Message);
+                return null;
+            }
+        }
+        
         public Hashtable osParseJSON(string JSON)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSON", m_host, "OSSL", m_itemID))
                 return new Hashtable();
-
-
+            
             // see http://www.json.org/ for more details on JSON
 
             string currentKey = null;

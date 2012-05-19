@@ -137,6 +137,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         string osGetScriptEngineName();
         string osGetSimulatorVersion();
+        Object osParseJSONNew(string JSON);
         Hashtable osParseJSON(string JSON);
 
         void osMessageObject(key objectUUID, string message);
