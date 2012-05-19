@@ -1215,6 +1215,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return sunHour;
         }
 
+        public double osGetSunParam(string param)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetSunParam", m_host, "OSSL", m_itemID))
+                return 0;
+            return GetSunParam(param);
+        }
+
+        private double GetSunParam(string param)
+        {
+            double value = 0.0;
+
+            ISunModule module = World.RequestModuleInterface<ISunModule>();
+            if (module != null)
+            {
+                value = module.GetSunParameter(param);
+            }
+
+            return value;
+        }
+
         public double osSunGetParam(string param)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL", m_itemID))
@@ -1244,7 +1264,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        public void osSetSunParam(string param, double value)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetSunParam", m_host, "OSSL", m_itemID)) return;
+            SetSunParam(param, value);
+        }
 
+        private void SetSunParam(string param, double value)
+        {
+            ISunModule module = World.RequestModuleInterface<ISunModule>();
+            if (module != null)
+            {
+                module.SetSunParameter(param, value);
+            }
+        }
+        
         public string osWindActiveModelPluginName()
         {
             if (

@@ -120,8 +120,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour);
         void osSetEstateSunSettings(bool sunFixed, double sunHour);
         double osGetCurrentSunHour();
-        double osSunGetParam(string param);
-        void osSunSetParam(string param, double value);
+        double osGetSunParam(string param);
+        double osSunGetParam(string param); // Deprecated
+        void osSetSunParam(string param, double value);
+        void osSunSetParam(string param, double value); // Deprecated
 
         // Wind Module Functions
         string osWindActiveModelPluginName();
