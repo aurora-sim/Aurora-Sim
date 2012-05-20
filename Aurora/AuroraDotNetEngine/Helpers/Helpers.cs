@@ -371,7 +371,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public enum ThreatLevel
     {
         /// <summary>
-        /// Function is no threat at all. It doesn't constitute an threat to either users or the system and has no known side effects
+        /// Function is no threat at all. It doesn't constitute a threat to either users or the system and has no known side effects
         /// </summary>
         None = 0,
 
@@ -381,7 +381,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         Nuisance = 1,
 
         /// <summary>
-        /// Extreme levels ob abuse of this function can cause impaired functioning of the region, or very gullible users can be tricked into experiencing harmless effects
+        /// Extreme levels of abuse of this function can cause impaired functioning of the region, or very gullible users can be tricked into experiencing harmless effects
         /// </summary>
         VeryLow = 2,
 
