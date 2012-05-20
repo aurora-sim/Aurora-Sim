@@ -369,56 +369,68 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     //
     // Level description
     //
-    // None     - Function is no threat at all. It doesn't constitute
-    //            an threat to either users or the system and has no
-    //            known side effects
+    // None     - Function is no threat at all. It doesn't constitute an threat to either users or the system and has no known side effects
     //
-    // Nuisance - Abuse of this command can cause a nuisance to the
-    //            region operator, such as log message spew
+    // Nuisance - Abuse of this command can cause a nuisance to the region operator, such as log message spew
     //
-    // VeryLow  - Extreme levels ob abuse of this function can cause
-    //            impaired functioning of the region, or very gullible
-    //            users can be tricked into experiencing harmless effects
+    // VeryLow  - Extreme levels ob abuse of this function can cause impaired functioning of the region, or very gullible users can be tricked into experiencing harmless effects
     //
-    // Low      - Intentional abuse can cause crashes or malfunction
-    //            under certain circumstances, which can easily be rectified,
-    //            or certain users can be tricked into certain situations
-    //            in an avoidable manner.
+    // Low      - Intentional abuse can cause crashes or malfunction under certain circumstances, which can easily be rectified, or certain users can be tricked into certain situations in an avoidable manner.
     //
-    // Moderate - Intentional abuse can cause denial of service and crashes
-    //            with potential of data or state loss, or trusting users
-    //            can be tricked into embarrassing or uncomfortable
-    //            situations.
+    // Moderate - Intentional abuse can cause denial of service and crashes with potential of data or state loss, or trusting users can be tricked into embarrassing or uncomfortable situations.
     //
-    // High     - Casual abuse can cause impaired functionality or temporary
-    //            denial of service conditions. Intentional abuse can easily
-    //            cause crashes with potential data loss, or can be used to
-    //            trick experienced and cautious users into unwanted situations,
-    //            or changes global data permanently and without undo ability
+    // High     - Casual abuse can cause impaired functionality or temporary denial of service conditions. Intentional abuse can easily cause crashes with potential data loss, or can be used to trick experienced and cautious users into unwanted situations, or changes global data permanently and without undo ability
     //            Malicious scripting can allow theft of content
     //
-    // VeryHigh - Even normal use may, depending on the number of instances,
-    //            or frequency of use, result in severe service impairment
-    //            or crash with loss of data, or can be used to cause
-    //            unwanted or harmful effects on users without giving the
-    //            user a means to avoid it.
+    // VeryHigh - Even normal use may, depending on the number of instances, or frequency of use, result in severe service impairment or crash with loss of data, or can be used to cause unwanted or harmful effects on users without giving the user a means to avoid it.
     //
-    // Severe   - Even casual use is a danger to region stability, or function
-    //            allows console or OS command execution, or function allows
-    //            taking money without consent, or allows deletion or
-    //            modification of user data, or allows the compromise of
-    //            sensitive data by design.
+    // Severe   - Even casual use is a danger to region stability, or function allows console or OS command execution, or function allows taking money without consent, or allows deletion or modification of user data, or allows the compromise of sensitive data by design.
 
     public enum ThreatLevel
     {
+        /// <summary>
+        /// 
+        /// </summary>
         None = 0,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Nuisance = 1,
+
+        /// <summary>
+        /// 
+        /// </summary>
         VeryLow = 2,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Low = 3,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Moderate = 4,
+
+        /// <summary>
+        /// 
+        /// </summary>
         High = 5,
+
+        /// <summary>
+        /// 
+        /// </summary>
         VeryHigh = 6,
+
+        /// <summary>
+        /// 
+        /// </summary>
         Severe = 7,
+
+        /// <summary>
+        /// 
+        /// </summary>
         NoAccess = 8
     }
 }
