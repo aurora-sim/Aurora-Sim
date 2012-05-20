@@ -80,6 +80,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         // Animation commands
         void osAvatarPlayAnimation(string avatar, string animation);
         void osAvatarStopAnimation(string avatar, string animation);
+        
+        void osSetTerrainTexture(int level, LSL_Key texture);
+        void osSetTerrainTextureHeight(int corner, double low, double high);
+
+        // Attachment commands
+        /// <summary>
+        /// Attach the object containing this script to the avatar that owns it without checking for PERMISSION_ATTACH
+        /// </summary>
+        /// <param name='attachment'>The attachment point.  For example, ATTACH_CHEST</param>
+        void osForceAttachToAvatar(int attachment);
+        /// <summary>
+        /// Detach the object containing this script from the avatar it is attached to without checking for PERMISSION_ATTACH
+        /// </summary>
+        /// <remarks>Nothing happens if the object is not attached.</remarks>
+        void osForceDetachFromAvatar();
 
         //texture draw functions
         string osMovePen(string drawList, int x, int y);
@@ -180,5 +195,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osCauseHealing(string avatar, double healing);
         void osCauseDamage(string avatar, double damage);
         LSL_String osGetInventoryDesc(string item);
+        LSL_Integer osInviteToGroup(LSL_Key agentId);
+        LSL_Integer osEjectFromGroup(LSL_Key agentId);
     }
 }
