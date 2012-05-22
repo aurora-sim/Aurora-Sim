@@ -300,15 +300,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     cur = "v" + ob;
                 else if (ob.GetType() == typeof(LSL_Types.Quaternion))
                     cur = "q" + ob;
-<<<<<<< HEAD
                 else if (ob.GetType() == typeof(LSL_Types.LSLString))
                     cur = "\"" + ob + "\"";
-                else if (ob.GetType() == typeof(LSL_Types.key))
-=======
-                else if (ob.GetType() == typeof (LSL_Types.LSLString))
-                    cur = "\"" + ob + "\"";
                 else if (ob.GetType() == typeof (LSL_Types.key))
->>>>>>> Merge in a patch by tsudico for "Script State Serialization doesn't escape double quotes", thanks!
                     cur = "k\"" + ob + "\"";
                 else if (o.GetType() == typeof(LSL_Types.list))
                     cur = "{" + ListToString(ob) + "}";
@@ -351,15 +345,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                             cur = "v" + o;
                         else if (o.GetType() == typeof(LSL_Types.Quaternion))
                             cur = "q" + o;
-<<<<<<< HEAD
                         else if (o.GetType() == typeof(LSL_Types.LSLString))
                             cur = "\"" + o + "\"";
-                        else if (o.GetType() == typeof(LSL_Types.key))
-=======
-                        else if (o.GetType() == typeof (LSL_Types.LSLString))
-                            cur = "\"" + o + "\"";
                         else if (o.GetType() == typeof (LSL_Types.key))
->>>>>>> Merge in a patch by tsudico for "Script State Serialization doesn't escape double quotes", thanks!
                             cur = "k\"" + o + "\"";
                         else if (o.GetType() == typeof(LSL_Types.list))
                             cur = "{" + ListToString(o) + "}";

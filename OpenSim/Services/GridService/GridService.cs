@@ -363,7 +363,7 @@ namespace OpenSim.Services.GridService
                     r.RegionLocX < regionInfos.RegionLocX + regionInfos.RegionSizeX) &&
                     (r.RegionLocY >= regionInfos.RegionLocY ||
                     r.RegionLocY < regionInfos.RegionLocY + regionInfos.RegionSizeY) &&
-                    !r.RegionID == regionInfos.RegionID) 
+                    r.RegionID != regionInfos.RegionID) 
                 {
                     //More than one region is here... it is overlapping stuff
                     MainConsole.Instance.WarnFormat (
