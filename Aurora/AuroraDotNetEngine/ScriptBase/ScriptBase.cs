@@ -306,7 +306,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                 else if (ob.GetType() == typeof(LSL_Types.key))
 =======
                 else if (ob.GetType() == typeof (LSL_Types.LSLString))
-                    cur = "\"" + ob.ToString().Replace("\"", "\\\"") + "\"";
+                    cur = "\"" + ob + "\"";
                 else if (ob.GetType() == typeof (LSL_Types.key))
 >>>>>>> Merge in a patch by tsudico for "Script State Serialization doesn't escape double quotes", thanks!
                     cur = "k\"" + ob + "\"";
@@ -357,7 +357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                         else if (o.GetType() == typeof(LSL_Types.key))
 =======
                         else if (o.GetType() == typeof (LSL_Types.LSLString))
-                            cur = "\"" + o.ToString().Replace("\"", "\\\"") + "\"";
+                            cur = "\"" + o + "\"";
                         else if (o.GetType() == typeof (LSL_Types.key))
 >>>>>>> Merge in a patch by tsudico for "Script State Serialization doesn't escape double quotes", thanks!
                             cur = "k\"" + o + "\"";
@@ -392,115 +392,102 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
             return vars;
         }
 
-        public LSL_Types.list ParseValueToList (string inval, int start, out int end)
+        public LSL_Types.list ParseValueToList(string inval, int start, out int end)
         {
-            LSL_Types.list v = new LSL_Types.list ();
+            LSL_Types.list v = new LSL_Types.list();
             end = -1;
             char c;
             string tr = ",}";
-            char[] charany = tr.ToCharArray ();
+            char[] charany = tr.ToCharArray();
             string param = "";
             int totlen = inval.Length;
             int len;
-            DateTime time_limit = DateTime.Now.AddSeconds (5.0); // Hard code timeout for now
 
             while (true)
             {
                 try
                 {
                     if (inval.Length == 0)
-                        v.Add (new LSL_Types.LSLString (""));
+                        v.Add(new LSL_Types.LSLString(""));
                     else
                     {
-                        c = inval [start++];
+                        c = inval[start++];
                         switch (c)
                         {
-                        case 'i':
-                            end = inval.IndexOfAny (charany, start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.LSLInteger (param));
-                            break;
-                        case 'f':
-                            end = inval.IndexOfAny (charany, start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.LSLFloat (param));
-                            break;
-                        case 'v':
-                            end = inval.IndexOf ('>', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.Vector3 (param));
-                            end++;
-                            break;
-                        case 'q':
-                            end = inval.IndexOf ('>', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.Quaternion (param));
-                            end++;
-                            break;
-                        case '"':
-                            end = inval.IndexOf ('"', start);
-                            while (inval[end - 1] == '\\')
-                            {
-                                int slashes = 2;
-                                while (end - slashes > start && inval[end - slashes] == '\\')
-                                    slashes++; // Add one until we don't find a slash
-                                slashes--; // Subtract one since this is past the number of slashes
-                                if (slashes % 2 != 0) // If the slashes are not even then it is an escaped double quote
-                                    end = inval.IndexOf ('"', end + 1);
-                            }
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.LSLString (param));
-                            end++;
-                            break;
-                        case 'k':
-                            start++;
-                            end = inval.IndexOf ('"', start);
-                            if (end > 0)
-                                len = end - start;
-                            else
-                                len = totlen - start;
-                            param = inval.Substring (start, len);
-                            v.Add (new LSL_Types.key (param));
-                            end++;
-                            break;
-                        case '{':
-                            v.Add (ParseValueToList (inval, start, out end));
-                            end++;
-                            break;
+                            case 'i':
+                                end = inval.IndexOfAny(charany, start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLInteger(param));
+                                break;
+                            case 'f':
+                                end = inval.IndexOfAny(charany, start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLFloat(param));
+                                break;
+                            case 'v':
+                                end = inval.IndexOf('>', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.Vector3(param));
+                                end++;
+                                break;
+                            case 'q':
+                                end = inval.IndexOf('>', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.Quaternion(param));
+                                end++;
+                                break;
+                            case '"':
+                                end = inval.IndexOf('"', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.LSLString(param));
+                                end++;
+                                break;
+                            case 'k':
+                                start++;
+                                end = inval.IndexOf('"', start);
+                                if (end > 0)
+                                    len = end - start;
+                                else
+                                    len = totlen - start;
+                                param = inval.Substring(start, len);
+                                v.Add(new LSL_Types.key(param));
+                                end++;
+                                break;
+                            case '{':
+                                v.Add(ParseValueToList(inval, start, out end));
+                                end++;
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
                         }
                     }
                     start = end;
-                    if (start == -1 || start >= totlen || (inval [start] == '}'))
+                    if (start == -1 || start >= totlen || (inval[start] == '}'))
                         break;
-
-                    while ((inval[start] == ',' || inval[start] == ' ') && DateTime.Now.CompareTo(time_limit) < 0)
-                        start++;
-
-                    if (DateTime.Now.CompareTo(time_limit) < 0)
-                        break;
+                    else
+                        while (inval[start] == ',' || inval[start] == ' ')
+                            start++;
                 }
                 catch
                 {
