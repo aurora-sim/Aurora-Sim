@@ -243,6 +243,12 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
+        public bool AttachmentsLoaded 
+        {
+            get; 
+            set;
+        }
+
         public bool SuccessfullyMadeRootAgent
         {
             get;
@@ -1184,6 +1190,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             
             bool update_movementflag = false;
+            bool update_rotation = false;
 
             if (AllowMovement && !SitGround && !Frozen)
             {
@@ -1203,7 +1210,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 int i = 0;
                 
-                bool update_rotation = false;
                 bool DCFlagKeyPressed = false;
                 Vector3 agent_control_v3 = Vector3.Zero;
                 Quaternion q = bodyRotation;
@@ -1222,8 +1228,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (q != m_bodyRot)
                 {
+                    Quaternion delta = Quaternion.Inverse(m_bodyRot) * q;
                     m_bodyRot = q;
-                    update_rotation = true;
+                    if (!(Math.Abs(delta.X) < 1e-5f && Math.Abs(delta.Y) < 1e-5f && Math.Abs(delta.Z) < 1e-5f))
+                        update_rotation = true;
                 }
 
                 if (m_parentID == UUID.Zero)
@@ -1442,8 +1450,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (update_movementflag &&
-                (m_parentID == UUID.Zero) && !SitGround && flags == AgentManager.ControlFlags.NONE)
+            if ((update_movementflag || update_rotation) && (m_parentID == UUID.Zero))
                  Animator.UpdateMovementAnimations(true);
             
 

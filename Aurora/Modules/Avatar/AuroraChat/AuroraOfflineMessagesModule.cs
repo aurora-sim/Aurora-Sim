@@ -171,7 +171,10 @@ namespace Aurora.Modules.Chat
             MainConsole.Instance.DebugFormat("[OFFLINE MESSAGING] Retrieving stored messages for {0}", client.AgentId);
 
             List<GridInstantMessage> msglist = OfflineMessagesConnector.GetOfflineMessages(client.AgentId);
-
+            msglist.Sort(delegate(GridInstantMessage a, GridInstantMessage b)
+            {
+                return a.timestamp.CompareTo(b.timestamp);
+            });
             foreach (GridInstantMessage IM in msglist)
             {
                 // Send through scene event manager so all modules get a chance

@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Tools;
+using Aurora.ScriptEngineParser;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -145,7 +146,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private readonly Dictionary<string, IScriptApi> m_apiFunctions = new Dictionary<string, IScriptApi>();
 
         private readonly Compiler m_compiler;
-        private readonly Random random = new Random();
 
         private bool FuncCntr;
         private bool IsParentEnumerable;
@@ -312,7 +312,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return 13 + i;
         }
 
-        public static string CreateCompilerScript(Compiler compiler, 
+        public static string CreateCompilerScript(Compiler compiler,
             List<string> MethodsToAdd, string ScriptClass)
         {
             string compiledScript = "";
@@ -360,7 +360,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 //               lock (p)
                 {
                     codeTransformer = new LSL2CSCodeTransformer(p.Parse(script));
-//                    p.m_lexer.Reset();
+                    //                    p.m_lexer.Reset();
                 }
             }
             catch (CSToolsException e)
@@ -388,7 +388,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                         e.slInfo.charPosition - 1, emessage);
 
                 m_compiler.AddError(message);
-//                p.m_lexer.Reset();
+                //                p.m_lexer.Reset();
                 ResetCounters();
                 return "Error parsing the script. " + message;
             }
@@ -436,7 +436,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 {
                     for (int b = 0; b < t.kids.Count; b++)
                     {
-                        retVal.Append("(" + ((Declaration) t.kids[b]).Datatype + ")");
+                        retVal.Append("(" + ((Declaration)t.kids[b]).Datatype + ")");
                         retVal.Append("parameters[" + b + "]");
                         if (b != t.kids.Count - 1)
                             retVal.Append(", ");
@@ -463,7 +463,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (AddLine.Contains("float"))
                 {
                     if (line.Contains("e") && !line.Contains("(") && !line.Contains(")"))
-                        // Looking for exponents, but not for functions that have ()
+                    // Looking for exponents, but not for functions that have ()
                     {
                         //Should have this - float *** = 151e9;
                         string[] SplitBeforeE = AddLine.Split('='); // Split at the e so we can look at the syntax
@@ -477,13 +477,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 {
                                     //Needs one then
                                     string[] Split = SplitBeforeESpace[0].Split('e');
-                                        // Split at the e so we can look at the syntax
+                                    // Split at the e so we can look at the syntax
                                     Split[0] += ".";
                                     string TempString = "";
                                     foreach (string tempLine in Split)
                                     {
                                         TempString += tempLine + "e";
-                                    } 
+                                    }
                                     TempString = TempString.Remove(TempString.Length - 1, 1);
                                     SplitBeforeESpace[0] = TempString;
                                     TempString = "";
@@ -533,7 +533,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             string AddInsideLine = parline;
                             //throw out all odd numbered lines as they are inside ""
-                            if (lineNumber%2 != 1)
+                            if (lineNumber % 2 != 1)
                             {
                                 string[] SplitLineA = AddLine.Split('<');
                                 if (SplitLineA.Length > 1)
@@ -1463,120 +1463,120 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // Argument, put IdentArgument and ExpressionArgument before Argument
             if (s is GlobalFunctionDefinition)
             {
-                fullretstr += GenerateGlobalFunctionDefinition((GlobalFunctionDefinition) s);
+                fullretstr += GenerateGlobalFunctionDefinition((GlobalFunctionDefinition)s);
             }
             else if (s is GlobalVariableDeclaration)
             {
-                fullretstr += GenerateGlobalVariableDeclaration((GlobalVariableDeclaration) s);
+                fullretstr += GenerateGlobalVariableDeclaration((GlobalVariableDeclaration)s);
             }
             else if (s is State)
             {
-                fullretstr += GenerateState((State) s);
+                fullretstr += GenerateState((State)s);
             }
             else if (s is CompoundStatement)
             {
-                fullretstr += GenerateCompoundStatement((CompoundStatement) s);
+                fullretstr += GenerateCompoundStatement((CompoundStatement)s);
             }
             else if (s is Declaration)
             {
-                fullretstr += GenerateDeclaration((Declaration) s);
+                fullretstr += GenerateDeclaration((Declaration)s);
             }
             else if (s is Statement)
             {
-                fullretstr += GenerateStatement((Statement) s);
+                fullretstr += GenerateStatement((Statement)s);
             }
             else if (s is ReturnStatement)
             {
-                fullretstr += GenerateReturnStatement((ReturnStatement) s);
+                fullretstr += GenerateReturnStatement((ReturnStatement)s);
             }
             else if (s is JumpLabel)
             {
-                fullretstr += GenerateJumpLabel((JumpLabel) s);
+                fullretstr += GenerateJumpLabel((JumpLabel)s);
             }
             else if (s is JumpStatement)
             {
-                fullretstr += GenerateJumpStatement((JumpStatement) s);
+                fullretstr += GenerateJumpStatement((JumpStatement)s);
             }
             else if (s is StateChange)
             {
-                fullretstr += GenerateStateChange((StateChange) s);
+                fullretstr += GenerateStateChange((StateChange)s);
             }
             else if (s is IfStatement)
             {
-                fullretstr += GenerateIfStatement((IfStatement) s);
+                fullretstr += GenerateIfStatement((IfStatement)s);
             }
             else if (s is WhileStatement)
             {
-                fullretstr += GenerateWhileStatement((WhileStatement) s);
+                fullretstr += GenerateWhileStatement((WhileStatement)s);
             }
             else if (s is DoWhileStatement)
             {
-                fullretstr += GenerateDoWhileStatement((DoWhileStatement) s);
+                fullretstr += GenerateDoWhileStatement((DoWhileStatement)s);
             }
             else if (s is ForLoop)
             {
-                fullretstr += GenerateForLoop((ForLoop) s);
+                fullretstr += GenerateForLoop((ForLoop)s);
             }
             else if (s is ArgumentList)
             {
-                fullretstr += GenerateArgumentList((ArgumentList) s);
+                fullretstr += GenerateArgumentList((ArgumentList)s);
             }
             else if (s is Assignment)
             {
-                fullretstr += GenerateAssignment((Assignment) s);
+                fullretstr += GenerateAssignment((Assignment)s);
             }
             else if (s is BinaryExpression)
             {
-                fullretstr += GenerateBinaryExpression((BinaryExpression) s, false, "");
+                fullretstr += GenerateBinaryExpression((BinaryExpression)s, false, "");
             }
             else if (s is ParenthesisExpression)
             {
-                fullretstr += GenerateParenthesisExpression((ParenthesisExpression) s);
+                fullretstr += GenerateParenthesisExpression((ParenthesisExpression)s);
             }
             else if (s is UnaryExpression)
             {
-                fullretstr += GenerateUnaryExpression((UnaryExpression) s);
+                fullretstr += GenerateUnaryExpression((UnaryExpression)s);
             }
             else if (s is IncrementDecrementExpression)
             {
-                fullretstr += GenerateIncrementDecrementExpression((IncrementDecrementExpression) s);
+                fullretstr += GenerateIncrementDecrementExpression((IncrementDecrementExpression)s);
             }
             else if (s is TypecastExpression)
             {
-                fullretstr += GenerateTypecastExpression((TypecastExpression) s);
+                fullretstr += GenerateTypecastExpression((TypecastExpression)s);
             }
             else if (s is FunctionCall)
             {
-                fullretstr += GenerateFunctionCall((FunctionCall) s, true);
+                fullretstr += GenerateFunctionCall((FunctionCall)s, true);
             }
             else if (s is VectorConstant)
             {
-                fullretstr += GenerateVectorConstant((VectorConstant) s);
+                fullretstr += GenerateVectorConstant((VectorConstant)s);
             }
             else if (s is RotationConstant)
             {
-                fullretstr += GenerateRotationConstant((RotationConstant) s);
+                fullretstr += GenerateRotationConstant((RotationConstant)s);
             }
             else if (s is ListConstant)
             {
-                fullretstr += GenerateListConstant((ListConstant) s);
+                fullretstr += GenerateListConstant((ListConstant)s);
             }
             else if (s is Constant)
             {
-                fullretstr += GenerateConstant((Constant) s);
+                fullretstr += GenerateConstant((Constant)s);
             }
             else if (s is IdentDotExpression)
             {
                 fullretstr += Generate(
-                    CheckName(((IdentDotExpression) s).Name) + "." + ((IdentDotExpression) s).Member, s);
+                    CheckName(((IdentDotExpression)s).Name) + "." + ((IdentDotExpression)s).Member, s);
             }
             else if (s is IdentExpression)
             {
-                fullretstr += Generate(CheckName(((IdentExpression) s).Name), s);
+                fullretstr += Generate(CheckName(((IdentExpression)s).Name), s);
             }
             else if (s is IDENT)
             {
-                fullretstr += Generate(CheckName(((TOKEN) s).yytext), s);
+                fullretstr += Generate(CheckName(((TOKEN)s).yytext), s);
             }
             else
             {
@@ -1670,7 +1670,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     checkForMultipleAssignments(identifiers, a);
 
                     IsaGlobalVar = true;
-                    string VarName = GenerateNode((SYMBOL) a.kids.Pop());
+                    string VarName = GenerateNode((SYMBOL)a.kids.Pop());
                     innerretstr += VarName;
                     IsaGlobalVar = false;
 
@@ -1777,7 +1777,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             foreach (SYMBOL kid in s.kids)
                 if (kid is StateEvent)
-                    retstr += GenerateStateEvent((StateEvent) kid, s.Name);
+                    retstr += GenerateStateEvent((StateEvent)kid, s.Name);
 
             return retstr;
         }
@@ -1815,8 +1815,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             List<ArgumentDeclarationList> args = new List<ArgumentDeclarationList>();
             foreach (SYMBOL kid in argumentDeclarationListKids)
             {
-                args.Add(((ArgumentDeclarationList) kid));
-                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList) kid));
+                args.Add(((ArgumentDeclarationList)kid));
+                retstr.Append(GenerateArgumentDeclarationList((ArgumentDeclarationList)kid));
             }
 
             m_allMethods.Add(String.Format("{0}_event_{1}", parentStateName, se.Name), args);
@@ -1847,7 +1847,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             foreach (Declaration d in adl.kids)
             {
                 retstr += GenerateDeclaration(d);
-//                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+                //                retstr += Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
                 if (0 < comma--)
                     retstr += Generate(", ");
             }
@@ -1887,13 +1887,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             // opening brace
             retstr += GenerateIndentedLine("{");
-//            if (IsParentEnumerable)
-//                retstr += GenerateLine("if (CheckSlice()) yield return null;");
+            //            if (IsParentEnumerable)
+            //                retstr += GenerateLine("if (CheckSlice()) yield return null;");
             m_braceCount++;
 
             foreach (SYMBOL kid in cs.kids)
                 if (kid is Statement && kid.kids.Top is BinaryExpression &&
-                    ((BinaryExpression) kid.kids.Top).ExpressionSymbol == "==")
+                    ((BinaryExpression)kid.kids.Top).ExpressionSymbol == "==")
                     continue;
                 else
                     retstr += GenerateNode(kid);
@@ -1913,7 +1913,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         /// <returns>String containing C# code for Declaration d.</returns>
         private string GenerateDeclaration(Declaration d)
         {
-//        return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
+            //        return Generate(String.Format("{0} {1}", d.Datatype, CheckName(d.Id)), d);
 
             GlobalVar var;
             if (IsaGlobalVar)
@@ -1982,7 +1982,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             Assignment a = kid as Assignment;
                             List<string> identifiers = new List<string>();
                             checkForMultipleAssignments(identifiers, a);
-                            retstr += GenerateNode((SYMBOL) a.kids.Pop());
+                            retstr += GenerateNode((SYMBOL)a.kids.Pop());
                             retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
                             foreach (SYMBOL akid in a.kids)
                             {
@@ -1993,7 +1993,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     {
                                         // special case handling for logical and/or, see Mantis 3174
                                         retstr += "((bool)(";
-                                        retstr += GenerateNode((SYMBOL) be.kids.Pop());
+                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
                                         retstr += "))";
                                         retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)),
                                                            be);
@@ -2004,7 +2004,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     }
                                     else
                                     {
-                                        retstr += GenerateNode((SYMBOL) be.kids.Pop());
+                                        retstr += GenerateNode((SYMBOL)be.kids.Pop());
                                         retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
                                         foreach (SYMBOL kidb in be.kids)
                                         {
@@ -2075,7 +2075,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return retstr; //If it is a list, and we are in an addition expression, we drop the assignment
             }
 
-            retstr += GenerateNode((SYMBOL) a.kids.Pop());
+            retstr += GenerateNode((SYMBOL)a.kids.Pop());
             retstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
             foreach (SYMBOL kid in a.kids)
                 retstr += GenerateNode(kid);
@@ -2108,26 +2108,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             if (s is Assignment)
             {
-                Assignment a = (Assignment) s;
+                Assignment a = (Assignment)s;
                 string newident = null;
 
                 if (a.kids[0] is Declaration)
                 {
-                    newident = ((Declaration) a.kids[0]).Id;
+                    newident = ((Declaration)a.kids[0]).Id;
                 }
                 else if (a.kids[0] is IDENT)
                 {
-                    newident = ((IDENT) a.kids[0]).yytext;
+                    newident = ((IDENT)a.kids[0]).yytext;
                 }
                 else if (a.kids[0] is IdentDotExpression)
                 {
-                    newident = ((IdentDotExpression) a.kids[0]).Name; // +"." + ((IdentDotExpression)a.kids[0]).Member;
+                    newident = ((IdentDotExpression)a.kids[0]).Name; // +"." + ((IdentDotExpression)a.kids[0]).Member;
                 }
                 else
                 {
                     AddWarning(String.Format(
                         "Multiple assignments checker internal error '{0}' at line {1} column {2}.", a.kids[0].GetType(),
-                        ((SYMBOL) a.kids[0]).Line - 1, ((SYMBOL) a.kids[0]).Position));
+                        ((SYMBOL)a.kids[0]).Line - 1, ((SYMBOL)a.kids[0]).Position));
                 }
 
                 if (identifiers.Contains(newident))
@@ -2135,7 +2135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     AddWarning(
                         String.Format(
                             "Multiple assignments to '{0}' at line {1} column {2}; results may differ between LSL and OSSL.",
-                            newident, ((SYMBOL) a.kids[0]).Line - 1, ((SYMBOL) a.kids[0]).Position));
+                            newident, ((SYMBOL)a.kids[0]).Line - 1, ((SYMBOL)a.kids[0]).Position));
                 }
                 identifiers.Add(newident);
             }
@@ -2143,7 +2143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             int index;
             for (index = 0; index < s.kids.Count; index++)
             {
-                checkForMultipleAssignments(identifiers, (SYMBOL) s.kids[index]);
+                checkForMultipleAssignments(identifiers, (SYMBOL)s.kids[index]);
             }
         }
 
@@ -2257,7 +2257,7 @@ default
             bool DoBrace = false;
             bool marc = FuncCallsMarc();
             tmpstr += GenerateIndented("if (", ifs);
-            tmpstr += GenerateNode((SYMBOL) ifs.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)ifs.kids.Pop());
             tmpstr += GenerateLine(")");
 
             retstr += DumpFunc(marc) + tmpstr;
@@ -2271,7 +2271,7 @@ default
             if (DoBrace)
                 retstr += GenerateLine("{");
 
-            retstr += GenerateNode((SYMBOL) ifs.kids.Pop());
+            retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
             // if (indentHere) m_braceCount--;
             if (DoBrace)
                 retstr += GenerateLine("}");
@@ -2287,7 +2287,7 @@ default
                 if (DoBrace)
                     retstr += GenerateLine("{");
 
-                retstr += GenerateNode((SYMBOL) ifs.kids.Pop());
+                retstr += GenerateNode((SYMBOL)ifs.kids.Pop());
 
                 if (DoBrace)
                     retstr += GenerateLine("}");
@@ -2333,7 +2333,7 @@ default
             bool marc = FuncCallsMarc();
 
             tmpstr += GenerateIndented("while (", ws);
-            tmpstr += GenerateNode((SYMBOL) ws.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)ws.kids.Pop());
             tmpstr += GenerateLine(")");
 
             //Forces all functions to use MoveNext() instead of .Current, as it never changes otherwise, and the loop runs infinitely
@@ -2351,7 +2351,7 @@ default
             // otherwise.
             bool indentHere = ws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr += GenerateNode((SYMBOL) ws.kids.Pop());
+            retstr += GenerateNode((SYMBOL)ws.kids.Pop());
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
@@ -2381,7 +2381,7 @@ default
             // otherwise.
             bool indentHere = dws.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            tmpstr += GenerateNode((SYMBOL) dws.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
@@ -2394,7 +2394,7 @@ default
             m_isInEnumeratedDeclaration = true;
 
             tmpstr += GenerateIndented("while (", dws);
-            tmpstr += GenerateNode((SYMBOL) dws.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)dws.kids.Pop());
             tmpstr += GenerateLine(");");
 
             m_isInEnumeratedDeclaration = false; //End above
@@ -2422,7 +2422,7 @@ default
             // the child will be null and we only print the semicolon.
             // for (x = 0; x < 10; x++)
             //      ^^^^^
-            ForLoopStatement s = (ForLoopStatement) fl.kids.Pop();
+            ForLoopStatement s = (ForLoopStatement)fl.kids.Pop();
             if (null != s)
             {
                 tmpstr += GenerateForLoopStatement(s);
@@ -2430,11 +2430,11 @@ default
             tmpstr += Generate("; ");
             // for (x = 0; x < 10; x++)
             //             ^^^^^^
-            tmpstr += GenerateNode((SYMBOL) fl.kids.Pop());
+            tmpstr += GenerateNode((SYMBOL)fl.kids.Pop());
             tmpstr += Generate("; ");
             // for (x = 0; x < 10; x++)
             //                     ^^^
-            tmpstr += GenerateForLoopStatement((ForLoopStatement) fl.kids.Pop());
+            tmpstr += GenerateForLoopStatement((ForLoopStatement)fl.kids.Pop());
             tmpstr += GenerateLine(")");
 
             retstr += DumpFunc(marc) + tmpstr;
@@ -2449,7 +2449,7 @@ default
             // otherwise.
             bool indentHere = fl.kids.Top is Statement;
             if (indentHere) m_braceCount++;
-            retstr += GenerateNode((SYMBOL) fl.kids.Pop());
+            retstr += GenerateNode((SYMBOL)fl.kids.Pop());
             if (indentHere) m_braceCount--;
 
             if (IsParentEnumerable)
@@ -2479,7 +2479,7 @@ default
 
             for (int i = 0; i < fls.kids.Count; i++)
             {
-                SYMBOL s = (SYMBOL) fls.kids[i];
+                SYMBOL s = (SYMBOL)fls.kids[i];
 
                 // Statements surrounded by parentheses in for loops
                 //
@@ -2495,7 +2495,7 @@ default
                 // script but with no debug or warnings at all!  Therefore, we won't deal with this yet (which looks
                 // like it would be considerably more complicated to handle).
                 while (s is ParenthesisExpression)
-                    s = (SYMBOL) s.kids.Pop();
+                    s = (SYMBOL)s.kids.Pop();
 
                 retstr += GenerateNode(s);
                 if (0 < comma--)
@@ -2522,7 +2522,7 @@ default
                 retstr += "((LSL_Types.LSLInteger)( " +
                           (isUnaryExpression ? addition : "") +
                           "(bool)(";
-                retstr += GenerateNode((SYMBOL) be.kids.Pop());
+                retstr += GenerateNode((SYMBOL)be.kids.Pop());
                 retstr += "))";
                 retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
                 retstr += "((LSL_Types.LSLInteger)((bool)(";
@@ -2533,7 +2533,7 @@ default
             else if (be.ExpressionSymbol.Equals("!=") || be.ExpressionSymbol.Equals("=="))
             {
                 retstr += "((LSL_Types.LSLInteger)(";
-                retstr += GenerateNode((SYMBOL) be.kids.Pop());
+                retstr += GenerateNode((SYMBOL)be.kids.Pop());
                 retstr += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
                 foreach (SYMBOL kid in be.kids)
                     retstr += GenerateNode(kid);
@@ -2552,7 +2552,7 @@ default
                     weSetTheAdditionExpression = true;
                     isAdditionExpression = true;
                 }
-                retstr += GenerateNode((SYMBOL) be.kids.Pop());
+                retstr += GenerateNode((SYMBOL)be.kids.Pop());
                 if (weSetTheAdditionExpression)
                     isAdditionExpression = false;
                 if (!(retstr == "()" || retstr == ""))
@@ -2577,12 +2577,12 @@ default
             string retstr = "";
 
             retstr += Generate(ue.UnarySymbol, ue);
-            SYMBOL kid = (SYMBOL) ue.kids.Pop();
+            SYMBOL kid = (SYMBOL)ue.kids.Pop();
             if (kid is BinaryExpression)
             {
                 string tempretstr = retstr;
                 retstr = "";
-                retstr += GenerateBinaryExpression((BinaryExpression) kid, true, tempretstr);
+                retstr += GenerateBinaryExpression((BinaryExpression)kid, true, tempretstr);
             }
             else
                 retstr += GenerateNode(kid);
@@ -2618,7 +2618,7 @@ default
 
             if (0 < ide.kids.Count)
             {
-                IdentDotExpression dot = (IdentDotExpression) ide.kids.Top;
+                IdentDotExpression dot = (IdentDotExpression)ide.kids.Top;
                 retstr +=
                     Generate(
                         String.Format("{0}",
@@ -2648,7 +2648,7 @@ default
 
             // we wrap all typecasted statements in parentheses
             retstr += Generate(String.Format("({0}) (", te.TypecastType), te);
-            retstr += GenerateNode((SYMBOL) te.kids.Pop());
+            retstr += GenerateNode((SYMBOL)te.kids.Pop());
             retstr += Generate(")");
 
             return retstr;
@@ -2689,7 +2689,7 @@ default
                             {
                                 // special case handling for logical and/or, see Mantis 3174
                                 tempString += "((bool)(";
-                                tempString += GenerateNode((SYMBOL) be.kids.Pop());
+                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
                                 tempString += "))";
                                 tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol.Substring(0, 1)), be);
                                 tempString += "((bool)(";
@@ -2699,7 +2699,7 @@ default
                             }
                             else
                             {
-                                tempString += GenerateNode((SYMBOL) be.kids.Pop());
+                                tempString += GenerateNode((SYMBOL)be.kids.Pop());
                                 tempString += Generate(String.Format(" {0} ", be.ExpressionSymbol), be);
                                 foreach (SYMBOL kidb in be.kids)
                                 {
@@ -2710,8 +2710,8 @@ default
                                     else if (kidb is TypecastExpression)
                                     {
                                         tempString +=
-                                            Generate(String.Format("({0}) (", ((TypecastExpression) kidb).TypecastType));
-                                        tempString += GenerateNode((SYMBOL) kidb.kids.Pop());
+                                            Generate(String.Format("({0}) (", ((TypecastExpression)kidb).TypecastType));
+                                        tempString += GenerateNode((SYMBOL)kidb.kids.Pop());
                                         tempString += Generate(")");
                                     }
 
@@ -2722,8 +2722,8 @@ default
                         }
                         else if (s is TypecastExpression)
                         {
-                            tempString += Generate(String.Format("({0}) (", ((TypecastExpression) s).TypecastType));
-                            tempString += GenerateNode((SYMBOL) s.kids.Pop());
+                            tempString += Generate(String.Format("({0}) (", ((TypecastExpression)s).TypecastType));
+                            tempString += GenerateNode((SYMBOL)s.kids.Pop());
                             tempString += Generate(")");
                         }
                         else
@@ -2747,10 +2747,10 @@ default
             string rettype = "void";
             if (LocalMethods.TryGetValue(fc.Id, out rettype))
                 isEnumerable = true;
-/* suspended.. API fails with IEnums
-            else if (IenFunctions.TryGetValue(fc.Id, out rettype))
-                isEnumerable = true;
-*/
+            /* suspended.. API fails with IEnums
+                        else if (IenFunctions.TryGetValue(fc.Id, out rettype))
+                            isEnumerable = true;
+            */
             else if (DTFunctions.Contains(fc.Id))
             {
                 DTFunction = true;
@@ -2787,7 +2787,7 @@ default
                         {
                             if (kid is ArgumentDeclarationList)
                             {
-                                ArgumentDeclarationList ADL = (ArgumentDeclarationList) kid;
+                                ArgumentDeclarationList ADL = (ArgumentDeclarationList)kid;
                                 typeDefs += (GenerateArgumentDeclarationList(ADL)) + ",";
                             }
                         }
@@ -2919,11 +2919,11 @@ default
             string retstr = "";
 
             retstr += Generate(String.Format("new {0}(", vc.Type), vc);
-            retstr += GenerateNode((SYMBOL) vc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
             retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL) vc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
             retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL) vc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)vc.kids.Pop());
             retstr += Generate(")");
 
             return retstr;
@@ -2939,13 +2939,13 @@ default
             string retstr = "";
 
             retstr += Generate(String.Format("new {0}(", rc.Type), rc);
-            retstr += GenerateNode((SYMBOL) rc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
             retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL) rc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
             retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL) rc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
             retstr += Generate(", ");
-            retstr += GenerateNode((SYMBOL) rc.kids.Pop());
+            retstr += GenerateNode((SYMBOL)rc.kids.Pop());
             retstr += Generate(")");
 
             return retstr;

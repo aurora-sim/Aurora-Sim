@@ -529,22 +529,63 @@ namespace Aurora.Modules.Groups
                 m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
                 m_groupsMessagingModule.SendMessageToGroup(im, groupID);
             }
-        }
+        }   
 
         public void EjectGroupMemberRequest(IClientAPI remoteClient, UUID groupID, UUID ejecteeID)
         {
+            EjectGroupMember(remoteClient, GetRequestingAgentID(remoteClient), groupID, ejecteeID);
+        }
+        
+        public void EjectGroupMember(IClientAPI remoteClient, UUID agentID, UUID groupID, UUID ejecteeID)
+        {   
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
-
-            if (!m_groupData.RemoveAgentFromGroup(GetRequestingAgentID(remoteClient), ejecteeID, groupID))
+            if (!m_groupData.RemoveAgentFromGroup(agentID, ejecteeID, groupID))
                 return;
 
             m_cachedGroupMemberships.Remove(ejecteeID);
-            remoteClient.SendEjectGroupMemberReply(GetRequestingAgentID(remoteClient), groupID, true);
+            string agentName;
+            RegionInfo regionInfo;
 
-            GroupRecord groupInfo = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, null);
+            // remoteClient provided or just agentID?
+            if (remoteClient != null)
+            {
+                agentName = remoteClient.Name;
+                regionInfo = remoteClient.Scene.RegionInfo;
+                remoteClient.SendEjectGroupMemberReply(agentID, groupID, true);
+            }
+            else
+            {
+                IClientAPI client = GetActiveClient(agentID);
+                if (client != null)
+                {
+                    agentName = client.Name;
+                    regionInfo = client.Scene.RegionInfo;
+                    client.SendEjectGroupMemberReply(agentID, groupID, true);
+                }
+ 
+                else
+                {
+ 
+                    regionInfo = m_sceneList[0].RegionInfo;
+                    UserAccount acc = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, agentID);
 
-            UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(
-                remoteClient.Scene.RegionInfo.ScopeID, ejecteeID);
+                    if (acc != null)
+                    {
+ 
+                        agentName = acc.FirstName + " " + acc.LastName;
+                    }
+                    else
+                    {
+                        agentName = "Unknown member";
+                    }
+ 
+                }
+ 
+            }
+ 
+            GroupRecord groupInfo = m_groupData.GetGroupRecord(agentID, groupID, null);
+
+            UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, ejecteeID);
 
             if ((groupInfo == null) || (account == null))
                 return;
@@ -553,13 +594,13 @@ namespace Aurora.Modules.Groups
             GridInstantMessage msg = new GridInstantMessage
                                          {
                                              imSessionID = UUID.Zero,
-                                             fromAgentID = GetRequestingAgentID(remoteClient),
+                                             fromAgentID = agentID, 
                                              toAgentID = ejecteeID,
                                              timestamp = 0,
-                                             fromAgentName = remoteClient.Name,
+                                             fromAgentName = agentName,
                                              message =
                                                  string.Format("You have been ejected from '{1}' by {0}.",
-                                                               remoteClient.Name,
+                                                               agentName,
                                                                groupInfo.GroupName),
                                              dialog = 210,
                                              fromGroup = false,
@@ -586,31 +627,6 @@ namespace Aurora.Modules.Groups
             // Interop, received special 210 code for ejecting a group member
             // this only works within the comms servers domain, and won't work hypergrid
 
-            msg = new GridInstantMessage
-                      {
-                          imSessionID = UUID.Zero,
-                          fromAgentID = UUID.Zero,
-                          toAgentID = remoteClient.AgentId,
-                          timestamp = 0,
-                          fromAgentName = remoteClient.Name
-                      };
-            if (account != null)
-                msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name,
-                                            groupInfo.GroupName, account.FirstName + " " + account.LastName);
-            else
-            {
-                msg.message = string.Format("{2} has been ejected from '{1}' by {0}.", remoteClient.Name,
-                                            groupInfo.GroupName, "Unknown member");
-            }
-            msg.dialog = (byte) InstantMessageDialog.MessageFromAgent;
-            msg.fromGroup = false;
-            msg.offline = 0;
-            msg.ParentEstateID = 0;
-            msg.Position = Vector3.Zero;
-            msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
-            msg.binaryBucket = new byte[0];
-            OutgoingInstantMessage(msg, GetRequestingAgentID(remoteClient));
-
             m_cachedGroupTitles[ejecteeID] = null;
             UpdateAllClientsWithGroupInfo(ejecteeID, "");
 
@@ -619,17 +635,17 @@ namespace Aurora.Modules.Groups
                 // SL sends out notifcations to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
                                             {
-                                                fromAgentID = groupID,
+                                                fromAgentID = agentID,
                                                 dialog = (byte) InstantMessageDialog.SessionSend,
                                                 binaryBucket = new byte[0],
-                                                fromAgentName = "System",
+                                                fromAgentName = agentName,
                                                 fromGroup = true,
                                                 imSessionID = groupID,
-                                                message = remoteClient.Name + " has left the group.",
+                                                message = account.Name + " has been ejected from the group by " + agentName + ".",
                                                 offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
                                                 timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                toAgentID = UUID.Zero
+                                                toAgentID = agentID
                                             };
 
                 m_groupsMessagingModule.EnsureGroupChatIsStarted(groupID);
@@ -639,12 +655,51 @@ namespace Aurora.Modules.Groups
 
         public void InviteGroupRequest(IClientAPI remoteClient, UUID groupID, UUID invitedAgentID, UUID roleID)
         {
+            
+            InviteGroup(remoteClient, GetRequestingAgentID(remoteClient), groupID, invitedAgentID, roleID);
+        }
+        
+        public void InviteGroup(IClientAPI remoteClient, UUID agentID, UUID groupID, UUID invitedAgentID, UUID roleID)
+        {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
-
+            
+            string agentName;
+            RegionInfo regionInfo;
+            // remoteClient provided or just agentID?
+            if (remoteClient != null)
+            {
+                agentName = remoteClient.Name;
+                regionInfo = remoteClient.Scene.RegionInfo;
+            }
+            else
+            {
+                IClientAPI client = GetActiveClient(agentID);
+                if (client != null)
+                {
+                    agentName = client.Name;
+                    regionInfo = client.Scene.RegionInfo;
+                }
+ 
+                else
+                {
+                    regionInfo = m_sceneList[0].RegionInfo;
+                    UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, agentID);
+                    if (account != null)
+                    {
+                        agentName = account.FirstName + " " + account.LastName;
+                    }
+ 
+                    else
+                    {
+                        agentName = "Unknown member";
+                    }
+                }
+            }
+ 
             UUID InviteID = UUID.Random();
 
-            m_groupData.AddAgentToGroupInvite(GetRequestingAgentID(remoteClient), InviteID, groupID, roleID,
-                                              invitedAgentID, remoteClient.Name);
+            m_groupData.AddAgentToGroupInvite(agentID, InviteID, groupID, roleID,
+                                              invitedAgentID, agentName);
 
             // Check to see if the invite went through, if it did not then it's possible
             // the remoteClient did not validate or did not have permission to invite.
@@ -659,10 +714,10 @@ namespace Aurora.Modules.Groups
                     GridInstantMessage msg = new GridInstantMessage
                                                  {
                                                      imSessionID = inviteUUID,
-                                                     fromAgentID = groupID,
+                                                     fromAgentID = agentID,
                                                      toAgentID = invitedAgentID,
                                                      timestamp = 0,
-                                                     fromAgentName = remoteClient.Name
+                                                     fromAgentName = agentName
                                                  };
 
 
@@ -675,7 +730,7 @@ namespace Aurora.Modules.Groups
                         MemberShipCost = ". To join, you must pay " + groupInfo.MembershipFee.ToString() + ".";
                     }
                     msg.message = string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
-                                                remoteClient.Name);
+                                                agentName);
                     msg.dialog = (byte) InstantMessageDialog.GroupInvitation;
                     msg.fromGroup = true;
                     msg.offline = 0;
@@ -684,7 +739,7 @@ namespace Aurora.Modules.Groups
                     msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
                     msg.binaryBucket = new byte[20];
 
-                    OutgoingInstantMessage(msg, invitedAgentID);
+                    OutgoingInstantMessage(msg, agentID);
                 }
             }
         }

@@ -105,6 +105,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Vector llGetAccel();
         LSL_Integer llGetAgentInfo(string id);
         LSL_String llGetAgentLanguage(string id);
+        LSL_List llGetAgentList(LSL_Integer scope, LSL_List options);
         LSL_Vector llGetAgentSize(string id);
         LSL_Float llGetAlpha(int face);
         LSL_Float llGetAndResetTime();
@@ -131,6 +132,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Integer llGetInventoryNumber(int type);
         LSL_Integer llGetInventoryPermMask(string item, int mask);
         LSL_Integer llGetInventoryType(string name);
+        LSL_Key llGenerateKey();
         LSL_Key llGetKey();
         LSL_Key llGetLandOwnerAt(LSL_Vector pos);
         LSL_Key llGetLinkKey(int linknum);

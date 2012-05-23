@@ -65,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public CompilerResults Compile(CompilerParameters parameters, bool isFile, string Script)
         {
-            string[] lines = Script.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = Script.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             List<string> libraries = new List<string>();
             foreach (string s in lines)
                 if (s.StartsWith("//@DEPENDS:"))
@@ -126,7 +126,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         public void FinishCompile(IScriptModulePlugin plugin, ScriptData data, IScript Script)
         {
-            MRMBase mmb = (MRMBase) Script;
+            MRMBase mmb = (MRMBase)Script;
             if (mmb == null)
                 return;
 

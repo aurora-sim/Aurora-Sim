@@ -587,6 +587,10 @@ namespace Aurora.Modules.Inventory
                     {
                         data = Encoding.ASCII.GetBytes(" ");
                     }
+                    if (invType == (sbyte)InventoryType.Gesture)
+                    {
+                        data = /*Default empty gesture*/ new byte[13] { 50, 10, 50, 53, 53, 10, 48, 10, 10, 10, 48, 10, 0 };
+                    }
 
                     AssetBase asset = new AssetBase(UUID.Random(), name, (AssetType)assetType,
                                                     remoteClient.AgentId) {Data = data, Description = description};

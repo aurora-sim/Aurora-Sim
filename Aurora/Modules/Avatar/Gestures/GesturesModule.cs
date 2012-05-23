@@ -108,7 +108,7 @@ namespace Aurora.Modules.Gestures
             item = invService.GetItem(item);
             if (item != null)
             {
-                item.Flags &= ~(uint) 1;
+                item.Flags |= (uint)1;
                 invService.UpdateItem(item);
             }
             else
@@ -124,7 +124,7 @@ namespace Aurora.Modules.Gestures
             item = invService.GetItem(item);
             if (item != null)
             {
-                item.Flags = 0;
+                item.Flags &= ~(uint)1;
                 invService.UpdateItem(item);
             }
             else

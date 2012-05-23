@@ -225,7 +225,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
                 if (transferModule == null) continue;
-                transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo));
+                transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo), true);
                 return true;
             }
             return false;

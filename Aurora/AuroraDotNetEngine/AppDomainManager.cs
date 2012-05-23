@@ -97,7 +97,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     lock (m_appDomainLock)
                     {
-                        currentAD = new AppDomainStructure {CurrentAppDomain = AppDomain.CurrentDomain};
+                        currentAD = new AppDomainStructure { CurrentAppDomain = AppDomain.CurrentDomain };
                         AppDomain.CurrentDomain.AssemblyResolve += m_scriptEngine.AssemblyResolver.OnAssemblyResolve;
                         return currentAD;
                     }
@@ -110,7 +110,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD == null)
                     {
                         // Create a new current AppDomain
-                        currentAD = new AppDomainStructure {CurrentAppDomain = PrepareNewAppDomain()};
+                        currentAD = new AppDomainStructure { CurrentAppDomain = PrepareNewAppDomain() };
                     }
                 }
                 else
@@ -130,7 +130,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD == null)
                     {
                         // Create a new current AppDomain
-                        currentAD = new AppDomainStructure {CurrentAppDomain = PrepareNewAppDomain()};
+                        currentAD = new AppDomainStructure { CurrentAppDomain = PrepareNewAppDomain() };
                     }
                 }
             }
@@ -330,7 +330,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     if (currentAD.ScriptsLoaded <= currentAD.ScriptsWaitingUnload)
                     {
                         if (currentAD.CurrentAppDomain.Id != AppDomain.CurrentDomain.Id)
-                            //Don't kill the current app domain!
+                        //Don't kill the current app domain!
                         {
                             try
                             {

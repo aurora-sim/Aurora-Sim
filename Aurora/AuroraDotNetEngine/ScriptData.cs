@@ -218,8 +218,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Remove from internal structure
             ScriptEngine.ScriptProtection.RemoveScript(this);
-//            if (!Silent) //Don't remove on a recompile because we'll make it under a different assembly
-//                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
+            //            if (!Silent) //Don't remove on a recompile because we'll make it under a different assembly
+            //                ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
 
             //Remove any errors that might be sitting around
             m_ScriptEngine.ScriptErrorReporter.RemoveError(ItemID);
@@ -241,7 +241,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_ScriptEngine.RemoveScriptFromPlugins(Part.UUID, ItemID);
 
                 //Release the script and destroy it
-                ILease lease = (ILease) RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
+                ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);
                 if (lease != null)
                     lease.Unregister(Script.Sponsor);
 
@@ -324,7 +324,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.RemoveScriptFromPlugins(Part.UUID, ItemID);
             //Remove other items from the queue.
             m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue(this, false);
-                // let current InExec finish or lsl reset fails
+            // let current InExec finish or lsl reset fails
 
             //Release controls over people.
             ReleaseControls();
@@ -348,7 +348,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             m_ScriptEngine.StateSave.SaveStateTo(this, true);
             m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew(this, false); // accept new events
             m_ScriptEngine.AddToScriptQueue(this, "state_entry", new DetectParams[0], EventPriority.FirstStart,
-                                            new object[] {});
+                                            new object[] { });
 
             MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Reset Script " + ItemID);
         }
@@ -364,7 +364,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //Fire state_exist after we switch over all the removing of events so that it gets the new versionID
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_exit",
                                                                   new DetectParams[0], EventPriority.FirstStart,
-                                                                  new object[0] {});
+                                                                  new object[0] { });
 
                 State = state;
 
@@ -380,7 +380,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_entry",
                                                                   new DetectParams[0], EventPriority.FirstStart,
-                                                                  new object[0] {});
+                                                                  new object[0] { });
                 //Save a state save after a state change, its a large change in the script's function
                 m_ScriptEngine.StateSave.SaveStateTo(this, true);
             }
@@ -469,8 +469,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 //Post the event for the prim that rezzed us
                 m_ScriptEngine.AddToObjectQueue(RezzedFrom, "object_rez", new DetectParams[0],
-                                                new object[]
-                                                    {(LSL_Types.LSLString) Part.ParentEntity.RootChild.UUID.ToString()});
+                                                new object[] { (LSL_Types.LSLString)Part.ParentEntity.RootChild.UUID.ToString() });
                 RezzedFrom = UUID.Zero;
             }
             if (StartedFromSavedState)
@@ -742,7 +741,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             //If its a reupload, an avatar is waiting for the script errors
             if (reupload)
-                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new[] {"SUCCESSFULL"}));
+                m_ScriptEngine.ScriptErrorReporter.AddError(ItemID, new ArrayList(new[] { "SUCCESSFULL" }));
 
             if (useDebug)
                 MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Stage 2 compile: " +
@@ -754,11 +753,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (LastStateSave != null)
             {
                 string assy = AssemblyName;
-                    // don't restore the assembly name, the one we have is right (if re-compiled or not)
+                // don't restore the assembly name, the one we have is right (if re-compiled or not)
                 m_ScriptEngine.StateSave.Deserialize(this, LastStateSave);
                 AssemblyName = assy;
                 if (this.State == "" && DefaultState != this.State)
-                    //Sometimes, "" is a valid state for other script languages
+                //Sometimes, "" is a valid state for other script languages
                 {
                     MainConsole.Instance.Warn("BROKEN STATE SAVE!!! - " + this.Part.Name + " @ " + this.Part.AbsolutePosition);
                     this.State = DefaultState;
@@ -813,7 +812,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public bool SetEventParams(string functionName, DetectParams[] qParams)
         {
-            if (Suspended)
+            if (Suspended || !Running)
                 return false; //No suspended scripts...
             if (qParams.Length > 0)
                 LastDetectParams = qParams;
@@ -835,18 +834,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             switch (functionName)
             {
-                    //Times pulled from http://wiki.secondlife.com/wiki/LSL_Delay
+                //Times pulled from http://wiki.secondlife.com/wiki/LSL_Delay
                 case "touch": //Limits for 0.1 seconds
                 case "touch_start":
                 case "touch_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (TouchEventDelayTicks*100);
+                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * 100);
                     break;
                 case "timer": //Settable timer limiter
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (TimerEventDelayTicks*100);
+                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * 100);
                     break;
                 case "collision": //Collision limiters taken off of reporting from WhiteStar in mantis 0004513
                 case "collision_start":
@@ -856,19 +855,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "land_collision_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (CollisionEventDelayTicks*100);
+                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * 100);
                     break;
                 case "control":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (0.5f*100);
+                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * 100);
                     break;
                 default: //Default is 0.05 seconds for event limiting
                     if (!NextEventDelay.ContainsKey(functionName))
                         break; //If it doesn't exist, we don't limit it
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long) (DefaultEventDelayTicks*100);
+                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * 100);
                     break;
             }
             //Add the event to the stats

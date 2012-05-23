@@ -519,7 +519,7 @@ namespace Aurora.DataManager.MySQL
 
         public override bool Insert(string table, object[] values, string updateKey, object updateValue)
         {
-            string query = String.Format("insert into {0} VALUES('", table);
+            string query = String.Format("insert into {0} VALUES(", table);
             Dictionary<string, object> param = new Dictionary<string, object>();
             int i = 0;
             foreach (object o in values)
@@ -527,8 +527,9 @@ namespace Aurora.DataManager.MySQL
                 param["?" + Util.ConvertDecString(i)] = o;
                 query += "?" + Util.ConvertDecString(i++) + ",";
             }
+            param["?update"] = updateValue;
             query = query.Remove(query.Length - 1);
-            query += String.Format(") ON DUPLICATE KEY UPDATE {0} = '{1}'", updateKey, updateValue);
+            query += String.Format(") ON DUPLICATE KEY UPDATE {0} = ?update", updateKey);
             try
             {
                 ExecuteNonQuery(query, param);
@@ -1057,9 +1058,9 @@ namespace Aurora.DataManager.MySQL
                 while (rdr.Read())
                 {
                     var name = rdr["Field"];
-                    var pk = rdr["Key"];
+                    //var pk = rdr["Key"];
                     var type = rdr["Type"];
-                    var extra = rdr["Extra"];
+                    //var extra = rdr["Extra"];
                     object defaultValue = rdr["Default"];
 
                     ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());

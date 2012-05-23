@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using Tools;
+using Aurora.ScriptEngineParser;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
@@ -35,7 +36,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private static Dictionary<string, string> m_datatypeLSL2OpenSim;
         private readonly SYMBOL m_astRoot;
         private readonly Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
-        private List<string> m_allVariableValues = new List<string>();
 
         /// <summary>
         ///   Pass the new CodeTranformer an abstract syntax tree.
@@ -91,26 +91,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             // ie: since IdentConstant and StringConstant inherit from Constant,
             // put IdentConstant and StringConstant before Constant
             if (s is Declaration)
-                ((Declaration) s).Datatype = m_datatypeLSL2OpenSim[((Declaration) s).Datatype];
+                ((Declaration)s).Datatype = m_datatypeLSL2OpenSim[((Declaration)s).Datatype];
             else if (s is Constant)
-                ((Constant) s).Type = m_datatypeLSL2OpenSim[((Constant) s).Type];
+                ((Constant)s).Type = m_datatypeLSL2OpenSim[((Constant)s).Type];
             else if (s is TypecastExpression)
-                ((TypecastExpression) s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression) s).TypecastType];
+                ((TypecastExpression)s).TypecastType = m_datatypeLSL2OpenSim[((TypecastExpression)s).TypecastType];
             else if (s is GlobalFunctionDefinition)
             {
-                if ("void" == ((GlobalFunctionDefinition) s).ReturnType) // we don't need to translate "void"
+                if ("void" == ((GlobalFunctionDefinition)s).ReturnType) // we don't need to translate "void"
                 {
-                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition) s).Name))
-                        GlobalMethods.Add(((GlobalFunctionDefinition) s).Name, "void");
+                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition)s).Name))
+                        GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, "void");
                 }
                 else
                 {
-                    ((GlobalFunctionDefinition) s).ReturnType =
-                        m_datatypeLSL2OpenSim[((GlobalFunctionDefinition) s).ReturnType];
-                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition) s).Name))
+                    ((GlobalFunctionDefinition)s).ReturnType =
+                        m_datatypeLSL2OpenSim[((GlobalFunctionDefinition)s).ReturnType];
+                    if (GlobalMethods != null && !GlobalMethods.ContainsKey(((GlobalFunctionDefinition)s).Name))
                     {
-                        GlobalMethods.Add(((GlobalFunctionDefinition) s).Name, ((GlobalFunctionDefinition) s).ReturnType);
-                        MethodArguements.Add(((GlobalFunctionDefinition) s).Name, (s).kids);
+                        GlobalMethods.Add(((GlobalFunctionDefinition)s).Name, ((GlobalFunctionDefinition)s).ReturnType);
+                        MethodArguements.Add(((GlobalFunctionDefinition)s).Name, (s).kids);
                     }
                 }
                 //Reset the variables, we changed events
@@ -132,7 +132,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else if (s is GlobalVariableDeclaration)
             {
-                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration) s;
+                GlobalVariableDeclaration gvd = (GlobalVariableDeclaration)s;
                 foreach (SYMBOL child in gvd.kids)
                 {
                     if (child is Assignment)
@@ -143,24 +143,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         {
                             if (assignmentChild is Declaration)
                             {
-                                Declaration d = (Declaration) assignmentChild;
+                                Declaration d = (Declaration)assignmentChild;
                                 decID = d.Id;
                                 isDeclaration = true;
                             }
                             else if (assignmentChild is IdentExpression)
                             {
-                                IdentExpression identEx = (IdentExpression) assignmentChild;
+                                IdentExpression identEx = (IdentExpression)assignmentChild;
                                 if (isDeclaration)
                                     m_globalVariableValues[decID] = identEx.Name;
                             }
                             else if (assignmentChild is ListConstant)
                             {
-                                ListConstant listConst = (ListConstant) assignmentChild;
+                                ListConstant listConst = (ListConstant)assignmentChild;
                                 foreach (SYMBOL listChild in listConst.kids)
                                 {
                                     if (listChild is ArgumentList)
                                     {
-                                        ArgumentList argList = (ArgumentList) listChild;
+                                        ArgumentList argList = (ArgumentList)listChild;
                                         int i = 0;
                                         bool changed = false;
                                         object[] p = new object[argList.kids.Count];
@@ -169,7 +169,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                             p[i] = objChild;
                                             if (objChild is IdentExpression)
                                             {
-                                                IdentExpression identEx = (IdentExpression) objChild;
+                                                IdentExpression identEx = (IdentExpression)objChild;
                                                 if (m_globalVariableValues.ContainsKey(identEx.Name))
                                                 {
                                                     changed = true;
@@ -194,7 +194,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             }
                             else if (assignmentChild is Constant)
                             {
-                                Constant identEx = (Constant) assignmentChild;
+                                Constant identEx = (Constant)assignmentChild;
                                 if (isDeclaration)
                                     m_globalVariableValues[decID] = identEx.Value;
                             }
@@ -270,7 +270,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
                         AddImplicitInitialization(s, i);
 
-                    TransformNode((SYMBOL) s.kids[i], null, null);
+                    TransformNode((SYMBOL)s.kids[i], null, null);
                 }
             }
         }
@@ -293,7 +293,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 sKids[i] = s.kids.Pop();
 
             // The child to be changed.
-            Declaration currentDeclaration = (Declaration) sKids[didx];
+            Declaration currentDeclaration = (Declaration)sKids[didx];
 
             // We need an assignment node.
             Assignment newAssignment = new Assignment(currentDeclaration.yyps,

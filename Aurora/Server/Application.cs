@@ -36,7 +36,7 @@ namespace Aurora.Server
     {
         public static void Main(string[] args)
         {
-            BaseApplication.BaseMain(args, "AuroraServer.ini", new AuroraBase());
+            BaseApplication.BaseMain(args, "Aurora.Server.ini", new AuroraBase());
         }
     }
 }

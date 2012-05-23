@@ -254,12 +254,23 @@ namespace OpenSim.Services.CapsService
             return cancelresponsedata;
         }
 
+        private bool _isInTeleportCurrently = false;
         private Hashtable TeleportLocation (Hashtable mDhttpMethod, UUID agentID)
         {
+            OSDMap retVal = new OSDMap();
             Hashtable responsedata = new Hashtable();
             responsedata["int_response_code"] = 200; //501; //410; //404;
             responsedata["content_type"] = "text/plain";
             responsedata["keepalive"] = false;
+
+            if (_isInTeleportCurrently)
+            {
+                retVal.Add("reason", "Duplicate teleport request.");
+                retVal.Add("success", OSD.FromBoolean(false));
+                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
+                return responsedata;
+            }
+            _isInTeleportCurrently = true;
 
             OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
             OSDMap pos = rm["LocationPos"] as OSDMap;
@@ -274,7 +285,14 @@ namespace OpenSim.Services.CapsService
             ulong RegionHandle = rm["RegionHandle"].AsULong();
             const uint tpFlags = 16;
 
-            OSDMap retVal = new OSDMap();
+            if (m_service.ClientCaps.GetRootCapsService().RegionHandle != m_service.RegionHandle)
+            {
+                retVal.Add("reason", "Contacted by non-root region for teleport. Protocol implemention is wrong.");
+                retVal.Add("success", OSD.FromBoolean(false));
+                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
+                return responsedata;
+            }
+
             string reason = "";
             int x, y;
             Util.UlongToInts(RegionHandle, out x, out y);
@@ -298,22 +316,26 @@ namespace OpenSim.Services.CapsService
             }
             circuitData.reallyischild = false;
             circuitData.child = false;
+
+            if (m_service.RegionHandle != destination.RegionHandle)
+                simService.MakeChildAgent(m_service.AgentID, m_service.Region);
+
             if(m_agentProcessing.TeleportAgent(ref destination, tpFlags, ad == null ? 0 : (int)ad.Far, circuitData, ad,
-                m_service.AgentID, m_service.RegionHandle, out reason))
+                m_service.AgentID, m_service.RegionHandle, out reason) || reason == "")
             {
                 retVal.Add("success", OSD.FromBoolean(true));
-                if(m_service.RegionHandle != destination.RegionHandle)
-                    simService.MakeChildAgent(m_service.AgentID, m_service.Region);
             }
             else
             {
-                simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination.RegionID);
+                if (reason != "Already in a teleport")//If this error occurs... don't kick them out of their current region
+                    simService.FailedToMoveAgentIntoNewRegion(m_service.AgentID, destination.RegionID);
                 retVal.Add("reason", reason);
                 retVal.Add("success", OSD.FromBoolean(false));
             }
 
             //Send back data
             responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
+            _isInTeleportCurrently = false;
             return responsedata;
         }
 

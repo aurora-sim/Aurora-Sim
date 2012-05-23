@@ -1189,40 +1189,73 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GroupMembersData)remoteValue;
 
-            QueryTables tables = new QueryTables();
-            tables.AddTable("osgroupmembership", "osgmPerm");
-            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osgmPerm.GroupID", "osgm.GroupID" } });
-            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" }, { "osr.GroupID", "osgmPerm.GroupID" } });
-            tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] { { "osg.GroupID", "osgmPerm.GroupID" } });
-            // left join means it doesn't have to exist
-            tables.AddTable("osgrouprolemembership", "osgmOwn", JoinType.Left, new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "'" + AgentID + "'", "osgmOwn.AgentID" } });
 
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["osgmPerm.GroupID"] = GroupID;
-            filter.andFilters["osgmPerm.AgentID"] = requestingAgentID;
-            filter.andFilters["osgm.AgentID"] = AgentID;
+            filter.andFilters["GroupID"] = GroupID;
+            filter.andFilters["AgentID"] = requestingAgentID;
 
-            List<string> Membership = data.Query(new[] { 
-                "osgm.AcceptNotices",
-                "osgm.Contribution",
-                "osgm.ListInProfile", 
-                "osgm.SelectedRoleID",
-                "osr.Title",
-                "osr.Powers",
-                "osgmOwn.RoleID"
-            }, tables, filter, null, null, null);
+            //Permissions
+            List<string> OtherPermiss = data.Query(new string[4] { 
+                "AcceptNotices",
+                "Contribution",
+                "ListInProfile", 
+                "SelectedRoleID"
+            }, "osgroupmembership", filter, null, null, null);
 
-            if (Membership.Count == 0) return null;
+            if (OtherPermiss.Count == 0)
+            {
+                return null;
+            }
+
+            filter.andFilters["AgentID"] = AgentID;
+
+            List<string> Membership = data.Query(new string[4] { 
+                "AcceptNotices",
+                "Contribution",
+                "ListInProfile", 
+                "SelectedRoleID"
+            }, "osgroupmembership", filter, null, null, null);
+
+            if (Membership.Count != 4)
+            {
+                return null;
+            }
+
+            filter.andFilters.Remove("AgentID");
+            filter.andFilters["RoleID"] = Membership[3];
+
+            List<string> GroupRole = data.Query(new string[2] { 
+                "Title",
+                "Powers"
+            }, "osrole", filter, null, null, null);
+
+            if (GroupRole.Count != 2)
+            {
+                return null;
+            }
+
+            filter.andFilters.Remove("RoleID");
+
+            List<string> OwnerRoleID = data.Query(new string[1] { 
+                "OwnerRoleID"
+            }, "osgroup", filter, null, null, null);
+
+            filter.andFilters["RoleID"] = OwnerRoleID[0];
+            filter.andFilters["AgentID"] = AgentID;
+
+            bool IsOwner = uint.Parse(data.Query(new string[1] { 
+                "COUNT(AgentID)"
+            }, "osgrouprolemembership", filter, null, null, null)[0]) == 1;
 
             GroupMembersData GMD = new GroupMembersData
             {
                 AcceptNotices = (Membership[0]) == "1",
                 AgentID = AgentID,
                 Contribution = int.Parse(Membership[1]),
-                IsOwner = Membership[6] != null,
+                IsOwner = IsOwner,
                 ListInProfile = (Membership[2]) == "1",
-                AgentPowers = ulong.Parse(Membership[5]),
-                Title = Membership[4],
+                AgentPowers = ulong.Parse(GroupRole[1]),
+                Title = GroupRole[0],
                 OnlineStatus = "(Online)"
             };
 
@@ -1252,6 +1285,7 @@ namespace Aurora.Services.DataService
                             new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "osgm.AgentID", "osgmOwn.AgentID" } });
 
             QueryFilter filter = new QueryFilter();
+<<<<<<< HEAD
             filter.andFilters["osgmPerm.GroupID"] = GroupID;
             filter.andFilters["osgmPerm.AgentID"] = requestingAgentID;
 
@@ -1269,9 +1303,15 @@ namespace Aurora.Services.DataService
             List<string> Membership = data.Query(fields, tables, filter, null, null, null);
 
             if (Membership.Count == 0) return null;
+=======
+            filter.andFilters["GroupID"] = GroupID;
+            List<string> Agents = data.Query(new string[1] { "AgentID" }, "osgroupmembership", filter, null, null, null);
+
+>>>>>>> 5338d74a69bfbb19992ae92f66aad78c086baa7b
             List<GroupMembersData> list = new List<GroupMembersData>();
             for (int loop = 0; loop < Membership.Count; loop += fields.Length)
             {
+<<<<<<< HEAD
                 GroupMembersData GMD = new GroupMembersData
                 {
                     AcceptNotices = (Membership[loop + 0]) == "1",
@@ -1293,6 +1333,20 @@ namespace Aurora.Services.DataService
                 else
                     GMD.OnlineStatus = "Online";
                 list.Add(GMD);
+=======
+                GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
+                if (d == null) continue;
+                OpenSim.Services.Interfaces.UserInfo info =
+                    m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
+                        d.AgentID.ToString());
+                if (info != null && !info.IsOnline)
+                    d.OnlineStatus = info.LastLogin.ToShortDateString();
+                else if (info == null)
+                    d.OnlineStatus = "Unknown";
+                else
+                    d.OnlineStatus = "Online";
+                list.Add(d);
+>>>>>>> 5338d74a69bfbb19992ae92f66aad78c086baa7b
             }
             return list;
         }

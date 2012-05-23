@@ -63,6 +63,8 @@ namespace Aurora.Framework
         protected bool m_doRemoteCalls = false;
         protected string m_name;
         protected bool m_doRemoteOnly = false;
+        protected int m_OSDRequestTimeout = 10000;
+        protected int m_OSDRequestTryCount = 7;
 
         public string PluginName
         {
@@ -84,6 +86,11 @@ namespace Aurora.Framework
             IConfig config;
             if ((config = source.Configs["AuroraConnectors"]) != null)
                 m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+            if ((config = source.Configs["Configuration"]) != null)
+            {
+                m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);
+                m_OSDRequestTryCount = config.GetInt("OSDRequestTryCount", m_OSDRequestTryCount);
+            }
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
@@ -139,8 +146,10 @@ namespace Aurora.Framework
             List<string> m_ServerURIs =
                     m_configService.FindValueOf(userID.ToString(), url, false);
             OSDMap response = null;
-            foreach (string uri in m_ServerURIs)
+            int loops2Do = (m_ServerURIs.Count < m_OSDRequestTryCount) ? m_ServerURIs.Count : m_OSDRequestTryCount;
+            for (int index = 0; index < loops2Do; index++)
             {
+                string uri = m_ServerURIs[index];
                 if (GetOSDMap(uri, map, out response))
                     break;
             }
@@ -163,20 +172,19 @@ namespace Aurora.Framework
             }
             if (response["Value"] == "null")
                 return null;
-            if (inst is IDataTransferable)
+            var instance = inst as IDataTransferable;
+            if (instance != null)
             {
-                IDataTransferable instance = (IDataTransferable)inst;
                 instance.FromOSD((OSDMap)response["Value"]);
                 return instance;
             }
-            else
-                return Util.OSDToObject(response["Value"], method.ReturnType);
+            return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = ServiceOSDRequest(url, map, "POST", 10000);
+            string resp = ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
             
             if (resp == "" || resp.StartsWith("<"))
                 return false;
@@ -239,7 +247,7 @@ namespace Aurora.Framework
                         // capture how much time was spent writing, this may seem silly
                         // but with the number concurrent requests, this often blocks
                         tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        string responseStr = responseStr = responseStream.GetStreamString();
+                        string responseStr = responseStream.GetStreamString();
                         // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
                         return responseStr;
                     }

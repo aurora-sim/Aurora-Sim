@@ -47,14 +47,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             #region Constructors
 
-            public Vector3 (Vector3 vector)
+            public Vector3(Vector3 vector)
             {
                 x = (float)vector.x;
                 y = (float)vector.y;
                 z = (float)vector.z;
             }
 
-            public Vector3 (OpenMetaverse.Vector3 vector)
+            public Vector3(OpenMetaverse.Vector3 vector)
             {
                 x = (float)vector.X;
                 y = (float)vector.Y;
@@ -75,7 +75,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string[] tmps = str.Split(new Char[] { ',', '<', '>' });
                 if (tmps.Length < 3)
                 {
-                    x=y=z=0;
+                    x = y = z = 0;
                     return;
                 }
                 bool res;
@@ -94,28 +94,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public override string ToString()
             {
-                string s=String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", x, y, z);
+                string s = String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", x, y, z);
                 return s;
             }
 
             public static explicit operator LSLString(Vector3 vec)
             {
-                string s=String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", vec.x, vec.y, vec.z);
+                string s = String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", vec.x, vec.y, vec.z);
                 return new LSLString(s);
             }
 
             public static explicit operator string(Vector3 vec)
             {
-                string s=String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", vec.x, vec.y, vec.z);
+                string s = String.Format("<{0:0.000000},{1:0.000000},{2:0.000000}>", vec.x, vec.y, vec.z);
                 return s;
             }
 
-            public static explicit operator Vector3 (string s)
+            public static explicit operator Vector3(string s)
             {
                 return new Vector3(s);
             }
 
-            public static implicit operator bool (Vector3 s)
+            public static implicit operator bool(Vector3 s)
             {
                 return s.x != 0 ||
                     s.y != 0 ||
@@ -333,7 +333,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string[] tmps = str.Split(new Char[] { ',', '<', '>' });
                 if (tmps.Length < 4)
                 {
-                    x=y=z=s=0;
+                    x = y = z = s = 0;
                     return;
                 }
                 bool res = Double.TryParse(tmps[0], NumberStyles.Float, Culture.NumberFormatInfo, out x);
@@ -364,19 +364,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public override string ToString()
             {
-                string st=String.Format(Culture.FormatProvider, "<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", x, y, z, s);
+                string st = String.Format(Culture.FormatProvider, "<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", x, y, z, s);
                 return st;
             }
 
             public static explicit operator string(Quaternion r)
             {
-                string s=String.Format("<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", r.x, r.y, r.z, r.s);
+                string s = String.Format("<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", r.x, r.y, r.z, r.s);
                 return s;
             }
 
             public static explicit operator LSLString(Quaternion r)
             {
-                string s=String.Format("<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", r.x, r.y, r.z, r.s);
+                string s = String.Format("<{0:0.000000},{1:0.000000},{2:0.000000},{3:0.000000}>", r.x, r.y, r.z, r.s);
                 return new LSLString(s);
             }
 
@@ -385,7 +385,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return new Quaternion(s);
             }
 
-            public static implicit operator bool (Quaternion s)
+            public static implicit operator bool(Quaternion s)
             {
                 return s.x != 0 ||
                     s.y != 0 ||
@@ -464,7 +464,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 get
                 {
                     if (m_data == null)
-                        m_data=new Object[0];
+                        m_data = new Object[0];
                     return m_data.Length;
                 }
             }
@@ -474,7 +474,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 get
                 {
                     if (m_data == null)
-                        m_data=new Object[0];
+                        m_data = new Object[0];
 
                     int size = 0;
 
@@ -509,28 +509,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public object[] Data
             {
-                get {
+                get
+                {
                     if (m_data == null)
-                        m_data=new Object[0];
+                        m_data = new Object[0];
                     return m_data;
                 }
 
-                set {m_data = value; }
+                set { m_data = value; }
             }
-        // Function to obtain LSL type from an index. This is needed
-        // because LSL lists allow for multiple types, and safely
-        // iterating in them requires a type check.
+            // Function to obtain LSL type from an index. This is needed
+            // because LSL lists allow for multiple types, and safely
+            // iterating in them requires a type check.
             public Type GetLSLListItemType(int itemIndex)
             {
                 return m_data[itemIndex].GetType();
             }
 
-        // Member functions to obtain item as specific types.
-        // For cases where implicit conversions would apply if items
-        // were not in a list (e.g. integer to float, but not float
-        // to integer) functions check for alternate types so as to
-        // down-cast from Object to the correct type.
-        // Note: no checks for item index being valid are performed
+            // Member functions to obtain item as specific types.
+            // For cases where implicit conversions would apply if items
+            // were not in a list (e.g. integer to float, but not float
+            // to integer) functions check for alternate types so as to
+            // down-cast from Object to the correct type.
+            // Note: no checks for item index being valid are performed
 
             public LSL_Types.LSLFloat GetLSLFloatItem(int itemIndex)
             {
@@ -562,26 +563,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public LSL_Types.LSLString GetLSLStringItem(int itemIndex)
             {
-              if (m_data[itemIndex] is LSL_Types.key)
-              {
-                return (LSL_Types.key)m_data[itemIndex];
-              }
-              else if (m_data[itemIndex] is String)
-              {
-                return new LSL_Types.LSLString((string)m_data[itemIndex]);
-              }
-              else if (m_data[itemIndex] is LSL_Types.LSLFloat)
-              {
-                  return new LSL_Types.LSLString((LSLFloat)m_data[itemIndex]);
-              }
-              else if (m_data[itemIndex] is LSL_Types.LSLInteger)
-              {
-                  return new LSL_Types.LSLString((LSLInteger)m_data[itemIndex]);
-              }
-              else
-              {
-                  return (LSL_Types.LSLString)m_data[itemIndex];
-              }
+                if (m_data[itemIndex] is LSL_Types.key)
+                {
+                    return (LSL_Types.key)m_data[itemIndex];
+                }
+                else if (m_data[itemIndex] is String)
+                {
+                    return new LSL_Types.LSLString((string)m_data[itemIndex]);
+                }
+                else if (m_data[itemIndex] is LSL_Types.LSLFloat)
+                {
+                    return new LSL_Types.LSLString((LSLFloat)m_data[itemIndex]);
+                }
+                else if (m_data[itemIndex] is LSL_Types.LSLInteger)
+                {
+                    return new LSL_Types.LSLString((LSLInteger)m_data[itemIndex]);
+                }
+                else
+                {
+                    return (LSL_Types.LSLString)m_data[itemIndex];
+                }
             }
 
             public LSL_Types.LSLInteger GetLSLIntegerItem(int itemIndex)
@@ -600,17 +601,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public LSL_Types.Vector3 GetVector3Item(int itemIndex)
             {
-              return (LSL_Types.Vector3)m_data[itemIndex];
+                return (LSL_Types.Vector3)m_data[itemIndex];
             }
 
             public LSL_Types.Quaternion GetQuaternionItem(int itemIndex)
             {
-              return (LSL_Types.Quaternion)m_data[itemIndex];
+                return (LSL_Types.Quaternion)m_data[itemIndex];
             }
 
             public LSL_Types.key GetKeyItem(int itemIndex)
             {
-              return (LSL_Types.key)m_data[itemIndex];
+                return (LSL_Types.key)m_data[itemIndex];
             }
 
             public static list operator +(list a, list b)
@@ -628,7 +629,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 m_data.SetValue(o, Length - 1);
             }
 
-            public static implicit operator bool (list s)
+            public static implicit operator bool(list s)
             {
                 return s.Length != 0;
             }
@@ -669,7 +670,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 int lb = -1;
                 try { la = a.Length; }
                 catch (NullReferenceException) { }
-                try {lb = b.Length;}
+                try { lb = b.Length; }
                 catch (NullReferenceException) { }
 
                 return la != lb;
@@ -708,15 +709,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Object[] ret;
 
                 if (start < 0)
-                    start=m_data.Length+start;
+                    start = m_data.Length + start;
 
                 if (start < 0)
-                    start=0;
+                    start = 0;
 
                 if (end < 0)
-                    end=m_data.Length+end;
+                    end = m_data.Length + end;
                 if (end < 0)
-                    end=0;
+                    end = 0;
 
                 if (start > end)
                 {
@@ -724,7 +725,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         return new list(new Object[0]);
 
                     if (start >= m_data.Length)
-                        start=m_data.Length-1;
+                        start = m_data.Length - 1;
 
                     return GetSublist(end, start);
                 }
@@ -732,29 +733,29 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 // start >= 0 && end >= 0 here
                 if (start >= m_data.Length)
                 {
-                    ret=new Object[m_data.Length];
+                    ret = new Object[m_data.Length];
                     Array.Copy(m_data, 0, ret, 0, m_data.Length);
 
                     return new list(ret);
                 }
 
                 if (end >= m_data.Length)
-                    end=m_data.Length-1;
+                    end = m_data.Length - 1;
 
                 // now, this makes the math easier
-                int remove=end+1-start;
+                int remove = end + 1 - start;
 
-                ret=new Object[m_data.Length-remove];
+                ret = new Object[m_data.Length - remove];
                 if (ret.Length == 0)
                     return new list(ret);
 
                 int src;
-                int dest=0;
+                int dest = 0;
 
                 for (src = 0; src < m_data.Length; src++)
                 {
                     if (src < start || src > end)
-                        ret[dest++]=m_data[src];
+                        ret[dest++] = m_data[src];
                 }
 
                 return new list(ret);
@@ -840,7 +841,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     }
                     else
                     {
-                        result = GetSublist(0,end);
+                        result = GetSublist(0, end);
                     }
 
                     // If start is outside of list, then just return
@@ -974,7 +975,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 int k;
                 int n = Data.Length;
 
-                for (i = 0; i < (n-stride); i += stride)
+                for (i = 0; i < (n - stride); i += stride)
                 {
                     for (j = i + stride; j < n; j += stride)
                     {
@@ -1440,14 +1441,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public LSLString(double d)
             {
-                string s=String.Format(Culture.FormatProvider, "{0:0.000000}", d);
-                m_string=s;
+                string s = String.Format(Culture.FormatProvider, "{0:0.000000}", d);
+                m_string = s;
             }
 
             public LSLString(LSLFloat f)
             {
                 string s = String.Format(Culture.FormatProvider, "{0:0.000000}", f.value);
-                m_string=s;
+                m_string = s;
             }
 
             public LSLString(LSLInteger i)
@@ -1510,7 +1511,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public static implicit operator list(LSLString s)
             {
-                return new list(new object[]{s});
+                return new list(new object[] { s });
             }
 
             public static implicit operator key(LSLString s)
@@ -1646,7 +1647,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             public int value;
             public static LSLInteger TRUE = new LSLInteger(1);
             public static LSLInteger FALSE = new LSLInteger(0);
-            private static readonly Regex castRegex = new Regex (@"(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*(-?|\+?)[0-9][0-9]*)");
+            private static readonly Regex castRegex = new Regex(@"(^[ ]*0[xX][0-9A-Fa-f][0-9A-Fa-f]*)|(^[ ]*(-?|\+?)[0-9][0-9]*)");
 
             #region Constructors
             public LSLInteger(int i)
@@ -1668,10 +1669,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 if (int.TryParse(s, out value))
                     return;
-                Match m = castRegex.Match (s);
+                Match m = castRegex.Match(s);
                 string v = m.Groups[0].Value;
                 // Leading plus sign is allowed, but ignored
-                v = v.Replace ("+", "");
+                v = v.Replace("+", "");
                 if (s == "TRUE")
                     value = 1;
                 else if (s == "FALSE")
@@ -1822,25 +1823,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return new LSLInteger(i1.value / i2);
             }
 
-//            static public LSLFloat operator +(LSLInteger i1, double f)
-//            {
-//                return new LSLFloat((double)i1.value + f);
-//            }
-//
-//            static public LSLFloat operator -(LSLInteger i1, double f)
-//            {
-//                return new LSLFloat((double)i1.value - f);
-//            }
-//
-//            static public LSLFloat operator *(LSLInteger i1, double f)
-//            {
-//                return new LSLFloat((double)i1.value * f);
-//            }
-//
-//            static public LSLFloat operator /(LSLInteger i1, double f)
-//            {
-//                return new LSLFloat((double)i1.value / f);
-//            }
+            //            static public LSLFloat operator +(LSLInteger i1, double f)
+            //            {
+            //                return new LSLFloat((double)i1.value + f);
+            //            }
+            //
+            //            static public LSLFloat operator -(LSLInteger i1, double f)
+            //            {
+            //                return new LSLFloat((double)i1.value - f);
+            //            }
+            //
+            //            static public LSLFloat operator *(LSLInteger i1, double f)
+            //            {
+            //                return new LSLFloat((double)i1.value * f);
+            //            }
+            //
+            //            static public LSLFloat operator /(LSLInteger i1, double f)
+            //            {
+            //                return new LSLFloat((double)i1.value / f);
+            //            }
 
             static public LSLInteger operator -(LSLInteger i)
             {
@@ -1906,12 +1907,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return i;
             }
 
-            public static LSLInteger operator << (LSLInteger i, int s)
+            public static LSLInteger operator <<(LSLInteger i, int s)
             {
                 return i.value << s;
             }
 
-            public static LSLInteger operator >> (LSLInteger i, int s)
+            public static LSLInteger operator >>(LSLInteger i, int s)
             {
                 return i.value >> s;
             }
@@ -2011,7 +2012,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             static public explicit operator uint(LSLFloat f)
             {
-                return (uint) Math.Abs(f.value);
+                return (uint)Math.Abs(f.value);
             }
 
             static public explicit operator string(LSLFloat f)
