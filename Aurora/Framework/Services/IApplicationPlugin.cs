@@ -319,7 +319,7 @@ namespace Aurora.Framework
 
         private static string preparedKey(string key)
         {
-            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "");
+            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "").Replace(".","alias");
         }
 
         public string ToSQL(char prepared, out Dictionary<string, object> ps)

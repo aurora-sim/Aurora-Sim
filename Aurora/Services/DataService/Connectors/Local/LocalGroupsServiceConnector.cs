@@ -972,6 +972,8 @@ namespace Aurora.Services.DataService
 
             if (GroupID == UUID.Zero)
                 GroupID = GetAgentActiveGroup(requestingAgentID, AgentID);
+            if (GroupID == UUID.Zero)
+                return null;
 
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroup", "osg");
@@ -1001,6 +1003,9 @@ namespace Aurora.Services.DataService
                     "osg.ShowInList"
                 };
             List<string> Membership = data.Query(fields, tables, filter, null, null, null);
+
+            if (fields.Length != Membership.Count)
+                return null;
 
             GroupMembershipData GMD = new GroupMembershipData
             {
