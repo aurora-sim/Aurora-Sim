@@ -134,6 +134,15 @@ namespace Aurora.Framework
         /// </summary>
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
+        #region JOIN
+
+        List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
+        Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
+        IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue);
+        List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
+
+        #endregion
+
         #endregion
 
         #region INSERT
@@ -310,7 +319,7 @@ namespace Aurora.Framework
 
         private static string preparedKey(string key)
         {
-            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "");
+            return key.Replace("`", "").Replace("(", "_").Replace(")", "").Replace(" ", "_").Replace("-", "minus").Replace("+", "add").Replace("/", "divide").Replace("*", "multiply").Replace("'", "").Replace(",", "").Replace(".","alias");
         }
 
         public string ToSQL(char prepared, out Dictionary<string, object> ps)
@@ -649,5 +658,77 @@ namespace Aurora.Framework
         /// <param name = "source">Config if more parameters are needed</param>
         /// <param name = "DefaultConnectionString">The connection string to use</param>
         void Initialize(IGenericData GenericData, IConfigSource source, IRegistryCore simBase, string DefaultConnectionString);
+    }
+
+    public class QueryTables
+    {
+        readonly List<QueryTable> tables = new List<QueryTable>();
+
+        public void AddTable(QueryTable newTable)
+        {
+            tables.Add(newTable);
+        }
+
+        /// <summary>
+        /// Add main table to select from
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="Alias"></param>
+        public void AddTable(string Name, string Alias)
+        {
+            AddTable(new QueryTable(){TableName = Name, TableAlias = Alias});
+        }
+
+        /// <summary>
+        /// Add secondary table that joins to another table
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="Alias"></param>
+        /// <param name="jType"></param>
+        /// <param name="toJoinOn"></param>
+        public void AddTable(string Name, string Alias, JoinType jType, string[,] toJoinOn)
+        {
+            AddTable(new QueryTable() { JoinOn = toJoinOn, TableAlias = Alias, TableName = Name, TypeJoin = jType });
+        }
+
+        public string ToSQL()
+        {
+            string returnValue = "";
+            foreach (QueryTable t in tables)
+            {
+                if (returnValue == "")
+                    returnValue = t.TableName + " AS " + t.TableAlias + " ";
+                else
+                {
+                    if (t.TypeJoin == JoinType.Inner)
+                        returnValue += " INNER JOIN " + t.TableName + " AS " + t.TableAlias + " ";
+                    else
+                        returnValue += " OUTER JOIN " + t.TableName + " AS " + t.TableAlias + " ";
+                    for (int loop = 0; loop < t.JoinOn.Length / 2; loop++)
+                    {
+                        if (loop != 0)
+                            returnValue += " AND ";
+                        else
+                            returnValue += " ON ";
+                        returnValue += t.JoinOn[loop, 0] + " = " + t.JoinOn[loop, 1];
+                    }
+                }
+            }
+            return returnValue;
+        }
+    }
+
+    public enum JoinType
+    {
+        Inner = 1,
+        Left = 2
+    }
+
+    public class QueryTable
+    {
+        public string TableName { get; set; }
+        public string TableAlias { get; set; }
+        public JoinType TypeJoin { get; set; }
+        public string[,] JoinOn { get; set; }
     }
 }

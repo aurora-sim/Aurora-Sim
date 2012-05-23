@@ -130,7 +130,6 @@ namespace Aurora.Services.DataService
         ///   Delete a parcel from the database
         /// </summary>
         /// <param name = "RegionID"></param>
-        /// <param name = "ParcelID"></param>
         public void RemoveAllLandObjects(UUID RegionID)
         {
             GenericUtils.RemoveGenericByType(RegionID, "LandData", GD);
@@ -170,10 +169,9 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ParcelID"] = data.GlobalID;
             GD.Delete("parcelaccess", filter);
-            Dictionary<string, object> row;
             foreach (ParcelManager.ParcelAccessEntry entry in data.ParcelAccessList)
             {
-                row = new Dictionary<string, object>(4);
+                Dictionary<string, object> row = new Dictionary<string, object>(4);
                 row["ParcelID"] = data.GlobalID;
                 row["AccessID"] = entry.AgentID;
                 row["Flags"] = entry.Flags;
@@ -191,19 +189,20 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ParcelID"] = LandData.GlobalID;
-            List<string> Query = GD.Query(new string[3]{
+            List<string> Query = GD.Query(new[]{
                 "AccessID",
                 "Flags",
                 "Time"
             }, "parcelaccess", filter, null, null, null);
 
-            ParcelManager.ParcelAccessEntry entry;
             for (int i = 0; i < Query.Count; i += 3)
             {
-                entry = new ParcelManager.ParcelAccessEntry();
-                entry.AgentID = UUID.Parse(Query[i]);
-                entry.Flags = (AccessList) Enum.Parse(typeof (AccessList), Query[i + 1]);
-                entry.Time = new DateTime(long.Parse(Query[i + 2]));
+                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry
+                                                            {
+                                                                AgentID = UUID.Parse(Query[i]),
+                                                                Flags = (AccessList) Enum.Parse(typeof (AccessList), Query[i + 1]),
+                                                                Time = new DateTime(long.Parse(Query[i + 2]))
+                                                            };
                 LandData.ParcelAccessList.Add(entry);
             }
         }

@@ -99,17 +99,6 @@ namespace Aurora.Services.DataService
                 }
                 finally
                 {
-                    try
-                    {
-                        //if (reader != null)
-                        //{
-                        //    reader.Close ();
-                        //    reader.Dispose ();
-                        //}
-                    }
-                    catch
-                    {
-                    }
                     GD.CloseDatabase();
                 }
             }
@@ -136,17 +125,6 @@ namespace Aurora.Services.DataService
                 }
                 finally
                 {
-                    try
-                    {
-                        //if (reader != null)
-                        //{
-                        //    reader.Close ();
-                        //    reader.Dispose ();
-                        //}
-                    }
-                    catch
-                    {
-                    }
                     GD.CloseDatabase();
                 }
             }
@@ -159,7 +137,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["assetID"] = assetID;
             filter.andFilters["avatarID"] = userID;
 
-            List<string> q = GD.Query(new string[1] { "*" }, m_itemsrealm, filter, null, null, null);
+            List<string> q = GD.Query(new[] { "*" }, m_itemsrealm, filter, null, null, null);
 
             return !(q != null && q.Count > 0);
         }
@@ -169,7 +147,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["assetID"] = assetID;
 
-            List<string> q = GD.Query(new string[1] { "inventoryName" }, m_itemsrealm, filter, null, null, null);
+            List<string> q = GD.Query(new[] { "inventoryName" }, m_itemsrealm, filter, null, null, null);
 
 
             return (q != null && q.Count > 0) ? q[0] :  "";
@@ -191,9 +169,9 @@ namespace Aurora.Services.DataService
                 //UUID agent_id = invFetch["agent_id"].AsUUID();
                 UUID owner_id = invFetch["owner_id"].AsUUID();
                 UUID folder_id = invFetch["folder_id"].AsUUID();
-                bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
-                bool fetch_items = invFetch["fetch_items"].AsBoolean();
-                int sort_order = invFetch["sort_order"].AsInteger();
+                //bool fetch_folders = invFetch["fetch_folders"].AsBoolean();
+                //bool fetch_items = invFetch["fetch_items"].AsBoolean();
+                //int sort_order = invFetch["sort_order"].AsInteger();
 
                 //Set the normal stuff
                 contents["agent_id"] = AgentID;
@@ -205,8 +183,7 @@ namespace Aurora.Services.DataService
                 List<UUID> moreLinkedItems = new List<UUID>();
                 int count = 0;
                 bool addToCount = true;
-                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id,
-                                             "avatarID", AgentID, "avatarID", libraryOwnerID);
+                string query = String.Format("where {0} = '{1}'", "parentFolderID", folder_id);
                 redoQuery:
                 using (IDataReader retVal = GD.QueryData(query, m_itemsrealm, "*"))
                 {
@@ -289,17 +266,6 @@ namespace Aurora.Services.DataService
                     }
                     finally
                     {
-                        try
-                        {
-                            //if (retVal != null)
-                            //{
-                            //    retVal.Close ();
-                            //    retVal.Dispose ();
-                            //}
-                        }
-                        catch
-                        {
-                        }
                         GD.CloseDatabase();
                     }
                 }
@@ -324,12 +290,11 @@ namespace Aurora.Services.DataService
                 int version = 0;
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["folderID"] = folder_id;
-                List<string> versionRetVal = GD.Query(new string[]{
+                List<string> versionRetVal = GD.Query(new[]{
                     "version",
                     "type"
                 }, m_foldersrealm, filter, null, null, null);
 
-                List<InventoryFolderBase> foldersToAdd = new List<InventoryFolderBase>();
                 if (versionRetVal.Count > 0)
                 {
                     version = int.Parse(versionRetVal[0]);
@@ -363,17 +328,6 @@ namespace Aurora.Services.DataService
                             }
                             finally
                             {
-                                try
-                                {
-                                    //if (retVal != null)
-                                    //{
-                                    //    retVal.Close ();
-                                    //    retVal.Dispose ();
-                                    //}
-                                }
-                                catch
-                                {
-                                }
                                 GD.CloseDatabase();
                             }
                         }
@@ -533,19 +487,8 @@ namespace Aurora.Services.DataService
                 }
                 finally
                 {
-                    try
-                    {
-                        //if (reader != null)
-                        //{
-                        //    reader.Close ();
-                        //    reader.Dispose ();
-                        //}
-                    }
-                    catch
-                    {
-                    }
+                    GD.CloseDatabase();
                 }
-                GD.CloseDatabase();
                 return items.ToArray();
             }
         }
@@ -878,8 +821,7 @@ namespace Aurora.Services.DataService
 
             private string AsString(DateTime value)
             {
-                string format;
-                format = value.Millisecond > 0 ? "yyyy-MM-ddTHH:mm:ss.ffZ" : "yyyy-MM-ddTHH:mm:ssZ";
+                string format = value.Millisecond > 0 ? "yyyy-MM-ddTHH:mm:ss.ffZ" : "yyyy-MM-ddTHH:mm:ssZ";
                 return value.ToUniversalTime().ToString(format);
             }
         }
