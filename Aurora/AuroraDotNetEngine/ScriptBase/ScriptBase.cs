@@ -302,7 +302,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     cur = "q" + ob;
                 else if (ob.GetType() == typeof(LSL_Types.LSLString))
                     cur = "\"" + ob + "\"";
-                else if (ob.GetType() == typeof(LSL_Types.key))
+                else if (ob.GetType() == typeof (LSL_Types.key))
                     cur = "k\"" + ob + "\"";
                 else if (o.GetType() == typeof(LSL_Types.list))
                     cur = "{" + ListToString(ob) + "}";
@@ -347,7 +347,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                             cur = "q" + o;
                         else if (o.GetType() == typeof(LSL_Types.LSLString))
                             cur = "\"" + o + "\"";
-                        else if (o.GetType() == typeof(LSL_Types.key))
+                        else if (o.GetType() == typeof (LSL_Types.key))
                             cur = "k\"" + o + "\"";
                         else if (o.GetType() == typeof(LSL_Types.list))
                             cur = "{" + ListToString(o) + "}";
