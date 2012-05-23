@@ -1274,66 +1274,13 @@ namespace Aurora.Services.DataService
                 return new List<GroupMembersData>(0);
             }
 
-            QueryTables tables = new QueryTables();
-            tables.AddTable("osgroupmembership", "osgmPerm");
-            tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osgmPerm.GroupID", "osgm.GroupID" } });
-            tables.AddTable("osrole", "osr", JoinType.Inner,
-                            new[,] { { "osgm.SelectedRoleID", "osr.RoleID" }, { "osr.GroupID", "osgmPerm.GroupID" } });
-            tables.AddTable("osgroup", "osg", JoinType.Inner, new[,] { { "osg.GroupID", "osgmPerm.GroupID" } });
-            // left join means it doesn't have to exist
-            tables.AddTable("osgrouprolemembership", "osgmOwn", JoinType.Left,
-                            new[,] { { "osg.OwnerRoleID", "osgmOwn.RoleID" }, { "osgm.AgentID", "osgmOwn.AgentID" } });
-
             QueryFilter filter = new QueryFilter();
-<<<<<<< HEAD
-            filter.andFilters["osgmPerm.GroupID"] = GroupID;
-            filter.andFilters["osgmPerm.AgentID"] = requestingAgentID;
-
-            string[] fields = new[]
-                                  {
-                                      "osgm.AcceptNotices",
-                                      "osgm.Contribution",
-                                      "osgm.ListInProfile",
-                                      "osgm.SelectedRoleID",
-                                      "osr.Title",
-                                      "osr.Powers",
-                                      "osgmOwn.RoleID",
-                                      "osgm.AgentID"
-                                  };
-            List<string> Membership = data.Query(fields, tables, filter, null, null, null);
-
-            if (Membership.Count == 0) return null;
-=======
             filter.andFilters["GroupID"] = GroupID;
-            List<string> Agents = data.Query(new string[1] { "AgentID" }, "osgroupmembership", filter, null, null, null);
+            List<string> Agents = data.Query(new[] { "AgentID" }, "osgroupmembership", filter, null, null, null);
 
->>>>>>> 5338d74a69bfbb19992ae92f66aad78c086baa7b
             List<GroupMembersData> list = new List<GroupMembersData>();
-            for (int loop = 0; loop < Membership.Count; loop += fields.Length)
+            foreach (string agent in Agents)
             {
-<<<<<<< HEAD
-                GroupMembersData GMD = new GroupMembersData
-                {
-                    AcceptNotices = (Membership[loop + 0]) == "1",
-                    AgentID = UUID.Parse(Membership[loop + 7]),
-                    Contribution = int.Parse(Membership[loop + 1]),
-                    IsOwner = Membership[loop + 6] != null,
-                    ListInProfile = (Membership[loop + 2]) == "1",
-                    AgentPowers = ulong.Parse(Membership[loop + 5]),
-                    Title = Membership[loop + 4],
-                    OnlineStatus = "(Online)"
-                };
-                OpenSim.Services.Interfaces.UserInfo info =
-                    m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IAgentInfoService>().GetUserInfo(
-                        GMD.AgentID.ToString());
-                if (info != null && !info.IsOnline)
-                    GMD.OnlineStatus = info.LastLogin.ToShortDateString();
-                else if (info == null)
-                    GMD.OnlineStatus = "Unknown";
-                else
-                    GMD.OnlineStatus = "Online";
-                list.Add(GMD);
-=======
                 GroupMembersData d = GetAgentGroupMemberData(requestingAgentID, GroupID, UUID.Parse(agent));
                 if (d == null) continue;
                 OpenSim.Services.Interfaces.UserInfo info =
@@ -1346,7 +1293,6 @@ namespace Aurora.Services.DataService
                 else
                     d.OnlineStatus = "Online";
                 list.Add(d);
->>>>>>> 5338d74a69bfbb19992ae92f66aad78c086baa7b
             }
             return list;
         }
@@ -1587,11 +1533,7 @@ namespace Aurora.Services.DataService
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["NoticeID"] = noticeID;
-<<<<<<< HEAD
-            List<string> notice = data.Query(new[]{
-=======
             string[] fields = new string[9]{
->>>>>>> 991c21e46800651b0744735899783d2b934bbb46
                 "GroupID",
                 "Timestamp",
                 "FromName",
