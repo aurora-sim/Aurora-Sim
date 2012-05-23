@@ -38,6 +38,7 @@
     SearchURL = ""
     OpenIDURL = ""
     SnapshotConfigURL = ""
+    DestinationURL = ""
     HelpURL = ""
     VoiceServerType = "vivox"
     MaxAgentGroups = 100

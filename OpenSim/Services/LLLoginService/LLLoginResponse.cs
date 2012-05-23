@@ -459,6 +459,9 @@ namespace OpenSim.Services.LLLoginService
                 if (OpenIDURL != String.Empty)
                     responseData["openid_url"] = OpenIDURL;
 
+                if (DestinationURL != String.Empty)
+                    responseData["destination_guide_url"] = DestinationURL;
+
                 if (MaxAgentGroups != 0)
                     responseData["max-agent-groups"] = MaxAgentGroups;
                 else
@@ -995,6 +998,11 @@ namespace OpenSim.Services.LLLoginService
         public string WebProfileURL
         {
             get { return (string) LLLoginResponseRegister.GetValue("WebProfileURL"); }
+        }
+
+        public string DestinationURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue("DestinationURL"); }
         }
 
         public string Message
