@@ -39,6 +39,7 @@
     OpenIDURL = ""
     SnapshotConfigURL = ""
     DestinationURL = ""
+    MarketPlaceURL = ""
     HelpURL = ""
     VoiceServerType = "vivox"
     MaxAgentGroups = 100
