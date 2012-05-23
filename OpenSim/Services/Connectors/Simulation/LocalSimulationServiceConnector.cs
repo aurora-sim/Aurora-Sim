@@ -240,7 +240,6 @@ namespace OpenSim.Services.Connectors.Simulation
             if (destination == null)
                 return false;
 
-#if (!ISWIN)
             foreach (IScene s in m_sceneList)
             {
                 if (s.RegionInfo.RegionID == destination.RegionID)
@@ -253,13 +252,6 @@ namespace OpenSim.Services.Connectors.Simulation
                 }
             }
             return false;
-#else
-            return (from s in m_sceneList
-                    where s.RegionInfo.RegionID == destination.RegionID
-                    let transferModule = s.RequestModuleInterface<IEntityTransferModule>()
-                    where transferModule != null
-                    select transferModule.IncomingRetrieveRootAgent(s, id, agentIsLeaving, out agent, out circuitData)).FirstOrDefault();
-#endif
             //MainConsole.Instance.Debug("[LOCAL COMMS]: region not found for ChildAgentUpdate");
         }
 
