@@ -42,5 +42,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         void ScriptRemoved(UUID itemID);
         void ObjectRemoved(UUID objectID);
+
+        string ExternalHostNameForLSL { get; }
     }
 }
