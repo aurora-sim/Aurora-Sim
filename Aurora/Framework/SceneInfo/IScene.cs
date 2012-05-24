@@ -40,16 +40,32 @@ namespace Aurora.Framework
     public enum DeRezAction : byte
     {
         SaveToExistingUserInventoryItem = 0,
-        AcquireToUserInventory = 1, // try to leave copy in world
+
+        /// <summary>
+        /// try to leave copy in world
+        /// </summary>
+        AcquireToUserInventory = 1,
         SaveIntoTaskInventory = 2,
         Attachment = 3,
         Take = 4,
-        GodTakeCopy = 5, // force take copy
+
+        /// <summary>
+        /// force take copy
+        /// </summary>
+        GodTakeCopy = 5,
         Delete = 6,
         AttachmentToInventory = 7,
         AttachmentExists = 8,
-        Return = 9, // back to owner's inventory
-        ReturnToLastOwner = 10 // deeded object back to last owner's inventory
+
+        /// <summary>
+        /// back to owner's inventory
+        /// </summary>
+        Return = 9,
+
+        /// <summary>
+        /// deeded object back to last owner's inventory
+        /// </summary>
+        ReturnToLastOwner = 10
     };
 
     public interface IScene : IRegistryCore
