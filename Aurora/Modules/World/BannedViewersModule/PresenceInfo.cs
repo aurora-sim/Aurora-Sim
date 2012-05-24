@@ -49,6 +49,8 @@ namespace Aurora.Modules.Ban
         public List<string> KnownAlts = new List<string>();
 
         public PresenceInfoFlags Flags;
+
+        [Flags]
         public enum PresenceInfoFlags : int
         {
             Clean = 1 << 1,
