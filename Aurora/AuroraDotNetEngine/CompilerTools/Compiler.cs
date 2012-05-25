@@ -216,7 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
             UUID assemblyGuid = UUID.Random();
 
-//            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
+            //            assembly = CheckDirectories(FilePrefix + "_compiled_" + itemID.ToString() + "V" + VersionID + ".dll", itemID);
 
             assembly = CheckDirectories(assemblyGuid.ToString() + ".dll", assemblyGuid);
 
@@ -487,7 +487,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             // Do actual compile
-            CompilerParameters parameters = new CompilerParameters {IncludeDebugInformation = true};
+            CompilerParameters parameters = new CompilerParameters { IncludeDebugInformation = true };
 
 
             string rootPath =

@@ -161,7 +161,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
             }
             string functionName = "changed";
-            object[] param = new Object[] {new LSL_Types.LSLInteger(change)};
+            object[] param = new Object[] { new LSL_Types.LSLInteger(change) };
 
 #if (!ISWIN)
             foreach (ScriptData ID in datas)
@@ -197,7 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             if (!CoalescedTouchEvents.TryGetValue(part.LocalId, out det))
                 det = new Dictionary<UUID, DetectParams>();
 
-            DetectParams detparam = new DetectParams {Key = remoteClient.AgentId};
+            DetectParams detparam = new DetectParams { Key = remoteClient.AgentId };
 
             detparam.Populate(part.ParentEntity.Scene);
             detparam.LinkNum = child.LinkNum;
@@ -216,7 +216,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_start";
-            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
             foreach (ScriptData ID in datas)
@@ -267,7 +267,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch";
-            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
             foreach (ScriptData ID in datas)
@@ -295,7 +295,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             // Add to queue for all scripts in ObjectID object
             DetectParams detparam = new DetectParams();
-            detparam = new DetectParams {Key = remoteClient.AgentId};
+            detparam = new DetectParams { Key = remoteClient.AgentId };
 
             detparam.Populate(m_scriptEngine.findPrimsScene(part.LocalId));
             detparam.LinkNum = child.LinkNum;
@@ -312,7 +312,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
 
             string functionName = "touch_end";
-            object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+            object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
             foreach (ScriptData ID in datas)
@@ -383,7 +383,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #if (!ISWIN)
             foreach (DetectedObject detobj in col.Colliders)
             {
-                DetectParams d = new DetectParams {Key = detobj.keyUUID};
+                DetectParams d = new DetectParams { Key = detobj.keyUUID };
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -408,7 +408,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision_start";
-                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -435,7 +435,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #if (!ISWIN)
             foreach (DetectedObject detobj in col.Colliders)
             {
-                DetectParams d = new DetectParams {Key = detobj.keyUUID};
+                DetectParams d = new DetectParams { Key = detobj.keyUUID };
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -460,7 +460,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision";
-                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -487,7 +487,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 #if (!ISWIN)
             foreach (DetectedObject detobj in col.Colliders)
             {
-                DetectParams d = new DetectParams {Key = detobj.keyUUID};
+                DetectParams d = new DetectParams { Key = detobj.keyUUID };
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
                 det.Add(d);
@@ -512,7 +512,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "collision_end";
-                object[] param = new Object[] {new LSL_Types.LSLInteger(det.Count)};
+                object[] param = new Object[] { new LSL_Types.LSLInteger(det.Count) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -574,7 +574,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision_start";
-                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -602,7 +602,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams
                                      {
-                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z), Key = detobj.keyUUID
+                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z),
+                                         Key = detobj.keyUUID
                                      };
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
@@ -633,7 +634,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision";
-                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -661,7 +662,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 DetectParams d = new DetectParams
                                      {
-                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z), Key = detobj.keyUUID
+                                         Position = new LSL_Types.Vector3(detobj.posVector.X, detobj.posVector.Y, detobj.posVector.Z),
+                                         Key = detobj.keyUUID
                                      };
                 d.Populate(part.ParentEntity.Scene);
                 d.LinkNum = part.LinkNum;
@@ -692,7 +694,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     return;
                 }
                 string functionName = "land_collision_end";
-                object[] param = new Object[] {new LSL_Types.Vector3(det[0].Position)};
+                object[] param = new Object[] { new LSL_Types.Vector3(det[0].Position) };
 
 #if (!ISWIN)
                 foreach (ScriptData ID in datas)
@@ -1063,7 +1065,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                                "' to fire event " + FunctionName);
                     return false;
                 }
-                scriptEvents eventType = (scriptEvents) Enum.Parse(typeof (scriptEvents), FunctionName);
+                scriptEvents eventType = (scriptEvents)Enum.Parse(typeof(scriptEvents), FunctionName);
 
                 // this must be done even if there is no event method
 
@@ -1072,12 +1074,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else if (eventType == scriptEvents.collision_start)
                     ID.RemoveCollisionEvents = false;
                 else if (eventType == scriptEvents.land_collision_start)
-                    ID.RemoveLandCollisionEvents = false; 
-                
+                    ID.RemoveLandCollisionEvents = false;
+
                 if (eventType == scriptEvents.state_entry)
                     ID.ResetEvents();
 
-                if ((ID.Script.GetStateEventFlags(ID.State) & (long) eventType) == 0)
+                if ((ID.Script.GetStateEventFlags(ID.State) & (long)eventType) == 0)
                     return false; //If the script doesn't contain the state, don't even bother queueing it
 
                 //Make sure we can execute events at position
@@ -1122,7 +1124,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         ID.NotAtRotTargetInQueue = true;
                         break;
                     case scriptEvents.control:
-                        int held = ((LSL_Types.LSLInteger) param[1]).value;
+                        int held = ((LSL_Types.LSLInteger)param[1]).value;
                         // int changed = ((LSL_Types.LSLInteger)data.Params[2]).value;
 
                         // If the last message was a 0 (nothing held)
@@ -1179,9 +1181,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     case scriptEvents.changed:
                         Changed changed;
                         if (param[0] is Changed)
-                            changed = (Changed) param[0];
+                            changed = (Changed)param[0];
                         else
-                            changed = (Changed) (((LSL_Types.LSLInteger) param[0]).value);
+                            changed = (Changed)(((LSL_Types.LSLInteger)param[0]).value);
                         if (ID.ChangedInQueue.Contains(changed))
                             return false;
                         ID.ChangedInQueue.Add(changed);
@@ -1252,11 +1254,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         Changed changed;
                         if (QIS.param[0] is Changed)
                         {
-                            changed = (Changed) QIS.param[0];
+                            changed = (Changed)QIS.param[0];
                         }
                         else
                         {
-                            changed = (Changed) (((LSL_Types.LSLInteger) QIS.param[0]).value);
+                            changed = (Changed)(((LSL_Types.LSLInteger)QIS.param[0]).value);
                         }
                         QIS.ID.ChangedInQueue.Remove(changed);
                         break;

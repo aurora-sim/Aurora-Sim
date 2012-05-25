@@ -86,8 +86,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.MiniModule
         {
             if (_OnNewUser != null)
             {
-                NewUserEventArgs e = new NewUserEventArgs
-                                         {Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security)};
+                NewUserEventArgs e = new NewUserEventArgs { Avatar = new SPAvatar(m_internalScene, presence.UUID, m_security) };
                 _OnNewUser(this, e);
             }
         }
