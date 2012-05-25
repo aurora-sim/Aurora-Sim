@@ -235,10 +235,10 @@ namespace Aurora.Modules.Friends
             else if (message["Method"] == "FriendshipOffered")
             {
                 //UUID Requester = message["Requester"].AsUUID();
-                UUID ExFriend = message["ExFriend"].AsUUID();
+                UUID Friend = message["Friend"].AsUUID();
                 GridInstantMessage im = new GridInstantMessage();
                 im.FromOSD((OSDMap) message["Message"]);
-                LocalFriendshipOffered(ExFriend, im);
+                LocalFriendshipOffered(Friend, im);
             }
             else if (message["Method"] == "FriendshipDenied")
             {

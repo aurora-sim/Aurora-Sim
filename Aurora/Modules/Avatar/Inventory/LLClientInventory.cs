@@ -59,6 +59,8 @@ namespace Aurora.Modules.Inventory
 
         protected IScene m_scene;
 
+        protected ListCombiningTimedSaving<InventoryItemBase> _moveInventoryItemQueue = new ListCombiningTimedSaving<InventoryItemBase>();
+
         #endregion
 
         #region INonSharedRegionModule members
@@ -76,6 +78,8 @@ namespace Aurora.Modules.Inventory
             scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
+
+            _moveInventoryItemQueue.Start(2, _saveMovedItems);
         }
 
         public void RegionLoaded (IScene scene)
@@ -702,8 +706,14 @@ namespace Aurora.Modules.Inventory
             //MainConsole.Instance.DebugFormat(
             //    "[AGENT INVENTORY]: Moving {0} items for user {1}", items.Count, remoteClient.AgentId);
 
-            if (!m_scene.InventoryService.MoveItems(remoteClient.AgentId, items))
-                MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to move items for user " + remoteClient.AgentId);
+
+            _moveInventoryItemQueue.Add(remoteClient.AgentId, items);
+        }
+
+        private void _saveMovedItems(UUID agentID, List<InventoryItemBase> itemsToMove)
+        {
+            if (!m_scene.InventoryService.MoveItems(agentID, itemsToMove))
+                MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to move items for user " + agentID);
         }
 
         /// <summary>

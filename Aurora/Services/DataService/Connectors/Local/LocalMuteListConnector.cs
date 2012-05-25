@@ -120,7 +120,7 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(AgentID, PossibleMuteID);
             if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
+                return remoteValue != null && (bool)remoteValue;
 
             return GenericUtils.GetGeneric<MuteList>(AgentID, "MuteList", PossibleMuteID.ToString(), GD) != null;
         }

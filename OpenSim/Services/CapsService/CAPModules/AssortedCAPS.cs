@@ -305,7 +305,11 @@ namespace OpenSim.Services.CapsService
             {
                 simService.RetrieveAgent(m_service.Region, m_service.AgentID, true, out ad, out circuitData);
                 if (ad != null)
+                {
                     ad.Position = position;
+                    ad.Center = position;
+                    circuitData.startpos = position;
+                }
             }
             if(destination == null || circuitData == null)
             {
