@@ -74,6 +74,11 @@ namespace Aurora.Modules.Scripting
 
         private IHttpServer m_HttpServer = null;
 
+        public string ExternalHostNameForLSL
+        {
+            get { return MainServer.Instance.HostName; }
+        }
+
         public Type ReplaceableInterface 
         {
             get { return null; }

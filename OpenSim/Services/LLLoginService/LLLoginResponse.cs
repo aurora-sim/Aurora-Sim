@@ -459,6 +459,12 @@ namespace OpenSim.Services.LLLoginService
                 if (OpenIDURL != String.Empty)
                     responseData["openid_url"] = OpenIDURL;
 
+                if (DestinationURL != String.Empty)
+                    responseData["destination_guide_url"] = DestinationURL;
+
+                if (MarketPlaceURL != String.Empty)
+                    responseData["marketplace_url"] = MarketPlaceURL;
+
                 if (MaxAgentGroups != 0)
                     responseData["max-agent-groups"] = MaxAgentGroups;
                 else
@@ -997,6 +1003,16 @@ namespace OpenSim.Services.LLLoginService
             get { return (string) LLLoginResponseRegister.GetValue("WebProfileURL"); }
         }
 
+        public string DestinationURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue("DestinationURL"); }
+        }
+
+        public string MarketPlaceURL
+        {
+            get { return (string)LLLoginResponseRegister.GetValue("MarketPlaceURL"); }
+        }
+        
         public string Message
         {
             get

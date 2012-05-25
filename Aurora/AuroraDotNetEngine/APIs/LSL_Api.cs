@@ -9702,7 +9702,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
-            return Environment.MachineName;
+            IUrlModule UrlModule = World.RequestModuleInterface<IUrlModule>();
+            return UrlModule.ExternalHostNameForLSL;
         }
 
         //  <summary>

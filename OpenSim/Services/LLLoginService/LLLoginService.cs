@@ -138,6 +138,8 @@ namespace OpenSim.Services.LLLoginService
                 IConfig gridInfo = config.Configs["GridInfoService"];
                 LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GetString("search", string.Empty));
             }
+            LLLoginResponseRegister.RegisterValue("DestinationURL", m_loginServerConfig.GetString("DestinationURL", string.Empty));
+            LLLoginResponseRegister.RegisterValue("MarketPlaceURL", m_loginServerConfig.GetString("MarketPlaceURL", string.Empty));
             LLLoginResponseRegister.RegisterValue("SunTexture", m_loginServerConfig.GetString("SunTexture", sunTexture));
             LLLoginResponseRegister.RegisterValue("MoonTexture", m_loginServerConfig.GetString("MoonTexture", moonTexture));
             LLLoginResponseRegister.RegisterValue("CloudTexture", m_loginServerConfig.GetString("CloudTexture", cloudTexture));
