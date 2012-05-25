@@ -239,7 +239,6 @@ namespace Aurora.Modules.Friends
                 GridInstantMessage im = new GridInstantMessage();
                 im.FromOSD((OSDMap) message["Message"]);
                 LocalFriendshipOffered(Friend, im);
-                System.Threading.Thread.Sleep(1000);
             }
             else if (message["Method"] == "FriendshipDenied")
             {
