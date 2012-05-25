@@ -88,39 +88,29 @@ namespace Aurora.Services.DataService
         public FriendInfo[] GetFriends(UUID principalID)
         {
             List<FriendInfo> infos = new List<FriendInfo>();
+
+            QueryTables tables = new QueryTables();
+            tables.AddTable(m_realm, "my");
+            tables.AddTable(m_realm, "his", JoinType.Inner, new[,] { { "my.Friend", "his.PrincipalID" }, { "my.PrincipalID", "his.Friend" } });
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["PrincipalID"] = principalID;
+            filter.andFilters["my.PrincipalID"] = principalID;
             List<string> query = GD.Query(new string[]{
-                "Friend",
-                "Flags"
-            }, m_realm, filter, null, null, null);
+                "my.Friend",
+                "my.Flags",
+                "his.Flags"
+            }, tables, filter, null, null, null);
 
             //These are used to get the other flags below
-            List<string> keys = new List<string>();
-            List<object> values = new List<object>();
 
-            for (int i = 0; i < query.Count; i += 2)
+            for (int i = 0; i < query.Count; i += 3)
             {
                 FriendInfo info = new FriendInfo{
                     PrincipalID = principalID,
                     Friend = query[i],
-                    MyFlags = int.Parse(query[i + 1])
+                    MyFlags = int.Parse(query[i + 1]),
+                    TheirFlags = int.Parse(query[i + 2])
                 };
                 infos.Add(info);
-
-                filter = new QueryFilter();
-                filter.andFilters["PrincipalID"] = info.Friend;
-                filter.andFilters["Friend"] = info.PrincipalID;
-
-                List<string> query2 = GD.Query(new string[1] { "Flags" }, m_realm, filter, null, null, null);
-
-                if (query2.Count >= 1)
-                {
-                    infos[infos.Count - 1].TheirFlags = int.Parse(query2[0]);
-                }
-
-                keys = new List<string>();
-                values = new List<object>();
             }
             return infos.ToArray();
         }

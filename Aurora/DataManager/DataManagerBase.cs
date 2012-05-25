@@ -301,6 +301,14 @@ namespace Aurora.DataManager
 
         public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
+        public abstract List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
+
+        public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
+
+        public abstract IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue);
+
+        public abstract List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
+
         #endregion
 
         #region INSERT
@@ -424,5 +432,6 @@ namespace Aurora.DataManager
 
         protected abstract List<ColumnDefinition> ExtractColumnsFromTable(string tableName);
         protected abstract Dictionary<string, IndexDefinition> ExtractIndicesFromTable(string tableName);
+
     }
 }

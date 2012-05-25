@@ -97,7 +97,9 @@ namespace Aurora.Modules.RegionLoader
             RegionListBox.Items.Clear ();
             foreach(RegionInfo r in infos)
             {
-                RegionListBox.Items.Add(!r.Disabled ? "Online - " + r.RegionName : r.RegionName);
+                IScene scene;
+                bool online = (m_sceneManager.TryGetScene(r.RegionID, out scene));
+                RegionListBox.Items.Add(online ? "Online - " + r.RegionName : r.RegionName);
             }
         }
 
@@ -262,6 +264,14 @@ namespace Aurora.Modules.RegionLoader
                 takeOffline.Enabled = true;
                 resetRegion.Enabled = true;
                 deleteRegion.Enabled = true;
+            });
+        }
+
+        private void RefreshCurrentRegionsThreaded()
+        {
+            m_timerEvents.Add (delegate
+            {
+                RefreshCurrentRegions();
             });
         }
 
@@ -547,7 +557,10 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 m_sceneManager.AllRegions++;
                 m_sceneManager.StartNewRegion (region);
                 if (CurrentRegionID == region.RegionID)
-                    SetOnlineStatus ();
+                {
+                    SetOnlineStatus();
+                    RefreshCurrentRegionsThreaded();
+                }
             });
         }
 
@@ -563,8 +576,11 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 {
                     m_sceneManager.CloseRegion(scene, ShutdownType.Immediate, 0);
                 }
-                if (scene == null || CurrentRegionID == scene.RegionInfo.RegionID || CurrentRegionID ==  UUID.Zero)
+                if (scene == null || CurrentRegionID == scene.RegionInfo.RegionID || CurrentRegionID == UUID.Zero)
+                {
                     SetOfflineStatus();
+                    RefreshCurrentRegionsThreaded();
+                }
             });
         }
 

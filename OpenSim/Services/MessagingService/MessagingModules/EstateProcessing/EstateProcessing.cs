@@ -131,7 +131,7 @@ namespace OpenSim.Services.MessagingService
                             if (estateConnector != null)
                             {
                                 EstateSettings es = null;
-                                if ((es = estateConnector.GetEstateSettings(regionID)) != null)
+                                if ((es = estateConnector.GetEstateSettings(regionID)) != null && es.EstateID != 0)
                                 {
                                     s.RegionInfo.EstateSettings = es;
                                     MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");

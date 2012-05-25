@@ -359,9 +359,9 @@ namespace OpenSim.Services.GridService
 
             foreach (GridRegion r in regions) 
             {
-                if ((r.RegionLocX >= regionInfos.RegionLocX ||
+                if ((r.RegionLocX >= regionInfos.RegionLocX &&
                     r.RegionLocX < regionInfos.RegionLocX + regionInfos.RegionSizeX) &&
-                    (r.RegionLocY >= regionInfos.RegionLocY ||
+                    (r.RegionLocY >= regionInfos.RegionLocY &&
                     r.RegionLocY < regionInfos.RegionLocY + regionInfos.RegionSizeY) &&
                     r.RegionID != regionInfos.RegionID) 
                 {
@@ -385,13 +385,6 @@ namespace OpenSim.Services.GridService
                         region.RegionName);
                     return new RegisterRegion() { Error = "Wrong Session ID" };
                 }
-                if (regions.Count > 0 && region.RegionID != regions[0].RegionID)
-                {
-                    MainConsole.Instance.WarnFormat(
-                        "[GRID SERVICE]: Region {0} tried to register in coordinates {1}, {2} which are already in use by {3}.",
-                        regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY, region.RegionName);
-                    return new RegisterRegion() { Error = "Region overlaps another region" };
-                }
             }
 
             if (!m_AllowNewRegistrations && region == null)
@@ -407,7 +400,7 @@ namespace OpenSim.Services.GridService
                 //Too big... kick it out
                 MainConsole.Instance.WarnFormat("[GRID SERVICE]: Region {0} tried to register with too large of a size {1},{2}.",
                                  regionInfos.RegionName, regionInfos.RegionSizeX, regionInfos.RegionSizeY);
-                return new RegisterRegion() { Error = "Region overlaps another region" };
+                return new RegisterRegion() { Error = "Region is too large, reduce its size." };
             }
 
             if ((region != null) && (region.RegionID != regionInfos.RegionID))
