@@ -219,9 +219,12 @@ namespace Aurora.Modules.Archivers
                                 }
                                 else
                                 {
-                                    assetNonBinaryCollection.Add(asset.ID, asset);
-                                    // I need something I can safely loop through
-                                    assets2Save.Enqueue(asset.ID);
+                                    if (!assetNonBinaryCollection.ContainsKey(asset.ID))
+                                    {
+                                        assetNonBinaryCollection.Add(asset.ID, asset);
+                                        // I need something I can safely loop through
+                                        assets2Save.Enqueue(asset.ID);
+                                    }
                                 }
                             }
                         }
