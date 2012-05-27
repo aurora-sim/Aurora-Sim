@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using Aurora.DataManager;
 using Aurora.Framework;
 using Aurora.DataManager.Migration;
-using C5;
 
 namespace Aurora.DataManager
 {
@@ -41,7 +40,7 @@ namespace Aurora.DataManager
             Version = new Version(0, 0, 2);
             MigrationName = "Stats";
 
-            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
+            schema = new List<SchemaDefinition>();
 
             AddSchema("statsdata", ColDefs(ColDef("session_id", ColumnTypes.String50),
                  ColDef("agent_id", ColumnTypes.String50),

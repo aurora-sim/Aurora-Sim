@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using Aurora.Framework;
-using C5;
 
 namespace Aurora.DataManager.Migration.Migrators.Scheduler
 {
@@ -39,7 +38,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
             Version = new Version(0, 0, 1);
             MigrationName = "Scheduler";
 
-            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
+            schema = new List<SchemaDefinition>();
 
             AddSchema("scheduler", ColDefs(
                 ColDef("id", ColumnTypes.String36),

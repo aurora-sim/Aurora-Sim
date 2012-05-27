@@ -26,7 +26,6 @@
 
 using System;
 using System.Collections.Generic;
-using C5;
 using Aurora.Framework;
 using Aurora.DataManager.Migration;
 
@@ -39,7 +38,7 @@ namespace Aurora.Modules.Ban
             Version = new Version(0, 0, 2);
             MigrationName = "PresenceInfo";
 
-            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
+            schema = new List<SchemaDefinition>();
 
             AddSchema("baninfo", ColDefs(
                 ColDef("AgentID", /*"AgentID"*/ ColumnTypes.String50),
