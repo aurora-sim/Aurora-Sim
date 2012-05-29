@@ -714,7 +714,7 @@ namespace Aurora.Modules.Groups
                     GridInstantMessage msg = new GridInstantMessage
                                                  {
                                                      imSessionID = inviteUUID,
-                                                     fromAgentID = agentID,
+                                                     fromAgentID = groupID,
                                                      toAgentID = invitedAgentID,
                                                      timestamp = 0,
                                                      fromAgentName = agentName
@@ -739,7 +739,7 @@ namespace Aurora.Modules.Groups
                     msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
                     msg.binaryBucket = new byte[20];
 
-                    OutgoingInstantMessage(msg, agentID);
+                    OutgoingInstantMessage(msg, invitedAgentID);
                 }
             }
         }

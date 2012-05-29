@@ -356,7 +356,7 @@ namespace Aurora.Services.DataService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue != null && (bool)remoteValue;
 
-            if ((CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RemoveMember)) && (requestingAgentID != AgentID))
+            if ((CheckGroupPermissions(requestingAgentID, GroupID, (ulong)GroupPowers.RemoveMember)) || (requestingAgentID == AgentID))
             {
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["AgentID"] = AgentID;
