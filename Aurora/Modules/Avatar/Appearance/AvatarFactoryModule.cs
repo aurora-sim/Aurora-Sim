@@ -439,7 +439,7 @@ textures 1
                 return;
             }
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-            _sendQueue.Add(agentid, appearance.Appearance);
+            _saveQueue.Add(agentid, appearance.Appearance);
         }
 
         public void QueueInitialAppearanceSend(UUID agentid)
