@@ -120,8 +120,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour);
         void osSetEstateSunSettings(bool sunFixed, double sunHour);
         double osGetCurrentSunHour();
-        double osSunGetParam(string param);
-        void osSunSetParam(string param, double value);
+        double osGetSunParam(string param);
+        double osSunGetParam(string param); // Deprecated
+        void osSetSunParam(string param, double value);
+        void osSunSetParam(string param, double value); // Deprecated
 
         // Wind Module Functions
         string osWindActiveModelPluginName();
@@ -135,6 +137,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         string osGetScriptEngineName();
         string osGetSimulatorVersion();
+        Object osParseJSONNew(string JSON);
         Hashtable osParseJSON(string JSON);
 
         void osMessageObject(key objectUUID, string message);
@@ -162,7 +165,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osLoadedCreationID();
 
         LSL_List osGetLinkPrimitiveParams(int linknumber, LSL_List rules);
-
+        
         key osGetMapTexture();
         key osGetRegionMapTexture(string regionName);
         LSL_List osGetRegionStats();
@@ -174,8 +177,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb);
         void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb);
-
+        string osGetGridGatekeeperURI();
         LSL_List osGetAvatarList();
+
+        // Grid Info Functions
+        string osGetGridHomeURI();
+        string osGetGridCustom(string key);
 
         void osReturnObject(LSL_Key userID);
         void osReturnObjects(LSL_Float Parameter);
