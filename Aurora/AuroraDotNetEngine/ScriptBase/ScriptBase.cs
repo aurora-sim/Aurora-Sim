@@ -505,7 +505,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
                     else
                         while ((inval[start] == ',' || inval[start] == ' ') && DateTime.Now.CompareTo(time_limit) < 0)
                              start++;
-                    if (DateTime.Now.CompareTo(time_limit) < 0)
+                    if (DateTime.Now.CompareTo(time_limit) > 0)
                         break;
                 }
                 catch
