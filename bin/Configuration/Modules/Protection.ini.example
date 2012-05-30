@@ -141,6 +141,10 @@
     ;; Reference: http://forums.osgrid.org/viewtopic.php?f=5&t=2863&start=0
     ;; Default is false
     StartDisabled = false
+	
+	;; Should we bother with maturity check on this region?
+	;; Default is true
+	CheckMaturityLevel = true
 
 [CrossRegionBanSystem]
     ;; This module allows for the combining of region ban lists across instances, so you can create larger ban lists with others across the grid you are in.
