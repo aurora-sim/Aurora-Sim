@@ -57,6 +57,7 @@ namespace Aurora.Modules.Estate
         private bool StartDisabled;
         private bool m_enabled;
         private bool m_enabledBlockTeleportSeconds;
+        private bool m_checkMaturityLevel = true;
 
         #endregion
 
@@ -914,18 +915,20 @@ namespace Aurora.Modules.Estate
                 }
             }
 
-
-            if (agentInfo != null &&
-                scene.RegionInfo.AccessLevel > Util.ConvertMaturityToAccessLevel((uint) agentInfo.MaturityRating))
+            if (m_checkMaturityLevel)
             {
-                reason = "The region has too high of a maturity level. Blocking teleport.";
-                return false;
-            }
+                if (agentInfo != null &&
+                    scene.RegionInfo.AccessLevel > Util.ConvertMaturityToAccessLevel((uint) agentInfo.MaturityRating))
+                {
+                    reason = "The region has too high of a maturity level. Blocking teleport.";
+                    return false;
+                }
 
-            if (agentInfo != null && ES.DenyMinors && (agentInfo.Flags & IAgentFlags.Minor) == IAgentFlags.Minor)
-            {
-                reason = "The region has too high of a maturity level. Blocking teleport.";
-                return false;
+                if (agentInfo != null && ES.DenyMinors && (agentInfo.Flags & IAgentFlags.Minor) == IAgentFlags.Minor)
+                {
+                    reason = "The region has too high of a maturity level. Blocking teleport.";
+                    return false;
+                }
             }
 
             #endregion
@@ -1024,6 +1027,7 @@ namespace Aurora.Modules.Estate
                 StartDisabled = config.GetBoolean("StartDisabled", StartDisabled);
                 ForceLandingPointsOnCrossing = config.GetBoolean("ForceLandingPointsOnCrossing",
                                                                  ForceLandingPointsOnCrossing);
+                m_checkMaturityLevel = config.GetBoolean("CheckMaturityLevel", true);
 
                 string banCriteriaString = config.GetString("BanCriteria", "");
                 if (banCriteriaString != "")
