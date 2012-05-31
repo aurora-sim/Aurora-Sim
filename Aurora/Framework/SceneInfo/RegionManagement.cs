@@ -74,7 +74,7 @@ namespace Aurora.Framework
         {
             object remoteValue = InternalDoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             IScene scene;
             return _sceneManager.TryGetScene(regionID, out scene);
@@ -115,7 +115,7 @@ namespace Aurora.Framework
         {
             object remoteValue = InternalDoRemote(regionID);
             if (remoteValue != null || m_doRemoteOnly)
-                return (bool)remoteValue;
+                return remoteValue == null ? false : (bool)remoteValue;
 
             IScene scene;
             if (_sceneManager.TryGetScene(regionID, out scene))
@@ -180,7 +180,7 @@ namespace Aurora.Framework
             return _regionInfoConnector.GetRegionInfo(regionName);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod="GetRegionInfoByUUID")]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
         public RegionInfo GetRegionInfo(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -190,13 +190,23 @@ namespace Aurora.Framework
             return _regionInfoConnector.GetRegionInfo(regionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public bool ConnectionIsWorking()
+        {
+            object remoteValue = InternalDoRemote();
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
+            return true;
+        }
+
         [CanBeReflected(NotReflectableLookUpAnotherTrace=true)]
         private object InternalDoRemote(params object[] o)
         {
             if (_url == "")
                 return DoRemote(o);
             else
-                return DoRemoteByURL(_url, o);
+                return DoRemoteByHTTP(_url, o);
         }
     }
 }

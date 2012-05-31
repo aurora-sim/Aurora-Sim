@@ -40,7 +40,7 @@ namespace Aurora.Management
         {
             Aurora.Framework.ConfigurationLoader config = new Framework.ConfigurationLoader();
             IConfigSource configSource = config.LoadConfigSettings(null);
-            RegionManager.StartSynchronously(false, false, configSource, new RegionManagement("http://127.0.0.1:9000/regionmanagement", "TestPassword"));
+            System.Windows.Forms.Application.Run(new RemoteManagementSetup(configSource));
         }
     }
 }

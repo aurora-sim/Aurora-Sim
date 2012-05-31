@@ -130,6 +130,11 @@ namespace Aurora.Framework
 
         public object DoRemoteByURL(string url, params object[] o)
         {
+            return DoRemoteCall(false, url, false, UUID.Zero, o);
+        }
+
+        public object DoRemoteByHTTP(string url, params object[] o)
+        {
             return DoRemoteCall(false, url, true, UUID.Zero, o);
         }
 

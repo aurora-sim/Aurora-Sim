@@ -72,5 +72,11 @@ namespace Aurora.Framework
         /// <param name="regionID"></param>
         /// <returns></returns>
         RegionInfo GetRegionInfo(UUID regionID);
+
+        /// <summary>
+        /// Checks whether remote connections are working
+        /// </summary>
+        /// <returns></returns>
+        bool ConnectionIsWorking();
     }
 }
