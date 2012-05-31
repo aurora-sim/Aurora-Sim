@@ -35,8 +35,11 @@ namespace Aurora.Framework
             if (config != null)
             {
                 string password = config.GetString("RemoteAccessPassword", "");
-                if(password != "")
+                if (password != "")
+                {
                     Init(m_registry, Name, password);
+                    SetDoRemoteCalls(false);
+                }
             }
         }
 
