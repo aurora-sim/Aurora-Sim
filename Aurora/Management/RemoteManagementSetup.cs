@@ -35,6 +35,7 @@ namespace Aurora.Management
 
         private void UpdateHistoryGUI()
         {
+            _history.Items.Clear();
             for (int i = 0; i < _historyLog.IPAddresses.Count; i++)
             {
                 _history.Items.Add(_historyLog.IPAddresses[i] + ":" + _historyLog.Ports[i]);
