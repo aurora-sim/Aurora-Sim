@@ -44,9 +44,6 @@ namespace Aurora.Framework
         {
             _regionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             _sceneManager = m_registry.RequestModuleInterface<ISceneManager>();
-
-            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
-            server.AddStreamHandler(new ServerHandler("/regionmanagement", "", m_registry));
         }
 
         public void PostInitialise()
@@ -59,6 +56,8 @@ namespace Aurora.Framework
 
         public void PostStart()
         {
+            IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+            server.AddStreamHandler(new ServerHandler("/regionmanagement", "", m_registry));
         }
 
         public void Close()
