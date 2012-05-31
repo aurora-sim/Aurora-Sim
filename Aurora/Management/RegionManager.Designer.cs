@@ -25,7 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Aurora.Modules.RegionLoader
+namespace Aurora.Management
 {
     partial class RegionManager
     {

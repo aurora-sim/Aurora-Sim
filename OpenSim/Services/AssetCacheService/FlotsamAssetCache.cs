@@ -753,12 +753,12 @@ namespace OpenSim.Services
                 return 0;
 
             Dictionary<UUID, AssetType> assets = new Dictionary<UUID, AssetType>();
-            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
-                foreach (IScene s in manager.Scenes)
+                foreach (IScene s in manager.GetAllScenes())
                 {
                     StampRegionStatusFile(s.RegionInfo.RegionID);
 

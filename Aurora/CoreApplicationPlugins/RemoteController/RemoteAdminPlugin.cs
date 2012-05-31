@@ -54,7 +54,7 @@ namespace OpenSim.CoreApplicationPlugins
         private static readonly Object   m_saveOarLock = new Object();
 
         private ISimulationBase m_application;
-        private SceneManager manager;
+        private ISceneManager manager;
         private IHttpServer m_httpServer;
         private IConfig m_config;
         private IConfigSource m_configSource;
@@ -191,7 +191,7 @@ namespace OpenSim.CoreApplicationPlugins
         {
             if (m_enabled)
             {
-                manager = m_application.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+                manager = m_application.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
                 if (!CreateDefaultAvatars())
                 {
                     MainConsole.Instance.Info("[RADMIN]: Default avatars not loaded");
@@ -281,13 +281,12 @@ namespace OpenSim.CoreApplicationPlugins
                 responseData["success"] = true;
                 response.Value = responseData;
 
-                manager.ForEachScene(
-                    delegate(IScene scene)
-                        {
-                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if (dialogModule != null)
-                                dialogModule.SendGeneralAlert(message);
-                        });
+                foreach (IScene scene in manager.GetAllScenes())
+                {
+                    IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                    if (dialogModule != null)
+                        dialogModule.SendGeneralAlert(message);
+                }
             }
             catch (Exception e)
             {
@@ -410,13 +409,12 @@ namespace OpenSim.CoreApplicationPlugins
                     message = "Region is going down now.";
                 }
 
-                manager.ForEachScene(
-                    delegate(IScene scene)
-                        {
-                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
-                            if (dialogModule != null)
-                                dialogModule.SendGeneralAlert(message);
-                        });
+                foreach (IScene scene in manager.GetAllScenes())
+                {
+                    IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                    if (dialogModule != null)
+                        dialogModule.SendGeneralAlert(message);
+                }
 
                 // Perform shutdown
                 System.Timers.Timer shutdownTimer = new System.Timers.Timer(timeout) {AutoReset = false};
@@ -544,7 +542,7 @@ namespace OpenSim.CoreApplicationPlugins
                         (string)requestData["password"] != m_requiredPassword) throw new Exception("wrong password");
 
                     // check whether we still have space left (iff we are using limits)
-                    if (m_regionLimit != 0 && manager.Scenes.Count >= m_regionLimit)
+                    if (m_regionLimit != 0 && manager.AllRegions >= m_regionLimit)
                         throw new Exception(String.Format("cannot instantiate new region, server capacity {0} already reached; delete regions first",
                                                           m_regionLimit));
                     // extract or generate region ID now
@@ -663,7 +661,7 @@ namespace OpenSim.CoreApplicationPlugins
                         string ownerFirst = (string)requestData["estate_owner_first"];
                         string ownerLast = (string)requestData["estate_owner_last"];
 
-                        IScene currentOrFirst = manager.CurrentOrFirstScene;
+                        IScene currentOrFirst = manager.GetCurrentOrFirstScene();
                         IUserAccountService accountService = currentOrFirst.UserAccountService;
                         UserAccount user = accountService.GetUserAccount(currentOrFirst.RegionInfo.ScopeID,
                                                                            ownerFirst, ownerLast);
@@ -1068,7 +1066,7 @@ namespace OpenSim.CoreApplicationPlugins
                     if (requestData.Contains("user_email"))
                         email = (string)requestData["user_email"];
 
-                    IScene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.GetCurrentOrFirstScene();
                     UUID scopeID = scene.RegionInfo.ScopeID;
 
                     UserAccount account = CreateUser(scopeID, firstName, lastName, password, email);
@@ -1169,9 +1167,9 @@ namespace OpenSim.CoreApplicationPlugins
                 responseData["user_firstname"] = firstName;
                 responseData["user_lastname"] = lastName;
 
-                UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
+                UUID scopeID = manager.GetCurrentOrFirstScene().RegionInfo.ScopeID;
 
-                UserAccount account = manager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
+                UserAccount account = manager.GetCurrentOrFirstScene().UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
                 if (null == account)
                 {
@@ -1180,7 +1178,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else
                 {
-                    UserInfo userInfo = manager.CurrentOrFirstScene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(account.PrincipalID.ToString());
+                    UserInfo userInfo = manager.GetCurrentOrFirstScene().RequestModuleInterface<IAgentInfoService>().GetUserInfo(account.PrincipalID.ToString());
                     if (userInfo != null)
                         responseData["lastlogin"] = userInfo.LastLogin;
                     else
@@ -1312,7 +1310,7 @@ namespace OpenSim.CoreApplicationPlugins
             //        if (requestData.ContainsKey("about_virtual_world"))
             //            aboutAvatar = (string)requestData["about_virtual_world"];
 
-                    IScene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.GetCurrentOrFirstScene();
                     UUID scopeID = scene.RegionInfo.ScopeID;
                     UserAccount account = scene.UserAccountService.GetUserAccount(scopeID, firstName, lastName);
 
@@ -1445,7 +1443,7 @@ namespace OpenSim.CoreApplicationPlugins
                 return;
             }
 
-            IScene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.GetCurrentOrFirstScene();
             UUID scopeID = scene.RegionInfo.ScopeID;
             UserAccount modelProfile = scene.UserAccountService.GetUserAccount(scopeID, modelSpecifiers[0], modelSpecifiers[1]);
 
@@ -1474,7 +1472,7 @@ namespace OpenSim.CoreApplicationPlugins
         private void EstablishAppearance(UUID destination, UUID source)
         {
             MainConsole.Instance.DebugFormat("[RADMIN] Initializing inventory for {0} from {1}", destination, source);
-            IScene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.GetCurrentOrFirstScene();
 
             // If the model has no associated appearance we're done.
             AvatarAppearance avatarAppearance = scene.AvatarService.GetAppearance(source);
@@ -1541,7 +1539,7 @@ namespace OpenSim.CoreApplicationPlugins
 
         private void CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance)
         {
-            IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
+            IInventoryService inventoryService = manager.GetCurrentOrFirstScene().InventoryService;
 
             // Get Clothing folder of receiver
             InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Wearable, AssetType.Clothing);
@@ -1603,7 +1601,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                     CreationDate = item.CreationDate,
                                                                     Folder = destinationFolder.ID
                                                                 };
-                        ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                        ILLClientInventory inventoryModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
                             inventoryModule.AddInventoryItem(destinationItem);
                         MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
@@ -1659,7 +1657,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                     CreationDate = item.CreationDate,
                                                                     Folder = destinationFolder.ID
                                                                 };
-                        ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                        ILLClientInventory inventoryModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
                             inventoryModule.AddInventoryItem(destinationItem);
                         MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
@@ -1684,7 +1682,7 @@ namespace OpenSim.CoreApplicationPlugins
         private void CopyInventoryFolders(UUID destination, UUID source, AssetType assetType, Dictionary<UUID,UUID> inventoryMap,
                                           AvatarAppearance avatarAppearance)
         {
-            IInventoryService inventoryService = manager.CurrentOrFirstScene.InventoryService;
+            IInventoryService inventoryService = manager.GetCurrentOrFirstScene().InventoryService;
 
             InventoryFolderBase sourceFolder = inventoryService.GetFolderForType(source, InventoryType.Unknown, assetType);
             InventoryFolderBase destinationFolder = inventoryService.GetFolderForType (destination, InventoryType.Unknown, assetType);
@@ -1770,7 +1768,7 @@ namespace OpenSim.CoreApplicationPlugins
                                                                 Folder = extraFolder.ID
                                                             };
 
-                    ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                    ILLClientInventory inventoryModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<ILLClientInventory>();
                     if (inventoryModule != null)
                         inventoryModule.AddInventoryItem(destinationItem);
                     inventoryMap.Add(item.ID, destinationItem.ID);
@@ -1832,7 +1830,7 @@ namespace OpenSim.CoreApplicationPlugins
                     UUID ID = UUID.Zero;
                     XmlNode perms = null;
 
-                    IScene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.GetCurrentOrFirstScene();
                     IInventoryService inventoryService = scene.InventoryService;
                     IAssetService assetService = scene.AssetService;
 
@@ -2094,7 +2092,7 @@ namespace OpenSim.CoreApplicationPlugins
                                             // associated asset
                                             // Parent folder
 
-                                            ILLClientInventory inventoryModule = manager.CurrentOrFirstScene.RequestModuleInterface<ILLClientInventory>();
+                                            ILLClientInventory inventoryModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<ILLClientInventory>();
                                             if (inventoryModule != null)
                                                 inventoryModule.AddInventoryItem(inventoryItem);
                                             MainConsole.Instance.DebugFormat("[RADMIN] Added item {0} to folder {1}", inventoryItem.ID, extraFolder.ID);
@@ -2537,7 +2535,7 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                scene = manager.CurrentOrFirstScene;
+                scene = manager.GetCurrentOrFirstScene();
                 scene.RegionInfo.EstateSettings.EstateAccess = new UUID[]{};
                 scene.RegionInfo.EstateSettings.Save();
             }
@@ -2600,9 +2598,9 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (requestData.Contains("users"))
                 {
-                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
-                    IScene scene = manager.CurrentOrFirstScene;
+                    UUID scopeID = manager.GetCurrentOrFirstScene().RegionInfo.ScopeID;
+                    IUserAccountService userService = manager.GetCurrentOrFirstScene().UserAccountService;
+                    IScene scene = manager.GetCurrentOrFirstScene();
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = new List<UUID>();
                     foreach (string name in users.Values)
@@ -2689,10 +2687,10 @@ namespace OpenSim.CoreApplicationPlugins
 
                 if (requestData.Contains("users"))
                 {
-                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    IUserAccountService userService = manager.CurrentOrFirstScene.UserAccountService;
+                    UUID scopeID = manager.GetCurrentOrFirstScene().RegionInfo.ScopeID;
+                    IUserAccountService userService = manager.GetCurrentOrFirstScene().UserAccountService;
                     //UserProfileCacheService ups = m_application.CommunicationsManager.UserProfileCacheService;
-                    IScene scene = manager.CurrentOrFirstScene;
+                    IScene scene = manager.GetCurrentOrFirstScene();
                     Hashtable users = (Hashtable) requestData["users"];
                     List<UUID> uuids = (from string name in users.Values
                                         select name.Split()
@@ -2768,14 +2766,14 @@ namespace OpenSim.CoreApplicationPlugins
                 }
                 else throw new Exception("neither region_name nor region_uuid given");
 
-                scene = manager.CurrentOrFirstScene;
+                scene = manager.GetCurrentOrFirstScene();
                 UUID[] accessControlList = scene.RegionInfo.EstateSettings.EstateAccess;
                 Hashtable users = new Hashtable();
 
                 foreach (UUID user in accessControlList)
                 {
-                    UUID scopeID = manager.CurrentOrFirstScene.RegionInfo.ScopeID;
-                    UserAccount account = manager.CurrentOrFirstScene.UserAccountService.GetUserAccount(scopeID, user);
+                    UUID scopeID = manager.GetCurrentOrFirstScene().RegionInfo.ScopeID;
+                    UserAccount account = manager.GetCurrentOrFirstScene().UserAccountService.GetUserAccount(scopeID, user);
                     if (account != null)
                     {
                         users[user.ToString()] = account.FirstName + " " + account.LastName;
@@ -2882,7 +2880,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="email"></param>
         private UserAccount CreateUser(UUID scopeID, string firstName, string lastName, string password, string email)
         {
-            IScene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.GetCurrentOrFirstScene();
             IUserAccountService userAccountService = scene.UserAccountService;
             IGridService gridService = scene.GridService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
@@ -2952,7 +2950,7 @@ namespace OpenSim.CoreApplicationPlugins
         /// <param name="password"></param>
         private bool ChangeUserPassword(string firstName, string lastName, string password)
         {
-            IScene scene = manager.CurrentOrFirstScene;
+            IScene scene = manager.GetCurrentOrFirstScene();
             IUserAccountService userAccountService = scene.UserAccountService;
             IAuthenticationService authenticationService = scene.AuthenticationService;
 

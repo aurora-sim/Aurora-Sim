@@ -383,7 +383,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                     regionFile = fileName;
 
                 MainConsole.Instance.Debug ("[LOADREGIONS]: Creating Region: " + regionName);
-                SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+                ISceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
                 manager.AllRegions++;
                 manager.StartNewRegion(LoadRegionFromFile(regionName, regionFile, false, m_configSource, regionName));
             }

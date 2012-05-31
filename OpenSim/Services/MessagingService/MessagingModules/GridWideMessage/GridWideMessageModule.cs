@@ -238,10 +238,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 string value = message["Value"].AsString();
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
-                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
-                if (manager != null && manager.Scenes.Count > 0)
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if (manager != null && manager.AllRegions > 0)
                 {
-                    foreach (IScene scene in manager.Scenes)
+                    foreach (IScene scene in manager.GetAllScenes())
                     {
                         IScenePresence sp = null;
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
@@ -263,10 +263,10 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 string value = message["Value"].AsString();
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
-                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
-                if (manager != null && manager.Scenes.Count > 0)
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if (manager != null && manager.AllRegions > 0)
                 {
-                    foreach (IScene scene in manager.Scenes)
+                    foreach (IScene scene in manager.GetAllScenes())
                     {
                         IScenePresence sp = null;
                         if (scene.TryGetScenePresence(UUID.Parse(user), out sp))

@@ -363,7 +363,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            SceneManager man = registry.RequestModuleInterface<SceneManager>();
+            ISceneManager man = registry.RequestModuleInterface<ISceneManager>();
             if (man != null)
             {
                 man.OnAddedScene += Init;

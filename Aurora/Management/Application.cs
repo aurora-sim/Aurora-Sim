@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,37 +25,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Simulation.Base;
 using Nini.Config;
 using Aurora.Framework;
 
-namespace Aurora.Simulation.Base
+namespace Aurora.Management
 {
     /// <summary>
-    ///   IService is a module that loads up by default and is loaded on every startup by either OpenSim.exe or Aurora.Server.exe
-    ///   It loads modules including IAssetService and others
+    ///   Starting class for the Aurora Manager
     /// </summary>
-    public interface IService
+    public class ManagementApplication
     {
-        /// <summary>
-        ///   Set up and register the module
-        ///   NOTE: Do NOT load module interfaces from this method, wait until PostInit runs
-        ///   NOTE: This is normally used to set up the 'base' services, ones that should be used in standalone or Aurora.Server
-        /// </summary>
-        /// <param name = "config">Config file</param>
-        /// <param name = "registry">Place to register the modules into</param>
-        void Initialize(IConfigSource config, IRegistryCore registry);
-
-        /// <summary>
-        ///   Load other IService modules now that this is set up
-        ///   NOTE: This is normally used to load remote connectors for remote grid mode
-        /// </summary>
-        /// <param name = "config">Config file</param>
-        /// <param name = "registry">Place to register and retrieve module interfaces</param>
-        void Start(IConfigSource config, IRegistryCore registry);
-
-        /// <summary>
-        ///   All modules have started up and it is ready to run
-        /// </summary>
-        void FinishedStartup();
+        public static void Main(string[] args)
+        {
+            Aurora.Framework.ConfigurationLoader config = new Framework.ConfigurationLoader();
+            IConfigSource configSource = config.LoadConfigSettings(null);
+            System.Windows.Forms.Application.Run(new RemoteManagementSetup(configSource));
+        }
     }
 }

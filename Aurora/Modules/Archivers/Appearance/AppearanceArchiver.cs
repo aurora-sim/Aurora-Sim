@@ -75,10 +75,10 @@ namespace Aurora.Modules.Archivers
             reader.Dispose();
 
             IScenePresence SP = null;
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (IScene scene in manager.Scenes)
+                foreach (IScene scene in manager.GetAllScenes())
                     if (scene.TryGetScenePresence(account.PrincipalID, out SP))
                         break;
                 if (SP == null)
@@ -361,10 +361,10 @@ namespace Aurora.Modules.Archivers
             }
 
             IScenePresence SP = null;
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                foreach (IScene scene in manager.Scenes)
+                foreach (IScene scene in manager.GetAllScenes())
                     if (scene.TryGetScenePresence(account.PrincipalID, out SP))
                         break;
                 if (SP == null)

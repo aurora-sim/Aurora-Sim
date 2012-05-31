@@ -66,7 +66,7 @@ namespace OpenSim.Services.Connectors.Simulation
         {
             if (m_localBackend != null)
             {
-                SceneManager man = registry.RequestModuleInterface<SceneManager>();
+                ISceneManager man = registry.RequestModuleInterface<ISceneManager>();
                 if (man != null)
                 {
                     man.OnAddedScene += Init;
