@@ -83,9 +83,9 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_AuroraEventManager; }
         }
 
-        private SceneManager m_sceneManager;
+        private ISceneManager m_sceneManager;
 
-        public SceneManager SceneManager
+        public ISceneManager SceneManager
         {
             get { return m_sceneManager; }
         }

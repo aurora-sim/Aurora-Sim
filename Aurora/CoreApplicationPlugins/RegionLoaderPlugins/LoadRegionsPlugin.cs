@@ -79,7 +79,7 @@ namespace OpenSim.CoreApplicationPlugins
 
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
             List<RegionInfo[]> regions = new List<RegionInfo[]>();
-            SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             MainConsole.Instance.DefaultPrompt = "Region (root)";//Set this up
             reload:
             foreach (IRegionLoader loader in regionLoaders)

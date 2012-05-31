@@ -31,14 +31,14 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using Aurora.Framework;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
-using OpenSim.Region.Framework.Scenes;
 
-namespace Aurora.Modules.RegionLoader
+namespace Aurora.Management
 {
     public partial class RegionManager : Form
     {
@@ -47,47 +47,79 @@ namespace Aurora.Modules.RegionLoader
         public event NewRegion OnNewRegion;
         private readonly bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
-        private readonly ISimulationBase m_OpenSimBase;
-        private readonly IRegionInfoConnector m_connector = null;
-        private bool m_changingRegion = false;
-        private bool m_textHasChanged = false;
-        private readonly SceneManager m_sceneManager;
-        private string m_defaultRegionsLocation = "DefaultRegions";
 
-        private readonly Timer m_timer = new Timer ();
-        private readonly List<NoOp> m_timerEvents = new List<NoOp> ();
+        private IConfigSource _config;
+        private bool _changingRegion = false;
+        private bool _textHasChanged = false;
+        private readonly IRegionManagement _regionManager;
+        private string _defaultRegionsLocation = "DefaultRegions";
 
-        public RegionManager(bool killOnCreate, bool openCreatePageFirst, ISimulationBase baseOpenSim)
+        private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer();
+        private readonly List<NoOp> _timerEvents = new List<NoOp>();
+
+        public static void StartAsynchronously(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
         {
-            m_OpenSimBase = baseOpenSim;
-            m_sceneManager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager> ();
-            m_connector = DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
-            KillAfterRegionCreation = killOnCreate;
+            Thread t = new Thread(delegate()
+            {
+                try
+                {
+                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, openCreatePageFirst, config, regionManagement);
+                    Application.Run(manager);
+                }
+                catch { }
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+        }
+
+        public static void StartSynchronously(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
+        {
+            bool done = false;
+            Thread t = new Thread(delegate()
+                {
+                    try
+                    {
+                        RegionManager manager = new RegionManager(killWindowOnRegionCreation, openCreatePageFirst, config, regionManagement);
+                        Application.Run(manager);
+                        done = true;
+                    }
+                    catch { done = true; }
+                });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            while (!done)
+                Thread.Sleep(100);
+        }
+
+        public RegionManager(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
+        {
+            _regionManager = regionManagement;
+            _config = config;
+            KillAfterRegionCreation = killWindowOnRegionCreation;
             InitializeComponent();
             if (openCreatePageFirst)
                 tabControl1.SelectedTab = tabPage2;
             CStartupType.SelectedIndex = 1;
             RefreshCurrentRegions();
             GetDefaultRegions ();
-            m_timer.Interval = 100;
-            m_timer.Tick += m_timer_Tick;
-            m_timer.Start ();
+            _timer.Interval = 100;
+            _timer.Tick += m_timer_Tick;
+            _timer.Start ();
         }
 
         void m_timer_Tick (object sender, EventArgs e)
         {
-            lock (m_timerEvents)
+            lock (_timerEvents)
             {
-                foreach (NoOp o in m_timerEvents)
+                foreach (NoOp o in _timerEvents)
                     o ();
-                m_timerEvents.Clear ();
+                _timerEvents.Clear ();
             }
         }
 
         private void RefreshCurrentRegions()
         {
-            RegionInfo[] regionInfos = m_connector.GetRegionInfos (false);
-            List < RegionInfo >  infos = new List<RegionInfo> (regionInfos);
+            List<RegionInfo> infos = _regionManager.GetRegionInfos(false);
             infos.Sort (delegate (RegionInfo a, RegionInfo b)
             {
                 if (!a.Disabled || !b.Disabled)
@@ -97,8 +129,7 @@ namespace Aurora.Modules.RegionLoader
             RegionListBox.Items.Clear ();
             foreach(RegionInfo r in infos)
             {
-                IScene scene;
-                bool online = (m_sceneManager.TryGetScene(r.RegionID, out scene));
+                bool online = _regionManager.GetWhetherRegionIsOnline(r.RegionID);
                 RegionListBox.Items.Add(online ? "Online - " + r.RegionName : r.RegionName);
             }
         }
@@ -156,7 +187,7 @@ namespace Aurora.Modules.RegionLoader
             region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
             region.InfiniteRegion = cInfiniteRegion.Checked;
 
-            m_connector.UpdateRegionInfo(region);
+            _regionManager.UpdateRegionInfo(region);
             CopyOverDefaultRegion (region.RegionName);
             if (KillAfterRegionCreation)
             {
@@ -164,20 +195,13 @@ namespace Aurora.Modules.RegionLoader
                 return;
             }
             MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-            SceneManager manager = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-            manager.AllRegions++;
-            region.NewRegion = true;
-            Util.FireAndForget(delegate(object o)
-            {
-                manager.StartNewRegion(region);
-            });
-            region.NewRegion = false;
+            _regionManager.StartNewRegion(region);
             RefreshCurrentRegions();
         }
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo(RegionToFind.Text);
+            RegionInfo region = _regionManager.GetRegionInfo(RegionToFind.Text);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -188,12 +212,12 @@ namespace Aurora.Modules.RegionLoader
 
         private void ChangeRegionInfo (RegionInfo region)
         {
-            m_changingRegion = true;
+            _changingRegion = true;
             if (region == null)
             {
                 button20.Enabled = false;
                 CurrentRegionID = UUID.Zero;
-                m_changingRegion = false;
+                _changingRegion = false;
                 textBox11.Text = "";
                 textBox6.Text = ""; 
                 textBox4.Text = "";
@@ -232,18 +256,17 @@ namespace Aurora.Modules.RegionLoader
             RegionSizeY.Text = region.RegionSizeY.ToString ();
             startupType.SelectedIndex = ConvertStartupType (region.Startup);
             einfiniteRegion.Checked = region.InfiniteRegion;
-            IScene scene;
-            if (m_sceneManager.TryGetScene (region.RegionID, out scene))
+            if (_regionManager.GetWhetherRegionIsOnline(region.RegionID))
                 SetOnlineStatus ();
             else
                 SetOfflineStatus ();
 
-            m_changingRegion = false;
+            _changingRegion = false;
         }
 
         private void SetOfflineStatus ()
         {
-            m_timerEvents.Add (delegate
+            _timerEvents.Add (delegate
                                    {
                 RegionStatus.Text = "Offline";
                 RegionStatus.BackColor = Color.Red;
@@ -256,7 +279,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetOnlineStatus ()
         {
-            m_timerEvents.Add (delegate
+            _timerEvents.Add (delegate
                                    {
                 RegionStatus.Text = "Online";
                 RegionStatus.BackColor = Color.SpringGreen;
@@ -269,7 +292,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void RefreshCurrentRegionsThreaded()
         {
-            m_timerEvents.Add (delegate
+            _timerEvents.Add (delegate
             {
                 RefreshCurrentRegions();
             });
@@ -277,7 +300,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetStoppingStatus ()
         {
-            m_timerEvents.Add (delegate
+            _timerEvents.Add (delegate
                                    {
                 RegionStatus.Text = "Stopping";
                 RegionStatus.BackColor = Color.LightPink;
@@ -290,7 +313,7 @@ namespace Aurora.Modules.RegionLoader
 
         private void SetStartingStatus ()
         {
-            m_timerEvents.Add (delegate
+            _timerEvents.Add (delegate
                                    {
                 RegionStatus.Text = "Starting";
                 RegionStatus.BackColor = Color.LightGreen;
@@ -313,7 +336,7 @@ namespace Aurora.Modules.RegionLoader
             }
             if (item.ToString().StartsWith("Online - "))
                 item = item.ToString().Remove(0, 9);
-            RegionInfo region = m_connector.GetRegionInfo(item.ToString());
+            RegionInfo region = _regionManager.GetRegionInfo(item.ToString());
             if (region == null)
             {
                 MessageBox.Show("You must enter a valid region name!");
@@ -366,7 +389,7 @@ namespace Aurora.Modules.RegionLoader
                 return;
             }
 
-            m_connector.UpdateRegionInfo(region);
+            _regionManager.UpdateRegionInfo(region);
             if (OnNewRegion != null)
                 OnNewRegion(region);
             if(listNeedsUpdated)
@@ -390,7 +413,7 @@ namespace Aurora.Modules.RegionLoader
             string item = RegionListBox.Items[RegionListBox.SelectedIndex].ToString();
             if(item.StartsWith("Online - "))
                 item = item.Remove(0, 9);
-            RegionInfo region = m_connector.GetRegionInfo(item);
+            RegionInfo region = _regionManager.GetRegionInfo(item);
             if (region == null)
             {
                 MessageBox.Show("Region was not found!");
@@ -504,7 +527,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 MessageBox.Show("Select a region before attempting to export.");
                 return;
             }
-            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
             if (region != null) //It never should be, but who knows
             {
                 //Make sure the directory exists
@@ -525,37 +548,36 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void startupType_TextChanged (object sender, EventArgs e)
         {
-            if (!m_changingRegion)
-                m_textHasChanged = true; //When the user finishes and deselects the box, it will save
+            if (!_changingRegion)
+                _textHasChanged = true; //When the user finishes and deselects the box, it will save
         }
 
         private void startupType_Leave (object sender, EventArgs e)
         {
-            if (m_textHasChanged)
+            if (_textHasChanged)
             {
                 Update ();
-                m_textHasChanged = false;
+                _textHasChanged = false;
             }
         }
 
         private void RegionManager_FormClosing (object sender, FormClosingEventArgs e)
         {
             //Save at the end if it hasn't yet
-            if (m_textHasChanged)
+            if (_textHasChanged)
             {
                 Update ();
-                m_textHasChanged = false;
+                _textHasChanged = false;
             }
         }
 
         private void putOnline_Click (object sender, EventArgs e)
         {
             SetStartingStatus ();
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
             Util.FireAndForget (delegate
-                                    {
-                m_sceneManager.AllRegions++;
-                m_sceneManager.StartNewRegion (region);
+            {
+                _regionManager.StartRegion(region);
                 if (CurrentRegionID == region.RegionID)
                 {
                     SetOnlineStatus();
@@ -566,17 +588,10 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void takeOffline_Click (object sender, EventArgs e)
         {
-            IScene scene;
             SetStoppingStatus();
             Util.FireAndForget (delegate
-                                    {
-                m_sceneManager.AllRegions--;
-                m_sceneManager.TryGetScene (CurrentRegionID, out scene);
-                if (scene != null)
-                {
-                    m_sceneManager.CloseRegion(scene, ShutdownType.Immediate, 0);
-                }
-                if (scene == null || CurrentRegionID == scene.RegionInfo.RegionID || CurrentRegionID == UUID.Zero)
+            {
+                if (_regionManager.StopRegion(CurrentRegionID))
                 {
                     SetOfflineStatus();
                     RefreshCurrentRegionsThreaded();
@@ -586,13 +601,11 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void resetRegion_Click (object sender, EventArgs e)
         {
-            IScene scene;
-            m_sceneManager.TryGetScene (CurrentRegionID, out scene);
-            if (scene != null)
+            if (_regionManager.GetWhetherRegionIsOnline(CurrentRegionID))
             {
                 DialogResult r = Utilities.InputBox("Are you sure?", "Are you sure you want to reset this region (deletes all prims and reverts terrain)?");
                 if (r == DialogResult.OK)
-                    m_sceneManager.ResetRegion(scene);
+                    _regionManager.ResetRegion(CurrentRegionID);
             }
             else
                 MessageBox.Show("The region is not online, please turn it online before doing this command.");
@@ -600,17 +613,14 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void deleteregion_Click (object sender, EventArgs e)
         {
-            RegionInfo region = m_connector.GetRegionInfo (CurrentRegionID);
+            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
             if (region != null) //It never should be, but who knows
             {
                 DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
                 if (r == DialogResult.OK)
                 {
                     takeOffline_Click(sender, e);
-                    m_connector.Delete (region);
-                    SceneManager sm = m_OpenSimBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
-                    if (sm != null)
-                        sm.DeleteRegion(region);
+                    _regionManager.DeleteRegion(region.RegionID);
                     //Remove everything from the GUI
                     ChangeRegionInfo(null);
                     //Update the regions in the list box as well
@@ -623,19 +633,19 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void GetDefaultRegions ()
         {
-            IConfig config = m_OpenSimBase.ConfigSource.Configs["RegionManager"];
+            IConfig config = _config.Configs["RegionManager"];
             if (config != null)
-                m_defaultRegionsLocation = config.GetString ("DefaultRegionsLocation", m_defaultRegionsLocation);
+                _defaultRegionsLocation = config.GetString ("DefaultRegionsLocation", _defaultRegionsLocation);
 
             RegionSelections.Items.Add ("None");//Add one for the default default
 
-            if (!Directory.Exists (m_defaultRegionsLocation))
+            if (!Directory.Exists (_defaultRegionsLocation))
             {
                 RegionSelections.SelectedIndex = 0;
                 return;
             }
 
-            string[] files = Directory.GetFiles (m_defaultRegionsLocation, "*.abackup");
+            string[] files = Directory.GetFiles (_defaultRegionsLocation, "*.abackup");
             foreach (string file in files)
             {
                 RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
@@ -646,13 +656,13 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void CopyOverDefaultRegion (string regionName)
         {
             string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
-            name = Path.Combine (m_defaultRegionsLocation, name + ".backup");//Full name
+            name = Path.Combine (_defaultRegionsLocation, name + ".backup");//Full name
             if (!File.Exists (name))
                 return;//None selected
 
             string loadAppenedFileName = "";
             string newFilePath = "";
-            IConfig simData = m_OpenSimBase.ConfigSource.Configs["FileBasedSimulationData"];
+            IConfig simData = _config.Configs["FileBasedSimulationData"];
             if (simData != null)
             {
                 loadAppenedFileName = simData.GetString ("ApendedLoadFileName", loadAppenedFileName);
@@ -676,12 +686,12 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
             Image b = null;
-            if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".png")))
-                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".png"));
-            else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpg")))
-                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpg"));
-            else if (File.Exists (Path.Combine (m_defaultRegionsLocation, name + ".jpeg")))
-                b = Image.FromFile (Path.Combine (m_defaultRegionsLocation, name + ".jpeg"));
+            if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".png")))
+                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".png"));
+            else if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".jpg")))
+                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".jpg"));
+            else if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".jpeg")))
+                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".jpeg"));
             if (b == null)
             {
                 RegionSelectionsPicture.Image = null;
@@ -708,7 +718,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private string BuildRegionManagerHTTPPage(UUID currentRegionID)
         {
-            RegionInfo region = m_connector.GetRegionInfo(currentRegionID);
+            RegionInfo region = _regionManager.GetRegionInfo(currentRegionID);
             string html;
             string path = Util.BasePathCombine(System.IO.Path.Combine("data", "RegionManager.html"));
             if (System.IO.File.Exists(path) && region != null)
@@ -735,7 +745,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private string RegionMangerHTMLChanged(Dictionary<string, string> vars)
         {
-            RegionInfo region = m_connector.GetRegionInfo(CurrentRegionID);
+            RegionInfo region = _regionManager.GetRegionInfo(CurrentRegionID);
             region.RegionName = vars["Region Name"];
             region.RegionLocX = int.Parse(vars["Region Location X"]) * Constants.RegionSize;
             region.RegionLocY = int.Parse(vars["Region Location Y"]) * Constants.RegionSize;

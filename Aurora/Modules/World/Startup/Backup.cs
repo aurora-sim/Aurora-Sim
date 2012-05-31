@@ -46,7 +46,7 @@ namespace Aurora.Modules.Startup
     {
         #region Declares
 
-        protected SceneManager m_manager;
+        protected ISceneManager m_manager;
         protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
         // the minimum time that must elapse before a changed object will be considered for persisted
         public static long m_dontPersistBefore = 60;
@@ -89,7 +89,7 @@ namespace Aurora.Modules.Startup
 
         public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_manager = scene.RequestModuleInterface<SceneManager>();
+            m_manager = scene.RequestModuleInterface<ISceneManager>();
             m_backup[scene].FinishStartup();
         }
 

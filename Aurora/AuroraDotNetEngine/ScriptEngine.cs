@@ -355,7 +355,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private void EventManager_OnStartupComplete(IScene scene, List<string> data)
         {
             AmountOfStartupsLeft++;
-            SceneManager m = scene.RequestModuleInterface<SceneManager>();
+            ISceneManager m = scene.RequestModuleInterface<ISceneManager>();
             if (AmountOfStartupsLeft >= m.AllRegions)
             {
                 //All done!

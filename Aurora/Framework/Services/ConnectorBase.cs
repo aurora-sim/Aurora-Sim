@@ -65,6 +65,7 @@ namespace Aurora.Framework
         protected bool m_doRemoteOnly = false;
         protected int m_OSDRequestTimeout = 10000;
         protected int m_OSDRequestTryCount = 7;
+        protected string m_password = "";
 
         public string PluginName
         {
@@ -77,46 +78,62 @@ namespace Aurora.Framework
             set;
         }
 
+        public void Init(IRegistryCore registry, string name, string password)
+        {
+            m_password = password;
+            Init(registry, name);
+        }
+
         public void Init(IRegistryCore registry, string name)
         {
             Enabled = true;
             m_registry = registry;
             m_name = name;
-            IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
-            IConfig config;
-            if ((config = source.Configs["AuroraConnectors"]) != null)
-                m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
-            if ((config = source.Configs["Configuration"]) != null)
+            ISimulationBase simBase = registry == null ? null : registry.RequestModuleInterface<ISimulationBase>();
+            if (simBase != null)
             {
-                m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);
-                m_OSDRequestTryCount = config.GetInt("OSDRequestTryCount", m_OSDRequestTryCount);
+                IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
+                IConfig config;
+                if ((config = source.Configs["AuroraConnectors"]) != null)
+                    m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+                if ((config = source.Configs["Configuration"]) != null)
+                {
+                    m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);
+                    m_OSDRequestTryCount = config.GetInt("OSDRequestTryCount", m_OSDRequestTryCount);
+                }
             }
             if (m_doRemoteCalls)
                 m_doRemoteOnly = true;//Lock out local + remote for now
             ConnectorRegistry.RegisterConnector(this);
         }
 
+        public void SetDoRemoteCalls(bool doRemoteCalls)
+        {
+            m_doRemoteCalls = doRemoteCalls;
+            m_doRemoteOnly = doRemoteCalls;
+        }
+
         public object DoRemote(params object[] o)
         {
-            return DoRemoteCall(false, "ServerURI", UUID.Zero, o);
+            return DoRemoteCall(false, "ServerURI", false, UUID.Zero, o);
         }
 
         public object DoRemoteForced(params object[] o)
         {
-            return DoRemoteCall(true, "ServerURI", UUID.Zero, o);
+            return DoRemoteCall(true, "ServerURI", false, UUID.Zero, o);
         }
 
         public object DoRemoteForUser(UUID userID, params object[] o)
         {
-            return DoRemoteCall(false, "ServerURI", UUID.Zero, o);
+            return DoRemoteCall(false, "ServerURI", false, UUID.Zero, o);
         }
 
         public object DoRemoteByURL(string url, params object[] o)
         {
-            return DoRemoteCall(false, url, UUID.Zero, o);
+            return DoRemoteCall(false, url, true, UUID.Zero, o);
         }
 
-        public object DoRemoteCall(bool forced, string url, UUID userID, params object[] o)
+        public object DoRemoteCall(bool forced, string url, bool urlOverrides, UUID userID, params object[] o)
         {
             if (!m_doRemoteCalls && !forced)
                 return null;
@@ -124,11 +141,14 @@ namespace Aurora.Framework
             int upStack = 1;
             if (userID == UUID.Zero)
                 upStack = 2;
-            MethodInfo method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
-            CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+            MethodInfo method;
+            CanBeReflected reflection;
+            GetReflection(upStack, stackTrace, out method, out reflection);
             string methodName = reflection != null && reflection.RenamedMethod != "" ? reflection.RenamedMethod : method.Name;
             OSDMap map = new OSDMap();
             map["Method"] = methodName;
+            if (reflection.UsePassword)
+                map["Password"] = m_password;
             int i = 0;
             var parameters = method.GetParameters();
             if (o.Length != parameters.Length)
@@ -144,7 +164,7 @@ namespace Aurora.Framework
                 i++;
             }
             List<string> m_ServerURIs =
-                    m_configService.FindValueOf(userID.ToString(), url, false);
+                urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
             OSDMap response = null;
             int loops2Do = (m_ServerURIs.Count < m_OSDRequestTryCount) ? m_ServerURIs.Count : m_OSDRequestTryCount;
             for (int index = 0; index < loops2Do; index++)
@@ -179,6 +199,14 @@ namespace Aurora.Framework
                 return instance;
             }
             return Util.OSDToObject(response["Value"], method.ReturnType);
+        }
+
+        private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
+        {
+            method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
+            reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+            if (reflection != null && reflection.NotReflectableLookUpAnotherTrace)
+                GetReflection(upStack + 1, stackTrace, out method, out reflection);
         }
 
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
@@ -268,23 +296,170 @@ namespace Aurora.Framework
             }
             finally
             {
-                if (errorMessage == "unknown error")
+                if (MainConsole.Instance != null)
                 {
-                    // This just dumps a warning for any operation that takes more than 500 ms
-                    int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                    MainConsole.Instance.TraceFormat(
-                        "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                        url, method, tickdiff, tickdata, tickserialize);
-                    if (tickdiff > 5000)
-                        MainConsole.Instance.InfoFormat(
+                    if (errorMessage == "unknown error")
+                    {
+                        // This just dumps a warning for any operation that takes more than 500 ms
+                        int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                        MainConsole.Instance.TraceFormat(
                             "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                             url, method, tickdiff, tickdata, tickserialize);
+                        if (tickdiff > 5000)
+                            MainConsole.Instance.InfoFormat(
+                                "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                url, method, tickdiff, tickdata, tickserialize);
+                    }
                 }
             }
 
-            MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
-                             data != null ? data.AsString() : "");
+            if(MainConsole.Instance != null)
+                MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
+                                 data != null ? data.AsString() : "");
             return "";
         }
+
+        public bool CheckPassword(string password)
+        {
+            return password == m_password;
+        }
+    }
+
+    public class ServerHandler : BaseStreamHandler
+    {
+        protected string m_SessionID;
+        protected IRegistryCore m_registry;
+        protected static Dictionary<string, List<MethodImplementation>> m_methods = null;
+
+        public ServerHandler(string url, string SessionID, IRegistryCore registry) :
+            base("POST", url)
+        {
+            m_SessionID = SessionID;
+            m_registry = registry;
+            if (m_methods == null)
+            {
+                m_methods = new Dictionary<string, List<MethodImplementation>>();
+                List<string> alreadyRunPlugins = new List<string>();
+                foreach (ConnectorBase plugin in ConnectorRegistry.Connectors)
+                {
+                    if (alreadyRunPlugins.Contains(plugin.PluginName))
+                        continue;
+                    alreadyRunPlugins.Add(plugin.PluginName);
+                    foreach (MethodInfo method in plugin.GetType().GetMethods())
+                    {
+                        CanBeReflected reflection = (CanBeReflected)Attribute.GetCustomAttribute(method, typeof(CanBeReflected));
+                        if (reflection != null)
+                        {
+                            string methodName = reflection.RenamedMethod == "" ? method.Name : reflection.RenamedMethod;
+                            List<MethodImplementation> methods = new List<MethodImplementation>();
+                            MethodImplementation imp = new MethodImplementation() { Method = method, Reference = plugin, Attribute = reflection };
+                            if (!m_methods.TryGetValue(methodName, out methods))
+                                m_methods.Add(methodName, (methods = new List<MethodImplementation>()));
+
+                            methods.Add(imp);
+                        }
+                    }
+                }
+            }
+        }
+
+        public override byte[] Handle(string path, Stream requestData,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            StreamReader sr = new StreamReader(requestData);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
+
+            try
+            {
+                OSDMap args = WebUtils.GetOSDMap(body, false);
+                if (args != null)
+                    return HandleMap(args);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
+            }
+            return new byte[0];
+        }
+
+        public byte[] HandleMap(OSDMap args)
+        {
+            if (args.ContainsKey("Method"))
+            {
+                IGridRegistrationService urlModule =
+                    m_registry.RequestModuleInterface<IGridRegistrationService>();
+                string method = args["Method"].AsString();
+
+                MethodImplementation methodInfo;
+                if (GetMethodInfo(method, args.Count - 1, out methodInfo))
+                {
+                    if (m_SessionID == "")
+                    {
+                        if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
+                            return new byte[0];
+                    }
+                    else if (!urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
+                        return new byte[0];
+                    if (methodInfo.Attribute.UsePassword)
+                    {
+                        if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
+                            return new byte[0];
+                    }
+
+                    MainConsole.Instance.Debug("[Server]: Method Called: " + method);
+
+                    ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
+                    object[] parameters = new object[paramInfo.Length];
+                    int paramNum = 0;
+                    foreach (ParameterInfo param in paramInfo)
+                        parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+
+                    object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
+                    OSDMap response = new OSDMap();
+                    if (o == null)//void method
+                        response["Value"] = "null";
+                    else
+                        response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
+                    response["Success"] = true;
+                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                }
+            }
+            MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
+
+            return new byte[0];
+        }
+
+        private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)
+        {
+            List<MethodImplementation> methods = new List<MethodImplementation>();
+            if (m_methods.TryGetValue(method, out methods))
+            {
+                if (methods.Count == 1)
+                {
+                    methodInfo = methods[0];
+                    return true;
+                }
+                foreach (MethodImplementation m in methods)
+                {
+                    if (m.Method.GetParameters().Length == parameters)
+                    {
+                        methodInfo = m;
+                        return true;
+                    }
+                }
+            }
+            MainConsole.Instance.Warn("COULD NOT FIND METHOD: " + method);
+            methodInfo = null;
+            return false;
+        }
+    }
+
+    public class MethodImplementation
+    {
+        public MethodInfo Method;
+        public ConnectorBase Reference;
+        public CanBeReflected Attribute;
     }
 }

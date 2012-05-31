@@ -40,27 +40,10 @@ using Timer = System.Timers.Timer;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    #region Delegates
-
-    public delegate void NewScene (IScene scene);
-    public delegate void NoParam ();
-
-    #endregion
-
-    #region Enums
-
-    public enum ShutdownType
-    {
-        Immediate,
-        Delayed
-    }
-    
-    #endregion
-
     /// <summary>
     /// Manager for adding, closing, reseting, and restarting scenes.
     /// </summary>
-    public class SceneManager : IApplicationPlugin
+    public class SceneManager : ISceneManager, IApplicationPlugin
     {
         #region Declares
 
@@ -73,7 +56,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private ISimulationBase m_OpenSimBase;
         private int RegionsFinishedStarting = 0;
-        public int AllRegions = 0;
+        public int AllRegions { get; set; }
 
         protected ISimulationDataStore m_simulationDataService;
         public ISimulationDataStore SimulationDataService
@@ -89,25 +72,20 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         private readonly List<IScene> m_localScenes = new List<IScene> ();
-        public List<IScene> Scenes
-        {
-            get { return m_localScenes; }
-        }
 
-        public IScene CurrentOrFirstScene
+        public List<IScene> GetAllScenes() { return new List<IScene>(m_localScenes); }
+
+        public IScene GetCurrentOrFirstScene()
         {
-            get
+            if (MainConsole.Instance.ConsoleScene == null)
             {
-                if (MainConsole.Instance.ConsoleScene == null)
+                if (m_localScenes.Count > 0)
                 {
-                    if (m_localScenes.Count > 0)
-                    {
-                        return m_localScenes[0];
-                    }
-                    return null;
+                    return m_localScenes[0];
                 }
-                return MainConsole.Instance.ConsoleScene;
+                return null;
             }
+            return MainConsole.Instance.ConsoleScene;
         }
 
         #endregion
@@ -116,21 +94,26 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void PreStartup(ISimulationBase simBase)
         {
-        }
+            m_OpenSimBase = simBase;
 
-        public void Initialize(ISimulationBase openSim)
-        {
-            m_OpenSimBase = openSim;
-
-            IConfig handlerConfig = openSim.ConfigSource.Configs["ApplicationPlugins"];
+            IConfig handlerConfig = simBase.ConfigSource.Configs["ApplicationPlugins"];
             if (handlerConfig.GetString("SceneManager", "") != Name)
                 return;
 
-            m_config = openSim.ConfigSource;
+            m_config = simBase.ConfigSource;
+            //Register us!
+            m_OpenSimBase.ApplicationRegistry.RegisterModuleInterface<ISceneManager>(this);
+        }
+
+        public void Initialize(ISimulationBase simBase)
+        {
+            IConfig handlerConfig = simBase.ConfigSource.Configs["ApplicationPlugins"];
+            if (handlerConfig.GetString("SceneManager", "") != Name)
+                return;
 
             string name = String.Empty;
             // Try reading the [SimulationDataStore] section
-            IConfig simConfig = openSim.ConfigSource.Configs["SimulationDataStore"];
+            IConfig simConfig = simBase.ConfigSource.Configs["SimulationDataStore"];
             if (simConfig != null)
             {
                 name = simConfig.GetString("DatabaseLoaderName", "FileBasedDatabase");
@@ -161,8 +144,6 @@ namespace OpenSim.Region.Framework.Scenes
             //Load the startup modules for the region
             m_startupPlugins = AuroraModuleLoader.PickupModules<ISharedRegionStartupModule>();
 
-            //Register us!
-            m_OpenSimBase.ApplicationRegistry.RegisterModuleInterface<SceneManager>(this);
             m_OpenSimBase.EventManager.RegisterEventHandler("RegionInfoChanged", RegionInfoChanged);
         }
 
@@ -223,9 +204,7 @@ namespace OpenSim.Region.Framework.Scenes
             MainConsole.Instance.Info("[SceneManager]: Startup Complete in region " + scene.RegionInfo.RegionName);
             RegionsFinishedStarting++;
             if (RegionsFinishedStarting >= AllRegions)
-            {
                 FinishStartUp();
-            }
         }
 
         private void FinishStartUp()
@@ -686,10 +665,10 @@ namespace OpenSim.Region.Framework.Scenes
                 OnCloseScene(scene);
         }
 
-        public void DeleteRegion(RegionInfo region)
+        public void DeleteRegion(UUID regionID)
         {
             IScene scene;
-            if (TryGetScene(region.RegionID, out scene))
+            if (TryGetScene(regionID, out scene))
                 DeleteSceneFromModules(scene);
         }
 
@@ -764,7 +743,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void KickUserCommand(string[] cmdparams)
         {
             string alert = null;
-            IList agents = new List<IScenePresence>(CurrentOrFirstScene.GetScenePresences ());
+            IList agents = new List<IScenePresence>(GetCurrentOrFirstScene().GetScenePresences());
 
             if (cmdparams.Length < 4)
             {
@@ -893,7 +872,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (irm.Name.ToLower () == cmdparams[1].ToLower ())
                     {
                         MainConsole.Instance.Info (String.Format ("Unloading module: {0}", irm.Name));
-                        foreach (IScene scene in Scenes)
+                        foreach (IScene scene in m_localScenes)
                             irm.RemoveRegion (scene);
                         irm.Close ();
                     }
@@ -932,9 +911,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (cmdparams.Length > 2)
             {
-                IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+                IRegionSerialiserModule serialiser = GetCurrentOrFirstScene().RequestModuleInterface<IRegionSerialiserModule>();
                 if (serialiser != null)
-                    serialiser.SavePrimsToXml2(CurrentOrFirstScene, cmdparams[2]);
+                    serialiser.SavePrimsToXml2(GetCurrentOrFirstScene(), cmdparams[2]);
             }
             else
             {
@@ -1095,7 +1074,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 else
-                    agents = CurrentOrFirstScene.GetScenePresences();
+                    agents = GetCurrentOrFirstScene().GetScenePresences();
             }
             else
             {
@@ -1107,7 +1086,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 else
-                    agents = CurrentOrFirstScene.GetScenePresences();
+                    agents = GetCurrentOrFirstScene().GetScenePresences();
                 agents.RemoveAll(delegate(IScenePresence sp)
                 {
                     return sp.IsChildAgent;
@@ -1189,9 +1168,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
+                    IRegionSerialiserModule serialiser = GetCurrentOrFirstScene().RequestModuleInterface<IRegionSerialiserModule>();
                     if (serialiser != null)
-                        serialiser.LoadPrimsFromXml2(CurrentOrFirstScene, cmdparams[2]);
+                        serialiser.LoadPrimsFromXml2(GetCurrentOrFirstScene(), cmdparams[2]);
                 }
                 catch (FileNotFoundException)
                 {
@@ -1212,7 +1191,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             try
             {
-                IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
+                IRegionArchiverModule archiver = GetCurrentOrFirstScene().RequestModuleInterface<IRegionArchiverModule>();
                 if (archiver != null)
                     archiver.HandleLoadOarConsoleCommand(cmdparams);
             }
@@ -1228,7 +1207,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="cmdparams"></param>
         protected void SaveOar(string[] cmdparams)
         {
-            IRegionArchiverModule archiver = CurrentOrFirstScene.RequestModuleInterface<IRegionArchiverModule>();
+            IRegionArchiverModule archiver = GetCurrentOrFirstScene().RequestModuleInterface<IRegionArchiverModule>();
             if (archiver != null)
                 archiver.HandleSaveOarConsoleCommand(cmdparams);
         }

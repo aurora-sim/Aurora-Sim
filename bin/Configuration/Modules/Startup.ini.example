@@ -18,6 +18,9 @@
 
     ;; How many objects should be allowed in all regions? (Will be overridden by settings per region)
     ObjectCapacity = 80000
+	
+	;; Adding this password allows people to remotely manage regions and the console, must not be blank
+	RemoteAccessPassword = ""
 
 [Update]
 

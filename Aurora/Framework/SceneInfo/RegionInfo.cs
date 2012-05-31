@@ -41,7 +41,7 @@ namespace Aurora.Framework
         Normal = 3
     }
 
-    public class RegionInfo
+    public class RegionInfo : IDataTransferable
     {
         public string RegionFile = String.Empty;
         public bool Disabled = false;
@@ -390,6 +390,16 @@ namespace Aurora.Framework
             }
             if (!m_UDPPorts.Contains (InternalEndPoint.Port))
                 m_UDPPorts.Add (InternalEndPoint.Port);
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            UnpackRegionInfoData(map);
+        }
+
+        public override OSDMap ToOSD()
+        {
+            return PackRegionInfoData(true);
         }
     }
 }

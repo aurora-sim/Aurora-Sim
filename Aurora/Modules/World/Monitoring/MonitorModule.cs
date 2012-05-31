@@ -730,7 +730,7 @@ namespace Aurora.Modules.Monitoring
         /// <param name = "args"></param>
         protected void DebugMonitorsInCurrentRegion(string[] args)
         {
-            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
                 //Dump the all instance one first
@@ -828,7 +828,7 @@ namespace Aurora.Modules.Monitoring
                 "Asset",
                 "State");
 
-            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
 #if (!ISWIN)
@@ -1033,7 +1033,7 @@ namespace Aurora.Modules.Monitoring
 
         public void PostInitialise()
         {
-            SceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
                 manager.OnAddedScene += OnAddedScene;
