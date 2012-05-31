@@ -396,15 +396,6 @@ namespace Aurora.Management
             if(listNeedsUpdated)
                 RefreshCurrentRegions();
             RegionListBox.SelectedItem = region.RegionName;
-
-            IOpenRegionSettingsConnector orsc = Aurora.DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-            {
-                OpenRegionSettings ors = orsc.GetSettings(region.RegionID);
-                ors.MaximumPhysPrimScale = float.Parse(eMaxPhysPrim.Text);
-                ors.MaximumPrimScale = float.Parse(eMaxPrimSize.Text);
-                orsc.SetSettings(region.RegionID, ors);
-            }
         }
 
         private void RegionListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -463,16 +454,6 @@ namespace Aurora.Management
         private void RegionTypeHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show("This is the type of region you are running. It is shown in the client in parcel info and Region/Estate.");
-        }
-
-        private void MaxNonPhysPrimHelp_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("This is the maxiumum size that you can make non physical prims.");
-        }
-
-        private void MaximumPhysPrimHelp_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("This is the maxiumum size that you can make physical prims.");
         }
 
         private void MaxPrimsHelp_Click(object sender, EventArgs e)
@@ -708,13 +689,9 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void RegionManager_Load(object sender, EventArgs e)
         {
-            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
-            if (orsc != null)
-            {
-                string navUrl = orsc.AddOpenRegionSettingsHTMLPage(CurrentRegionID);
-                //string navUrl = BuildRegionManagerHTTPPage(CurrentRegionID);
-                webBrowser1.Navigate(navUrl);
-            }
+            string url;
+            if((url = _regionManager.GetOpenRegionSettingsHTMLPage(CurrentRegionID)) != "")
+                webBrowser1.Navigate(url);
         }
 
         private string BuildRegionManagerHTTPPage(UUID currentRegionID)

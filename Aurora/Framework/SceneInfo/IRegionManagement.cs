@@ -30,9 +30,9 @@ namespace Aurora.Framework
         /// <summary>
         /// Attempts to stop the currently running region
         /// </summary>
-        /// <param name="CurrentRegionID"></param>
+        /// <param name="regionID"></param>
         /// <returns></returns>
-        bool StopRegion(UUID CurrentRegionID);
+        bool StopRegion(UUID regionID);
 
         /// <summary>
         /// Clears all objects from the region
@@ -72,6 +72,13 @@ namespace Aurora.Framework
         /// <param name="regionID"></param>
         /// <returns></returns>
         RegionInfo GetRegionInfo(UUID regionID);
+
+        /// <summary>
+        /// Get an HTML page that allows for the get/set of OpenRegionSettings for the region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        string GetOpenRegionSettingsHTMLPage(UUID regionID);
 
         /// <summary>
         /// Checks whether remote connections are working

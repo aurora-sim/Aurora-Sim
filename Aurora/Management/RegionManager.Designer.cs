@@ -83,8 +83,6 @@ namespace Aurora.Management
             this.button11 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
-            this.button8 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -102,11 +100,7 @@ namespace Aurora.Management
             this.label3 = new System.Windows.Forms.Label();
             this.ObjectCount = new System.Windows.Forms.TextBox();
             this.Port = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.MaxPhys = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.MaxNonPhys = new System.Windows.Forms.TextBox();
             this.Type = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
@@ -146,8 +140,6 @@ namespace Aurora.Management
             this.DisabledHelp = new System.Windows.Forms.Button();
             this.MaturityHelp = new System.Windows.Forms.Button();
             this.MaxPrimsHelp = new System.Windows.Forms.Button();
-            this.MaximumPhysPrimHelp = new System.Windows.Forms.Button();
-            this.MaxNonPhysPrimHelp = new System.Windows.Forms.Button();
             this.RegionTypeHelp = new System.Windows.Forms.Button();
             this.RegionPort = new System.Windows.Forms.Button();
             this.RegionLocationY = new System.Windows.Forms.Button();
@@ -165,12 +157,8 @@ namespace Aurora.Management
             this.label25 = new System.Windows.Forms.Label();
             this.textBox6 = new System.Windows.Forms.TextBox();
             this.textBox7 = new System.Windows.Forms.TextBox();
-            this.label26 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
-            this.eMaxPhysPrim = new System.Windows.Forms.TextBox();
-            this.label28 = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
-            this.eMaxPrimSize = new System.Windows.Forms.TextBox();
             this.textBox11 = new System.Windows.Forms.TextBox();
             this.label30 = new System.Windows.Forms.Label();
             this.webBrowser1 = new System.Windows.Forms.WebBrowser();
@@ -259,9 +247,9 @@ namespace Aurora.Management
             // 
             // Create
             // 
-            this.Create.Location = new System.Drawing.Point(538, 301);
+            this.Create.Location = new System.Drawing.Point(515, 301);
             this.Create.Name = "Create";
-            this.Create.Size = new System.Drawing.Size(104, 23);
+            this.Create.Size = new System.Drawing.Size(127, 23);
             this.Create.TabIndex = 1;
             this.Create.Text = "Create my Region!";
             this.Create.UseVisualStyleBackColor = true;
@@ -288,8 +276,6 @@ namespace Aurora.Management
             this.groupBox1.Controls.Add(this.button11);
             this.groupBox1.Controls.Add(this.button10);
             this.groupBox1.Controls.Add(this.button9);
-            this.groupBox1.Controls.Add(this.button8);
-            this.groupBox1.Controls.Add(this.button7);
             this.groupBox1.Controls.Add(this.button6);
             this.groupBox1.Controls.Add(this.button4);
             this.groupBox1.Controls.Add(this.button3);
@@ -307,11 +293,7 @@ namespace Aurora.Management
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.ObjectCount);
             this.groupBox1.Controls.Add(this.Port);
-            this.groupBox1.Controls.Add(this.label9);
             this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.MaxPhys);
-            this.groupBox1.Controls.Add(this.label8);
-            this.groupBox1.Controls.Add(this.MaxNonPhys);
             this.groupBox1.Controls.Add(this.Type);
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Location = new System.Drawing.Point(9, 6);
@@ -324,7 +306,7 @@ namespace Aurora.Management
             // cInfiniteRegion
             // 
             this.cInfiniteRegion.AutoSize = true;
-            this.cInfiniteRegion.Location = new System.Drawing.Point(247, 382);
+            this.cInfiniteRegion.Location = new System.Drawing.Point(246, 292);
             this.cInfiniteRegion.Name = "cInfiniteRegion";
             this.cInfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.cInfiniteRegion.TabIndex = 66;
@@ -332,7 +314,7 @@ namespace Aurora.Management
             // 
             // button19
             // 
-            this.button19.Location = new System.Drawing.Point(80, 379);
+            this.button19.Location = new System.Drawing.Point(79, 289);
             this.button19.Name = "button19";
             this.button19.Size = new System.Drawing.Size(21, 20);
             this.button19.TabIndex = 65;
@@ -343,7 +325,7 @@ namespace Aurora.Management
             // label39
             // 
             this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(6, 383);
+            this.label39.Location = new System.Drawing.Point(5, 293);
             this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(86, 15);
             this.label39.TabIndex = 64;
@@ -356,14 +338,14 @@ namespace Aurora.Management
             "Normal",
             "Medium",
             "Soft"});
-            this.CStartupType.Location = new System.Drawing.Point(247, 347);
+            this.CStartupType.Location = new System.Drawing.Point(246, 312);
             this.CStartupType.Name = "CStartupType";
             this.CStartupType.Size = new System.Drawing.Size(100, 30);
             this.CStartupType.TabIndex = 63;
             // 
             // button18
             // 
-            this.button18.Location = new System.Drawing.Point(93, 343);
+            this.button18.Location = new System.Drawing.Point(92, 308);
             this.button18.Name = "button18";
             this.button18.Size = new System.Drawing.Size(21, 20);
             this.button18.TabIndex = 61;
@@ -374,7 +356,7 @@ namespace Aurora.Management
             // label37
             // 
             this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(6, 347);
+            this.label37.Location = new System.Drawing.Point(5, 312);
             this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(75, 15);
             this.label37.TabIndex = 60;
@@ -463,7 +445,7 @@ namespace Aurora.Management
             // DisabledCreate
             // 
             this.DisabledCreate.AutoSize = true;
-            this.DisabledCreate.Location = new System.Drawing.Point(247, 323);
+            this.DisabledCreate.Location = new System.Drawing.Point(247, 272);
             this.DisabledCreate.Name = "DisabledCreate";
             this.DisabledCreate.Size = new System.Drawing.Size(15, 14);
             this.DisabledCreate.TabIndex = 42;
@@ -471,7 +453,7 @@ namespace Aurora.Management
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(56, 320);
+            this.button11.Location = new System.Drawing.Point(56, 269);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(21, 20);
             this.button11.TabIndex = 40;
@@ -481,7 +463,7 @@ namespace Aurora.Management
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(56, 297);
+            this.button10.Location = new System.Drawing.Point(56, 246);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(21, 20);
             this.button10.TabIndex = 39;
@@ -491,33 +473,13 @@ namespace Aurora.Management
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(155, 272);
+            this.button9.Location = new System.Drawing.Point(155, 221);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(21, 20);
             this.button9.TabIndex = 38;
             this.button9.Text = "?";
             this.button9.UseVisualStyleBackColor = true;
             this.button9.Click += new System.EventHandler(this.MaxPrimsHelp_Click);
-            // 
-            // button8
-            // 
-            this.button8.Location = new System.Drawing.Point(155, 246);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(21, 20);
-            this.button8.TabIndex = 37;
-            this.button8.Text = "?";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.MaximumPhysPrimHelp_Click);
-            // 
-            // button7
-            // 
-            this.button7.Location = new System.Drawing.Point(174, 219);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(21, 20);
-            this.button7.TabIndex = 36;
-            this.button7.Text = "?";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.MaxNonPhysPrimHelp_Click);
             // 
             // button6
             // 
@@ -579,7 +541,7 @@ namespace Aurora.Management
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 324);
+            this.label12.Location = new System.Drawing.Point(6, 273);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(56, 15);
             this.label12.TabIndex = 24;
@@ -605,7 +567,7 @@ namespace Aurora.Management
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 301);
+            this.label11.Location = new System.Drawing.Point(6, 250);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(50, 15);
             this.label11.TabIndex = 22;
@@ -626,7 +588,7 @@ namespace Aurora.Management
             "PG",
             "Mature",
             "Adult"});
-            this.Maturity.Location = new System.Drawing.Point(247, 298);
+            this.Maturity.Location = new System.Drawing.Point(247, 247);
             this.Maturity.Name = "Maturity";
             this.Maturity.Size = new System.Drawing.Size(100, 17);
             this.Maturity.TabIndex = 21;
@@ -642,7 +604,7 @@ namespace Aurora.Management
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 275);
+            this.label10.Location = new System.Drawing.Point(6, 224);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(176, 15);
             this.label10.TabIndex = 20;
@@ -659,7 +621,7 @@ namespace Aurora.Management
             // 
             // ObjectCount
             // 
-            this.ObjectCount.Location = new System.Drawing.Point(247, 272);
+            this.ObjectCount.Location = new System.Drawing.Point(247, 221);
             this.ObjectCount.Name = "ObjectCount";
             this.ObjectCount.Size = new System.Drawing.Size(100, 20);
             this.ObjectCount.TabIndex = 19;
@@ -673,15 +635,6 @@ namespace Aurora.Management
             this.Port.TabIndex = 8;
             this.Port.Text = "9000";
             // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(6, 249);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(167, 15);
-            this.label9.TabIndex = 18;
-            this.label9.Text = "Maximum Physical Prim Size";
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -690,31 +643,6 @@ namespace Aurora.Management
             this.label4.Size = new System.Drawing.Size(78, 15);
             this.label4.TabIndex = 9;
             this.label4.Text = "Region Ports";
-            // 
-            // MaxPhys
-            // 
-            this.MaxPhys.Location = new System.Drawing.Point(247, 246);
-            this.MaxPhys.Name = "MaxPhys";
-            this.MaxPhys.Size = new System.Drawing.Size(100, 20);
-            this.MaxPhys.TabIndex = 17;
-            this.MaxPhys.Text = "50";
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 223);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(194, 15);
-            this.label8.TabIndex = 16;
-            this.label8.Text = "Maximum Non-Physical Prim Size";
-            // 
-            // MaxNonPhys
-            // 
-            this.MaxNonPhys.Location = new System.Drawing.Point(247, 220);
-            this.MaxNonPhys.Name = "MaxNonPhys";
-            this.MaxNonPhys.Size = new System.Drawing.Size(100, 20);
-            this.MaxNonPhys.TabIndex = 15;
-            this.MaxNonPhys.Text = "256";
             // 
             // Type
             // 
@@ -935,8 +863,6 @@ namespace Aurora.Management
             this.groupBox3.Controls.Add(this.DisabledHelp);
             this.groupBox3.Controls.Add(this.MaturityHelp);
             this.groupBox3.Controls.Add(this.MaxPrimsHelp);
-            this.groupBox3.Controls.Add(this.MaximumPhysPrimHelp);
-            this.groupBox3.Controls.Add(this.MaxNonPhysPrimHelp);
             this.groupBox3.Controls.Add(this.RegionTypeHelp);
             this.groupBox3.Controls.Add(this.RegionPort);
             this.groupBox3.Controls.Add(this.RegionLocationY);
@@ -954,12 +880,8 @@ namespace Aurora.Management
             this.groupBox3.Controls.Add(this.label25);
             this.groupBox3.Controls.Add(this.textBox6);
             this.groupBox3.Controls.Add(this.textBox7);
-            this.groupBox3.Controls.Add(this.label26);
             this.groupBox3.Controls.Add(this.label27);
-            this.groupBox3.Controls.Add(this.eMaxPhysPrim);
-            this.groupBox3.Controls.Add(this.label28);
             this.groupBox3.Controls.Add(this.label29);
-            this.groupBox3.Controls.Add(this.eMaxPrimSize);
             this.groupBox3.Controls.Add(this.textBox11);
             this.groupBox3.Controls.Add(this.label30);
             this.groupBox3.Location = new System.Drawing.Point(9, 6);
@@ -972,7 +894,7 @@ namespace Aurora.Management
             // einfiniteRegion
             // 
             this.einfiniteRegion.AutoSize = true;
-            this.einfiniteRegion.Location = new System.Drawing.Point(247, 377);
+            this.einfiniteRegion.Location = new System.Drawing.Point(247, 325);
             this.einfiniteRegion.Name = "einfiniteRegion";
             this.einfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.einfiniteRegion.TabIndex = 55;
@@ -981,7 +903,7 @@ namespace Aurora.Management
             // 
             // button13
             // 
-            this.button13.Location = new System.Drawing.Point(80, 374);
+            this.button13.Location = new System.Drawing.Point(80, 322);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size(21, 20);
             this.button13.TabIndex = 54;
@@ -992,7 +914,7 @@ namespace Aurora.Management
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(6, 378);
+            this.label17.Location = new System.Drawing.Point(6, 326);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(86, 15);
             this.label17.TabIndex = 53;
@@ -1004,7 +926,7 @@ namespace Aurora.Management
             this.startupType.Items.AddRange(new object[] {
             "Normal",
             "Medium"});
-            this.startupType.Location = new System.Drawing.Point(247, 341);
+            this.startupType.Location = new System.Drawing.Point(247, 289);
             this.startupType.Name = "startupType";
             this.startupType.Size = new System.Drawing.Size(157, 30);
             this.startupType.TabIndex = 37;
@@ -1013,7 +935,7 @@ namespace Aurora.Management
             // 
             // button17
             // 
-            this.button17.Location = new System.Drawing.Point(93, 341);
+            this.button17.Location = new System.Drawing.Point(93, 289);
             this.button17.Name = "button17";
             this.button17.Size = new System.Drawing.Size(21, 20);
             this.button17.TabIndex = 52;
@@ -1024,7 +946,7 @@ namespace Aurora.Management
             // label36
             // 
             this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(6, 345);
+            this.label36.Location = new System.Drawing.Point(6, 293);
             this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(75, 15);
             this.label36.TabIndex = 51;
@@ -1046,7 +968,6 @@ namespace Aurora.Management
             this.RegionSizeY.Name = "RegionSizeY";
             this.RegionSizeY.Size = new System.Drawing.Size(157, 20);
             this.RegionSizeY.TabIndex = 48;
-            this.RegionSizeY.Text = "256";
             this.RegionSizeY.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.RegionSizeY.Leave += new System.EventHandler(this.startupType_Leave);
             // 
@@ -1075,7 +996,6 @@ namespace Aurora.Management
             this.RegionSizeX.Name = "RegionSizeX";
             this.RegionSizeX.Size = new System.Drawing.Size(157, 20);
             this.RegionSizeX.TabIndex = 45;
-            this.RegionSizeX.Text = "256";
             this.RegionSizeX.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.RegionSizeX.Leave += new System.EventHandler(this.startupType_Leave);
             // 
@@ -1090,17 +1010,16 @@ namespace Aurora.Management
             // 
             // StartupNumberBox
             // 
-            this.StartupNumberBox.Location = new System.Drawing.Point(247, 317);
+            this.StartupNumberBox.Location = new System.Drawing.Point(247, 265);
             this.StartupNumberBox.Name = "StartupNumberBox";
             this.StartupNumberBox.Size = new System.Drawing.Size(157, 20);
             this.StartupNumberBox.TabIndex = 44;
-            this.StartupNumberBox.Text = "0";
             this.StartupNumberBox.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.StartupNumberBox.Leave += new System.EventHandler(this.startupType_Leave);
             // 
             // button12
             // 
-            this.button12.Location = new System.Drawing.Point(93, 317);
+            this.button12.Location = new System.Drawing.Point(93, 265);
             this.button12.Name = "button12";
             this.button12.Size = new System.Drawing.Size(21, 20);
             this.button12.TabIndex = 43;
@@ -1111,7 +1030,7 @@ namespace Aurora.Management
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(6, 321);
+            this.label13.Location = new System.Drawing.Point(6, 269);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(94, 15);
             this.label13.TabIndex = 42;
@@ -1120,7 +1039,7 @@ namespace Aurora.Management
             // DisabledEdit
             // 
             this.DisabledEdit.AutoSize = true;
-            this.DisabledEdit.Location = new System.Drawing.Point(247, 298);
+            this.DisabledEdit.Location = new System.Drawing.Point(247, 246);
             this.DisabledEdit.Name = "DisabledEdit";
             this.DisabledEdit.Size = new System.Drawing.Size(15, 14);
             this.DisabledEdit.TabIndex = 41;
@@ -1130,7 +1049,7 @@ namespace Aurora.Management
             // 
             // DisabledHelp
             // 
-            this.DisabledHelp.Location = new System.Drawing.Point(56, 295);
+            this.DisabledHelp.Location = new System.Drawing.Point(56, 243);
             this.DisabledHelp.Name = "DisabledHelp";
             this.DisabledHelp.Size = new System.Drawing.Size(21, 20);
             this.DisabledHelp.TabIndex = 39;
@@ -1140,7 +1059,7 @@ namespace Aurora.Management
             // 
             // MaturityHelp
             // 
-            this.MaturityHelp.Location = new System.Drawing.Point(56, 272);
+            this.MaturityHelp.Location = new System.Drawing.Point(56, 220);
             this.MaturityHelp.Name = "MaturityHelp";
             this.MaturityHelp.Size = new System.Drawing.Size(21, 20);
             this.MaturityHelp.TabIndex = 38;
@@ -1150,33 +1069,13 @@ namespace Aurora.Management
             // 
             // MaxPrimsHelp
             // 
-            this.MaxPrimsHelp.Location = new System.Drawing.Point(155, 247);
+            this.MaxPrimsHelp.Location = new System.Drawing.Point(155, 195);
             this.MaxPrimsHelp.Name = "MaxPrimsHelp";
             this.MaxPrimsHelp.Size = new System.Drawing.Size(21, 20);
             this.MaxPrimsHelp.TabIndex = 37;
             this.MaxPrimsHelp.Text = "?";
             this.MaxPrimsHelp.UseVisualStyleBackColor = true;
             this.MaxPrimsHelp.Click += new System.EventHandler(this.MaxPrimsHelp_Click);
-            // 
-            // MaximumPhysPrimHelp
-            // 
-            this.MaximumPhysPrimHelp.Location = new System.Drawing.Point(155, 221);
-            this.MaximumPhysPrimHelp.Name = "MaximumPhysPrimHelp";
-            this.MaximumPhysPrimHelp.Size = new System.Drawing.Size(21, 20);
-            this.MaximumPhysPrimHelp.TabIndex = 36;
-            this.MaximumPhysPrimHelp.Text = "?";
-            this.MaximumPhysPrimHelp.UseVisualStyleBackColor = true;
-            this.MaximumPhysPrimHelp.Click += new System.EventHandler(this.MaximumPhysPrimHelp_Click);
-            // 
-            // MaxNonPhysPrimHelp
-            // 
-            this.MaxNonPhysPrimHelp.Location = new System.Drawing.Point(174, 194);
-            this.MaxNonPhysPrimHelp.Name = "MaxNonPhysPrimHelp";
-            this.MaxNonPhysPrimHelp.Size = new System.Drawing.Size(21, 20);
-            this.MaxNonPhysPrimHelp.TabIndex = 35;
-            this.MaxNonPhysPrimHelp.Text = "?";
-            this.MaxNonPhysPrimHelp.UseVisualStyleBackColor = true;
-            this.MaxNonPhysPrimHelp.Click += new System.EventHandler(this.MaxNonPhysPrimHelp_Click);
             // 
             // RegionTypeHelp
             // 
@@ -1240,7 +1139,7 @@ namespace Aurora.Management
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(6, 299);
+            this.label20.Location = new System.Drawing.Point(6, 247);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(56, 15);
             this.label20.TabIndex = 24;
@@ -1261,14 +1160,13 @@ namespace Aurora.Management
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(157, 20);
             this.textBox3.TabIndex = 4;
-            this.textBox3.Text = "1000";
             this.textBox3.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox3.Leave += new System.EventHandler(this.startupType_Leave);
             // 
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(6, 276);
+            this.label22.Location = new System.Drawing.Point(6, 224);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(50, 15);
             this.label22.TabIndex = 22;
@@ -1285,11 +1183,10 @@ namespace Aurora.Management
             // 
             // textBox4
             // 
-            this.textBox4.Location = new System.Drawing.Point(247, 273);
+            this.textBox4.Location = new System.Drawing.Point(247, 221);
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(157, 20);
             this.textBox4.TabIndex = 21;
-            this.textBox4.Text = "PG";
             this.textBox4.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox4.Leave += new System.EventHandler(this.startupType_Leave);
             // 
@@ -1299,14 +1196,13 @@ namespace Aurora.Management
             this.textBox5.Name = "textBox5";
             this.textBox5.Size = new System.Drawing.Size(157, 20);
             this.textBox5.TabIndex = 6;
-            this.textBox5.Text = "1000";
             this.textBox5.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox5.Leave += new System.EventHandler(this.startupType_Leave);
             // 
             // label24
             // 
             this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(6, 250);
+            this.label24.Location = new System.Drawing.Point(6, 198);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(176, 15);
             this.label24.TabIndex = 20;
@@ -1323,11 +1219,10 @@ namespace Aurora.Management
             // 
             // textBox6
             // 
-            this.textBox6.Location = new System.Drawing.Point(247, 247);
+            this.textBox6.Location = new System.Drawing.Point(247, 195);
             this.textBox6.Name = "textBox6";
             this.textBox6.Size = new System.Drawing.Size(157, 20);
             this.textBox6.TabIndex = 19;
-            this.textBox6.Text = "65536";
             this.textBox6.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox6.Leave += new System.EventHandler(this.startupType_Leave);
             // 
@@ -1337,18 +1232,8 @@ namespace Aurora.Management
             this.textBox7.Name = "textBox7";
             this.textBox7.Size = new System.Drawing.Size(157, 20);
             this.textBox7.TabIndex = 8;
-            this.textBox7.Text = "9000";
             this.textBox7.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox7.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
-            // label26
-            // 
-            this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(6, 224);
-            this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(167, 15);
-            this.label26.TabIndex = 18;
-            this.label26.Text = "Maximum Physical Prim Size";
             // 
             // label27
             // 
@@ -1359,25 +1244,6 @@ namespace Aurora.Management
             this.label27.TabIndex = 9;
             this.label27.Text = "Region Ports";
             // 
-            // eMaxPhysPrim
-            // 
-            this.eMaxPhysPrim.Location = new System.Drawing.Point(247, 221);
-            this.eMaxPhysPrim.Name = "eMaxPhysPrim";
-            this.eMaxPhysPrim.Size = new System.Drawing.Size(157, 20);
-            this.eMaxPhysPrim.TabIndex = 17;
-            this.eMaxPhysPrim.Text = "50";
-            this.eMaxPhysPrim.TextChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.eMaxPhysPrim.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
-            // label28
-            // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(6, 198);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(194, 15);
-            this.label28.TabIndex = 16;
-            this.label28.Text = "Maximum Non-Physical Prim Size";
-            // 
             // label29
             // 
             this.label29.AutoSize = true;
@@ -1387,23 +1253,12 @@ namespace Aurora.Management
             this.label29.Size = new System.Drawing.Size(0, 13);
             this.label29.TabIndex = 12;
             // 
-            // eMaxPrimSize
-            // 
-            this.eMaxPrimSize.Location = new System.Drawing.Point(247, 195);
-            this.eMaxPrimSize.Name = "eMaxPrimSize";
-            this.eMaxPrimSize.Size = new System.Drawing.Size(157, 20);
-            this.eMaxPrimSize.TabIndex = 15;
-            this.eMaxPrimSize.Text = "256";
-            this.eMaxPrimSize.TextChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.eMaxPrimSize.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
             // textBox11
             // 
             this.textBox11.Location = new System.Drawing.Point(247, 117);
             this.textBox11.Name = "textBox11";
             this.textBox11.Size = new System.Drawing.Size(157, 20);
             this.textBox11.TabIndex = 13;
-            this.textBox11.Text = "Mainland";
             this.textBox11.TextChanged += new System.EventHandler(this.startupType_TextChanged);
             this.textBox11.Leave += new System.EventHandler(this.startupType_Leave);
             // 
@@ -1496,8 +1351,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button button11;
         private System.Windows.Forms.Button button10;
         private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button3;
@@ -1515,11 +1368,7 @@ namespace Aurora.Management
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox ObjectCount;
         private System.Windows.Forms.TextBox Port;
-        private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox MaxPhys;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox MaxNonPhys;
         private System.Windows.Forms.TextBox Type;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TabPage tabPage1;
@@ -1559,8 +1408,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button DisabledHelp;
         private System.Windows.Forms.Button MaturityHelp;
         private System.Windows.Forms.Button MaxPrimsHelp;
-        private System.Windows.Forms.Button MaximumPhysPrimHelp;
-        private System.Windows.Forms.Button MaxNonPhysPrimHelp;
         private System.Windows.Forms.Button RegionTypeHelp;
         private System.Windows.Forms.Button RegionPort;
         private System.Windows.Forms.Button RegionLocationY;
@@ -1578,12 +1425,8 @@ namespace Aurora.Management
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.TextBox textBox6;
         private System.Windows.Forms.TextBox textBox7;
-        private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label27;
-        private System.Windows.Forms.TextBox eMaxPhysPrim;
-        private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Label label29;
-        private System.Windows.Forms.TextBox eMaxPrimSize;
         private System.Windows.Forms.TextBox textBox11;
         private System.Windows.Forms.Label label30;
         private System.Windows.Forms.WebBrowser webBrowser1;

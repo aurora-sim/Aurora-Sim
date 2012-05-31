@@ -192,6 +192,19 @@ namespace Aurora.Framework
             return _regionInfoConnector.GetRegionInfo(regionID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
+        public string GetOpenRegionSettingsHTMLPage(UUID regionID)
+        {
+            object remoteValue = InternalDoRemote(regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
+
+            IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
+            if (orsc != null)
+                return orsc.AddOpenRegionSettingsHTMLPage(regionID);
+            return "";
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public bool ConnectionIsWorking()
         {
