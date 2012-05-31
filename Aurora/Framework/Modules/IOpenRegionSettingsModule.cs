@@ -321,7 +321,8 @@ namespace Aurora.Framework
         {
             if (rm == null)
                 return;
-            MaxDragDistance = (float) rm["MaxDragDistance"].AsReal();
+            MaxDragDistance = (float)rm["MaxDragDistance"].AsReal();
+            DefaultDrawDistance = (float)rm["DrawDistance"].AsReal();
             ForceDrawDistance = rm["ForceDrawDistance"].AsInteger() == 1;
             MaximumPrimScale = (float) rm["MaxPrimScale"].AsReal();
             MinimumPrimScale = (float) rm["MinPrimScale"].AsReal();
