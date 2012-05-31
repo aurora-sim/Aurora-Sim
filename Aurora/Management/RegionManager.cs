@@ -194,7 +194,8 @@ namespace Aurora.Management
                 Application.Exit();
                 return;
             }
-            MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            if(MainConsole.Instance != null)
+                MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
             _regionManager.StartNewRegion(region);
             RefreshCurrentRegions();
         }
@@ -772,6 +773,11 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         {
             groupBox3.Visible = !groupBox3.Visible;
             webBrowser1.Visible = !webBrowser1.Visible;
+        }
+
+        private void einfiniteRegion_CheckedChanged(object sender, EventArgs e)
+        {
+            Update();
         }
     }
 }
