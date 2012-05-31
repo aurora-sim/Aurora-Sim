@@ -978,7 +978,7 @@ namespace Aurora.Services.DataService
             QueryTables tables = new QueryTables();
             tables.AddTable("osgroup", "osg");
             tables.AddTable("osgroupmembership", "osgm", JoinType.Inner, new[,] { { "osg.GroupID", "osgm.GroupID" } });
-            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" } });
+            tables.AddTable("osrole", "osr", JoinType.Inner, new[,] { { "osgm.SelectedRoleID", "osr.RoleID" }, { "osr.GroupID", "osg.GroupID" } });
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["osg.GroupID"] = GroupID;
