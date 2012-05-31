@@ -637,8 +637,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void CopyOverDefaultRegion (string regionName)
         {
-            string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
-            name = Path.Combine (_defaultRegionsLocation, name + ".backup");//Full name
+            string fileName = RegionSelections.Items[RegionSelections.SelectedIndex].ToString();
+            string name = Path.Combine(_defaultRegionsLocation, fileName + ".abackup");//Full name
             if (!File.Exists (name))
                 return;//None selected
 
@@ -650,9 +650,9 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 loadAppenedFileName = simData.GetString ("ApendedLoadFileName", loadAppenedFileName);
                 newFilePath = simData.GetString ("LoadBackupDirectory", newFilePath);
             }
-            string newFileName = Path.Combine (newFilePath, name + loadAppenedFileName + ".abackup");
-            if (!File.Exists (name))
-                return; //None selected
+            string newFileName = newFilePath == "" || newFilePath == "/" ?
+                regionName + loadAppenedFileName + ".abackup" :
+                Path.Combine(newFilePath, regionName + loadAppenedFileName + ".abackup");
             if (File.Exists (newFileName))
             {
                 DialogResult s = Utilities.InputBox ("Delete file?", "The file " + name + " already exists, delete?");
