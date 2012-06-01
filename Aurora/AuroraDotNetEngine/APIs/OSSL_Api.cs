@@ -40,6 +40,7 @@ using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Services.Interfaces;
@@ -67,7 +68,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         internal ISceneChildEntity m_host;
         internal UUID m_itemID;
         internal uint m_localID;
-
         public IScene World
         {
             get { return m_host.ParentEntity.Scene; }
@@ -503,7 +503,113 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return UUID.Zero.ToString();
         }
 
+        private enum InfoType
+        {
+            Nick,
+            Name,
+            Login,
+            Home,
+            Custom
+        };
 
+        private string GridUserInfo(InfoType type)
+        {
+            return GridUserInfo(type, "");
+        }
+
+        private string GridUserInfo(InfoType type, string key)
+        {
+            string retval = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+            string url = config.Configs["GridInfo"].GetString("GridInfoURI", String.Empty);
+
+            if (String.IsNullOrEmpty(url))
+                return "Configuration Error!";
+
+            string verb = "/json_grid_info";
+            OSDMap json = new OSDMap();
+
+            OSDMap info = (OSDMap) Util.CombineParams(new[] {String.Format("{0}{1}", url, verb)}, 3000);
+
+            if (info["Success"] != true)
+                return "Get GridInfo Failed!";
+
+            json = (OSDMap)OSDParser.DeserializeJson(info["_RawResult"].AsString());
+
+            switch (type)
+            {
+                case InfoType.Nick:
+                    retval = json["gridnick"];
+                    break;
+
+                case InfoType.Name:
+                    retval = json["gridname"];
+                    break;
+
+                case InfoType.Login:
+                    retval = json["login"];
+                    break;
+
+                case InfoType.Home:
+                    retval = json["home"];
+                    break;
+
+                case InfoType.Custom:
+                    retval = json[key];
+                    break;
+
+                default:
+                    retval = "error";
+                    break;
+            }
+
+            return retval;
+        }
+
+        public string osGetGridHomeURI() //patched from OpenSim, you can remove this comment after pull
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridHomeURI", m_host, "OSSL",
+                                                   m_itemID)) return "";
+
+            string HomeURI = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+
+            if (config.Configs["GridInfoService"] != null)
+                HomeURI = MainServer.Instance.ServerURI + "/";
+
+            if (String.IsNullOrEmpty(HomeURI))
+                HomeURI = GridUserInfo(InfoType.Home);
+
+            return HomeURI;
+        }
+
+        public string osGetGridCustom(string key) //patched from OpenSim, you can remove this comment after pull
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridCustom", m_host, "OSSL",
+                                                   m_itemID)) return "";
+
+            string retval = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+
+            if (config.Configs["GridInfoService"] != null)
+                retval = config.Configs["gridnick"].GetString(key, retval);
+
+            if (String.IsNullOrEmpty(retval))
+                retval = GridUserInfo(InfoType.Custom, key);
+
+            return retval;
+        }
+
+        public string osGetGridGatekeeperURI() //patched from OpenSim, you can remove this comment after pull
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridGatekeeperURI", m_host, "OSSL", m_itemID)) return "";
+            string gatekeeperURI = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+            if (config.Configs["GridService"] != null)
+               gatekeeperURI = MainServer.Instance.ServerURI + "/"; 
+               return gatekeeperURI;
+        }
+ 
         public void osForceAttachToAvatar(int attachmentPoint)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osForceAttachToAvatar", m_host, "OSSL", m_itemID)) return;
@@ -1108,7 +1214,27 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return sunHour;
         }
 
-        public double osSunGetParam(string param)
+        public double osGetSunParam(string param) 
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetSunParam", m_host, "OSSL", m_itemID))
+                return 0;
+            return GetSunParam(param);
+        }
+
+        private double GetSunParam(string param)
+        {
+            double value = 0.0;
+
+            ISunModule module = World.RequestModuleInterface<ISunModule>();
+            if (module != null)
+            {
+                value = module.GetSunParameter(param);
+            }
+
+            return value;
+        }
+
+        public double osSunGetParam(string param) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL", m_itemID))
                 return 0;
@@ -1125,7 +1251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return value;
         }
 
-        public void osSunSetParam(string param, double value)
+        public void osSunSetParam(string param, double value) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunSetParam", m_host, "OSSL", m_itemID)) return;
 
@@ -1137,7 +1263,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        public void osSetSunParam(string param, double value)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSetSunParam", m_host, "OSSL", m_itemID)) return;
+            SetSunParam(param, value);
+        }
 
+        private void SetSunParam(string param, double value)
+        {
+            ISunModule module = World.RequestModuleInterface<ISunModule>();
+            if (module != null)
+            {
+                module.SetSunParameter(param, value);
+            }
+        }
+        
         public string osWindActiveModelPluginName()
         {
             if (
@@ -1458,12 +1598,79 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return "";
         }
 
+        private Hashtable osdToHashtable(OSDMap map)
+        {
+            Hashtable result = new Hashtable();
+            foreach (KeyValuePair<string, OSD> item in map)
+            {
+                result.Add(item.Key, osdToObject(item.Value));
+            }
+            return result;
+        }
+
+        private ArrayList osdToArray(OSDArray list)
+        {
+            ArrayList result = new ArrayList();
+            foreach (OSD item in list)
+            {
+                result.Add(osdToObject(item));
+            }
+            return result;
+        }
+
+        private Object osdToObject(OSD decoded)
+        {
+            if (decoded is OSDString)
+            {
+                return (string)decoded.AsString();
+            }
+            else if (decoded is OSDInteger)
+            {
+                return (int)decoded.AsInteger();
+            }
+            else if (decoded is OSDReal)
+            {
+                return (float)decoded.AsReal();
+            }
+            else if (decoded is OSDBoolean)
+            {
+                return (bool)decoded.AsBoolean();
+            }
+            else if (decoded is OSDMap)
+            {
+                return osdToHashtable((OSDMap)decoded);
+            }
+            else if (decoded is OSDArray)
+            {
+                return osdToArray((OSDArray)decoded);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public Object osParseJSONNew(string JSON) //patched from OpenSim, you can remove this comment after pull
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSONNew", m_host, "OSSL", m_itemID))
+                return new object();
+            try
+            {
+                OSD decoded = OSDParser.DeserializeJson(JSON);
+                return osdToObject(decoded);
+            }
+            catch (Exception e)
+            {
+                OSSLError("osParseJSONNew: Problems decoding JSON string " + JSON + " : " + e.Message);
+                return null;
+            }
+        }
+        
         public Hashtable osParseJSON(string JSON)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSON", m_host, "OSSL", m_itemID))
                 return new Hashtable();
-
-
+            
             // see http://www.json.org/ for more details on JSON
 
             string currentKey = null;
