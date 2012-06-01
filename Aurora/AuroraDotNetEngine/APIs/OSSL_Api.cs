@@ -566,7 +566,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return retval;
         }
 
-        public string osGetGridHomeURI()
+        public string osGetGridHomeURI() //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridHomeURI", m_host, "OSSL",
                                                    m_itemID)) return "";
@@ -583,7 +583,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return HomeURI;
         }
 
-        public string osGetGridCustom(string key)
+        public string osGetGridCustom(string key) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridCustom", m_host, "OSSL",
                                                    m_itemID)) return "";
@@ -600,7 +600,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return retval;
         }
 
-        public string osGetGridGatekeeperURI()
+        public string osGetGridGatekeeperURI() //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridGatekeeperURI", m_host, "OSSL", m_itemID)) return "";
             string gatekeeperURI = String.Empty;
@@ -1214,7 +1214,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return sunHour;
         }
 
-        public double osGetSunParam(string param)
+        public double osGetSunParam(string param) 
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osGetSunParam", m_host, "OSSL", m_itemID))
                 return 0;
@@ -1234,7 +1234,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return value;
         }
 
-        public double osSunGetParam(string param)
+        public double osSunGetParam(string param) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunGetParam", m_host, "OSSL", m_itemID))
                 return 0;
@@ -1251,7 +1251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return value;
         }
 
-        public void osSunSetParam(string param, double value)
+        public void osSunSetParam(string param, double value) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osSunSetParam", m_host, "OSSL", m_itemID)) return;
 
@@ -1649,8 +1649,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return null;
             }
         }
-        
-        public Object osParseJSONNew(string JSON)
+
+        public Object osParseJSONNew(string JSON) //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osParseJSONNew", m_host, "OSSL", m_itemID))
                 return new object();

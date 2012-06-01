@@ -120,9 +120,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetRegionSunSettings(bool useEstateSun, bool sunFixed, double sunHour);
         void osSetEstateSunSettings(bool sunFixed, double sunHour);
         double osGetCurrentSunHour();
-        double osGetSunParam(string param);
+        double osGetSunParam(string param); //patched from OpenSim
         double osSunGetParam(string param); // Deprecated
-        void osSetSunParam(string param, double value);
+        void osSetSunParam(string param, double value); //patched from OpenSim
         void osSunSetParam(string param, double value); // Deprecated
 
         // Wind Module Functions
@@ -137,8 +137,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
 
         string osGetScriptEngineName();
         string osGetSimulatorVersion();
-        Object osParseJSONNew(string JSON);
-        Hashtable osParseJSON(string JSON);
+        Object osParseJSONNew(string JSON); //patched from OpenSim
+        Hashtable osParseJSON(string JSON); 
 
         void osMessageObject(key objectUUID, string message);
 
@@ -177,12 +177,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void osSetPrimitiveParams(LSL_Key prim, LSL_List rules);
         void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb);
         void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb);
-        string osGetGridGatekeeperURI();
+        string osGetGridGatekeeperURI(); //maybe HG only
         LSL_List osGetAvatarList();
 
         // Grid Info Functions
-        string osGetGridHomeURI();
-        string osGetGridCustom(string key);
+        string osGetGridHomeURI(); //maybe HG only
+        string osGetGridCustom(string key); //maybe HG only
 
         void osReturnObject(LSL_Key userID);
         void osReturnObjects(LSL_Float Parameter);
