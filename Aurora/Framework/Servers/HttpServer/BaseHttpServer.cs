@@ -451,6 +451,8 @@ namespace Aurora.Framework.Servers.HttpServer
                     //
                     if (buffer == null)
                         return;
+                    if (buffer.Length == 0)//Just send the end of connection 0
+                        buffer = new byte[1] { 0 };
 
                     if (!response.SendChunked)
                         response.ContentLength64 = buffer.LongLength;
@@ -477,7 +479,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                     }
-                    response = null;
                     //This makes timeouts VERY bad if enabled
                     /*try
                     {
@@ -488,7 +489,8 @@ namespace Aurora.Framework.Servers.HttpServer
                     catch(Exception ex)
                     {
                         MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: ISSUE WITH CLEANUP {0}", ex.ToString());
-                    }*/
+                    }
+                    response = null;*/
                     return;
                 }
 
