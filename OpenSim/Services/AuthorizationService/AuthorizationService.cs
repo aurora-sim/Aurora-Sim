@@ -56,7 +56,7 @@ namespace OpenSim.Services.AuthorizationService
                     }
                 }
 #else
-                foreach (IScene scene in manager.Scenes.Where(scene => scene.RegionInfo.RegionID == region.RegionID))
+                foreach (IScene scene in manager.GetAllScenes().Where(scene => scene.RegionInfo.RegionID == region.RegionID))
                 {
                     //Found the region, check permissions
                     return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);

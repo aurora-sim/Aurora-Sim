@@ -213,7 +213,7 @@ namespace OpenSim.Services.RobustCompat
             }
             return false;
 #else
-            return presence.Scene.RequestModuleInterface<SceneManager>().Scenes.Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
+            return presence.Scene.RequestModuleInterface<SceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
 #endif
         }
 
