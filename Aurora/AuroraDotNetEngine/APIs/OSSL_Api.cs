@@ -172,9 +172,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 MainConsole.Instance.RunCommand("shutdown");
             }
-            else
-            {
-            }
         }
 
         public void osReturnObjects(LSL_Float Parameter)

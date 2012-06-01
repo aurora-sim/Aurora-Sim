@@ -64,10 +64,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaSetCloudDensity(LSL_Float density)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASetCloudDensity", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaSetCloudDensity", m_host, "AA", m_itemID))
                 return;
             if (!World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
+            {
+                ShoutError("You do not have estate permissions here.");
                 return;
+            }
             ICloudModule CloudModule = World.RequestModuleInterface<ICloudModule>();
             if (CloudModule == null)
                 return;
@@ -76,14 +79,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaUpdateDatabase(LSL_String key, LSL_String value, LSL_String token)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAUpdateDatabase", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaUpdateDatabase", m_host, "AA", m_itemID))
                 return;
             AssetConnector.UpdateLSLData(token.m_string, key.m_string, value.m_string);
         }
 
         public LSL_List aaQueryDatabase(LSL_String key, LSL_String token)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAQueryDatabase", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaQueryDatabase", m_host, "AA", m_itemID))
                 return new LSL_List();
 
             List<string> query = AssetConnector.FindLSLData(token.m_string, key.m_string);
@@ -93,7 +96,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_String aaSerializeXML(LSL_List keys, LSL_List values)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AASerializeXML", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaSerializeXML", m_host, "AA", m_itemID))
                 return new LSL_String();
             XmlDocument doc = new XmlDocument();
             for (int i = 0; i < keys.Length; i++)
@@ -109,7 +112,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List aaDeserializeXMLKeys(LSL_String xmlFile)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AADeserializeXMLKeys", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaDeserializeXMLKeys", m_host, "AA", m_itemID))
                 return new LSL_List();
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(xmlFile.m_string);
@@ -124,8 +127,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List aaDeserializeXMLValues(LSL_String xmlFile)
         {
-            if (
-                !ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AADeserializeXMLValues", m_host, "AA",
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaDeserializeXMLValues", m_host, "AA",
                                                    m_itemID)) return new LSL_List();
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(xmlFile.m_string);
@@ -140,15 +142,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaSetConeOfSilence(LSL_Float radius)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASetConeOfSilence", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaSetConeOfSilence", m_host, "AA", m_itemID))
                 return;
             if (World.Permissions.IsGod(m_host.OwnerID))
                 m_host.SetConeOfSilence(radius.value);
+            else
+                ShoutError("You do not have god permissions here.");
         }
 
         public void aaJoinCombatTeam(LSL_Key uuid, LSL_String team)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAJoinCombatTeam", m_host, "AA", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaJoinCombatTeam", m_host, "AA", m_itemID)) return;
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
@@ -171,7 +175,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaLeaveCombat(LSL_Key uuid)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AALeaveCombat", m_host, "AA", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaLeaveCombat", m_host, "AA", m_itemID)) return;
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
@@ -189,7 +193,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaJoinCombat(LSL_Key uuid)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAJoinCombat", m_host, "AA", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaJoinCombat", m_host, "AA", m_itemID)) return;
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
@@ -207,7 +211,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_Float aaGetHealth(LSL_Key uuid)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetHealth", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetHealth", m_host, "AA", m_itemID))
                 return new LSL_Float();
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
@@ -227,7 +231,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID avID;
             if (UUID.TryParse(uuid, out avID))
             {
-                if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeam", m_host, "AA", m_itemID))
+                if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaGetTeam", m_host, "AA", m_itemID))
                     return new LSL_String();
                 IScenePresence SP = World.GetScenePresence(avID);
                 if (SP != null)
@@ -244,7 +248,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_List aaGetTeamMembers(LSL_String team)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AAGetTeamMembers", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaGetTeamMembers", m_host, "AA", m_itemID))
                 return new LSL_List();
             List<UUID> Members = new List<UUID>();
             ICombatModule module = World.RequestModuleInterface<ICombatModule>();
@@ -260,14 +264,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public LSL_String aaGetLastOwner()
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetLastOwner", m_host, "AA", m_itemID))
                 return new LSL_String();
             return new LSL_String(m_host.LastOwnerID.ToString());
         }
 
         public LSL_String aaGetLastOwner(LSL_String PrimID)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetLastOwner", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetLastOwner", m_host, "AA", m_itemID))
                 return new LSL_String();
             ISceneChildEntity part = m_host.ParentEntity.Scene.GetSceneObjectPart(UUID.Parse(PrimID.m_string));
             if (part != null)
@@ -278,7 +282,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaSayDistance(int channelID, LSL_Float Distance, string text)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "AASayDistance", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryLow, "aaSayDistance", m_host, "AA", m_itemID))
                 return;
 
             if (text.Length > 1023)
@@ -298,7 +302,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaSayTo(string userID, string text)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "AASayTo", m_host, "AA", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "aaSayTo", m_host, "AA", m_itemID)) return;
 
 
             UUID AgentID;
@@ -309,18 +313,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     chatModule.SimChatBroadcast(text, ChatTypeEnum.SayTo, 0,
                                                 m_host.AbsolutePosition, m_host.Name, m_host.UUID, false, AgentID, World);
             }
+            else
+                LSLError("Incorrect UUID format.");
         }
 
         public LSL_String aaGetText()
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetText", m_host, "AA", m_itemID))
                 return new LSL_String();
             return m_host.Text;
         }
 
         public LSL_Rotation aaGetTextColor()
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetText", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetTextColor", m_host, "AA", m_itemID))
                 return new LSL_Rotation();
             LSL_Rotation v = new LSL_Rotation(m_host.Color.R, m_host.Color.G, m_host.Color.B, m_host.Color.A);
             return v;
@@ -328,14 +334,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaRaiseError(string message)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARaiseError", m_host, "AA", m_itemID)) return;
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaRaiseError", m_host, "AA", m_itemID)) return;
             m_ScriptEngine.PostScriptEvent(m_itemID, m_host.UUID, "on_error", new object[] { message });
             throw new EventAbortException();
         }
 
         public void aaFreezeAvatar(string ID)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAFreezeAvatar", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaFreezeAvatar", m_host, "AA", m_itemID))
                 return;
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
@@ -351,7 +357,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
                     }
 
-                    if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AAThawAvatar", m_host, "AA", m_itemID))
+                    if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "aaFreezeAvatar", m_host, "AA", m_itemID))
                         return;
                     SP.AllowMovement = false;
                 }
@@ -360,7 +366,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaThawAvatar(string ID)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "AAThawAvatar", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "aaThawAvatar", m_host, "AA", m_itemID))
                 return;
             UUID AgentID = UUID.Zero;
             if (UUID.TryParse(ID, out AgentID))
@@ -376,18 +382,21 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         return;
                     }
 
-                    if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "AAThawAvatar", m_host, "AA", m_itemID))
+                    if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "aaThawAvatar", m_host, "AA", m_itemID))
                         return;
                     SP.AllowMovement = true;
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("Incorrect UUID format.");
         }
 
         //This asks the agent whether they would like to participate in the combat
         public void aaRequestCombatPermission(string ID)
         {
-            if (
-                !ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AARequestCombatPermission", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaRequestCombatPermission", m_host, "AA", m_itemID))
                 return;
             IScenePresence SP;
             UUID AgentID = UUID.Zero;
@@ -399,12 +408,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (!module.CheckCombatPermission(AgentID)) //Don't ask multiple times
                         RequestPermissions(SP, ScriptBaseClass.PERMISSION_COMBAT);
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("Incorrect UUID format.");
         }
 
         public LSL_Integer aaGetWalkDisabled(string vPresenceId)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetWalkDisabled", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetWalkDisabled", m_host, "AA", m_itemID))
                 return new LSL_Integer();
             TaskInventoryItem item;
 
@@ -428,14 +441,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IScenePresence avatar = World.GetScenePresence(avatarId);
                         return avatar.ForceFly;
                     }
+                    else
+                        LSLError("You do not have permission to access this information.");
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("You do not have permission to access this information.");
             return false;
         }
 
         public void aaSetWalkDisabled(string vPresenceId, bool vbValue)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetWalkDisabled", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaSetWalkDisabled", m_host, "AA", m_itemID))
                 return;
             TaskInventoryItem item;
 
@@ -459,13 +478,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IScenePresence avatar = World.GetScenePresence(avatarId);
                         avatar.ForceFly = vbValue;
                     }
+                    else
+                        LSLError("You do not have permission to access this information.");
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("You do not have permission to access this information.");
         }
 
         public LSL_Integer aaGetFlyDisabled(string vPresenceId)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAGetFlyDisabled", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaGetFlyDisabled", m_host, "AA", m_itemID))
                 return new LSL_Integer();
             TaskInventoryItem item;
 
@@ -489,14 +514,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IScenePresence avatar = World.GetScenePresence(avatarId);
                         return avatar.FlyDisabled;
                     }
+                    else
+                        LSLError("You do not have permission to access this information.");
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("You do not have permission to access this information.");
             return false;
         }
 
         public void aaSetFlyDisabled(string vPresenceId, bool vbValue)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetFlyDisabled", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaSetFlyDisabled", m_host, "AA", m_itemID))
                 return;
             TaskInventoryItem item;
 
@@ -520,13 +551,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         IScenePresence avatar = World.GetScenePresence(avatarId);
                         avatar.FlyDisabled = vbValue;
                     }
+                    else
+                        LSLError("You do not have permission to access this information.");
                 }
+                else
+                    LSLError("Agent does not exist in the sim.");
             }
+            else
+                LSLError("You do not have permission to access this information.");
         }
 
         public LSL_Key aaAvatarFullName2Key(string fullname)
         {
-            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAvatarFullName2Key", m_host, "AA", m_itemID))
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaAvatarFullName2Key", m_host, "AA", m_itemID))
                 return new LSL_String();
             UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, fullname);
 
@@ -538,6 +575,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         public void aaSetEnv(LSL_String name, LSL_List value)
         {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.VeryHigh, "aaSetEnv", m_host, "AA", m_itemID))
+                return;
+            if (!World.Permissions.IsGod(m_host.OwnerID))
+            {
+                LSLError("You do not have god permissions.");
+                return;
+            }
             if (name == ScriptBaseClass.ENABLE_GRAVITY)
             {
                 LSL_Integer enabled = value.GetLSLIntegerItem(0);
@@ -789,6 +833,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                                       new DetectParams[0]), EventPriority.FirstStart);
         }
 
+        internal void ShoutError(string msg)
+        {
+            ILSL_Api api = (ILSL_Api)m_ScriptEngine.GetApi(m_itemID, "ll");
+            api.llShout(ScriptBaseClass.DEBUG_CHANNEL, msg);
+        }
+
+        internal void LSLError(string msg)
+        {
+            throw new Exception("LSL Runtime Error: " + msg);
+        }
+
         public void aaSetCharacterStat(string UUIDofAv, string StatName, float statValue)
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AASetCharacterStat", m_host, "AA", m_itemID))
@@ -800,6 +855,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>();
                 cp.SetStat(StatName, statValue);
             }
+            else
+                LSLError("Agent does not exist in the sim.");
         }
 
         public LSL_Integer aaGetIsInfiniteRegion()

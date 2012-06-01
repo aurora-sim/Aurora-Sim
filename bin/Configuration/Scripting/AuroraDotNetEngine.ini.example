@@ -230,6 +230,7 @@
     ;; *** Threat-Level=High    Recommended to use UUID for those set as false
     ;Allow_aaSetCenterOfGravity = false
     ;; *** Threat-Level=VeryHigh    Recommended to use UUID for those set as false
+    ;Allow_aaSetEnv = true
     ;; *** Threat-Level=Severe    Recommended to use UUID for those set as false
     ;;
     ;; ### BOT Functions ###
