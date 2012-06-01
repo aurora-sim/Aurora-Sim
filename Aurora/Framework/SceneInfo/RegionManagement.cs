@@ -192,7 +192,7 @@ namespace Aurora.Framework
             return _regionInfoConnector.GetRegionInfo(regionID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public string GetOpenRegionSettingsHTMLPage(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
