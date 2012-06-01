@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
-using C5;
 
 namespace Aurora.DataManager.Migration
 {
@@ -187,15 +186,15 @@ namespace Aurora.DataManager.Migration
                     validated = currentMigrator.Validate(genericData);
                     if (!validated)
                     {
-                        Rec<string, ColumnDefinition[], IndexDefinition[]> rec;
+                        SchemaDefinition rec;
                         currentMigrator.DebugTestThatAllTablesValidate(genericData, out rec);
                         MainConsole.Instance.Fatal(string.Format(
                             "FAILED TO REVALIDATE MIGRATION {0}-{1}, FIXING TABLE FORCIBLY... NEW TABLE NAME {2}",
                             currentMigrator.MigrationName,
                             currentMigrator.Version,
-                            rec.X1 + "_broken"
+                            rec.Name + "_broken"
                         ));
-                        genericData.RenameTable(rec.X1, rec.X1 + "_broken");
+                        genericData.RenameTable(rec.Name, rec.Name + "_broken");
                         currentMigrator.Migrate(genericData);
                         validated = currentMigrator.Validate(genericData);
                         if (!validated)
