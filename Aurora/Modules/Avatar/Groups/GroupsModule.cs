@@ -712,15 +712,13 @@ namespace Aurora.Modules.Groups
                     UUID inviteUUID = InviteID;
 
                     GridInstantMessage msg = new GridInstantMessage
-                    {
-                        imSessionID = inviteUUID,
-                        fromAgentID = groupID,
-                        toAgentID = invitedAgentID,
-                        timestamp = 0,
-                        fromAgentName = remoteClient.Name
-                    };
-
-
+                                                 {
+                                                     imSessionID = inviteUUID,
+                                                     fromAgentID = groupID,
+                                                     toAgentID = invitedAgentID,
+                                                     timestamp = 0,
+                                                     fromAgentName = agentName
+                                                 };
                     // msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
                     //msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                     GroupRecord groupInfo = GetGroupRecord(groupID);

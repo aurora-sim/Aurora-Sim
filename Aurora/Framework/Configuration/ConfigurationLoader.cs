@@ -66,118 +66,127 @@ namespace Aurora.Framework
         {
             iniFilePath = "";
             bool iniFileExists = false;
+            bool oldoptions = false;
 
-            IConfig startupConfig = argvSource.Configs["Startup"];
+            string mainIniDirectory = "";
+            string mainIniFileName = defaultIniFile;
+            string secondaryIniFileName = "";
 
             List<string> sources = new List<string>();
-
-            bool oldoptions =
-                startupConfig.GetBoolean("oldoptions", false);
-
-            inidbg =
-                startupConfig.GetBoolean("inidbg", inidbg);
-
-            showIniLoading =
-                startupConfig.GetBoolean("inishowfileloading", showIniLoading);
             string basePath = Util.configDir();
-            if (oldoptions)
+
+            if (argvSource != null)
             {
-                string masterFileName =
-                    startupConfig.GetString("inimaster", String.Empty);
+                IConfig startupConfig = argvSource.Configs["Startup"];
 
-                string iniGridName =
-                    startupConfig.GetString("inigrid", String.Empty);
 
-                if (iniGridName == string.Empty) //Read the old name then
-                    iniGridName =
-                        startupConfig.GetString("inifile", String.Empty);
+                oldoptions =
+                    startupConfig.GetBoolean("oldoptions", false);
 
-                string iniSimName =
-                    startupConfig.GetString("inisim", defaultIniFile);
+                inidbg =
+                    startupConfig.GetBoolean("inidbg", inidbg);
 
-                //Be mindful of these when modifying...
-                //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
-                //2) That inifile may be used with or without inimaster being used.
-                //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Aurora.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
+                showIniLoading =
+                    startupConfig.GetBoolean("inishowfileloading", showIniLoading);
 
-                if (IsUri(masterFileName))
+                if (oldoptions)
                 {
-                    if (!sources.Contains(masterFileName))
-                        sources.Add(masterFileName);
-                }
-                else
-                {
-                    string masterFilePath = Util.BasePathCombine(masterFileName);
+                    string masterFileName =
+                        startupConfig.GetString("inimaster", String.Empty);
 
-                    if (masterFileName != String.Empty &&
-                        File.Exists(masterFilePath) &&
-                        (!sources.Contains(masterFilePath)))
-                        sources.Add(masterFilePath);
-                    if (iniGridName == "") //Then it doesn't exist and we need to set this
-                        iniFilePath = masterFilePath;
-                    if (iniSimName == "") //Then it doesn't exist and we need to set this
-                        iniFilePath = masterFilePath;
-                }
+                    string iniGridName =
+                        startupConfig.GetString("inigrid", String.Empty);
 
-                if (iniGridName != "")
-                {
-                    if (IsUri(iniGridName))
+                    if (iniGridName == string.Empty) //Read the old name then
+                        iniGridName =
+                            startupConfig.GetString("inifile", String.Empty);
+
+                    string iniSimName =
+                        startupConfig.GetString("inisim", defaultIniFile);
+
+                    //Be mindful of these when modifying...
+                    //1) When file A includes file B, if the same directive is found in both, that the value in file B wins.
+                    //2) That inifile may be used with or without inimaster being used.
+                    //3) That any values for directives pulled in via inifile (Config Set 2) override directives of the same name found in the directive set (Config Set 1) created by reading in bin/Aurora.ini and its subsequently included files or that created by reading in whatever file inimaster points to and its subsequently included files.
+
+                    if (IsUri(masterFileName))
                     {
-                        if (!sources.Contains(iniGridName))
-                            sources.Add(iniGridName);
-                        iniFilePath = iniGridName;
+                        if (!sources.Contains(masterFileName))
+                            sources.Add(masterFileName);
                     }
                     else
                     {
-                        iniFilePath = Util.BasePathCombine(iniGridName);
+                        string masterFilePath = Util.BasePathCombine(masterFileName);
 
-                        if (File.Exists(iniFilePath))
+                        if (masterFileName != String.Empty &&
+                            File.Exists(masterFilePath) &&
+                            (!sources.Contains(masterFilePath)))
+                            sources.Add(masterFilePath);
+                        if (iniGridName == "") //Then it doesn't exist and we need to set this
+                            iniFilePath = masterFilePath;
+                        if (iniSimName == "") //Then it doesn't exist and we need to set this
+                            iniFilePath = masterFilePath;
+                    }
+
+                    if (iniGridName != "")
+                    {
+                        if (IsUri(iniGridName))
                         {
-                            if (!sources.Contains(iniFilePath))
-                                sources.Add(iniFilePath);
+                            if (!sources.Contains(iniGridName))
+                                sources.Add(iniGridName);
+                            iniFilePath = iniGridName;
+                        }
+                        else
+                        {
+                            iniFilePath = Util.BasePathCombine(iniGridName);
+
+                            if (File.Exists(iniFilePath))
+                            {
+                                if (!sources.Contains(iniFilePath))
+                                    sources.Add(iniFilePath);
+                            }
                         }
                     }
-                }
 
-                if (iniSimName != "")
-                {
-                    if (IsUri(iniSimName))
+                    if (iniSimName != "")
                     {
-                        if (!sources.Contains(iniSimName))
-                            sources.Add(iniSimName);
-                        iniFilePath = iniSimName;
-                    }
-                    else
-                    {
-                        iniFilePath = Util.BasePathCombine(iniSimName);
-
-                        if (File.Exists(iniFilePath))
+                        if (IsUri(iniSimName))
                         {
-                            if (!sources.Contains(iniFilePath))
-                                sources.Add(iniFilePath);
+                            if (!sources.Contains(iniSimName))
+                                sources.Add(iniSimName);
+                            iniFilePath = iniSimName;
+                        }
+                        else
+                        {
+                            iniFilePath = Util.BasePathCombine(iniSimName);
+
+                            if (File.Exists(iniFilePath))
+                            {
+                                if (!sources.Contains(iniFilePath))
+                                    sources.Add(iniFilePath);
+                            }
                         }
                     }
-                }
 
-                string iniDirName =
-                    startupConfig.GetString("inidirectory", "");
+                    string iniDirName =
+                        startupConfig.GetString("inidirectory", "");
 
-                if (iniDirName != "" && Directory.Exists(iniDirName))
-                {
-                    Console.WriteLine(string.Format("Searching folder {0} for config ini files",
-                                     iniDirName));
+                    if (iniDirName != "" && Directory.Exists(iniDirName))
+                    {
+                        Console.WriteLine(string.Format("Searching folder {0} for config ini files",
+                                         iniDirName));
 
-                    string[] fileEntries = Directory.GetFiles(iniDirName);
+                        string[] fileEntries = Directory.GetFiles(iniDirName);
 #if (!ISWIN)
-                    foreach (string filePath in fileEntries)
-                    {
-                        string extension = Path.GetExtension(filePath);
-                        if (extension != null && extension.ToLower() == ".ini")
+                        foreach (string filePath in fileEntries)
                         {
-                            if (!sources.Contains(Path.Combine(iniDirName, filePath)))
-                                sources.Add(Path.Combine(iniDirName, filePath));
+                            string extension = Path.GetExtension(filePath);
+                            if (extension != null && extension.ToLower() == ".ini")
+                            {
+                                if (!sources.Contains(Path.Combine(iniDirName, filePath)))
+                                    sources.Add(Path.Combine(iniDirName, filePath));
+                            }
                         }
-                    }
 #else
                     foreach (string filePath in fileEntries.Where(filePath =>
                                                                       {
@@ -188,18 +197,20 @@ namespace Aurora.Framework
                         sources.Add(Path.Combine(iniDirName, filePath));
                     }
 #endif
+                    }
+                }
+                else
+                {
+                    mainIniDirectory = startupConfig.GetString("mainIniDirectory", "");
+                    mainIniFileName = startupConfig.GetString("mainIniFileName", defaultIniFile);
+                    secondaryIniFileName = startupConfig.GetString("secondaryIniFileName", "");
                 }
             }
-            else
+
+            if (!oldoptions)
             {
-                string mainIniDirectory = startupConfig.GetString("mainIniDirectory", "");
                 if (mainIniDirectory != "")
                     basePath = mainIniDirectory;
-
-                string mainIniFileName = startupConfig.GetString("mainIniFileName", defaultIniFile);
-
-                string secondaryIniFileName = startupConfig.GetString("secondaryIniFileName", "");
-
                 if (mainIniFileName != "")
                 {
                     if (IsUri(mainIniFileName))
@@ -278,7 +289,8 @@ namespace Aurora.Framework
                 throw new NotSupportedException();
             }
             // Make sure command line options take precedence
-            m_config.Merge(argvSource);
+            if(argvSource != null)
+                m_config.Merge(argvSource);
 
             return m_config;
         }

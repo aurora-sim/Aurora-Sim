@@ -28,10 +28,11 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
-using Aurora.Modules.RegionLoader;
 using Nini.Config;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Management;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 {
@@ -121,26 +122,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    bool done = false, errored = false;
-                    Thread t = new Thread(delegate()
-                    {
-                        try
-                        {
-                            RegionManager manager = new RegionManager(false, true, m_openSim);
-                            Application.Run(manager);
-                            done = true;
-                        }
-                        catch
-                        {
-                            errored = true;
-                        }
-                    });
-                    t.SetApartmentState(ApartmentState.STA);
-                    t.Start();
-                    while (!done)
-                        if (errored)
-                            throw new Exception();
-                        Thread.Sleep(100);
+                    RegionManager.StartSynchronously(false, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
                 }
             }
             catch
@@ -154,22 +136,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void OpenRegionManager(string[] cmdparams)
         {
-            Thread t = new Thread(StartRegionManagerThread);
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start ();
-        }
-
-        protected void StartRegionManagerThread()
-        {
-            try
-            {
-                RegionManager manager = new RegionManager(false, false, m_openSim);
-                Application.Run(manager);
-            }
-            catch(Exception ex)
-            {
-                MainConsole.Instance.Output("Failed to start the region manager: " + ex);
-            }
+            RegionManager.StartAsynchronously(false, false, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
         }
 
         private void FindOldRegionFiles()
@@ -258,7 +225,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 //Open the region manager for them
                 MessageBox.Show (reason, "Startup failed, regions did not validate!");
-                OpenRegionManager(new string[0]);
+                RegionManager.StartSynchronously(false, false, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
             }
             catch
             {

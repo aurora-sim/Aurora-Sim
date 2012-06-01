@@ -1531,7 +1531,7 @@ namespace Aurora.Framework
                     break;
                 case FireAndForgetMethod.SmartThreadPool:
                     if (m_ThreadPool == null)
-                        m_ThreadPool = new SmartThreadPool(5000, 15, 1);
+                        InitThreadPool(15);
                     if (m_threadPoolRunning) //Check if the thread pool should be running
                         m_ThreadPool.QueueWorkItem(SmartThreadPoolCallback, new[] { callback, obj });
                     break;

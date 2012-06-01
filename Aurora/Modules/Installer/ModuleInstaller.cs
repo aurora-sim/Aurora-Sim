@@ -314,14 +314,14 @@ namespace Aurora.Modules.Installer
                 plugin.PostStart();
             }
             IRegionModulesController rmc = m_registry.RequestModuleInterface<IRegionModulesController>();
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
                 foreach (ISharedRegionModule srm in sregionModule)
                 {
                     srm.Initialise(m_config);
                     srm.PostInitialise();
-                    foreach (IScene scene in manager.Scenes)
+                    foreach (IScene scene in manager.GetAllScenes())
                     {
                         srm.AddRegion(scene);
                         srm.RegionLoaded(scene);
@@ -331,7 +331,7 @@ namespace Aurora.Modules.Installer
                 foreach (INonSharedRegionModule nsrm in nsregionModule)
                 {
                     nsrm.Initialise(m_config);
-                    foreach (IScene scene in manager.Scenes)
+                    foreach (IScene scene in manager.GetAllScenes())
                     {
                         nsrm.AddRegion(scene);
                         nsrm.RegionLoaded(scene);

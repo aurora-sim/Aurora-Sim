@@ -43,11 +43,11 @@ namespace OpenSim.Services.AuthorizationService
 
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
 #if (!ISWIN)
-                foreach (IScene scene in manager.Scenes)
+                foreach (IScene scene in manager.GetAllScenes())
                 {
                     if (scene.RegionInfo.RegionID == region.RegionID)
                     {
@@ -56,7 +56,7 @@ namespace OpenSim.Services.AuthorizationService
                     }
                 }
 #else
-                foreach (IScene scene in manager.Scenes.Where(scene => scene.RegionInfo.RegionID == region.RegionID))
+                foreach (IScene scene in manager.GetAllScenes().Where(scene => scene.RegionInfo.RegionID == region.RegionID))
                 {
                     //Found the region, check permissions
                     return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);

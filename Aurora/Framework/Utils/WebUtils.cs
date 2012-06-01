@@ -359,16 +359,11 @@ namespace Aurora.Simulation.Base
                     string strBuffer = OSDParser.SerializeJsonString(data);
                     byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
 
-                    if (buffer.Length <= 0)
-                    {
-                    }
-                    else
-                    {
-                        request.ContentType = "application/json";
-                        request.ContentLength = buffer.Length; //Count bytes to send
+                    request.ContentType = "application/json";
+                    request.ContentLength = buffer.Length; //Count bytes to send
+                    if (buffer.Length > 0)
                         using (Stream requestStream = request.GetRequestStream())
                             requestStream.Write(buffer, 0, buffer.Length); //Send it
-                    }
                 }
 
                 // capture how much time was spent writing, this may seem silly

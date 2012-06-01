@@ -93,19 +93,19 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             if (orsc != null)
             {
                 OpenRegionSettings settings = orsc.GetSettings(regionID);
-                settings.DefaultDrawDistance = float.Parse(vars["Default Draw Distance"]);
+                settings.DefaultDrawDistance = floatParse(vars["Default Draw Distance"]);
                 settings.ForceDrawDistance = vars["Force Draw Distance"] != null;
-                settings.MaxDragDistance = float.Parse(vars["Max Drag Distance"]);
-                settings.MaximumPrimScale = float.Parse(vars["Max Prim Scale"]);
-                settings.MinimumPrimScale = float.Parse(vars["Min Prim Scale"]);
-                settings.MaximumPhysPrimScale = float.Parse(vars["Max Physical Prim Scale"]);
-                settings.MaximumHollowSize = float.Parse(vars["Max Hollow Size"]);
-                settings.MinimumHoleSize = float.Parse(vars["Min Hole Size"]);
-                settings.MaximumLinkCount = int.Parse(vars["Max Link Count"]);
-                settings.MaximumLinkCountPhys = int.Parse(vars["Max Link Count Phys"]);
-                settings.MaximumInventoryItemsTransfer = int.Parse(vars["Max Inventory Items To Transfer"]);
-                settings.TerrainDetailScale = float.Parse(vars["Terrain Scale"]);
-                settings.ShowTags = int.Parse(vars["Show Tags"]);
+                settings.MaxDragDistance = floatParse(vars["Max Drag Distance"]);
+                settings.MaximumPrimScale = floatParse(vars["Max Prim Scale"]);
+                settings.MinimumPrimScale = floatParse(vars["Min Prim Scale"]);
+                settings.MaximumPhysPrimScale = floatParse(vars["Max Physical Prim Scale"]);
+                settings.MaximumHollowSize = floatParse(vars["Max Hollow Size"]);
+                settings.MinimumHoleSize = floatParse(vars["Min Hole Size"]);
+                settings.MaximumLinkCount = (int)floatParse(vars["Max Link Count"]);
+                settings.MaximumLinkCountPhys = (int)floatParse(vars["Max Link Count Phys"]);
+                settings.MaximumInventoryItemsTransfer = (int)floatParse(vars["Max Inventory Items To Transfer"]);
+                settings.TerrainDetailScale = floatParse(vars["Terrain Scale"]);
+                settings.ShowTags = (int)floatParse(vars["Show Tags"]);
                 settings.RenderWater = vars["Render Water"] != null;
                 settings.DisplayMinimap = vars["Allow Minimap"] != null;
                 settings.AllowPhysicalPrims = vars["Allow Physical Prims"] != null;
@@ -113,6 +113,14 @@ namespace Aurora.Modules.OpenRegionSettingsModule
                 settings.ClampPrimSizes = vars["Enforce Max Build Constraints"] != null;
                 orsc.SetSettings(regionID, settings);
             }
+        }
+
+        private float floatParse(string p)
+        {
+            float d = 0;
+            if(!float.TryParse(p, out d))
+                d = 0;
+            return d;
         }
 
         #endregion

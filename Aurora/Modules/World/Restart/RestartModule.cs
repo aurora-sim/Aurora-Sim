@@ -171,7 +171,7 @@ namespace Aurora.Modules.Restart
                 }
             }
             MainConsole.Instance.Error("[Scene]: Restaring Now");
-            m_scene.RequestModuleInterface<SceneManager>().RestartRegion(m_scene);
+            m_scene.RequestModuleInterface<ISceneManager>().RestartRegion(m_scene);
         }
 
         #endregion

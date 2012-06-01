@@ -69,7 +69,7 @@ namespace OpenSim.Services.AssetService
             if (m_database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
-            registry.RegisterModuleInterface<IAssetService>(this);
+           registry.RegisterModuleInterface<IAssetService>(this);
 
             if (MainConsole.Instance != null)
             {

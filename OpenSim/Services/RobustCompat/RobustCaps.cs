@@ -207,13 +207,13 @@ namespace OpenSim.Services.RobustCompat
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
 #if (!ISWIN)
-            foreach (IScene scene in presence.Scene.RequestModuleInterface<SceneManager>().Scenes)
+            foreach (IScene scene in presence.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes())
             {
                 if (scene.GetScenePresence(UUID.Parse(u.UserID)) != null) return true;
             }
             return false;
 #else
-            return presence.Scene.RequestModuleInterface<SceneManager>().Scenes.Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
+            return presence.Scene.RequestModuleInterface<SceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
 #endif
         }
 

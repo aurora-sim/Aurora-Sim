@@ -177,10 +177,10 @@ namespace OpenSim.Services.MessagingService
                 bool NewStatus = innerMessage["NewStatus"].AsBoolean();
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
-                SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
-                if (manager != null && manager.Scenes.Count > 0)
+                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
+                if (manager != null && manager.GetAllScenes().Count > 0)
                 {
-                    IFriendsModule friendsModule = manager.Scenes[0].RequestModuleInterface<IFriendsModule>();
+                    IFriendsModule friendsModule = manager.GetCurrentOrFirstScene().RequestModuleInterface<IFriendsModule>();
                     if (friendsModule != null)
                     {
                         //Send the message

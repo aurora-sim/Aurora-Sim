@@ -52,6 +52,12 @@ namespace Aurora.Framework
         ReturnToLastOwner = 10 // deeded object back to last owner's inventory
     };
 
+    public enum ShutdownType
+    {
+        Immediate,
+        Delayed
+    }
+
     public interface IScene : IRegistryCore
     {
         #region Core

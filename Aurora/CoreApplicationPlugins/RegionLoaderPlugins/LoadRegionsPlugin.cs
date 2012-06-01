@@ -78,10 +78,10 @@ namespace OpenSim.CoreApplicationPlugins
                 return;
 
             List<IRegionLoader> regionLoaders = AuroraModuleLoader.PickupModules<IRegionLoader>();
-            List<RegionInfo[]> regions = new List<RegionInfo[]>();
-            SceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_openSim.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             MainConsole.Instance.DefaultPrompt = "Region (root)";//Set this up
-            reload:
+        reload:
+            List<RegionInfo[]> regions = new List<RegionInfo[]>();
             foreach (IRegionLoader loader in regionLoaders)
             {
                 loader.Initialise(m_openSim.ConfigSource, m_openSim);
@@ -99,7 +99,28 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     MainConsole.Instance.Error("[LoadRegions]: Halting startup due to conflicts in region configurations");
                     if (!loader.FailedToStartRegions(reason))
-                        throw new Exception(); //If it doesn't fix it, end the program
+                    {
+                        bool foundSomeRegions = false;
+                        foreach (IRegionLoader l in regionLoaders)
+                        {
+                            l.Initialise(m_openSim.ConfigSource, m_openSim);
+
+                            if (!loader.Enabled)
+                                continue;
+
+                            RegionInfo[] rs = loader.LoadRegions();
+                            if (rs == null)
+                                continue; //No regions, end for this module
+                            if (CheckRegionsForSanity(regionsToLoad, out reason))
+                            {
+                                foundSomeRegions = true;
+                                break;
+                            }
+                        }
+                        if(!foundSomeRegions)
+                            throw new Exception(); //If it doesn't fix it, and we don't have regions now, end the program
+                    }
+                    goto reload;
                 }
                 else
                 {
