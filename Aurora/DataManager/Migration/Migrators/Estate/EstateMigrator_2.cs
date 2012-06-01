@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using Aurora.Framework;
-using C5;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
@@ -42,7 +41,7 @@ namespace Aurora.DataManager.Migration.Migrators
             Version = new Version(0, 0, 2);
             MigrationName = "Estate";
 
-            schema = new List<Rec<string, ColumnDefinition[], IndexDefinition[]>>();
+            schema = new List<SchemaDefinition>();
 
             AddSchema("estateregions", ColDefs(
                 ColDef("RegionID", ColumnTypes.String36),

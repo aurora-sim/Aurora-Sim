@@ -32,7 +32,6 @@ using Aurora.DataManager.Migration;
 using Aurora.DataManager.Migration.Migrators;
 using Aurora.DataManager.MySQL;
 using Aurora.DataManager.SQLite;
-using C5;
 using NUnit.Framework;
 using Aurora.Framework;
 
