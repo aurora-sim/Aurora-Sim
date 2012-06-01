@@ -114,6 +114,60 @@ namespace Aurora.Framework
         MSSQL7
     }
 
+    public class SchemaDefinition
+    {
+        private string m_name;
+        /// <summary>
+        /// Name of schema
+        /// </summary>
+        public string Name {
+            get{ return m_name; }
+        }
+
+        private ColumnDefinition[] m_columns;
+        /// <summary>
+        /// Columns in schema
+        /// </summary>
+        public ColumnDefinition[] Columns
+        {
+            get { return m_columns; }
+        }
+
+        private IndexDefinition[] m_indices;
+        /// <summary>
+        /// Indices in schema
+        /// </summary>
+        public IndexDefinition[] Indices
+        {
+            get { return m_indices; }
+        }
+
+        /// <summary>
+        /// Defines a schema with no indices.
+        /// </summary>
+        /// <param name="schemaName">Name of schema</param>
+        /// <param name="columns">Columns in schema</param>
+        public SchemaDefinition(string schemaName, ColumnDefinition[] columns)
+        {
+            m_name = schemaName;
+            m_columns = columns;
+            m_indices = new IndexDefinition[0];
+        }
+
+        /// <summary>
+        /// Defines a schema with indices
+        /// </summary>
+        /// <param name="schemaName">Name of schema</param>
+        /// <param name="columns">Columns in schema</param>
+        /// <param name="indices">Indices in schema</param>
+        public SchemaDefinition(string schemaName, ColumnDefinition[] columns, IndexDefinition[] indices)
+        {
+            m_name = schemaName;
+            m_columns = columns;
+            m_indices = indices;
+        }
+    }
+
     public enum ColumnTypes
     {
         Blob,

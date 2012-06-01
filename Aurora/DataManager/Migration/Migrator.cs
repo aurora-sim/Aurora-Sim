@@ -28,8 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Aurora.Framework;
 using C5;
+using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration
 {
@@ -42,7 +42,7 @@ namespace Aurora.DataManager.Migration
     {
         private readonly Dictionary<string, string> renameSchema = new Dictionary<string, string>();
         public Dictionary<string, string> renameColumns = new Dictionary<string, string>();
-        public List<Rec<string, ColumnDefinition[], IndexDefinition[]>> schema;
+        public List<SchemaDefinition> schema;
         public List<Rec<string, IndexDefinition[]>> dropIndices;
 
         public Version Version { get; protected set; }
@@ -262,7 +262,7 @@ namespace Aurora.DataManager.Migration
 
         protected void AddSchema(string table, ColumnDefinition[] definitions, IndexDefinition[] indexes)
         {
-            schema.Add(new Rec<string, ColumnDefinition[], IndexDefinition[]>(table, definitions, indexes));
+            schema.Add(new SchemaDefinition(table, definitions, indexes));
         }
 
         protected void RenameSchema(string oldTable, string newTable)
@@ -273,9 +273,9 @@ namespace Aurora.DataManager.Migration
         protected void RemoveSchema(string table)
         {
             //Remove all of the tables that have this name
-            schema.RemoveAll(delegate(Rec<string, ColumnDefinition[], IndexDefinition[]> r)
+            schema.RemoveAll(delegate(SchemaDefinition r)
             {
-                if (r.X1 == table)
+                if (r.Name == table)
                     return true;
                 return false;
             });
@@ -294,37 +294,37 @@ namespace Aurora.DataManager.Migration
             }
             foreach (var s in schema)
             {
-                genericData.EnsureTableExists(s.X1, s.X2, s.X3, renameColumns);
+                genericData.EnsureTableExists(s.Name, s.Columns, s.Indices, renameColumns);
             }
         }
 
         protected bool TestThatAllTablesValidate(IDataConnector genericData)
         {
 #if (!ISWIN)
-            foreach (Rec<string, ColumnDefinition[], IndexDefinition[]> s in schema)
+            foreach (SchemaDefinition s in schema)
             {
-                if (!genericData.VerifyTableExists(s.X1, s.X2, s.X3)) return false;
+                if (!genericData.VerifyTableExists(s.Name, s.Columns, s.Indices)) return false;
             }
             return true;
 #else
-            return schema.All(s => genericData.VerifyTableExists(s.X1, s.X2, s.X3));
+            return schema.All(s => genericData.VerifyTableExists(s.Name, s.Columns, s.Indices));
 #endif
         }
 
-        public bool DebugTestThatAllTablesValidate(IDataConnector genericData, out Rec<string, ColumnDefinition[], IndexDefinition[]> reason)
+        public bool DebugTestThatAllTablesValidate(IDataConnector genericData, out SchemaDefinition reason)
         {
-            reason = new Rec<string, ColumnDefinition[], IndexDefinition[]>();
+            reason = null;
 #if (!ISWIN)
             foreach (var s in schema)
             {
-                if (!genericData.VerifyTableExists(s.X1, s.X2, s.X3))
+                if (!genericData.VerifyTableExists(s.Name, s.Columns, s.Indices))
                 {
                     reason = s;
                     return false;
                 }
             }
 #else
-            foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.X1, s.X2, s.X3)))
+            foreach (var s in schema.Where(s => !genericData.VerifyTableExists(s.Name, s.Columns, s.Indices)))
             {
                 reason = s;
                 return false;
@@ -337,7 +337,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                CopyTableToTempVersion(genericData, s.X1, s.X2, s.X3);
+                CopyTableToTempVersion(genericData, s.Name, s.Columns, s.Indices);
             }
         }
 
@@ -345,7 +345,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                RestoreTempTableToReal(genericData, s.X1, s.X2, s.X3);
+                RestoreTempTableToReal(genericData, s.Name, s.Columns, s.Indices);
             }
         }
 
@@ -368,7 +368,7 @@ namespace Aurora.DataManager.Migration
         {
             foreach (var s in schema)
             {
-                DeleteTempVersion(genericData, s.X1);
+                DeleteTempVersion(genericData, s.Name);
             }
         }
 

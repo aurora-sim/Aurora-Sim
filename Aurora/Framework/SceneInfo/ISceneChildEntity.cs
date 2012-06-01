@@ -20,15 +20,23 @@ namespace Aurora.Framework
 
     /// <summary>
     /// Only used internally to schedule client updates.
-    /// 0 - no update is scheduled
-    /// 1 - terse update scheduled
-    /// 2 - full update scheduled
     /// </summary>
     /// 
     public enum InternalUpdateFlags : byte
     {
+        /// <summary>
+        /// no update is scheduled
+        /// </summary>
         NoUpdate = 0,
+
+        /// <summary>
+        /// terse update scheduled
+        /// </summary>
         TerseUpdate = 1,
+
+        /// <summary>
+        /// full update scheduled
+        /// </summary>
         FullUpdate = 2
     }
 
