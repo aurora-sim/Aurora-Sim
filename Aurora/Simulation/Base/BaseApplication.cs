@@ -68,7 +68,6 @@ using Aurora.Framework;
 using log4net.Config;
 using System.Net;
 using System.Text;
-using System.Diagnostics;
 
 namespace Aurora.Simulation.Base
 {
@@ -255,7 +254,6 @@ namespace Aurora.Simulation.Base
                     string dbSchema = "aurora";
                     string dbUser = "aurora";
                     string ipAddress = Framework.Utilities.GetExternalIp();
-                    bool auroraReconfig;
                     string platform = "1";
                     string mode = "1";
                     string dbregion = "1";
@@ -765,19 +763,15 @@ namespace Aurora.Simulation.Base
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
                 
-            }
-
-        }
-            catch
-            {
-            }
                 }
 
-          
-
-    }
-
-
+             }
+                catch
+                {
+                }
+            }
+                
+          }
             
         }
 
@@ -796,7 +790,6 @@ namespace Aurora.Simulation.Base
                     string dbSchema = "aurora";
                     string dbUser = "aurora";
                     string ipAddress = Framework.Utilities.GetExternalIp();
-                    bool auroraReconfig;
                     string platform = "1";
                     string mode = "1";
                     string dbregion = "1";
@@ -1313,14 +1306,6 @@ namespace Aurora.Simulation.Base
                     {
                     }
                 }
-
-
-
-            
-
-
-
-        
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource,
                                    ISimulationBase simBase, string[] cmdParameters)
