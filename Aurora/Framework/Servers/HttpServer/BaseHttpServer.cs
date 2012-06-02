@@ -570,6 +570,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (SocketException e)
             {
+                response.ReuseContext = false; //If it errored, be safe and don't use it again
                 // At least on linux, it appears that if the client makes a request without requiring the response,
                 // an unconnected socket exception is thrown when we close the response output stream.  There's no
                 // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
@@ -581,10 +582,12 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (IOException)
             {
+                response.ReuseContext = false; //If it errored, be safe and don't use it again
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw ");
             }
             catch (Exception e)
             {
+                response.ReuseContext = false; //If it errored, be safe and don't use it again
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0}", e);
                 SendHTML500(response);
             }
@@ -596,7 +599,10 @@ namespace Aurora.Framework.Servers.HttpServer
                 // Every month or so this will wrap and give bad numbers, not really a problem
                 // since its just for reporting, 500ms limit can be adjusted
                 if (tickdiff > 500)
+                {
+                    response.ReuseContext = false; //If it took a long time, don't use it again
                     MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms", reqnum, RawUrl, tickdiff, HTTPMethod);
+                }
             }
         }
 
