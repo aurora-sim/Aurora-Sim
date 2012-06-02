@@ -225,11 +225,9 @@ namespace Aurora.Simulation.Base
             Process sProcessName = Process.GetCurrentProcess();
             string sCompare = sProcessName.ToString();
             
-            if (((sCompare == "System.Diagnostics.Process (Aurora)"
-                || sCompare == "System.Diagnostics.Process (Aurora.vshost)")
+            if (((sCompare == "System.Diagnostics.Process (Aurora)")
                 && ((Aurora_log) && (new FileInfo("Aurora.log").Length > 0))) 
-                || ((sCompare == "System.Diagnostics.Process (Aurora.Server)" 
-                || sCompare == "System.Diagnostics.Process (Aurora.Server.vshost)")
+                || ((sCompare == "System.Diagnostics.Process (Aurora.Server)")
                 && ((Aurora_Server_log) && (new FileInfo("AuroraServer.log").Length > 0))))
                 {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -238,15 +236,15 @@ namespace Aurora.Simulation.Base
             
             else
             {
-                MainConsole.Instance = new LocalConsole();
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("\n\n*************Required Configuration files not found.*************");
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("\n\n   This is your first time running Aurora, if not and you already configured your *ini.example files, please ignore this warning and press enter; Otherwise type yes and Aurora will guide you trough configuration files.\n\nRemember, these file names are Case Sensitive in Linux and Proper Cased.\n1. ./Aurora.ini\nand\n2. ./Configuration/Standalone/StandaloneCommon.ini \nor\n3. ./Configuration/Grid/GridCommon.ini\n\nAlso, you will want to examine these files in great detail because only the basic system will load by default. Aurora can do a LOT more if you spend a little time going through these files.\n\n");
                 Console.ForegroundColor = ConsoleColor.Green;
-                string resp = MainConsole.Instance.Prompt(
-                                        "Do you want to configure Aurora now?",
-                                        "no");
+                string resp = "no";
+                Console.WriteLine("Do you want to configure Aurora now? [no] : ");
+                resp = Console.ReadLine();
+
                 if (resp == "yes")
                 {
                     string dbSource = "localhost";
