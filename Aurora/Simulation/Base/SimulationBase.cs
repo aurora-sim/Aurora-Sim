@@ -422,6 +422,7 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance.Commands.AddCommand("set timer script interval", "set timer script interval", "Set the interval for the timer script (in minutes).", HandleTimerScriptTime);
 
             MainConsole.Instance.Commands.AddCommand("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
+            MainConsole.Instance.Commands.AddCommand("run configurator", "run configurator", "Runs Aurora.Configurator.", runConfig);
         }
 
         private void HandleQuit(string[] args)
@@ -459,9 +460,14 @@ namespace Aurora.Simulation.Base
         }
 
         public virtual void HandleForceGC(string[] cmd)
-        {
+        {   
             GC.Collect();
             MainConsole.Instance.Warn("Garbage collection finished");
+        }   
+
+        public virtual void runConfig(string[] cmd)
+        {
+            BaseApplication.runConfigurator();
         }
 
         public virtual void HandleTimerScriptTime(string[] cmd)
