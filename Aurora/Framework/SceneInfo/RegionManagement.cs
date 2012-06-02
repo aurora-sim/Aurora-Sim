@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
@@ -277,6 +278,100 @@ namespace Aurora.Framework
             }
             File.Copy(name, newFileName);
             return true;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public List<string> GetEstatesForUser(string name)
+        {
+            object remoteValue = InternalDoRemote(name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<string>)remoteValue;
+
+            List<string> estateItems = new List<string>();
+            IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (conn != null)
+            {
+                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
+                if (account != null)
+                {
+                    List<EstateSettings> estates = conn.GetEstates(account.PrincipalID);
+                    foreach (var es in estates)
+                        estateItems.Add(es.EstateName);
+                }
+            }
+            return estateItems;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public void ChangeEstate(string ownerName, string estateToJoin, UUID regionID)
+        {
+            InternalDoRemote(ownerName, estateToJoin, regionID);
+            if (m_doRemoteOnly)
+                return;
+
+            IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (conn != null)
+            {
+                conn.DelinkRegion(regionID);
+                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName);
+                conn.LinkRegion(regionID, conn.GetEstate(account.PrincipalID, estateToJoin));
+            }
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod="CreateNewEstateWithInformation")]
+        public bool CreateNewEstate(UUID regionID, string estateName, string ownerName)
+        {
+            object remoteValue = InternalDoRemote(regionID, estateName, ownerName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
+            IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (conn != null)
+            {
+                UUID userID = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName).PrincipalID;
+                conn.DelinkRegion(regionID);
+
+                return conn.CreateNewEstate(new EstateSettings() { EstateName = estateName, EstateOwner = userID }, regionID) != 0;
+            }
+            return false;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public string GetCurrentEstate(UUID regionID)
+        {
+            object remoteValue = InternalDoRemote(regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
+
+            IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (conn != null)
+            {
+                EstateSettings es = conn.GetEstateSettings(regionID);
+                if (es == null)
+                    return "";
+                else
+                    return es.EstateName;
+            }
+            return "";
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public string GetEstateOwnerName(UUID regionID)
+        {
+            object remoteValue = InternalDoRemote(regionID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (string)remoteValue;
+
+            IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
+            if (conn != null)
+            {
+                EstateSettings es = conn.GetEstateSettings(regionID);
+                if (es == null)
+                    return "";
+                else
+                    return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, es.EstateOwner).Name;
+            }
+            return "";
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]

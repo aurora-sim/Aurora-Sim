@@ -107,5 +107,43 @@ namespace Aurora.Framework
         /// <param name="name"></param>
         /// <returns></returns>
         System.Drawing.Image GetDefaultRegionImage(string name);
+
+        /// <summary>
+        /// Gets a list of all estates that the user has
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        List<string> GetEstatesForUser(string name);
+
+        /// <summary>
+        /// Changes the current estate of the region given
+        /// </summary>
+        /// <param name="ownerName"></param>
+        /// <param name="estateToJoin"></param>
+        /// <param name="regionID"></param>
+        void ChangeEstate(string ownerName, string estateToJoin, UUID regionID);
+
+        /// <summary>
+        /// Create a new estate with the given information
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <param name="estateName"></param>
+        /// <param name="ownerName"></param>
+        /// <returns></returns>
+        bool CreateNewEstate(UUID regionID, string estateName, string ownerName);
+
+        /// <summary>
+        /// Get the current estate name for the region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        string GetCurrentEstate(UUID regionID);
+
+        /// <summary>
+        /// Get the estate owner's name for the given region
+        /// </summary>
+        /// <param name="regionID"></param>
+        /// <returns></returns>
+        string GetEstateOwnerName(UUID regionID);
     }
 }

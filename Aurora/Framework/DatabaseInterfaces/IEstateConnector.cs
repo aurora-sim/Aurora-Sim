@@ -59,7 +59,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name = "ES"></param>
         /// <param name = "RegionID"></param>
-        /// <returns></returns>
+        /// <returns>0 if the estate could not be created, otherwise, the estateID</returns>
         int CreateNewEstate(EstateSettings ES, UUID RegionID);
 
         /// <summary>

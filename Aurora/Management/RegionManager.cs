@@ -34,6 +34,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Aurora.Framework;
+using OpenSim.Services.Interfaces;
 using Nini.Config;
 using Nini.Ini;
 using OpenMetaverse;
@@ -47,6 +48,7 @@ namespace Aurora.Management
         public event NewRegion OnNewRegion;
         private readonly bool KillAfterRegionCreation = false;
         private UUID CurrentRegionID = UUID.Zero;
+        private UUID _CurrentEstateRegionSelectedID = UUID.Zero;
 
         private IConfigSource _config;
         private bool _changingRegion = false;
@@ -125,11 +127,13 @@ namespace Aurora.Management
                     return a.Disabled.CompareTo(b.Disabled);//At the top
                 return a.RegionName.CompareTo (b.RegionName);
             });
-            RegionListBox.Items.Clear ();
+            RegionListBox.Items.Clear();
+            estateRegionSelection.Items.Clear();
             foreach(RegionInfo r in infos)
             {
                 bool online = _regionManager.GetWhetherRegionIsOnline(r.RegionID);
                 RegionListBox.Items.Add(online ? "Online - " + r.RegionName : r.RegionName);
+                estateRegionSelection.Items.Add(r.RegionName);
             }
         }
 
@@ -727,6 +731,64 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void einfiniteRegion_CheckedChanged(object sender, EventArgs e)
         {
             Update();
+        }
+
+        private void estateOwnerLookupSearch_Click(object sender, EventArgs e)
+        {
+            RegionInfo region = _regionManager.GetRegionInfo(estateRegionSelection.SelectedItem.ToString());
+            if (region == null)
+            {
+                MessageBox.Show("Region was not found!");
+                return;
+            }
+            _CurrentEstateRegionSelectedID = region.RegionID;
+            estateSelection.Items.Clear();
+            List<string> estateItems = _regionManager.GetEstatesForUser(estateOwnerName.Text);
+            estateSelection.Items.AddRange(estateItems.ToArray());
+            UpdateCurrentEstateText(null);
+            createNewEstate.Enabled = true;
+            changeRegionEstateButton.Enabled = true;
+        }
+
+        private void UpdateCurrentEstateText(string p)
+        {
+            if (p != null)
+                currentEstateName.Text = p;
+            else
+            {
+                string estateName = _regionManager.GetCurrentEstate(_CurrentEstateRegionSelectedID);
+                currentEstateName.Text = estateName == "" ? "No estates exist" : estateName;
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            string ownerName = estateOwnerName.Text;
+            string estateToJoin = estateSelection.SelectedItem.ToString();
+
+            _regionManager.ChangeEstate(ownerName, estateToJoin, _CurrentEstateRegionSelectedID);
+            UpdateCurrentEstateText(estateToJoin);
+        }
+
+        private void createNewEstate_Click(object sender, EventArgs e)
+        {
+            UUID regionID = _CurrentEstateRegionSelectedID;
+            string estateName = this.estateName.Text;
+            string ownerName = estateOwnerName.Text;
+
+            if (!_regionManager.CreateNewEstate(regionID, estateName, ownerName))
+                MessageBox.Show("Failed to create the estate, possibly duplicate estate name?");
+            else
+                UpdateCurrentEstateText(estateName);
+        }
+
+        private void estateRegionSelection_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            RegionInfo region = _regionManager.GetRegionInfo(estateRegionSelection.SelectedItem.ToString());
+            if (region == null)
+                return;
+
+            estateOwnerName.Text = _regionManager.GetEstateOwnerName(region.RegionID);
         }
     }
 }
