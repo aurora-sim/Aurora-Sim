@@ -64,7 +64,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected byte[] m_oldstylerevertTerrain;
         protected byte[] m_oldstyleterrain;
         //For backwards compat
-        //For backwards compat
         protected List<LandData> m_parcels = new List<LandData>();
         protected bool m_requiresSave = true;
         protected bool m_displayNotSavingNotice = true;
@@ -243,7 +242,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         public virtual void RemoveRegion(UUID regionUUID)
         {
             //Remove the file so that the region is gone
-            File.Delete(m_loadDirectory + m_fileName);
+            File.Delete(m_loadDirectory == "/" ? m_fileName : m_loadDirectory + m_fileName);
         }
 
         public virtual void RenameBackupFiles(string oldRegionName, string newRegionName, IConfigSource configSource)
@@ -401,6 +400,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
             if (appendedFilePath == "/")
                 appendedFilePath = "";
+            if (m_scene.RegionInfo.HasBeenDeleted)
+                return;
             IBackupModule backupModule = m_scene.RequestModuleInterface<IBackupModule>();
             if (backupModule != null && backupModule.LoadingPrims) //Something is changing lots of prims
             {

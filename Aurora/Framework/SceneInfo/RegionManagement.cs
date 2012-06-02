@@ -149,8 +149,9 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            _regionInfoConnector.Delete(GetRegionInfo(regionID));
-            _sceneManager.DeleteRegion(regionID);
+            IScene scene;
+            if (_sceneManager.TryGetScene(regionID, out scene))
+                _sceneManager.RemoveRegion(scene, true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]

@@ -122,7 +122,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    RegionManager.StartSynchronously(false, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                    RegionManager.StartSynchronously(true, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
                 }
             }
             catch

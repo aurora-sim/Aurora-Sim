@@ -602,8 +602,9 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 DialogResult r = Utilities.InputBox ("Are you sure?", "Are you sure you want to delete this region?");
                 if (r == DialogResult.OK)
                 {
-                    takeOffline_Click(sender, e);
+                    SetStoppingStatus();
                     _regionManager.DeleteRegion(region.RegionID);
+                    SetOfflineStatus();
                     //Remove everything from the GUI
                     ChangeRegionInfo(null);
                     //Update the regions in the list box as well
