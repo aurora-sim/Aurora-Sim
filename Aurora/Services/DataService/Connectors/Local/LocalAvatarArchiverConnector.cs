@@ -125,6 +125,8 @@ namespace Aurora.Services.DataService
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["Archive"] = archive.ArchiveXML;
+                values["Snapshot"] = archive.Snapshot.MySqlEscape();
+                values["IsPublic"] = archive.IsPublic;
 
                 GD.Update("avatararchives", values, null, filter, null, null);
             }
