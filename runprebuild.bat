@@ -52,6 +52,7 @@ goto framework
 
     :frameworkcheck
     if %vstudio%==2008 goto frameworkerror
+	echo WARNING: .net4 may cause script errors!
     goto bits
 
     :frameworkerror
