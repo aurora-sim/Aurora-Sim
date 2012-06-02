@@ -928,6 +928,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_objectUpdatesToSend.Clear();
             lock (m_presenceUpdatesToSendLock)
                 m_presenceUpdatesToSend.Clear();
+            lock(m_presenceAnimationsToSendLock)
+                m_presenceAnimationsToSend.Clear();
+            lock (m_lastPresencesInViewLock)
+                lastPresencesDInView.Clear();
+            lock(m_objectPropertiesToSendLock)
+                m_objectPropertiesToSend.Clear();
+            lastGrpsInView.Clear();
             m_presence.OnSignificantClientMovement -= SignificantClientMovement;
             m_presence.Scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
             m_scene.EventManager.OnClosingClient -= EventManager_OnClosingClient;
