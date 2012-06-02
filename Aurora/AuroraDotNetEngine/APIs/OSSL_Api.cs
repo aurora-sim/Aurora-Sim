@@ -848,28 +848,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 if (target != null)
                 {
-                    UUID animID = UUID.Zero;
-                    lock (m_host.TaskInventory)
+                    UUID animID = new UUID();
+                    if (!UUID.TryParse(animation, out animID))
                     {
-#if (!ISWIN)
-                        foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+
+                        animID = UUID.Zero;
+                        lock (m_host.TaskInventory)
                         {
-                            if (inv.Value.Name == animation)
+#if (!ISWIN)
+                            foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                            {
+                                if (inv.Value.Name == animation)
+ 	                            {
+ 	                               if (inv.Value.Type == (int)AssetType.Animation)
+ 	                                   animID = inv.Value.AssetID;
+ 	                               continue;
+ 	                            }
+                            }
+
+#else
+                            foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory.Where(inv => inv.Value.Name == animation))
                             {
                                 if (inv.Value.Type == (int)AssetType.Animation)
                                     animID = inv.Value.AssetID;
                                 continue;
                             }
-                        }
-#else
-                        foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory.Where(inv => inv.Value.Name == animation))
-                        {
-                            if (inv.Value.Type == (int) AssetType.Animation)
-                                animID = inv.Value.AssetID;
-                            continue;
-                        }
 #endif
+                        }
                     }
+
                     if (animID == UUID.Zero)
                         target.Animator.AddAnimation(animation, m_host.UUID);
                     else
