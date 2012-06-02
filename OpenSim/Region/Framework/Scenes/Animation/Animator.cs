@@ -331,7 +331,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 //            if (actor != null && actor.Flying)
             if (actor != null &&
                 (m_scenePresence.AgentControlFlags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY) ==
-                (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY)
+                (uint) AgentManager.ControlFlags.AGENT_CONTROL_FLY || m_scenePresence.ForceFly)
             {
                 m_animTickFall = 0;
                 if (move.X != 0f || move.Y != 0f)
