@@ -187,6 +187,8 @@ namespace Aurora.Framework
                     inst = string.Empty;
                 else if (method.ReturnType == typeof(void))
                     return null;
+                else if (method.ReturnType == typeof(System.Drawing.Image))
+                    inst = null;
                 else
                     inst = Activator.CreateInstance(method.ReturnType);
             }

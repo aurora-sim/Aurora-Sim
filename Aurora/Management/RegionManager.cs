@@ -52,7 +52,6 @@ namespace Aurora.Management
         private bool _changingRegion = false;
         private bool _textHasChanged = false;
         private readonly IRegionManagement _regionManager;
-        private string _defaultRegionsLocation = "DefaultRegions";
 
         private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer();
         private readonly List<NoOp> _timerEvents = new List<NoOp>();
@@ -617,23 +616,12 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void GetDefaultRegions ()
         {
-            IConfig config = _config.Configs["RegionManager"];
-            if (config != null)
-                _defaultRegionsLocation = config.GetString ("DefaultRegionsLocation", _defaultRegionsLocation);
+            RegionSelections.Items.Add("None");//Add one for the default default
+            List<string> files = _regionManager.GetDefaultRegionNames();
 
-            RegionSelections.Items.Add ("None");//Add one for the default default
-
-            if (!Directory.Exists (_defaultRegionsLocation))
-            {
-                RegionSelections.SelectedIndex = 0;
-                return;
-            }
-
-            string[] files = Directory.GetFiles (_defaultRegionsLocation, "*.abackup");
             foreach (string file in files)
-            {
                 RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
-            }
+
             if (RegionSelections.Items.Count > 1)//Select the first one by default so that its pretty for the user
                 RegionSelections.SelectedIndex = 1;
             else
@@ -643,42 +631,20 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
         private void CopyOverDefaultRegion (string regionName)
         {
             string fileName = RegionSelections.Items[RegionSelections.SelectedIndex].ToString();
-            string name = Path.Combine(_defaultRegionsLocation, fileName + ".abackup");//Full name
-            if (!File.Exists (name))
-                return;//None selected
-
-            string loadAppenedFileName = "";
-            string newFilePath = "";
-            IConfig simData = _config.Configs["FileBasedSimulationData"];
-            if (simData != null)
+            if (!_regionManager.MoveDefaultRegion(regionName, fileName, false))
             {
-                loadAppenedFileName = simData.GetString ("ApendedLoadFileName", loadAppenedFileName);
-                newFilePath = simData.GetString ("LoadBackupDirectory", newFilePath);
-            }
-            string newFileName = newFilePath == "" || newFilePath == "/" ?
-                regionName + loadAppenedFileName + ".abackup" :
-                Path.Combine(newFilePath, regionName + loadAppenedFileName + ".abackup");
-            if (File.Exists (newFileName))
-            {
-                DialogResult s = Utilities.InputBox("Delete file?", "The file " + newFileName + " already exists, delete?");
+                DialogResult s = Utilities.InputBox("Delete file?", "The file " + regionName + ".abackup already exists, delete?");
                 if (s == DialogResult.OK)
-                    File.Delete(newFileName);
+                    _regionManager.MoveDefaultRegion(regionName, fileName, true);
                 else
-                    return;//None selected
+                    return;//Don't copy the region then
             }
-            File.Copy (name, newFileName);
         }
 
         private void RegionSelections_SelectedIndexChanged (object sender, EventArgs e)
         {
             string name = RegionSelections.Items[RegionSelections.SelectedIndex].ToString ();
-            Image b = null;
-            if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".png")))
-                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".png"));
-            else if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".jpg")))
-                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".jpg"));
-            else if (File.Exists (Path.Combine (_defaultRegionsLocation, name + ".jpeg")))
-                b = Image.FromFile (Path.Combine (_defaultRegionsLocation, name + ".jpeg"));
+            Image b = _regionManager.GetDefaultRegionImage(name);
             if (b == null)
             {
                 RegionSelectionsPicture.Image = null;
