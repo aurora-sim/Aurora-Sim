@@ -229,6 +229,7 @@ namespace Aurora.Management
                 textBox1.Text = "";
                 RegionSizeX.Text = "";
                 RegionSizeY.Text = "";
+                StartupNumberBox.Text = "0";
                 startupType.SelectedIndex = 0;
                 einfiniteRegion.Checked = false;
                 return;
@@ -257,6 +258,7 @@ namespace Aurora.Management
             RegionSizeY.Text = region.RegionSizeY.ToString ();
             startupType.SelectedIndex = ConvertStartupType (region.Startup);
             einfiniteRegion.Checked = region.InfiniteRegion;
+            StartupNumberBox.Text = region.NumberStartup.ToString();
             if (_regionManager.GetWhetherRegionIsOnline(region.RegionID))
                 SetOnlineStatus ();
             else
@@ -632,7 +634,10 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             {
                 RegionSelections.Items.Add (Path.GetFileNameWithoutExtension (file));//Remove the extension
             }
-            RegionSelections.SelectedIndex = 1;//Select the first one by default so that its pretty for the user
+            if (RegionSelections.Items.Count > 1)//Select the first one by default so that its pretty for the user
+                RegionSelections.SelectedIndex = 1;
+            else
+                RegionSelections.SelectedIndex = 0;
         }
 
         private void CopyOverDefaultRegion (string regionName)
@@ -655,9 +660,9 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
                 Path.Combine(newFilePath, regionName + loadAppenedFileName + ".abackup");
             if (File.Exists (newFileName))
             {
-                DialogResult s = Utilities.InputBox ("Delete file?", "The file " + name + " already exists, delete?");
+                DialogResult s = Utilities.InputBox("Delete file?", "The file " + newFileName + " already exists, delete?");
                 if (s == DialogResult.OK)
-                    File.Delete (name);
+                    File.Delete(newFileName);
                 else
                     return;//None selected
             }
