@@ -69,10 +69,28 @@ namespace Aurora.Modules.Archivers
                 return null;
             }
 
-            StreamReader reader = new StreamReader(FileName);
-            string file = reader.ReadToEnd();
-            reader.Close();
-            reader.Dispose();
+            string archiveXML = "";
+            if (FileName.EndsWith(".database"))
+            {
+                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                if (archiver != null)
+                {
+                    AvatarArchive archive = archiver.GetAvatarArchive(FileName.Substring(0, FileName.LastIndexOf(".database")));
+                    archiveXML = archive.ArchiveXML;
+                }
+                else
+                {
+                    MainConsole.Instance.Error("[AvatarArchive] Unable to load from database!");
+                    return null;
+                }
+            }
+            else
+            {
+                StreamReader reader = new StreamReader(FileName);
+                archiveXML = reader.ReadToEnd();
+                reader.Close();
+                reader.Dispose();
+            }
 
             IScenePresence SP = null;
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
@@ -90,7 +108,7 @@ namespace Aurora.Modules.Archivers
 
             string FolderNameToLoadInto = "";
 
-            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(file));
+            OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(archiveXML));
 
             OSDMap assetsMap = ((OSDMap)map["Assets"]);
             OSDMap itemsMap = ((OSDMap)map["Items"]);
@@ -124,10 +142,6 @@ namespace Aurora.Modules.Archivers
             {
                 MainConsole.Instance.Warn("[AvatarArchiver]: Error loading assets and items, " + ex);
             }
-
-
-
-
 
             //Now update the client about the new items
             if (SP != null)
@@ -349,7 +363,7 @@ namespace Aurora.Modules.Archivers
 
         protected void HandleSaveAvatarArchive(string[] cmdparams)
         {
-            if (cmdparams.Length != 7)
+            if (cmdparams.Length < 7)
             {
                 MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
             }
@@ -374,13 +388,12 @@ namespace Aurora.Modules.Archivers
             if (SP != null)
                 SP.ControllingClient.SendAlertMessage("Appearance saving in progress...");
 
-            AvatarAppearance appearance = AvatarService.GetAppearance(SP.UUID);
+            AvatarAppearance appearance = AvatarService.GetAppearance(account.PrincipalID);
             if (appearance == null)
             {
-                IAvatarAppearanceModule appearancemod = SP.RequestModuleInterface<IAvatarAppearanceModule>();
+                IAvatarAppearanceModule appearancemod = m_registry.RequestModuleInterface<IAvatarAppearanceModule>();
                 appearance = appearancemod.Appearance;
             }
-            StreamWriter writer = new StreamWriter(cmdparams[5], false);
             OSDMap map = new OSDMap();
             OSDMap body = new OSDMap();
             OSDMap assets = new OSDMap();
@@ -420,11 +433,70 @@ namespace Aurora.Modules.Archivers
             map.Add("Body", body);
             map.Add("Assets", assets);
             map.Add("Items", items);
+
             //Write the map
-            writer.Write(OSDParser.SerializeLLSDXmlString(map));
-            writer.Close();
-            writer.Dispose();
-            MainConsole.Instance.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            if (cmdparams[5].EndsWith(".database"))
+            {
+                IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
+                if (archiver != null)
+                {
+                    AvatarArchive archive = new AvatarArchive();
+                    archive.ArchiveXML = OSDParser.SerializeLLSDXmlString(map);
+
+                    // Add the extra details for archives
+                    archive.Name = cmdparams[5].Substring(0, cmdparams[5].LastIndexOf(".database"));
+                    if (cmdparams.Length > 7)
+                    {
+                        if (cmdparams.Contains("--Snapshot"))
+                        {
+                            UUID snapshot;
+                            int index = 0;
+                            for(; index < cmdparams.Length; index++)
+                            {
+                                if(cmdparams[index] == "--Snapshot")
+                                {
+                                    index++;
+                                    break;
+                                }
+                            }
+                            if(index < cmdparams.Length && UUID.TryParse(cmdparams[index], out snapshot))
+                            {
+                                archive.Snapshot = snapshot.ToString();
+                            }
+                        }
+                        else
+                        {
+                            archive.Snapshot = UUID.Zero.ToString();
+                        }
+                        if (cmdparams.Contains("--public"))
+                        {
+                            archive.IsPublic = 1;
+                        }
+                    }
+                    else
+                    {
+                        archive.Snapshot = UUID.Zero.ToString();
+                        archive.IsPublic = 0;
+                    }
+
+                    // Save the archive
+                    archiver.SaveAvatarArchive(archive);
+                    MainConsole.Instance.Info("[AvatarArchive] Saved archive to database as: " + archive.Name);
+                }
+                else
+                {
+                    MainConsole.Instance.Error("[AvatarArchive] Unable to save to database!");
+                    return;
+                }
+            }
+            else
+            {
+                StreamWriter writer = new StreamWriter(cmdparams[5], false);
+                writer.Write(OSDParser.SerializeLLSDXmlString(map));
+                writer.Close();
+                writer.Dispose();
+                MainConsole.Instance.Info("[AvatarArchive] Saved archive to " + cmdparams[5]);
+            }
         }
 
         private void SaveAsset(UUID AssetID, OSDMap assetMap)
@@ -531,8 +603,8 @@ namespace Aurora.Modules.Archivers
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("save avatar archive",
-                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto>",
-                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive)",
+                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--Snapshot <UUID>) (--public)",
+                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both Snapshot UUID and \"--public\" are optional.",
                                                          HandleSaveAvatarArchive);
                 MainConsole.Instance.Commands.AddCommand("load avatar archive",
                                                          "load avatar archive <First> <Last> <Filename>",
