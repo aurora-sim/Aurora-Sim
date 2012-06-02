@@ -249,8 +249,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 Script = null;
             }
 
-            MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " +
-                        Part.Name);
+            if(InventoryItem != null && Part != null)
+                MainConsole.Instance.Debug("[" + m_ScriptEngine.ScriptEngineName + "]: Closed Script " + InventoryItem.Name + " in " +
+                            Part.Name);
             if (AppDomain == null)
                 return;
 

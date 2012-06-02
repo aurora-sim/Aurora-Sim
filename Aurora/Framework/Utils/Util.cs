@@ -1662,6 +1662,8 @@ namespace Aurora.Framework
         {
             if (o is OSD)
                 return (OSD)o;
+            if (o is System.Drawing.Image)
+                return OSDBinary.FromBinary(ImageToByteArray(o as System.Drawing.Image));
             OSD oo;
             if ((oo = OSD.FromObject(o)).Type != OSDType.Unknown)
                 return (OSD)oo;
@@ -1693,6 +1695,20 @@ namespace Aurora.Framework
             return null;
         }
 
+        public static byte[] ImageToByteArray(System.Drawing.Image imageIn)
+        {
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
+            return ms.ToArray();
+        }
+
+        public static System.Drawing.Image ByteArrayToImage(byte[] byteArrayIn)
+        {
+            MemoryStream ms = new MemoryStream(byteArrayIn);
+            System.Drawing.Image returnImage = System.Drawing.Image.FromStream(ms);
+            return returnImage;
+        }
+
         private static object CreateInstance(Type type)
         {
             if (type == typeof(string))
@@ -1717,6 +1733,9 @@ namespace Aurora.Framework
 
                 return o.AsString();
             }
+            if (o.Type == OSDType.Array && PossibleArrayType == typeof(System.Drawing.Image))
+                return ByteArrayToImage(o.AsBinary());
+
             if (o.Type == OSDType.Integer || PossibleArrayType == typeof(int))
                 return o.AsInteger();
             if (o.Type == OSDType.Binary || PossibleArrayType == typeof(byte[]))

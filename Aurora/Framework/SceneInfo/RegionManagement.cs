@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework.Servers.HttpServer;
 
 namespace Aurora.Framework
 {
@@ -148,8 +149,9 @@ namespace Aurora.Framework
             if (m_doRemoteOnly)
                 return;
 
-            _regionInfoConnector.Delete(GetRegionInfo(regionID));
-            _sceneManager.DeleteRegion(regionID);
+            IScene scene;
+            if (_sceneManager.TryGetScene(regionID, out scene))
+                _sceneManager.RemoveRegion(scene, true);//Deletes the .abackup file, all prims in the region, and the info from all region loaders
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -192,7 +194,7 @@ namespace Aurora.Framework
             return _regionInfoConnector.GetRegionInfo(regionID);
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true, RenamedMethod = "GetRegionInfoByUUID")]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public string GetOpenRegionSettingsHTMLPage(UUID regionID)
         {
             object remoteValue = InternalDoRemote(regionID);
@@ -203,6 +205,78 @@ namespace Aurora.Framework
             if (orsc != null)
                 return orsc.AddOpenRegionSettingsHTMLPage(regionID);
             return "";
+        }
+
+        private string _defaultRegionsLocation = "DefaultRegions";
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public List<string> GetDefaultRegionNames()
+        {
+            object remoteValue = InternalDoRemote();
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<string>)remoteValue;
+            IConfig config = _sceneManager.ConfigSource.Configs["RegionManager"];
+            if (config != null)
+                _defaultRegionsLocation = config.GetString("DefaultRegionsLocation", _defaultRegionsLocation);
+
+            if (!Directory.Exists(_defaultRegionsLocation))
+                return new List<string>();
+
+            return new List<string>(Directory.GetFiles(_defaultRegionsLocation, "*.abackup"));
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public System.Drawing.Image GetDefaultRegionImage(string name)
+        {
+            object remoteValue = InternalDoRemote(name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (System.Drawing.Image)remoteValue;
+
+            IConfig config = _sceneManager.ConfigSource.Configs["RegionManager"];
+            if (config != null)
+                _defaultRegionsLocation = config.GetString("DefaultRegionsLocation", _defaultRegionsLocation);
+
+            System.Drawing.Image b = null;
+            if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".png")))
+                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".png"));
+            else if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".jpg")))
+                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".jpg"));
+            else if (File.Exists(Path.Combine(_defaultRegionsLocation, name + ".jpeg")))
+                b = System.Drawing.Image.FromFile(Path.Combine(_defaultRegionsLocation, name + ".jpeg"));
+
+            return b;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public bool MoveDefaultRegion(string regionName, string fileName, bool forced)
+        {
+            object remoteValue = InternalDoRemote(regionName, fileName, forced);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
+            string name = Path.Combine(_defaultRegionsLocation, fileName + ".abackup");//Full name
+            if (!File.Exists(name))
+                return true;//None selected, it can't be done, just don't do anything about it
+
+            string loadAppenedFileName = "";
+            string newFilePath = "";
+            IConfig simData = _sceneManager.ConfigSource.Configs["FileBasedSimulationData"];
+            if (simData != null)
+            {
+                loadAppenedFileName = simData.GetString("ApendedLoadFileName", loadAppenedFileName);
+                newFilePath = simData.GetString("LoadBackupDirectory", newFilePath);
+            }
+            string newFileName = newFilePath == "" || newFilePath == "/" ?
+                regionName + loadAppenedFileName + ".abackup" :
+                Path.Combine(newFilePath, regionName + loadAppenedFileName + ".abackup");
+            if (File.Exists(newFileName))
+            {
+                if (!forced)
+                    return false;
+                else
+                    File.Delete(newFileName);
+            }
+            File.Copy(name, newFileName);
+            return true;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]

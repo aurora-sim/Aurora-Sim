@@ -98,6 +98,8 @@ namespace Aurora.Framework
             set { m_regionSettings = value; }
         }
 
+        public bool HasBeenDeleted { get; set; }
+
         public bool AllowScriptCrossing { get; set; }
 
         private List<int> m_UDPPorts = new List<int> ();

@@ -495,6 +495,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (backup != null)
                 backup.DeleteAllSceneObjects();
 
+            scene.RegionInfo.HasBeenDeleted = true;
             CloseRegion (scene, ShutdownType.Immediate, 0);
 
             if (!cleanup)

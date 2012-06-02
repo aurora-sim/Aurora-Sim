@@ -330,7 +330,9 @@ namespace Aurora.Modules.Startup
             GridRegion r = BuildGridRegion(scene.RegionInfo);
             r.IsOnline = false;
             string error = "";
-            if ((error = GridService.UpdateMap(r)) != "")
+            if(scene.RegionInfo.HasBeenDeleted)
+                GridService.DeregisterRegion(r);
+            else if ((error = GridService.UpdateMap(r)) != "")
                 MainConsole.Instance.WarnFormat("[RegisterRegionWithGrid]: Deregister from grid failed for region {0}, {1}",
                                  scene.RegionInfo.RegionName, error);
         }

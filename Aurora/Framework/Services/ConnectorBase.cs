@@ -187,6 +187,8 @@ namespace Aurora.Framework
                     inst = string.Empty;
                 else if (method.ReturnType == typeof(void))
                     return null;
+                else if (method.ReturnType == typeof(System.Drawing.Image))
+                    inst = null;
                 else
                     inst = Activator.CreateInstance(method.ReturnType);
             }
@@ -233,90 +235,118 @@ namespace Aurora.Framework
             return response["Success"];
         }
 
+        /// <summary>
+        /// Dictionary of end points
+        /// </summary>
+        private static Dictionary<string, object> m_endpointSerializer = new Dictionary<string, object>();
+
+        private static object EndPointLock(string url)
+        {
+            System.Uri uri = new System.Uri(url);
+            string endpoint = string.Format("{0}:{1}", uri.Host, uri.Port);
+
+            lock (m_endpointSerializer)
+            {
+                object eplock = null;
+
+                if (!m_endpointSerializer.TryGetValue(endpoint, out eplock))
+                {
+                    eplock = new object();
+                    m_endpointSerializer.Add(endpoint, eplock);
+                    // m_log.WarnFormat("[WEB UTIL] add a new host to end point serializer {0}",endpoint);
+                }
+
+                return eplock;
+            }
+        }
+
         public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
         {
             // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
 
-            string errorMessage = "unknown error";
-            int tickstart = Util.EnvironmentTickCount();
-            int tickdata = 0;
-            int tickserialize = 0;
-
-            try
+            lock (EndPointLock(url))
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = method;
-                request.Timeout = timeout;
-                request.KeepAlive = false;
-                request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout / 2;
+                string errorMessage = "unknown error";
+                int tickstart = Util.EnvironmentTickCount();
+                int tickdata = 0;
+                int tickserialize = 0;
 
-                // If there is some input, write it into the request
-                if (data != null)
+                try
                 {
-                    string strBuffer = OSDParser.SerializeJsonString(data, true);
-                    byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = method;
+                    request.Timeout = timeout;
+                    request.KeepAlive = false;
+                    request.MaximumAutomaticRedirections = 10;
+                    request.ReadWriteTimeout = timeout / 2;
 
-                    request.ContentType = "application/json";
-                    request.ContentLength = buffer.Length; //Count bytes to send
-                    if (buffer.Length > 0)
-                        using (Stream requestStream = request.GetRequestStream())
-                            requestStream.Write(buffer, 0, buffer.Length); //Send it
-                }
-
-                // capture how much time was spent writing, this may seem silly
-                // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
+                    // If there is some input, write it into the request
+                    if (data != null)
                     {
-                        // capture how much time was spent writing, this may seem silly
-                        // but with the number concurrent requests, this often blocks
-                        tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        string responseStr = responseStream.GetStreamString();
-                        // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                        return responseStr;
+                        string strBuffer = OSDParser.SerializeJsonString(data, true);
+                        byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
+
+                        request.ContentType = "application/json";
+                        request.ContentLength = buffer.Length; //Count bytes to send
+                        if (buffer.Length > 0)
+                            using (Stream requestStream = request.GetRequestStream())
+                                requestStream.Write(buffer, 0, buffer.Length); //Send it
+                    }
+
+                    // capture how much time was spent writing, this may seem silly
+                    // but with the number concurrent requests, this often blocks
+                    tickdata = Util.EnvironmentTickCountSubtract(tickstart);
+
+                    using (WebResponse response = request.GetResponse())
+                    {
+                        using (Stream responseStream = response.GetResponseStream())
+                        {
+                            // capture how much time was spent writing, this may seem silly
+                            // but with the number concurrent requests, this often blocks
+                            tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
+                            string responseStr = responseStream.GetStreamString();
+                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
+                            return responseStr;
+                        }
                     }
                 }
-            }
-            catch (WebException we)
-            {
-                errorMessage = we.Message;
-                if (we.Status == WebExceptionStatus.ProtocolError)
+                catch (WebException we)
                 {
-                    HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                }
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                if (MainConsole.Instance != null)
-                {
-                    if (errorMessage == "unknown error")
+                    errorMessage = we.Message;
+                    if (we.Status == WebExceptionStatus.ProtocolError)
                     {
-                        // This just dumps a warning for any operation that takes more than 500 ms
-                        int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                        MainConsole.Instance.TraceFormat(
-                            "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                            url, method, tickdiff, tickdata, tickserialize);
-                        if (tickdiff > 5000)
-                            MainConsole.Instance.InfoFormat(
+                        HttpWebResponse webResponse = (HttpWebResponse)we.Response;
+                        errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = ex.Message;
+                }
+                finally
+                {
+                    if (MainConsole.Instance != null)
+                    {
+                        if (errorMessage == "unknown error")
+                        {
+                            // This just dumps a warning for any operation that takes more than 500 ms
+                            int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                            MainConsole.Instance.TraceFormat(
                                 "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                 url, method, tickdiff, tickdata, tickserialize);
+                            if (tickdiff > 5000)
+                                MainConsole.Instance.InfoFormat(
+                                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                    url, method, tickdiff, tickdata, tickserialize);
+                        }
                     }
                 }
-            }
 
-            if(MainConsole.Instance != null)
-                MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
-                                 data != null ? data.AsString() : "");
-            return "";
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
+                                     data != null ? data.AsString() : "");
+                return "";
+            }
         }
 
         public bool CheckPassword(string password)
@@ -426,7 +456,8 @@ namespace Aurora.Framework
                     return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
                 }
             }
-            MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
+            else
+                MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
 
             return new byte[0];
         }
