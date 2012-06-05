@@ -155,6 +155,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         string osGetGridNick();
         string osGetGridName();
         string osGetGridLoginURI();
+        string osGetThreatLevel(string key);
 
         LSL_String osFormatString(string str, LSL_List strings);
         LSL_List osMatchString(string src, string pattern, int start);
