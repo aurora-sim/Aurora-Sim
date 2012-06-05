@@ -236,10 +236,14 @@ namespace Aurora.Modules.Profiles
             IMoneyModule money = p.Scene.RequestModuleInterface<IMoneyModule>();
             if (money != null)
             {
-                if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified"))
+                Classified classcheck = ProfileFrontend.GetClassified(queryclassifiedID);
+                if (classcheck == null)
                 {
-                    remoteClient.SendAlertMessage("You do not have enough money to complete this upload.");
-                    return;
+                    if (!money.Charge(remoteClient.AgentId, queryclassifiedPrice, "Add Classified"))
+                    {
+                        remoteClient.SendAlertMessage("You do not have enough money to create this classified.");
+                        return;
+                    }
                 }
             }
 
