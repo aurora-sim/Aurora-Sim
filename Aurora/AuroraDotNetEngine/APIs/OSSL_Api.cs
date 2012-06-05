@@ -597,6 +597,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             return retval;
         }
 
+        public string osGetThreatLevel(string key)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetThreatLevel", m_host, "OSSL",
+                                                   m_itemID)) return "";
+
+            string retval = String.Empty;
+            IConfigSource config = m_ScriptEngine.ConfigSource;
+
+            if (config.Configs["AllowedAPIs"].Contains("os"))
+                retval = config.Configs["FunctionThreatLevel"].GetString(key, retval);
+
+            if (String.IsNullOrEmpty(retval))
+                retval = GridUserInfo(InfoType.Custom, key);
+
+            return retval;
+        }
+
         public string osGetGridGatekeeperURI() //patched from OpenSim, you can remove this comment after pull
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetGridGatekeeperURI", m_host, "OSSL", m_itemID)) return "";
