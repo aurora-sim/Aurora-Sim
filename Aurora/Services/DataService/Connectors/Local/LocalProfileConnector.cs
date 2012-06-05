@@ -177,9 +177,9 @@ namespace Aurora.Services.DataService
                 classified.Category,
                 classified.SimName.MySqlEscape(),
                 classified.CreatorUUID,
-                classified.ScopeID,
                 classified.ClassifiedUUID,
-                OSDParser.SerializeJsonString(classified.ToOSD())
+                OSDParser.SerializeJsonString(classified.ToOSD()),
+                classified.ScopeID
             };
             return GD.Insert("userclassifieds", values.ToArray());
         }
