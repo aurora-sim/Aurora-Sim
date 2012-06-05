@@ -853,7 +853,7 @@ namespace Aurora.Services.DataService
                 return new List<DirClassifiedReplyData>();
 
             List<DirClassifiedReplyData> Data = new List<DirClassifiedReplyData>();
-            for (int i = 0; i < retVal.Count; i += 6)
+            for (int i = 0; i < retVal.Count; i += 7)
             {
                 //Pull the classified out of OSD
                 Classified classified = new Classified();
@@ -871,7 +871,7 @@ namespace Aurora.Services.DataService
                 //Check maturity levels
                 if ((replyData.classifiedFlags & (uint)DirectoryManager.ClassifiedFlags.Mature) != (uint)DirectoryManager.ClassifiedFlags.Mature)
                 {
-                    if ((queryFlags & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) != (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
+                    if ((queryFlags & (uint)DirectoryManager.ClassifiedQueryFlags.Mature) == (uint)DirectoryManager.ClassifiedQueryFlags.Mature)
                         Data.Add(replyData);
                 }
                 else
