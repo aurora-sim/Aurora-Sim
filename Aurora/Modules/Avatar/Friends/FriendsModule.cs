@@ -585,7 +585,7 @@ namespace Aurora.Modules.Friends
                                                        "Will you be my friend?", true, Vector3.Zero);
             foreach (FriendInfo fi in friends)
             {
-                if(fi.MyFlags == -1)
+                if(fi.MyFlags == 0)
                 {
                     UUID fromAgentID;
                     string url = "", first = "", last = "", secret = "";
