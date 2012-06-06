@@ -115,6 +115,35 @@ namespace Aurora.Services.DataService
             return infos.ToArray();
         }
 
+        public FriendInfo[] GetFriendsRequest(UUID principalID)
+        {
+            List<FriendInfo> infos = new List<FriendInfo>();
+
+            QueryTables tables = new QueryTables();
+            tables.AddTable(m_realm, "my");
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["my.PrincipalID"] = principalID;
+            filter.andFilters["my.Flags"] = 0;
+            List<string> query = GD.Query(new string[]{
+                "my.Friend",
+                "my.Flags",
+            }, tables, filter, null, null, null);
+
+            //These are used to get the other flags below
+
+            for (int i = 0; i < query.Count; i += 3)
+            {
+                FriendInfo info = new FriendInfo
+                {
+                    PrincipalID = principalID,
+                    Friend = query[i],
+                    MyFlags = int.Parse(query[i + 1]),
+                };
+                infos.Add(info);
+            }
+            return infos.ToArray();
+        }
+
         #endregion
 
         public void Dispose()

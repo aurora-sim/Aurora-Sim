@@ -153,6 +153,24 @@ namespace Aurora.Modules.Friends
             return new FriendInfo[0];
         }
 
+        public FriendInfo[] GetFriendsRequest(UUID agentID)
+        {
+            UserFriendData friendsData;
+
+            lock (m_Friends)
+            {
+                if (m_Friends.TryGetValue(agentID, out friendsData))
+                    return friendsData.Friends;
+                else
+                {
+                    UpdateFriendsCache(agentID);
+                    if (m_Friends.TryGetValue(agentID, out friendsData))
+                        return friendsData.Friends;
+                }
+            }
+
+            return new FriendInfo[0];
+        }
         #endregion
 
         #region ISharedRegionModule Members
@@ -273,6 +291,7 @@ namespace Aurora.Modules.Friends
             client.OnDenyFriendRequest += OnDenyFriendRequest;
             client.OnTerminateFriendship += OnTerminateFriendship;
             client.OnGrantUserRights += OnGrantUserRights;
+            OfflineFriendRequest(client);
             //Only send if they are root!
             //Util.FireAndForget(delegate(object o)
             //{
@@ -419,7 +438,7 @@ namespace Aurora.Modules.Friends
             if (LocalFriendshipOffered(friendID, im))
                 return;
 
-            // The prospective friend is not here [as root]. Let's forward.
+            // The prospective friend is not here [as root]. Let's4 forward.
             SyncMessagePosterService.Post(SyncMessageHelper.FriendshipOffered(
                 agentID, friendID, im, m_Scenes[0].RegionInfo.RegionHandle), m_Scenes[0].RegionInfo.RegionHandle);
             // If the prospective friend is not online, he'll get the message upon login.
@@ -552,6 +571,39 @@ namespace Aurora.Modules.Friends
                     SyncMessagePosterService.Post(SyncMessageHelper.FriendGrantRights(
                         requester, target, myFlags, rights, m_Scenes[0].RegionInfo.RegionHandle),
                                                   m_Scenes[0].RegionInfo.RegionHandle);
+                }
+            }
+        }
+
+        public void OfflineFriendRequest(IClientAPI client)
+        {
+            // Barrowed a few lines from SendFriendsOnlineIfNeeded() above.
+            UUID agentID = client.AgentId;
+            FriendInfo[] friends = FriendsService.GetFriendsRequest(agentID).ToArray();
+            GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
+                                                       (byte)InstantMessageDialog.FriendshipOffered,
+                                                       "Will you be my friend?", true, Vector3.Zero);
+            foreach (FriendInfo fi in friends)
+            {
+                if(fi.MyFlags == -1)
+                {
+                    UUID fromAgentID;
+                    string url = "", first = "", last = "", secret = "";
+                    if (!UUID.TryParse(fi.Friend, out fromAgentID))
+                        if (
+                            !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
+                            continue;
+
+                    UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
+                    im.fromAgentID = fromAgentID;
+                    if (account != null)
+                        im.fromAgentName = account.Name;
+                    else
+                        im.fromAgentName = first + " " + last;
+                    im.offline = 1;
+                    im.imSessionID = im.fromAgentID;
+
+                    LocalFriendshipOffered(agentID, im);
                 }
             }
         }
