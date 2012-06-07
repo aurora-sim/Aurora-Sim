@@ -18,7 +18,11 @@
 //
 // Example of osSetProjectionParams
 //
-string ProjParams = "TRUE, <UUID>, 10.0, 5.0, 7.5";
+integer project = TRUE;
+key textureID = "<UUID>";
+float fov = 10.0;
+float focus = 5.0;
+float amb = 7.5;
 default
 {
     state_entry()
@@ -27,6 +31,6 @@ default
     }
     touch_end(integer num)
     {
-        osSetProjectionParams(ProjParams);
+        osSetProjectionParams(project, textureID, fov, focus, amb);
     }
 }
