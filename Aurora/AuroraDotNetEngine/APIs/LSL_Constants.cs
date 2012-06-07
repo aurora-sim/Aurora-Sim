@@ -78,6 +78,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger PERMISSION_CHANGE_PERMISSIONS = 512;
         public static readonly LSL_Types.LSLInteger PERMISSION_TRACK_CAMERA = 1024;
         public static readonly LSL_Types.LSLInteger PERMISSION_CONTROL_CAMERA = 2048;
+        public static readonly LSL_Types.LSLInteger PERMISSION_TELEPORT = 4096;
         public static readonly LSL_Types.LSLInteger PERMISSION_COMBAT = 8196;
 
         public static readonly LSL_Types.LSLInteger AGENT_FLYING = 1;
