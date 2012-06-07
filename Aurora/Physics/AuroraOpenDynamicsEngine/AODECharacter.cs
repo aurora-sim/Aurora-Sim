@@ -838,7 +838,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (IsJumping)
             {
 //                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
-                if ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150)
+                if (flying || ((IsColliding) && m_preJumpCounter > _parent_scene.m_preJumpTime || m_preJumpCounter > 150))
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
