@@ -60,5 +60,13 @@ namespace Aurora.Framework
         /// <param name = "principalID"></param>
         /// <returns></returns>
         FriendInfo[] GetFriends(UUID principalID);
+
+        /// <summary>
+        ///   Gets all friends of the user
+        /// </summary>
+        /// <param name = "principalID"></param>
+        /// <returns></returns>
+        FriendInfo[] GetFriendsRequest(UUID principalID);
+        
     }
 }
