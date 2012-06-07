@@ -14,7 +14,7 @@
 // ================================================================
 // C# Source Line:      public void osSetProjectionParams(bool projection, LSL_Key texture, double fov, double focus, double amb)
 // C# Source Line:      public void osSetProjectionParams(LSL_Key prim, bool projection, LSL_Key texture, double fov, double focus, double amb)
-// Inworld Script Line: osSetProjectionParams(integer projection, key texture, float FieldOfVision float focus, float ambience); 
+// Inworld Script Line: osSetProjectionParams(integer projection, key texture, float FieldOfVision, float focus, float ambience); 
 //
 // Example of osSetProjectionParams
 //
@@ -22,7 +22,7 @@ integer project = TRUE;
 key textureID = "<UUID>";
 float fov = 10.0;
 float focus = 5.0;
-float amb = 7.5;
+float ambience = 7.5;
 default
 {
     state_entry()
@@ -31,6 +31,6 @@ default
     }
     touch_end(integer num)
     {
-        osSetProjectionParams(project, textureID, fov, focus, amb);
+        osSetProjectionParams(project, textureID, fov, focus, ambience);
     }
 }
