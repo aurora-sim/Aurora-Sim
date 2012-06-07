@@ -50,7 +50,7 @@
     ;; The amount to multiply the jump by (can have a decimal point)
     PreJumpMultiplierX = 6
     PreJumpMultiplierY = 6
-    PreJumpMultiplierZ = 4.5
+    PreJumpMultiplierZ = 5.5
 
     ;; ##
     ;; ## Gravity Settings

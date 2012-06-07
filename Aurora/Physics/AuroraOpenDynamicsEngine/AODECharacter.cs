@@ -853,9 +853,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (m_preJumpCounter == _parent_scene.m_preJumpTime)
                 {
                     m_ispreJumping = false;
-                    _target_velocity.X = m_preJumpForce.X*_parent_scene.m_preJumpForceMultiplierX;
-                    _target_velocity.Y = m_preJumpForce.Y*_parent_scene.m_preJumpForceMultiplierY;
-                    _target_velocity.Z = m_preJumpForce.Z*_parent_scene.m_preJumpForceMultiplierZ;
+                    _target_velocity.X = m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplierX;
+                    _target_velocity.Y = m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplierY;
+                    _target_velocity.Z = m_preJumpForce.Z * (this.m_alwaysRun ? _parent_scene.m_preJumpForceMultiplierZ / 1.5f : _parent_scene.m_preJumpForceMultiplierZ);
 
                     m_preJumpCounter = 0;
                     m_isJumping = true;
