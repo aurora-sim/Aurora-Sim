@@ -1057,7 +1057,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _parent_scene.CalculateGravity(m_mass, tempPos, false, 0.65f, ref gravForce);
                     //Allow point gravity and repulsors affect us a bit
 
-            vec += gravForce;
+            if (_target_velocity == Vector3.Zero && vec.X == 0 && vec.Y == 0)
+                vec = Vector3.Zero;
+            else
+                vec += gravForce;
 
             #endregion
 
