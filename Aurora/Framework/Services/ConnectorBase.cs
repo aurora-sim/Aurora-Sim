@@ -275,7 +275,7 @@ namespace Aurora.Framework
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                     request.Method = method;
-                    request.Timeout = timeout * 4;
+                    request.Timeout = timeout;
                     request.KeepAlive = false;
                     request.MaximumAutomaticRedirections = 10;
                     request.ReadWriteTimeout = timeout / 2;
