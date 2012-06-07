@@ -192,65 +192,60 @@ namespace OpenSim.Services.MessagingService
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["Target"].AsUUID();
-                UserInfo friendSession =
-                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
-                if (friendSession != null && friendSession.IsOnline)
+                IClientCapsService friendSession =
+                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
+                if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
-                    GridRegion region = gridService.GetRegionByUUID(UUID.Zero, friendSession.CurrentRegionID);
                     //Forward the message
-                    asyncPost.Post(region.RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipOffered")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["Friend"].AsUUID();
-                UserInfo friendSession =
-                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
-                if (friendSession != null && friendSession.IsOnline)
+                IClientCapsService friendSession =
+                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
+                if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
-                    GridRegion region = gridService.GetRegionByUUID(UUID.Zero, friendSession.CurrentRegionID);
                     //Forward the message
-                    asyncPost.Post(region.RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendTerminated")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["ExFriend"].AsUUID();
-                UserInfo friendSession =
-                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
-                if (friendSession != null && friendSession.IsOnline)
+                IClientCapsService friendSession =
+                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
+                if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
-                    GridRegion region = gridService.GetRegionByUUID(UUID.Zero, friendSession.CurrentRegionID);
                     //Forward the message
-                    asyncPost.Post(region.RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipDenied")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
-                UserInfo friendSession =
-                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
-                if (friendSession != null && friendSession.IsOnline)
+                IClientCapsService friendSession =
+                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
+                if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
-                    GridRegion region = gridService.GetRegionByUUID(UUID.Zero, friendSession.CurrentRegionID);
                     //Forward the message
-                    asyncPost.Post(region.RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
                 }
             }
             else if (message.ContainsKey("Method") && message["Method"] == "FriendshipApproved")
             {
                 OSDMap body = (OSDMap) message["Message"];
                 UUID targetID = body["FriendID"].AsUUID();
-                UserInfo friendSession =
-                    m_registry.RequestModuleInterface<IAgentInfoService>().GetUserInfo(targetID.ToString());
-                if (friendSession != null && friendSession.IsOnline)
+                IClientCapsService friendSession =
+                    m_registry.RequestModuleInterface<ICapsService>().GetClientCapsService(targetID);
+                if (friendSession != null && friendSession.GetRootCapsService() != null)
                 {
-                    GridRegion region = gridService.GetRegionByUUID(UUID.Zero, friendSession.CurrentRegionID);
                     //Forward the message
-                    asyncPost.Post(region.RegionHandle, message);
+                    asyncPost.Post(friendSession.GetRootCapsService().RegionHandle, message);
                 }
             }
             return null;

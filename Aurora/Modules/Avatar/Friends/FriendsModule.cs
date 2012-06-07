@@ -486,7 +486,22 @@ namespace Aurora.Modules.Friends
         {
             MainConsole.Instance.DebugFormat("[FRIENDS]: {0} denied friendship to {1}", agentID, friendID);
 
-            FriendsService.Delete(agentID, friendID.ToString());
+
+            FriendInfo[] friends = FriendsService.GetFriendsRequest(agentID).ToArray();
+            foreach (FriendInfo fi in friends)
+            {
+                if (fi.MyFlags == 0)
+                {
+                    UUID fromAgentID;
+                    string url = "", first = "", last = "", secret = "";
+                    if (!UUID.TryParse(fi.Friend, out fromAgentID))
+                        if (
+                            !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
+                            continue;
+                    if (fromAgentID == friendID)//Get those pesky HG travelers as well
+                        FriendsService.Delete(agentID, fi.Friend);
+                }
+            }
             FriendsService.Delete(friendID, agentID.ToString());
 
             //
