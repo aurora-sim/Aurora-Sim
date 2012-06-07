@@ -569,13 +569,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                    m_itemID)) return "";
 
             string HomeURI = String.Empty;
-            IConfigSource config = m_ScriptEngine.ConfigSource;
 
-            if (config.Configs["GridInfoService"] != null)
+            if (m_ScriptEngine.Config.GetString("GridInfoService") != null)
                 HomeURI = MainServer.Instance.ServerURI + "/";
-
-            if (String.IsNullOrEmpty(HomeURI))
-                HomeURI = GridUserInfo(InfoType.Home);
 
             return HomeURI;
         }
@@ -586,13 +582,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                    m_itemID)) return "";
 
             string retval = String.Empty;
-            IConfigSource config = m_ScriptEngine.ConfigSource;
 
-            if (config.Configs["GridInfoService"] != null)
-                retval = config.Configs["gridnick"].GetString(key, retval);
-
-            if (String.IsNullOrEmpty(retval))
-                retval = GridUserInfo(InfoType.Custom, key);
+            if (m_ScriptEngine.Config.GetString("GridInfoService") != null)
+                retval = m_ScriptEngine.Config.GetString("gridnick", retval);
 
             return retval;
         }
@@ -603,13 +595,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                                    m_itemID)) return "";
 
             string retval = String.Empty;
-            IConfigSource config = m_ScriptEngine.ConfigSource;
 
-            if (config.Configs["AllowedAPIs"].Contains("os"))
-                retval = config.Configs["FunctionThreatLevel"].GetString(key, retval);
-
-            if (String.IsNullOrEmpty(retval))
-                retval = GridUserInfo(InfoType.Custom, key);
+            if (m_ScriptEngine.Config.GetString("AllowedAPIs").Contains("os"))
+                retval = m_ScriptEngine.Config.GetString("FunctionThreatLevel", retval);
 
             return retval;
         }
