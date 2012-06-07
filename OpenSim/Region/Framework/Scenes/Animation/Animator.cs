@@ -43,6 +43,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
         private float m_animTickFall;
         private float m_animTickStandup;
+        private float m_animTickWalk;
         protected AnimationSet m_animations;
         protected string m_movementAnimation = "DEFAULT";
 
@@ -204,7 +205,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
-
+            const float FALL_AFTER_MOVE_TIME = 0.25f;
             const float SOFTLAND_FORCE = 80;
 
             #region Inputs
@@ -418,9 +419,24 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
             #endregion Flying
 
+            #region Jumping
+
+            if (actor != null && actor.IsJumping)
+            {
+                return "JUMP";
+            }
+            if (actor != null && actor.IsPreJumping)
+            {
+                return "PREJUMP";
+            }
+
+            #endregion
+
             #region Falling/Floating/Landing
 
-            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && actor.Velocity.Z < -2)
+            float walkElapsed = (Util.EnvironmentTickCount() - m_animTickWalk) / 1000f;
+            if (actor != null && actor.IsPhysical && !actor.IsJumping && (!actor.IsColliding) && actor.Velocity.Z < -2 &&
+                walkElapsed > FALL_AFTER_MOVE_TIME)
             {
                 //Always return falldown immediately as there shouldn't be a waiting period
                 if (m_animTickFall == 0)
@@ -431,15 +447,6 @@ namespace OpenSim.Region.Framework.Scenes.Animation
             #endregion Falling/Floating/Landing
 
             #region Ground Movement
-
-            if (actor != null && actor.IsJumping)
-            {
-                return "JUMP";
-            }
-            if (actor != null && actor.IsPreJumping)
-            {
-                return "PREJUMP";
-            }
 
             if (m_movementAnimation == "FALLDOWN")
             {
@@ -485,6 +492,8 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 if (actor != null && (move.X != 0f || move.Y != 0f ||
                                       actor.Velocity.X != 0 && actor.Velocity.Y != 0))
                 {
+                    if(actor.IsColliding)
+                        m_animTickWalk = Util.EnvironmentTickCount();
                     // Walking / crouchwalking / running
                     if (move.Z < 0f)
                         return "CROUCHWALK";
