@@ -225,11 +225,12 @@ namespace Aurora.Simulation.Base
             Process sProcessName = Process.GetCurrentProcess();
             string sCompare = sProcessName.ToString();
 
-            if (((sCompare == "System.Diagnostics.Process (Aurora)")
-                && ((Aurora_log) && (new FileInfo("Aurora.log").Length > 0))) 
-                || ((sCompare == "System.Diagnostics.Process (Aurora.Server)")
+            if (((Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                && ((Aurora_log) && (new FileInfo("Aurora.log").Length > 0)))
+                || ((Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
                 && ((Aurora_Server_log) && (new FileInfo("AuroraServer.log").Length > 0))))
-                {
             {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine("Required Configuration Files Found\n");
