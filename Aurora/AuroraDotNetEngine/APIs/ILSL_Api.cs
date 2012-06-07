@@ -410,6 +410,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Integer llTarget(LSL_Vector position, LSL_Float range);
         void llTargetOmega(LSL_Vector axis, LSL_Float spinrate, LSL_Float gain);
         void llTargetRemove(int number);
+        void llTeleportAgent(LSL_Key avatar, LSL_String landmark, LSL_Vector position, LSL_Vector look_at);
+        void llTeleportAgentGlobalCoords(LSL_Key agent, LSL_Vector global_coordinates,
+            LSL_Vector region_coordinates, LSL_Vector look_at);
         DateTime llTeleportAgentHome(LSL_Key agent);
         DateTime llTextBox(string avatar, string message, int chat_channel);
         LSL_String llToLower(string source);
