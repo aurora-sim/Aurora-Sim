@@ -126,6 +126,14 @@ namespace OpenSim.Services.Interfaces
         List<FriendInfo> GetFriends(UUID PrincipalID);
 
         /// <summary>
+        ///   Get all friends requests of the given user
+        /// </summary>
+        /// <param name = "PrincipalID"></param>
+        /// <returns></returns>
+        /// 
+        List<FriendInfo> GetFriendsRequest(UUID principalID);
+
+        /// <summary>
         ///   Store the changes of the friend of PrincipalID
         /// </summary>
         /// <param name = "PrincipalID"></param>

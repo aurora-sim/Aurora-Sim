@@ -92,6 +92,16 @@ namespace OpenSim.Services.Friends
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual List<FriendInfo> GetFriendsRequest(UUID PrincipalID)
+        {
+            object remoteValue = DoRemote(PrincipalID);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<FriendInfo>)remoteValue;
+
+            return new List<FriendInfo>(m_Database.GetFriendsRequest(PrincipalID));
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
             object remoteValue = DoRemote(PrincipalID, Friend, flags);

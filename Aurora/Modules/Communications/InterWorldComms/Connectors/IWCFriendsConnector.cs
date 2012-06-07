@@ -110,6 +110,15 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<FriendInfo> GetFriendsRequest(UUID PrincipalID)
+        {
+            List<FriendInfo> friends = m_localService.GetFriendsRequest(PrincipalID);
+            if (friends == null || friends.Count == 0)
+                friends = (List<FriendInfo>)DoRemoteForced(PrincipalID);
+            return friends ?? new List<FriendInfo>();
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public bool StoreFriend(UUID PrincipalID, string Friend, int flags)
         {
             List<string> serverURIs =
