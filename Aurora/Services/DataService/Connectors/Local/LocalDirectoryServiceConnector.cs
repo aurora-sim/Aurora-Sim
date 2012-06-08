@@ -115,9 +115,7 @@ namespace Aurora.Services.DataService
                                               args.Flags,
                                               args.Dwell,
                                               args.InfoUUID,
-                                              ((args.Flags & (uint) ParcelFlags.ForSale) == (uint) ParcelFlags.ForSale)
-                                                  ? 1
-                                                  : 0,
+                                              ((args.Flags & (uint) ParcelFlags.ForSale) == (uint) ParcelFlags.ForSale) ? 1 : 0,
                                               args.SalePrice,
                                               args.AuctionID,
                                               args.Area,
@@ -125,10 +123,7 @@ namespace Aurora.Services.DataService
                                               args.Maturity,
                                               args.OwnerID,
                                               args.GroupID,
-                                              ((args.Flags & (uint) ParcelFlags.ShowDirectory) ==
-                                               (uint) ParcelFlags.ShowDirectory)
-                                                  ? 1
-                                                  : 0,
+                                              ((args.Flags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory) ? 1 : 0,
                                               args.SnapshotID,
                                               OSDParser.SerializeLLSDXmlString(args.Bitmap),
                                               (int)args.Category,

@@ -58,7 +58,7 @@
     AvatarHandler = RobustAvatarServicesConnector
     EventQueueHandler = EventQueueMasterService
     FreeSwitchHandler = RemoteFreeswitchConnector
-    FriendsHandler = FriendsServicesConnector
+    FriendsHandler = RobustFriendsServicesConnector
     GridHandler = RobustGridServicesConnector
     InventoryHandler = XInventoryServicesConnector
     NeighborHandler = NeighborServiceConnector

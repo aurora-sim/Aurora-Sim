@@ -64,6 +64,10 @@
     ;; Default is commented out
     ;ViewerXMLURL = "http://phoenixviewer.com/app/client_list.xml"
 	
+	;; If you want to change the backup client list file saved in the bin directory, set it here
+	;; Default is commented out
+	;ViewerXMLFile = "client_list.xml"
+	
 ;;
 ;; This module helps to protect your sim if something goes wrong.
 ;; If the sim or physics FPS drops below the given rate, this module

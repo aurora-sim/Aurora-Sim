@@ -46,6 +46,7 @@ namespace Aurora.Modules.Ban
         private bool m_useIncludeList = false;
         private OSDMap m_map = null;
         private string m_viewerTagURL = "http://phoenixviewer.com/app/client_list.xml";
+        private string m_viewerTagFile = "client_list.xml";
         private IRegistryCore m_registry;
 
         public void Initialize(IConfigSource source, IRegistryCore registry)
@@ -58,7 +59,8 @@ namespace Aurora.Modules.Ban
                 m_bannedViewers = Util.ConvertToList(bannedViewers);
                 string allowedViewers = config.GetString ("ViewersToAllow", "");
                 m_allowedViewers = Util.ConvertToList(allowedViewers);
-                m_viewerTagURL = config.GetString ("ViewerXMLURL", m_viewerTagURL);
+                m_viewerTagURL = config.GetString("ViewerXMLURL", m_viewerTagURL);
+                m_viewerTagFile = config.GetString("ViewerXMLFile", m_viewerTagFile);
                 m_enabled = config.GetBoolean ("Enabled", true);
                 m_useIncludeList = config.GetBoolean ("UseAllowListInsteadOfBanList", false);
                 if (m_enabled)
@@ -100,6 +102,8 @@ namespace Aurora.Modules.Ban
                 //Read the website once!
                 if (m_map == null)
                     m_map = OSDParser.Deserialize(Utilities.ReadExternalWebsite(m_viewerTagURL)) as OSDMap;
+                if (m_map == null)
+                    m_map = OSDParser.Deserialize(System.IO.File.ReadAllText(m_viewerTagFile)) as OSDMap;
                 if(m_map == null)
                     return;//Can't find it
 
