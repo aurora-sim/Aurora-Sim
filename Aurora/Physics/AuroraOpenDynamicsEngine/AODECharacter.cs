@@ -842,12 +842,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_isJumping = false;
                     m_preJumpCounter = 0;
-                    _target_velocity.Z = -1;
+                    _target_velocity.X /= 2;
+                    _target_velocity.Y /= 2;
+                    _target_velocity.Z = -0.5f;
                 }
                 else
+                {
+                    _target_velocity.X = m_preJumpForce.X * _parent_scene.m_preJumpForceMultiplierX;
+                    _target_velocity.Y = m_preJumpForce.Y * _parent_scene.m_preJumpForceMultiplierY;
                     m_preJumpCounter++;
+                }
             }
-
             else if (m_ispreJumping)
             {
                 if (m_preJumpCounter == _parent_scene.m_preJumpTime)
