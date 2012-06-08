@@ -425,7 +425,7 @@ namespace OpenSim.Region.Framework.Scenes
             IAttachmentsModule attmodule =
                 presence.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attmodule != null)
-                attmodule.SendAttachmentsToPresence(presence, m_presence);
+                attmodule.SendAttachmentsToPresence(m_presence, presence);
         }
 
         #endregion
@@ -501,7 +501,10 @@ namespace OpenSim.Region.Framework.Scenes
             HashSet<ISceneEntity> NewGrpsInView = new HashSet<ISceneEntity>();
 
             int time = Util.EnvironmentTickCount();
-            foreach (ISceneEntity e in from e in entities where e != null where !e.IsAttachment where !e.IsDeleted where !lastGrpsInView.Contains(e) where m_culler != null where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
+            foreach (ISceneEntity e in from e in entities where e != null 
+                                       where !e.IsAttachment where !e.IsDeleted
+                                       where !lastGrpsInView.Contains(e) where m_culler != null
+                                       where m_culler.ShowEntityToClient(m_presence, e, m_scene, time) select e)
             {
                 NewGrpsInView.Add(e);
             }
