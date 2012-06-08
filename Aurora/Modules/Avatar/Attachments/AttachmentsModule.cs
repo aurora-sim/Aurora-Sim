@@ -819,7 +819,7 @@ namespace Aurora.Modules.Attachments
 
                 // Fire after attach, so we don't get messy perms dialogs
                 // 4 == AttachedRez
-                group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero);
+                group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero, false);
             }
 
             if (UUID.Zero == itemID)

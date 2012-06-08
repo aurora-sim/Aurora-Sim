@@ -93,7 +93,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     }
                     else
                     {
-                        MainConsole.Instance.Warn("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
+                        MainConsole.Instance.Debug("[LocalAssetDatabase]: Asset already exists in the db, fixing ID... - " + asset.ID);
                         InsertAsset(asset, UUID.Random());
                     }
                 }

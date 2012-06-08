@@ -865,7 +865,7 @@ namespace Aurora.Modules.InventoryAccess
             }
 
             // Fire on_rez
-            group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
+            group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
 
             group.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
             if (!m_scene.Permissions.BypassPermissions ())
@@ -999,7 +999,7 @@ namespace Aurora.Modules.InventoryAccess
                 }
 
                 // Fire on_rez
-                group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
+                group.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
 
                 if (!m_scene.Permissions.BypassPermissions())
                 {

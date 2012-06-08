@@ -1618,7 +1618,7 @@ namespace OpenSim.Region.Framework.Scenes
                         duplicatedGroup.UpdateGroupRotationR(rot);
                     }
 
-                    duplicatedGroup.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero);
+                    duplicatedGroup.CreateScriptInstances(0, true, StateSource.NewRez, UUID.Zero, false);
                     duplicatedGroup.HasGroupChanged = true;
                     duplicatedGroup.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
 

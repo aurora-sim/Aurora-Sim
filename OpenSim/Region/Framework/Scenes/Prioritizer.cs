@@ -62,8 +62,6 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private readonly Dictionary<uint, bool> m_previousCulled = new Dictionary<uint, bool>();
         private readonly bool m_useDistanceCulling = true;
-        private int m_cachedXOffset;
-        private int m_cachedYOffset;
         private int m_lastCached;
         private float m_sizeToForceDualCulling = 10f;
         private bool m_useCulling = true;
@@ -92,12 +90,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         #endregion
-
-        public void Reset()
-        {
-            m_cachedXOffset = 0;
-            m_cachedYOffset = 0;
-        }
 
         public bool ShowEntityToClient(IScenePresence client, IEntity entity, IScene scene, int currentTickCount)
         {

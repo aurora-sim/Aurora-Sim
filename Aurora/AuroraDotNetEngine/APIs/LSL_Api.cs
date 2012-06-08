@@ -84,7 +84,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         protected IUrlModule m_UrlModule = null;
         internal ScriptProtectionModule ScriptProtection;
         protected IWorldComm m_comms = null;
-        private IScene m_scene;
 
         // MUST be a ref type
         public class UserInfoCacheEntry
@@ -3555,7 +3554,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                     World.SceneGraph.AddPrimToScene(group);
 
-                    group.CreateScriptInstances(param, true, StateSource.ScriptedRez, RezzedFrom);
+                    group.CreateScriptInstances(param, true, StateSource.ScriptedRez, RezzedFrom, false);
 
                     if (!World.Permissions.BypassPermissions())
                     {
@@ -4227,7 +4226,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         group.ClearPartAttachmentData();
 
                     // Fire on_rez
-                    group.CreateScriptInstances(0, true, StateSource.ScriptedRez, UUID.Zero);
+                    group.CreateScriptInstances(0, true, StateSource.ScriptedRez, UUID.Zero, false);
                     group.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
@@ -6455,7 +6454,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (parcel || parcelOwned)
             {
                 pos = m_host.GetWorldPosition();
-                IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                 ILandObject land = parcelManagement.GetLandObject(pos.X, pos.Y);
                 if (land == null)
                 {
@@ -6485,7 +6484,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     if (!regionWide)
                     {
                         pos = ssp.AbsolutePosition;
-                        IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                        IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
                         ILandObject land = parcelManagement.GetLandObject(pos.X, pos.Y);
                         if (land != null)
                         {

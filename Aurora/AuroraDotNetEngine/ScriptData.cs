@@ -512,8 +512,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         ///   This starts the script and sets up the variables.
         /// </summary>
         /// <returns></returns>
-        public bool Start(bool reupload)
+        public bool Start(LUStruct startInfo)
         {
+            bool reupload = startInfo.Action == LUType.Reupload;
             DateTime StartTime = DateTime.Now.ToUniversalTime();
             Running = true;
             Suspended = false;
@@ -545,9 +546,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             IScenePresence presence = World.GetScenePresence(Part.OwnerID);
 
 
+            if (startInfo.ClearStateSaves)
+                m_ScriptEngine.StateSave.DeleteFrom(this);
             //Now that the initial loading is complete,
             // we need to find the state save and start loading the info from it
-
             StateSave LastStateSave = m_ScriptEngine.StateSave.FindScriptStateSave(this);
             if (!reupload && Loading && LastStateSave != null)
             {
@@ -724,7 +726,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName +
                             "]: File not found in app domain creation. Corrupt state save! " + AssemblyName);
                 ScriptEngine.ScriptProtection.RemovePreviouslyCompiled(Source);
-                return Start(reupload); // Lets restart the script if this happens
+                return Start(startInfo); // Lets restart the script if this happens
             }
             catch (Exception ex)
             {

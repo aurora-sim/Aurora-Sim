@@ -48,7 +48,6 @@ namespace OpenSim.Services.GridService
         protected bool m_AllowNewRegistrations = true;
         protected IAuthenticationService m_AuthenticationService;
         protected IRegionData m_Database;
-        private bool m_DeleteOnUnregister = true;
         protected bool m_DisableRegistrations;
         protected bool m_UseSessionID = true;
         protected IConfigSource m_config;

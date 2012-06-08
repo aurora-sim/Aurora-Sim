@@ -353,7 +353,7 @@ namespace Aurora.Modules.Archivers
                         groupsToBackup.Add(sceneObject);
                         sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
                         sceneObjectsLoadedCount++;
-                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero, true);
                     }
                     sceneObjectsLoadedCount++;
                     if (sceneObjectsLoadedCount % 250 == 0)

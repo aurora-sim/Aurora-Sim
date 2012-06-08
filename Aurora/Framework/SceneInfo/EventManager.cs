@@ -59,7 +59,7 @@ namespace Aurora.Framework
         /// Fired when a new script is created.
         /// </summary>
         public event NewRezScripts OnRezScripts;
-        public delegate void NewRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom);
+        public delegate void NewRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves);
 
         public delegate void RemoveScript(uint localID, UUID itemID);
         public event RemoveScript OnRemoveScript;
@@ -639,7 +639,7 @@ namespace Aurora.Framework
             }
         }
 
-        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
+        public void TriggerRezScripts(ISceneChildEntity part, TaskInventoryItem[] taskInventoryItem, int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves)
         {
             NewRezScripts handlerRezScripts = OnRezScripts;
             if (handlerRezScripts != null)
@@ -648,7 +648,7 @@ namespace Aurora.Framework
                 {
                     try
                     {
-                        d(part, taskInventoryItem, startParam, postOnRez, stateSource, RezzedFrom);
+                        d(part, taskInventoryItem, startParam, postOnRez, stateSource, RezzedFrom, clearStateSaves);
                     }
                     catch (Exception e)
                     {

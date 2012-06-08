@@ -237,25 +237,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     //Close
                     item.ID.CloseAndDispose(true);
                 }
-                else if (item.Action == LUType.Load)
+                else if (item.Action == LUType.Load ||
+                    item.Action == LUType.Reupload)
                 {
                     try
                     {
                         //Start
-                        if (item.ID.Start(false))
-                            NeedsFired.Add(item);
-                    }
-                    catch (Exception ex)
-                    {
-                        MainConsole.Instance.Error("[" + m_ScriptEngine.ScriptEngineName + "]: LEAKED COMPILE ERROR: " + ex);
-                    }
-                }
-                else if (item.Action == LUType.Reupload)
-                {
-                    try
-                    {
-                        //Start, but don't add to the queue's again
-                        if (item.ID.Start(true))
+                        if (item.ID.Start(item))
                             NeedsFired.Add(item);
                     }
                     catch (Exception ex)
@@ -363,6 +351,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         public void Stats()
         {
+#pragma warning disable 618
             foreach (Thread t in scriptThreadpool.GetThreads())
             {
                 if (t != null)
@@ -396,6 +385,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     MainConsole.Instance.Debug(trace.GetFrames());
                 }
             }
+#pragma warning restore 618
         }
 
         /// <summary>

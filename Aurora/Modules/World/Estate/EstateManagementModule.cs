@@ -848,7 +848,7 @@ namespace Aurora.Modules.Estate
                     ISceneEntity[] entities = m_scene.Entities.GetEntities ();
                     foreach (ISceneEntity ent in entities)
                     {
-                         ent.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero);
+                        ent.CreateScriptInstances(0, false, StateSource.NewRez, UUID.Zero, false);
                     }
                 }
                 m_scene.RegionInfo.RegionSettings.DisableScripts = !ScriptEngine;

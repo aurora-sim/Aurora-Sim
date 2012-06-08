@@ -201,7 +201,7 @@ namespace Aurora.Framework
 
         void SetAttachmentPoint (byte p);
 
-        void CreateScriptInstances (int p, bool p_2, StateSource stateSource, UUID uUID);
+        void CreateScriptInstances(int p, bool p_2, StateSource stateSource, UUID rezzedFrom, bool clearStateSaves);
 
         void ResumeScripts ();
 

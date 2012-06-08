@@ -159,7 +159,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                     sceneObject.ScheduleGroupUpdate (PrimUpdateFlags.ForcedFullUpdate);
                     if (startScripts)
                     {
-                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero, false);
                     }
                 }
             }

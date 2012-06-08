@@ -72,14 +72,10 @@ namespace OpenSim.Services
                     string last = requestData.ContainsKey("last") ? requestData["last"].ToString() : "";
                     string name = requestData.ContainsKey("username") ? requestData["username"].ToString() : "";
                     string passwd = "";
-                    string authType = "UserAccount";
                     if (!requestData.ContainsKey("web_login_key"))
                         passwd = requestData["passwd"].ToString();
                     else
-                    {
                         passwd = requestData["web_login_key"].ToString();
-                        authType = "WebLoginKey";
-                    }
                     string startLocation = string.Empty;
                     UUID scopeID = UUID.Zero;
                     if (requestData["scope_id"] != null)

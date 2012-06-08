@@ -322,6 +322,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
     public struct LUStruct
     {
         public LUType Action;
+        public bool ClearStateSaves;
         public ScriptData ID;
     }
 

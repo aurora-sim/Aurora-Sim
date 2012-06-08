@@ -933,7 +933,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 MaintenanceThread.AddScriptChange(new LUStruct[1]
                                                       {
                                                           StartScript(findPrim(partID), itemID, startParam, postOnRez,
-                                                                      stateSource, UUID.Zero)
+                                                                      stateSource, UUID.Zero, false)
                                                       }, LoadPriority.Restart);
                 return;
             }
@@ -1054,7 +1054,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// <param name = "itemID"></param>
         /// <param name = "localID"></param>
         public LUStruct StartScript(ISceneChildEntity part, UUID itemID, int startParam, bool postOnRez,
-                                    StateSource statesource, UUID RezzedFrom)
+                                    StateSource statesource, UUID RezzedFrom, bool clearStateSaves)
         {
             ScriptData id = ScriptProtection.GetScript(part.UUID, itemID);
 
@@ -1089,6 +1089,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             id.Part = part;
             id.World = part.ParentEntity.Scene;
             id.RezzedFrom = RezzedFrom;
+            ls.ClearStateSaves = clearStateSaves;
             ls.ID = id;
             //WE MUST ADD THIS HERE, even though it hasn't compiled yet... 
             //we need to add it so that if things go trying to add events before it fully compiles, we don't fail completely

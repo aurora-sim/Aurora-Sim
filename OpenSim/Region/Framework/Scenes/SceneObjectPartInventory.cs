@@ -271,7 +271,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Start all the scripts contained in this prim's inventory
         /// </summary>
-        public void CreateScriptInstances (int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom)
+        public void CreateScriptInstances (int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves)
         {
             List<TaskInventoryItem> LSLItems = GetInventoryScripts();
             if (LSLItems.Count == 0)
@@ -279,7 +279,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             bool SendUpdate = m_part.AddFlag(PrimFlags.Scripted);
             m_part.ParentGroup.Scene.EventManager.TriggerRezScripts(
-                                    m_part, LSLItems.ToArray(), startParam, postOnRez, stateSource, RezzedFrom);
+                                    m_part, LSLItems.ToArray(), startParam, postOnRez, stateSource, RezzedFrom, clearStateSaves);
             if(SendUpdate)
                 m_part.ScheduleUpdate(PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             ResumeScripts();
@@ -363,7 +363,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 bool SendUpdate = m_part.AddFlag (PrimFlags.Scripted);
                 m_part.ParentGroup.Scene.EventManager.TriggerRezScripts (
-                    m_part, new[] { item }, startParam, postOnRez, stateSource, UUID.Zero);
+                    m_part, new[] { item }, startParam, postOnRez, stateSource, UUID.Zero, false);
                 if (SendUpdate)
                     m_part.ScheduleUpdate (PrimUpdateFlags.PrimFlags); //We only need to send a compressed
             }

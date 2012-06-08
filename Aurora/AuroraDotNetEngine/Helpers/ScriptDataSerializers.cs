@@ -195,8 +195,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             //Attempt to find the state saves we have
             if (component != null)
             {
+                bool changed = false;
                 //if we did remove something, resave it
                 if (component.Remove(script.ItemID.ToString()))
+                    changed = true;
+                if (component.Remove(script.InventoryItem.OldItemID.ToString()))
+                    changed = true;
+                if (component.Remove(script.InventoryItem.ItemID.ToString()))
+                    changed = true;
+                if (changed)
                 {
                     if (component.Count == 0)
                         m_manager.RemoveComponentState(script.Part.UUID, m_componentName);

@@ -916,7 +916,7 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero);
+            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero, false);
 
             return true;
         }

@@ -79,7 +79,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Start all the scripts contained in this entity's inventory
         /// </summary>
-        void CreateScriptInstances(int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom);
+        void CreateScriptInstances(int startParam, bool postOnRez, StateSource stateSource, UUID RezzedFrom, bool clearStateSaves);
 
         ArrayList GetScriptErrors(UUID itemID);
         void ResumeScripts();

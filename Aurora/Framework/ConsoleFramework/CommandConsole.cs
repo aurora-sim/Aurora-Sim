@@ -919,11 +919,6 @@ namespace Aurora.Framework
                             m_consoleReadingThread = null;
                             continue;
                         }
-                        else if (m_consoleReadingThread.ThreadState == ThreadState.Suspended)
-                        {
-                            m_consoleReadingThread.Resume();
-                            continue;
-                        }
                         if (m_consoleReadingThread.Join(1000))
                         {
                             continue;

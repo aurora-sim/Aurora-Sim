@@ -334,7 +334,7 @@ namespace Aurora.Modules.Startup
                 ISceneEntity[] entities = m_scene.Entities.GetEntities();
                 foreach(ISceneEntity group in entities)
                 {
-                    group.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                    group.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero, false);
                 }
                 //Now reset it
                 LoadingPrims = false;
@@ -798,7 +798,7 @@ namespace Aurora.Modules.Startup
                     {
                         sceneObject.HasGroupChanged = true;
                         sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
-                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero);
+                        sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero, false);
                     }
                 }
             }
