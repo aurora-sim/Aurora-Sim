@@ -499,10 +499,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                         m_animTickWalk = Util.EnvironmentTickCount();
                     // Walking / crouchwalking / running
                     if (move.Z < 0f)
-                    {
-                        MainConsole.Instance.Warn("CROUCHWALK");
                         return "CROUCHWALK";
-                    }
                     else if (m_scenePresence.SetAlwaysRun)
                         return "RUN";
                     else
@@ -512,10 +509,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
                 {
                     // Not walking
                     if (move.Z < 0f && !wasLastFlying)
-                    {
-                        MainConsole.Instance.Warn("CROUCH");
                         return "CROUCH";
-                    }
                     else
                         return "STAND";
                 }
