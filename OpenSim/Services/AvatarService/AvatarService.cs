@@ -152,7 +152,61 @@ namespace OpenSim.Services.AvatarService
                                                                                                               avatar
                                                                                                           });
             RemoveOldBaked(principalID, avatar);
+            avatar = FixWearables(principalID, avatar.ToAvatarAppearance(principalID));
             return m_Database.Store(principalID, avatar);
+        }
+
+        private AvatarData FixWearables(UUID userID, AvatarAppearance appearance)
+        {
+            IInventoryService invService = m_registry.RequestModuleInterface<IInventoryService>();
+
+            for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
+            {
+                for (int j = 0; j < appearance.Wearables[j].Count; j++)
+                {
+                    if (appearance.Wearables[i][j].ItemID == UUID.Zero)
+                        continue;
+
+                    // Ignore ruth's assets
+                    if (appearance.Wearables[i][j].ItemID == AvatarWearable.DefaultWearables[i][j].ItemID)
+                    {
+                        //MainConsole.Instance.ErrorFormat(
+                        //    "[AvatarFactory]: Found an asset for the default avatar, itemID {0}, wearable {1}, asset {2}" +
+                        //    ", setting to default asset {3}.",
+                        //    appearance.Wearables[i][j].ItemID, (WearableType)i, appearance.Wearables[i][j].AssetID,
+                        //    AvatarWearable.DefaultWearables[i][j].AssetID);
+                        appearance.Wearables[i].Add(appearance.Wearables[i][j].ItemID,
+                                                    appearance.Wearables[i][j].AssetID);
+                        continue;
+                    }
+
+                    InventoryItemBase baseItem = new InventoryItemBase(appearance.Wearables[i][j].ItemID, userID);
+                    baseItem = invService.GetItem(baseItem);
+
+                    if (baseItem != null)
+                    {
+                        if (baseItem.AssetType == (int)AssetType.Link)
+                        {
+                            baseItem = new InventoryItemBase(baseItem.AssetID, userID);
+                            baseItem = invService.GetItem(baseItem);
+                        }
+                        appearance.Wearables[i].Clear();
+                        appearance.Wearables[i].Add(baseItem.ID, baseItem.AssetID);
+                    }
+                    else
+                    {
+                        MainConsole.Instance.ErrorFormat(
+                            "[AvatarFactory]: Can't find inventory item {0} for {1}, setting to default",
+                            appearance.Wearables[i][j].ItemID, (WearableType)i);
+
+                        appearance.Wearables[i].RemoveItem(appearance.Wearables[i][j].ItemID);
+                        appearance.Wearables[i].Add(AvatarWearable.DefaultWearables[i][j].ItemID,
+                                                    AvatarWearable.DefaultWearables[i][j].AssetID);
+                    }
+                }
+            }
+
+            return new AvatarData(appearance);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]

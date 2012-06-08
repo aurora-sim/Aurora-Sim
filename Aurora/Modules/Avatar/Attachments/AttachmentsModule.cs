@@ -1013,12 +1013,12 @@ namespace Aurora.Modules.Attachments
 
             public ISceneEntity[] Get ()
             {
-                ISceneEntity[] attachments = new ISceneEntity[m_attachments.Count];
                 lock (m_attachments)
                 {
+                    ISceneEntity[] attachments = new ISceneEntity[m_attachments.Count];
                     m_attachments.CopyTo(attachments);
+                    return attachments;
                 }
-                return attachments;
             }
         }
 
