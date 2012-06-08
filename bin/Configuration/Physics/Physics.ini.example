@@ -3,7 +3,10 @@
     ;; Choose one of the physics engines below
 
     ;; AuroraOpenDynamicsEngine is by some distance the most developed physics engine and is the main supported physics engine of Aurora
-    Include-AuroraOpenDynamicsEngine = Configuration/Physics/AuroraOpenDynamicsEngine.ini 
+	;; This is the slower, OpenSim and old Aurora-Sim style movement configuration, the next option enables faster avatar movement, which feels more like Second Life
+    ;Include-AuroraOpenDynamicsEngine = Configuration/Physics/AuroraOpenDynamicsEngine.ini 
+	;; Makes AuroraOpenDynamicsEngine avatars feel like they are in Second Life
+    Include-SLAuroraOpenDynamicsEngine = Configuration/Physics/SecondLifeFeelingAuroraOpenDynamicsEngine.ini 
 
     ;; ModifiedBulletSim is an alternate physics engine that is not as developed and has plenty of bugs still to work out.
     ;Include-ModifiedBulletSim = Configuration/Physics/BulletPhysics.ini 
