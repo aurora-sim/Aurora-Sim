@@ -357,13 +357,26 @@ namespace OpenSim.Services.Interfaces
                     {
                         string wearIndex = _kvp.Key.Substring(9);
                         string[] wearIndices = wearIndex.Split(new[] {':'});
-                        int index = Convert.ToInt32(wearIndices[0]);
+                        if (wearIndices.Length == 1)
+                        {
+                            int index = Convert.ToInt32(wearIndices[0]);
 
-                        string[] ids = _kvp.Value.Split(new[] {':'});
-                        UUID itemID = new UUID(ids[0]);
-                        UUID assetID = new UUID(ids[1]);
+                            string[] ids = _kvp.Value.Split(new[] { ':' });
+                            UUID itemID = new UUID(ids[0]);
+                            UUID assetID = new UUID(ids[1]);
+                            appearance.Wearables[index].Add(itemID, assetID);
+                        }
+                        else
+                        {
+                            //For when we get stuff like 0020_0_x003A_0
+                            var index2 = wearIndices[1].Split('_');
+                            int index = Convert.ToInt32(index2[1]);
 
-                        appearance.Wearables[index].Add(itemID, assetID);
+                            string[] ids = _kvp.Value.Split(new[] { ':' });
+                            UUID itemID = new UUID(ids[0]);
+                            UUID assetID = new UUID(ids[1]);
+                            appearance.Wearables[index].Add(itemID, assetID);
+                        }
                     }
                 }
 

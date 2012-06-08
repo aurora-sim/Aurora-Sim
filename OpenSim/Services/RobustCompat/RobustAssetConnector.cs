@@ -40,31 +40,43 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.RobustCompat
 {
-    /*public class RobustAssetServicesConnector : AssetServicesConnector
+    public class RobustAssetServicesConnector : IAssetServiceConnector, IService
     {
-        public override string Name
+        public string Name
         {
             get { return GetType().Name; }
         }
 
-        public override void Initialize(IConfigSource config, IRegistryCore registry)
+        private IRegistryCore m_registry;
+        private IImprovedAssetCache m_Cache;
+
+        public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            m_registry = registry;
             registry.RegisterModuleInterface<IAssetServiceConnector>(this);
+            Configure(config, registry);
 
             IConfig handlerConfig = config.Configs["Handlers"];
             if (handlerConfig.GetString("AssetHandler", "") != Name)
                 return;
 
-            if (MainConsole.Instance != null)
-                MainConsole.Instance.Commands.AddCommand("dump asset",
-                                                         "dump asset <id> <file>",
-                                                         "dump one cached asset", HandleDumpAsset);
-
             registry.RegisterModuleInterface<IAssetService>(this);
         }
 
-        public override Aurora.Framework.AssetBase Get(string id)
+        public void Configure(IConfigSource config, IRegistryCore registry)
+        {
+            m_registry = registry;
+        }
+
+        public void Start(IConfigSource config, IRegistryCore registry)
+        {
+        }
+
+        public void FinishedStartup()
+        {
+            m_Cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
+        }
+
+        public Aurora.Framework.AssetBase Get(string id)
         {
             Aurora.Framework.AssetBase asset = null;
             AssetBase rasset = null;
@@ -80,8 +92,8 @@ namespace OpenSim.Services.RobustCompat
                                           ? null
                                           : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                                               "AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] {m_serverURL});
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] {m_serverURL});
             if (serverURIs != null)
                 foreach (string mServerUri in serverURIs)
                 {
@@ -89,19 +101,19 @@ namespace OpenSim.Services.RobustCompat
                     rasset = SynchronousRestObjectRequester.MakeRequest<int, AssetBase>("GET", uri, 0);
                     asset = TearDown(rasset);
                     if (m_Cache != null && asset != null)
-                        m_Cache.Cache(asset);
+                        m_Cache.Cache(asset.IDString, asset);
                     if (asset != null)
                         return asset;
                 }
             return null;
         }
 
-        public override bool Get(string id, object sender, AssetRetrieved handler)
+        public bool Get(string id, object sender, AssetRetrieved handler)
         {
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] {m_serverURL});
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -120,7 +132,7 @@ namespace OpenSim.Services.RobustCompat
                                         {
                                             Aurora.Framework.AssetBase a = TearDown(aa);
                                             if (m_Cache != null)
-                                                m_Cache.Cache(a);
+                                                m_Cache.Cache(a.IDString, a);
                                             handler(id, sender, a);
                                             result = true;
                                         });
@@ -138,13 +150,13 @@ namespace OpenSim.Services.RobustCompat
             return false;
         }
 
-        public override UUID Store(Aurora.Framework.AssetBase asset)
+        public UUID Store(Aurora.Framework.AssetBase asset)
         {
             AssetBase rasset = Build(asset);
             if ((asset.Flags & AssetFlags.Local) == AssetFlags.Local)
             {
                 if (m_Cache != null)
-                    m_Cache.Cache(asset);
+                    m_Cache.Cache(asset.IDString, asset);
 
                 return asset.ID;
             }
@@ -152,8 +164,8 @@ namespace OpenSim.Services.RobustCompat
             UUID newID = UUID.Zero;
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            if (m_serverURL != string.Empty)
-                serverURIs = new List<string>(new string[1] {m_serverURL});
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string mServerUri in serverURIs)
             {
                 string uri = mServerUri + "/";
@@ -175,7 +187,7 @@ namespace OpenSim.Services.RobustCompat
                     asset.ID = newID;
 
                     if (m_Cache != null)
-                        m_Cache.Cache(asset);
+                        m_Cache.Cache(asset.IDString, asset);
                 }
                 else
                     return asset.ID; //OPENSIM
@@ -534,5 +546,150 @@ namespace OpenSim.Services.RobustCompat
         }
 
         #endregion
-    }*/
+
+        public IAssetService InnerService
+        {
+            get { return this; }
+        }
+
+        public bool GetExists(string id)
+        {
+            Aurora.Framework.AssetBase asset = null;
+            if (m_Cache != null)
+                asset = m_Cache.Get(id);
+
+            if (asset != null)
+                return true;
+
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            foreach (string m_ServerURI in serverURIs)
+            {
+                string uri = m_ServerURI + "/" + id + "/exists";
+
+                bool exists = SynchronousRestObjectRequester.
+                        MakeRequest<int, bool>("GET", uri, 0);
+                if (exists)
+                    return exists;
+            }
+
+            return false;
+        }
+
+        public byte[] GetData(string id)
+        {
+            if (m_Cache != null)
+            {
+                Aurora.Framework.AssetBase fullAsset = m_Cache.Get(id);
+
+                if (fullAsset != null)
+                    return fullAsset.Data;
+            }
+
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            foreach (string m_ServerURI in serverURIs)
+            {
+                RestClient rc = new RestClient(m_ServerURI);
+                rc.AddResourcePath("assets");
+                rc.AddResourcePath(id);
+                rc.AddResourcePath("data");
+
+                rc.RequestMethod = "GET";
+
+                System.IO.Stream s = rc.Request();
+
+                if (s == null)
+                    return null;
+
+                if (s.Length > 0)
+                {
+                    byte[] ret = new byte[s.Length];
+                    s.Read(ret, 0, (int)s.Length);
+
+                    return ret;
+                }
+            }
+
+            return null;
+        }
+
+        public Aurora.Framework.AssetBase GetCached(string id)
+        {
+            if (m_Cache != null)
+                return m_Cache.Get(id);
+
+            return null;
+        }
+
+        void IAssetService.Get(string id, object sender, AssetRetrieved handler)
+        {
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            foreach (string m_ServerURI in serverURIs)
+            {
+                string uri = m_ServerURI + "/" + id;
+
+                Aurora.Framework.AssetBase asset = null;
+                if (m_Cache != null)
+                    asset = m_Cache.Get(id);
+
+                if (asset == null)
+                {
+                    AsynchronousRestObjectRequester.
+                            MakeRequest<int, AssetBase>("GET", uri, 0,
+                            delegate(AssetBase a)
+                            {
+                                handler(id, sender, TearDown(a));
+                            });
+                }
+                else
+                {
+                    handler(id, sender, asset);
+                }
+            }
+        }
+
+        public UUID UpdateContent(UUID id, byte[] data)
+        {
+            Aurora.Framework.AssetBase asset = null;
+
+            if (m_Cache != null)
+                asset = m_Cache.Get(id.ToString());
+
+            if (asset == null)
+            {
+                asset = Get(id.ToString());
+                if (asset == null)
+                    return UUID.Zero;
+            }
+            asset.Data = data;
+
+            List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
+            //if (m_serverURL != string.Empty)
+            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            foreach (string m_ServerURI in serverURIs)
+            {
+                string uri = m_ServerURI + "/" + id;
+
+                if (SynchronousRestObjectRequester.
+                        MakeRequest<AssetBase, bool>("POST", uri, Build(asset)))
+                {
+                    if (m_Cache != null)
+                        m_Cache.Cache(asset.IDString, asset);
+
+                    return asset.ID;
+                }
+            }
+            return UUID.Zero;
+        }
+
+        public bool Delete(UUID id)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

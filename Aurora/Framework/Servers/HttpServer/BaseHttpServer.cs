@@ -536,6 +536,11 @@ namespace Aurora.Framework.Servers.HttpServer
                     case "application/xml":
                     case "application/json":
                     default:
+                        if (request.ContentType == "application/x-gzip")
+                        {
+                            System.IO.Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
+                            request.InputStream = inputStream;
+                        }
                         //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: in default handler");
                         // Point of note..  the DoWeHaveA methods check for an EXACT path
                         //                        if (request.RawUrl.Contains("/CAPS/EQG"))

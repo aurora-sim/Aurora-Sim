@@ -175,6 +175,7 @@ namespace Aurora.Framework.Servers.HttpServer
         public Stream InputStream
         {
             get { return _request.Body; }
+            set { _request.Body = value; }
         }
 
         public bool IsSecured

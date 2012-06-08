@@ -107,7 +107,13 @@ namespace OpenSim.Services
                 }
                 catch
                 {
-                    map = null;
+                    if (request["content-type"].ToString() == "application/x-gzip")
+                    {
+                        System.IO.Stream inputStream = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(Utils.StringToBytes(request["body"].ToString())), System.IO.Compression.CompressionMode.Decompress);
+                        System.IO.StreamReader reader = new System.IO.StreamReader(inputStream, System.Text.Encoding.UTF8);
+                        string requestBody = reader.ReadToEnd();
+                        map = (OSDMap)OSDParser.DeserializeJson(requestBody);
+                    }
                 }
                 if (map != null)
                 {
