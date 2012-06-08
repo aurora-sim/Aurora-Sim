@@ -73,7 +73,7 @@ namespace Aurora.Framework
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
     public delegate void SetAppearance(
-        IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables);
+        IClientAPI remoteClient, Primitive.TextureEntry textureEntry, byte[] visualParams, WearableCache[] wearables, uint serial);
 
     public delegate void StartAnim(IClientAPI remoteClient, UUID animID);
 

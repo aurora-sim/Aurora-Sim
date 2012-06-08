@@ -300,12 +300,6 @@ namespace Aurora.Framework
                 }
             }
 
-            if (changed)
-            {
-                Serial++;
-                MainConsole.Instance.Debug("[Appearance]: Incrementing Serial (Textures) to " + Serial);
-            }
-
             m_texture = textureEntry;
             return changed;
         }
@@ -339,11 +333,7 @@ namespace Aurora.Framework
 
             // Reset the height if the visual parameters actually changed
             if (changed)
-            {
                 SetHeight();
-                Serial++;
-                MainConsole.Instance.Debug("[Appearance]: Incrementing Serial (VisualParams) to " + Serial);
-            }
 
             return changed;
         }

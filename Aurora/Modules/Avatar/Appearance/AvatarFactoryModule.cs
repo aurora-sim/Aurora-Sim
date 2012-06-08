@@ -293,11 +293,12 @@ textures 1
         /// <param name="client"></param>
         /// <param name="wearables"></param>
         public void SetAppearance(IClientAPI client, Primitive.TextureEntry textureEntry, byte[] visualParams,
-                                  WearableCache[] wearables)
+                                  WearableCache[] wearables, uint serial)
         {
             IScenePresence sp = m_scene.GetScenePresence(client.AgentId);
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
 
+            appearance.Appearance.Serial = (int)serial;
             //MainConsole.Instance.InfoFormat("[AVFACTORY]: start SetAppearance for {0}", client.AgentId);
 
             // Process the texture entry transactionally, this doesn't guarantee that Appearance is
@@ -340,7 +341,6 @@ textures 1
                 if (texturesChanged || visualParamsChanged)
                     QueueAppearanceSave(client.AgentId);
 
-                appearance.Appearance.Serial++;
             }
             // And always queue up an appearance update to send out
             QueueAppearanceSend(client.AgentId);
@@ -499,13 +499,6 @@ textures 1
                                                 ? sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance
                                                 : app;
 
-            //if(!texture)
-            //If it is only a visual params, it will have a texture coming after it,
-            //which will null this increment out (in theory), but this is needed so
-            //that if something goes wrong and it doesn't send the texture serial, such
-            //as if the client logs out, that the textures will be rebaked on the next login
-            appearance.Serial++;
-
             m_scene.AvatarService.SetAppearance(agentid, appearance);
         }
 
@@ -532,7 +525,6 @@ textures 1
 
             // This agent just became root. We are going to tell everyone about it.
             appearance.SendAvatarDataToAllAgents(true);
-            appearance.Appearance.Serial += 10;
             if (ValidateBakedTextureCache(sp.ControllingClient))
                 appearance.SendAppearanceToAgent(sp);
             else
@@ -853,7 +845,6 @@ textures 1
 
             //Force send!
             IAvatarAppearanceModule appearance = sp.RequestModuleInterface<IAvatarAppearanceModule>();
-            appearance.Appearance.Serial++;
             sp.ControllingClient.SendWearables(appearance.Appearance.Wearables, appearance.Appearance.Serial);
             Thread.Sleep(100);
             appearance.SendAvatarDataToAllAgents(true);
@@ -1112,7 +1103,6 @@ textures 1
                     MainConsole.Instance.Warn("[AvatarAppearanceModule]: Been 10 seconds since root agent " + m_sp.Name +
                                " was added and appearance was not sent, force sending now.");
 
-                    Appearance.Serial++;
                     m_sp.ControllingClient.SendWearables(Appearance.Wearables, Appearance.Serial);
 
                     //Send rebakes if needed
