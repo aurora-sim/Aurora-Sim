@@ -200,7 +200,7 @@ namespace OpenSim.Services
                 }
                 else
                 {
-                    MainConsole.Instance.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC?");
+                    MainConsole.Instance.Error("[EQMHandler]: ERROR IN THE HANDLER, FAILED TO FIND CLIENT, IWC/HG OR BOT?");
                     bool enqueueResult = false;
                     foreach (OSD ev in OSDEvents)
                     {
