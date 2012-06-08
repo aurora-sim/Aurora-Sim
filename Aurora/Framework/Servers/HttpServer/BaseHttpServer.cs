@@ -607,7 +607,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (tickdiff > 500)
                 {
                     response.ReuseContext = false; //If it took a long time, don't use it again
-                    MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms for a request sized {4}", reqnum, RawUrl, tickdiff, HTTPMethod, contentLength / 1024 / 1024);
+                    MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms for a request sized {4}", reqnum, RawUrl, tickdiff, HTTPMethod, ((float)contentLength) / 1024 / 1024);
                 }
             }
         }
