@@ -926,6 +926,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if (!flying) //If there is a ground collision, it sets flying to false, so check against real flying
                     {
+                        m_forceAppliedBeforeFalling = Vector3.Zero;
                         // We're standing or walking on something
                         if (_target_velocity.X != 0.0f)
                             vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 2;

@@ -459,7 +459,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
 
                     return "SOFT_LAND";
                 }
-                else if (fallElapsed < 1.1)
+                else if (fallElapsed < 1.1 || (Math.Abs(actor.Velocity.X) > 1 && Math.Abs(actor.Velocity.Y) > 1 && actor.Velocity.Z < 3))
                 {
                     m_animTickFall = Util.EnvironmentTickCount();
 
