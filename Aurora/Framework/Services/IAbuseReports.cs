@@ -107,7 +107,7 @@ namespace OpenSim.Services.Interfaces
             Active = DicCol["Active"].AsBoolean();
             AssignedTo = DicCol["AssignedTo"].AsString();
             Category = DicCol["Category"].AsString();
-            Checked = Convert.ToBoolean(DicCol["Checked"].AsString());
+            Checked = DicCol["Checked"].AsBoolean();
             Notes = DicCol["Notes"].AsString();
             Number = DicCol["Number"].AsInteger();
             ObjectName = DicCol["ObjectName"].AsString();
@@ -115,7 +115,7 @@ namespace OpenSim.Services.Interfaces
             ObjectUUID = DicCol["ObjectUUID"].AsUUID();
             RegionName = DicCol["RegionName"].AsString();
             ReporterName = DicCol["ReporterName"].AsString();
-            ScreenshotID = new UUID(DicCol["ScreenshotID"].AsString());
+            ScreenshotID = DicCol["ScreenshotID"].AsUUID();
         }
 
         public override OSDMap ToOSD()
