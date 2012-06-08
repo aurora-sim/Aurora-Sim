@@ -357,7 +357,7 @@ namespace OpenSim.Services.Interfaces
                     {
                         string wearIndex = _kvp.Key.Substring(9);
                         string[] wearIndices = wearIndex.Split(new[] {':'});
-                        if (wearIndices.Length == 1)
+                        if (wearIndices.Length == 2 && wearIndices[1].Length == 1)
                         {
                             int index = Convert.ToInt32(wearIndices[0]);
 
