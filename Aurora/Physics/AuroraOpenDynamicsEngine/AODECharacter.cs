@@ -639,6 +639,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #region Move
 
         private int m_lastForceApplied = 0;
+        private Vector3 m_forceAppliedBeforeFalling = Vector3.Zero;
 
         /// <summary>
         ///   Called from Simulate
@@ -960,8 +961,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         // we're not colliding and we're not flying so that means we're falling!
                         // m_iscolliding includes collisions with the ground.
-                        vec.X += (_target_velocity.X - vel.X) * PID_D * 0.85f;
-                        vec.Y += (_target_velocity.Y - vel.Y) * PID_D * 0.85f;
+                        vec.X += (_target_velocity.X + m_forceAppliedBeforeFalling.X * movementmult * 2 - vel.X) * PID_D * 0.85f;
+                        vec.Y += (_target_velocity.Y + m_forceAppliedBeforeFalling.Y * movementmult * 2 - vel.Y) * PID_D * 0.85f;
                     }
                 }
 
@@ -1002,7 +1003,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     vec.Z = (_target_velocity.Z*movementmult - vel.Z)*PID_D*0.5f;
                     if (_parent_scene.AllowAvGravity && tempPos.Z > _parent_scene.AvGravityHeight)
                         //Add extra gravity
-                        vec.Z += ((10*_parent_scene.gravityz)*Mass);
+                        vec.Z += ((10 * _parent_scene.gravityz) * Mass);
+                    m_forceAppliedBeforeFalling = _target_velocity;
                 }
             }
 
