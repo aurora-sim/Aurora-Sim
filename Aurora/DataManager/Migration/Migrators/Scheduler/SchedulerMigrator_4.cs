@@ -31,11 +31,11 @@ using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration.Migrators.Scheduler
 {
-    public class SchedulerMigrator_3 : Migrator
+    public class SchedulerMigrator_4 : Migrator
     {
-        public SchedulerMigrator_3()
+        public SchedulerMigrator_4()
         {
-            Version = new Version(0, 0, 3);
+            Version = new Version(0, 0, 4);
             MigrationName = "Scheduler";
 
             schema = new List<SchemaDefinition>();
