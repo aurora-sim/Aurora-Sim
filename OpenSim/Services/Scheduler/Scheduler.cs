@@ -209,7 +209,7 @@ namespace OpenSim.Services
 #else
                     foreach (string results in reciept.Cast<string>().Where(results => results != ""))
                     {
-                        m_database.SaveHistoryCompletereciept(I.HistoryLastID, results);
+                        m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
                     }
 #endif
                 }
