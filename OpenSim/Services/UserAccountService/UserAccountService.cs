@@ -279,7 +279,7 @@ namespace OpenSim.Services.UserAccountService
 
             if (data.UserTitle == null)
                 data.UserTitle = "";
-
+            m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("UpdateUserInformation", data.PrincipalID);
             return m_Database.Store(data);
         }
 
@@ -307,6 +307,22 @@ namespace OpenSim.Services.UserAccountService
                 return (List<UserAccount>)remoteValue;
 
             UserAccount[] d = m_Database.GetUsers(scopeID, query, start, count);
+
+            if (d == null)
+                return new List<UserAccount>();
+
+            List<UserAccount> ret = new List<UserAccount>(d);
+            return ret;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags)
+        {
+            object remoteValue = DoRemote(level, flags);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserAccount>)remoteValue;
+
+            UserAccount[] d = m_Database.GetUsers(scopeID, level, flags);
 
             if (d == null)
                 return new List<UserAccount>();
@@ -363,6 +379,7 @@ namespace OpenSim.Services.UserAccountService
                     MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
                     CacheAccount(account);
+                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("CreateUserInformation", userID);
                 }
                 else
                 {

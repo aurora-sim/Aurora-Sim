@@ -137,12 +137,20 @@ namespace OpenSim.Services
             return m_database.SchedulerExist(scdID);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="SchedulerGet")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerGet")]
         public SchedulerItem Get(string ID)
         {
             if (m_doRemoteCalls)
                 return (SchedulerItem)DoRemote(ID);
             return m_database.Get(ID);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerGet")]
+        public SchedulerItem Get(string scheduleFor, string fireFunction)
+        {
+            if (m_doRemoteCalls)
+                return (SchedulerItem)DoRemote(scheduleFor, fireFunction);
+            return m_database.Get(scheduleFor, fireFunction);
         }
 
         #endregion
@@ -185,7 +193,7 @@ namespace OpenSim.Services
 
                 // now fire
                 List<Object> reciept = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
-                if (!I.HistoryReciept)
+                if (!I.Historyreciept)
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
@@ -195,13 +203,13 @@ namespace OpenSim.Services
                         string results = (string)o;
                         if (results != "")
                         {
-                            m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                            m_database.SaveHistoryCompletereciept(I.HistoryLastID, results);
                         }
                     }
 #else
                     foreach (string results in reciept.Cast<string>().Where(results => results != ""))
                     {
-                        m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                        m_database.SaveHistoryCompletereciept(I.HistoryLastID, results);
                     }
 #endif
                 }
@@ -216,7 +224,7 @@ namespace OpenSim.Services
 
         public void MarkComplete(string history_id, string reciept)
         {
-            m_database.SaveHistoryCompleteReciept(history_id, reciept);
+            m_database.SaveHistoryCompletereciept(history_id, reciept);
         }
 
         #endregion

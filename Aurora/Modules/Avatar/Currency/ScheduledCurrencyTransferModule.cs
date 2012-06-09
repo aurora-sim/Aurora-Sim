@@ -63,7 +63,7 @@ namespace Aurora.Modules.Avatar.Currency
                     itemInfo.Add("Amount", amount);
                     itemInfo.Add("Text", text);
                     SchedulerItem item = new SchedulerItem("ScheduledPayment",
-                        OSDParser.SerializeJsonString(itemInfo),false, DateTime.UtcNow, 1, RepeatType.months);
+                        OSDParser.SerializeJsonString(itemInfo),false, DateTime.UtcNow, 1, RepeatType.months, agentID);
                     itemInfo.Add("SchedulerID", item.id);
                     scheduler.Save(item);
 

@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -44,11 +45,13 @@ namespace OpenSim.Services.Interfaces
 
         SchedulerItem SaveHistoryComplete(SchedulerItem I);
 
-        void SaveHistoryCompleteReciept(string historyID, string reciept);
+        void SaveHistoryCompletereciept(string historyID, string reciept);
 
         void HistoryDeleteOld(SchedulerItem I);
 
         SchedulerItem Get(string id);
+
+        SchedulerItem Get(string scheduleFor, string fireFunction);
 
     }
 
@@ -65,5 +68,7 @@ namespace OpenSim.Services.Interfaces
         bool Exist(string scdID);
 
         SchedulerItem Get(string ID);
+
+        SchedulerItem Get(string scheduleFor, string fireFunction);
     }
 }

@@ -196,6 +196,39 @@ namespace Aurora.Services.DataService
             return data.ToArray();
         }
 
+        public UserAccount[] GetUsers(UUID scopeID, int level, int flag)
+        {
+            List<UserAccount> data = new List<UserAccount>();
+
+            QueryFilter filter = new QueryFilter();
+            filter.andGreaterThanEqFilters["UserLevel"] = level;
+            if (flag != 0)  
+                filter.andBitfieldAndFilters["UserFlags"] = (uint)flag;
+            filter.andFilters["ScopeID"] = scopeID;
+
+            Dictionary<string, bool> sort = new Dictionary<string, bool>(2);
+            sort["LastName"] = true;
+            sort["FirstName"] = true; // these are in this order so results should be ordered by last name first, then first name
+
+            List<string> retVal = GD.Query(new[]{
+                                                   "PrincipalID",
+                                                   "ScopeID",
+                                                   "FirstName",
+                                                   "LastName",
+                                                   "Email",
+                                                   "ServiceURLs",
+                                                   "Created",
+                                                   "UserLevel",
+                                                   "UserFlags",
+                                                   "UserTitle",
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
+                                               }, m_realm, filter, sort, null, null);
+
+            ParseQuery(retVal, ref data);
+
+            return data.ToArray();
+        }
+
         public uint NumberOfUsers(UUID scopeID, string query)
         {
             return uint.Parse(GD.Query(new[] { "COUNT(*)" }, m_realm, GetUsersFilter(scopeID, query), null, null, null)[0]);
