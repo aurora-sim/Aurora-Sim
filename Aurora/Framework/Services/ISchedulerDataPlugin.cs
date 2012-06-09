@@ -45,7 +45,7 @@ namespace OpenSim.Services.Interfaces
 
         SchedulerItem SaveHistoryComplete(SchedulerItem I);
 
-        void SaveHistoryCompleteReciept(string historyID, string reciept);
+        void SaveHistoryCompleteReceipt(string historyID, string receipt);
 
         void HistoryDeleteOld(SchedulerItem I);
 

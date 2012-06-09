@@ -187,29 +187,29 @@ namespace OpenSim.Services
                 if (I.RunOnce) I.Enabled = false;
                 if (I.Enabled) I.CalculateNextRunTime(I.TimeToRun);
 
-                if (!I.HisotryKeep)
+                if (!I.HistoryKeep)
                     m_database.HistoryDeleteOld(I);
                 m_database.SchedulerSave(I);
 
                 // now fire
-                List<Object> reciept = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
-                if (!I.HistoryReciept)
+                List<Object> receipt = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
+                if (!I.HistoryReceipt)
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
 #if (!ISWIN)
-                    foreach (Object o in reciept)
+                    foreach (Object o in receipt)
                     {
                         string results = (string)o;
                         if (results != "")
                         {
-                            m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                            m_database.SaveHistoryCompleteReceipt(I.HistoryLastID, results);
                         }
                     }
 #else
-                    foreach (string results in reciept.Cast<string>().Where(results => results != ""))
+                    foreach (string results in receipt.Cast<string>().Where(results => results != ""))
                     {
-                        m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
+                        m_database.SaveHistoryCompleteReceipt(I.HistoryLastID, results);
                     }
 #endif
                 }
@@ -222,9 +222,9 @@ namespace OpenSim.Services
             }
         }
 
-        public void MarkComplete(string history_id, string reciept)
+        public void MarkComplete(string history_id, string receipt)
         {
-            m_database.SaveHistoryCompleteReciept(history_id, reciept);
+            m_database.SaveHistoryCompleteReceipt(history_id, receipt);
         }
 
         #endregion

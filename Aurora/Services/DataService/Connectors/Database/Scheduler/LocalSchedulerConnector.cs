@@ -42,7 +42,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         private readonly string[] theFields = new[]
                                          {
                                              "id", "fire_function", "fire_params", "run_once", "run_every",
-                                             "runs_next", "keep_history", "require_reciept", "last_history_id", 
+                                             "runs_next", "keep_history", "require_receipt", "last_history_id", 
                                              "create_time", "start_time", "run_every_type", "enabled", "schedule_for"
                                          };
 
@@ -121,8 +121,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 I.RunOnce,
                 I.RunEvery, 
                 I.TimeToRun,
-                I.HisotryKeep,
-                I.HistoryReciept,
+                I.HistoryKeep,
+                I.HistoryReceipt,
                 I.HistoryLastID,
                 I.CreateTime,
                 I.StartTime,
@@ -175,7 +175,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             row["run_time"] = I.TimeToRun;
             row["is_complete"] = 0;
             row["complete_time"] = DateTime.UtcNow;
-            row["reciept"] = "";
+            row["receipt"] = "";
             m_Gd.Insert("scheduler_history", row);
 
             I.HistoryLastID = his_id;
@@ -187,7 +187,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             Dictionary<string, object> values = new Dictionary<string, object>(3);
             values["is_complete"] = true;
             values["complete_time"] = DateTime.UtcNow;
-            values["reciept"] = "";
+            values["receipt"] = "";
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["id"] = I.HistoryLastID;
@@ -197,12 +197,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             return I;
         }
 
-        public void SaveHistoryCompleteReciept(string historyID, string reciept)
+        public void SaveHistoryCompleteReceipt(string historyID, string receipt)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(3);
             values["is_complete"] = 1;
             values["complete_time"] = DateTime.UtcNow;
-            values["reciept"] = reciept;
+            values["receipt"] = receipt;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["id"] = historyID;
@@ -253,12 +253,12 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                            id = dr["id"].ToString(),
                            FireFunction = dr["fire_function"].ToString(),
                            FireParams = dr["fire_params"].ToString(),
-                           HisotryKeep = bool.Parse(dr["keep_history"].ToString()),
+                           HistoryKeep = bool.Parse(dr["keep_history"].ToString()),
                            Enabled = bool.Parse(dr["enabled"].ToString()),
                            CreateTime = DateTime.Parse(dr["create_time"].ToString()),
                            HistoryLastID = dr["last_history_id"].ToString(),
                            TimeToRun = DateTime.Parse(dr["runs_next"].ToString()),
-                           HistoryReciept = bool.Parse(dr["require_reciept"].ToString()),
+                           HistoryReceipt = bool.Parse(dr["require_receipt"].ToString()),
                            RunEvery = int.Parse(dr["run_every"].ToString()),
                            RunOnce = bool.Parse(dr["run_once"].ToString()),
                            RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString()),
@@ -279,8 +279,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 RunOnce = bool.Parse(values[3]),
                 RunEvery = int.Parse(values[4]),
                 TimeToRun = DateTime.Parse(values[5]),
-                HisotryKeep = bool.Parse(values[6]),
-                HistoryReciept = bool.Parse(values[7]),
+                HistoryKeep = bool.Parse(values[6]),
+                HistoryReceipt = bool.Parse(values[7]),
                 HistoryLastID = values[8],
                 CreateTime = DateTime.Parse(values[9]),
                 StartTime = DateTime.Parse(values[10]),
