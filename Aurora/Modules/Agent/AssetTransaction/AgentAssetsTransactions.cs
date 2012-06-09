@@ -215,30 +215,22 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 UUID assetID = UUID.Combine(transactionID, remoteClient.SecureSessionId);
 
-                AssetBase asset = Manager.MyScene.AssetService.Get(assetID.ToString());
-
-                if (asset == null)
+                AssetXferUploader uploader = XferUploaders[transactionID];
+                if (!uploader.Finished)
                 {
-                    AssetXferUploader uploader = XferUploaders[transactionID];
-                    if (!uploader.Finished)
-                    {
-                        uploader.FinishedEvent = () =>
-                            UpdateInventoryItemWithAsset(item, assetID, transactionID, asset);
-                        return;
-                    }
+                    uploader.FinishedEvent = () =>
+                        UpdateInventoryItemWithAsset(item, assetID, transactionID);
+                    return;
                 }
 
-                UpdateInventoryItemWithAsset(item, assetID, transactionID, asset);
+                UpdateInventoryItemWithAsset(item, assetID, transactionID);
             }
         }
 
-        private void UpdateInventoryItemWithAsset(InventoryItemBase item, UUID assetID, UUID transactionID, AssetBase asset)
+        private void UpdateInventoryItemWithAsset(InventoryItemBase item, UUID assetID, UUID transactionID)
         {
-            if (asset == null)
-            {
-                AssetXferUploader uploader = XferUploaders[transactionID];
-                asset = uploader.GetAssetData();
-            }
+            AssetXferUploader uploader = XferUploaders[transactionID];
+            AssetBase asset = uploader.GetAssetData();
             if (asset != null && asset.ID == assetID)
             {
                 // Assets never get updated, new ones get created
@@ -250,7 +242,10 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
                 asset.ID = Manager.MyScene.AssetService.Store(asset);
                 item.AssetID = asset.ID;
+                XferUploaders.Remove(transactionID);
             }
+            else
+                return;
 
             IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
