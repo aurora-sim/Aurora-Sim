@@ -193,7 +193,7 @@ namespace OpenSim.Services
 
                 // now fire
                 List<Object> reciept = EventManager.FireGenericEventHandler(I.FireFunction, I.FireParams);
-                if (!I.Historyreciept)
+                if (!I.HistoryReciept)
                     I = m_database.SaveHistoryComplete(I);
                 else
                 {
@@ -203,7 +203,7 @@ namespace OpenSim.Services
                         string results = (string)o;
                         if (results != "")
                         {
-                            m_database.SaveHistoryCompletereciept(I.HistoryLastID, results);
+                            m_database.SaveHistoryCompleteReciept(I.HistoryLastID, results);
                         }
                     }
 #else
@@ -224,7 +224,7 @@ namespace OpenSim.Services
 
         public void MarkComplete(string history_id, string reciept)
         {
-            m_database.SaveHistoryCompletereciept(history_id, reciept);
+            m_database.SaveHistoryCompleteReciept(history_id, reciept);
         }
 
         #endregion

@@ -115,7 +115,7 @@ namespace Aurora.Framework
             id = UUID.Random().ToString();
             RunOnce = true;
             RunEvery = 0;
-            Historyreciept = false;
+            HistoryReciept = false;
             FireFunction = string.Empty;
             FireParams = string.Empty;
             HisotryKeep = false;
@@ -138,7 +138,7 @@ namespace Aurora.Framework
 
         public string FireFunction { get; set; }
 
-        public bool Historyreciept { get; set; }
+        public bool HistoryReciept { get; set; }
 
         public bool RunOnce { get; set; }
 
@@ -163,7 +163,7 @@ namespace Aurora.Framework
                                          {"HisotryKeep",HisotryKeep},
                                          {"FireParams",FireParams},
                                          {"FireFunction",FireFunction},
-                                         {"Historyreciept",Historyreciept},
+                                         {"HistoryReciept",HistoryReciept},
                                          {"RunOnce",RunOnce},
                                          {"RunEvery",RunEvery},
                                          {"CreateTime",CreateTime},
@@ -184,7 +184,7 @@ namespace Aurora.Framework
             HisotryKeep = map["HisotryKeep"].AsBoolean();
             FireParams = map["FireParams"].AsString();
             FireFunction = map["FireFunction"].AsString();
-            Historyreciept = map["Historyreciept"].AsBoolean();
+            HistoryReciept = map["HistoryReciept"].AsBoolean();
             RunOnce = map["RunOnce"].AsBoolean();
             RunEvery = map["RunEvery"].AsInteger();
             CreateTime = map["CreateTime"].AsDate();
@@ -203,7 +203,7 @@ namespace Aurora.Framework
             RanTime = 0;
             CompleteTime = 0;
             isComplete = false;
-            reciept = "";
+            Reciept = "";
             ErrorLog = "";
         }
 
@@ -211,7 +211,7 @@ namespace Aurora.Framework
 
         protected string ErrorLog { get; set; }
 
-        protected string reciept { get; set; }
+        protected string Reciept { get; set; }
 
         protected int CompleteTime { get; set; }
 

@@ -122,7 +122,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 I.RunEvery, 
                 I.TimeToRun,
                 I.HisotryKeep,
-                I.Historyreciept,
+                I.HistoryReciept,
                 I.HistoryLastID,
                 I.CreateTime,
                 I.StartTime,
@@ -197,7 +197,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             return I;
         }
 
-        public void SaveHistoryCompletereciept(string historyID, string reciept)
+        public void SaveHistoryCompleteReciept(string historyID, string reciept)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(3);
             values["is_complete"] = 1;
@@ -258,7 +258,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                            CreateTime = DateTime.Parse(dr["create_time"].ToString()),
                            HistoryLastID = dr["last_history_id"].ToString(),
                            TimeToRun = DateTime.Parse(dr["runs_next"].ToString()),
-                           Historyreciept = bool.Parse(dr["require_reciept"].ToString()),
+                           HistoryReciept = bool.Parse(dr["require_reciept"].ToString()),
                            RunEvery = int.Parse(dr["run_every"].ToString()),
                            RunOnce = bool.Parse(dr["run_once"].ToString()),
                            RunEveryType = (RepeatType)int.Parse(dr["run_every_type"].ToString()),
@@ -280,7 +280,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
                 RunEvery = int.Parse(values[4]),
                 TimeToRun = DateTime.Parse(values[5]),
                 HisotryKeep = bool.Parse(values[6]),
-                Historyreciept = bool.Parse(values[7]),
+                HistoryReciept = bool.Parse(values[7]),
                 HistoryLastID = values[8],
                 CreateTime = DateTime.Parse(values[9]),
                 StartTime = DateTime.Parse(values[10]),
