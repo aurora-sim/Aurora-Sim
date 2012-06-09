@@ -47,11 +47,13 @@ namespace Aurora.Modules.Agent.AssetTransaction
         private uint m_createItemCallback;
         private string m_description = String.Empty;
         private bool m_finished;
+        public bool Finished { get { return m_finished; } }
         private string m_name = String.Empty;
         private bool m_storeLocal;
         private uint nextPerm;
         private sbyte type;
         private byte wearableType;
+        public NoParam FinishedEvent = null;
 
         public AssetXferUploader(AgentAssetTransactions transactions)
         {
@@ -135,6 +137,9 @@ namespace Aurora.Modules.Agent.AssetTransaction
         protected void SendCompleteMessage(IClientAPI remoteClient)
         {
             m_finished = true;
+            if (FinishedEvent != null)
+                FinishedEvent();
+
             if (m_createItem)
             {
                 DoCreateItem(m_createItemCallback, remoteClient);
