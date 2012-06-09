@@ -115,10 +115,10 @@ namespace Aurora.Framework
             id = UUID.Random().ToString();
             RunOnce = true;
             RunEvery = 0;
-            HistoryReciept = false;
+            HistoryReceipt = false;
             FireFunction = string.Empty;
             FireParams = string.Empty;
-            HisotryKeep = false;
+            HistoryKeep = false;
             HistoryLastID = "";
             Enabled = false;
             ScheduleFor = UUID.Zero;
@@ -132,13 +132,13 @@ namespace Aurora.Framework
 
         public bool Enabled { get; set; }
 
-        public bool HisotryKeep { get; set; }
+        public bool HistoryKeep { get; set; }
 
         public string FireParams { get; set; }
 
         public string FireFunction { get; set; }
 
-        public bool HistoryReciept { get; set; }
+        public bool HistoryReceipt { get; set; }
 
         public bool RunOnce { get; set; }
 
@@ -160,10 +160,10 @@ namespace Aurora.Framework
                                          {"HistoryLastID", HistoryLastID},
                                          {"TimeToRun",TimeToRun},
                                          {"Enabled",Enabled},
-                                         {"HisotryKeep",HisotryKeep},
+                                         {"HistoryKeep",HistoryKeep},
                                          {"FireParams",FireParams},
                                          {"FireFunction",FireFunction},
-                                         {"HistoryReciept",HistoryReciept},
+                                         {"HistoryReceipt",HistoryReceipt},
                                          {"RunOnce",RunOnce},
                                          {"RunEvery",RunEvery},
                                          {"CreateTime",CreateTime},
@@ -181,10 +181,10 @@ namespace Aurora.Framework
             HistoryLastID = map["HistoryLastID"].AsString();
             TimeToRun = map["TimeToRun"].AsDate();
             Enabled = map["Enabled"].AsBoolean();
-            HisotryKeep = map["HisotryKeep"].AsBoolean();
+            HistoryKeep = map["HistoryKeep"].AsBoolean();
             FireParams = map["FireParams"].AsString();
             FireFunction = map["FireFunction"].AsString();
-            HistoryReciept = map["HistoryReciept"].AsBoolean();
+            HistoryReceipt = map["HistoryReceipt"].AsBoolean();
             RunOnce = map["RunOnce"].AsBoolean();
             RunEvery = map["RunEvery"].AsInteger();
             CreateTime = map["CreateTime"].AsDate();
@@ -203,7 +203,7 @@ namespace Aurora.Framework
             RanTime = 0;
             CompleteTime = 0;
             isComplete = false;
-            Reciept = "";
+            Receipt = "";
             ErrorLog = "";
         }
 
@@ -211,7 +211,7 @@ namespace Aurora.Framework
 
         protected string ErrorLog { get; set; }
 
-        protected string Reciept { get; set; }
+        protected string Receipt { get; set; }
 
         protected int CompleteTime { get; set; }
 
