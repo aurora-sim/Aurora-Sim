@@ -206,7 +206,7 @@ namespace OpenSim.Region.Framework.Scenes.Animation
         {
             const float STANDUP_TIME = 2f;
             const float BRUSH_TIME = 3.5f;
-            const float FALL_AFTER_MOVE_TIME = 0.25f;
+            const float FALL_AFTER_MOVE_TIME = 0.75f;
             const float SOFTLAND_FORCE = 80;
 
             #region Inputs

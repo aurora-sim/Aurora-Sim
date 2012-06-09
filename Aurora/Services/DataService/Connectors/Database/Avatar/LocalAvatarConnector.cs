@@ -39,6 +39,7 @@ namespace Aurora.Services.DataService
         private IGenericData GD;
         private string m_realm = "avatars";
         //private string m_cacherealm = "avatarscache";
+        private PreAddedDictionary<UUID, object> m_locks = new PreAddedDictionary<UUID, object>(() => new object());
 
         #region IAvatarData Members
 
@@ -72,19 +73,22 @@ namespace Aurora.Services.DataService
 
         public bool Store(UUID PrincipalID, AvatarData data)
         {
-            QueryFilter filter = new QueryFilter();
-            filter.andFilters["PrincipalID"] = PrincipalID;
-            GD.Delete(m_realm, filter);
-            List<object[]> insertList = new List<object[]>();
-            foreach(KeyValuePair<string, string> kvp in data.Data)
+            lock (m_locks[PrincipalID])
             {
-                insertList.Add(new object[3]{
-                    PrincipalID,
-                    kvp.Key.MySqlEscape(32),
-                    kvp.Key == "Textures" ? kvp.Value : kvp.Value.MySqlEscape()
-                });
+                QueryFilter filter = new QueryFilter();
+                filter.andFilters["PrincipalID"] = PrincipalID;
+                GD.Delete(m_realm, filter);
+                List<object[]> insertList = new List<object[]>();
+                foreach (KeyValuePair<string, string> kvp in data.Data)
+                {
+                    insertList.Add(new object[3]{
+                        PrincipalID,
+                        kvp.Key.MySqlEscape(32),
+                        kvp.Key == "Textures" ? kvp.Value : kvp.Value.MySqlEscape()
+                    });
+                }
+                GD.InsertMultiple(m_realm, insertList);
             }
-            GD.InsertMultiple(m_realm, insertList);
             return true;
         }
 

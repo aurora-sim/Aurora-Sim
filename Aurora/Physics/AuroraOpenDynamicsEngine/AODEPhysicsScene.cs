@@ -812,6 +812,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // Testing if the collision is at the feet of the avatar
                     if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z*0.6f))
                         p2col = false;
+                    ((AuroraODECharacter)p2).IsTruelyColliding = true;
                 }
 
                 p2.IsColliding = p2col;
@@ -1049,6 +1050,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero)
                     {
                         chr.IsColliding = false;
+                        chr.IsTruelyColliding = false;
 
                         // test the avatar's geometry for collision with the space
                         // This will return near and the space that they are the closest to

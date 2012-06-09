@@ -215,39 +215,50 @@ namespace Aurora.Modules.Agent.AssetTransaction
             {
                 UUID assetID = UUID.Combine(transactionID, remoteClient.SecureSessionId);
 
-                AssetBase asset = Manager.MyScene.AssetService.Get(assetID.ToString());
-
-                if (asset == null)
+                AssetXferUploader uploader = XferUploaders[transactionID];
+                if (!uploader.Finished)
                 {
-                    asset = GetTransactionAsset(transactionID);
+                    uploader.FinishedEvent = () =>
+                        UpdateInventoryItemWithAsset(item, assetID, transactionID);
+                    return;
                 }
 
-                if (asset != null && asset.ID == assetID)
-                {
-                    // Assets never get updated, new ones get created
-                    asset.ID = UUID.Random();
-                    asset.Name = item.Name;
-                    asset.Description = item.Description;
-                    asset.Type = (sbyte) item.AssetType;
-                    item.AssetID = asset.ID;
-
-                    asset.ID = Manager.MyScene.AssetService.Store(asset);
-                    item.AssetID = asset.ID;
-                }
-
-                IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
-                if (monitorModule != null)
-                {
-                    INetworkMonitor networkMonitor =
-                        (INetworkMonitor)
-                        monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(),
-                                                 MonitorModuleHelper.NetworkMonitor);
-                    networkMonitor.AddPendingUploads(-1);
-                }
-
-                IInventoryService invService = Manager.MyScene.InventoryService;
-                invService.UpdateItem(item);
+                UpdateInventoryItemWithAsset(item, assetID, transactionID);
             }
+        }
+
+        private void UpdateInventoryItemWithAsset(InventoryItemBase item, UUID assetID, UUID transactionID)
+        {
+            AssetXferUploader uploader = XferUploaders[transactionID];
+            AssetBase asset = uploader.GetAssetData();
+            if (asset != null && asset.ID == assetID)
+            {
+                // Assets never get updated, new ones get created
+                asset.ID = UUID.Random();
+                asset.Name = item.Name;
+                asset.Description = item.Description;
+                asset.Type = (sbyte)item.AssetType;
+                item.AssetID = asset.ID;
+
+                asset.ID = Manager.MyScene.AssetService.Store(asset);
+                item.AssetID = asset.ID;
+                XferUploaders.Remove(transactionID);
+            }
+            else
+                return;
+
+            IMonitorModule monitorModule = Manager.MyScene.RequestModuleInterface<IMonitorModule>();
+            if (monitorModule != null)
+            {
+                INetworkMonitor networkMonitor =
+                    (INetworkMonitor)
+                    monitorModule.GetMonitor(Manager.MyScene.RegionInfo.RegionID.ToString(),
+                                             MonitorModuleHelper.NetworkMonitor);
+                networkMonitor.AddPendingUploads(-1);
+            }
+
+            IInventoryService invService = Manager.MyScene.InventoryService;
+            invService.UpdateItem(item);
         }
     }
 }
