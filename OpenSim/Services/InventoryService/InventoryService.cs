@@ -515,10 +515,10 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public virtual InventoryCollection GetFolderContent(UUID principalID, UUID folderID)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.High, OnlyCallableIfUserInRegion = true)]
+        public virtual InventoryCollection GetFolderContent(UUID UserID, UUID folderID)
         {
-            object remoteValue = DoRemote(principalID, folderID);
+            object remoteValue = DoRemote(UserID, folderID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryCollection)remoteValue;
 
@@ -529,7 +529,7 @@ namespace OpenSim.Services.InventoryService
             MainConsole.Instance.DebugFormat("[XINVENTORY SERVICE]: Fetch contents for folder {0}", folderID.ToString());
             InventoryCollection inventory = new InventoryCollection
             {
-                UserID = principalID,
+                UserID = UserID,
                 Folders = m_Database.GetFolders(
                     new[] { "parentFolderID" },
                     new[] { folderID.ToString() }),
@@ -543,7 +543,7 @@ namespace OpenSim.Services.InventoryService
             return inventory;
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetFolderItems(UUID principalID, UUID folderID)
         {
             object remoteValue = DoRemote(principalID, folderID);
@@ -927,8 +927,13 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryFolderBase GetFolderByOwnerAndName(UUID FolderOwner, string FolderName)
         {
+            object remoteValue = DoRemote(FolderOwner, FolderName);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (InventoryFolderBase)remoteValue;
+
             List<InventoryFolderBase> folders = m_Database.GetFolders(
                 new[] { "folderName", "agentID" },
                 new[] { FolderName, FolderOwner.ToString() });

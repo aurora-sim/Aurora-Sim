@@ -43,8 +43,8 @@
 
 [ClientStack.LindenUDP]
     ;; Allow UDP packets to be used for inventory
-	;; Really should be false... but some viewers don't allow for CAPS only
-	AllowUDPInventory = true
+	;; Really should be false... but some viewers don't allow for CAPS only (CAPS has been around for a long time, its time for this to die)
+	AllowUDPInventory = false
 	
     ;; Set this to true to process incoming packets asynchronously. This can speed up the queue, but can also cause deadlocks, so watch out.
     ;; Default is true

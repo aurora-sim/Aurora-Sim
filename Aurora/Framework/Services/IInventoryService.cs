@@ -74,7 +74,7 @@ namespace OpenSim.Services.Interfaces
         InventoryFolderBase GetRootFolder(UUID userID);
 
         /// <summary>
-        /// 
+        /// Gets a folder by name for the given user
         /// </summary>
         /// <param name="userID"></param>
         /// <param name="FolderName"></param>
@@ -82,7 +82,7 @@ namespace OpenSim.Services.Interfaces
         InventoryFolderBase GetFolderByOwnerAndName(UUID userID, string FolderName);
 
         /// <summary>
-        ///   Retrieve the root inventory folder for the given user.
+        ///   Retrieve the root inventory folder for the given user. - local only
         /// </summary>
         /// <param name = "userID"></param>
         /// <returns>null if no root folder was found</returns>
@@ -114,7 +114,7 @@ namespace OpenSim.Services.Interfaces
         List<InventoryFolderBase> GetFolderFolders(UUID userID, UUID folderID);
 
         /// <summary>
-        ///   Gets the items inside a folder
+        ///   Gets the items inside a folder - local only
         /// </summary>
         /// <param name = "userID"></param>
         /// <param name = "folderID"></param>
@@ -225,7 +225,7 @@ namespace OpenSim.Services.Interfaces
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
         /// <summary>
-        ///   Get an OSDArray of the items in the given folder
+        ///   Get an OSDArray of the items in the given folder - local only
         /// </summary>
         /// <param name = "principalID"></param>
         /// <param name = "folderID"></param>
@@ -233,7 +233,7 @@ namespace OpenSim.Services.Interfaces
         OSDArray GetLLSDFolderItems(UUID principalID, UUID folderID);
 
         /// <summary>
-        ///   Get the item serialized as an OSDArray
+        ///   Get the item serialized as an OSDArray - local only
         /// </summary>
         /// <param name = "itemID"></param>
         /// <returns></returns>

@@ -38,6 +38,7 @@ using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
+using Nini.Config;
 
 namespace Aurora.Modules.Inventory
 {
@@ -65,7 +66,7 @@ namespace Aurora.Modules.Inventory
 
         #region INonSharedRegionModule members
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialise(IConfigSource source)
         {
         }
 
@@ -125,9 +126,11 @@ namespace Aurora.Modules.Inventory
             client.OnCreateNewInventoryFolder += HandleCreateInventoryFolder;
             client.OnUpdateInventoryFolder += HandleUpdateInventoryFolder;
             client.OnMoveInventoryFolder += HandleMoveInventoryFolder; // 2; //!!
+#if UDP_INVENTORY
             client.OnFetchInventoryDescendents += HandleFetchInventoryDescendents;
-            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents; // 2; //!!
             client.OnFetchInventory += HandleFetchInventory;
+#endif
+            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents; // 2; //!!
             client.OnUpdateInventoryItem += UpdateInventoryItemAsset;
             client.OnChangeInventoryItemFlags += ChangeInventoryItemFlags;
             client.OnCopyInventoryItem += CopyInventoryItem;
@@ -151,10 +154,12 @@ namespace Aurora.Modules.Inventory
             client.OnCreateNewInventoryItem -= CreateNewInventoryItem;
             client.OnCreateNewInventoryFolder -= HandleCreateInventoryFolder;
             client.OnUpdateInventoryFolder -= HandleUpdateInventoryFolder;
-            client.OnMoveInventoryFolder -= HandleMoveInventoryFolder; // 2; //!!
+            client.OnMoveInventoryFolder -= HandleMoveInventoryFolder;
+#if UDP_INVENTORY
             client.OnFetchInventoryDescendents -= HandleFetchInventoryDescendents;
-            client.OnPurgeInventoryDescendents -= HandlePurgeInventoryDescendents; // 2; //!!
             client.OnFetchInventory -= HandleFetchInventory;
+#endif
+            client.OnPurgeInventoryDescendents -= HandlePurgeInventoryDescendents;
             client.OnUpdateInventoryItem -= UpdateInventoryItemAsset;
             client.OnCopyInventoryItem -= CopyInventoryItem;
             client.OnMoveInventoryItem -= MoveInventoryItem;
@@ -168,6 +173,8 @@ namespace Aurora.Modules.Inventory
             client.OnDeRezObject -= DeRezObjects;
         }
 
+#if UDP_INVENTORY
+        
         /// <summary>
         /// Handle a fetch inventory request from the client
         /// </summary>
@@ -223,6 +230,8 @@ namespace Aurora.Modules.Inventory
             SendInventoryDelegate d = (SendInventoryDelegate)iar.AsyncState;
             d.EndInvoke(iar);
         }
+
+#endif
 
         /// <summary>
         /// Handle an inventory folder creation request from the client.
@@ -1413,7 +1422,7 @@ namespace Aurora.Modules.Inventory
         /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
         /// appropriate default folder.
         /// </param>
-        /// <param name="doOwnerCheck"></param>
+        /// <param name="doOwnerCheck">This is for when the item is being given away publically, such as when it is posted on a group notice</param>
         /// <returns>
         /// The inventory item copy given, null if the give was unsuccessful
         /// </returns>
