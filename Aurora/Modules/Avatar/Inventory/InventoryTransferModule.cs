@@ -182,13 +182,13 @@ namespace Aurora.Modules.Inventory
                                           "into agent {1}'s inventory",
                                           folderID, im.toAgentID);
 
-                        InventoryFolderBase folderCopy = null;
+                        InventoryFolderBase folder = null;
                         ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
                         if (inventoryModule != null)
-                            folderCopy = inventoryModule.GiveInventoryFolder(receipientID, client.AgentId, folderID,
+                            folder = inventoryModule.GiveInventoryFolder(receipientID, client.AgentId, folderID,
                                                                              UUID.Zero);
 
-                        if (folderCopy == null)
+                        if (folder == null)
                         {
                             client.SendAgentAlertMessage("Can't find folder to give. Nothing given.", false);
                             return;
@@ -196,16 +196,14 @@ namespace Aurora.Modules.Inventory
 
                         // The outgoing binary bucket should contain only the byte which signals an asset folder is
                         // being copied and the following bytes for the copied folder's UUID
-                        copyID = folderCopy.ID;
+                        copyID = folder.ID;
                         byte[] copyIDBytes = copyID.GetBytes();
                         im.binaryBucket = new byte[1 + copyIDBytes.Length];
                         im.binaryBucket[0] = (byte) AssetType.Folder;
                         Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
 
                         if (user != null)
-                        {
-                            user.ControllingClient.SendBulkUpdateInventory(folderCopy);
-                        }
+                            user.ControllingClient.SendBulkUpdateInventory(folder);
 
                         im.imSessionID = folderID;
                     }

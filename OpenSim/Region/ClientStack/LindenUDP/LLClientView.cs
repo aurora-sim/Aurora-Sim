@@ -2056,7 +2056,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(inventoryReply, ThrottleOutPacketType.Asset);
         }
 
-        private void SendBulkUpdateInventoryFolder(InventoryFolderBase folderBase)
+        public void SendBulkUpdateInventory(InventoryFolderBase folder)
         {
             // We will use the same transaction id for all the separate packets to be sent out in this update.
             UUID transactionId = UUID.Random();
@@ -2064,7 +2064,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             List<BulkUpdateInventoryPacket.FolderDataBlock> folderDataBlocks
                 = new List<BulkUpdateInventoryPacket.FolderDataBlock>();
 
-            SendBulkUpdateInventoryFolderRecursive(folderBase, ref folderDataBlocks, transactionId);
+            SendBulkUpdateInventoryFolderRecursive(folder, ref folderDataBlocks, transactionId);
 
             if (folderDataBlocks.Count > 0)
             {
@@ -2210,17 +2210,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return itemBlock;
         }
 
-        public void SendBulkUpdateInventory(InventoryNodeBase node)
-        {
-            if (node is InventoryItemBase)
-                SendBulkUpdateInventoryItem((InventoryItemBase) node);
-            else if (node is InventoryFolderBase)
-                SendBulkUpdateInventoryFolder((InventoryFolderBase) node);
-            else
-                MainConsole.Instance.ErrorFormat("[CLIENT]: Client for {0} sent unknown inventory node named {1}", Name, node.Name);
-        }
-
-        private void SendBulkUpdateInventoryItem(InventoryItemBase item)
+        public void SendBulkUpdateInventory(InventoryItemBase item)
         {
             const uint FULL_MASK_PERMISSIONS = (uint) PermissionMask.All;
 

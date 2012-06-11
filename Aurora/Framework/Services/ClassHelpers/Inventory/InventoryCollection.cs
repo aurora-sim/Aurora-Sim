@@ -40,6 +40,7 @@ namespace Aurora.Framework
         public List<InventoryFolderBase> Folders;
         public List<InventoryItemBase> Items;
         public UUID UserID;
+        public UUID FolderID;
 
         public override OSDMap ToOSD()
         {
@@ -48,6 +49,7 @@ namespace Aurora.Framework
             map["Items"] = new OSDArray(Items.ConvertAll<OSD>((item) => item.ToOSD()));
             map["Folders"] = new OSDArray(Folders.ConvertAll<OSD>((folder) => folder.ToOSD()));
             map["UserID"] = UserID;
+            map["FolderID"] = FolderID;
 
             return map;
         }
@@ -71,6 +73,7 @@ namespace Aurora.Framework
             }
             );
             UserID = map["UserID"];
+            FolderID = map["FolderID"];
         }
     }
 }

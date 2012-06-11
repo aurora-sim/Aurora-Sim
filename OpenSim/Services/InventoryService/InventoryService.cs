@@ -530,6 +530,7 @@ namespace OpenSim.Services.InventoryService
             InventoryCollection inventory = new InventoryCollection
             {
                 UserID = UserID,
+                FolderID = folderID,
                 Folders = m_Database.GetFolders(
                     new[] { "parentFolderID" },
                     new[] { folderID.ToString() }),

@@ -2115,7 +2115,11 @@ namespace Aurora.BotManager
         {
         }
 
-        public void SendBulkUpdateInventory(InventoryNodeBase node)
+        public void SendBulkUpdateInventory(InventoryItemBase node)
+        {
+        }
+
+        public void SendBulkUpdateInventory(InventoryFolderBase node)
         {
         }
 

@@ -127,6 +127,7 @@ namespace OpenSim.Services.Connectors
                 inventory.Folders = new List<InventoryFolderBase>();
                 inventory.Items = new List<InventoryItemBase>();
                 inventory.UserID = principalID;
+                inventory.FolderID = folderID;
 
                 Dictionary<string, object> folders =
                     (Dictionary<string, object>)ret["FOLDERS"];

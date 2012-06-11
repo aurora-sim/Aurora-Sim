@@ -118,11 +118,11 @@ namespace Aurora.Modules.Archivers
 
             appearance.Owner = account.PrincipalID;
 
-            List<InventoryItemBase> items = new List<InventoryItemBase>();
-
             InventoryFolderBase AppearanceFolder = InventoryService.GetFolderForType(account.PrincipalID,
                                                                                      InventoryType.Wearable,
                                                                                      AssetType.Clothing);
+
+            List<InventoryItemBase> items = new List<InventoryItemBase>();
 
             InventoryFolderBase folderForAppearance
                 = new InventoryFolderBase(
@@ -136,7 +136,7 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(assetsMap);
-                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance);
+                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, out items);
             }
             catch (Exception ex)
             {
@@ -145,32 +145,18 @@ namespace Aurora.Modules.Archivers
 
             //Now update the client about the new items
             if (SP != null)
-            {
                 SP.ControllingClient.SendBulkUpdateInventory(folderForAppearance);
-                foreach (InventoryItemBase itemCopy in items)
-                {
-                    if (itemCopy == null)
-                    {
-                        SP.ControllingClient.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
-                        continue;
-                    }
-                    if (!SP.IsChildAgent)
-                    {
-                        SP.ControllingClient.SendBulkUpdateInventory(itemCopy);
-                    }
-                }
-            }
+
             MainConsole.Instance.Info("[AvatarArchive] Loaded archive from " + FileName);
             return appearance;
         }
 
-        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder)
+        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, out List<InventoryItemBase> items)
         {
-
-
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
 
+            items = new List<InventoryItemBase>();
 
             // Wearables
             AvatarWearable[] wearables = avatarAppearance.Wearables;
@@ -213,6 +199,7 @@ namespace Aurora.Modules.Archivers
                                                                     };
                             if (InventoryService != null)
                                 InventoryService.AddItem(destinationItem);
+                            items.Add(destinationItem);
                             MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}",
                                                              destinationItem.ID, destinationFolder.ID);
 
@@ -271,6 +258,7 @@ namespace Aurora.Modules.Archivers
                         };
                         if (InventoryService != null)
                             InventoryService.AddItem(destinationItem);
+                        items.Add(destinationItem);
                         MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 
                         // Attach item

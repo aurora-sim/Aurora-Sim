@@ -1463,12 +1463,16 @@ namespace Aurora.Framework
         void SendTaskInventory(UUID taskID, short serial, byte[] fileName);
 
         /// <summary>
-        ///   Used by the server to inform the client of new inventory items and folders.
+        ///   Used by the server to inform the client of new inventory items.
         /// </summary>
-        /// If the node is a folder then the contents will be transferred
-        /// (including all descendent folders) as well as the folder itself.
         /// <param name = "node"></param>
-        void SendBulkUpdateInventory(InventoryNodeBase node);
+        void SendBulkUpdateInventory(InventoryItemBase node);
+
+        /// <summary>
+        ///   Used by the server to inform the client of new inventory items/folders.
+        /// </summary>
+        /// <param name = "node"></param>
+        void SendBulkUpdateInventory(InventoryFolderBase node);
 
         void SendXferPacket(ulong xferID, uint packet, byte[] data);
 
