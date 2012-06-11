@@ -379,9 +379,16 @@ namespace Aurora.Framework.Servers.HttpServer
 
                     if (requestHandler is IStreamedRequestHandler)
                     {
-                        IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
+                        try
+                        {
+                            IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
 
-                        buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
+                            buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
+                        }
+                        catch (Exception ex)
+                        {
+                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex.ToString() + ".");
+                        }
                     }
                     else if (requestHandler is IGenericHTTPHandler)
                     {
@@ -435,13 +442,20 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                     else
                     {
-                        IStreamHandler streamHandler = (IStreamHandler)requestHandler;
-
-                        using (MemoryStream memoryStream = new MemoryStream())
+                        try
                         {
-                            streamHandler.Handle(path, request.InputStream, memoryStream, request, response);
-                            memoryStream.Flush();
-                            buffer = memoryStream.ToArray();
+                            IStreamHandler streamHandler = (IStreamHandler)requestHandler;
+
+                            using (MemoryStream memoryStream = new MemoryStream())
+                            {
+                                streamHandler.Handle(path, request.InputStream, memoryStream, request, response);
+                                memoryStream.Flush();
+                                buffer = memoryStream.ToArray();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex.ToString() + ".");
                         }
                     }
 
@@ -591,6 +605,7 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 response.ReuseContext = false; //If it errored, be safe and don't use it again
                 MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw ");
+                SendHTML500(response);
             }
             catch (Exception e)
             {
