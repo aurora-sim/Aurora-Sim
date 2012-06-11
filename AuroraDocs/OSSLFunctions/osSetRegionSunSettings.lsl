@@ -22,7 +22,7 @@
 //
 integer useEstateSun = TRUE; // TRUE to use Estate Sun instead of Region Sun
 integer sunFixed = TRUE;     // TRUE to keep the sun stationary
-float sunHour = 1.0          // The "Sun Hour" that is desired, 0...24, with 0 just after SunRise
+float sunHour = 1.0;         // The "Sun Hour" that is desired, 0...24, with 0 just after SunRise
 
 default
 {
@@ -34,6 +34,6 @@ default
     {
         if(sunHour < 24.0) sunHour = sunHour+2.0;
         else sunHour = 1.0;
-        osSetRegionSunSettings(integer useEstateSun, integer sunFixed, float sunHour);
+        osSetRegionSunSettings(useEstateSun, sunFixed, sunHour);
     }
 }
