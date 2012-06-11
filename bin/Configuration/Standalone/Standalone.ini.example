@@ -49,6 +49,7 @@
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
+	AssetHandlerUseCache = true
     AsyncMessagePostServiceHandler = LocalAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService

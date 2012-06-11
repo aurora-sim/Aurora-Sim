@@ -87,6 +87,7 @@
     UserAccountHandler = IWCUserAccountConnector
     SyncMessagePosterServiceHandler = IWCSyncMessagePosterConnector
     AssetHandler = IWCAssetConnector
+	AssetHandlerUseCache = true
     AgentInfoHandler = IWCAgentInfoConnector
     EventQueueHandler = IWCEventQueueServicesConnector
     AvatarHandler = IWCAvatarConnector

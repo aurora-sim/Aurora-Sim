@@ -37,6 +37,7 @@
     AbuseReportHandler = AbuseReportsService
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
+	AssetHandlerUseCache = true
     AsyncMessageRequesterServiceHandler = AsyncMessageRequesterService
     AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
