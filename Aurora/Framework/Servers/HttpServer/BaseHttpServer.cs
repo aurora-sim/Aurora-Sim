@@ -372,7 +372,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 {
                     //MainConsole.Instance.Debug("[BASE HTTP SERVER]: Found Stream Handler");
                     // Okay, so this is bad, but should be considered temporary until everything is IStreamHandler.
-                    byte[] buffer;
+                    byte[] buffer = null;
 
                     response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
 
@@ -469,6 +469,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     //
                     try
                     {
+                        response.ReuseContext = false;
                         response.Send();
                     }
                     catch (SocketException e)

@@ -270,10 +270,11 @@ namespace Aurora.Framework
                 int tickstart = Util.EnvironmentTickCount();
                 int tickdata = 0;
                 int tickserialize = 0;
-
+                byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+                HttpWebRequest request = null;
                 try
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request = (HttpWebRequest)WebRequest.Create(url);
                     request.Method = method;
                     request.Timeout = timeout;
                     request.KeepAlive = false;
@@ -281,16 +282,12 @@ namespace Aurora.Framework
                     request.ReadWriteTimeout = timeout / 4;
 
                     // If there is some input, write it into the request
-                    if (data != null)
+                    if (buffer != null && buffer.Length > 0)
                     {
-                        string strBuffer = OSDParser.SerializeJsonString(data, true);
-                        byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
-
                         request.ContentType = "application/json";
                         request.ContentLength = buffer.Length; //Count bytes to send
-                        if (buffer.Length > 0)
-                            using (Stream requestStream = request.GetRequestStream())
-                                requestStream.Write(buffer, 0, buffer.Length); //Send it
+                        using (Stream requestStream = request.GetRequestStream())
+                             requestStream.Write(buffer, 0, buffer.Length); //Send it
                     }
 
                     // capture how much time was spent writing, this may seem silly
@@ -318,10 +315,14 @@ namespace Aurora.Framework
                         HttpWebResponse webResponse = (HttpWebResponse)we.Response;
                         errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
                     }
+                    if(request != null)
+                        request.Abort();
                 }
                 catch (Exception ex)
                 {
                     errorMessage = ex.Message;
+                    if (request != null)
+                        request.Abort();
                 }
                 finally
                 {
@@ -447,7 +448,6 @@ namespace Aurora.Framework
                             return new byte[0];
                     }
 
-                    MainConsole.Instance.Debug("[Server]: Method Called: " + method);
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                     object[] parameters = new object[paramInfo.Length];
