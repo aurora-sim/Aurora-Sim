@@ -94,6 +94,10 @@ namespace Aurora.Framework
         ///     params are the old RegionInfo and the new RegionInfo
         ///   DeleteUserInformation - The user is being deleted, remove all of their information from all databases
         ///     params are the user's UUID
+        ///   CreateUserInformation - The user account is being created
+        ///     params are the user's UUID
+        ///   UpdateUserInformation - The user account is being updated
+        ///     params are the user's UUID
         /// </summary>
         public void RegisterEventHandler(string functionName, OnGenericEventHandler handler)
         {

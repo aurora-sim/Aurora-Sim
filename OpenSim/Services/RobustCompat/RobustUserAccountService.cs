@@ -86,6 +86,11 @@ namespace OpenSim.Services
             return GetUserAccounts(scopeID, query);
         }
 
+        public List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags)
+        {
+            return new List<UserAccount>();
+        }
+
         public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();

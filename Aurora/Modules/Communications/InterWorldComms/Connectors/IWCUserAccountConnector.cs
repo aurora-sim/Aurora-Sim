@@ -131,6 +131,14 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags)
+        {
+            List<UserAccount> accounts = m_localService.GetUserAccounts(scopeID, level, flags);
+            accounts.AddRange(FixRemoteAccounts((List<UserAccount>)DoRemoteForced(scopeID, scopeID, level, flags)));
+            return accounts;
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public uint NumberOfUserAccounts(UUID scopeID, string query)
         {
             return m_localService.NumberOfUserAccounts(scopeID, query);

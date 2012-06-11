@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using Aurora.Framework;
+using OpenMetaverse;
 
 namespace OpenSim.Services.Interfaces
 {
@@ -50,6 +51,8 @@ namespace OpenSim.Services.Interfaces
 
         SchedulerItem Get(string id);
 
+        SchedulerItem Get(string scheduleFor, string fireFunction);
+
     }
 
     public interface IScheduleService
@@ -65,5 +68,7 @@ namespace OpenSim.Services.Interfaces
         bool Exist(string scdID);
 
         SchedulerItem Get(string ID);
+
+        SchedulerItem Get(string scheduleFor, string fireFunction);
     }
 }

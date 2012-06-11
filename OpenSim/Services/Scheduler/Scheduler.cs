@@ -137,12 +137,20 @@ namespace OpenSim.Services
             return m_database.SchedulerExist(scdID);
         }
 
-        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod="SchedulerGet")]
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerGet")]
         public SchedulerItem Get(string ID)
         {
             if (m_doRemoteCalls)
                 return (SchedulerItem)DoRemote(ID);
             return m_database.Get(ID);
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low, RenamedMethod = "SchedulerGet")]
+        public SchedulerItem Get(string scheduleFor, string fireFunction)
+        {
+            if (m_doRemoteCalls)
+                return (SchedulerItem)DoRemote(scheduleFor, fireFunction);
+            return m_database.Get(scheduleFor, fireFunction);
         }
 
         #endregion

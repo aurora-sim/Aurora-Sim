@@ -289,6 +289,15 @@ namespace OpenSim.Services.Interfaces
         List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count);
 
         /// <summary>
+        /// Returns a paginated list of avatars that matches both the search criteriion and the scope ID passed
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="level">greater than or equal to clause is used</param>
+        /// <param name="flags">bit mask clause is used</param>
+        /// <returns></returns>
+        List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags);
+
+        /// <summary>
         /// Returns the number of avatars that match both the search criterion and the scope ID passed
         /// </summary>
         /// <param name="scopeID"></param>
@@ -346,6 +355,7 @@ namespace OpenSim.Services.Interfaces
         bool DeleteAccount(UUID userID, bool archiveInformation);
         UserAccount[] GetUsers(UUID scopeID, string query);
         UserAccount[] GetUsers(UUID scopeID, string query, uint? start, uint? count);
+        UserAccount[] GetUsers(UUID scopeID, int level, int flags);
         uint NumberOfUsers(UUID scopeID, string query);
     }
 }
