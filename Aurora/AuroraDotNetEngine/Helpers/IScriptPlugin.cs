@@ -43,6 +43,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         string Name { get; }
 
         /// <summary>
+        /// Whether or not the plugin should remove itself from scripts on state changes
+        /// </summary>
+        bool RemoveOnStateChange { get; }
+
+        /// <summary>
         ///   Start the plugin
         /// </summary>
         /// <param name = "engine"></param>

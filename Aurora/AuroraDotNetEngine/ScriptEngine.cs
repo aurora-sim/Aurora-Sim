@@ -692,10 +692,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
             if (delay > 0.001)
-                ID.EventDelayTicks = (long)delay;
+                ID.EventDelayTicks = (long)(delay * TimeSpan.TicksPerSecond);
             else
                 ID.EventDelayTicks = 0;
-            ID.EventDelayTicks = (long)(delay * 10000000L);
         }
 
         #endregion
@@ -1339,6 +1338,15 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             foreach (IScriptPlugin plugin in ScriptPlugins)
             {
                 plugin.RemoveScript(primID, itemID);
+            }
+        }
+
+        public void RemoveScriptFromChangedStatePlugins(ScriptData script)
+        {
+            foreach (IScriptPlugin plugin in ScriptPlugins)
+            {
+                if (plugin.RemoveOnStateChange)
+                    plugin.RemoveScript(script.Part.UUID, script.ItemID);
             }
         }
 

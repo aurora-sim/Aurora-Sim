@@ -41,6 +41,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
 
         #region IScriptPlugin Members
 
+        public bool RemoveOnStateChange { get { return false; } }
+
         public void Initialize(ScriptEngine ScriptEngine)
         {
             m_ScriptEngine = ScriptEngine;

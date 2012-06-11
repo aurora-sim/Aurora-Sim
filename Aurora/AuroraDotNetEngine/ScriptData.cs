@@ -97,7 +97,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public AppDomain AppDomain;
         public string AssemblyName;
         public List<Changed> ChangedInQueue = new List<Changed>();
-        private double CollisionEventDelayTicks = 0.5;
+        private double CollisionEventDelayTicks = 0.13;
         public bool CollisionInQueue;
         public bool TimerInQueue;
         public bool TouchInQueue;
@@ -362,6 +362,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //but we would need to remove timer/listen/sensor events as well to keep compat with SL style lsl
                 //m_ScriptEngine.MaintenanceThread.RemoveFromEventSchQueue (this, false);
                 //m_ScriptEngine.MaintenanceThread.SetEventSchSetIgnoreNew (this, false); // accept new events
+                
+                //Remove us from timer, listen, and sensor events
+                m_ScriptEngine.RemoveScriptFromChangedStatePlugins(this);
+
                 //Fire state_exist after we switch over all the removing of events so that it gets the new versionID
                 m_ScriptEngine.MaintenanceThread.AddEventSchQueue(this, "state_exit",
                                                                   new DetectParams[0], EventPriority.FirstStart,
@@ -843,12 +847,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "touch_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * 100);
+                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * TimeSpan.TicksPerMillisecond);
                     break;
                 case "timer": //Settable timer limiter
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * 100);
+                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * TimeSpan.TicksPerMillisecond);
                     break;
                 case "collision": //Collision limiters taken off of reporting from WhiteStar in mantis 0004513
                 case "collision_start":
@@ -858,19 +862,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "land_collision_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * 100);
+                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * TimeSpan.TicksPerMillisecond);
                     break;
                 case "control":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * 100);
+                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * TimeSpan.TicksPerMillisecond);
                     break;
                 default: //Default is 0.05 seconds for event limiting
                     if (!NextEventDelay.ContainsKey(functionName))
                         break; //If it doesn't exist, we don't limit it
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * 100);
+                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * TimeSpan.TicksPerMillisecond);
                     break;
             }
             //Add the event to the stats
