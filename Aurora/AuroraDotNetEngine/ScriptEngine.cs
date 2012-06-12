@@ -692,7 +692,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 return;
             }
             if (delay > 0.001)
-                ID.EventDelayTicks = (long)(delay * TimeSpan.TicksPerSecond);
+                ID.EventDelayTicks = (long)(delay * 1000000L);
             else
                 ID.EventDelayTicks = 0;
         }

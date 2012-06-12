@@ -143,6 +143,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public bool TargetOmegaWasSet;
         private double TimerEventDelayTicks = 0.01;
         private double TouchEventDelayTicks = 0.1;
+        private const long TicksPerMillisecond = 1000;
         public UUID UserInventoryItemID;
 
         /// <summary>
@@ -847,12 +848,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "touch_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * TimeSpan.TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long)(TouchEventDelayTicks * TicksPerMillisecond);
                     break;
                 case "timer": //Settable timer limiter
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * TimeSpan.TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long)(TimerEventDelayTicks * TicksPerMillisecond);
                     break;
                 case "collision": //Collision limiters taken off of reporting from WhiteStar in mantis 0004513
                 case "collision_start":
@@ -862,19 +863,19 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 case "land_collision_end":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * TimeSpan.TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long)(CollisionEventDelayTicks * TicksPerMillisecond);
                     break;
                 case "control":
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * TimeSpan.TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long)(0.5f * TicksPerMillisecond);
                     break;
                 default: //Default is 0.05 seconds for event limiting
                     if (!NextEventDelay.ContainsKey(functionName))
                         break; //If it doesn't exist, we don't limit it
                     if (NowTicks < NextEventDelay[functionName])
                         return false;
-                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * TimeSpan.TicksPerMillisecond);
+                    NextEventDelay[functionName] = NowTicks + (long)(DefaultEventDelayTicks * TicksPerMillisecond);
                     break;
             }
             //Add the event to the stats
