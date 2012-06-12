@@ -1679,81 +1679,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     string[] vars = VarName.Split(' ');
                     string type = vars[0];
                     string varName = vars[1];
-                    string globalVarValue = "";
 
                     #endregion
 
                     innerretstr += Generate(String.Format(" {0} ", a.AssignmentType), a);
                     foreach (SYMBOL kid in a.kids)
                     {
-                        if (kid is Constant)
-                        {
-                            Constant c = kid as Constant;
-                            // Supprt LSL's weird acceptance of floats with no trailing digits
-                            // after the period. Turn float x = 10.; into float x = 10.0;
-                            if ("LSL_Types.LSLFloat" == c.Type)
-                            {
-                                int dotIndex = c.Value.IndexOf('.') + 1;
-                                if (0 < dotIndex && (dotIndex == c.Value.Length || !Char.IsDigit(c.Value[dotIndex])))
-                                    globalVarValue = c.Value.Insert(dotIndex, "0");
-                                globalVarValue = "new LSL_Types.LSLFloat(" + c.Value + ") ";
-                            }
-                            else if ("LSL_Types.LSLInteger" == c.Type)
-                            {
-                                globalVarValue = "new LSL_Types.LSLInteger(" + c.Value + ") ";
-                            }
-                            else if ("LSL_Types.LSLString" == c.Type)
-                            {
-                                globalVarValue = "new LSL_Types.LSLString(\"" + c.Value + "\") ";
-                            }
-                            if (globalVarValue == "")
-                                globalVarValue = c.Value;
-
-                            if (globalVarValue == null)
-                                globalVarValue = GenerateNode(c);
-                            if (GlobalVariables.ContainsKey(globalVarValue))
-                            {
-                                //Its an assignment to another global var!
-                                //reset the global value to the other's value
-                                GlobalVar var;
-                                GlobalVariables.TryGetValue(globalVarValue, out var);
-                                //Do one last additional test before we set it.
-                                if (type == var.Type)
-                                {
-                                    globalVarValue = var.Value;
-                                }
-                                c.Value = globalVarValue;
-                            }
-                            innerretstr += globalVarValue;
-                        }
-                        else if (kid is IdentExpression)
-                        {
-                            IdentExpression c = kid as IdentExpression;
-                            globalVarValue = c.Name;
-
-                            if (GlobalVariables.ContainsKey(globalVarValue))
-                            {
-                                //Its an assignment to another global var!
-                                //reset the global value to the other's value
-                                GlobalVar var;
-                                GlobalVariables.TryGetValue(globalVarValue, out var);
-                                //Do one last additional test before we set it.
-                                if (type == var.Type)
-                                {
-                                    globalVarValue = var.Value;
-                                }
-                            }
-
-                            innerretstr += globalVarValue;
-                        }
-                        else
-                            innerretstr += GenerateNode(kid);
+                        innerretstr += CheckIfGlobalVariable(varName, type, kid);
                     }
-                    GlobalVariables.Add(varName, new GlobalVar
-                                                     {
-                                                         Type = type,
-                                                         Value = globalVarValue
-                                                     });
 
                     retstr += innerretstr;
                 }
@@ -1764,6 +1697,92 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             return retstr;
+        }
+
+        private string CheckIfGlobalVariable(string varName, string type, SYMBOL kid)
+        {
+            string globalVarValue = "";
+            if (kid is Constant)
+            {
+                Constant c = kid as Constant;
+                // Supprt LSL's weird acceptance of floats with no trailing digits
+                // after the period. Turn float x = 10.; into float x = 10.0;
+                if ("LSL_Types.LSLFloat" == c.Type)
+                {
+                    int dotIndex = c.Value.IndexOf('.') + 1;
+                    if (0 < dotIndex && (dotIndex == c.Value.Length || !Char.IsDigit(c.Value[dotIndex])))
+                        globalVarValue = c.Value.Insert(dotIndex, "0");
+                    globalVarValue = "new LSL_Types.LSLFloat(" + c.Value + ") ";
+                }
+                else if ("LSL_Types.LSLInteger" == c.Type)
+                {
+                    globalVarValue = "new LSL_Types.LSLInteger(" + c.Value + ") ";
+                }
+                else if ("LSL_Types.LSLString" == c.Type)
+                {
+                    globalVarValue = "new LSL_Types.LSLString(\"" + c.Value + "\") ";
+                }
+                if (globalVarValue == "")
+                    globalVarValue = c.Value;
+
+                if (globalVarValue == null)
+                    globalVarValue = GenerateNode(c);
+                if (GlobalVariables.ContainsKey(globalVarValue))
+                {
+                    //Its an assignment to another global var!
+                    //reset the global value to the other's value
+                    GlobalVar var;
+                    GlobalVariables.TryGetValue(globalVarValue, out var);
+                    //Do one last additional test before we set it.
+                    if (type == var.Type)
+                    {
+                        globalVarValue = var.Value;
+                    }
+                    c.Value = globalVarValue;
+                }
+                GlobalVariables.Add(varName, new GlobalVar
+                {
+                    Type = type,
+                    Value = globalVarValue
+                });
+                return globalVarValue;
+            }
+            else if (kid is IdentExpression)
+            {
+                IdentExpression c = kid as IdentExpression;
+                globalVarValue = c.Name;
+
+                if (GlobalVariables.ContainsKey(globalVarValue))
+                {
+                    //Its an assignment to another global var!
+                    //reset the global value to the other's value
+                    GlobalVar var;
+                    GlobalVariables.TryGetValue(globalVarValue, out var);
+                    //Do one last additional test before we set it.
+                    if (type == var.Type)
+                    {
+                        globalVarValue = var.Value;
+                    }
+                }
+                GlobalVariables.Add(varName, new GlobalVar
+                {
+                    Type = type,
+                    Value = globalVarValue
+                });
+
+                return globalVarValue;
+            }
+            else if (kid is UnaryExpression)
+            {
+                UnaryExpression c = kid as UnaryExpression;
+                foreach (SYMBOL k in c.kids)
+                {
+                    globalVarValue += CheckIfGlobalVariable(varName, type, k);
+                }
+                return globalVarValue;
+            }
+            else
+                return GenerateNode(kid);
         }
 
         /// <summary>
