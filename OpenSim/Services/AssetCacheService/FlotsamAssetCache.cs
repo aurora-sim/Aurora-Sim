@@ -60,7 +60,7 @@ namespace OpenSim.Services
         private ulong m_HitRateDisplay = 1; // How often to display hit statistics, given in requests
 
         private static ulong m_Requests;
-        private Dictionary<string, AssetRequest> m_assetRequests = new Dictionary<string, AssetRequest>();
+        private PreAddedDictionary<string, AssetRequest> m_assetRequests = new PreAddedDictionary<string, AssetRequest>(() => new AssetRequest());
         private class AssetRequest
         {
             private int _amt = 1;
@@ -358,10 +358,7 @@ namespace OpenSim.Services
 
         public AssetBase Get(string id, out bool found)
         {
-            if (m_assetRequests.ContainsKey(id))
-                m_assetRequests[id].Amt++;
-            else
-                m_assetRequests[id] = new AssetRequest();
+            m_assetRequests[id].Amt++;
             m_Requests++;
 
             AssetBase asset = null;

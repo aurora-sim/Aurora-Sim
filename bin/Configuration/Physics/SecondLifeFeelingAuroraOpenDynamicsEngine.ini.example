@@ -90,7 +90,7 @@
     aviesCanEscapeGravity = true
     
     ;; How many times faster the avatar will fly than a walking avatar
-    AvFlySpeed = 7.0
+    AvFlySpeed = 6.0
 	
 	;; Walk speed.  Smaller is faster.
     ;; speed of movement with Always Run off
