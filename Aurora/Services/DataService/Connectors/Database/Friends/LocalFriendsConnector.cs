@@ -71,7 +71,7 @@ namespace Aurora.Services.DataService
             GD.Delete(m_realm, filter);
             Dictionary<string, object> row = new Dictionary<string, object>(4);
             row["PrincipalID"] = PrincipalID;
-            row["Friend"] = Friend.MySqlEscape();
+            row["Friend"] = Friend;
             row["Flags"] = Flags;
             row["Offered"] = Offered;
             return GD.Insert(m_realm, row);
@@ -81,7 +81,7 @@ namespace Aurora.Services.DataService
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["PrincipalID"] = ownerID;
-            filter.andFilters["Friend"] = friend.MySqlEscape();
+            filter.andFilters["Friend"] = friend;
             return GD.Delete(m_realm, filter);
         }
 

@@ -173,9 +173,9 @@ namespace Aurora.Services.DataService
             filter.andFilters["ClassifiedUUID"] = classified.ClassifiedUUID;
             GD.Delete("userclassifieds", filter);
             List<object> values = new List<object>{
-                classified.Name.MySqlEscape(),
+                classified.Name,
                 classified.Category,
-                classified.SimName.MySqlEscape(),
+                classified.SimName,
                 classified.CreatorUUID,
                 classified.ClassifiedUUID,
                 OSDParser.SerializeJsonString(classified.ToOSD()),
@@ -255,8 +255,8 @@ namespace Aurora.Services.DataService
             GD.Delete("userpicks", filter);
             List<object> values = new List<object>
                                       {
-                                          pick.Name.MySqlEscape(),
-                                          pick.SimName.MySqlEscape(),
+                                          pick.Name,
+                                          pick.SimName,
                                           pick.CreatorUUID,
                                           pick.PickUUID,
                                           OSDParser.SerializeJsonString(pick.ToOSD())

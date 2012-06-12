@@ -178,7 +178,7 @@ namespace Aurora.Services.DataService
             {
                 filter.andFilters["ScopeID"] = scopeID;
             }
-            filter.andLikeFilters["RegionName"] = regionName.MySqlEscape();
+            filter.andLikeFilters["RegionName"] = regionName;
 
             List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 

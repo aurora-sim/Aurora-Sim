@@ -168,17 +168,17 @@ namespace Aurora.Services.DataService
         public void AddAbuseReport(AbuseReport report)
         {
             List<object> InsertValues = new List<object>{
-                report.Category.ToString().MySqlEscape(100),
-                report.ReporterName.MySqlEscape(100),
-                report.ObjectName.MySqlEscape(100),
+                report.Category.ToString(),
+                report.ReporterName,
+                report.ObjectName,
                 report.ObjectUUID,
-                report.AbuserName.MySqlEscape(100),
-                report.AbuseLocation.MySqlEscape(100),
-                report.AbuseDetails.MySqlEscape(512),
-                report.ObjectPosition.MySqlEscape(100),
-                report.RegionName.MySqlEscape(100),
+                report.AbuserName,
+                report.AbuseLocation,
+                report.AbuseDetails,
+                report.ObjectPosition,
+                report.RegionName,
                 report.ScreenshotID,
-                report.AbuseSummary.MySqlEscape(100)
+                report.AbuseSummary
             };
 
             Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
@@ -192,10 +192,10 @@ namespace Aurora.Services.DataService
 
             InsertValues.Add(report.Number);
 
-            InsertValues.Add(report.AssignedTo.MySqlEscape(100));
+            InsertValues.Add(report.AssignedTo);
             InsertValues.Add(report.Active ? 1 : 0);
             InsertValues.Add(report.Checked ? 1 : 0);
-            InsertValues.Add(report.Notes.MySqlEscape(1024));
+            InsertValues.Add(report.Notes);
 
             GD.Insert(m_abuseReportsTable, InsertValues.ToArray());
         }
@@ -223,22 +223,22 @@ namespace Aurora.Services.DataService
         {
             Dictionary<string, object> row = new Dictionary<string, object>(16);
             //This is update, so we trust the number as it should know the number it's updating now.
-            row["Category"] = report.Category.ToString().MySqlEscape(100);
-            row["ReporterName"] = report.ReporterName.MySqlEscape(100);
-            row["ObjectName"] = report.ObjectName.MySqlEscape(100);
+            row["Category"] = report.Category.ToString();
+            row["ReporterName"] = report.ReporterName;
+            row["ObjectName"] = report.ObjectName;
             row["ObjectUUID"] = report.ObjectUUID;
-            row["AbuserName"] = report.AbuserName.MySqlEscape(100);
-            row["AbuseLocation"] = report.AbuseLocation.MySqlEscape(100);
-            row["AbuseDetails"] = report.AbuseDetails.MySqlEscape(512);
-            row["ObjectPosition"] = report.ObjectPosition.MySqlEscape(100);
-            row["RegionName"] = report.RegionName.MySqlEscape(100);
+            row["AbuserName"] = report.AbuserName;
+            row["AbuseLocation"] = report.AbuseLocation;
+            row["AbuseDetails"] = report.AbuseDetails;
+            row["ObjectPosition"] = report.ObjectPosition;
+            row["RegionName"] = report.RegionName;
             row["ScreenshotID"] = report.ScreenshotID;
-            row["AbuseSummary"] = report.AbuseSummary.MySqlEscape(100);
+            row["AbuseSummary"] = report.AbuseSummary;
             row["Number"] = report.Number;
-            row["AssignedTo"] = report.AssignedTo.MySqlEscape(100);
+            row["AssignedTo"] = report.AssignedTo;
             row["Active"] = report.Active ? 1 : 0;
             row["Checked"] = report.Checked ? 1 : 0;
-            row["Notes"] = report.Notes.MySqlEscape(1024);
+            row["Notes"] = report.Notes;
 
             GD.Replace(m_abuseReportsTable, row);
         }

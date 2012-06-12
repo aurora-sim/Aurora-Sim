@@ -478,15 +478,21 @@ namespace Aurora.Modules.Groups
         {
             if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
-            // Should check to see if OpenEnrollment, or if there's an outstanding invitation
-            m_groupData.AddAgentToGroup(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID,
-                                        UUID.Zero);
+            GroupRecord record = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, "");
+            if (record != null && record.OpenEnrollment)
+            {
+                // Should check to see if OpenEnrollment, or if there's an outstanding invitation
+                m_groupData.AddAgentToGroup(GetRequestingAgentID(remoteClient), GetRequestingAgentID(remoteClient), groupID,
+                                            UUID.Zero);
 
-            m_cachedGroupMemberships.Remove(remoteClient.AgentId);
-            remoteClient.SendJoinGroupReply(groupID, true);
+                m_cachedGroupMemberships.Remove(remoteClient.AgentId);
+                remoteClient.SendJoinGroupReply(groupID, true);
 
-            // Should this send updates to everyone in the group?
-            SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
+                ActivateGroup(remoteClient, groupID);
+
+                // Should this send updates to everyone in the group?
+                SendAgentGroupDataUpdate(remoteClient, GetRequestingAgentID(remoteClient));
+            }
         }
 
         public void LeaveGroupRequest(IClientAPI remoteClient, UUID groupID)

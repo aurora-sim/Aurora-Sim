@@ -79,7 +79,7 @@ namespace Aurora.Services.DataService
             }
             Dictionary<string, object> row = new Dictionary<string, object>(4);
             row["RegionID"] = region.RegionID;
-            row["RegionName"] = region.RegionName.MySqlEscape(50);
+            row["RegionName"] = region.RegionName;
             row["RegionInfo"] = OSDParser.SerializeJsonString(region.PackRegionInfoData(true));
             row["DisableD"] = region.Disabled ? 1 : 0;
             GD.Replace("simulator", row);
@@ -143,7 +143,7 @@ namespace Aurora.Services.DataService
         public RegionInfo GetRegionInfo (string regionName)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["RegionName"] = regionName.MySqlEscape(50);
+            filter.andFilters["RegionName"] = regionName;
             List<string> RetVal = GD.Query(new[] { "RegionInfo" }, "simulator", filter, null, null, null);
 
             if (RetVal.Count == 0)
