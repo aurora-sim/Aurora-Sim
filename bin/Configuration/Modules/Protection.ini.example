@@ -79,7 +79,7 @@
     Enabled = false
 
     ;; The baseline of what the FPS 'should' be on a normal sim load
-    ;; Default: 40
+    ;; Default: 45
     BaseRateFramesPerSecond = 45
 
     ;; When the FPS gets below BaseRate * this percent,

@@ -507,7 +507,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         TimeSpan SinceLastFrame = DateTime.UtcNow - m_lastphysupdate;
                         if (!RegionInfo.RegionSettings.DisablePhysics && ApproxEquals((float)SinceLastFrame.TotalMilliseconds,
-                            m_updatetimespan, 3))
+                            m_updatetimespan, 15))
                         {
                             m_sceneGraph.UpdatePreparePhysics();
                             m_sceneGraph.UpdatePhysics(SinceLastFrame.TotalSeconds);

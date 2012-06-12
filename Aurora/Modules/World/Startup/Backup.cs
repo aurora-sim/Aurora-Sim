@@ -48,10 +48,6 @@ namespace Aurora.Modules.Startup
 
         protected ISceneManager m_manager;
         protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
-        // the minimum time that must elapse before a changed object will be considered for persisted
-        public static long m_dontPersistBefore = 60;
-        // the maximum time that must elapse before a changed object will be considered for persisted
-        public static long m_persistAfter = 600;
 
         #endregion
 
@@ -67,16 +63,6 @@ namespace Aurora.Modules.Startup
             }
             //Set up the backup for the scene
             m_backup[scene] = new InternalSceneBackup(scene);
-
-            IConfig persistanceConfig = source.Configs["Persistance"];
-            if (persistanceConfig != null)
-            {
-                m_dontPersistBefore =
-                    persistanceConfig.GetLong("MinimumTimeBeforePersistenceConsidered", m_dontPersistBefore);
-
-                m_persistAfter =
-                    persistanceConfig.GetLong("MaximumTimeBeforePersistenceConsidered", m_persistAfter);
-            }
         }
 
         public void PostInitialise(IScene scene, IConfigSource source, ISimulationBase openSimBase)
