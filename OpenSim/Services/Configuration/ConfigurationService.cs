@@ -110,7 +110,8 @@ namespace OpenSim.Services.ConfigurationService
 
         public virtual void AddNewUrls(string key, OSDMap urls)
         {
-            m_autoConfig.Remove("ServerURI");
+            if(urls.ContainsKey("ServerURI"))
+                m_autoConfig.Remove("ServerURI");
             foreach (KeyValuePair<string, OSD> kvp in urls)
             {
                 if (kvp.Value == "" && kvp.Value.Type != OSDType.Array)
