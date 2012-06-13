@@ -34,66 +34,34 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using HttpServer;
+using Griffin.Networking;
+using Griffin.Networking.Http.Protocol;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class OSHttpRequest
     {
-        private readonly Encoding _contentEncoding;
-        private readonly string _contentType;
         private readonly Hashtable _query;
         private readonly NameValueCollection _queryString;
-        private readonly IPEndPoint _remoteIPEndPoint;
-        private readonly string _userAgent;
-        private readonly Dictionary<string, object> _whiteboard = new Dictionary<string, object>();
+        private IPEndPoint _remoteIPEndPoint;
 
-        protected IHttpClientContext _context;
-        protected IHttpRequest _request;
+        protected IRequest _httpRequest;
+        protected IPipelineHandlerContext _httpContext;
 
         public OSHttpRequest()
         {
         }
 
-        public OSHttpRequest(IHttpClientContext context, IHttpRequest req)
+        public OSHttpRequest(IPipelineHandlerContext context, IRequest req)
         {
-            _request = req;
-            _context = context;
-
-            if (null != req.Headers["content-encoding"])
-                _contentEncoding = Encoding.GetEncoding(_request.Headers["content-encoding"]);
-            if (null != req.Headers["content-type"])
-                _contentType = _request.Headers["content-type"];
-            if (null != req.Headers["user-agent"])
-                _userAgent = req.Headers["user-agent"];
-            if (null != req.Headers["remote_addr"])
-            {
-                try
-                {
-                    IPAddress addr = IPAddress.Parse(req.Headers["remote_addr"]);
-                    // sometimes req.Headers["remote_port"] returns a comma separated list, so use
-                    // the first one in the list and log it 
-                    string[] strPorts = req.Headers["remote_port"].Split(new[] {','});
-                    if (strPorts.Length > 1)
-                    {
-                        MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                         req.Headers["remote_addr"], req.Headers["remote_port"]);
-                    }
-                    int port = Int32.Parse(strPorts[0]);
-                    _remoteIPEndPoint = new IPEndPoint(addr, port);
-                }
-                catch (FormatException)
-                {
-                    MainConsole.Instance.ErrorFormat("[OSHttpRequest]: format exception on addr/port {0}:{1}, ignoring",
-                                     req.Headers["remote_addr"], req.Headers["remote_port"]);
-                }
-            }
+            _httpContext = context;
+            _httpRequest = req;
 
             _queryString = new NameValueCollection();
             _query = new Hashtable();
             try
             {
-                foreach (HttpInputItem item in req.QueryString)
+                foreach (var item in req.QueryString)
                 {
                     try
                     {
@@ -122,36 +90,31 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public string[] AcceptTypes
         {
-            get { return _request.AcceptTypes; }
+            get { return new string[0]; }
         }
 
         public Encoding ContentEncoding
         {
-            get { return _contentEncoding; }
+            get { return _httpRequest.ContentEncoding; }
         }
 
         public long ContentLength
         {
-            get { return _request.ContentLength; }
-        }
-
-        public long ContentLength64
-        {
-            get { return ContentLength; }
+            get { return _httpRequest.ContentLength; }
         }
 
         public string ContentType
         {
-            get { return _contentType; }
+            get { return _httpRequest.ContentType; }
         }
 
         public HttpCookieCollection Cookies
         {
             get
             {
-                RequestCookies cookies = _request.Cookies;
+                var cookies = _httpRequest.Cookies;
                 HttpCookieCollection httpCookies = new HttpCookieCollection();
-                foreach (RequestCookie cookie in cookies)
+                foreach (var cookie in cookies)
                     httpCookies.Add(new HttpCookie(cookie.Name, cookie.Value));
                 return httpCookies;
             }
@@ -159,33 +122,34 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public bool HasEntityBody
         {
-            get { return _request.ContentLength != 0; }
+            get { return _httpRequest.ContentLength != 0; }
         }
 
         public NameValueCollection Headers
         {
-            get { return _request.Headers; }
+            get 
+            {
+                NameValueCollection nvc = new NameValueCollection();
+                foreach (var header in _httpRequest.Headers)
+                    nvc.Add(header.Name, header.Value);
+                return nvc;
+            }
         }
 
         public string HttpMethod
         {
-            get { return _request.Method; }
+            get { return _httpRequest.Method; }
         }
 
         public Stream InputStream
         {
-            get { return _request.Body; }
-            set { _request.Body = value; }
-        }
-
-        public bool IsSecured
-        {
-            get { return _context.IsSecured; }
+            get { return _httpRequest.Body; }
+            set { _httpRequest.Body = value; }
         }
 
         public bool KeepAlive
         {
-            get { return ConnectionType.KeepAlive == _request.Connection; }
+            get { return _httpRequest.KeepAlive; }
         }
 
         public NameValueCollection QueryString
@@ -204,41 +168,23 @@ namespace Aurora.Framework.Servers.HttpServer
 //        public Hashtable Form { get; private set; }
         public string RawUrl
         {
-            get { return _request.Uri.AbsolutePath; }
+            get { return _httpRequest.Uri.AbsolutePath; }
         }
 
         public IPEndPoint RemoteIPEndPoint
         {
-            get { return _remoteIPEndPoint; }
+            get
+            {
+                if (_remoteIPEndPoint == null)
+                    _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], int.Parse(_httpRequest.Headers["Host"].Value.Split(':')[1]));
+
+                return _remoteIPEndPoint;
+            }
         }
 
         public Uri Url
         {
-            get { return _request.Uri; }
-        }
-
-        public string UserAgent
-        {
-            get { return _userAgent; }
-        }
-
-        internal IHttpRequest IHttpRequest
-        {
-            get { return _request; }
-        }
-
-        internal IHttpClientContext IHttpClientContext
-        {
-            get { return _context; }
-        }
-
-        /// <summary>
-        ///   Internal whiteboard for handlers to store temporary stuff
-        ///   into.
-        /// </summary>
-        internal Dictionary<string, object> Whiteboard
-        {
-            get { return _whiteboard; }
+            get { return _httpRequest.Uri; }
         }
 
         public override string ToString()
@@ -255,6 +201,11 @@ namespace Aurora.Framework.Servers.HttpServer
             }
 
             return me.ToString();
+        }
+
+        internal OSHttpResponse MakeResponse(HttpStatusCode code, string reason)
+        {
+            return new OSHttpResponse(_httpContext, _httpRequest, _httpRequest.CreateResponse(code, reason));
         }
     }
 }

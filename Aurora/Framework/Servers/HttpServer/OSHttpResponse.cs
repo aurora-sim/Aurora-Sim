@@ -28,7 +28,9 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using HttpServer;
+using Griffin.Networking;
+using Griffin.Networking.Http.Protocol;
+using Griffin.Networking.Http.Messages;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -38,34 +40,19 @@ namespace Aurora.Framework.Servers.HttpServer
     /// </summary>
     public class OSHttpResponse
     {
-        private readonly IHttpClientContext _httpClientContext;
-        protected IHttpResponse _httpResponse;
+        protected IResponse _httpResponse;
+        protected IRequest _httpRequest;
+        protected IPipelineHandlerContext _httpContext;
 
         public OSHttpResponse()
         {
         }
 
-        public OSHttpResponse(IHttpResponse resp)
+        public OSHttpResponse(IPipelineHandlerContext context, IRequest request, IResponse response)
         {
-            _httpResponse = resp;
-        }
-
-        /// <summary>
-        ///   Instantiate an OSHttpResponse object from an OSHttpRequest
-        ///   object.
-        /// </summary
-        /// <param name = "req">Incoming OSHttpRequest to which we are
-        ///   replying</param>
-        public OSHttpResponse(OSHttpRequest req)
-        {
-            _httpResponse = new HttpResponse(req.IHttpClientContext, req.IHttpRequest);
-            _httpClientContext = req.IHttpClientContext;
-        }
-
-        public OSHttpResponse(HttpResponse resp, IHttpClientContext clientContext)
-        {
-            _httpResponse = resp;
-            _httpClientContext = clientContext;
+            _httpContext = context;
+            _httpRequest = request;
+            _httpResponse = response;
         }
 
         /// <summary>
@@ -82,35 +69,12 @@ namespace Aurora.Framework.Servers.HttpServer
             set { _httpResponse.ContentType = value; }
         }
 
-        // public bool IsContentTypeSet
-        // {
-        //     get { return _contentTypeSet; }
-        // }
-        // private bool _contentTypeSet;
-        /// <summary>
-        ///   Boolean property indicating whether the content type
-        ///   property actively has been set.
-        /// </summary>
-        /// <remarks>
-        ///   IsContentTypeSet will go away together with .NET base.
-        /// </remarks>
         /// <summary>
         ///   Length of the body content; 0 if there is no body.
         /// </summary>
         public long ContentLength
         {
             get { return _httpResponse.ContentLength; }
-
-            set { _httpResponse.ContentLength = value; }
-        }
-
-        /// <summary>
-        ///   Alias for ContentLength.
-        /// </summary>
-        public long ContentLength64
-        {
-            get { return ContentLength; }
-            set { ContentLength = value; }
         }
 
         /// <summary>
@@ -118,41 +82,17 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public Encoding ContentEncoding
         {
-            get { return _httpResponse.Encoding; }
+            get { return _httpResponse.ContentEncoding; }
 
-            set { _httpResponse.Encoding = value; }
+            set { _httpResponse.ContentEncoding = value; }
         }
 
         public bool KeepAlive
         {
-            get { return _httpResponse.Connection == ConnectionType.KeepAlive; }
-
-            set {
-                _httpResponse.Connection = value ? ConnectionType.KeepAlive : ConnectionType.Close;
-            }
-        }
-
-        /// <summary>
-        ///   Get or set the keep alive timeout property (default is
-        ///   20). Setting this to 0 also disables KeepAlive. Setting
-        ///   this to something else but 0 also enable KeepAlive.
-        /// </summary>
-        public int KeepAliveTimeout
-        {
             get { return _httpResponse.KeepAlive; }
 
-            set
-            {
-                if (value == 0)
-                {
-                    _httpResponse.Connection = ConnectionType.Close;
-                    _httpResponse.KeepAlive = 0;
-                }
-                else
-                {
-                    _httpResponse.Connection = ConnectionType.KeepAlive;
-                    _httpResponse.KeepAlive = value;
-                }
+            set {
+                _httpResponse.KeepAlive = value;
             }
         }
 
@@ -164,22 +104,18 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </remarks>
         public Stream OutputStream
         {
-            get { return _httpResponse.Body; }
+            get
+            {
+                if (_httpResponse.Body == null)
+                    _httpResponse.Body = new MemoryStream();
+
+                return _httpResponse.Body; 
+            }
         }
 
         public string ProtocolVersion
         {
             get { return _httpResponse.ProtocolVersion; }
-
-            set { _httpResponse.ProtocolVersion = value; }
-        }
-
-        /// <summary>
-        ///   Return the output stream feeding the body.
-        /// </summary>
-        public Stream Body
-        {
-            get { return _httpResponse.Body; }
         }
 
         /// <summary>
@@ -187,19 +123,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public string RedirectLocation
         {
-            // get { return _redirectLocation; }
             set { _httpResponse.Redirect(value); }
-        }
-
-
-        /// <summary>
-        ///   Chunk transfers.
-        /// </summary>
-        public bool SendChunked
-        {
-            get { return _httpResponse.Chunked; }
-
-            set { _httpResponse.Chunked = value; }
         }
 
         /// <summary>
@@ -207,9 +131,9 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public virtual int StatusCode
         {
-            get { return (int) _httpResponse.Status; }
+            get { return (int) _httpResponse.StatusCode; }
 
-            set { _httpResponse.Status = (HttpStatusCode) value; }
+            set { _httpResponse.StatusCode = value; }
         }
 
 
@@ -218,30 +142,10 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public string StatusDescription
         {
-            get { return _httpResponse.Reason; }
+            get { return _httpResponse.StatusDescription; }
 
-            set { _httpResponse.Reason = value; }
+            set { _httpResponse.StatusDescription = value; }
         }
-
-        public bool ReuseContext
-        {
-            get
-            {
-                if (_httpClientContext != null)
-                {
-                    return !_httpClientContext.EndWhenDone;
-                }
-                return true;
-            }
-            set
-            {
-                if (_httpClientContext != null)
-                {
-                    _httpClientContext.EndWhenDone = !value;
-                }
-            }
-        }
-
 
         /// <summary>
         ///   Add a header field and content to the response.
@@ -260,14 +164,8 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public void Send()
         {
-            _httpResponse.Body.Flush();
-            _httpResponse.Send();
-        }
-
-        public void FreeContext()
-        {
-            if (_httpClientContext != null)
-                _httpClientContext.Close();
+            _httpResponse.Body.Position = 0;
+            _httpContext.SendDownstream(new SendHttpResponse(_httpRequest, _httpResponse));
         }
     }
 }

@@ -203,7 +203,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
             AppDomain restrictedDomain = null;
 
-#if NET4
+#if NET_4_0
             SecurityZone zone = SecurityZone.MyComputer;
             try
             {

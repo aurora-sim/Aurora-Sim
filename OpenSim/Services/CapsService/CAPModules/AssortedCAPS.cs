@@ -220,7 +220,7 @@ namespace OpenSim.Services.CapsService
 
             body["agents"] = array;
             byte[] m = OSDParser.SerializeLLSDXmlBytes(body);
-            httpResponse.Body.Write(m, 0, m.Length);
+            httpResponse.OutputStream.Write(m, 0, m.Length);
             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.OK;
             httpResponse.Send();
             return null;

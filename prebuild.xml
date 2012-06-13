@@ -133,7 +133,8 @@
       <Reference name="System.Web"/>
  	  <Reference name="System.Xml"/>
 
-      <Reference name="HttpServer_OpenSim" path="../../bin/"/>
+      <Reference name="Griffin.Networking" path="../../bin/"/>
+      <Reference name="Griffin.Networking.Http" path="../../bin/"/>
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>

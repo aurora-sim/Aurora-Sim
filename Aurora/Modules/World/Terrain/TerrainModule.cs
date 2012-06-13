@@ -850,7 +850,6 @@ namespace Aurora.Modules.Terrain
             client.OnBakeTerrain += client_OnBakeTerrain;
             client.OnLandUndo += client_OnLandUndo;
             client.OnGodlikeMessage += client_onGodlikeMessage;
-            client.OnUnackedTerrain += client_OnUnackedTerrain;
             client.OnRegionHandShakeReply += SendLayerData;
 
             //Add them to the cache
@@ -874,7 +873,6 @@ namespace Aurora.Modules.Terrain
             client.OnBakeTerrain -= client_OnBakeTerrain;
             client.OnLandUndo -= client_OnLandUndo;
             client.OnGodlikeMessage -= client_onGodlikeMessage;
-            client.OnUnackedTerrain -= client_OnUnackedTerrain;
             client.OnRegionHandShakeReply -= SendLayerData;
 
             //Remove them from the cache
@@ -1719,12 +1717,6 @@ namespace Aurora.Modules.Terrain
             {
                 InterfaceBakeTerrain(null); //bake terrain does not use the passed in parameter
             }
-        }
-
-        protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
-        {
-            //MainConsole.Instance.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, m_channel.GetSerialised(m_scene));
         }
 
         private void StoreUndoState()

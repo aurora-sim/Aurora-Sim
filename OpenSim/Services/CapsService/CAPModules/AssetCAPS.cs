@@ -147,8 +147,6 @@ namespace OpenSim.Services.CapsService
             }
 
             httpResponse.Send();
-            httpRequest.InputStream.Close();
-            httpRequest = null;
             return null;
         }
 
@@ -282,11 +280,10 @@ namespace OpenSim.Services.CapsService
                         else
                             response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 
-                        response.ContentLength = len;
                         response.ContentType = texture.TypeString;
                         response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
 
-                        response.Body.Write(texture.Data, start, len);
+                        response.OutputStream.Write(texture.Data, start, len);
                     }
                 }
                 else
@@ -299,13 +296,12 @@ namespace OpenSim.Services.CapsService
             {
                 // Full content request
                 response.StatusCode = (int)System.Net.HttpStatusCode.OK;
-                response.ContentLength = texture.Data.Length;
                 response.ContentType = texture.TypeString;
                 if (format == DefaultFormat)
                     response.ContentType = texture.TypeString;
                 else
                     response.ContentType = "image/" + format;
-                response.Body.Write(texture.Data, 0, texture.Data.Length);
+                response.OutputStream.Write(texture.Data, 0, texture.Data.Length);
             }
         }
 

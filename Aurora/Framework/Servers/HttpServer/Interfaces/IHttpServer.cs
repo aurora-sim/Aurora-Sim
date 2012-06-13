@@ -137,9 +137,5 @@ namespace Aurora.Framework.Servers.HttpServer
         void RemoveStreamHandler(string httpMethod, string path);
 
         void RemoveXmlRPCHandler(string method);
-
-        string GetHTTP404(string host);
-
-        string GetHTTP500();
     }
 }

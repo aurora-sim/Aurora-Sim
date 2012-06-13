@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
-using HttpServer;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -81,20 +80,22 @@ namespace Aurora.Framework.Servers.HttpServer
 
                         Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
                                                                                str.ReadToEnd());
-                        m_server.DoHTTPGruntWork(
+                        var request = new OSHttpRequest(req.HttpContext, req.Request);
+                        m_server.MessageHandler.SendGenericHTTPResponse(
                             responsedata,
-                            new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
-                            new OSHttpRequest(req.HttpContext, req.Request)
+                            request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
+                            request
                         );
                     }
                     else
                     {
                         if ((Environment.TickCount - req.RequestTime) > m_timeout)
                         {
-                            m_server.DoHTTPGruntWork(
+                            var request = new OSHttpRequest(req.HttpContext, req.Request);
+                            m_server.MessageHandler.SendGenericHTTPResponse(
                                 req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                                new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
-                                new OSHttpRequest(req.HttpContext, req.Request));
+                                request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
+                                request);
                         }
                         else
                         {

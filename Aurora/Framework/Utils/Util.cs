@@ -1543,25 +1543,10 @@ namespace Aurora.Framework
                     });
                     thread.Start(obj);
                     break;
-#if NET_4_0
-                case FireAndForgetMethod.Await:
-                    AwaitCallback(callback, obj);
-                    break;
-#endif
                 default:
                     throw new NotImplementedException();
             }
         }
-
-#if NET_4_0
-        private static async void AwaitCallback(WaitCallback callback, object o)
-        {
-            await TaskEx.Run(() =>
-                {
-                    callback(o);
-                });
-        }
-#endif
 
         private static object SmartThreadPoolCallback(object o)
         {

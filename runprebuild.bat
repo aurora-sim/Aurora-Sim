@@ -9,7 +9,7 @@ rem ## Default Visual Studio choice (2008, 2010)
 set vstudio=2010
 
 rem ## Default .NET Framework (3_5, 4_0 (Unsupported on VS2008))
-set framework=3_5
+set framework=4_0
 
 rem ## Default architecture (86 (for 32bit), 64, AnyCPU)
 set bits=AnyCPU
@@ -52,7 +52,6 @@ goto framework
 
     :frameworkcheck
     if %vstudio%==2008 goto frameworkerror
-	echo WARNING: .net4 may cause script errors!
     goto bits
 
     :frameworkerror
@@ -95,7 +94,7 @@ echo.
 echo Creating compile batch file for your convinence...
 if %framework%==3_5 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild
 if %framework%==4_0 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild
-if %framework%==4_0 set net4=;NET4
+if %framework%==3_5 set net4=;NET3
 if %bits%==x64 set args=/p:Platform=x64
 if %bits%==x86 set args=/p:Platform=x86
 if %configuration%==r  (

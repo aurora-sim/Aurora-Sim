@@ -728,8 +728,8 @@ namespace Aurora.Framework
 
         private string InternalPrompt(string prompt, string defaultresponse, List<string> options)
         {
-            m_reading = Thread.CurrentThread != m_consoleReadingThread;
             string ret;
+            m_reading = Thread.CurrentThread != m_consoleReadingThread;
             lock (m_readingLock)
             {
                 ret = ReadLine(String.Format("{0}{2} [{1}]: ",
@@ -872,13 +872,11 @@ namespace Aurora.Framework
         }
 
         public bool Processing = true;
-#if !NET_4_0
         private delegate void PromptEvent();
         private readonly Object m_consoleLock = new Object();
         protected static bool m_reading;
         private Thread m_consoleReadingThread;
         protected readonly Object m_readingLock = new Object();
-#endif
         private Thread StartReadingThread()
         {
             Thread t = new Thread(delegate()
@@ -903,7 +901,6 @@ namespace Aurora.Framework
                 }
                 lock (m_consoleLock)
                 {
-#if !NET_4_0
                     if(m_consoleReadingThread == null)
                         m_consoleReadingThread = StartReadingThread();
                     try
@@ -929,16 +926,6 @@ namespace Aurora.Framework
                         //Eat the exception and go on
                         Output("[Console]: Failed to execute command: " + ex);
                     }
-#else
-                    Task prompt = TaskEx.Run(() => { Prompt(); });
-                    while (!Task.WaitAll(new Task[1] { prompt }, 1000))
-                    {
-                        if (!Processing)
-                        {
-                            throw new Exception("Restart");
-                        }
-                    }
-#endif
                 }
             }
         }

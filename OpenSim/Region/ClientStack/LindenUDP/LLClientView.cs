@@ -130,7 +130,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event StatusChange OnChildAgentStatus;
         public event GenericMessage OnGenericMessage;
         public event BuyObjectInventory OnBuyObjectInventory;
-        public event TerrainUnacked OnUnackedTerrain;
         public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
 
 #pragma warning restore 67

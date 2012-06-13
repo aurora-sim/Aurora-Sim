@@ -29,7 +29,6 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Threading;
-using HttpServer;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -154,10 +153,11 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             foreach (PollServiceHttpRequest req in m_requests.Cast<PollServiceHttpRequest>())
             {
-                m_server.DoHTTPGruntWork(
+                var request = new OSHttpRequest(req.HttpContext, req.Request);
+                m_server.MessageHandler.SendGenericHTTPResponse(
                     req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
-                    new OSHttpResponse(new HttpResponse(req.HttpContext, req.Request), req.HttpContext),
-                    new OSHttpRequest(req.HttpContext, req.Request)
+                    request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
+                    request
                 );
             }
 
