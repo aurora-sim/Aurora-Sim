@@ -493,6 +493,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                     catch (IOException e)
                     {
+                        response.ReuseContext = false; // This has to be here to prevent a Linux/Mono crash
                         MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                     }
                     //This makes timeouts VERY bad if enabled
