@@ -483,7 +483,8 @@ namespace Aurora.Framework.Servers.HttpServer
                     //
                     try
                     {
-                        response.ReuseContext = false;
+                        if(!response.KeepAlive)
+                            response.ReuseContext = false;
                         response.Send();
                     }
                     catch (SocketException e)
