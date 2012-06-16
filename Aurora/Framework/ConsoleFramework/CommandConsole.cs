@@ -335,11 +335,14 @@ namespace Aurora.Framework
                             if (commands.ContainsKey(cmdToExecute))
                             {
 #if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
+                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
                                 {
-                                    cmdList = new List<string>(commandPath);
-                                    cmdList.AddRange(commandOptions);
-                                    fn(cmdList.ToArray());
+                                    if (fn != null)
+                                    {
+                                       cmdList = new List<string>(commandPath);
+                                       cmdList.AddRange(commandOptions);
+                                       fn(cmdList.ToArray());
+                                    }
                                 }
 #else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
