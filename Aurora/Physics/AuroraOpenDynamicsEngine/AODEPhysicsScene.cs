@@ -1071,6 +1071,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 foreach (AuroraODECharacter chr in _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
                 {
                     chr.IsColliding = false;
+                    chr.IsTruelyColliding = false;
 
                     // test the avatar's geometry for collision with the space
                     // This will return near and the space that they are the closest to
@@ -2115,6 +2116,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                     actor.Move(ODE_STEPSIZE, ref defects);
                                 }
                             }
+                            
 #else
                             foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                             {
@@ -2161,7 +2163,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 #else
                                     foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities().Where(child => child.PhysActor != null))
                                     {
-                                        RemovePrimThreadLocked((AuroraODEPrim) child.PhysActor);
+                                        RemovePrimThreadLocked((AuroraODEPrim)child.PhysActor);
                                         child.PhysActor = null; //Delete it
                                     }
 #endif
@@ -2331,17 +2333,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             if (actor.bad)
                                 MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
                             else
-                                actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                         }
                     }
 #else
                     foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                     {
                         if (actor.bad)
-                            MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?",
-                                             actor.m_uuid);
+                            MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
                         else
-                            actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                            actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                     }
 #endif
                 }
@@ -2369,13 +2370,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     if (actor.IsPhysical)
                     {
-                        actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                        actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                     }
                 }
 #else
                 foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
                 {
-                    actor.UpdatePositionAndVelocity(nodesteps*ODE_STEPSIZE);
+                    actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                 }
 #endif
             }
@@ -2587,8 +2588,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 return b.CollisionScore.CompareTo(a.CollisionScore);
             });
 #else
-            collidingPrims.Sort(
-                (a, b) => b.CollisionScore.CompareTo(a.CollisionScore));
+            collidingPrims.Sort((a, b) => b.CollisionScore.CompareTo(a.CollisionScore));
 #endif
             //Limit to 25
             if (collidingPrims.Count > 25)
