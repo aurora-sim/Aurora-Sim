@@ -28,15 +28,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using Aurora.Framework;
+using Aurora.Framework.Capabilities;
+using Aurora.Framework.Servers.HttpServer;
 using Aurora.Modules.AbuseReportsGUI;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 
@@ -267,42 +270,33 @@ namespace Aurora.Modules.AbuseReports
 
         private void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
-            UUID capuuid = UUID.Random();
-
-#if (!ISWIN)
             caps.AddStreamHandler("SendUserReportWithScreenshot",
-                                new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
-                                                      delegate(Hashtable m_dhttpMethod)
+                                new GenericStreamHandler("POST", CapsUtil.CreateCAPS("SendUserReportWithScreenshot", ""),
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return ProcessSendUserReportWithScreenshot(m_dhttpMethod, capuuid, agentID);
+                                                          return ProcessSendUserReportWithScreenshot(request, agentID);
                                                       }));
-#else
-            caps.AddStreamHandler("SendUserReportWithScreenshot",
-                                  new RestHTTPHandler("POST", "/CAPS/" + capuuid + "/",
-                                                      m_dhttpMethod =>
-                                                      ProcessSendUserReportWithScreenshot(m_dhttpMethod,
-                                                                                          capuuid,
-                                                                                          agentID)));
-#endif
         }
 
-        private Hashtable ProcessSendUserReportWithScreenshot(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private byte[] ProcessSendUserReportWithScreenshot(Stream request, UUID agentID)
         {
             IScenePresence SP = findScenePresence(agentID);
-            string RegionName = (string) m_dhttpMethod["abuse-region-name"];
-            UUID AbuserID = UUID.Parse((string) m_dhttpMethod["abuser-id"]);
-            byte Category = byte.Parse((string) m_dhttpMethod["category"]);
-            byte CheckFlags = byte.Parse((string) m_dhttpMethod["check-flags"]);
-            string details = (string) m_dhttpMethod["details"];
-            UUID objectID = UUID.Parse((string) m_dhttpMethod["object-id"]);
-            Vector3 position = Vector3.Zero; //(string)m_dhttpMethod["position"];
-            byte ReportType = byte.Parse((string) m_dhttpMethod["report-type"]);
-            UUID ScreenShotID = UUID.Parse((string) m_dhttpMethod["screenshot-id"]);
-            string summary = (string) m_dhttpMethod["summary"];
-            UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
-                       details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            string RegionName = map["abuse-region-name"];
+            UUID AbuserID = map["abuser-id"];
+            uint Category = map["category"];
+            uint CheckFlags = map["check-flags"];
+            string details = map["details"];
+            UUID objectID = map["object-id"];
+            Vector3 position = map["position"];
+            uint ReportType = map["report-type"];
+            UUID ScreenShotID = map["screenshot-id"];
+            string summary = map["summary"];
+            //UserReport(SP.ControllingClient, RegionName, AbuserID, Category, CheckFlags,
+            //           details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
             //TODO: Figure this out later
-            return new Hashtable();
+            return new byte[0];
         }
 
         #endregion

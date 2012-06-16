@@ -26,8 +26,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -2004,40 +2005,21 @@ namespace Aurora.Modules.Inventory
             retVal["UpdateScriptTask"] = retVal["UpdateScriptTaskInventory"];
 
             //Region Server bound
-#if (!ISWIN)
-            IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
-                delegate(string request, string path, string param,
-                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateScriptTask"],
+                delegate(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                 {
-                    return ScriptTaskInventory(agentID, request, path, param,
-                        httpRequest, httpResponse);
-                });
-#else
-            IRequestHandler handler = new RestStreamHandler("POST", retVal["UpdateScriptTask"],
-                                                            (request, path, param, httpRequest, httpResponse) =>
-                                                            ScriptTaskInventory(agentID, request, path, param,
-                                                                                httpRequest, httpResponse));
-#endif
-            server.AddStreamHandler(handler);
+                    return ScriptTaskInventory(agentID, path, request, httpRequest, httpResponse);
+                }));
 
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
             retVal["UpdateScriptAgent"] = retVal["UpdateNotecardAgentInventory"];
             //Unless the script engine goes, region server bound
-#if (!ISWIN)
-            handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(string request, string path, string param,
-                                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(
+                string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return NoteCardAgentInventory(agentID, request, path, param,
-                    httpRequest, httpResponse);
-            });
-#else
-            handler = new RestStreamHandler("POST", retVal["UpdateNotecardAgentInventory"],
-                                            (request, path, param, httpRequest, httpResponse) =>
-                                            NoteCardAgentInventory(agentID, request, path, param,
-                                                                   httpRequest, httpResponse));
-#endif
-            server.AddStreamHandler(handler);
+                return NoteCardAgentInventory(agentID, path, request, httpRequest, httpResponse);
+            }));
             return retVal;
         }
 
@@ -2051,14 +2033,14 @@ namespace Aurora.Modules.Inventory
         /// <param name="httpRequest">HTTP request header object</param>
         /// <param name="httpResponse">HTTP response header object</param>
         /// <returns></returns>
-        public string ScriptTaskInventory(UUID AgentID, string request, string path, string param,
-                                          OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] ScriptTaskInventory(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
             try
             {
                 MainConsole.Instance.Debug("[Scene]: ScriptTaskInventory Request in region: " + m_scene.RegionInfo.RegionName);
                 //MainConsole.Instance.DebugFormat("[CAPS]: request: {0}, path: {1}, param: {2}", request, path, param);
-                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
                 UUID item_id = map["item_id"].AsUUID();
                 UUID task_id = map["task_id"].AsUUID();
                 int is_script_running = map["is_script_running"].AsInteger();
@@ -2076,7 +2058,7 @@ namespace Aurora.Modules.Inventory
                         AgentID);
 
                 MainServer.Instance.AddStreamHandler(
-                    new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
+                    new GenericStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
                 string uploaderURL = MainServer.Instance.ServerURI + capsBase +
                                      uploaderPath;
@@ -2084,7 +2066,7 @@ namespace Aurora.Modules.Inventory
                 map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
-                return OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
             catch (Exception e)
             {
@@ -2104,13 +2086,13 @@ namespace Aurora.Modules.Inventory
         /// <param name="httpRequest"></param>
         /// <param name="httpResponse"></param>
         /// <returns></returns>
-        public string NoteCardAgentInventory(UUID AgentID, string request, string path, string param,
-                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] NoteCardAgentInventory(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request in region: " + m_regionName + "\n" + request);
             //MainConsole.Instance.Debug("[CAPS]: NoteCardAgentInventory Request is: " + request);
 
-            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             string capsBase = "/CAPS/" + UUID.Random();
             string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
@@ -2119,7 +2101,7 @@ namespace Aurora.Modules.Inventory
                 new ItemUpdater(AgentID, m_scene, map["item_id"].AsUUID(), capsBase + uploaderPath, MainServer.Instance);
 
             MainServer.Instance.AddStreamHandler(
-                new BinaryStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
+                new GenericStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
 
             string uploaderURL = MainServer.Instance.ServerURI + capsBase +
                                  uploaderPath;
@@ -2127,7 +2109,7 @@ namespace Aurora.Modules.Inventory
             map = new OSDMap();
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
-            return OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         /// <summary>
@@ -2158,8 +2140,10 @@ namespace Aurora.Modules.Inventory
             /// <param name="path"></param>
             /// <param name="param"></param>
             /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
+            public byte[] uploaderCaps(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
+                byte[] data = HttpServerHandlerHelpers.ReadFully(request);
                 UUID inv = inventoryItemID;
                 IClientAPI client;
                 string res = "";
@@ -2172,7 +2156,7 @@ namespace Aurora.Modules.Inventory
 
                 httpListener.RemoveStreamHandler("POST", uploaderPath);
 
-                return res;
+                return Encoding.UTF8.GetBytes(res);
             }
         }
 
@@ -2213,7 +2197,8 @@ namespace Aurora.Modules.Inventory
             /// <param name="path"></param>
             /// <param name="param"></param>
             /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
+            public byte[] uploaderCaps(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 try
                 {
@@ -2224,6 +2209,7 @@ namespace Aurora.Modules.Inventory
                     IClientAPI client;
                     m_scene.ClientManager.TryGetValue(AgentID, out client);
                     UUID newAssetID = UUID.Zero;
+                    byte[] data = HttpServerHandlerHelpers.ReadFully(request);
                     ArrayList errors = CapsUpdateTaskInventoryScriptAsset(client, inventoryItemID, primID, isScriptRunning, data, out newAssetID);
 
                     OSDMap map = new OSDMap();
@@ -2232,17 +2218,11 @@ namespace Aurora.Modules.Inventory
                     map["state"] = "complete";
                     OSDArray array = new OSDArray();
                     foreach (object o in errors)
-                    {
                         array.Add(OSD.FromObject(o));
-                    }
+
                     map["errors"] = array;
-                    string res = OSDParser.SerializeLLSDXmlString(map);
-
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
-
-                    //                    MainConsole.Instance.InfoFormat("[CAPS]: TaskInventoryScriptUpdater.uploaderCaps res: {0}", res);
-
-                    return res;
+                    return OSDParser.SerializeLLSDXmlBytes(map);
                 }
                 catch (Exception e)
                 {

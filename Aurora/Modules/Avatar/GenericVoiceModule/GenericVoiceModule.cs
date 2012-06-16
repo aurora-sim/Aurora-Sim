@@ -26,6 +26,8 @@
  */
 
 using System;
+using System.IO;
+using System.Text;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -131,20 +133,18 @@ namespace Aurora.Modules.Voice
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
 #if (!ISWIN)
-            caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
+                                                       delegate(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return ProvisionVoiceAccountRequest(scene, request, path, param,
-                                                                                               agentID);
+                                                           return ProvisionVoiceAccountRequest(scene, agentID);
                                                        }));
             retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
-            caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
+                                                       delegate(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return ParcelVoiceInfoRequest(scene, request, path, param,
-                                                                                         agentID);
+                                                           return ParcelVoiceInfoRequest(scene, agentID);
                                                        }));
 #else
             caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
@@ -164,8 +164,7 @@ namespace Aurora.Modules.Voice
         }
 
         /// Callback for a client request for Voice Account Details.
-        public string ProvisionVoiceAccountRequest(IScene scene, string request, string path, string param,
-                                                   UUID agentID)
+        public byte[] ProvisionVoiceAccountRequest(IScene scene, UUID agentID)
         {
             try
             {
@@ -175,24 +174,23 @@ namespace Aurora.Modules.Voice
                 response["voice_sip_uri_hostname"] = "";
                 response["voice_account_server_name"] = "";
 
-                return OSDParser.SerializeLLSDXmlString(response);
+                return OSDParser.SerializeLLSDXmlBytes(response);
             }
             catch (Exception)
             {
-                return "<llsd><undef /></llsd>";
+                return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
             }
         }
 
         /// Callback for a client request for ParcelVoiceInfo
-        public string ParcelVoiceInfoRequest(IScene scene, string request, string path, string param,
-                                             UUID agentID)
+        public byte[] ParcelVoiceInfoRequest(IScene scene, UUID agentID)
         {
             OSDMap response = new OSDMap();
             response["region_name"] = scene.RegionInfo.RegionName;
             response["parcel_local_id"] = 0;
             response["voice_credentials"] = new OSDMap();
             ((OSDMap) response["voice_credentials"])["channel_uri"] = "";
-            return OSDParser.SerializeLLSDXmlString(response);
+            return OSDParser.SerializeLLSDXmlBytes(response);
         }
     }
 }

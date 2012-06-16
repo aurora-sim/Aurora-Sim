@@ -37,7 +37,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInPostHandler : BaseStreamHandler
+    public class MessagingServiceInPostHandler : BaseRequestHandler
     {
         private readonly string m_SessionID;
         private readonly IAsyncMessageRecievedService m_handler;

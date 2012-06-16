@@ -30,7 +30,7 @@ using System.IO;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public abstract class BaseRequestHandler
+    public abstract class BaseRequestHandler : IStreamedRequestHandler
     {
         private readonly string m_httpMethod;
 
@@ -92,5 +92,8 @@ namespace Aurora.Framework.Servers.HttpServer
             body = body.Trim();
             return body;
         }
+
+        public abstract byte[] Handle(string path, Stream request,
+                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse);
     }
 }

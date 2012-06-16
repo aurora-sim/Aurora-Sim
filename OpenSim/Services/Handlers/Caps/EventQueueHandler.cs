@@ -115,7 +115,7 @@ namespace OpenSim.Services
         #endregion
     }
 
-    public class EQMEventPoster : BaseStreamHandler
+    public class EQMEventPoster : BaseRequestHandler
     {
         private readonly string m_SessionID;
         private readonly ICapsService m_capsService;

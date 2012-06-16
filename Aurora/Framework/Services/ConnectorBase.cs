@@ -356,7 +356,7 @@ namespace Aurora.Framework
         }
     }
 
-    public class ServerHandler : BaseStreamHandler
+    public class ServerHandler : BaseRequestHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;

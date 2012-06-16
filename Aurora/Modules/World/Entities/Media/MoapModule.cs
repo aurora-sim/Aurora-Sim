@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
@@ -204,7 +205,7 @@ namespace Aurora.Modules.Entities.Media
                 m_omCapUrls[agentID] = retVal["ObjectMedia"];
 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                server.AddStreamHandler(new RestStreamHandler("POST", retVal["ObjectMedia"], HandleObjectMediaMessage));
+                server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectMedia"], HandleObjectMediaMessage));
             }
 
             retVal["ObjectMediaNavigate"] = CapsUtil.CreateCAPS("ObjectMediaNavigate", "");
@@ -215,7 +216,7 @@ namespace Aurora.Modules.Entities.Media
                 m_omuCapUrls[agentID] = retVal["ObjectMediaNavigate"];
 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                server.AddStreamHandler(new RestStreamHandler("POST", retVal["ObjectMediaNavigate"],
+                server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectMediaNavigate"],
                                                               HandleObjectMediaNavigateMessage));
             }
             return retVal;
@@ -264,8 +265,8 @@ namespace Aurora.Modules.Entities.Media
         /// <param name = "httpRequest"></param>
         /// <param name = "httpResponse"></param>
         /// <returns></returns>
-        protected string HandleObjectMediaMessage(
-            string request, string path, string param, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        protected byte[] HandleObjectMediaMessage(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMedia path [{0}], raw request [{1}]", path, request);
 
@@ -289,7 +290,7 @@ namespace Aurora.Modules.Entities.Media
         /// </summary>
         /// <param name = "omr"></param>
         /// <returns></returns>
-        protected string HandleObjectMediaRequest(ObjectMediaRequest omr)
+        protected byte[] HandleObjectMediaRequest(ObjectMediaRequest omr)
         {
             UUID primId = omr.PrimID;
 
@@ -300,7 +301,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received a GET ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return new byte[0];
             }
 
             ObjectMediaResponse resp = new ObjectMediaResponse
@@ -318,11 +319,7 @@ namespace Aurora.Modules.Entities.Media
                 resp.Version = part.MediaUrl;
             }
 
-            string rawResp = OSDParser.SerializeLLSDXmlString(resp.Serialize());
-
-//            MainConsole.Instance.DebugFormat("[MOAP]: Got HandleObjectMediaRequestGet raw response is [{0}]", rawResp);
-
-            return rawResp;
+            return OSDParser.SerializeLLSDXmlBytes(resp.Serialize());
         }
 
         /// <summary>
@@ -331,7 +328,7 @@ namespace Aurora.Modules.Entities.Media
         /// <param name = "path">Path on which this request was made</param>
         /// <param name = "omu">/param>
         ///   <returns></returns>
-        protected string HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
+        protected new byte[] HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
         {
             UUID primId = omu.PrimID;
 
@@ -342,7 +339,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received an UPDATE ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return new byte[0];
             }
 
 //            MainConsole.Instance.DebugFormat("[MOAP]: Received {0} media entries for prim {1}", omu.FaceMedia.Length, primId);
@@ -359,7 +356,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received {0} media entries from client for prim {1} {2} but this prim has only {3} faces.  Dropping request.",
                     omu.FaceMedia.Length, part.Name, part.UUID, part.GetNumberOfSides());
-                return string.Empty;
+                return new byte[0];
             }
 
             UUID agentId = default(UUID);
@@ -434,7 +431,7 @@ namespace Aurora.Modules.Entities.Media
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
-            return string.Empty;
+            return new byte[0];
         }
 
         /// <summary>
@@ -446,8 +443,8 @@ namespace Aurora.Modules.Entities.Media
         /// <param name = "httpRequest">/param>
         ///   <param name = "httpResponse">/param>
         ///     <returns></returns>
-        protected string HandleObjectMediaNavigateMessage(
-            string request, string path, string param, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        protected byte[] HandleObjectMediaNavigateMessage(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
 //            MainConsole.Instance.DebugFormat("[MOAP]: Got ObjectMediaNavigate request [{0}]", request);
 
@@ -464,7 +461,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received an ObjectMediaNavigateMessage for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return new byte[0];
             }
 
             UUID agentId = default(UUID);
@@ -473,7 +470,7 @@ namespace Aurora.Modules.Entities.Media
                 agentId = m_omuCapUsers[path];
 
             if (!m_scene.Permissions.CanInteractWithPrimMedia(agentId, part.UUID, omn.Face))
-                return string.Empty;
+                return new byte[0];
 
 //            MainConsole.Instance.DebugFormat(
 //                "[MOAP]: Received request to update media entry for face {0} on prim {1} {2} to {3}", 
@@ -481,7 +478,7 @@ namespace Aurora.Modules.Entities.Media
 
             // If media has never been set for this prim, then just return.
             if (null == part.Shape.Media)
-                return string.Empty;
+                return new byte[0];
 
             MediaEntry me = null;
 
@@ -490,7 +487,7 @@ namespace Aurora.Modules.Entities.Media
 
             // Do the same if media has not been set up for a specific face
             if (null == me)
-                return string.Empty;
+                return new byte[0];
 
             if (me.EnableWhiteList)
             {
@@ -500,7 +497,7 @@ namespace Aurora.Modules.Entities.Media
 //                        "[MOAP]: Blocking change of face {0} on prim {1} {2} to {3} since it's not on the enabled whitelist", 
 //                        omn.Face, part.Name, part.UUID, omn.URL);
 
-                    return string.Empty;
+                    return new byte[0];
                 }
             }
 
@@ -512,7 +509,7 @@ namespace Aurora.Modules.Entities.Media
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
-            return OSDParser.SerializeLLSDXmlString(new OSD());
+            return OSDParser.SerializeLLSDXmlBytes(new OSD());
         }
 
         /// <summary>

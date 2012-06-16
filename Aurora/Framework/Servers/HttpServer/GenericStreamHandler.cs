@@ -26,66 +26,57 @@
  */
 
 using System.IO;
-using System.Text;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class RestStreamHandler : BaseStreamHandler
+    public delegate byte[] HttpServerHandle(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse);
+    public class GenericStreamHandler : BaseRequestHandler
     {
-        private readonly RestMethod m_restMethod;
-
-        public RestStreamHandler(string httpMethod, string path, RestMethod restMethod) : base(httpMethod, path)
+        private HttpServerHandle _method;
+        public GenericStreamHandler(string httpMethod, string path, HttpServerHandle method) 
+            : base(httpMethod, path)
         {
-            m_restMethod = restMethod;
-        }
-
-        public RestMethod Method
-        {
-            get { return m_restMethod; }
+            _method = method;
         }
 
         public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
                                       OSHttpResponse httpResponse)
         {
-            Encoding encoding = Encoding.UTF8;
-            StreamReader streamReader = new StreamReader(request, encoding);
-
-            string requestBody = streamReader.ReadToEnd();
-            streamReader.Close();
-
-            string param = GetParam(path);
-            string responseString = m_restMethod(requestBody, path, param, httpRequest, httpResponse);
-
-            return Encoding.UTF8.GetBytes(responseString);
+            return _method(path, request, httpRequest, httpResponse);
         }
     }
 
-    public class RestBytesStreamHandler : BaseStreamHandler
+    public class HttpServerHandlerHelpers
     {
-        private readonly RestBytesMethod m_restMethod;
-
-        public RestBytesStreamHandler(string httpMethod, string path, RestBytesMethod restMethod)
-            : base(httpMethod, path)
+        public static byte[] ReadFully(Stream stream)
         {
-            m_restMethod = restMethod;
+            byte[] buffer = new byte[1024];
+            using (MemoryStream ms = new MemoryStream(1024 * 256))
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, 0, buffer.Length);
+
+                    if (read <= 0)
+                    {
+                        return ms.ToArray();
+                    }
+
+                    ms.Write(buffer, 0, read);
+                }
+            }
         }
+    }
 
-        public RestBytesMethod Method
+    public static class MyExtensions
+    {
+        public static string ReadUntilEnd(this System.IO.Stream stream)
         {
-            get { return m_restMethod; }
-        }
-
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
-                                      OSHttpResponse httpResponse)
-        {
-            Encoding encoding = Encoding.UTF8;
-            StreamReader streamReader = new StreamReader(request, encoding);
-
-            string requestBody = streamReader.ReadToEnd();
-            streamReader.Close();
-
-            string param = GetParam(path);
-            return m_restMethod(requestBody, path, param, httpRequest, httpResponse);
+            StreamReader rdr = new StreamReader(stream);
+            string str = rdr.ReadToEnd();
+            rdr.Close();
+            return str;
         }
     }
 }

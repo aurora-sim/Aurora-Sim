@@ -33,6 +33,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Web;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
@@ -41,33 +42,12 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
+using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace OpenSim.Services.CapsService
 {
     public class AssetCAPS : ICapsServiceConnector
     {
-        #region Stream Handler
-
-        public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-        public class StreamHandler : BaseStreamHandler
-        {
-            readonly StreamHandlerCallback m_callback;
-
-            public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
-                : base(httpMethod, path)
-            {
-                m_callback = callback;
-            }
-
-            public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return m_callback(path, request, httpRequest, httpResponse);
-            }
-        }
-
-        #endregion Stream Handler
-
         private const string m_uploadBakedTexturePath = "0010";
         protected IAssetService m_assetService;
         protected IRegionClientCapsService m_service;
@@ -81,13 +61,13 @@ namespace OpenSim.Services.CapsService
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
 
             service.AddStreamHandler("GetTexture",
-                new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
+                new GenericStreamHandler("GET", service.CreateCAPS("GetTexture", ""),
                                                         ProcessGetTexture));
             service.AddStreamHandler("UploadBakedTexture",
-                new RestStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+                new GenericStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
                                                         UploadBakedTexture));
             service.AddStreamHandler("GetMesh",
-                new RestHTTPHandler("GET", service.CreateCAPS("GetMesh", ""),
+                new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
                                                        ProcessGetMesh));
         }
 
@@ -401,9 +381,7 @@ namespace OpenSim.Services.CapsService
 
         #region Baked Textures
 
-        public string UploadBakedTexture(string request, string path,
-                string param, OSHttpRequest httpRequest,
-                OSHttpResponse httpResponse)
+        public byte[] UploadBakedTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             try
             {
@@ -418,14 +396,14 @@ namespace OpenSim.Services.CapsService
                 uploader.OnUpLoad += BakedTextureUploaded;
 
                 m_service.AddStreamHandler(uploadpath,
-                        new BinaryStreamHandler("POST", uploadpath,
+                        new GenericStreamHandler("POST", uploadpath,
                         uploader.uploaderCaps));
 
                 string uploaderURL = m_service.HostUri + uploadpath;
                 OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
-                return OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
             catch (Exception e)
             {
@@ -459,21 +437,21 @@ namespace OpenSim.Services.CapsService
             /// <param name="path"></param>
             /// <param name="param"></param>
             /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
+            public byte[] uploaderCaps(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 handlerUpLoad = OnUpLoad;
                 UUID newAssetID;
-                handlerUpLoad(data, out newAssetID);
+                handlerUpLoad(HttpServerHandlerHelpers.ReadFully(request), out newAssetID);
 
                 string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["item_id"] = UUID.Zero;
                 map["state"] = "complete";
-                res = OSDParser.SerializeLLSDXmlString(map);
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
-                return res;
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
         }
 
@@ -487,31 +465,22 @@ namespace OpenSim.Services.CapsService
             asset.ID = newAssetID;
         }
 
-        public Hashtable ProcessGetMesh(Hashtable request)
+        public byte[] ProcessGetMesh(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 400; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "Request wasn't what was expected";
+            httpResponse.ContentType = "text/plain";
 
             string meshStr = string.Empty;
 
-            if (request.ContainsKey("mesh_id"))
-                meshStr = request["mesh_id"].ToString();
+
+            if (httpRequest.QueryString["mesh_id"] != null)
+                meshStr = httpRequest.QueryString["mesh_id"];
 
 
             UUID meshID = UUID.Zero;
             if (!String.IsNullOrEmpty(meshStr) && UUID.TryParse(meshStr, out meshID))
             {
                 if (m_assetService == null)
-                {
-                    responsedata["int_response_code"] = 404; //501; //410; //404;
-                    responsedata["content_type"] = "text/plain";
-                    responsedata["keepalive"] = false;
-                    responsedata["str_response_string"] = "The asset service is unavailable.  So is your mesh.";
-                    return responsedata;
-                }
+                    return Encoding.UTF8.GetBytes("The asset service is unavailable.  So is your mesh.");
 
                 // Only try to fetch locally cached textures. Misses are redirected
                 AssetBase mesh = m_assetService.GetCached(meshID.ToString());
@@ -519,18 +488,16 @@ namespace OpenSim.Services.CapsService
                 {
                     if (mesh.Type == (SByte)AssetType.Mesh)
                     {
-                        responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
-                        responsedata["content_type"] = "application/vnd.ll.mesh";
-                        responsedata["int_response_code"] = 200;
+                        httpResponse.StatusCode = 200;
+                        httpResponse.ContentType = "application/vnd.ll.mesh";
+                        return mesh.Data;
                     }
                     // Optionally add additional mesh types here
                     else
                     {
-                        responsedata["int_response_code"] = 404; //501; //410; //404;
-                        responsedata["content_type"] = "text/plain";
-                        responsedata["keepalive"] = false;
-                        responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
-                        return responsedata;
+                        httpResponse.StatusCode = 404; //501; //410; //404;
+                        httpResponse.ContentType = "text/plain";
+                        return Encoding.UTF8.GetBytes("Unfortunately, this asset isn't a mesh.");
                     }
                 }
                 else
@@ -540,34 +507,31 @@ namespace OpenSim.Services.CapsService
                     {
                         if (mesh.Type == (SByte)AssetType.Mesh)
                         {
-                            responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
-                            responsedata["content_type"] = "application/vnd.ll.mesh";
-                            responsedata["int_response_code"] = 200;
+                            httpResponse.StatusCode = 200;
+                            httpResponse.ContentType = "application/vnd.ll.mesh";
+                            return mesh.Data;
                         }
                         // Optionally add additional mesh types here
                         else
                         {
-                            responsedata["int_response_code"] = 404; //501; //410; //404;
-                            responsedata["content_type"] = "text/plain";
-                            responsedata["keepalive"] = false;
-                            responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
-                            return responsedata;
+                            httpResponse.StatusCode = 404; //501; //410; //404;
+                            httpResponse.ContentType = "text/plain";
+                            return Encoding.UTF8.GetBytes("Unfortunately, this asset isn't a mesh.");
                         }
                     }
 
                     else
                     {
-                        responsedata["int_response_code"] = 404; //501; //410; //404;
-                        responsedata["content_type"] = "text/plain";
-                        responsedata["keepalive"] = false;
-                        responsedata["str_response_string"] = "Your Mesh wasn't found.  Sorry!";
-                        return responsedata;
+                        httpResponse.StatusCode = 404; //501; //410; //404;
+                        httpResponse.ContentType = "text/plain";
+                        return Encoding.UTF8.GetBytes("Your Mesh wasn't found.  Sorry!");
                     }
                 }
 
             }
 
-            return responsedata;
+            httpResponse.StatusCode = 404;
+            return Encoding.UTF8.GetBytes("Failed to find mesh");
         }
 
         #endregion

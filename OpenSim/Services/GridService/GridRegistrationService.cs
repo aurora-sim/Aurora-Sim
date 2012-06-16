@@ -765,7 +765,7 @@ namespace OpenSim.Services.GridService
 
             #region Remote Handlers
 
-            public class RemoteLoadBalancingPostHandler : BaseStreamHandler
+            public class RemoteLoadBalancingPostHandler : BaseRequestHandler
             {
                 private readonly GridRegistrationService m_service;
                 private readonly string m_password;

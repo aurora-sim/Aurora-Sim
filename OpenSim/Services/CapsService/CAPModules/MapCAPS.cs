@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -56,23 +58,16 @@ namespace OpenSim.Services.CapsService
             if (config != null)
                 m_allowCapsMessage = config.GetBoolean("AllowCapsMessage", m_allowCapsMessage);
 
-#if (!ISWIN)
-            RestMethod method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
             {
-                return MapLayerRequest(request, path, param, httpRequest, httpResponse, m_service.AgentID);
+                return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse, m_service.AgentID);
             };
-#else
-            RestMethod method =
-                (request, path, param, httpRequest, httpResponse) =>
-                MapLayerRequest(request, path, param, httpRequest, httpResponse,
-                                m_service.AgentID);
-#endif
             m_service.AddStreamHandler("MapLayer",
-                                       new RestStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
+                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
                                                              method));
             m_service.AddStreamHandler("MapLayerGod",
-                                       new RestStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
+                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
                                                              method));
         }
 
@@ -98,8 +93,7 @@ namespace OpenSim.Services.CapsService
         /// <param name = "agentID"></param>
         /// <param name = "caps"></param>
         /// <returns></returns>
-        public string MapLayerRequest(string request, string path, string param,
-                                      OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
+        public byte[] MapLayerRequest(string request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
             int bottom = (m_service.RegionY/Constants.RegionSize) - m_mapDistance;
             int top = (m_service.RegionY/Constants.RegionSize) + m_mapDistance;
@@ -138,8 +132,7 @@ namespace OpenSim.Services.CapsService
                 mapBlocksData.Add(block.ToOSD());
             }
             OSDMap response = MapLayerResponce(layerData, mapBlocksData, flags);
-            string resp = OSDParser.SerializeLLSDXmlString(response);
-            return resp;
+            return OSDParser.SerializeLLSDXmlBytes(response);
         }
 
         protected MapBlockData MapBlockFromGridRegion(GridRegion r, int flag)

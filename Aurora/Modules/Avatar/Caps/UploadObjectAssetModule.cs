@@ -27,7 +27,9 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using System.Reflection;
+using System.Text;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
@@ -87,16 +89,13 @@ namespace Aurora.Modules.Caps
         {
             OSDMap retVal = new OSDMap();
             retVal["UploadObjectAsset"] = CapsUtil.CreateCAPS("UploadObjectAsset", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
-                                                       delegate(Hashtable m_dhttpMethod)
+
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UploadObjectAsset"],
+                                                       delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return ProcessAdd(m_dhttpMethod, agentID);
+                                                           return ProcessAdd(request, httpResponse, agentID);
                                                        }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UploadObjectAsset"],
-                                                        m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
@@ -107,19 +106,14 @@ namespace Aurora.Modules.Caps
         /// <param name = "AgentId"></param>
         /// <param name = "cap"></param>
         /// <returns></returns>
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId)
+        public byte[] ProcessAdd(Stream request, OSHttpResponse response, UUID AgentId)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 400; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "Request wasn't what was expected";
             IScenePresence avatar;
 
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
-                return responsedata;
+                return new byte[0];
 
-            OSDMap r = (OSDMap) OSDParser.Deserialize((string) request["requestbody"]);
+            OSDMap r = (OSDMap) OSDParser.Deserialize(request);
             UploadObjectAssetMessage message = new UploadObjectAssetMessage();
             try
             {
@@ -133,13 +127,8 @@ namespace Aurora.Modules.Caps
 
             if (message == null)
             {
-                responsedata["int_response_code"] = 400; //501; //410; //404;
-                responsedata["content_type"] = "text/plain";
-                responsedata["keepalive"] = false;
-                responsedata["str_response_string"] =
-                    "<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>";
-
-                return responsedata;
+                response.StatusCode = 400; //501; //410; //404;
+                return Encoding.UTF8.GetBytes("<llsd><map><key>error</key><string>Error parsing Object</string></map></llsd>");
             }
 
             Vector3 pos = avatar.AbsolutePosition + (Vector3.UnitX*avatar.Rotation);
@@ -308,7 +297,7 @@ namespace Aurora.Modules.Caps
                     //Stop now then
                     avatar.ControllingClient.SendAlertMessage("You do not have permission to rez objects here: " +
                                                               reason);
-                    return responsedata;
+                    return new byte[0];
                 }
                 allparts[i] = grp;
             }
@@ -322,13 +311,9 @@ namespace Aurora.Modules.Caps
             pos = m_scene.SceneGraph.GetNewRezLocation(Vector3.Zero, rootpos, UUID.Zero, rot, 1, 1, true,
                                                        allparts[0].GroupScale(), false);
 
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>",
-                                                                ConvertUintToBytes(allparts[0].LocalId));
-
-            return responsedata;
+            OSDMap map = new OSDMap();
+            map["local_id"] = allparts[0].LocalId;
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         private string ConvertUintToBytes(uint val)

@@ -28,8 +28,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -721,30 +723,20 @@ namespace Aurora.Modules.Chat
             OSDMap retVal = new OSDMap();
             retVal["ChatSessionRequest"] = CapsUtil.CreateCAPS("ChatSessionRequest", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ChatSessionRequest"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ChatSessionRequest"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return ProcessChatSessionRequest(m_dhttpMethod, agentID);
+                                                          return ProcessChatSessionRequest(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ChatSessionRequest"],
-                                                        m_dhttpMethod =>
-                                                        ProcessChatSessionRequest(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable ProcessChatSessionRequest(Hashtable mDhttpMethod, UUID Agent)
+        private byte[] ProcessChatSessionRequest(Stream request, UUID Agent)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = findScene(Agent).EventManager.TriggerChatSessionRequest(Agent, rm);
-            return responsedata;
+            return Encoding.UTF8.GetBytes(findScene(Agent).EventManager.TriggerChatSessionRequest(Agent, rm));
         }
 
         private string OnChatSessionRequest(UUID Agent, OSDMap rm)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -57,16 +58,18 @@ namespace Aurora.Modules.WindlightSettings
             retVal["EnvironmentSettings"] = CapsUtil.CreateCAPS("EnvironmentSettings", "");
 #if (!ISWIN)
             //Sets the windlight settings
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EnvironmentSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["EnvironmentSettings"],
+                                                      delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return SetEnvironment(m_dhttpMethod, agentID);
+                                                          return SetEnvironment(request, agentID);
                                                       }));
             //Sets the windlight settings
-            server.AddStreamHandler(new RestHTTPHandler("GET", retVal["EnvironmentSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("GET", retVal["EnvironmentSettings"],
+                                                      delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return EnvironmentSettings(m_dhttpMethod, agentID);
+                                                          return EnvironmentSettings(request, agentID);
                                                       }));
 #else
             //Sets the windlight settings
@@ -79,20 +82,14 @@ namespace Aurora.Modules.WindlightSettings
             return retVal;
         }
 
-        private Hashtable SetEnvironment(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] SetEnvironment(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
-                return responsedata; //They don't exist
+                return new byte[0]; //They don't exist
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
-                m_info = OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+                m_info = OSDParser.DeserializeLLSDXml(request);
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                     gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
@@ -102,20 +99,14 @@ namespace Aurora.Modules.WindlightSettings
             else
                 SP.ControllingClient.SendAlertMessage(
                     "You don't have the correct permissions to set the Windlight Settings");
-            return responsedata;
+            return new byte[0];
         }
 
-        private Hashtable EnvironmentSettings(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] EnvironmentSettings(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
-                return responsedata; //They don't exist
+                return new byte[0]; //They don't exist
 
             if (m_info == null)
             {
@@ -128,8 +119,8 @@ namespace Aurora.Modules.WindlightSettings
                 }
             }
             if (m_info != null)
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(m_info);
-            return responsedata;
+                return OSDParser.SerializeLLSDXmlBytes(m_info);
+            return new byte[0];
         }
 
         #region Nested type: DatabaseWrapper

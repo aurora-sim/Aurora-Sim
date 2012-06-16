@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
@@ -145,47 +146,29 @@ namespace Aurora.Modules.SimConsole
             OSDMap retVal = new OSDMap();
             retVal["SimConsoleAsync"] = CapsUtil.CreateCAPS("SimConsoleAsync", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["SimConsoleAsync"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return SimConsoleAsyncResponder(m_dhttpMethod, agentID);
+                                                          return SimConsoleAsyncResponder(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["SimConsoleAsync"],
-                                                        m_dhttpMethod =>
-                                                        SimConsoleAsyncResponder(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable SimConsoleAsyncResponder(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] SimConsoleAsyncResponder(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = findScene(agentID).GetScenePresence(agentID);
             if (SP == null)
-                return responsedata; //They don't exist
+                return new byte[0]; //They don't exist
 
-            OSD rm = OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSD rm = OSDParser.DeserializeLLSDXml(request);
 
             string message = rm.AsString();
 
             //Is a god, or they authenticated to the server and have write access
             if (AuthenticateUser(SP, message) && CanWrite(SP.UUID))
-            {
                 FireConsole(message);
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString("");
-            }
-            else
-            {
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString("");
-            }
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes("");
         }
 
         private void FireConsole(string message)

@@ -356,7 +356,7 @@ namespace Aurora.Modules
     /// <summary>
     ///   This class deals with incoming requests (secure and insecure) from other hosts
     /// </summary>
-    public class IWCIncomingConnections : BaseStreamHandler
+    public class IWCIncomingConnections : BaseRequestHandler
     {
         private readonly InterWorldCommunications IWC;
 

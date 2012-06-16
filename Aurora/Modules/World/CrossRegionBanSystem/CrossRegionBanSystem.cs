@@ -238,7 +238,7 @@ namespace Aurora.Modules.CrossRegionBanSystem
         }
     }
 
-    public class CRBSIncoming : BaseStreamHandler
+    public class CRBSIncoming : BaseRequestHandler
     {
         private readonly CrossRegionBanSystem CRBS;
 

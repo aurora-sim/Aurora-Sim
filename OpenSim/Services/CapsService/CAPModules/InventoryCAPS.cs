@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -57,68 +58,51 @@ namespace OpenSim.Services.CapsService
             m_inventoryService = service.Registry.RequestModuleInterface<IInventoryService>();
             m_libraryService = service.Registry.RequestModuleInterface<ILibraryService>();
 
-#if (!ISWIN)
-            RestBytesMethod method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            HttpServerHandle method = delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
             {
                 return HandleWebFetchInventoryDescendents(request, m_service.AgentID);
             };
-#else
-            RestBytesMethod method =
-                (request, path, param, httpRequest, httpResponse) =>
-                HandleWebFetchInventoryDescendents(request, m_service.AgentID);
-#endif
             service.AddStreamHandler("WebFetchInventoryDescendents",
-                                     new RestBytesStreamHandler("POST",
+                                     new GenericStreamHandler("POST",
                                                                 service.CreateCAPS("WebFetchInventoryDescendents", ""),
                                                                 method));
             service.AddStreamHandler("FetchInventoryDescendents",
-                                     new RestBytesStreamHandler("POST",
+                                     new GenericStreamHandler("POST",
                                                                 service.CreateCAPS("FetchInventoryDescendents", ""),
                                                                 method));
             service.AddStreamHandler("FetchInventoryDescendents2",
-                                     new RestBytesStreamHandler("POST",
+                                     new GenericStreamHandler("POST",
                                                                 service.CreateCAPS("FetchInventoryDescendents2", ""),
                                                                 method));
 
-#if (!ISWIN)
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            method = delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
             {
                 return HandleFetchLibDescendents(request, m_service.AgentID);
             };
-#else
-            method =
-                (request, path, param, httpRequest, httpResponse) =>
-                HandleFetchLibDescendents(request, m_service.AgentID);
-#endif
             service.AddStreamHandler("FetchLibDescendents",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLibDescendents", ""),
                                                                 method));
             service.AddStreamHandler("FetchLibDescendents2",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLibDescendents2", ""),
                                                                 method));
 
-#if (!ISWIN)
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            method = delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
             {
                 return HandleFetchInventory(request, m_service.AgentID);
             };
-#else
-            method =
-                (request, path, param, httpRequest, httpResponse) => HandleFetchInventory(request, m_service.AgentID);
-#endif
             service.AddStreamHandler("FetchInventory",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchInventory", ""),
                                                                 method));
             service.AddStreamHandler("FetchInventory2",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
                                                                 method));
 
 #if (!ISWIN)
-            method = delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            method = delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
             {
                 return HandleFetchLib(request, m_service.AgentID);
             };
@@ -126,18 +110,18 @@ namespace OpenSim.Services.CapsService
             method = (request, path, param, httpRequest, httpResponse) => HandleFetchLib(request, m_service.AgentID);
 #endif
             service.AddStreamHandler("FetchLib",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                                 method));
             service.AddStreamHandler("FetchLib2",
-                                     new RestBytesStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
+                                     new GenericStreamHandler("POST", service.CreateCAPS("FetchLib2", ""),
                                                                 method));
 
             service.AddStreamHandler("NewFileAgentInventory",
-                                     new RestStreamHandler("POST",
+                                     new GenericStreamHandler("POST",
                                                            service.CreateCAPS("NewFileAgentInventory", m_newInventory),
                                                            NewAgentInventoryRequest));
             service.AddStreamHandler("NewFileAgentInventoryVariablePrice",
-                                     new RestStreamHandler("POST",
+                                     new GenericStreamHandler("POST",
                                                            service.CreateCAPS("NewFileAgentInventoryVariablePrice", ""),
                                                            NewAgentInventoryRequestVariablePrice));
 
@@ -175,7 +159,7 @@ namespace OpenSim.Services.CapsService
 
         #region Inventory
 
-        public byte[] HandleWebFetchInventoryDescendents(string request, UUID AgentID)
+        public byte[] HandleWebFetchInventoryDescendents(Stream request, UUID AgentID)
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             OSDArray foldersrequested = (OSDArray) map["folders"];
@@ -200,7 +184,7 @@ namespace OpenSim.Services.CapsService
             return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public byte[] HandleFetchLibDescendents(string request, UUID AgentID)
+        public byte[] HandleFetchLibDescendents(Stream request, UUID AgentID)
         {
             try
             {
@@ -223,7 +207,7 @@ namespace OpenSim.Services.CapsService
             return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public byte[] HandleFetchInventory(string request, UUID AgentID)
+        public byte[] HandleFetchInventory(Stream request, UUID AgentID)
         {
             try
             {
@@ -269,7 +253,7 @@ namespace OpenSim.Services.CapsService
             return OSDParser.SerializeLLSDXmlBytes(rmap);
         }
 
-        public byte[] HandleFetchLib(string request, UUID AgentID)
+        public byte[] HandleFetchLib(Stream request, UUID AgentID)
         {
             try
             {
@@ -321,8 +305,8 @@ namespace OpenSim.Services.CapsService
         /// </summary>
         /// <param name = "llsdRequest"></param>
         /// <returns></returns>
-        public string NewAgentInventoryRequest(string request, string path, string param,
-                                               OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] NewAgentInventoryRequest(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
@@ -331,14 +315,13 @@ namespace OpenSim.Services.CapsService
                 map = new OSDMap();
                 map["uploader"] = "";
                 map["state"] = "error";
-                return OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
-            return OSDParser.SerializeLLSDXmlString(InternalNewAgentInventoryRequest(map,
-                path, param, httpRequest, httpResponse));
+            return OSDParser.SerializeLLSDXmlBytes(InternalNewAgentInventoryRequest(map, httpRequest, httpResponse));
         }
 
-        public string NewAgentInventoryRequestVariablePrice(string request, string path, string param,
-                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] NewAgentInventoryRequestVariablePrice(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             string asset_type = map["asset_type"].AsString();
@@ -349,14 +332,14 @@ namespace OpenSim.Services.CapsService
                 map = new OSDMap();
                 map["uploader"] = "";
                 map["state"] = "error";
-                return OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
-            OSDMap resp = InternalNewAgentInventoryRequest(map, path, param, httpRequest, httpResponse);
+            OSDMap resp = InternalNewAgentInventoryRequest(map, httpRequest, httpResponse);
 
             resp["resource_cost"] = resourceCost;
             resp["upload_price"] = charge; //Set me if you want to use variable cost stuff
 
-            return OSDParser.SerializeLLSDXmlString(map);
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         private bool ChargeUser(string asset_type, OSDMap map)
@@ -398,8 +381,7 @@ namespace OpenSim.Services.CapsService
             return true;
         }
 
-        private OSDMap InternalNewAgentInventoryRequest(OSDMap map, string path, string param,
-                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        private OSDMap InternalNewAgentInventoryRequest(OSDMap map, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             string asset_type = map["asset_type"].AsString();
             //MainConsole.Instance.Info("[CAPS]: NewAgentInventoryRequest Request is: " + map.ToString());
@@ -423,7 +405,7 @@ namespace OpenSim.Services.CapsService
                                   asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
                                   group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
-                                       new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                       new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
             string uploaderURL = m_service.HostUri + uploadpath;
             map = new OSDMap();
@@ -463,7 +445,7 @@ namespace OpenSim.Services.CapsService
                                   asset_type, uploadpath, "Upload" + uploaderPath, m_service, this, everyone_mask,
                                   group_mask, next_owner_mask);
             m_service.AddStreamHandler("Upload" + uploaderPath,
-                                       new BinaryStreamHandler("POST", uploadpath, uploader.uploaderCaps));
+                                       new GenericStreamHandler("POST", uploadpath, uploader.uploaderCaps));
 
             string uploaderURL = m_service.HostUri + uploadpath;
             map = new OSDMap();
@@ -755,23 +737,23 @@ namespace OpenSim.Services.CapsService
             ///<param name = "path"></param>
             ///<param name = "param"></param>
             ///<returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
+            public byte[] uploaderCaps(string path, Stream request,
+                                           OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 UUID inv = inventoryItemID;
+                byte[] data = HttpServerHandlerHelpers.ReadFully(request);
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
                 newAssetID = m_invCaps.UploadCompleteHandler(m_assetName, m_assetDes, newAssetID, inv, parentFolder,
                                                              data, m_invType, m_assetType, m_everyone_mask, m_group_mask,
                                                              m_next_owner_mask);
 
-                string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["new_inventory_item"] = inv;
                 map["state"] = "complete";
-                res = OSDParser.SerializeLLSDXmlString(map);
 
-                return res;
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
         }
 
