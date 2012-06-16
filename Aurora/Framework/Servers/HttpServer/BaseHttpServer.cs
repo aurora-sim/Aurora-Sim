@@ -483,16 +483,17 @@ namespace Aurora.Framework.Servers.HttpServer
                     //
                     try
                     {
-                        response.ReuseContext = false;
+                        response.ReuseContext = true;
                         response.Send();
                     }
                     catch (SocketException e)
                     {
-                        // This has to be here to prevent a Linux/Mono crash
+                        response.ReuseContext = false; // This has to be here to prevent a Linux/Mono crash
                         MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
                     }
                     catch (IOException e)
                     {
+                        response.ReuseContext = false; // This has to be here to prevent a Linux/Mono crash
                         MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                     }
                     //This makes timeouts VERY bad if enabled
