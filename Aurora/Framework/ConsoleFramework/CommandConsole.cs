@@ -231,7 +231,7 @@ namespace Aurora.Framework
 #else
                                 foreach (CommandDelegate fn in commands[com].fn.Where(fn => fn != null))
                                 {
-                                    cmdList = new List<string>(command);
+                                    cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
@@ -278,11 +278,11 @@ namespace Aurora.Framework
                                     }
                                 }
 #else
-                                foreach (KeyValuePair<string, CommandInfo> cmd in from cmd in commands let cmdSplit = cmd.Key.Split(' ') where cmdSplit.Length == command.Length let same = !command.Where((t, k) => !cmdSplit[k].StartsWith(t)).Any() where same select cmd)
+                                foreach (KeyValuePair<string, CommandInfo> cmd in from cmd in commands let cmdSplit = cmd.Key.Split(' ') where cmdSplit.Length == commandPath.Length let same = !commandPath.Where((t, k) => !cmdSplit[k].StartsWith(t)).Any() where same select cmd)
                                 {
                                     foreach (CommandDelegate fn in cmd.Value.fn.Where(fn => fn != null))
                                     {
-                                        cmdList = new List<string>(command);
+                                        cmdList = new List<string>(commandPath);
                                         cmdList.AddRange(commandOptions);
                                         fn(cmdList.ToArray());
                                     }
@@ -335,19 +335,16 @@ namespace Aurora.Framework
                             if (commands.ContainsKey(cmdToExecute))
                             {
 #if (!ISWIN)
-                                foreach (CommandDelegate fn in commands[cmdToExecute].fn)
+                                foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
-                                    if (fn != null)
-                                    {
-                                        cmdList = new List<string>(commandPath);
-                                        cmdList.AddRange(commandOptions);
-                                        fn(cmdList.ToArray());
-                                    }
+                                    cmdList = new List<string>(commandPath);
+                                    cmdList.AddRange(commandOptions);
+                                    fn(cmdList.ToArray());
                                 }
 #else
                                 foreach (CommandDelegate fn in commands[cmdToExecute].fn.Where(fn => fn != null))
                                 {
-                                    cmdList = new List<string>(command);
+                                    cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
                                     fn(cmdList.ToArray());
                                 }
