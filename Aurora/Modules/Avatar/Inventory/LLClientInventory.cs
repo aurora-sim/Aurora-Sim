@@ -62,6 +62,7 @@ namespace Aurora.Modules.Inventory
         protected IScene m_scene;
 
         protected ListCombiningTimedSaving<InventoryItemBase> _moveInventoryItemQueue = new ListCombiningTimedSaving<InventoryItemBase>();
+        protected ListCombiningTimedSaving<AddInventoryItemStore> _addInventoryItemQueue = new ListCombiningTimedSaving<AddInventoryItemStore>();
 
         #endregion
 
@@ -82,6 +83,7 @@ namespace Aurora.Modules.Inventory
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
 
             _moveInventoryItemQueue.Start(2, _saveMovedItems);
+            _addInventoryItemQueue.Start(0.5, _saveAddedItems);
         }
 
         public void RegionLoaded (IScene scene)
@@ -526,22 +528,13 @@ namespace Aurora.Modules.Inventory
                                              BasePermissions = baseMask,
                                              CreationDate = creationDate
                                          };
-            if (AddInventoryItem(item))
+            AddInventoryItem(item, () =>
             {
-                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory> ();
+                IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
                 if (avFactory != null)
-                    avFactory.NewAppearanceLink (item);
+                    avFactory.NewAppearanceLink(item);
                 remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
-            }
-            else
-            {
-                IDialogModule module = m_scene.RequestModuleInterface<IDialogModule>();
-                if (module != null)
-                    module.SendAlertToUser(remoteClient, "Failed to create item");
-                MainConsole.Instance.WarnFormat(
-                    "Failed to add item for {0} in CreateNewInventoryItem!",
-                     remoteClient.Name);
-            }
+            });
         }
 
         /// <summary>
@@ -726,6 +719,17 @@ namespace Aurora.Modules.Inventory
                 MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to move items for user " + agentID);
         }
 
+        private void _saveAddedItems(UUID agentID, List<AddInventoryItemStore> itemsToAdd)
+        {
+            foreach (AddInventoryItemStore item in itemsToAdd)
+            {
+                if (!m_scene.InventoryService.AddItem(item.Item))
+                    MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to add items for user " + agentID);
+                else if(item.Complete != null)
+                    item.Complete();
+            }
+        }
+        
         /// <summary>
         /// Copy an inventory item in the user's inventory
         /// </summary>
@@ -1347,7 +1351,16 @@ namespace Aurora.Modules.Inventory
         /// Add the given inventory item to a user's inventory.
         /// </summary>
         /// <param name="item">The item to add</param>
-        public bool AddInventoryItem(InventoryItemBase item)
+        public void AddInventoryItem(InventoryItemBase item)
+        {
+            AddInventoryItem(item, null);
+        }
+
+        /// <summary>
+        /// Add the given inventory item to a user's inventory.
+        /// </summary>
+        /// <param name="item">The item to add</param>
+        public void AddInventoryItem(InventoryItemBase item, NoParam onSuccess)
         {
             if (UUID.Zero == item.Folder)
             {
@@ -1368,18 +1381,18 @@ namespace Aurora.Modules.Inventory
                         MainConsole.Instance.WarnFormat(
                             "[LLClientInventory]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
                             item.Owner, item.Name);
-                        return false;
+                        return;
                     }
                 }
             }
 
-            if (m_scene.InventoryService.AddItem(item))
-                return true;
-            MainConsole.Instance.WarnFormat(
-                "[LLClientInventory]: Agent {0} could not add item {1} {2}",
-                item.Owner, item.Name, item.ID);
+            _addInventoryItemQueue.Add(item.Owner, new List<AddInventoryItemStore>() { new AddInventoryItemStore() { Item = item, Complete = onSuccess } });
+        }
 
-            return false;
+        protected class AddInventoryItemStore
+        {
+            public InventoryItemBase Item;
+            public NoParam Complete;
         }
 
         /// <summary>
@@ -1390,8 +1403,7 @@ namespace Aurora.Modules.Inventory
         /// in which the item is to be placed.</param>
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
-            if(AddInventoryItem(item))
-                remoteClient.SendInventoryItemCreateUpdate(item, 0);
+            AddInventoryItem(item, () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
         }
 
         /// <summary>
@@ -1590,23 +1602,20 @@ namespace Aurora.Modules.Inventory
                 itemCopy.SalePrice = item.SalePrice;
                 itemCopy.SaleType = item.SaleType;
 
-                if (AddInventoryItem (itemCopy))
-                {
-                    IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule> ();
-                    if (invAccess != null)
-                        invAccess.TransferInventoryAssets (itemCopy, senderId, recipient);
-                }
-                else
-                    return null;
-
-                if (!m_scene.Permissions.BypassPermissions())
-                {
-                    if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                AddInventoryItem(itemCopy, () =>
                     {
-                        List<UUID> items = new List<UUID> {item.ID};
-                        m_scene.InventoryService.DeleteItems(senderId, items);
-                    }
-                }
+                        IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                        if (invAccess != null)
+                            invAccess.TransferInventoryAssets(itemCopy, senderId, recipient);
+                        if (!m_scene.Permissions.BypassPermissions())
+                        {
+                            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                            {
+                                List<UUID> items = new List<UUID> { item.ID };
+                                m_scene.InventoryService.DeleteItems(senderId, items);
+                            }
+                        }
+                    });
 
                 return itemCopy;
             }
