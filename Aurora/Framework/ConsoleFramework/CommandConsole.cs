@@ -250,7 +250,6 @@ namespace Aurora.Framework
                             }
                             else
                             {
-#if (!ISWIN)
                                 foreach (KeyValuePair<string, CommandInfo> cmd in commands)
                                 {
                                     string[] cmdSplit = cmd.Key.Split(' ');
@@ -277,18 +276,6 @@ namespace Aurora.Framework
                                         }
                                     }
                                 }
-#else
-                                foreach (KeyValuePair<string, CommandInfo> cmd in from cmd in commands let cmdSplit = cmd.Key.Split(' ') where cmdSplit.Length == commandPath.Length let same = !commandPath.Where((t, k) => !cmdSplit[k].StartsWith(t)).Any() where same select cmd)
-                                {
-                                    foreach (CommandDelegate fn in cmd.Value.fn.Where(fn => fn != null))
-                                    {
-                                        cmdList = new List<string>(commandPath);
-                                        cmdList.AddRange(commandOptions);
-                                        fn(cmdList.ToArray());
-                                    }
-                                    return new string[0];
-                                }
-#endif
                             }
                         }
                     }
