@@ -132,7 +132,6 @@ namespace Aurora.Modules.Voice
         {
             OSDMap retVal = new OSDMap();
             retVal["ProvisionVoiceAccountRequest"] = CapsUtil.CreateCAPS("ProvisionVoiceAccountRequest", "");
-#if (!ISWIN)
             caps.AddStreamHandler(new GenericStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
                                                        delegate(string path, Stream request,
                                                             OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -146,19 +145,6 @@ namespace Aurora.Modules.Voice
                                                        {
                                                            return ParcelVoiceInfoRequest(scene, agentID);
                                                        }));
-#else
-            caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ProvisionVoiceAccountRequest"],
-                                                        (request, path, param, httpRequest, httpResponse) =>
-                                                        ProvisionVoiceAccountRequest(scene, request, path,
-                                                                                     param,
-                                                                                     agentID)));
-            retVal["ParcelVoiceInfoRequest"] = CapsUtil.CreateCAPS("ParcelVoiceInfoRequest", "");
-            caps.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelVoiceInfoRequest"],
-                                                        (request, path, param, httpRequest, httpResponse) =>
-                                                        ParcelVoiceInfoRequest(scene, request, path,
-                                                                               param,
-                                                                               agentID)));
-#endif
 
             return retVal;
         }

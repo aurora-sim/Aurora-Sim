@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -223,8 +224,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             public changes what;
         }
 
-        public Aurora.Framework.LocklessQueue<AODEchangeitem> ChangesQueue =
-            new Aurora.Framework.LocklessQueue<AODEchangeitem>();
+        public ConcurrentQueue<AODEchangeitem> ChangesQueue = new ConcurrentQueue<AODEchangeitem>();
 
         private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
 
@@ -1955,7 +1955,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private bool GetNextChange(out AODEchangeitem item)
         {
-            return ChangesQueue.Dequeue(out item);
+            return ChangesQueue.TryDequeue(out item);
         }
 
         /// <summary>

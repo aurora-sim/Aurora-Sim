@@ -32,9 +32,6 @@ using System.Reflection;
 using Nini.Config;
 using log4net.Core;
 using System.Threading;
-#if NET_4_0
-using System.Threading.Tasks;
-#endif
 
 namespace Aurora.Framework
 {

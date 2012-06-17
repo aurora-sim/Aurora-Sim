@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using OpenMetaverse;
@@ -46,17 +47,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <summary>
         ///   Holds information about pending acknowledgements
         /// </summary>
-        private readonly LocklessQueue<PendingAck> m_pendingAcknowledgements = new LocklessQueue<PendingAck>();
+        private readonly ConcurrentQueue<PendingAck> m_pendingAcknowledgements = new ConcurrentQueue<PendingAck>();
 
         /// <summary>
         ///   Holds packets that need to be added to the unacknowledged list
         /// </summary>
-        private readonly LocklessQueue<OutgoingPacket> m_pendingAdds = new LocklessQueue<OutgoingPacket>();
+        private readonly ConcurrentQueue<OutgoingPacket> m_pendingAdds = new ConcurrentQueue<OutgoingPacket>();
 
         /// <summary>
         ///   Holds information about pending removals
         /// </summary>
-        private readonly LocklessQueue<uint> m_pendingRemoves = new LocklessQueue<uint>();
+        private readonly ConcurrentQueue<uint> m_pendingRemoves = new ConcurrentQueue<uint>();
 
         /// <summary>
         ///   Add an unacked packet to the collection

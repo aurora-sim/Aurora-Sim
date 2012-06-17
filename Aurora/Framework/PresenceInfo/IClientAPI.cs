@@ -1439,7 +1439,6 @@ namespace Aurora.Framework
         void SendAvatarDataImmediate(IEntity avatar);
         void SendAvatarUpdate(IEnumerable<EntityUpdate> updates);
         void SendPrimUpdate(IEnumerable<EntityUpdate> updates);
-        void FlushPrimUpdates();
 
         void SendInventoryFolderDetails(UUID ownerID, UUID folderID, List<InventoryItemBase> items,
                                         List<InventoryFolderBase> folders, int version, bool fetchFolders,

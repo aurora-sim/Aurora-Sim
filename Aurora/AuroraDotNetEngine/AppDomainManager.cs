@@ -203,27 +203,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             PermissionSet setIntersection = new PermissionSet(PermissionState.Unrestricted);
             AppDomain restrictedDomain = null;
 
-#if NET_4_0
-            SecurityZone zone = SecurityZone.MyComputer;
-            try
-            {
-                zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
-            }
-            catch
-            {
-                zone = SecurityZone.MyComputer;
-            }
-
-            Evidence ev = new Evidence();
-            ev.AddHostEvidence(new Zone(zone));
-            setIntersection = SecurityManager.GetStandardSandbox(ev);
-            setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
-            setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
-            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
-            
-            // create an AppDomain where this policy will be in effect
-            restrictedDomain = AppDomain.CreateDomain(appDomainName, ev, ads, setIntersection, null);
-#else
+#if NET_3_5
 
             PolicyStatement emptyPolicy = new PolicyStatement(new PermissionSet(PermissionState.None));
             UnionCodeGroup policyRoot = new UnionCodeGroup(new AllMembershipCondition(), emptyPolicy);
@@ -274,6 +254,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             // create an AppDomain where this policy will be in effect
             restrictedDomain = AppDomain.CreateDomain(appDomainName, null, ads);
             restrictedDomain.SetAppDomainPolicy(appDomainLevel);
+#else
+            SecurityZone zone = SecurityZone.MyComputer;
+            try
+            {
+                zone = (SecurityZone)Enum.Parse(typeof(SecurityZone), permissionSetName);
+            }
+            catch
+            {
+                zone = SecurityZone.MyComputer;
+            }
+
+            Evidence ev = new Evidence();
+            ev.AddHostEvidence(new Zone(zone));
+            setIntersection = SecurityManager.GetStandardSandbox(ev);
+            setIntersection.AddPermission(new System.Net.SocketPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Net.WebPermission(PermissionState.Unrestricted));
+            setIntersection.AddPermission(new System.Security.Permissions.SecurityPermission(PermissionState.Unrestricted));
+
+            // create an AppDomain where this policy will be in effect
+            restrictedDomain = AppDomain.CreateDomain(appDomainName, ev, ads, setIntersection, null);
 #endif
 
             return restrictedDomain;

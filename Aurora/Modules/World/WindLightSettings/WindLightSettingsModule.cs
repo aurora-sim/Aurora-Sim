@@ -214,7 +214,6 @@ namespace Aurora.Modules.WindlightSettings
             OSDMap retVal = new OSDMap();
             retVal["DispatchWindLightSettings"] = CapsUtil.CreateCAPS("DispatchWindLightSettings", "");
             //Sets the windlight settings
-#if (!ISWIN)
             server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchWindLightSettings"],
                                                       delegate(string path, Stream request,
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -222,11 +221,6 @@ namespace Aurora.Modules.WindlightSettings
                                                           return DispatchWindLightSettings(path, request, httpRequest,
                                                               httpResponse, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
-                                                        m_dhttpMethod =>
-                                                        DispatchWindLightSettings(m_dhttpMethod, agentID)));
-#endif
 
             retVal["RetrieveWindLightSettings"] = CapsUtil.CreateCAPS("RetrieveWindLightSettings", "");
             //Retrieves the windlight settings for a specifc parcel or region

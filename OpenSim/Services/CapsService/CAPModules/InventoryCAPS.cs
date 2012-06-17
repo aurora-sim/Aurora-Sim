@@ -100,15 +100,11 @@ namespace OpenSim.Services.CapsService
                                      new GenericStreamHandler("POST", service.CreateCAPS("FetchInventory2", ""),
                                                                 method));
 
-#if (!ISWIN)
             method = delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                                     OSHttpResponse httpResponse)
             {
                 return HandleFetchLib(request, m_service.AgentID);
             };
-#else
-            method = (request, path, param, httpRequest, httpResponse) => HandleFetchLib(request, m_service.AgentID);
-#endif
             service.AddStreamHandler("FetchLib",
                                      new GenericStreamHandler("POST", service.CreateCAPS("FetchLib", ""),
                                                                 method));

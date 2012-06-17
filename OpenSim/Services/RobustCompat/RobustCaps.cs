@@ -346,22 +346,12 @@ namespace OpenSim.Services.RobustCompat
         private void AddCapsHandler(AgentCircuitData circuit)
         {
             //Used by incoming (home) agents from HG
-#if (!ISWIN)
             MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
                 delegate(string path, Stream request, OSHttpRequest httpRequest,
                                                             OSHttpResponse httpResponse)
                     {
                         return CapsRequest(circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
                     }));
-#else
-            MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                                                                       (request, path, param2, httpRequest, httpResponse)
-                                                                       =>
-                                                                       CapsRequest(request, path, param2, httpRequest,
-                                                                                   httpResponse,
-                                                                                   circuit.ServiceURLs[
-                                                                                       "IncomingCAPSHandler"].ToString())));
-#endif
         }
 
         public void RegionLoaded (IScene scene)
