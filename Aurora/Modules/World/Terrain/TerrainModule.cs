@@ -1900,6 +1900,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceRescaleTerrain(string[] cmd)
         {
+            if (cmd.Count() < 4)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -1964,6 +1969,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceElevateTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -1978,6 +1988,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceMultiplyTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -1992,6 +2007,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceLowerTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -2006,6 +2026,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceFillTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
