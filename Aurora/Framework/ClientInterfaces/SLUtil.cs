@@ -363,6 +363,8 @@ namespace Aurora.Framework
                                 {
                                     ln = ln.Remove(ln.Length - 1, 1);
                                     level--;
+                                    if(level == 0)
+                                        break;
                                 }
 
                                 if (ln.StartsWith("{"))
