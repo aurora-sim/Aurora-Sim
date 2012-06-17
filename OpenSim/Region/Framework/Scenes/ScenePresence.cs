@@ -1220,7 +1220,7 @@ namespace OpenSim.Region.Framework.Scenes
                     actor.Flying = true;
                 else if (m_flyDisabled)
                     actor.Flying = false;
-                else
+                else if(actor.Flying != ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0))
                     actor.Flying = ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
 
                 if (actor.Flying != oldflying)
