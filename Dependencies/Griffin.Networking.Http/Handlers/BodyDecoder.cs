@@ -107,6 +107,14 @@ namespace Griffin.Networking.Http.Handlers
         {
             if (bufferSlice.RemainingLength == 0)
                 return false;
+            if (_currentMessage == null)
+            {
+                /*byte[] bytes = new byte[bufferSlice.RemainingLength];
+                Array.Copy(bufferSlice.Buffer, bytes, bufferSlice.RemainingLength);
+                string body = System.Text.Encoding.UTF8.GetString(bytes);
+                Console.WriteLine(body);*/
+                return false;
+            }
 
             if (_currentMessage.Body == null)
             {
