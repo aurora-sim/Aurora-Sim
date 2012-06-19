@@ -60,7 +60,7 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         public volatile bool HTTPDRunning = false;
 
-        protected HttpListener m_httpListener;
+        protected HttpListener _httpListener;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
@@ -554,11 +554,6 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void Start()
         {
-            StartHTTP();
-        }
-
-        private void StartHTTP()
-        {
             try
             {
                 var factory = new DelegatePipelineFactory();
@@ -578,8 +573,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
                 factory.AddUpstreamHandler(() => new BodyDecoder(decoder, 65535, 6000000));
                 factory.AddUpstreamHandler(() => (MessageHandler = new MessageHandler(this)));
-                HttpListener listener = new HttpListener(factory);
-                listener.Start(new IPEndPoint(IPAddress.Any, (int)Port));
+                _httpListener = new HttpListener(factory);
+                _httpListener.Start(new IPEndPoint(IPAddress.Any, (int)Port));
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
@@ -602,7 +597,7 @@ namespace Aurora.Framework.Servers.HttpServer
             HTTPDRunning = false;
             try
             {
-                m_httpListener.Stop();
+                _httpListener.Stop();
             }
             catch (NullReferenceException)
             {
