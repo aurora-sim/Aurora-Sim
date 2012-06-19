@@ -272,7 +272,7 @@ namespace OpenSim.Services.CapsService
 
                         response.ContentType = texture.TypeString;
                         response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
-                        byte[] array = new byte[end - start];
+                        byte[] array = new byte[len];
                         Array.Copy(texture.Data, start, array, 0, end);
                         return array;
                     }
