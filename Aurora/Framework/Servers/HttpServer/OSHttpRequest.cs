@@ -39,7 +39,7 @@ using Griffin.Networking.Http.Protocol;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public class OSHttpRequest
+    public class OSHttpRequest : IDisposable
     {
         private readonly Hashtable _query;
         private readonly NameValueCollection _queryString;
@@ -207,5 +207,19 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             return new OSHttpResponse(_httpContext, _httpRequest, _httpRequest.CreateResponse(code, reason));
         }
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            _query.Clear();
+            _queryString.Clear();
+            _remoteIPEndPoint = null;
+            _httpRequest.Body = null;
+            _httpRequest = null;
+            _httpContext = null;
+        }
+
+        #endregion
     }
 }

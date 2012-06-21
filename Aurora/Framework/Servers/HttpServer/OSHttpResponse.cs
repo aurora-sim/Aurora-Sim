@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -38,7 +39,7 @@ namespace Aurora.Framework.Servers.HttpServer
     ///   OSHttpResponse is the OpenSim representation of an HTTP
     ///   response.
     /// </summary>
-    public class OSHttpResponse
+    public class OSHttpResponse : IDisposable
     {
         protected IResponse _httpResponse;
         protected IRequest _httpRequest;
@@ -167,5 +168,18 @@ namespace Aurora.Framework.Servers.HttpServer
             _httpResponse.Body.Position = 0;
             _httpContext.SendDownstream(new SendHttpResponse(_httpRequest, _httpResponse));
         }
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            _httpResponse.Body = null;
+            _httpResponse = null;
+            _httpRequest.Body = null;
+            _httpRequest = null;
+            _httpContext = null;
+        }
+
+        #endregion
     }
 }
