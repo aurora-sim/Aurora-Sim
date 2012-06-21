@@ -32,8 +32,9 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Aurora.Framework;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace OpenSim.Services.Robust
 {
     public class AsynchronousRestObjectRequester
     {

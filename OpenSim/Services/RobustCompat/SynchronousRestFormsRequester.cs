@@ -29,8 +29,9 @@ using System;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using Aurora.Framework;
 
-namespace Aurora.Framework.Servers.HttpServer
+namespace OpenSim.Services.Robust
 {
     public class SynchronousRestFormsRequester
     {

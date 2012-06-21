@@ -35,9 +35,9 @@ using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 
-namespace Aurora.Modules.Chat
+namespace OpenSim.Services.Robust
 {
-    public class OfflineMessageModule : ISharedRegionModule
+    public class RobustOfflineMessageModule : ISharedRegionModule
     {
         private readonly List<IScene> m_SceneList = new List<IScene>();
         private bool enabled = true;
@@ -55,7 +55,7 @@ namespace Aurora.Modules.Chat
                 return;
             }
             if (cnf != null && cnf.GetString("OfflineMessageModule", "None") !=
-                "OfflineMessageModule")
+                "RobustOfflineMessageModule")
             {
                 enabled = false;
                 return;

@@ -38,7 +38,7 @@ using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Services.Robust
 {
     public class XInventoryServicesConnector : IInventoryService, IService
     {

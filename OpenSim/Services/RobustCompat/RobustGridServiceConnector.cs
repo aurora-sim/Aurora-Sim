@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustGridServicesConnector : IGridService, IService
     {
