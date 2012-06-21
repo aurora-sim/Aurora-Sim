@@ -675,7 +675,7 @@ namespace Aurora.Framework.Servers.HttpServer
         #endregion
     }
 
-    public class MessageHandler : IUpstreamHandler
+    public class MessageHandler : IUpstreamHandler, IDisposable
     {
         private BaseHttpServer _server;
         public MessageHandler(BaseHttpServer server)
@@ -1346,6 +1346,8 @@ namespace Aurora.Framework.Servers.HttpServer
                     }
                 }
 
+                
+
                 switch (request.ContentType)
                 {
                     case null:
@@ -1409,8 +1411,19 @@ namespace Aurora.Framework.Servers.HttpServer
                     MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request for {0}/{1} on port {2} took {3} ms for a request sized {4}mb", HTTPMethod, RawUrl, _server.Port, tickdiff, ((float)contentLength) / 1024 / 1024);
                 else if (MainConsole.Instance.IsEnabled(log4net.Core.Level.Trace))
                     MainConsole.Instance.TraceFormat("[BASE HTTP SERVER]: request for {0}/{1} on port {2} took {3} ms", HTTPMethod, RawUrl, _server.Port, tickdiff);
+
+                
             }
         }
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            
+        }
+
+        #endregion
     }
 
     public class JsonBodyDecoder : IBodyDecoder
