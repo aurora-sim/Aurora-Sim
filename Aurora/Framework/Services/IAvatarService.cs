@@ -151,11 +151,15 @@ namespace OpenSim.Services.Interfaces
             Data["VisualParams"] = String.Join(",", vps);
 
             // Attachments
-            List<AvatarAttachment> attachments = appearance.GetAttachments();
-            foreach (AvatarAttachment attach in attachments)
+            var attachments = appearance.GetAttachmentsDictionary();
+            foreach (KeyValuePair<int, List<AvatarAttachment>> kvp in attachments)
             {
-                Data["_ap_" + attach.AttachPoint] = attach.ItemID.ToString();
-                Data["_apa_" + attach.AttachPoint] = attach.AssetID.ToString();
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    var attach = kvp.Value[i];
+                    Data["_ap_" + attach.AttachPoint + "_" + i] = attach.ItemID.ToString();
+                    Data["_apa_" + attach.AttachPoint + "_" + i] = attach.AssetID.ToString();
+                }
             }
         }
 
@@ -397,7 +401,7 @@ namespace OpenSim.Services.Interfaces
 
                 foreach (KeyValuePair<string, string> _kvp in attchs)
                 {
-                    string pointStr = _kvp.Key.Substring(4);
+                    string pointStr = _kvp.Key.Substring(4,1);
                     int point = 0;
                     if (!Int32.TryParse(pointStr, out point))
                         continue;

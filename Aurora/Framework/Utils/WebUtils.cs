@@ -451,6 +451,7 @@ namespace Aurora.Simulation.Base
 
                     request.ContentLength = buffer.Length;
                     request.ContentType = "application/x-www-form-urlencoded";
+
                     using (Stream requestStream = request.GetRequestStream())
                         requestStream.Write(buffer, 0, buffer.Length);
                 }

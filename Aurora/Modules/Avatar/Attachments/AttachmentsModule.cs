@@ -771,21 +771,6 @@ namespace Aurora.Modules.Attachments
             group.RootChild.SetParentLocalId (presence.LocalId);
             group.SetAttachmentPoint(Convert.ToByte(AttachmentPt));
 
-            AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
-            if (attPlugin != null)
-            {
-                attPlugin.AddAttachment (group);
-                presence.SetAttachments(attPlugin.Get());
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-
-                bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
-                if (save)
-                {
-                    appearance.Appearance.SetAttachments(attPlugin.Get());
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-                }
-            }
-
             // Killing it here will cause the client to deselect it
             // It then reappears on the avatar, deselected
             // through the full update below
@@ -837,11 +822,17 @@ namespace Aurora.Modules.Attachments
                 item = m_scene.InventoryService.GetItem(item);
                 //Update the ItemID with the new item
                 group.SetFromItemID(itemID, item.AssetID);
+            }
 
-                //If we updated the attachment, we need to save the change
+            AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
+            if (attPlugin != null)
+            {
+                attPlugin.AddAttachment (group);
+                presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                if (appearance.Appearance.SetAttachment(AttachmentPt, itemID, item.AssetID))
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+
+                appearance.Appearance.SetAttachments(attPlugin.Get());
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
 
