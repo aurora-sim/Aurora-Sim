@@ -231,11 +231,7 @@ namespace OpenSim.Services.CapsService
             map["bad_ids"] = bad_ids;
             map["bad_usernames"] = bad_usernames;
 
-            byte[] m = OSDParser.SerializeLLSDXmlBytes(map);
-            httpResponse.OutputStream.Write(m, 0, m.Length);
-            httpResponse.StatusCode = (int) HttpStatusCode.OK;
-            httpResponse.Send();
-            return null;
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         private void PackUserInfo(IUserProfileInfo info, UserAccount account, ref OSDArray agents)
