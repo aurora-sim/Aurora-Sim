@@ -571,7 +571,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 decoder.Add("text/www-form-urlencoded", new JsonBodyDecoder());
                 decoder.Add("text/x-www-form-urlencoded", new JsonBodyDecoder());
 
-                factory.AddUpstreamHandler(() => new BodyDecoder(decoder, 65535, 6000000));
+                factory.AddUpstreamHandler(() => new BodyDecoder(decoder, 65535, int.MaxValue));
                 factory.AddUpstreamHandler(() => (MessageHandler = new MessageHandler(this)));
                 _httpListener = new HttpListener(factory);
                 _httpListener.Start(new IPEndPoint(IPAddress.Any, (int)Port));
@@ -620,7 +620,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             lock (m_HTTPHandlers)
             {
-                if (httpMethod != null && httpMethod.Length == 0)
+                if (httpMethod == "")
                 {
                     m_HTTPHandlers.Remove(path);
                     return;

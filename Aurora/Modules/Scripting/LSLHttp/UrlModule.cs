@@ -152,15 +152,19 @@ namespace Aurora.Modules.Scripting
                 m_UrlMap[url] = urlData;
                 
                 string uri = "/lslhttp/" + urlcode.ToString() + "/";
-               
-                m_HttpServer.AddPollServiceHTTPHandler(uri,HandleHttpPoll,
-                        new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents,
+                m_HttpServer.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
+                        new PollServiceEventArgs(HttpRequestHandler,HasEvents, GetEvents, NoEvents, Valid,
                             urlcode));
 
                 engine.PostScriptEvent(itemID, host.UUID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
             }
 
             return urlcode;
+        }
+
+        private bool Valid()
+        {
+            return true;
         }
 
         public UUID RequestSecureURL (IScriptModule engine, ISceneChildEntity host, UUID itemID)
@@ -284,7 +288,7 @@ namespace Aurora.Modules.Scripting
 
         private void RemoveUrl(UrlData data)
         {
-            m_HttpServer.RemoveHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
+            m_HttpServer.RemovePollServiceHTTPHandler("", "/lslhttp/"+data.urlcode.ToString()+"/");
         }
 
         private Hashtable NoEvents(UUID requestID, UUID sessionID)

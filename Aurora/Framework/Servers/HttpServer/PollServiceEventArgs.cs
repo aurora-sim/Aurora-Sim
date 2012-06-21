@@ -39,21 +39,25 @@ namespace Aurora.Framework.Servers.HttpServer
 
     public delegate Hashtable NoEventsMethod(UUID requestID, UUID pId);
 
+    public delegate bool IsValid();
+
     public class PollServiceEventArgs : EventArgs
     {
         public GetEventsMethod GetEvents;
         public HasEventsMethod HasEvents;
         public UUID Id;
         public NoEventsMethod NoEvents;
+        public IsValid Valid;
         public RequestMethod Request;
 
         public PollServiceEventArgs(RequestMethod pRequest, HasEventsMethod pHasEvents, GetEventsMethod pGetEvents,
-                                    NoEventsMethod pNoEvents, UUID pId)
+                                    NoEventsMethod pNoEvents, IsValid isValid, UUID pId)
         {
             Request = pRequest;
             HasEvents = pHasEvents;
             GetEvents = pGetEvents;
             NoEvents = pNoEvents;
+            Valid = isValid;
             Id = pId;
         }
     }

@@ -63,45 +63,48 @@ namespace Aurora.Framework.Servers.HttpServer
                 PollServiceHttpRequest req = m_request.Dequeue();
                 try
                 {
-                    if (req.PollServiceArgs.HasEvents(req.RequestID, req.PollServiceArgs.Id))
+                    if (req.PollServiceArgs.Valid())
                     {
-                        StreamReader str;
-                        try
+                        if (req.PollServiceArgs.HasEvents(req.RequestID, req.PollServiceArgs.Id))
                         {
-                            str = new StreamReader(req.Request.Body);
-                        }
-                        catch (ArgumentException)
-                        {
-                            // Stream was not readable means a child agent
-                            // was closed due to logout, leaving the
-                            // Event Queue request orphaned.
-                            continue;
-                        }
+                            StreamReader str;
+                            try
+                            {
+                                str = new StreamReader(req.Request.Body);
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Stream was not readable means a child agent
+                                // was closed due to logout, leaving the
+                                // Event Queue request orphaned.
+                                continue;
+                            }
 
-                        Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
-                                                                               str.ReadToEnd());
-                        var request = new OSHttpRequest(req.HttpContext, req.Request);
-                        m_server.MessageHandler.SendGenericHTTPResponse(
-                            responsedata,
-                            request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
-                            request
-                        );
-                    }
-                    else
-                    {
-                        if ((Environment.TickCount - req.RequestTime) > m_timeout)
-                        {
+                            Hashtable responsedata = req.PollServiceArgs.GetEvents(req.RequestID, req.PollServiceArgs.Id,
+                                                                                   str.ReadToEnd());
                             var request = new OSHttpRequest(req.HttpContext, req.Request);
                             m_server.MessageHandler.SendGenericHTTPResponse(
-                                req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
+                                responsedata,
                                 request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
-                                request);
+                                request
+                            );
                         }
                         else
                         {
-                            ReQueuePollServiceItem reQueueItem = ReQueue;
-                            if (reQueueItem != null)
-                                reQueueItem(req);
+                            if ((Environment.TickCount - req.RequestTime) > m_timeout)
+                            {
+                                var request = new OSHttpRequest(req.HttpContext, req.Request);
+                                m_server.MessageHandler.SendGenericHTTPResponse(
+                                    req.PollServiceArgs.NoEvents(req.RequestID, req.PollServiceArgs.Id),
+                                    request.MakeResponse(System.Net.HttpStatusCode.OK, "OK"),
+                                    request);
+                            }
+                            else
+                            {
+                                ReQueuePollServiceItem reQueueItem = ReQueue;
+                                if (reQueueItem != null)
+                                    reQueueItem(req);
+                            }
                         }
                     }
                 }

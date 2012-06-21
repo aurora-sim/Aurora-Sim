@@ -274,6 +274,7 @@ namespace OpenSim.Services.CapsService
         private readonly Queue<OSD> queue = new Queue<OSD>();
         private string m_capsPath;
         private int m_ids;
+        private bool _isValid = false;
         private IRegionClientCapsService m_service;
 
         #endregion
@@ -504,6 +505,11 @@ namespace OpenSim.Services.CapsService
             return new Hashtable();
         }
 
+        public bool Valid()
+        {
+            return _isValid;
+        }
+
         #endregion
 
         #endregion
@@ -527,9 +533,10 @@ namespace OpenSim.Services.CapsService
                                                            }));
 
             // This will persist this beyond the expiry of the caps handlers
+            _isValid = true;
             MainServer.Instance.AddPollServiceHTTPHandler(
                 m_capsPath, EventQueuePoll,
-                new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, service.AgentID));
+                new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid, service.AgentID));
 
             Random rnd = new Random(Environment.TickCount);
             m_ids = rnd.Next(30000000);
@@ -542,6 +549,7 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            _isValid = false;
             m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
             MainServer.Instance.RemovePollServiceHTTPHandler("POST", m_capsPath);
         }
