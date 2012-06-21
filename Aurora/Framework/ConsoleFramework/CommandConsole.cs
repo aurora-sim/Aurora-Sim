@@ -908,7 +908,8 @@ namespace Aurora.Framework
                                 m_consoleReadingThread.Abort();
                             continue;
                         }
-                        else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped)
+                        else if (m_consoleReadingThread.ThreadState == ThreadState.Stopped ||
+                            m_consoleReadingThread.ThreadState == ThreadState.Aborted)
                         {
                             m_consoleReadingThread = null;
                             continue;

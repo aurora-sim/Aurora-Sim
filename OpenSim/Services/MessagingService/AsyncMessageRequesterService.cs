@@ -117,9 +117,10 @@ namespace OpenSim.Services.MessagingService
                 m_scenes[0].RequestModuleInterface<IConfigurationService>().FindValueOf("MessagingServerURI");
             foreach (string host in serverURIs)
             {
-                OSDMap response = WebUtils.PostToService(host, message, true, false, true);
-                if (response is OSDMap)
+                OSD resp = OSDParser.DeserializeJson(WebUtils.PostToService(host, message));
+                if (resp is OSDMap)
                 {
+                    OSDMap response = (OSDMap)resp;
                     if (response["Messages"].Type == OSDType.Map)
                     {
                         OSDMap messages = (OSDMap) response["Messages"];

@@ -124,7 +124,7 @@ namespace OpenSim.Services.RobustCompat
             }
             if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals (""))
             {
-                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
+                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000);
                 presence.CallbackURI = null;
             }
 #if (!ISWIN)
@@ -382,8 +382,7 @@ namespace OpenSim.Services.RobustCompat
 
         public virtual byte[] CapsRequest(string url)
         {
-            OSDMap response = WebUtils.PostToService (url, new OSDMap (), true, false, true);
-            return OSDParser.SerializeLLSDXmlBytes (response);
+            return System.Text.Encoding.UTF8.GetBytes (WebUtils.PostToService (url, new OSDMap ()));
         }
 
         #endregion

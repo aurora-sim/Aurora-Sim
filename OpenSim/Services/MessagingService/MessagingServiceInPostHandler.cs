@@ -96,14 +96,14 @@ namespace OpenSim.Services.MessagingService
         private byte[] FailureResult()
         {
             OSDMap map = new OSDMap();
-            map["Success"] = false;
+            map["success"] = false;
             return ReturnResult(map);
         }
 
         private byte[] SuccessResult()
         {
             OSDMap map = new OSDMap();
-            map["Success"] = true;
+            map["success"] = true;
             return ReturnResult(map);
         }
 

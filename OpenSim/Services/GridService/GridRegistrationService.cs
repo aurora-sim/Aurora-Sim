@@ -758,7 +758,7 @@ namespace OpenSim.Services.GridService
                 request["Method"] = method;
                 request["Param"] = param;
                 request["Param2"] = param2;
-                return WebUtils.PostToService (url + "/LoadBalancing", request, true, false, true);
+                return OSDParser.DeserializeJson(WebUtils.PostToService (url + "/LoadBalancing", request)) as OSDMap;
             }
 
             #endregion

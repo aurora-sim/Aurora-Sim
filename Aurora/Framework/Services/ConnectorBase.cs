@@ -219,7 +219,7 @@ namespace Aurora.Framework
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
+            string resp = WebUtils.ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
             
             if (resp == "" || resp.StartsWith("<"))
                 return false;
@@ -233,121 +233,6 @@ namespace Aurora.Framework
                 return false;
             }
             return response["Success"];
-        }
-
-        /// <summary>
-        /// Dictionary of end points
-        /// </summary>
-        private static Dictionary<string, object> m_endpointSerializer = new Dictionary<string, object>();
-
-        private static object EndPointLock(string url)
-        {
-            System.Uri uri = new System.Uri(url);
-            string endpoint = string.Format("{0}:{1}", uri.Host, uri.Port);
-
-            lock (m_endpointSerializer)
-            {
-                object eplock = null;
-
-                if (!m_endpointSerializer.TryGetValue(endpoint, out eplock))
-                {
-                    eplock = new object();
-                    m_endpointSerializer.Add(endpoint, eplock);
-                    // m_log.WarnFormat("[WEB UTIL] add a new host to end point serializer {0}",endpoint);
-                }
-
-                return eplock;
-            }
-        }
-
-        public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
-        {
-            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
-
-            lock (EndPointLock(url))
-            {
-                string errorMessage = "unknown error";
-                int tickstart = Util.EnvironmentTickCount();
-                int tickdata = 0;
-                int tickserialize = 0;
-                byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
-                HttpWebRequest request = null;
-                try
-                {
-                    request = (HttpWebRequest)WebRequest.Create(url);
-                    request.Method = method;
-                    request.Timeout = timeout;
-                    request.KeepAlive = false;
-                    request.MaximumAutomaticRedirections = 10;
-                    request.ReadWriteTimeout = timeout / 4;
-
-                    // If there is some input, write it into the request
-                    if (buffer != null && buffer.Length > 0)
-                    {
-                        request.ContentType = "application/json";
-                        request.ContentLength = buffer.Length; //Count bytes to send
-                        using (Stream requestStream = request.GetRequestStream())
-                             requestStream.Write(buffer, 0, buffer.Length); //Send it
-                    }
-
-                    // capture how much time was spent writing, this may seem silly
-                    // but with the number concurrent requests, this often blocks
-                    tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                    using (WebResponse response = request.GetResponse())
-                    {
-                        using (Stream responseStream = response.GetResponseStream())
-                        {
-                            // capture how much time was spent writing, this may seem silly
-                            // but with the number concurrent requests, this often blocks
-                            tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                            string responseStr = responseStream.GetStreamString();
-                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                            return responseStr;
-                        }
-                    }
-                }
-                catch (WebException we)
-                {
-                    errorMessage = we.Message;
-                    if (we.Status == WebExceptionStatus.ProtocolError)
-                    {
-                        HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                        errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                    }
-                    if(request != null)
-                        request.Abort();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = ex.Message;
-                    if (request != null)
-                        request.Abort();
-                }
-                finally
-                {
-                    if (MainConsole.Instance != null)
-                    {
-                        if (errorMessage == "unknown error")
-                        {
-                            // This just dumps a warning for any operation that takes more than 500 ms
-                            int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                            MainConsole.Instance.TraceFormat(
-                                "[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                url, method, tickdiff, tickdata, tickserialize);
-                            if (tickdiff > 5000)
-                                MainConsole.Instance.InfoFormat(
-                                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize);
-                        }
-                    }
-                }
-
-                if (MainConsole.Instance != null)
-                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
-                                     data != null ? data.AsString() : "");
-                return "";
-            }
         }
 
         public bool CheckPassword(string password)
@@ -447,7 +332,6 @@ namespace Aurora.Framework
                         if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
                             return new byte[0];
                     }
-
 
                     ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
                     object[] parameters = new object[paramInfo.Length];

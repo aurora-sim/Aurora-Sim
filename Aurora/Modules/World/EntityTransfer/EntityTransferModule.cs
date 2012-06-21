@@ -294,33 +294,32 @@ namespace Aurora.Modules.EntityTransfer
                 {
                     //This does CreateAgent and sends the EnableSimulator/EstablishAgentCommunication/TeleportFinish
                     //  messages if they need to be called and deals with the callback
-                    OSDMap map = syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
-                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle), 
-                        sp.UUID, sp.Scene.RegionInfo.RegionHandle);
-                    bool result = false;
-                    if(map != null)
-                        result = map["Success"].AsBoolean();
-                    if (!result)
-                    {
-                        // Fix the agent status
-                        sp.IsChildAgent = false;
-                        //Tell modules about it
-                        sp.AgentFailedToLeave();
-                        sp.ControllingClient.SendTeleportFailed(map != null
-                                                                    ? map["Reason"].AsString()
-                                                                    : "Teleport Failed");
-                        return;
-                    }
-                    //Get the new destintation, it may have changed
-                    if(map.ContainsKey("Destination"))
-                    {
-                        finalDestination = new GridRegion();
-                        finalDestination.FromOSD((OSDMap)map["Destination"]);
-                    }
+                    syncPoster.Get(SyncMessageHelper.TeleportAgent((int)sp.DrawDistance,
+                        agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle),
+                        sp.UUID, sp.Scene.RegionInfo.RegionHandle, (map) =>
+                        {
+                            if (map == null)
+                            {
+                                // Fix the agent status
+                                sp.IsChildAgent = false;
+                                //Tell modules about it
+                                sp.AgentFailedToLeave();
+                                sp.ControllingClient.SendTeleportFailed(map != null
+                                                                            ? map["Reason"].AsString()
+                                                                            : "Teleport Failed");
+                                return;
+                            }
+                            //Get the new destintation, it may have changed
+                            if (map.ContainsKey("Destination"))
+                            {
+                                finalDestination = new GridRegion();
+                                finalDestination.FromOSD((OSDMap)map["Destination"]);
+                            }
+                            MakeChildAgent(sp, finalDestination, false);
+                        });
                 }
             }
 
-            MakeChildAgent(sp, finalDestination, false);
         }
 
         private AgentCircuitData BuildCircuitDataForPresence(IScenePresence sp, Vector3 position)
@@ -570,63 +569,43 @@ namespace Aurora.Modules.EntityTransfer
 
         public virtual void Cross(IScenePresence agent, bool isFlying, GridRegion crossingRegion)
         {
+            Vector3 pos = new Vector3(agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
+            pos.X = (agent.Scene.RegionInfo.RegionLocX + pos.X) - crossingRegion.RegionLocX;
+            pos.Y = (agent.Scene.RegionInfo.RegionLocY + pos.Y) - crossingRegion.RegionLocY;
+
+            //Make sure that they are within bounds (velocity can push it out of bounds)
+            if (pos.X < 0)
+                pos.X = 1;
+            if (pos.Y < 0)
+                pos.Y = 1;
+
+            if (pos.X > crossingRegion.RegionSizeX)
+                pos.X = crossingRegion.RegionSizeX - 1;
+            if (pos.Y > crossingRegion.RegionSizeY)
+                pos.Y = crossingRegion.RegionSizeY - 1;
+            InternalCross(agent, pos, isFlying, crossingRegion);
+        }
+
+        public virtual void InternalCross(IScenePresence agent, Vector3 attemptedPos, bool isFlying, GridRegion crossingRegion)
+        {
             if(agent.PhysicsActor != null)
                 agent.PhysicsActor.IsPhysical = false;
-            CrossAgentToNewRegionAsyncUtil (agent, isFlying, crossingRegion);
-        }
-
-        private void CrossAgentToNewRegionAsyncUtil (IScenePresence agent, bool isFlying, GridRegion crossingRegion)
-        {
-            Vector3 newposition = new Vector3 (agent.AbsolutePosition.X, agent.AbsolutePosition.Y, agent.AbsolutePosition.Z);
-#if (!ISWIN)
-            Util.FireAndForget(delegate(object o)
-            {
-                CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying, false);
-            });
-#else
-            Util.FireAndForget (o => CrossAgentToNewRegionAsync(agent, newposition, crossingRegion, isFlying, false));
-#endif
-        }
-
-        /// <summary>
-        /// This Closes child agents on neighboring regions
-        /// Calls an asynchronous method to do so..  so it doesn't lag the sim.
-        /// </summary>
-        protected IScenePresence CrossAgentToNewRegionAsync(IScenePresence agent, Vector3 pos,
-            GridRegion crossingRegion, bool isFlying, bool positionIsAlreadyFixed)
-        {
+            
             MainConsole.Instance.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
 
             IScene m_scene = agent.Scene;
 
             try
             {
-                if (!positionIsAlreadyFixed)
-                {
-                    pos.X = (m_scene.RegionInfo.RegionLocX + pos.X) - crossingRegion.RegionLocX;
-                    pos.Y = (m_scene.RegionInfo.RegionLocY + pos.Y) - crossingRegion.RegionLocY;
-
-                    //Make sure that they are within bounds (velocity can push it out of bounds)
-                    if (pos.X < 0)
-                        pos.X = 1;
-                    if (pos.Y < 0)
-                        pos.Y = 1;
-
-                    if (pos.X > crossingRegion.RegionSizeX)
-                        pos.X = crossingRegion.RegionSizeX - 1;
-                    if (pos.Y > crossingRegion.RegionSizeY)
-                        pos.Y = crossingRegion.RegionSizeY - 1;
-                }
-
                 agent.SetAgentLeaving(crossingRegion);
 
                 AgentData cAgent = new AgentData();
                 agent.CopyTo(cAgent);
-                cAgent.Position = pos;
+                cAgent.Position = attemptedPos;
                 if (isFlying)
                     cAgent.ControlFlags |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
 
-                AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, pos);
+                AgentCircuitData agentCircuit = BuildCircuitDataForPresence(agent, attemptedPos);
                 agentCircuit.teleportFlags = (uint)TeleportFlags.ViaRegionID;
 
                 IEventQueueService eq = agent.Scene.RequestModuleInterface<IEventQueueService>();
@@ -638,52 +617,51 @@ namespace Aurora.Modules.EntityTransfer
                         agent.Scene.RequestModuleInterface<ISyncMessagePosterService>();
                     if (syncPoster != null)
                     {
-                        OSDMap map = syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, pos,
-                                                                                 agent.Velocity, agentCircuit, cAgent,
-                                                                                 agent.Scene.RegionInfo.RegionHandle),
-                                                    agent.UUID, agent.Scene.RegionInfo.RegionHandle);
-                        bool result = false;
-                        if (map != null)
-                            result = map["Success"].AsBoolean();
-                        if (!result)
-                        {
-                            //Tell modules that we have failed
-                            agent.AgentFailedToLeave();
-                            if (map != null)
+                        syncPoster.Get(SyncMessageHelper.CrossAgent(crossingRegion, attemptedPos,
+                            agent.Velocity, agentCircuit, cAgent,
+                            agent.Scene.RegionInfo.RegionHandle),
+                            agent.UUID, agent.Scene.RegionInfo.RegionHandle,
+                            (map) =>
                             {
-                                if (map.ContainsKey("Note") && !map["Note"].AsBoolean())
-                                    return agent;
-                                agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
-                            }
-                            else
-                                agent.ControllingClient.SendTeleportFailed("TP Failed");
-                            if (agent.PhysicsActor != null)
-                                agent.PhysicsActor.IsPhysical = true; //Fix the setting that we set earlier
-                            // In any case
-                            agent.FailedCrossingTransit(crossingRegion);
-                            return agent;
-                        }
+                                if (map == null)
+                                {
+                                    //Tell modules that we have failed
+                                    agent.AgentFailedToLeave();
+                                    if (map != null)
+                                    {
+                                        if (map.ContainsKey("Note") && !map["Note"].AsBoolean())
+                                            return;
+                                        agent.ControllingClient.SendTeleportFailed(map["Reason"].AsString());
+                                    }
+                                    else
+                                        agent.ControllingClient.SendTeleportFailed("TP Failed");
+                                    if (agent.PhysicsActor != null)
+                                        agent.PhysicsActor.IsPhysical = true; //Fix the setting that we set earlier
+                                    // In any case
+                                    agent.FailedCrossingTransit(crossingRegion);
+                                    return;
+                                }
+                                //We're killing the animator and the physics actor, so we don't need to worry about agent.PhysicsActor.IsPhysical
+                                agent.MakeChildAgent(crossingRegion);
+                                //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
+                                // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
+                                //agent.SendOtherAgentsAvatarDataToMe();
+                                //agent.SendOtherAgentsAppearanceToMe();
+
+                                //Kill the groups here, otherwise they will become ghost attachments 
+                                //  and stay in the sim, they'll get readded below into the new sim
+                                //KillAttachments(agent);
+                                // In any case
+                                agent.SuccessfulCrossingTransit(crossingRegion);
+                            });
                     }
                 }
-                //We're killing the animator and the physics actor, so we don't need to worry about agent.PhysicsActor.IsPhysical
-                agent.MakeChildAgent(crossingRegion);
 
-                //Revolution- We already were in this region... we don't need updates about the avatars we already know about, right?
-                // OLD: now we have a child agent in this region. Request and send all interesting data about (root) agents in the sim
-                //agent.SendOtherAgentsAvatarDataToMe();
-                //agent.SendOtherAgentsAppearanceToMe();
-
-                //Kill the groups here, otherwise they will become ghost attachments 
-                //  and stay in the sim, they'll get readded below into the new sim
-                //KillAttachments(agent);
             }
             catch(Exception ex)
             {
                 MainConsole.Instance.Warn("[EntityTransferModule]: Exception in crossing: " + ex);
             }
-            // In any case
-            agent.SuccessfulCrossingTransit(crossingRegion);
-            return agent;
         }
 
         private void KillAttachments(IScenePresence agent)
@@ -791,8 +769,8 @@ namespace Aurora.Modules.EntityTransfer
                         {
                             IScenePresence SP = grp.Scene.GetScenePresence(avID);
                             SP.Velocity = grp.RootChild.PhysActor.Velocity;
-                            SP = CrossAgentToNewRegionAsync(SP, attemptedPos, destination, false, true);
-                            success = SP.IsChildAgent;
+                            InternalCross(SP, attemptedPos, false, destination);
+                            success = grp.Scene.GetScenePresence(avID).IsChildAgent;
                         }
                     }
                     if(success)
@@ -1033,7 +1011,7 @@ namespace Aurora.Modules.EntityTransfer
             {
                 OSDMap map = new OSDMap ();
                 map["Reason"] = reason;
-                map["Success"] = false;
+                map["success"] = false;
                 reason = OSDParser.SerializeJsonString (map);
                 return false;
             }
@@ -1075,7 +1053,7 @@ namespace Aurora.Modules.EntityTransfer
                 scene.RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.AgentID,
                 agent.circuitcode);
 
-            responseMap["Success"] = true;
+            responseMap["success"] = true;
             reason = OSDParser.SerializeJsonString (responseMap);
             return true;
         }

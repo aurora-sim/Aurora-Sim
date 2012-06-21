@@ -71,34 +71,54 @@ namespace OpenSim.Services.MessagingService
 
         public void Post(OSDMap request, ulong RegionHandle)
         {
-            List<string> serverURIs =
-                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(),
-                                                                                       "MessagingServerURI");
-            if (serverURIs.Count > 0)
+            Util.FireAndForget((o) =>
             {
-                OSDMap message = CreateWebRequest(request);
-                string postInfo = OSDParser.SerializeJsonString(message);
-                foreach (string host in serverURIs)
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(RegionHandle.ToString(),
+                                                                                           "MessagingServerURI");
+                if (serverURIs.Count > 0)
                 {
-                    //Send it async
-                    AsynchronousRestObjectRequester.MakeRequest("POST", host, postInfo);
+                    OSDMap message = CreateWebRequest(request);
+                    string postInfo = OSDParser.SerializeJsonString(message);
+                    foreach (string host in serverURIs)
+                    {
+                        //Send it async
+                        WebUtils.PostToService(host, message);
+                    }
                 }
-            }
+            });
         }
 
-        public OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle)
+        public void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response)
         {
-            OSDMap retval = null;
-            OSDMap message = CreateWebRequest(request);
-            List<string> serverURIs =
-                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID.ToString(),
-                                                                                       RegionHandle.ToString(),
-                                                                                       "MessagingServerURI");
-            foreach (string host in serverURIs)
+            Util.FireAndForget((o) =>
             {
-                retval = WebUtils.PostToService(host, message, true, false);
-            }
-            return CreateWebResponse(retval);
+                OSDMap retval = null;
+                List<string> serverURIs =
+                    m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(userID.ToString(),
+                                                                                           RegionHandle.ToString(),
+                                                                                           "MessagingServerURI");
+                foreach (string host in serverURIs)
+                {
+                    string backURL = "/" + UUID.Random();
+                    request["ResponseURL"] = backURL;
+                    OSDMap message = CreateWebRequest(request);
+                    MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", backURL, (path, req,
+                                  httpRequest, httpResponse) =>
+                    {
+                        string resultStr = req.ReadUntilEnd();
+                        if (resultStr != "")
+                        {
+                            retval = OSDParser.DeserializeJson(resultStr) as OSDMap;
+                            if (retval != null)
+                                response(retval);
+                        }
+                        MainServer.Instance.RemoveStreamHandler("POST", backURL);
+                        return System.Text.Encoding.UTF8.GetBytes("");
+                    }));
+                    WebUtils.PostToService(host, message);
+                }
+            });
         }
 
         #endregion
@@ -111,20 +131,6 @@ namespace OpenSim.Services.MessagingService
             message["Message"] = request;
 
             return message;
-        }
-
-        private OSDMap CreateWebResponse(OSDMap request)
-        {
-            if (request == null)
-                return null;
-            try
-            {
-                return (OSDMap) OSDParser.DeserializeJson(request["_RawResult"]);
-            }
-            catch
-            {
-                return null;
-            }
         }
     }
 }
