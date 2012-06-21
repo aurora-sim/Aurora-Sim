@@ -122,6 +122,7 @@ namespace Aurora.Modules.Attachments
                 presence.RegisterModuleInterface(attachmentsPlugin);
 
                 List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments();
+                MainConsole.Instance.InfoFormat( "[ATTACHMENTS MODULE]:  Found {0} attachments to attach to avatar {1}", attachments.Count, presence.Name);
                 foreach (AvatarAttachment attach in attachments)
                 {
                     try
@@ -453,13 +454,12 @@ namespace Aurora.Modules.Attachments
                         }
                         else
                         {
-                            foreach (var prim in objatt.ChildrenEntities())
-                            {
+                            return null;//It was already added
+                            /*foreach (var prim in objatt.ChildrenEntities())
                                 prim.LocalId = 0;
-                            }
                             bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
                             if (!success)
-                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!"); */
                         }
                     }
                     catch { }
@@ -722,7 +722,7 @@ namespace Aurora.Modules.Attachments
                 }
             }
 
-            MainConsole.Instance.InfoFormat(
+            MainConsole.Instance.DebugFormat(
                 "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                 group.Name, remoteClient.Name, AttachmentPt, group.LocalId);
 
