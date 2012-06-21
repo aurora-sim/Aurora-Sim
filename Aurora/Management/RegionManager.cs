@@ -369,7 +369,9 @@ namespace Aurora.Management
             region.InternalEndPoint = new IPEndPoint (address, region.UDPPorts[0]);
 
             region.RegionType = textBox11.Text;
-            region.ObjectCapacity = int.Parse(textBox6.Text);
+            int capacity;
+            if (int.TryParse(textBox6.Text, out capacity))
+                region.ObjectCapacity = capacity;
             int maturityLevel = 0;
             if (!int.TryParse(Maturity.Text, out maturityLevel))
             {
@@ -382,9 +384,9 @@ namespace Aurora.Management
             }
             region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
-            region.NumberStartup = int.Parse(StartupNumberBox.Text);
-            region.RegionSizeX = int.Parse(RegionSizeX.Text);
-            region.RegionSizeY = int.Parse(RegionSizeY.Text);
+            int.TryParse(StartupNumberBox.Text, out region.NumberStartup);
+            int.TryParse(RegionSizeX.Text, out region.RegionSizeX);
+            int.TryParse(RegionSizeY.Text, out region.RegionSizeY);
             region.Startup = ConvertIntToStartupType(startupType.SelectedIndex);
             region.InfiniteRegion = einfiniteRegion.Checked;
 
