@@ -49,70 +49,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         #region Declares
 
-        #region Enums
-
-        /// <summary>
-        ///   this are prim change comands replace old taints
-        ///   but for now use a single comand per call since argument passing still doesn't support multiple comands
-        /// </summary>
-        public enum changes
-        {
-            Add = 0, // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
-            Remove,
-            Delete,
-            Link,
-            // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
-            //  or removes from a object if arg is null
-            DeLink,
-            Position,
-            // arg Vector3 new position in world coords. Changes prim position. Prim must know if it is root or child
-            Orientation,
-            // arg Quaternion new orientation in world coords. Changes prim position. Prim must know it it is root or child
-            PosOffset, // not in use
-            // arg Vector3 new position in local coords. Changes prim position in object
-            OriOffset, // not in use
-            // arg Vector3 new position in local coords. Changes prim velocity in object
-            Velocity,
-            // arg Quaternion new rotation in local coords. Changes avatar rotation in object
-            Rotation,
-            // arg float new capsule length of avatar. Changes avatar height
-            CapsuleLength,
-            AngVelocity,
-            Acceleration,
-            Force,
-            Torque,
-
-            AddForce,
-            AddAngForce,
-            AngLock,
-
-            Size,
-            Shape,
-
-            CollidesWater,
-            VolumeDtc,
-
-            Physical,
-            Selected,
-            disabled,
-
-            VehicleType,
-            VehicleFloatParam,
-            VehicleVectorParam,
-            VehicleRotationParam,
-            VehicleFlags,
-            VehicleSetCameraPos,
-
-            buildingrepresentation,
-            blockphysicalreconstruction,
-
-
-
-            Null //keep this last used do dim the methods array. does nothing but pulsing the prim
-        }
-
-        #endregion
-
         public struct ContactParameter
         {
             public float bounce;
@@ -1309,7 +1245,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             pos.X = position.X;
             pos.Y = position.Y;
             pos.Z = position.Z;
-            AuroraODECharacter newAv = new AuroraODECharacter(avName, this, pos, rotation, size)
+            ODESpecificAvatar newAv = new ODESpecificAvatar(avName, this, pos, rotation, size)
                                            {
                                                LocalID = localID,
                                                UUID = UUID,
@@ -1938,13 +1874,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             // Move characters
                             lock (_characters)
                             {
-                                List<AuroraODECharacter> defects = new List<AuroraODECharacter>();
-                                foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
-                                    actor.Move(ODE_STEPSIZE, ref defects);
+                                List<ODESpecificAvatar> defects = new List<ODESpecificAvatar>();
+                                foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
+                                    if (actor.Move(ODE_STEPSIZE))
+                                        defects.Add(actor);
 
                                 if (defects.Count != 0)
                                 {
-                                    foreach (AuroraODECharacter defect in defects)
+                                    foreach (ODESpecificAvatar defect in defects)
                                     {
                                         defect.Destroy();
                                         RemoveCharacter(defect);

@@ -7,94 +7,14 @@ using Aurora.Framework;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
-    public class ODESpecificAvatar : PhysicsCharacter
+    public class ODESpecificAvatar : AuroraODECharacter
     {
-        #region Declare
+        #region Constructor
 
-        protected readonly CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
-        protected AuroraODEPhysicsScene _parent_scene;
-        public IntPtr Amotor = IntPtr.Zero;
-        protected float AvatarHalfsize;
-        public IntPtr Body = IntPtr.Zero;
-        public float CAPSULE_LENGTH = 2.140599f;
-        public float CAPSULE_RADIUS = 0.37f;
-        public float MinimumGroundFlightOffset = 3f;
-        protected float PID_D;
-        protected float PID_P;
-        public IntPtr Shell = IntPtr.Zero;
-        public d.Mass ShellMass;
-        protected bool ShouldBeWalking = true;
-        protected bool StartingUnderWater = true;
-        protected bool WasUnderWater;
-
-        protected Vector3 _position;
-        protected Vector3 _target_velocity;
-        protected Vector3 _velocity;
-        protected bool _wasZeroFlagFlying;
-        protected bool _zeroFlag;
-        protected d.Vector3 _zeroPosition;
-        public bool bad;
-        protected bool flying;
-        protected float lastUnderwaterPush;
-        protected int m_ZeroUpdateSent;
-        protected bool m_alwaysRun;
-        protected int m_colliderfilter;
-        protected CollisionCategories m_collisionCategories = (CollisionCategories.Character);
-
-        // Default, Collide with Other Geometries, spaces, bodies and characters.
-        protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space | CollisionCategories.Body | CollisionCategories.Character
-            //                                                        | CollisionCategories.Land
-                                                             );
-
-        //        float m_UpdateTimecntr = 0;
-        //        float m_UpdateFPScntr = 0.05f;
-        protected bool m_isJumping;
-        public bool m_isPhysical; // the current physical status
-        protected bool m_iscolliding;
-        protected bool m_iscollidingGround;
-
-        protected bool m_ispreJumping;
-        protected Vector3 m_lastAngVelocity;
-        protected Vector3 m_lastPosition;
-        protected Vector3 m_lastVelocity;
-        public uint m_localID;
-
-        protected float m_mass = 80f;
-        protected string m_name = String.Empty;
-        protected bool m_pidControllerActive = true;
-        protected int m_preJumpCounter;
-        protected Vector3 m_preJumpForce = Vector3.Zero;
-        protected Vector3 m_rotationalVelocity;
-        protected float m_speedModifier = 1.0f;
-        protected Quaternion m_taintRotation = Quaternion.Identity;
-        protected bool m_shouldBePhysical = true;
-        protected int m_lastForceApplied = 0;
-        protected Vector3 m_forceAppliedBeforeFalling = Vector3.Zero;
-
-        // unique UUID of this character object
-        public UUID m_uuid;
-        protected bool realFlying;
-
-        public override bool IsJumping
+        public ODESpecificAvatar(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Quaternion rotation,
+            Vector3 size) : base(avName, parent_scene, pos, rotation, size)
         {
-            get { return m_isJumping; }
-        }
-
-        public override bool IsPreJumping
-        {
-            get { return m_ispreJumping; }
-        }
-
-        public override float SpeedModifier
-        {
-            get { return m_speedModifier; }
-            set { m_speedModifier = value; }
-        }
-
-        public string Name
-        {
-            get { return m_name; }
-            set { m_name = value; }
+            base._parent_ref = this;
         }
 
         #endregion
@@ -106,7 +26,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   This is the avatar's movement control + PID Controller
         /// </summary>
         /// <param name = "timeStep"></param>
-        public void Move(float timeStep, ref List<PhysicsCharacter> defects)
+        /// <returns>True if the avatar should be removed from the simulation</returns>
+        public bool Move(float timeStep)
         {
             //  no lock; for now it's only called from within Simulate()
 
@@ -114,10 +35,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // calculating base velocity to the current position
 
             if (Body == IntPtr.Zero)
-                return;
+                return false;
 
             if (!m_shouldBePhysical)
-                return;
+                return false;
 
             Vector3 vec = Vector3.Zero;
             d.Vector3 vel = d.BodyGetLinearVel(Body);
@@ -157,8 +78,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!localPos.IsFinite())
             {
                 MainConsole.Instance.Warn("[PHYSICS]: Avatar Position is non-finite!");
-                defects.Add(this);
-                // _parent_scene.RemoveCharacter(this);
 
                 // destroy avatar capsule and related ODE data
 
@@ -185,7 +104,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomDestroy(Shell);
                     Shell = IntPtr.Zero;
                 }
-                return;
+                return true;
             }
 
             #endregion
@@ -330,7 +249,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_preJumpCounter++;
                     TriggerMovementUpdate();
-                    return;
+                    return false;
                 }
             }
 
@@ -666,7 +585,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 MainConsole.Instance.Warn("[PHYSICS]: Got a NaN force vector in Move()");
                 MainConsole.Instance.Warn("[PHYSICS]: Avatar Position is non-finite!");
-                defects.Add(this);
                 //kill the Geometry
                 _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
@@ -683,9 +601,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     d.GeomDestroy(Shell);
                     Shell = IntPtr.Zero;
                 }
+                return true;
             }
 
             #endregion
+
+            return false;
         }
 
         #endregion
@@ -701,7 +622,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name = "npositionX"></param>
         /// <param name = "npositionY"></param>
         /// <param name = "npositionZ"></param>
-        protected void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ) //, float tensor)
+        public void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ) //, float tensor)
         {
             _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
@@ -751,7 +672,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _position.Y = npositionY;
             _position.Z = npositionZ;
 
-            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Position, _position);
+            _parent_scene.AddChange(this, changes.Position, _position);
 
             d.BodySetMass(Body, ref ShellMass);
             d.GeomSetBody(Shell, Body);
