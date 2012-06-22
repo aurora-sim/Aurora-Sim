@@ -328,7 +328,7 @@ namespace Aurora.Modules.Entities.Media
         /// <param name = "path">Path on which this request was made</param>
         /// <param name = "omu">/param>
         ///   <returns></returns>
-        protected new byte[] HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
+        protected byte[] HandleObjectMediaUpdate(string path, ObjectMediaUpdate omu)
         {
             UUID primId = omu.PrimID;
 
