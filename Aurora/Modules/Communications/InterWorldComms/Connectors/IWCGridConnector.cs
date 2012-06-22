@@ -92,9 +92,9 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None)]
-        public RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID)
+        public RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password)
         {
-            return m_localService.RegisterRegion(regionInfos, oldSessionID);
+            return m_localService.RegisterRegion(regionInfos, oldSessionID, password);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
@@ -228,15 +228,15 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public void SetRegionUnsafe(UUID RegionID)
+        public void SetRegionUnsafe(UUID id)
         {
-            m_localService.SetRegionUnsafe(RegionID);
+            m_localService.SetRegionUnsafe(id);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public void SetRegionSafe(UUID RegionID)
+        public void SetRegionSafe(UUID id)
         {
-            m_localService.SetRegionUnsafe(RegionID);
+            m_localService.SetRegionUnsafe(id);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
