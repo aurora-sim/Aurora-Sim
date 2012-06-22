@@ -189,9 +189,10 @@ namespace Aurora.Framework
                     if (ALLOW_CACHE)
                         LoadedDlls.Add(moduleDir, new List<Type>());
                     foreach (FileInfo fileInfo in dir.GetFiles("*.dll"))
-                    {
                         modules.AddRange(LoadModulesFromDLL<T>(moduleDir, fileInfo.FullName));
-                    }
+
+                    LoadedAssemblys.Clear();
+
                     if (ALLOW_CACHE)
                         firstLoad.Add(moduleDir);
                 }
@@ -246,19 +247,19 @@ namespace Aurora.Framework
             List<T> modules = new List<T>();
             if (dllBlackList.Contains(dllName))
                 return modules;
-            //MainConsole.Instance.Info ("[ModuleLoader]: Loading " + dllName);
 
             Assembly pluginAssembly;
             if (!LoadedAssemblys.TryGetValue(dllName, out pluginAssembly))
             {
                 try
                 {
-                    pluginAssembly = Assembly.LoadFrom(dllName);
+                    pluginAssembly = Assembly.Load(AssemblyName.GetAssemblyName(dllName));
                     LoadedAssemblys.Add(dllName, pluginAssembly);
                 }
                 catch (BadImageFormatException)
                 {
                 }
+                catch { }
             }
 
             if (pluginAssembly != null)
@@ -266,29 +267,22 @@ namespace Aurora.Framework
                 try
                 {
                     List<Type> loadedTypes = new List<Type>();
-
-                    foreach (Type pluginType in pluginAssembly.GetTypes())
+                    foreach (Type pluginType in pluginAssembly.GetTypes().Where((p) => p.IsPublic && !p.IsAbstract))
                     {
                         try
                         {
-                            if (pluginType.IsPublic)
+                            if (ALLOW_CACHE)
                             {
-                                if (!pluginType.IsAbstract)
+                                if (!firstLoad.Contains(moduleDir))
                                 {
-                                    if (ALLOW_CACHE)
-                                    {
-                                        if (!firstLoad.Contains(moduleDir))
-                                        {
-                                            //Only add on the first load
-                                            if (!loadedTypes.Contains(pluginType))
-                                                loadedTypes.Add(pluginType);
-                                        }
-                                    }
-                                    if (pluginType.GetInterface(typeof (T).Name, true) != null)
-                                    {
-                                        modules.Add((T) Activator.CreateInstance(pluginType));
-                                    }
+                                    //Only add on the first load
+                                    if (!loadedTypes.Contains(pluginType))
+                                        loadedTypes.Add(pluginType);
                                 }
+                            }
+                            if (pluginType.GetInterface(typeof(T).Name, true) != null)
+                            {
+                                modules.Add((T)Activator.CreateInstance(pluginType));
                             }
                         }
                         catch (Exception ex)
