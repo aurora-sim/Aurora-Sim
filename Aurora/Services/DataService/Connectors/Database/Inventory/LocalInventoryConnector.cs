@@ -361,7 +361,7 @@ namespace Aurora.Services.DataService
             filter.andFilters["folderID"] = folder.ID;
             GD.Delete(m_foldersrealm, filter);
             Dictionary<string, object> row = new Dictionary<string, object>(6);
-            row["folderName"] = folder.Name.MySqlEscape(64);
+            row["folderName"] = folder.Name;
             row["type"] = folder.Type;
             row["version"] = folder.Version;
             row["folderID"] = folder.ID;
@@ -378,8 +378,8 @@ namespace Aurora.Services.DataService
             Dictionary<string, object> row = new Dictionary<string, object>(20);
             row["assetID"] = item.AssetID;
             row["assetType"] = item.AssetType;
-            row["inventoryName"] = item.Name.MySqlEscape(64);
-            row["inventoryDescription"] = item.Description.MySqlEscape(128);
+            row["inventoryName"] = item.Name;
+            row["inventoryDescription"] = item.Description;
             row["inventoryNextPermissions"] = item.NextPermissions;
             row["inventoryCurrentPermissions"] = item.CurrentPermissions;
             row["invType"] = item.InvType;

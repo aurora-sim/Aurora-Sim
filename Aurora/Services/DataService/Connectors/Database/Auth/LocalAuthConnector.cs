@@ -93,9 +93,9 @@ namespace Aurora.Services.DataService
             GD.Delete(m_realm, filter);
             Dictionary<string, object> row = new Dictionary<string, object>(4);
             row["UUID"] = data.PrincipalID;
-            row["passwordHash"] = data.PasswordHash.MySqlEscape(1024);
-            row["passwordSalt"] = data.PasswordSalt.MySqlEscape(1024);
-            row["accountType"] = data.AccountType.MySqlEscape(32);
+            row["passwordHash"] = data.PasswordHash;
+            row["passwordSalt"] = data.PasswordSalt;
+            row["accountType"] = data.AccountType;
             return GD.Insert(m_realm, row);
         }
 
@@ -103,7 +103,7 @@ namespace Aurora.Services.DataService
         public bool SetDataItem(UUID principalID, string item, string value)
         {
             Dictionary<string, object> values = new Dictionary<string, object>(1);
-            values[item.MySqlEscape()] = value;
+            values[item] = value;
 
             QueryFilter filter = new QueryFilter();
             filter.andFilters["UUID"] = principalID;

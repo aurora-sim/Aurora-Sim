@@ -89,8 +89,8 @@ namespace Aurora.Services.DataService
 
             Dictionary<string, object> row = new Dictionary<string, object>(11);
             row["GroupID"] = groupID;
-            row["Name"] = name.MySqlEscape(50);
-            row["Charter"] = charter.MySqlEscape(50);
+            row["Name"] = name;
+            row["Charter"] = charter;
             row["InsigniaID"] = insigniaID;
             row["FounderID"] = founderID;
             row["MembershipFee"] = membershipFee;
@@ -133,7 +133,7 @@ namespace Aurora.Services.DataService
             if (CheckGroupPermissions(requestingAgentID, groupID, (ulong)(GroupPowers.ChangeOptions | GroupPowers.ChangeIdentity)))
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(6);
-                values["Charter"] = charter.MySqlEscape(50);
+                values["Charter"] = charter;
                 values["InsigniaID"] = insigniaID;
                 values["MembershipFee"] = membershipFee;
                 values["OpenEnrollment"] = openEnrollment;
@@ -161,13 +161,13 @@ namespace Aurora.Services.DataService
                 row["GroupID"] = groupID;
                 row["NoticeID"] = noticeID == UUID.Zero ? UUID.Random() : noticeID;
                 row["Timestamp"] = ((uint) Util.UnixTimeSinceEpoch());
-                row["FromName"] = fromName.MySqlEscape(50);
-                row["Subject"] = subject.MySqlEscape(50);
-                row["Message"] = message.MySqlEscape(1024);
+                row["FromName"] = fromName;
+                row["Subject"] = subject;
+                row["Message"] = message;
                 row["HasAttachment"] = (ItemID != UUID.Zero) ? 1 : 0;
                 row["ItemID"] = ItemID;
                 row["AssetType"] = AssetType;
-                row["ItemName"] = ItemName.MySqlEscape(50);
+                row["ItemName"] = ItemName;
 
                 data.Insert("osgroupnotice", row);
             }
@@ -394,8 +394,8 @@ namespace Aurora.Services.DataService
                 Dictionary<string, object> row = new Dictionary<string, object>(6);
                 row["GroupID"] = GroupID;
                 row["RoleID"] = RoleID;
-                row["Name"] = NameOf.MySqlEscape(50);
-                row["Description"] = Description.MySqlEscape(50);
+                row["Name"] = NameOf;
+                row["Description"] = Description;
                 row["Title"] = Title;
                 row["Powers"] = Powers;
                 data.Insert("osrole", row);
@@ -415,15 +415,15 @@ namespace Aurora.Services.DataService
                 values["RoleID"] = RoleID;
                 if (NameOf != null)
                 {
-                    values["Name"] = NameOf.MySqlEscape(512);
+                    values["Name"] = NameOf;
                 }
                 if (Desc != null)
                 {
-                    values["Description"] = Desc.MySqlEscape(512);
+                    values["Description"] = Desc;
                 }
                 if (Title != null)
                 {
-                    values["Title"] = Title.MySqlEscape(512);
+                    values["Title"] = Title;
                 }
                 values["Powers"] = Powers;
 
@@ -564,7 +564,7 @@ namespace Aurora.Services.DataService
                 row["RoleID"] = roleID;
                 row["AgentID"] = AgentID;
                 row["TMStamp"] = Util.UnixTimeSinceEpoch();
-                row["FromAgentName"] = FromAgentName.MySqlEscape(50);
+                row["FromAgentName"] = FromAgentName;
                 data.Insert("osgroupinvite", row);
             }
         }
@@ -781,7 +781,7 @@ namespace Aurora.Services.DataService
             }
             if (!string.IsNullOrEmpty(GroupName))
             {
-                filter.andFilters["Name"] = GroupName.MySqlEscape(50);
+                filter.andFilters["Name"] = GroupName;
             }
             if (filter.Count == 0)
             {
@@ -1310,7 +1310,7 @@ namespace Aurora.Services.DataService
                 return (List<DirGroupsReplyData>)remoteValue;
 
             QueryFilter filter = new QueryFilter();
-            filter.andLikeFilters["Name"] = "%" + search.MySqlEscape(50) + "%";
+            filter.andLikeFilters["Name"] = "%" + search + "%";
 
             List<string> retVal = data.Query(new[]{
                 "GroupID",

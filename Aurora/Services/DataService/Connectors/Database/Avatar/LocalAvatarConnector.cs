@@ -83,8 +83,8 @@ namespace Aurora.Services.DataService
                 {
                     insertList.Add(new object[3]{
                         PrincipalID,
-                        kvp.Key.MySqlEscape(32),
-                        kvp.Key == "Textures" ? kvp.Value : kvp.Value.MySqlEscape()
+                        kvp.Key,
+                        kvp.Value
                     });
                 }
                 GD.InsertMultiple(m_realm, insertList);

@@ -493,8 +493,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                 row["hash_code"] = asset.HashCode;
                 row["parent_id"] = (asset.ID == asset.ParentID) ? "" : (UUID.Zero == asset.ParentID) ? "" : asset.ParentID.ToString();
                 row["creator_id"] = (asset.CreatorID == UUID.Zero) ? "" : asset.CreatorID.ToString();
-                row["name"] = asset.Name.MySqlEscape(64);
-                row["description"] = asset.Description.MySqlEscape(128);
+                row["name"] = asset.Name;
+                row["description"] = asset.Description;
                 row["asset_type"] = (int)asset.TypeAsset;
                 row["create_time"] = Util.ToUnixTime(asset.CreationDate);
                 row["access_time"] = Util.ToUnixTime(DateTime.UtcNow);
