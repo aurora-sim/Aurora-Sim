@@ -266,7 +266,7 @@ namespace Aurora.Modules.Attachments
             IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
             if (presence != null && presence.SuccessfullyMadeRootAgent)
             {
-                ISceneEntity att = RezSingleAttachmentFromInventory(remoteClient, itemID, UUID.Zero, AttachmentPt, true);
+                ISceneEntity att = RezSingleAttachmentFromInventory(remoteClient, itemID, UUID.Zero, AttachmentPt, false);
 
                 if (null == att)
                     return UUID.Zero;
@@ -447,13 +447,17 @@ namespace Aurora.Modules.Attachments
                     bool forceUpdateOnNextDeattach = false;
                     try
                     {
-                        if (updateUUIDs)
+                        IEntity e;
+                        if(!m_scene.SceneGraph.TryGetEntity(objatt.UUID, out e))//if (updateUUIDs)
                         {
                             m_scene.SceneGraph.AddPrimToScene(objatt);
                             forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                         }
                         else
                         {
+                            if (e as ISceneEntity != null)
+                                (e as ISceneEntity).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+
                             return null;//It was already added
                             /*foreach (var prim in objatt.ChildrenEntities())
                                 prim.LocalId = 0;

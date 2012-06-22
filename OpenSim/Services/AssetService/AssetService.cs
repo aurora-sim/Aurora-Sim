@@ -188,7 +188,11 @@ namespace OpenSim.Services.AssetService
         {
             object remoteValue = DoRemote(asset);
             if (remoteValue != null || m_doRemoteOnly)
+            {
+                if (remoteValue == null)
+                    return UUID.Zero;
                 asset.ID = (UUID)remoteValue;
+            }
             else
                 //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
                 asset.ID = m_database.Store(asset);

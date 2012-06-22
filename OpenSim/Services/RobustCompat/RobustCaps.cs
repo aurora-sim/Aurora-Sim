@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 using Aurora.Framework.Capabilities;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustCaps : INonSharedRegionModule
     {

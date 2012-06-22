@@ -711,6 +711,7 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             byte[] data;
             string filePath;
             TarArchiveReader.TarEntryType entryType;
+            System.Collections.Concurrent.ConcurrentQueue<byte[]> groups = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
             //Load the archive data that we need
             while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
             {
@@ -751,24 +752,46 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 }
                 else if (filePath.StartsWith("entities/"))
                 {
-                    MemoryStream ms = new MemoryStream(data);
-                    SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format(ref ms, scene);
-                    ms.Close();
-                    ms = null;
-                    data = null;
-                    foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
-                    {
-                        if (!foundLocalIDs.Contains(part.LocalId))
-                            foundLocalIDs.Add(part.LocalId);
-                        else
-                            part.LocalId = 0; //Reset it! Only use it once!
-                    }
-                    m_groups.Add(sceneObject);
+                    groups.Enqueue(data);
                 }
                 data = null;
             }
             m_loadStream.Close();
             m_loadStream = null;
+            int threadCount = 16;
+            System.Threading.Thread[] threads = new System.Threading.Thread[threadCount];
+            for (int i = 0; i < threadCount; i++)
+            {
+                threads[i] = new System.Threading.Thread(() =>
+                    {
+                        start:
+                        byte[] groupData;
+                        if (groups.TryDequeue(out groupData))
+                        {
+                            MemoryStream ms = new MemoryStream(groupData);
+                            SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format(ref ms, scene);
+                            ms.Close();
+                            ms = null;
+                            data = null;
+                            foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
+                            {
+                                if (!foundLocalIDs.Contains(part.LocalId))
+                                    foundLocalIDs.Add(part.LocalId);
+                                else
+                                    part.LocalId = 0; //Reset it! Only use it once!
+                            }
+                            m_groups.Add(sceneObject);
+                        }
+                        else
+                            return;
+                        goto start;
+                    });
+                threads[i].Start();
+            }
+            for (int i = 0; i < threadCount; i++)
+                threads[i].Join();
+
+
             foundLocalIDs.Clear();
             GC.Collect();
         }

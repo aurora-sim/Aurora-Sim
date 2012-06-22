@@ -36,8 +36,9 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.Interfaces;
+using Aurora.DataManager;
 
-namespace Aurora.Addon.Hypergrid
+namespace OpenSim.Services.Robust
 {
     public class RobustInventoryConnector : LocalInventoryConnector
     {
@@ -57,7 +58,7 @@ namespace Aurora.Addon.Hypergrid
                 GD.ConnectToDatabase(connectionString, "Inventory",
                                      source.Configs["AuroraConnectors"].GetBoolean("ValidateTables", true));
 
-                DataManager.DataManager.RegisterPlugin(this);
+                DataManager.RegisterPlugin(this);
             }
         }
 

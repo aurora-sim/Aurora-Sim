@@ -215,7 +215,8 @@ namespace Aurora.Modules.Archivers
                                 {
                                     UUID aid = asset.ID;
                                     asset.ID = m_scene.AssetService.Store(asset);
-                                    if (asset.ID != aid) assetBinaryChangeRecord.Add(aid, asset.ID);
+                                    if (asset.ID != aid && asset.ID != UUID.Zero) 
+                                        assetBinaryChangeRecord.Add(aid, asset.ID);
                                 }
                                 else
                                 {
