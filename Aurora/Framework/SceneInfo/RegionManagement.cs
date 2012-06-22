@@ -366,7 +366,7 @@ namespace Aurora.Framework
             if (conn != null)
             {
                 EstateSettings es = conn.GetEstateSettings(regionID);
-                if (es == null)
+                if (es == null || es.EstateID == 0)
                     return "";
                 else
                     return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, es.EstateOwner).Name;
