@@ -304,6 +304,10 @@ namespace Aurora.Framework
         public virtual void ForceSetPosition(Vector3 position)
         {
         }
+
+        public virtual void DoAChange(changes changes, object p)
+        {
+        }
     }
 
     public class NullObjectPhysicsActor : PhysicsObject

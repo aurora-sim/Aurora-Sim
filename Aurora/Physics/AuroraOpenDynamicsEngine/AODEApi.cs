@@ -311,6 +311,11 @@ namespace OdeAPI
             }
             public dReal X, Y, Z;
             private dReal _w;
+
+            public OpenMetaverse.Vector3 ToVector3()
+            {
+                return new OpenMetaverse.Vector3((float)X, (float)Y, (float)Z);
+            }
         }
 
 

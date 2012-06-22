@@ -207,8 +207,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public struct AODEchangeitem
         {
             public Object arg;
-            public AuroraODECharacter character;
-            public AuroraODEPrim prim;
+            public PhysicsActor actor;
             public changes what;
         }
 
@@ -1873,19 +1872,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   Called to queue a change to a prim
         ///   to use in place of old taint mechanism so changes do have a time sequence
         /// </summary>
-        public void AddChange(AuroraODEPrim prim, changes what, Object arg)
+        public void AddChange(PhysicsActor actor, changes what, Object arg)
         {
-            AODEchangeitem item = new AODEchangeitem {prim = prim, what = what, arg = arg};
-            ChangesQueue.Enqueue(item);
-        }
-
-        /// <summary>
-        ///   Called to queue a change to a prim
-        ///   to use in place of old taint mechanism so changes do have a time sequence
-        /// </summary>
-        public void AddChange(AuroraODECharacter character, changes what, Object arg)
-        {
-            AODEchangeitem item = new AODEchangeitem {character = character, what = what, arg = arg};
+            AODEchangeitem item = new AODEchangeitem { actor = actor, what = what, arg = arg };
             ChangesQueue.Enqueue(item);
         }
 
@@ -1928,10 +1917,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             while (ChangesQueue.TryDequeue(out item))
                             {
-                                if (item.prim != null)
-                                    try { item.prim.DoAChange(item.what, item.arg); } catch { }
-                                if (item.character != null)
-                                    try { item.character.ProcessTaints(item.what, item.arg); } catch { }
+                                try { item.actor.DoAChange(item.what, item.arg); } catch { }
                                 if (tlimit-- <= 0)
                                     break;
                             }
