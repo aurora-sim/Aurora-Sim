@@ -1302,7 +1302,6 @@ namespace Aurora.Framework.Servers.HttpServer
                             buffer = Encoding.UTF8.GetBytes("Internal Server Error");
                         }
                         else
-                            
                             return;//The handler took care of sending it for us
                     }
                     else if (buffer.Length == 0)
@@ -1314,7 +1313,9 @@ namespace Aurora.Framework.Servers.HttpServer
                     respcontentLength = buffer.Length;
                     try
                     {
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
+
+                        if (buffer != MainServer.NoResponse)
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
                         response.Send();
                     }
                     catch (SocketException e)

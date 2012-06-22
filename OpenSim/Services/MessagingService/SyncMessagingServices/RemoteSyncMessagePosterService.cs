@@ -114,7 +114,7 @@ namespace OpenSim.Services.MessagingService
                                 response(retval);
                         }
                         MainServer.Instance.RemoveStreamHandler("POST", backURL);
-                        return System.Text.Encoding.UTF8.GetBytes("");
+                        return MainServer.NoResponse;
                     }));
                     WebUtils.PostToService(host, message);
                 }

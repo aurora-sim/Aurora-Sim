@@ -1052,24 +1052,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     chr.IsColliding = false;
                     chr.LinkSetIsColliding = false;
                 }
-                foreach (AuroraODEPrim chr in _activeprims)
+                foreach (AuroraODEPrim prm in _activeprims)
                 {
-                    if (chr.Body != IntPtr.Zero && d.BodyIsEnabled(chr.Body) &&
-                        (!chr.m_disabled) && (!chr.m_frozen))
+                    if (prm.Body != IntPtr.Zero && d.BodyIsEnabled(prm.Body) &&
+                        (!prm.m_disabled) && (!prm.m_frozen))
                     {
                         try
                         {
-                            lock (chr)
+                            lock (prm)
                             {
-                                if (space != IntPtr.Zero && chr.prim_geom != IntPtr.Zero)
+                                if (space != IntPtr.Zero && prm.prim_geom != IntPtr.Zero)
                                 {
-                                    d.SpaceCollide2(space, chr.prim_geom, IntPtr.Zero, nearCallback);
+                                    d.SpaceCollide2(space, prm.prim_geom, IntPtr.Zero, nearCallback);
                                 }
                                 else
                                 {
                                     if (removeprims == null)
                                         removeprims = new List<AuroraODEPrim>();
-                                    removeprims.Add(chr);
+                                    removeprims.Add(prm);
                                     MainConsole.Instance.Debug(
                                         "[PHYSICS]: unable to collide test active prim against space.  The space was zero, the geom was zero or it was in the process of being removed.  Removed it from the active prim list.  This needs to be fixed!");
                                 }
@@ -1080,19 +1080,17 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                         }
                     }
-                    else if (chr.m_frozen)
+                    else if (prm.m_frozen)
                     {
                         if (removeprims == null)
                             removeprims = new List<AuroraODEPrim>();
-                        removeprims.Add(chr);
+                        removeprims.Add(prm);
                     }
                 }
                 if (removeprims != null)
                 {
                     foreach (AuroraODEPrim chr in removeprims)
-                    {
                         _activeprims.Remove(chr);
-                    }
                 }
             }
 
@@ -1493,12 +1491,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!prim.childPrim)
                 {
                     lock (prim.childrenPrim)
-                    {
                         foreach (AuroraODEPrim prm in prim.childrenPrim)
-                        {
                             RemovePrimThreadLocked(prm);
-                        }
-                    }
                 }
                 lock (_prims)
                     _prims.Remove(prim);
@@ -1895,11 +1889,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ChangesQueue.Enqueue(item);
         }
 
-        private bool GetNextChange(out AODEchangeitem item)
-        {
-            return ChangesQueue.TryDequeue(out item);
-        }
-
         #endregion
 
         #region Simulation Loop
@@ -1937,19 +1926,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             int tlimit = 500;
                             AODEchangeitem item;
 
-                            while (GetNextChange(out item))
+                            while (ChangesQueue.TryDequeue(out item))
                             {
                                 if (item.prim != null)
-                                {
-                                    try
-                                    {
-                                        if (item.prim.DoAChange(item.what, item.arg))
-                                            RemovePrimThreadLocked(item.prim);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
+                                    try { item.prim.DoAChange(item.what, item.arg); } catch { }
                                 if (item.character != null)
                                     try { item.character.ProcessTaints(item.what, item.arg); } catch { }
                                 if (tlimit-- <= 0)
@@ -2004,11 +1984,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 {
                                     foreach (AuroraODEPrim defect in defects)
                                     {
-                                        foreach (ISceneChildEntity child in defect.ParentEntity.ParentEntity.ChildrenEntities().Where(child => child.PhysActor != null))
-                                        {
-                                            RemovePrimThreadLocked((AuroraODEPrim)child.PhysActor);
-                                            child.PhysActor = null; //Delete it
-                                        }
                                         //Destroy it
                                         RemovePrimThreadLocked(defect);
                                         defect.ParentEntity.PhysActor = null; //Delete it
