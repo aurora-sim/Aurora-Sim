@@ -69,8 +69,7 @@ namespace Aurora.Framework.Servers.HttpServer
         protected X509Certificate2 m_cert;
         protected SslProtocols m_sslProtocol = SslProtocols.None;
 
-        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
-            new Dictionary<string, PollServiceEventArgs>();
+        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers = new Dictionary<string, PollServiceEventArgs>();
 
         protected bool m_isSecure;
         protected uint m_port;
@@ -704,7 +703,6 @@ namespace Aurora.Framework.Servers.HttpServer
             //MainConsole.Instance.Warn("Taking in request " + msg.HttpRequest.Uri.ToString());
 
             var request = msg.HttpRequest;
-            var response = request.CreateResponse(HttpStatusCode.OK, "OK");
             PollServiceEventArgs psEvArgs;
             OSHttpRequest req = new OSHttpRequest(context, request);
 
@@ -781,10 +779,10 @@ namespace Aurora.Framework.Servers.HttpServer
                 response.StatusCode = responsecode;
             }
 
-            if (!(contentType.Contains("image")
-                || contentType.Contains("x-shockwave-flash")
-                || contentType.Contains("application/x-oar")
-                || contentType.Contains("application/vnd.ll.mesh")))
+            if (contentType != null && !(contentType.Contains("image")
+                                         || contentType.Contains("x-shockwave-flash")
+                                         || contentType.Contains("application/x-oar")
+                                         || contentType.Contains("application/vnd.ll.mesh")))
             {
                 // Text
                 buffer = Encoding.UTF8.GetBytes(responseString);
@@ -799,7 +797,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
             string ETag = Util.SHA1Hash(buffer.ToString());
             response.AddHeader("ETag", ETag);
-            List<string> rHeaders = request.Headers.AllKeys.ToList<string>();
+            List<string> rHeaders = request.Headers.AllKeys.ToList();
             if (rHeaders.Contains("if-none-match") && request.Headers["if-none-match"].IndexOf(ETag) >= 0)
             {
                 response.StatusCode = 304;
@@ -1052,7 +1050,6 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             XmlRpcRequest xmlRprcRequest = null;
             string requestBody;
-            byte[] buf;
 
             using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
                 requestBody = reader.ReadToEnd();
@@ -1071,6 +1068,7 @@ namespace Aurora.Framework.Servers.HttpServer
             if (xmlRprcRequest != null)
             {
                 string methodName = xmlRprcRequest.MethodName;
+                byte[] buf;
                 if (methodName != null)
                 {
                     xmlRprcRequest.Params.Add(request.RemoteIPEndPoint);
@@ -1267,7 +1265,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         }
                         catch (Exception ex)
                         {
-                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex.ToString() + ".");
+                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
                         }
                     }
                     else if (requestHandler is IGenericHTTPHandler)
@@ -1331,18 +1329,19 @@ namespace Aurora.Framework.Servers.HttpServer
                     {
                         MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                     }
+                    finally
+                    {
+                        buffer = null;
+                    }
                     return;
                 }
 
                 if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
                 {
-                    foreach (string strAccept in request.AcceptTypes)
+                    if (request.AcceptTypes.Any(strAccept => strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json")))
                     {
-                        if (strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json"))
-                        {
-                            HandleLLSDRequests(request, response);
-                            return;
-                        }
+                        HandleLLSDRequests(request, response);
+                        return;
                     }
                 }
 
@@ -1368,7 +1367,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     default:
                         if (request.ContentType == "application/x-gzip")
                         {
-                            System.IO.Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
+                            Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
                             request.InputStream = inputStream;
                         }
                         if (_server.DoWeHaveALLSDHandler(request.RawUrl))
@@ -1420,7 +1419,7 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public void Dispose()
         {
-            
+            _server = null;
         }
 
         #endregion
