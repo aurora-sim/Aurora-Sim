@@ -18,7 +18,6 @@ namespace Griffin.Networking.Channels
         private readonly IPipeline _pipeline;
         private readonly BufferPool _pool;
         private readonly BufferSlice _readBuffer;
-        private MemoryStream _readStream;
         private Socket _socket;
         private Stream _stream;
 
@@ -149,11 +148,14 @@ namespace Griffin.Networking.Channels
         /// <param name="msg">Message</param>
         public void SendStream(SendStream msg)
         {
+            if (_stream.CanRead)
+            {
 #if NET_3_5
             CopyTo(msg.Stream, _stream);
 #else
-            msg.Stream.CopyTo(_stream);
+                msg.Stream.CopyTo(_stream);
 #endif
+            }
             msg.Stream.Dispose();
         }
 
@@ -334,7 +336,6 @@ namespace Griffin.Networking.Channels
                 Dispose();
             }
         }
-
 
         /// <summary>
         /// Releases unmanaged and - optionally - managed resources

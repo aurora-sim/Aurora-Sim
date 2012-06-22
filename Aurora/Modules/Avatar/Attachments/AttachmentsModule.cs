@@ -157,20 +157,10 @@ namespace Aurora.Modules.Attachments
                 foreach (ISceneEntity entity in entities)
                 {
                     receiver.SceneViewer.QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-#if (!ISWIN)
-                    foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                    foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
                     {
-                        if (!child.IsRoot)
-                        {
-                            receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                        }
+                        receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                     }
-#else
-                                               foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
-                                               {
-                                                   receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                                               }
-#endif
                 }
             }
             else
@@ -471,9 +461,7 @@ namespace Aurora.Modules.Attachments
                     //If we updated the attachment, we need to save the change
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
-                    {
                         FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID, forceUpdateOnNextDeattach);
-                    }
                     else
                         objatt = null;//Presence left, kill the attachment
                     #endregion

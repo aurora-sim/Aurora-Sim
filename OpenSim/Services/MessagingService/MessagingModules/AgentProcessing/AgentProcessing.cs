@@ -231,7 +231,7 @@ namespace OpenSim.Services.MessagingService
                         result["Destination"] = destination.ToOSD(); //Send back the new destination
                         WebUtils.PostToService(rootCaps.LoopbackRegionIP.ToString() + ResponseURL, result);
                     });
-                    return new OSDMap();
+                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse",true) };
                 }
             }
             else if (message["Method"] == "CrossAgent")
@@ -261,10 +261,10 @@ namespace OpenSim.Services.MessagingService
                         string reason = "";
                         result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
                                                        AgentID, requestingRegion, out reason);
-                        result["Reason"] = reason;
+                        result["reason"] = reason;
                         WebUtils.PostToService(rootCaps.Region.ServerURI + ResponseURL, result);
                     });
-                    return new OSDMap();
+                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
                 }
                 else if (clientCaps.InTeleport)
                 {

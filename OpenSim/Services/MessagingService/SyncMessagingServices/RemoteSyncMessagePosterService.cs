@@ -116,7 +116,15 @@ namespace OpenSim.Services.MessagingService
                         MainServer.Instance.RemoveStreamHandler("POST", backURL);
                         return System.Text.Encoding.UTF8.GetBytes("");
                     }));
-                    WebUtils.PostToService(host, message);
+                    string result = WebUtils.PostToService(host, message);
+                    if (result != "")
+                    {
+                        OSDMap r = OSDParser.DeserializeJson(result) as OSDMap;
+                        if (r == null || r.ContainsKey("WillHaveResponse"))
+                            response(null);
+                    }
+                    else
+                        response(null);
                 }
             });
         }

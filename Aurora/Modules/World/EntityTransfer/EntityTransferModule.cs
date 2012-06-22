@@ -298,7 +298,7 @@ namespace Aurora.Modules.EntityTransfer
                         agentCircuit, agent, teleportFlags, finalDestination, sp.Scene.RegionInfo.RegionHandle),
                         sp.UUID, sp.Scene.RegionInfo.RegionHandle, (map) =>
                         {
-                            if (map == null)
+                            if (map == null || !map["success"].AsBoolean())
                             {
                                 // Fix the agent status
                                 sp.IsChildAgent = false;
@@ -623,7 +623,7 @@ namespace Aurora.Modules.EntityTransfer
                             agent.UUID, agent.Scene.RegionInfo.RegionHandle,
                             (map) =>
                             {
-                                if (map == null)
+                                if (map == null || !map["success"].AsBoolean())
                                 {
                                     //Tell modules that we have failed
                                     agent.AgentFailedToLeave();
