@@ -47,6 +47,8 @@ namespace Aurora.Management
         public delegate void NoOp();
         public event NewRegion OnNewRegion;
         private readonly bool KillAfterRegionCreation = false;
+        private bool RegionHasBeenCreated = false;
+        private UUID RegionCreatedID = UUID.Zero;
         private UUID CurrentRegionID = UUID.Zero;
         private UUID _CurrentEstateRegionSelectedID = UUID.Zero;
 
@@ -100,6 +102,7 @@ namespace Aurora.Management
             InitializeComponent();
             if (openCreatePageFirst)
                 tabControl1.SelectedTab = tabPage2;
+            changeEstateBox.Visible = false;
             CStartupType.SelectedIndex = 1;
             RefreshCurrentRegions();
             GetDefaultRegions ();
@@ -186,21 +189,17 @@ namespace Aurora.Management
                 MessageBox.Show ("You must enter a valid region size (multiple of " + Constants.MinRegionSize + "!");
                 return;
             }
-            region.NumberStartup = int.Parse (CStartNum.Text);
             region.Startup = ConvertIntToStartupType(CStartupType.SelectedIndex);
             region.InfiniteRegion = cInfiniteRegion.Checked;
 
             _regionManager.UpdateRegionInfo(region);
             CopyOverDefaultRegion (region.RegionName);
-            if (KillAfterRegionCreation)
-            {
-                Application.Exit();
-                return;
-            }
-            if(MainConsole.Instance != null)
-                MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
-            _regionManager.StartNewRegion(region);
+            MessageBox.Show("You must now set up an estate for the new region");
             RefreshCurrentRegions();
+            tabControl1.SelectedIndex = 2;
+            estateRegionSelection.SelectedItem = region.RegionName;
+            RegionHasBeenCreated = true;
+            RegionCreatedID = region.RegionID;
         }
 
         private void SearchForRegionByName_Click(object sender, EventArgs e)
@@ -232,7 +231,6 @@ namespace Aurora.Management
                 textBox1.Text = "";
                 RegionSizeX.Text = "";
                 RegionSizeY.Text = "";
-                StartupNumberBox.Text = "0";
                 startupType.SelectedIndex = 0;
                 einfiniteRegion.Checked = false;
                 return;
@@ -261,7 +259,6 @@ namespace Aurora.Management
             RegionSizeY.Text = region.RegionSizeY.ToString ();
             startupType.SelectedIndex = ConvertStartupType (region.Startup);
             einfiniteRegion.Checked = region.InfiniteRegion;
-            StartupNumberBox.Text = region.NumberStartup.ToString();
             if (_regionManager.GetWhetherRegionIsOnline(region.RegionID))
                 SetOnlineStatus ();
             else
@@ -384,7 +381,6 @@ namespace Aurora.Management
             }
             region.RegionSettings.Maturity = maturityLevel;
             region.Disabled = DisabledEdit.Checked;
-            int.TryParse(StartupNumberBox.Text, out region.NumberStartup);
             int.TryParse(RegionSizeX.Text, out region.RegionSizeX);
             int.TryParse(RegionSizeY.Text, out region.RegionSizeY);
             region.Startup = ConvertIntToStartupType(startupType.SelectedIndex);
@@ -750,6 +746,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             UpdateCurrentEstateText(null);
             createNewEstate.Enabled = true;
             changeRegionEstateButton.Enabled = true;
+            changeEstateBox.Visible = true;
         }
 
         private void UpdateCurrentEstateText(string p)
@@ -770,6 +767,25 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
             _regionManager.ChangeEstate(ownerName, estateToJoin, _CurrentEstateRegionSelectedID);
             UpdateCurrentEstateText(estateToJoin);
+            if (RegionHasBeenCreated && RegionCreatedID == _CurrentEstateRegionSelectedID)
+                StartRegionAfterEstateCreation();
+        }
+
+        private void StartRegionAfterEstateCreation()
+        {
+            if (KillAfterRegionCreation)
+            {
+                //Kill it so startup can continue
+                Application.Exit();
+                return;
+            }
+            RegionInfo region = _regionManager.GetRegionInfo(_CurrentEstateRegionSelectedID);
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.Info("[LOADREGIONS]: Creating Region: " + region.RegionName + ")");
+            _regionManager.StartNewRegion(region);
+            RefreshCurrentRegions();
+            RegionHasBeenCreated = false;
+            RegionCreatedID = UUID.Zero;
         }
 
         private void createNewEstate_Click(object sender, EventArgs e)
@@ -781,7 +797,12 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             if (!_regionManager.CreateNewEstate(regionID, estateName, ownerName))
                 MessageBox.Show("Failed to create the estate, possibly duplicate estate name?");
             else
+            {
                 UpdateCurrentEstateText(estateName);
+
+                if (RegionHasBeenCreated && RegionCreatedID == regionID)
+                    StartRegionAfterEstateCreation();
+            }
         }
 
         private void estateRegionSelection_SelectedIndexChanged(object sender, EventArgs e)

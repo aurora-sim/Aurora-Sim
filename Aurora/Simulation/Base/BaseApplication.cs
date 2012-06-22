@@ -163,7 +163,8 @@ namespace Aurora.Simulation.Base
 
             BinMigratorService service = new BinMigratorService();
             service.MigrateBin();
-            Configure();
+            if(!args.Contains("-skipconfig"))
+                Configure();
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
             configSource.Alias.AddAlias("On", true);
@@ -225,12 +226,12 @@ namespace Aurora.Simulation.Base
             Process sProcessName = Process.GetCurrentProcess();
             string sCompare = sProcessName.ToString();
 
-            if (((Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+            if ((((Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
                 Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
                 && ((Aurora_log) && (new FileInfo("Aurora.log").Length > 0)))
                 || ((Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
                 Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
-                && ((Aurora_Server_log) && (new FileInfo("AuroraServer.log").Length > 0))))
+                && ((Aurora_Server_log) && (new FileInfo("AuroraServer.log").Length > 0)))))
             {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine("Required Configuration Files Found\n");

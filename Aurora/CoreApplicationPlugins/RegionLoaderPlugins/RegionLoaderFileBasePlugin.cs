@@ -366,6 +366,11 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             return NeedsUpdate;
         }
 
+        public void CreateRegion()
+        {
+            AddRegion(new string[0]);
+        }
+
         /// <summary>
         /// Creates a new region based on the parameters specified.   This will ask the user questions on the console
         /// </summary>

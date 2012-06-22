@@ -149,8 +149,8 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             int now = (int)Utils.DateTimeToUnixTime(DateTime.UtcNow);
             Dictionary<string, object> row = new Dictionary<string, object>(11);
             row["id"] = assetID;
-            row["name"] = asset.Name.MySqlEscape(64);
-            row["description"] = asset.Description.MySqlEscape(64);
+            row["name"] = asset.Name;
+            row["description"] = asset.Description;
             row["assetType"] = (sbyte)asset.TypeAsset;
             row["local"] = (asset.Flags & AssetFlags.Local) == AssetFlags.Local;
             row["temporary"] = (asset.Flags & AssetFlags.Temporary) == AssetFlags.Temporary;

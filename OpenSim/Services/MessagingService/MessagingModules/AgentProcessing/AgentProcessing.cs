@@ -93,12 +93,9 @@ namespace OpenSim.Services.MessagingService
             UUID AgentID = message["AgentID"].AsUUID();
             ulong requestingRegion = message["RequestingRegion"].AsULong();
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-            MainConsole.Instance.Warn(message["Method"]);
             if (capsService == null)
-            {
-                //MainConsole.Instance.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
                 return new OSDMap();
-            }
+
             IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
 
             IRegionClientCapsService regionCaps = null;

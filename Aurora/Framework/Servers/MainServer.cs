@@ -31,6 +31,7 @@ namespace Aurora.Framework
 {
     public class MainServer
     {
+        public static byte[] NoResponse = new byte[1] { 1 };
         public static IHttpServer Instance { get; set; }
     }
 }

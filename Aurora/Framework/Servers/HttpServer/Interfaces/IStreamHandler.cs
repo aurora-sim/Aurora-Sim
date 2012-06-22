@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
 using System.IO;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public interface IRequestHandler
+    public interface IRequestHandler: IDisposable
     {
         // Return response content type
         string ContentType { get; }

@@ -309,44 +309,50 @@ namespace Aurora.Framework
             if (args.ContainsKey("Method"))
             {
                 string method = args["Method"].AsString();
-
-                MethodImplementation methodInfo;
-                if (GetMethodInfo(method, args.Count - 1, out methodInfo))
+                try
                 {
-                    if (m_SessionID == "")
+                    MethodImplementation methodInfo;
+                    if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                     {
-                        if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
+                        if (m_SessionID == "")
+                        {
+                            if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
+                                return new byte[0];
+                        }
+                        else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
                             return new byte[0];
-                    }
-                    else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
-                        return new byte[0];
-                    if (methodInfo.Attribute.UsePassword)
-                    {
-                        if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
-                            return new byte[0];
-                    }
-                    if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
-                    {
-                        UUID userID = args["UserID"].AsUUID();
-                        IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
-                        if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
-                            return new byte[0];
-                    }
+                        if (methodInfo.Attribute.UsePassword)
+                        {
+                            if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
+                                return new byte[0];
+                        }
+                        if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
+                        {
+                            UUID userID = args["UserID"].AsUUID();
+                            IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
+                            if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
+                                return new byte[0];
+                        }
 
-                    ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
-                    object[] parameters = new object[paramInfo.Length];
-                    int paramNum = 0;
-                    foreach (ParameterInfo param in paramInfo)
-                        parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
+                        object[] parameters = new object[paramInfo.Length];
+                        int paramNum = 0;
+                        foreach (ParameterInfo param in paramInfo)
+                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
 
-                    object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
-                    OSDMap response = new OSDMap();
-                    if (o == null)//void method
-                        response["Value"] = "null";
-                    else
-                        response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
-                    response["Success"] = true;
-                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                        object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
+                        OSDMap response = new OSDMap();
+                        if (o == null)//void method
+                            response["Value"] = "null";
+                        else
+                            response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
+                        response["Success"] = true;
+                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat("[ServerHandler]: Error occured for method {0}: {1}", method, ex.ToString());
                 }
             }
             else

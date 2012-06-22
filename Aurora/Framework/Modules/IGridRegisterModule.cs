@@ -44,14 +44,15 @@ namespace Aurora.Framework
         /// <param name = "scene"></param>
         /// <param name = "returnResultImmediately">If false, it will walk the user through how to fix potential issues</param>
         /// <param name = "continueTrying">Continue trying to register until it succeeds</param>
+        /// <param name="password"> </param>
         /// <returns>Success</returns>
-        bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately, bool continueTrying);
+        bool RegisterRegionWithGrid(IScene scene, bool returnResultImmediately, bool continueTrying, string password);
 
         /// <summary>
         ///   Add this generic info to all registering regions
         /// </summary>
-        /// <param name = "p"></param>
-        /// <param name = "path"></param>
+        /// <param name="key"> </param>
+        /// <param name="value"> </param>
         void AddGenericInfo(string key, string value);
 
         /// <summary>

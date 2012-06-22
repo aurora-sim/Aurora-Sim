@@ -110,14 +110,14 @@ namespace Aurora.Services.DataService
         public void SaveAvatarArchive(AvatarArchive archive)
         {
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["Name"] = archive.Name.MySqlEscape();
+            filter.andFilters["Name"] = archive.Name;
             List<string> Check = GD.Query(new string[] { "Name" }, "avatararchives", filter, null, null, null);
             if (Check.Count == 0)
             {
                 GD.Insert("avatararchives", new object[]{
-                    archive.Name.MySqlEscape(),
+                    archive.Name,
                     archive.ArchiveXML,
-                    archive.Snapshot.MySqlEscape(),
+                    archive.Snapshot,
                     archive.IsPublic
                 });
             }
@@ -125,7 +125,7 @@ namespace Aurora.Services.DataService
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
                 values["Archive"] = archive.ArchiveXML;
-                values["Snapshot"] = archive.Snapshot.MySqlEscape();
+                values["Snapshot"] = archive.Snapshot;
                 values["IsPublic"] = archive.IsPublic;
 
                 GD.Update("avatararchives", values, null, filter, null, null);

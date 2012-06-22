@@ -137,7 +137,7 @@ namespace Aurora.Services.DataService
                 UUID.Zero
             };
 
-            string[] words = query.MySqlEscape().Split(new[] { ' ' });
+            string[] words = query.Split(new[] { ' ' });
 
             for (int i = 0; i < words.Length; i++)
             {

@@ -70,9 +70,6 @@ namespace Aurora.Management
             this.CStartupType = new System.Windows.Forms.ListBox();
             this.button18 = new System.Windows.Forms.Button();
             this.label37 = new System.Windows.Forms.Label();
-            this.CStartNum = new System.Windows.Forms.TextBox();
-            this.button16 = new System.Windows.Forms.Button();
-            this.label35 = new System.Windows.Forms.Label();
             this.button14 = new System.Windows.Forms.Button();
             this.CRegionSizeY = new System.Windows.Forms.TextBox();
             this.label33 = new System.Windows.Forms.Label();
@@ -133,9 +130,6 @@ namespace Aurora.Management
             this.RSizeXHelp = new System.Windows.Forms.Button();
             this.RegionSizeX = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
-            this.StartupNumberBox = new System.Windows.Forms.TextBox();
-            this.button12 = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
             this.DisabledEdit = new System.Windows.Forms.CheckBox();
             this.DisabledHelp = new System.Windows.Forms.Button();
             this.MaturityHelp = new System.Windows.Forms.Button();
@@ -164,21 +158,21 @@ namespace Aurora.Management
             this.webBrowser1 = new System.Windows.Forms.WebBrowser();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
-            this.estateRegionSelection = new System.Windows.Forms.ListBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.estateOwnerName = new System.Windows.Forms.TextBox();
-            this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.estateOwnerLookupSearch = new System.Windows.Forms.Button();
-            this.estateSelection = new System.Windows.Forms.ListBox();
-            this.changeRegionEstateButton = new System.Windows.Forms.Button();
-            this.groupBox8 = new System.Windows.Forms.GroupBox();
-            this.createNewEstate = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
-            this.estateName = new System.Windows.Forms.TextBox();
-            this.groupBox9 = new System.Windows.Forms.GroupBox();
-            this.label9 = new System.Windows.Forms.Label();
+            this.changeEstateBox = new System.Windows.Forms.GroupBox();
             this.currentEstateName = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.changeRegionEstateButton = new System.Windows.Forms.Button();
+            this.estateSelection = new System.Windows.Forms.ListBox();
+            this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.estateName = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.createNewEstate = new System.Windows.Forms.Button();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.estateOwnerLookupSearch = new System.Windows.Forms.Button();
+            this.estateOwnerName = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.estateRegionSelection = new System.Windows.Forms.ListBox();
             this.tabPage2.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit();
@@ -189,10 +183,10 @@ namespace Aurora.Management
             this.groupBox3.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage3.SuspendLayout();
-            this.groupBox6.SuspendLayout();
-            this.groupBox7.SuspendLayout();
-            this.groupBox8.SuspendLayout();
+            this.changeEstateBox.SuspendLayout();
             this.groupBox9.SuspendLayout();
+            this.groupBox8.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.SuspendLayout();
             // 
             // label14
@@ -284,9 +278,6 @@ namespace Aurora.Management
             this.groupBox1.Controls.Add(this.CStartupType);
             this.groupBox1.Controls.Add(this.button18);
             this.groupBox1.Controls.Add(this.label37);
-            this.groupBox1.Controls.Add(this.CStartNum);
-            this.groupBox1.Controls.Add(this.button16);
-            this.groupBox1.Controls.Add(this.label35);
             this.groupBox1.Controls.Add(this.button14);
             this.groupBox1.Controls.Add(this.CRegionSizeY);
             this.groupBox1.Controls.Add(this.label33);
@@ -327,7 +318,7 @@ namespace Aurora.Management
             // cInfiniteRegion
             // 
             this.cInfiniteRegion.AutoSize = true;
-            this.cInfiniteRegion.Location = new System.Drawing.Point(246, 292);
+            this.cInfiniteRegion.Location = new System.Drawing.Point(247, 266);
             this.cInfiniteRegion.Name = "cInfiniteRegion";
             this.cInfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.cInfiniteRegion.TabIndex = 66;
@@ -335,7 +326,7 @@ namespace Aurora.Management
             // 
             // button19
             // 
-            this.button19.Location = new System.Drawing.Point(79, 289);
+            this.button19.Location = new System.Drawing.Point(84, 263);
             this.button19.Name = "button19";
             this.button19.Size = new System.Drawing.Size(21, 20);
             this.button19.TabIndex = 65;
@@ -346,7 +337,7 @@ namespace Aurora.Management
             // label39
             // 
             this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(5, 293);
+            this.label39.Location = new System.Drawing.Point(6, 267);
             this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(75, 13);
             this.label39.TabIndex = 64;
@@ -359,14 +350,14 @@ namespace Aurora.Management
             "Normal",
             "Medium",
             "Soft"});
-            this.CStartupType.Location = new System.Drawing.Point(246, 312);
+            this.CStartupType.Location = new System.Drawing.Point(247, 286);
             this.CStartupType.Name = "CStartupType";
             this.CStartupType.Size = new System.Drawing.Size(100, 30);
             this.CStartupType.TabIndex = 63;
             // 
             // button18
             // 
-            this.button18.Location = new System.Drawing.Point(92, 308);
+            this.button18.Location = new System.Drawing.Point(75, 291);
             this.button18.Name = "button18";
             this.button18.Size = new System.Drawing.Size(21, 20);
             this.button18.TabIndex = 61;
@@ -377,37 +368,11 @@ namespace Aurora.Management
             // label37
             // 
             this.label37.AutoSize = true;
-            this.label37.Location = new System.Drawing.Point(5, 312);
+            this.label37.Location = new System.Drawing.Point(6, 295);
             this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(68, 13);
             this.label37.TabIndex = 60;
             this.label37.Text = "Startup Type";
-            // 
-            // CStartNum
-            // 
-            this.CStartNum.Location = new System.Drawing.Point(247, 195);
-            this.CStartNum.Name = "CStartNum";
-            this.CStartNum.Size = new System.Drawing.Size(100, 20);
-            this.CStartNum.TabIndex = 59;
-            this.CStartNum.Text = "0";
-            // 
-            // button16
-            // 
-            this.button16.Location = new System.Drawing.Point(93, 195);
-            this.button16.Name = "button16";
-            this.button16.Size = new System.Drawing.Size(21, 20);
-            this.button16.TabIndex = 58;
-            this.button16.Text = "?";
-            this.button16.UseVisualStyleBackColor = true;
-            // 
-            // label35
-            // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(6, 199);
-            this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(81, 13);
-            this.label35.TabIndex = 57;
-            this.label35.Text = "Startup Number";
             // 
             // button14
             // 
@@ -466,7 +431,7 @@ namespace Aurora.Management
             // DisabledCreate
             // 
             this.DisabledCreate.AutoSize = true;
-            this.DisabledCreate.Location = new System.Drawing.Point(247, 272);
+            this.DisabledCreate.Location = new System.Drawing.Point(247, 246);
             this.DisabledCreate.Name = "DisabledCreate";
             this.DisabledCreate.Size = new System.Drawing.Size(15, 14);
             this.DisabledCreate.TabIndex = 42;
@@ -474,7 +439,7 @@ namespace Aurora.Management
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(56, 269);
+            this.button11.Location = new System.Drawing.Point(56, 243);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(21, 20);
             this.button11.TabIndex = 40;
@@ -484,7 +449,7 @@ namespace Aurora.Management
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(56, 246);
+            this.button10.Location = new System.Drawing.Point(56, 220);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(21, 20);
             this.button10.TabIndex = 39;
@@ -494,7 +459,7 @@ namespace Aurora.Management
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(155, 221);
+            this.button9.Location = new System.Drawing.Point(155, 195);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(21, 20);
             this.button9.TabIndex = 38;
@@ -562,7 +527,7 @@ namespace Aurora.Management
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(6, 273);
+            this.label12.Location = new System.Drawing.Point(6, 247);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(48, 13);
             this.label12.TabIndex = 24;
@@ -588,7 +553,7 @@ namespace Aurora.Management
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(6, 250);
+            this.label11.Location = new System.Drawing.Point(6, 224);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(44, 13);
             this.label11.TabIndex = 22;
@@ -609,7 +574,7 @@ namespace Aurora.Management
             "PG",
             "Mature",
             "Adult"});
-            this.Maturity.Location = new System.Drawing.Point(247, 247);
+            this.Maturity.Location = new System.Drawing.Point(247, 221);
             this.Maturity.Name = "Maturity";
             this.Maturity.Size = new System.Drawing.Size(100, 17);
             this.Maturity.TabIndex = 21;
@@ -625,7 +590,7 @@ namespace Aurora.Management
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 224);
+            this.label10.Location = new System.Drawing.Point(6, 198);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(146, 13);
             this.label10.TabIndex = 20;
@@ -642,7 +607,7 @@ namespace Aurora.Management
             // 
             // ObjectCount
             // 
-            this.ObjectCount.Location = new System.Drawing.Point(247, 221);
+            this.ObjectCount.Location = new System.Drawing.Point(247, 195);
             this.ObjectCount.Name = "ObjectCount";
             this.ObjectCount.Size = new System.Drawing.Size(100, 20);
             this.ObjectCount.TabIndex = 19;
@@ -877,9 +842,6 @@ namespace Aurora.Management
             this.groupBox3.Controls.Add(this.RSizeXHelp);
             this.groupBox3.Controls.Add(this.RegionSizeX);
             this.groupBox3.Controls.Add(this.label19);
-            this.groupBox3.Controls.Add(this.StartupNumberBox);
-            this.groupBox3.Controls.Add(this.button12);
-            this.groupBox3.Controls.Add(this.label13);
             this.groupBox3.Controls.Add(this.DisabledEdit);
             this.groupBox3.Controls.Add(this.DisabledHelp);
             this.groupBox3.Controls.Add(this.MaturityHelp);
@@ -915,7 +877,7 @@ namespace Aurora.Management
             // einfiniteRegion
             // 
             this.einfiniteRegion.AutoSize = true;
-            this.einfiniteRegion.Location = new System.Drawing.Point(247, 325);
+            this.einfiniteRegion.Location = new System.Drawing.Point(247, 302);
             this.einfiniteRegion.Name = "einfiniteRegion";
             this.einfiniteRegion.Size = new System.Drawing.Size(15, 14);
             this.einfiniteRegion.TabIndex = 55;
@@ -924,7 +886,7 @@ namespace Aurora.Management
             // 
             // button13
             // 
-            this.button13.Location = new System.Drawing.Point(80, 322);
+            this.button13.Location = new System.Drawing.Point(80, 299);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size(21, 20);
             this.button13.TabIndex = 54;
@@ -935,7 +897,7 @@ namespace Aurora.Management
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(6, 326);
+            this.label17.Location = new System.Drawing.Point(6, 303);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(75, 13);
             this.label17.TabIndex = 53;
@@ -947,7 +909,7 @@ namespace Aurora.Management
             this.startupType.Items.AddRange(new object[] {
             "Normal",
             "Medium"});
-            this.startupType.Location = new System.Drawing.Point(247, 289);
+            this.startupType.Location = new System.Drawing.Point(247, 266);
             this.startupType.Name = "startupType";
             this.startupType.Size = new System.Drawing.Size(157, 30);
             this.startupType.TabIndex = 37;
@@ -956,7 +918,7 @@ namespace Aurora.Management
             // 
             // button17
             // 
-            this.button17.Location = new System.Drawing.Point(93, 289);
+            this.button17.Location = new System.Drawing.Point(93, 266);
             this.button17.Name = "button17";
             this.button17.Size = new System.Drawing.Size(21, 20);
             this.button17.TabIndex = 52;
@@ -967,7 +929,7 @@ namespace Aurora.Management
             // label36
             // 
             this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(6, 293);
+            this.label36.Location = new System.Drawing.Point(6, 270);
             this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(68, 13);
             this.label36.TabIndex = 51;
@@ -1028,34 +990,6 @@ namespace Aurora.Management
             this.label19.Size = new System.Drawing.Size(74, 13);
             this.label19.TabIndex = 46;
             this.label19.Text = "Region Size X";
-            // 
-            // StartupNumberBox
-            // 
-            this.StartupNumberBox.Location = new System.Drawing.Point(247, 265);
-            this.StartupNumberBox.Name = "StartupNumberBox";
-            this.StartupNumberBox.Size = new System.Drawing.Size(157, 20);
-            this.StartupNumberBox.TabIndex = 44;
-            this.StartupNumberBox.TextChanged += new System.EventHandler(this.startupType_TextChanged);
-            this.StartupNumberBox.Leave += new System.EventHandler(this.startupType_Leave);
-            // 
-            // button12
-            // 
-            this.button12.Location = new System.Drawing.Point(93, 265);
-            this.button12.Name = "button12";
-            this.button12.Size = new System.Drawing.Size(21, 20);
-            this.button12.TabIndex = 43;
-            this.button12.Text = "?";
-            this.button12.UseVisualStyleBackColor = true;
-            this.button12.Click += new System.EventHandler(this.button12_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(6, 269);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(81, 13);
-            this.label13.TabIndex = 42;
-            this.label13.Text = "Startup Number";
             // 
             // DisabledEdit
             // 
@@ -1314,7 +1248,7 @@ namespace Aurora.Management
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.groupBox7);
+            this.tabPage3.Controls.Add(this.changeEstateBox);
             this.tabPage3.Controls.Add(this.groupBox6);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
@@ -1323,6 +1257,105 @@ namespace Aurora.Management
             this.tabPage3.TabIndex = 3;
             this.tabPage3.Text = "Change Estate";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // changeEstateBox
+            // 
+            this.changeEstateBox.Controls.Add(this.currentEstateName);
+            this.changeEstateBox.Controls.Add(this.label9);
+            this.changeEstateBox.Controls.Add(this.groupBox9);
+            this.changeEstateBox.Controls.Add(this.groupBox8);
+            this.changeEstateBox.Location = new System.Drawing.Point(9, 149);
+            this.changeEstateBox.Name = "changeEstateBox";
+            this.changeEstateBox.Size = new System.Drawing.Size(636, 259);
+            this.changeEstateBox.TabIndex = 1;
+            this.changeEstateBox.TabStop = false;
+            this.changeEstateBox.Text = "Change Estate";
+            // 
+            // currentEstateName
+            // 
+            this.currentEstateName.AutoSize = true;
+            this.currentEstateName.Location = new System.Drawing.Point(95, 27);
+            this.currentEstateName.Name = "currentEstateName";
+            this.currentEstateName.Size = new System.Drawing.Size(0, 13);
+            this.currentEstateName.TabIndex = 40;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(12, 27);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(77, 13);
+            this.label9.TabIndex = 39;
+            this.label9.Text = "Current Estate:";
+            // 
+            // groupBox9
+            // 
+            this.groupBox9.Controls.Add(this.changeRegionEstateButton);
+            this.groupBox9.Controls.Add(this.estateSelection);
+            this.groupBox9.Location = new System.Drawing.Point(155, 55);
+            this.groupBox9.Name = "groupBox9";
+            this.groupBox9.Size = new System.Drawing.Size(475, 198);
+            this.groupBox9.TabIndex = 38;
+            this.groupBox9.TabStop = false;
+            this.groupBox9.Text = "Switch to Existing Estate";
+            // 
+            // changeRegionEstateButton
+            // 
+            this.changeRegionEstateButton.Enabled = false;
+            this.changeRegionEstateButton.Location = new System.Drawing.Point(93, 142);
+            this.changeRegionEstateButton.Name = "changeRegionEstateButton";
+            this.changeRegionEstateButton.Size = new System.Drawing.Size(130, 23);
+            this.changeRegionEstateButton.TabIndex = 36;
+            this.changeRegionEstateButton.Text = "Change region\'s estate";
+            this.changeRegionEstateButton.UseVisualStyleBackColor = true;
+            this.changeRegionEstateButton.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // estateSelection
+            // 
+            this.estateSelection.FormattingEnabled = true;
+            this.estateSelection.Location = new System.Drawing.Point(6, 19);
+            this.estateSelection.Name = "estateSelection";
+            this.estateSelection.Size = new System.Drawing.Size(217, 108);
+            this.estateSelection.TabIndex = 35;
+            // 
+            // groupBox8
+            // 
+            this.groupBox8.Controls.Add(this.estateName);
+            this.groupBox8.Controls.Add(this.label8);
+            this.groupBox8.Controls.Add(this.createNewEstate);
+            this.groupBox8.Location = new System.Drawing.Point(6, 55);
+            this.groupBox8.Name = "groupBox8";
+            this.groupBox8.Size = new System.Drawing.Size(143, 200);
+            this.groupBox8.TabIndex = 37;
+            this.groupBox8.TabStop = false;
+            this.groupBox8.Text = "Create New Estate";
+            // 
+            // estateName
+            // 
+            this.estateName.Location = new System.Drawing.Point(6, 41);
+            this.estateName.Name = "estateName";
+            this.estateName.Size = new System.Drawing.Size(130, 20);
+            this.estateName.TabIndex = 38;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(6, 25);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(93, 13);
+            this.label8.TabIndex = 37;
+            this.label8.Text = "New Estate Name";
+            // 
+            // createNewEstate
+            // 
+            this.createNewEstate.Enabled = false;
+            this.createNewEstate.Location = new System.Drawing.Point(6, 80);
+            this.createNewEstate.Name = "createNewEstate";
+            this.createNewEstate.Size = new System.Drawing.Size(130, 23);
+            this.createNewEstate.TabIndex = 36;
+            this.createNewEstate.Text = "Create new Estate";
+            this.createNewEstate.UseVisualStyleBackColor = true;
+            this.createNewEstate.Click += new System.EventHandler(this.createNewEstate_Click);
             // 
             // groupBox6
             // 
@@ -1337,44 +1370,6 @@ namespace Aurora.Management
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Select Region";
             // 
-            // estateRegionSelection
-            // 
-            this.estateRegionSelection.FormattingEnabled = true;
-            this.estateRegionSelection.Location = new System.Drawing.Point(6, 19);
-            this.estateRegionSelection.Name = "estateRegionSelection";
-            this.estateRegionSelection.Size = new System.Drawing.Size(217, 108);
-            this.estateRegionSelection.TabIndex = 34;
-            this.estateRegionSelection.SelectedIndexChanged += new System.EventHandler(this.estateRegionSelection_SelectedIndexChanged);
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(239, 16);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(152, 13);
-            this.label5.TabIndex = 35;
-            this.label5.Text = "Name of the new estate owner";
-            // 
-            // estateOwnerName
-            // 
-            this.estateOwnerName.Location = new System.Drawing.Point(242, 41);
-            this.estateOwnerName.Name = "estateOwnerName";
-            this.estateOwnerName.Size = new System.Drawing.Size(174, 20);
-            this.estateOwnerName.TabIndex = 36;
-            // 
-            // groupBox7
-            // 
-            this.groupBox7.Controls.Add(this.currentEstateName);
-            this.groupBox7.Controls.Add(this.label9);
-            this.groupBox7.Controls.Add(this.groupBox9);
-            this.groupBox7.Controls.Add(this.groupBox8);
-            this.groupBox7.Location = new System.Drawing.Point(9, 149);
-            this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(636, 259);
-            this.groupBox7.TabIndex = 1;
-            this.groupBox7.TabStop = false;
-            this.groupBox7.Text = "Change Estate";
-            // 
             // estateOwnerLookupSearch
             // 
             this.estateOwnerLookupSearch.Location = new System.Drawing.Point(341, 104);
@@ -1385,91 +1380,30 @@ namespace Aurora.Management
             this.estateOwnerLookupSearch.UseVisualStyleBackColor = true;
             this.estateOwnerLookupSearch.Click += new System.EventHandler(this.estateOwnerLookupSearch_Click);
             // 
-            // estateSelection
+            // estateOwnerName
             // 
-            this.estateSelection.FormattingEnabled = true;
-            this.estateSelection.Location = new System.Drawing.Point(6, 19);
-            this.estateSelection.Name = "estateSelection";
-            this.estateSelection.Size = new System.Drawing.Size(217, 108);
-            this.estateSelection.TabIndex = 35;
+            this.estateOwnerName.Location = new System.Drawing.Point(242, 41);
+            this.estateOwnerName.Name = "estateOwnerName";
+            this.estateOwnerName.Size = new System.Drawing.Size(174, 20);
+            this.estateOwnerName.TabIndex = 36;
             // 
-            // changeRegionEstateButton
+            // label5
             // 
-            this.changeRegionEstateButton.Enabled = false;
-            this.changeRegionEstateButton.Location = new System.Drawing.Point(93, 142);
-            this.changeRegionEstateButton.Name = "changeRegionEstateButton";
-            this.changeRegionEstateButton.Size = new System.Drawing.Size(130, 23);
-            this.changeRegionEstateButton.TabIndex = 36;
-            this.changeRegionEstateButton.Text = "Change region\'s estate";
-            this.changeRegionEstateButton.UseVisualStyleBackColor = true;
-            this.changeRegionEstateButton.Click += new System.EventHandler(this.button5_Click);
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(239, 16);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(152, 13);
+            this.label5.TabIndex = 35;
+            this.label5.Text = "Name of the new estate owner";
             // 
-            // groupBox8
+            // estateRegionSelection
             // 
-            this.groupBox8.Controls.Add(this.estateName);
-            this.groupBox8.Controls.Add(this.label8);
-            this.groupBox8.Controls.Add(this.createNewEstate);
-            this.groupBox8.Location = new System.Drawing.Point(6, 55);
-            this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(143, 200);
-            this.groupBox8.TabIndex = 37;
-            this.groupBox8.TabStop = false;
-            this.groupBox8.Text = "Create New Estate";
-            // 
-            // createNewEstate
-            // 
-            this.createNewEstate.Enabled = false;
-            this.createNewEstate.Location = new System.Drawing.Point(6, 80);
-            this.createNewEstate.Name = "createNewEstate";
-            this.createNewEstate.Size = new System.Drawing.Size(130, 23);
-            this.createNewEstate.TabIndex = 36;
-            this.createNewEstate.Text = "Create new Estate";
-            this.createNewEstate.UseVisualStyleBackColor = true;
-            this.createNewEstate.Click += new System.EventHandler(this.createNewEstate_Click);
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 25);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(93, 13);
-            this.label8.TabIndex = 37;
-            this.label8.Text = "New Estate Name";
-            // 
-            // estateName
-            // 
-            this.estateName.Location = new System.Drawing.Point(6, 41);
-            this.estateName.Name = "estateName";
-            this.estateName.Size = new System.Drawing.Size(130, 20);
-            this.estateName.TabIndex = 38;
-            // 
-            // groupBox9
-            // 
-            this.groupBox9.Controls.Add(this.changeRegionEstateButton);
-            this.groupBox9.Controls.Add(this.estateSelection);
-            this.groupBox9.Location = new System.Drawing.Point(155, 55);
-            this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(475, 198);
-            this.groupBox9.TabIndex = 38;
-            this.groupBox9.TabStop = false;
-            this.groupBox9.Text = "Switch to Existing Estate";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(12, 27);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(77, 13);
-            this.label9.TabIndex = 39;
-            this.label9.Text = "Current Estate:";
-            // 
-            // currentEstateName
-            // 
-            this.currentEstateName.AutoSize = true;
-            this.currentEstateName.Location = new System.Drawing.Point(95, 27);
-            this.currentEstateName.Name = "currentEstateName";
-            this.currentEstateName.Size = new System.Drawing.Size(0, 13);
-            this.currentEstateName.TabIndex = 40;
+            this.estateRegionSelection.FormattingEnabled = true;
+            this.estateRegionSelection.Location = new System.Drawing.Point(6, 19);
+            this.estateRegionSelection.Name = "estateRegionSelection";
+            this.estateRegionSelection.Size = new System.Drawing.Size(217, 108);
+            this.estateRegionSelection.TabIndex = 34;
+            this.estateRegionSelection.SelectedIndexChanged += new System.EventHandler(this.estateRegionSelection_SelectedIndexChanged);
             // 
             // RegionManager
             // 
@@ -1498,13 +1432,13 @@ namespace Aurora.Management
             this.groupBox3.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
-            this.groupBox7.ResumeLayout(false);
-            this.groupBox7.PerformLayout();
+            this.changeEstateBox.ResumeLayout(false);
+            this.changeEstateBox.PerformLayout();
+            this.groupBox9.ResumeLayout(false);
             this.groupBox8.ResumeLayout(false);
             this.groupBox8.PerformLayout();
-            this.groupBox9.ResumeLayout(false);
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1527,9 +1461,6 @@ namespace Aurora.Management
         private System.Windows.Forms.ListBox CStartupType;
         private System.Windows.Forms.Button button18;
         private System.Windows.Forms.Label label37;
-        private System.Windows.Forms.TextBox CStartNum;
-        private System.Windows.Forms.Button button16;
-        private System.Windows.Forms.Label label35;
         private System.Windows.Forms.Button button14;
         private System.Windows.Forms.TextBox CRegionSizeY;
         private System.Windows.Forms.Label label33;
@@ -1590,9 +1521,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Button RSizeXHelp;
         private System.Windows.Forms.TextBox RegionSizeX;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox StartupNumberBox;
-        private System.Windows.Forms.Button button12;
-        private System.Windows.Forms.Label label13;
         private System.Windows.Forms.CheckBox DisabledEdit;
         private System.Windows.Forms.Button DisabledHelp;
         private System.Windows.Forms.Button MaturityHelp;
@@ -1625,7 +1553,7 @@ namespace Aurora.Management
         private System.Windows.Forms.ListBox estateRegionSelection;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox estateOwnerName;
-        private System.Windows.Forms.GroupBox groupBox7;
+        private System.Windows.Forms.GroupBox changeEstateBox;
         private System.Windows.Forms.Button estateOwnerLookupSearch;
         private System.Windows.Forms.ListBox estateSelection;
         private System.Windows.Forms.Button changeRegionEstateButton;

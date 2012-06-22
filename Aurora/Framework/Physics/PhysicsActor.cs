@@ -284,6 +284,7 @@ namespace Aurora.Framework
         public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }
+        public abstract bool IsTruelyColliding { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
         public abstract float Buoyancy { get; set; }
@@ -301,6 +302,10 @@ namespace Aurora.Framework
         }
 
         public virtual void ForceSetPosition(Vector3 position)
+        {
+        }
+
+        public virtual void DoAChange(changes changes, object p)
         {
         }
     }
@@ -410,11 +415,8 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override bool IsColliding
-        {
-            get { return false; }
-            set { return; }
-        }
+        public override bool IsColliding { get; set; }
+        public override bool IsTruelyColliding { get; set; }
 
         public override int PhysicsActorType
         {
@@ -572,11 +574,8 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override bool IsColliding
-        {
-            get { return false; }
-            set { return; }
-        }
+        public override bool IsTruelyColliding { get; set; }
+        public override bool IsColliding { get; set; }
 
         public override int PhysicsActorType
         {

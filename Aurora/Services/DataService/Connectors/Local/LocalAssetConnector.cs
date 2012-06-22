@@ -65,15 +65,15 @@ namespace Aurora.Services.DataService
         {
             object remoteValue = DoRemote(token, key, value);            if (remoteValue != null || m_doRemoteOnly)                return;            if (FindLSLData(token, key).Count == 0)
             {
-                GD.Insert("lslgenericdata", new[] {token.MySqlEscape(50), key.MySqlEscape(50), value.MySqlEscape(50)});
+                GD.Insert("lslgenericdata", new[] {token, key, value});
             }
             else
             {
                 Dictionary<string, object> values = new Dictionary<string, object>(1);
-                values["ValueSetting"] = value.MySqlEscape(50);
+                values["ValueSetting"] = value;
 
                 QueryFilter filter = new QueryFilter();
-                filter.andFilters["KeySetting"] = key.MySqlEscape(50);
+                filter.andFilters["KeySetting"] = key;
 
                 GD.Update("lslgenericdata", values, null, filter, null, null);
             }
@@ -86,8 +86,8 @@ namespace Aurora.Services.DataService
                 return (List<string>)remoteValue;
             
             QueryFilter filter = new QueryFilter();
-            filter.andFilters["Token"] = token.MySqlEscape(50);
-            filter.andFilters["KeySetting"] = token.MySqlEscape(50);
+            filter.andFilters["Token"] = token;
+            filter.andFilters["KeySetting"] = token;
             return GD.Query(new string[1] { "*" }, "lslgenericdata", filter, null, null, null);
         }
 

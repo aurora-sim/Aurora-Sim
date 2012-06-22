@@ -101,7 +101,7 @@ namespace OpenSim.Services.Robust
 
         #region IGridService
 
-        public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID)
+        public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID, string password)
         {
             Dictionary<string, object> rinfo = regionInfo.ToKVP();
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -782,11 +782,11 @@ namespace OpenSim.Services.Robust
             return null;
         }
 
-        public void SetRegionUnsafe(UUID RegionID)
+        public void SetRegionUnsafe(UUID id)
         {
         }
 
-        public void SetRegionSafe(UUID RegionID)
+        public void SetRegionSafe(UUID id)
         {
         }
 

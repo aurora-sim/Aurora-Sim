@@ -87,7 +87,7 @@ namespace Aurora.Services.DataService
                 values["TelehubRotZ"] = telehub.TelehubRotZ;
                 values["Spawns"] = telehub.BuildFromList(telehub.SpawnPos);
                 values["ObjectUUID"] = telehub.ObjectUUID;
-                values["Name"] = telehub.Name.MySqlEscape(50);
+                values["Name"] = telehub.Name;
 
                 QueryFilter filter = new QueryFilter();
                 filter.andFilters["RegionID"] = telehub.RegionID;
@@ -110,7 +110,7 @@ namespace Aurora.Services.DataService
                     telehub.TelehubRotZ,
                     telehub.BuildFromList(telehub.SpawnPos),
                     telehub.ObjectUUID,
-                    telehub.Name.MySqlEscape(50)
+                    telehub.Name
                 });
             }
         }

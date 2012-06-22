@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Aurora.Framework;
 using Nini.Config;
@@ -78,19 +79,33 @@ namespace Aurora.Modules.WindlightSettings
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
                 return new byte[0]; //They don't exist
+            bool success = false;
+            string fail_reason = "";
             if (SP.Scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
                 m_info = OSDParser.DeserializeLLSDXml(request);
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                     gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                  (new DatabaseWrapper {Info = m_info}).ToOSD());
+                                  (new DatabaseWrapper { Info = m_info }).ToOSD());
+                success = true;
                 SP.ControllingClient.SendAlertMessage("Windlight Settings saved successfully");
             }
             else
+            {
+                fail_reason = "You don't have permissions to set the windlight settings here.";
                 SP.ControllingClient.SendAlertMessage(
                     "You don't have the correct permissions to set the Windlight Settings");
-            return new byte[0];
+            }
+            OSDMap result = new OSDMap()
+            {
+                new KeyValuePair<string, OSD>("success", success),
+                new KeyValuePair<string, OSD>("regionID", SP.Scene.RegionInfo.RegionID)
+            };
+            if (fail_reason != "")
+                result["fail_reason"] = fail_reason;
+
+            return OSDParser.SerializeLLSDXmlBytes(result);
         }
 
         private byte[] EnvironmentSettings(Stream request, UUID agentID)

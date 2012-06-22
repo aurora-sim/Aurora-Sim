@@ -310,6 +310,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { }
         }
 
+        public override bool IsTruelyColliding { get; set; }
         public override bool IsColliding
         {
             get { return iscolliding; }
@@ -2306,7 +2307,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!m_isSelected)
             {
-                //MainConsole.Instance.Info("[PHYSICS]: dequeing forcelist");
                 if (IsPhysical)
                 {
                     m_angularforceacc += (Vector3)arg * 100;
@@ -2741,17 +2741,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_vehicle.ProcessSetCameraPos(CameraRotation);
         }
 
-
-        public bool DoAChange(AuroraODEPhysicsScene.changes what, object arg)
+        public void DoAChange(AuroraODEPhysicsScene.changes what, object arg)
         {
             if (m_frozen && what != AuroraODEPhysicsScene.changes.Add && what != AuroraODEPhysicsScene.changes.Remove && what != AuroraODEPhysicsScene.changes.Delete)
-                return false;
+                return;
 
             if (prim_geom == IntPtr.Zero && what != AuroraODEPhysicsScene.changes.Add &&
                 what != AuroraODEPhysicsScene.changes.Remove && what != AuroraODEPhysicsScene.changes.Delete)
             {
                 m_frozen = true;
-                return false;
+                return;
             }
 
             // nasty switch
@@ -2771,7 +2770,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     RemoveGeom();
                     m_targetSpace = IntPtr.Zero;
-                    return true;
+                    _parent_scene.RemovePrimThreadLocked(this);
+                    break;
+
                 case AuroraODEPhysicsScene.changes.Delete:
                     if (_parent != null)
                     {
@@ -2783,7 +2784,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     RemoveGeom();
                     m_targetSpace = IntPtr.Zero;
-                    return true;
+                    _parent_scene.RemovePrimThreadLocked(this);
+                    break;
 
                 case AuroraODEPhysicsScene.changes.Link:
                     AuroraODEPrim tmp = (AuroraODEPrim)arg;
@@ -2924,7 +2926,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     donullchange();
                     break;
             }
-            return false;
         }
 
         public void AddChange(AuroraODEPhysicsScene.changes what, object arg)

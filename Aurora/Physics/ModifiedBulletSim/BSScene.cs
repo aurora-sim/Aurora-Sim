@@ -416,13 +416,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             return prim;
         }
 
-        // This is a call from the simulator saying that some physical property has been updated.
-        // The BulletSim driver senses the changing of relevant properties so this taint 
-        // information call is not needed.
-        public override void AddPhysicsActorTaint(PhysicsActor prim)
-        {
-        }
-
         // Simulate one timestep
         public override void Simulate(float timeStep)
         {
