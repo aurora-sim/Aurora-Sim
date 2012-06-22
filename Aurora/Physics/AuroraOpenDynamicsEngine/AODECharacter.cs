@@ -58,8 +58,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 _position;
         private Vector3 _target_velocity;
         private Vector3 _velocity;
-//        private Quaternion _orientation;
-//        private Quaternion _lastorientation;
         private bool _wasZeroFlagFlying;
         private bool _zeroFlag;
         private d.Vector3 _zeroPosition;
@@ -75,10 +73,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space | CollisionCategories.Body | CollisionCategories.Character
 //                                                        | CollisionCategories.Land
                                                              );
-
-        private bool m_hasTaintForce;
-        private bool m_hasTaintRot;
-        private bool m_hasTaintPos;
 
 //        float m_UpdateTimecntr = 0;
 //        float m_UpdateFPScntr = 0.05f;
@@ -100,14 +94,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private Vector3 m_preJumpForce = Vector3.Zero;
         private Vector3 m_rotationalVelocity;
         private float m_speedModifier = 1.0f;
-        private Vector3 m_taintForce;
         //private static float POSTURE_SERVO = 10000.0f;
-        private Vector3 m_taintPosition = Vector3.Zero;
         private Quaternion m_taintRotation = Quaternion.Identity;
-        private float m_tainted_CAPSULE_LENGTH; // set when the capsule length changes. 
-
-        public bool m_tainted_isPhysical;
-                    // set when the physical status is tainted (false=not existing in physics engine, true=existing)
 
         // unique UUID of this character object
         public UUID m_uuid;
@@ -143,59 +131,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                   Vector3 size)
         {
             m_uuid = UUID.Random();
+            _parent_scene = parent_scene;
 
             m_taintRotation = rotation;
-//            _orientation = rotation;
-//            _lastorientation = rotation;
 
             if (IsFinite(pos))
             {
                 if (pos.Z > 9999999f || pos.Z < -90f)
                 {
-//                    pos.Z = parent_scene.GetTerrainHeightAtXY(127, 127) + 5;
                     pos.Z =
-                        parent_scene.GetTerrainHeightAtXY(parent_scene.Region.RegionSizeX*0.5f,
-                                                          parent_scene.Region.RegionSizeY*0.5f) + 5.0f;
+                        _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f,
+                                                          _parent_scene.Region.RegionSizeY * 0.5f) + 5.0f;
                 }
                 _position = pos;
-                m_taintPosition.X = pos.X;
-                m_taintPosition.Y = pos.Y;
-                m_taintPosition.Z = pos.Z;
             }
             else
             {
-                _position.X = parent_scene.Region.RegionSizeX*0.5f;
-                _position.Y = parent_scene.Region.RegionSizeY*0.5f;
-                _position.Z = parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
+                _position.X = _parent_scene.Region.RegionSizeX * 0.5f;
+                _position.Y = _parent_scene.Region.RegionSizeY * 0.5f;
+                _position.Z = _parent_scene.GetTerrainHeightAtXY(_position.X, _position.Y) + 10f;
 
-                m_taintPosition.X = _position.X;
-                m_taintPosition.Y = _position.Y;
-                m_taintPosition.Z = _position.Z;
                 MainConsole.Instance.Warn("[PHYSICS]: Got NaN Position on Character Create");
             }
 
-            _parent_scene = parent_scene;
 
-            CAPSULE_RADIUS = parent_scene.avCapRadius;
-
-            // m_StandUpRotation =
-            //     new d.Matrix3(0.5f, 0.7071068f, 0.5f, -0.7071068f, 0f, 0.7071068f, 0.5f, -0.7071068f,
-            //                   0.5f);
-
+            CAPSULE_RADIUS = _parent_scene.avCapRadius;
             CAPSULE_LENGTH = (size.Z*1.1f) - CAPSULE_RADIUS*2.0f;
-
-//            if ((m_collisionFlags & CollisionCategories.Land) == 0)
             AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
-//            else
-//                AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
-
-            //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
-            m_tainted_CAPSULE_LENGTH = CAPSULE_LENGTH;
 
             m_isPhysical = false; // current status: no ODE information exists
-            m_tainted_isPhysical = true; // new tainted status: need to create ODE information
-
-            _parent_scene.AddPhysicsActorTaint(this);
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Add, null);
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.CapsuleLength, CAPSULE_LENGTH);
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Position, _position);
 /*
             m_UpdateTimecntr = 0;
             m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
@@ -265,6 +232,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
+        public override bool IsTruelyColliding { get; set; }
+
         /// <summary>
         ///   Returns if the avatar is colliding in general.
         ///   This includes the ground and objects and avatar.
@@ -293,8 +262,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public bool IsTruelyColliding { get; set; }
-
         /// <summary>
         ///   This 'puts' an avatar somewhere in the physics space.
         ///   Not really a good choice unless you 'know' it's a good
@@ -320,11 +287,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         _position.Y = value.Y;
                         _position.Z = value.Z;
 
-                        m_taintPosition.X = value.X;
-                        m_taintPosition.Y = value.Y;
-                        m_taintPosition.Z = value.Z;
-                        m_hasTaintPos = true;
-                        _parent_scene.AddPhysicsActorTaint(this);
+                        _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Position, value);
                     }
                     else
                     {
@@ -362,17 +325,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     m_pidControllerActive = true;
-
-                    m_tainted_CAPSULE_LENGTH = (SetSize.Z*1.1f) - CAPSULE_RADIUS*2.0f;
-//                    if ((m_collisionFlags & CollisionCategories.Land) == 0)
                     AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
-//                    else
-//                        AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS - 0.3f;
-                    //MainConsole.Instance.Info("[RESIZE]: " + m_tainted_CAPSULE_LENGTH.ToString());
-
                     Velocity = Vector3.Zero;
 
-                    _parent_scene.AddPhysicsActorTaint(this);
+                    _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.CapsuleLength, (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f);
                 }
                 else
                 {
@@ -444,8 +400,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_taintRotation; }
             set
             {
-                m_hasTaintRot = true;
                 m_taintRotation = value;
+                _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Rotation, value);
                 //Matrix3 or = Orientation.ToRotationMatrix();
                 //d.Matrix3 ord = new d.Matrix3(or.m00, or.m10, or.m20, or.m01, or.m11, or.m21, or.m02, or.m12, or.m22);
                 //d.BodySetRotation(Body, ref ord);
@@ -591,9 +547,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _position.Y = npositionY;
             _position.Z = npositionZ;
 
-            m_taintPosition.X = _position.X;
-            m_taintPosition.Y = _position.Y;
-            m_taintPosition.Z = _position.Z;
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Position, _position);
 
             d.BodySetMass(Body, ref ShellMass);
             d.GeomSetBody(Shell, Body);
@@ -1501,9 +1455,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (pushforce)
                 {
                     m_pidControllerActive = false;
-                    m_taintForce = force *100f;
-                    m_hasTaintForce = true;
-                    _parent_scene.AddPhysicsActorTaint(this);
+                    _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Force, force * 100);
                 }
                 else
                 {
@@ -1545,9 +1497,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public void Destroy()
         {
             m_isPhysical = true;
-            m_tainted_isPhysical = false;
-            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Add, null);
-            _parent_scene.AddPhysicsActorTaint(this);
+            _parent_scene.AddChange(this, AuroraODEPhysicsScene.changes.Remove, null);
         }
 
         #endregion
@@ -1588,15 +1538,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
-        public void ProcessTaints(float timestep)
+        public void ProcessTaints(AuroraODEPhysicsScene.changes taint, object val)
         {
             if (!m_shouldBePhysical)
                 return;
 
-            if (m_tainted_isPhysical != m_isPhysical)
+            switch (taint)
             {
-                if (m_tainted_isPhysical)
-                {
+                case AuroraODEPhysicsScene.changes.Add:
                     // Create avatar capsule and related ODE data
                     if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero)) // && Amotor == IntPtr.Zero))
                     {
@@ -1611,9 +1560,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     _parent_scene.actor_name_map[Shell] = this;
                     _parent_scene.AddCharacter(this);
-                }
-                else
-                {
+                    m_isPhysical = true;
+                    break;
+                case AuroraODEPhysicsScene.changes.Remove:
                     _parent_scene.RemoveCharacter(this);
                     // destroy avatar capsule and related ODE data
                     if (Amotor != IntPtr.Zero)
@@ -1638,83 +1587,78 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.GeomDestroy(Shell);
                         Shell = IntPtr.Zero;
                     }
-                }
-
-                m_isPhysical = m_tainted_isPhysical;
-            }
-
-            if (m_tainted_CAPSULE_LENGTH != CAPSULE_LENGTH)
-            {
-                if (Shell != IntPtr.Zero && Body != IntPtr.Zero) // && Amotor != IntPtr.Zero)
-                {
-                    if (Amotor != IntPtr.Zero)
+                    m_isPhysical = false;
+                    break;
+                case AuroraODEPhysicsScene.changes.CapsuleLength:
+                    float taintCapsul = (float)val;
+                    if (Shell != IntPtr.Zero && Body != IntPtr.Zero) // && Amotor != IntPtr.Zero)
                     {
-                        // Kill the Amotor
-                        d.JointDestroy(Amotor);
-                        Amotor = IntPtr.Zero;
-                    }
-                    m_pidControllerActive = true;
-                    // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
-                    float prevCapsule = CAPSULE_LENGTH;
-                    CAPSULE_LENGTH = m_tainted_CAPSULE_LENGTH;
-                    //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
-                    d.BodyDestroy(Body);
-                    Body = IntPtr.Zero;
-                    d.GeomDestroy(Shell);
-                    Shell = IntPtr.Zero;
-                    AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                              _position.Z + (CAPSULE_LENGTH - prevCapsule));
+                        if (Amotor != IntPtr.Zero)
+                        {
+                            // Kill the Amotor
+                            d.JointDestroy(Amotor);
+                            Amotor = IntPtr.Zero;
+                        }
+                        m_pidControllerActive = true;
+                        // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
+                        float prevCapsule = CAPSULE_LENGTH;
+                        CAPSULE_LENGTH = taintCapsul;
+                        //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
+                        d.BodyDestroy(Body);
+                        Body = IntPtr.Zero;
+                        d.GeomDestroy(Shell);
+                        Shell = IntPtr.Zero;
+                        AvatarGeomAndBodyCreation(_position.X, _position.Y,
+                                                  _position.Z + (CAPSULE_LENGTH - prevCapsule));
                         //, _parent_scene.avStandupTensor);
-                    Velocity = Vector3.Zero;
+                        Velocity = Vector3.Zero;
 
-                    _parent_scene.actor_name_map[Shell] = this;
-                }
-                else
-                {
-                    MainConsole.Instance.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - "
-                               + (Shell == IntPtr.Zero ? "Shell " : "")
-                               + (Body == IntPtr.Zero ? "Body " : "")
-                        );
-                }
-            }
+                        _parent_scene.actor_name_map[Shell] = this;
+                    }
+                    else
+                    {
+                        MainConsole.Instance.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - "
+                                   + (Shell == IntPtr.Zero ? "Shell " : "")
+                                   + (Body == IntPtr.Zero ? "Body " : "")
+                            );
+                    }
+                    break;
+                case AuroraODEPhysicsScene.changes.Position:
+                    Vector3 taintPos = (Vector3)val;
+                    if (!taintPos.ApproxEquals(_position, 0.05f))
+                    {
+                        if (Body != IntPtr.Zero)
+                        {
+                            d.BodySetPosition(Body, taintPos.X, taintPos.Y, taintPos.Z);
 
-            if (m_hasTaintPos)
-            {
-                if (!m_taintPosition.ApproxEquals(_position, 0.05f))
-                {
+                            _position.X = taintPos.X;
+                            _position.Y = taintPos.Y;
+                            _position.Z = taintPos.Z;
+                        }
+                    }
+                    break;
+                case AuroraODEPhysicsScene.changes.Rotation:
                     if (Body != IntPtr.Zero)
                     {
-                        d.BodySetPosition(Body, m_taintPosition.X, m_taintPosition.Y, m_taintPosition.Z);
-
-                        _position.X = m_taintPosition.X;
-                        _position.Y = m_taintPosition.Y;
-                        _position.Z = m_taintPosition.Z;
+                        Quaternion taintRot = (Quaternion)val;
+                        d.Quaternion q = new d.Quaternion
+                        {
+                            W = taintRot.W,
+                            X = taintRot.X,
+                            Y = taintRot.Y,
+                            Z = taintRot.Z
+                        };
+                        d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
                     }
-                }
-            }
-            if (m_hasTaintRot)
-            {
-                if (Body != IntPtr.Zero)
-                {
-                    d.Quaternion q = new d.Quaternion
-                                         {
-                                             W = m_taintRotation.W,
-                                             X = m_taintRotation.X,
-                                             Y = m_taintRotation.Y,
-                                             Z = m_taintRotation.Z
-                                         };
-                    d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
-                }
-            }
-
-            if (m_hasTaintForce)
-            {
-                if (Body != IntPtr.Zero)
-                {
-                    if (m_taintForce.X != 0f || m_taintForce.Y != 0f || m_taintForce.Z != 0)
-                        d.BodyAddForce(Body, m_taintForce.X, m_taintForce.Y, m_taintForce.Z);
-                    m_hasTaintForce = false;
-                }
+                    break;
+                case AuroraODEPhysicsScene.changes.Force:
+                    if (Body != IntPtr.Zero)
+                    {
+                        Vector3 taintForce = (Vector3)val;
+                        if (taintForce.X != 0f || taintForce.Y != 0f || taintForce.Z != 0)
+                            d.BodyAddForce(Body, taintForce.X, taintForce.Y, taintForce.Z);
+                    }
+                    break;
             }
         }
 

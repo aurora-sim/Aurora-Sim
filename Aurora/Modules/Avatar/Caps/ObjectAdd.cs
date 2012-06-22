@@ -339,8 +339,6 @@ namespace Aurora.Modules.Caps
             rootpart.NextOwnerMask = next_owner_mask;
             rootpart.Material = (byte) material;
 
-            m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
-
             OSDMap map = new OSDMap();
             map["local_id"] = obj.LocalId;
             return OSDParser.SerializeLLSDXmlBytes(map);

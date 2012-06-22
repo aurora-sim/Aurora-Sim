@@ -316,27 +316,7 @@ namespace Aurora.Framework
             string type = typeof (T).ToString();
             try
             {
-                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
-#if (!ISWIN)
-                foreach (Type pluginType in pluginAssembly.GetTypes())
-                {
-                    if (pluginType.IsPublic)
-                    {
-                        try
-                        {
-                            Type typeInterface = pluginType.GetInterface(type, true);
-
-                            if (typeInterface != null)
-                            {
-                                return (T)Activator.CreateInstance(pluginType);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                }
-#else
+                Assembly pluginAssembly = Assembly.Load(AssemblyName.GetAssemblyName(dllName));
                 foreach (Type pluginType in pluginAssembly.GetTypes().Where(pluginType => pluginType.IsPublic))
                 {
                     try
@@ -352,7 +332,7 @@ namespace Aurora.Framework
                     {
                     }
                 }
-#endif
+
             }
             catch (ReflectionTypeLoadException e)
             {
@@ -378,27 +358,7 @@ namespace Aurora.Framework
             string type = typeof (T).ToString();
             try
             {
-                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
-#if (!ISWIN)
-                foreach (Type pluginType in pluginAssembly.GetTypes())
-                {
-                    if (pluginType.IsPublic)
-                    {
-                        try
-                        {
-                            Type typeInterface = pluginType.GetInterface(type, true);
-
-                            if (typeInterface != null)
-                            {
-                                plugins.Add((T)Activator.CreateInstance(pluginType));
-                            }
-                        }
-                        catch (Exception)
-                        {
-                        }
-                    }
-                }
-#else
+                Assembly pluginAssembly = Assembly.Load(AssemblyName.GetAssemblyName(dllName));
                 foreach (Type pluginType in pluginAssembly.GetTypes().Where(pluginType => pluginType.IsPublic))
                 {
                     try
@@ -414,8 +374,6 @@ namespace Aurora.Framework
                     {
                     }
                 }
-#endif
-                
             }
             catch (ReflectionTypeLoadException e)
             {
@@ -461,36 +419,30 @@ namespace Aurora.Framework
 
             try
             {
-                Assembly pluginAssembly = Assembly.LoadFrom(dllName);
+                Assembly pluginAssembly = Assembly.Load(AssemblyName.GetAssemblyName(dllName));
 
-                foreach (Type pluginType in pluginAssembly.GetTypes())
+                foreach (Type pluginType in pluginAssembly.GetTypes().Where((p) => p.IsPublic && 
+                    !(className != String.Empty && p.ToString() != p.Namespace + "." + className)))
                 {
-                    if (pluginType.IsPublic)
+                    Type typeInterface = pluginType.GetInterface(interfaceName, true);
+
+                    if (typeInterface != null)
                     {
-                        if (className != String.Empty
-                            && pluginType.ToString() != pluginType.Namespace + "." + className)
-                            continue;
-
-                        Type typeInterface = pluginType.GetInterface(interfaceName, true);
-
-                        if (typeInterface != null)
+                        T plug = null;
+                        try
                         {
-                            T plug = null;
-                            try
-                            {
-                                plug = (T) Activator.CreateInstance(pluginType,
-                                                                    args);
-                            }
-                            catch (Exception e)
-                            {
-                                if (!(e is MissingMethodException))
-                                    MainConsole.Instance.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName,
-                                                      e.InnerException);
-                                return null;
-                            }
-
-                            return plug;
+                            plug = (T)Activator.CreateInstance(pluginType,
+                                                                args);
                         }
+                        catch (Exception e)
+                        {
+                            if (!(e is MissingMethodException))
+                                MainConsole.Instance.ErrorFormat("Error loading plugin from {0}, exception {1}", dllName,
+                                                  e.InnerException);
+                            return null;
+                        }
+
+                        return plug;
                     }
                 }
 

@@ -106,10 +106,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return null;
         }
 
-        public override void AddPhysicsActorTaint(PhysicsActor prim)
-        {
-        }
-
         public override void Simulate(float timeStep)
         {
             foreach (PhysicsActor actor in _actors)

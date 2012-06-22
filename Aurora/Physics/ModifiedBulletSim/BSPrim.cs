@@ -345,6 +345,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             set { _throttleUpdates = value; }
         }
 
+        public override bool IsTruelyColliding { get; set; }
         public override bool IsColliding
         {
             get { return (_collidingStep == _scene.SimulationStep); }

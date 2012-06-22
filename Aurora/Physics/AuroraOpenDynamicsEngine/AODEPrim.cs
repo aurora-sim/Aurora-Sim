@@ -310,6 +310,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { }
         }
 
+        public override bool IsTruelyColliding { get; set; }
         public override bool IsColliding
         {
             get { return iscolliding; }
