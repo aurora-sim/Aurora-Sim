@@ -9,7 +9,7 @@ using Aurora.Simulation.Base;
 using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 
-namespace OpenSim.Services
+namespace OpenSim.Services.Robust
 {
     public class UserAccountServicesConnector : IUserAccountService, IService
     {

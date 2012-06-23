@@ -43,7 +43,13 @@ namespace OpenSim.Region.Framework.Interfaces
         ///   Add the given inventory item to a user's inventory.
         /// </summary>
         /// <param name = "item">The item to add</param>
-        bool AddInventoryItem(InventoryItemBase item);
+        void AddInventoryItem(InventoryItemBase item);
+
+        /// <summary>
+        ///   Add the given inventory item to a user's inventory.
+        /// </summary>
+        /// <param name = "item">The item to add</param>
+        void AddInventoryItem(InventoryItemBase item, NoParam onSuccess);
 
         /// <summary>
         ///   Add an inventory item to an avatar's inventory.

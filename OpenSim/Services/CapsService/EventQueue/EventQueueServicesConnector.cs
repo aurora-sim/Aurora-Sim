@@ -137,12 +137,12 @@ namespace OpenSim.Services.CapsService
                             });
 
                         return true;*/
-                            string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER", OSDParser.SerializeJsonString(request));
+                            string resp =WebUtils.PostToService(serverURI + "/CAPS/EQMPOSTER", request);
                             return RequestHandler(resp, events, avatarID, regionHandle);
                         }
                         else
                         {
-                            string resp = SynchronousRestFormsRequester.MakeRequest("POST", serverURI + "/CAPS/EQMPOSTER", OSDParser.SerializeJsonString(request));
+                            string resp = WebUtils.PostToService(serverURI + "/CAPS/EQMPOSTER", request);
                             return RequestHandler(resp, events, avatarID, regionHandle);
                         }
                     }
@@ -158,20 +158,9 @@ namespace OpenSim.Services.CapsService
 
         public bool RequestHandler(string response, OSDArray events, UUID avatarID, ulong RegionHandle)
         {
-            OSD r = OSDParser.DeserializeJson(response);
-            if (r.Type == OSDType.Map)
-            {
-                OSDMap result = (OSDMap) r;
-                if (result != null)
-                {
-                    bool success = result["success"].AsBoolean();
-                    if (!success)
-                        MainConsole.Instance.Warn("[EventQueueServicesConnector]: Failed to post EQMessage for user " + avatarID);
-                    else
-                        return success;
-                }
-            }
-            return false;
+            if (response == "")
+                return false;
+            return OSDParser.DeserializeJson(response).Type == OSDType.Map;
         }
     }
 }

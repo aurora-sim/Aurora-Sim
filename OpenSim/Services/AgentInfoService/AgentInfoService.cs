@@ -102,7 +102,9 @@ namespace OpenSim.Services
             List<UserInfo> infos = new List<UserInfo>();
             for (int i = 0; i < userIDs.Count; i++)
             {
-                infos.Add(GetUserInfo(userIDs[i]));
+                var userInfo = GetUserInfo(userIDs[i]);
+                if(userInfo != null)
+                    infos.Add(userInfo);
             }
             return infos;
         }

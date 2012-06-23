@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -110,22 +111,17 @@ namespace Aurora.Modules.Auction
             OSDMap retVal = new OSDMap();
             retVal["ViewerStartAuction"] = CapsUtil.CreateCAPS("ViewerStartAuction", "");
 
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ViewerStartAuction"],
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ViewerStartAuction"],
                                                         ViewerStartAuction));
             return retVal;
         }
 
-        private Hashtable ViewerStartAuction(Hashtable mDhttpMethod)
+        private byte[] ViewerStartAuction(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            //OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
-            //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
+            return new byte[0];
         }
 
         #endregion

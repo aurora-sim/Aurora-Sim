@@ -83,7 +83,7 @@ namespace OpenSim.Region.Framework.Scenes
         private readonly OrderedDictionary /*<UUID, ISceneChildEntity>*/
             m_objectPropertiesToSend = new OrderedDictionary /*<UUID, ISceneChildEntity>*/();
 
-        private readonly HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity>();
+        private HashSet<ISceneEntity> lastGrpsInView = new HashSet<ISceneEntity>();
         private readonly Dictionary<UUID, IScenePresence> lastPresencesDInView = new Dictionary<UUID, IScenePresence>();
         private readonly object m_lastPresencesInViewLock = new object();
         private Vector3 m_lastUpdatePos;
@@ -509,7 +509,10 @@ namespace OpenSim.Region.Framework.Scenes
                 NewGrpsInView.Add(e);
             }
             entities = null;
-            lastGrpsInView.UnionWith(NewGrpsInView);
+            if (lastGrpsInView.Count == 0)
+                lastGrpsInView = new HashSet<ISceneEntity>(NewGrpsInView);
+            else
+                lastGrpsInView.UnionWith(NewGrpsInView);
             // send them 
             if (NewGrpsInView.Count != 0)
                 SendQueued(NewGrpsInView);

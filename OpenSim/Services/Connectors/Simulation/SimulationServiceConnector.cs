@@ -123,13 +123,13 @@ namespace OpenSim.Services.Connectors.Simulation
                 if (data != null)
                     args["agent_data"] = data.Pack();
 
-                OSDMap result = WebUtils.PostToService(uri, args, true, false);
-                OSDMap results = WebUtils.GetOSDMap(result["_RawResult"].AsString());
+                string resultStr = WebUtils.PostToService(uri, args);
                 //Pull out the result and set it as the reason
-                if (results == null)
+                if (resultStr == "")
                     return false;
-                reason = results["reason"] != null ? results["reason"].AsString() : "";
-                if (result["Success"].AsBoolean())
+                OSDMap result = OSDParser.DeserializeJson(resultStr) as OSDMap;
+                reason = result["reason"] != null ? result["reason"].AsString() : "";
+                if (result["success"].AsBoolean())
                 {
                     //Not right... don't return true except for opensim combatibility :/
                     if (reason == "" || reason == "authorized")
@@ -143,7 +143,7 @@ namespace OpenSim.Services.Connectors.Simulation
                             reason = responseMap["Reason"].AsString();
                         if (responseMap.ContainsKey("requestedUDPPort"))
                             requestedUDPPort = responseMap["requestedUDPPort"];
-                        return results["success"].AsBoolean();
+                        return result["success"].AsBoolean();
                     }
                     catch
                     {
@@ -187,7 +187,7 @@ namespace OpenSim.Services.Connectors.Simulation
             data["Method"] = "FailedToMoveAgentIntoNewRegion";
             try
             {
-                WebUtils.PostToService(uri, data, false, false, false);
+                WebUtils.PostToService(uri, data);
                 return true;
             }
             catch (Exception e)
@@ -209,7 +209,7 @@ namespace OpenSim.Services.Connectors.Simulation
             data["Method"] = "MakeChildAgent";
             try
             {
-                WebUtils.PostToService(uri, data, false, false, false);
+                WebUtils.PostToService(uri, data);
                 return true;
             }
             catch (Exception e)
@@ -236,20 +236,20 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    OSDMap result = WebUtils.GetFromService(uri, true, false, false);
-                    if (result["Success"].AsBoolean())
+                    string resultStr = WebUtils.GetFromService(uri);
+                    if (resultStr != "")
                     {
-                        OSDMap r = (OSDMap) OSDParser.DeserializeJson(result["_RawResult"]);
-                        if (r["Result"] == "Not Found")
+                        OSDMap result = OSDParser.DeserializeJson(resultStr) as OSDMap;
+                        if (result["Result"] == "Not Found")
                             return false;
                         agent = new AgentData();
 
-                        if (!r.ContainsKey("AgentData"))
+                        if (!result.ContainsKey("AgentData"))
                             return false; //Disable old simulators
 
-                        agent.Unpack((OSDMap) r["AgentData"]);
+                        agent.Unpack((OSDMap)result["AgentData"]);
                         circuitData = new AgentCircuitData();
-                        circuitData.UnpackAgentCircuitData((OSDMap) r["CircuitData"]);
+                        circuitData.UnpackAgentCircuitData((OSDMap)result["CircuitData"]);
                         return true;
                     }
                 }
@@ -277,7 +277,7 @@ namespace OpenSim.Services.Connectors.Simulation
 
                 try
                 {
-                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000, false, false, false);
+                    WebUtils.ServiceOSDRequest(uri, null, "DELETE", 10000);
                 }
                 catch (Exception e)
                 {
@@ -335,8 +335,8 @@ namespace OpenSim.Services.Connectors.Simulation
                     args["destination_name"] = OSD.FromString(destination.RegionName);
                     args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                    OSDMap result = WebUtils.PutToService(uri, args, true, true, false);
-                    if (!result["Success"].AsBoolean())
+                    string result = WebUtils.PutToService(uri, args);
+                    if (result == "")
                     {
                         if (m_blackListedRegions.ContainsKey(uri))
                         {
@@ -350,12 +350,12 @@ namespace OpenSim.Services.Connectors.Simulation
                         }
                         else
                             m_blackListedRegions[uri] = 0;
-                        return result["Success"].AsBoolean();
+                        return false;
                     }
                     //Clear out the blacklist if it went through
                     m_blackListedRegions.Remove(uri);
 
-                    OSDMap innerResult = (OSDMap) result["_Result"];
+                    OSDMap innerResult = (OSDMap)OSDParser.DeserializeJson(result);
                     return innerResult["Updated"].AsBoolean();
                 }
                 catch (Exception e)
@@ -398,8 +398,8 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService(uri, args, true, false);
-                if (bool.TryParse(result["_RawResult"], out successful))
+                string result = WebUtils.PostToService(uri, args);
+                if (bool.TryParse(result, out successful))
                     return successful;
             }
             return successful;
@@ -430,8 +430,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 args["destination_name"] = OSD.FromString(destination.RegionName);
                 args["destination_uuid"] = OSD.FromString(destination.RegionID.ToString());
 
-                OSDMap result = WebUtils.PostToService(uri, args, true, false);
-                if (bool.TryParse(result["_RawResult"], out successful))
+                if (bool.TryParse(WebUtils.PostToService(uri, args), out successful))
                     return successful;
             }
             return successful;

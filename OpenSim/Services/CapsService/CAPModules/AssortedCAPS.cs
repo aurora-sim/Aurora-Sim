@@ -41,28 +41,6 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.CapsService
 {
-    #region Stream Handler
-
-    public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-    public class StreamHandler : BaseStreamHandler
-    {
-        readonly StreamHandlerCallback m_callback;
-
-        public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
-            : base(httpMethod, path)
-        {
-            m_callback = callback;
-        }
-
-        public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-        {
-            return m_callback(path, request, httpRequest, httpResponse);
-        }
-    }
-
-    #endregion
-
     public class AssortedCAPS : ICapsServiceConnector
     {
         private IRegionClientCapsService m_service;
@@ -77,54 +55,41 @@ namespace OpenSim.Services.CapsService
             m_agentInfoService = service.Registry.RequestModuleInterface<IAgentInfoService>();
             m_agentProcessing = service.Registry.RequestModuleInterface<IAgentProcessing>();
 
-#if (!ISWIN)
-            GenericHTTPMethod method = delegate(Hashtable httpMethod)
+            HttpServerHandle method = delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
+                return ProcessUpdateAgentLanguage(request, m_service.AgentID);
             };
-#else
-            GenericHTTPMethod method = httpMethod => ProcessUpdateAgentLanguage(httpMethod, m_service.AgentID);
-#endif  
-            service.AddStreamHandler("UpdateAgentLanguage", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
+            service.AddStreamHandler("UpdateAgentLanguage", new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentLanguage", ""),
                                                       method));
 
 
-#if (!ISWIN)
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
+                return ProcessUpdateAgentInfo(request, m_service.AgentID);
             };
-#else
-            method = httpMethod => ProcessUpdateAgentInfo(httpMethod, m_service.AgentID);
-#endif
-            service.AddStreamHandler("UpdateAgentInformation", new RestHTTPHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
+            service.AddStreamHandler("UpdateAgentInformation", new GenericStreamHandler("POST", service.CreateCAPS("UpdateAgentInformation", ""),
                                 method));
 
-            service.AddStreamHandler ("AvatarPickerSearch", new StreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
+            service.AddStreamHandler ("AvatarPickerSearch", new GenericStreamHandler ("GET", service.CreateCAPS("AvatarPickerSearch", ""),
                                                       ProcessAvatarPickerSearch));
 
-#if (!ISWIN)
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return HomeLocation(httpMethod, m_service.AgentID);
+                return HomeLocation(request, m_service.AgentID);
             };
-#else
-            method = httpMethod => HomeLocation(httpMethod, m_service.AgentID);
-#endif
-
-            service.AddStreamHandler("HomeLocation", new RestHTTPHandler("POST", service.CreateCAPS("HomeLocation", ""),
+            service.AddStreamHandler("HomeLocation", new GenericStreamHandler("POST", service.CreateCAPS("HomeLocation", ""),
                                                       method));
 
-#if (!ISWIN)
-            method = delegate(Hashtable httpMethod)
+            method = delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
-                return TeleportLocation(httpMethod, m_service.AgentID);
+                return TeleportLocation(request, m_service.AgentID);
             };
-#else
-            method = httpMethod => TeleportLocation(httpMethod, m_service.AgentID);
-#endif
 
-            service.AddStreamHandler("TeleportLocation", new RestHTTPHandler("POST", service.CreateCAPS("TeleportLocation", ""),
+            service.AddStreamHandler("TeleportLocation", new GenericStreamHandler("POST", service.CreateCAPS("TeleportLocation", ""),
                                                       method));
         }
 
@@ -143,9 +108,9 @@ namespace OpenSim.Services.CapsService
 
         #region Other CAPS
 
-        private Hashtable HomeLocation(Hashtable mDhttpMethod, UUID agentID)
+        private byte[] HomeLocation(Stream request, UUID agentID)
         {
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             OSDMap HomeLocation = rm["HomeLocation"] as OSDMap;
             if (HomeLocation != null)
             {
@@ -163,39 +128,26 @@ namespace OpenSim.Services.CapsService
             }
 
             rm.Add("success", OSD.FromBoolean(true));
-
-            //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(rm);
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(rm);
         }
 
-        private Hashtable ProcessUpdateAgentLanguage(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] ProcessUpdateAgentLanguage(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
-            OSD r = OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSD r = OSDParser.DeserializeLLSDXml(request);
             if (!(r is OSDMap))
-                return responsedata;
+                return new byte[0];
             OSDMap rm = (OSDMap)r;
             IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)
             {
                 IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
                 if (IAI == null)
-                    return responsedata;
+                    return new byte[0];
                 IAI.Language = rm["language"].AsString();
                 IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
                 AgentFrontend.UpdateAgent(IAI);
             }
-            return responsedata;
+            return new byte[0];
         }
 
         private byte[] ProcessAvatarPickerSearch(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -219,16 +171,12 @@ namespace OpenSim.Services.CapsService
             }
 
             body["agents"] = array;
-            byte[] m = OSDParser.SerializeLLSDXmlBytes(body);
-            httpResponse.Body.Write(m, 0, m.Length);
-            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.OK;
-            httpResponse.Send();
-            return null;
+            return OSDParser.SerializeLLSDXmlBytes(body);
         }
 
-        private Hashtable ProcessUpdateAgentInfo(Hashtable mDhttpMethod, UUID agentID)
+        private byte[] ProcessUpdateAgentInfo(Stream request, UUID agentID)
         {
-            OSD r = OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSD r = OSDParser.DeserializeLLSDXml(request);
             OSDMap rm = (OSDMap)r;
             OSDMap access = (OSDMap)rm["access_prefs"];
             string Level = access["max"].AsString();
@@ -246,33 +194,22 @@ namespace OpenSim.Services.CapsService
                 agent.MaturityRating = maxLevel;
                 data.UpdateAgent(agent);
             }
-            Hashtable cancelresponsedata = new Hashtable();
-            cancelresponsedata["int_response_code"] = 200; //501; //410; //404;
-            cancelresponsedata["content_type"] = "text/plain";
-            cancelresponsedata["keepalive"] = false;
-            cancelresponsedata["str_response_string"] = "";
-            return cancelresponsedata;
+            return new byte[0];
         }
 
         private bool _isInTeleportCurrently = false;
-        private Hashtable TeleportLocation (Hashtable mDhttpMethod, UUID agentID)
+        private byte[] TeleportLocation (Stream request, UUID agentID)
         {
             OSDMap retVal = new OSDMap();
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-
             if (_isInTeleportCurrently)
             {
                 retVal.Add("reason", "Duplicate teleport request.");
                 retVal.Add("success", OSD.FromBoolean(false));
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
-                return responsedata;
+                return OSDParser.SerializeLLSDXmlBytes(retVal);
             }
             _isInTeleportCurrently = true;
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
             OSDMap pos = rm["LocationPos"] as OSDMap;
             Vector3 position = new Vector3((float)pos["X"].AsReal(),
                 (float)pos["Y"].AsReal(),
@@ -289,8 +226,7 @@ namespace OpenSim.Services.CapsService
             {
                 retVal.Add("reason", "Contacted by non-root region for teleport. Protocol implemention is wrong.");
                 retVal.Add("success", OSD.FromBoolean(false));
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
-                return responsedata;
+                return OSDParser.SerializeLLSDXmlBytes(retVal);
             }
 
             string reason = "";
@@ -315,8 +251,7 @@ namespace OpenSim.Services.CapsService
             {
                 retVal.Add("reason", "Could not find the destination region.");
                 retVal.Add("success", OSD.FromBoolean(false));
-                responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
-                return responsedata;
+                return OSDParser.SerializeLLSDXmlBytes(retVal);
             }
             circuitData.reallyischild = false;
             circuitData.child = false;
@@ -338,9 +273,8 @@ namespace OpenSim.Services.CapsService
             }
 
             //Send back data
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
             _isInTeleportCurrently = false;
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(retVal);
         }
 
         #endregion

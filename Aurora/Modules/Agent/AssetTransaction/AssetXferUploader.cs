@@ -229,8 +229,8 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
             ILLClientInventory inventoryModule =
                 m_userTransactions.Manager.MyScene.RequestModuleInterface<ILLClientInventory>();
-            if (inventoryModule != null && inventoryModule.AddInventoryItem(item))
-                remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
+            if (inventoryModule != null)
+                inventoryModule.AddInventoryItem(item, () => remoteClient.SendInventoryItemCreateUpdate(item, callbackID));
             else
                 remoteClient.SendAlertMessage("Unable to create inventory item");
         }

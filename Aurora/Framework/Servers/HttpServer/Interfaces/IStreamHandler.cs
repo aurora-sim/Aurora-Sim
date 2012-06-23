@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
 using System.IO;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public interface IRequestHandler
+    public interface IRequestHandler: IDisposable
     {
         // Return response content type
         string ContentType { get; }
@@ -46,13 +47,6 @@ namespace Aurora.Framework.Servers.HttpServer
     {
         // Handle request stream, return byte array
         byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-    }
-
-    public interface IStreamHandler : IRequestHandler
-    {
-        // Handle request stream, return byte array
-        void Handle(string path, Stream request, Stream response, OSHttpRequest httpReqbuest,
-                    OSHttpResponse httpResponse);
     }
 
     public interface IGenericHTTPHandler : IRequestHandler

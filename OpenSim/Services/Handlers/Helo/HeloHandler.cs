@@ -55,7 +55,7 @@ namespace OpenSim.Services
         #endregion
     }
 
-    public class HeloServerGetHandler : BaseStreamHandler
+    public class HeloServerGetHandler : BaseRequestHandler
     {
         private readonly string m_HandlersType;
 

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
@@ -51,7 +52,7 @@ namespace Aurora.Modules.Entities.ObjectDelete
     /// </summary>
     public class AsyncSceneObjectGroupDeleter : INonSharedRegionModule, IAsyncSceneObjectGroupDeleter
     {
-        private readonly Queue<DeleteToInventoryHolder> m_removeFromSimQueue = new Queue<DeleteToInventoryHolder>();
+        private readonly ConcurrentQueue<DeleteToInventoryHolder> m_removeFromSimQueue = new ConcurrentQueue<DeleteToInventoryHolder>();
         private bool DeleteLoopInUse;
 
         /// <value>
@@ -122,10 +123,7 @@ namespace Aurora.Modules.Entities.ObjectDelete
                 DeleteGroups(objectGroups);
             }
 
-            lock (m_removeFromSimQueue)
-            {
-                m_removeFromSimQueue.Enqueue(dtis);
-            }
+            m_removeFromSimQueue.Enqueue(dtis);
 
             if (!DeleteLoopInUse)
             {
@@ -171,18 +169,8 @@ namespace Aurora.Modules.Entities.ObjectDelete
 
             try
             {
-                int left = 0;
-                lock (m_removeFromSimQueue)
+                if (m_removeFromSimQueue.TryDequeue(out x))
                 {
-                    left = m_removeFromSimQueue.Count;
-                }
-                if (left > 0)
-                {
-                    lock (m_removeFromSimQueue)
-                    {
-                        x = m_removeFromSimQueue.Dequeue();
-                    }
-
                     if (x.permissionToDelete)
                     {
                         IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
@@ -190,7 +178,7 @@ namespace Aurora.Modules.Entities.ObjectDelete
                             backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
                     MainConsole.Instance.DebugFormat(
-                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", left);
+                        "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.", m_removeFromSimQueue.Count);
 
                     if (x.permissionToTake)
                     {

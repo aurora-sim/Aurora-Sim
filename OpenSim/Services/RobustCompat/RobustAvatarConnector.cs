@@ -9,7 +9,7 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Connectors;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustAvatarServicesConnector : IAvatarService, IService
     {

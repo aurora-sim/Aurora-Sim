@@ -1239,7 +1239,6 @@ namespace OpenSim.Region.Framework.Scenes
                     if (actor.IsPhysical)
                     {
                         actor.Velocity = value;
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         m_tempVelocity = Vector3.Zero;
                     }
                     else
@@ -1432,19 +1431,10 @@ namespace OpenSim.Region.Framework.Scenes
                         m_shape.Scale = value;
 
                         PhysicsActor actor = PhysActor;
-                        if (actor != null && m_parentGroup != null)
-                        {
-                            if (m_parentGroup.Scene != null)
-                            {
-                                if (m_parentGroup.Scene.PhysicsScene != null)
-                                {
+                        if (actor != null && m_parentGroup != null &&
+                            m_parentGroup.Scene != null &&
+                            m_parentGroup.Scene.PhysicsScene != null)
                                     actor.Size = m_shape.Scale;
-                                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
-                                    // here whould be a nice spot to ask physics about OOB
-                                    // nahh better on the get
-                                }
-                            }
-                        }
                         TriggerScriptChangedEvent(Changed.SCALE);
                     }
                 }
@@ -2153,9 +2143,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     actor.Position = GetWorldPosition();
                     actor.Orientation = GetWorldRotation();
-
-                    // Tell the physics engines that this prim changed.
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                 }
             }
             if (triggerMoving_End)
@@ -3817,10 +3804,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Shape = m_shape;
 
                 if ((UpdatePhysics) && (PhysActor != null))
-                {
                     PhysActor.Shape = m_shape;
-                    m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
-                }
             }
 
             // This is what makes vehicle trailers work
@@ -4064,8 +4048,6 @@ namespace OpenSim.Region.Framework.Scenes
                             actor.Orientation = resultingrotation;
                             //MainConsole.Instance.Info("[PART]: RO2:" + actor.Orientation.ToString());
                         }
-                        m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
-                        //}
                     }
                     catch (Exception ex)
                     {
@@ -4122,14 +4104,12 @@ namespace OpenSim.Region.Framework.Scenes
                         if (_parentID == 0)
                         {
                             actor.Position = value;
-                            m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
                         else if (single || !actor.IsPhysical)
                         {
                             // To move the child prim in respect to the group position and rotation we have to calculate
                             actor.Position = GetWorldPosition();
                             actor.Orientation = GetWorldRotation();
-                            m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(actor);
                         }
 
                         // Tell the physics engines that this prim changed.
@@ -4292,7 +4272,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //Get physics to update in a hackish way
                 this.PhysActor.Shape = shape;
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
             }
             this.Shape = shape;
         }
@@ -5133,10 +5112,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetPhysicsAxisRotation()
         {
             if (PhysActor != null)
-            {
                 PhysActor.LockAngularMotion(RotationAxis);
-                m_parentGroup.Scene.PhysicsScene.AddPhysicsActorTaint(PhysActor);
-            }
         }
 
         /// <summary>

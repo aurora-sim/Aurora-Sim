@@ -83,10 +83,10 @@ namespace Aurora.Framework
 
         private readonly Timer _updateTimer = new Timer();
         private const int _checkTime = 500; // milliseconds to wait between checks for updates
-        private int _sendtime = 3;
+        private double _sendtime = 3;
         private TimeElapsed _arg;
 
-        public void Start(int secondsToWait, TimeElapsed args)
+        public void Start(double secondsToWait, TimeElapsed args)
         {
             _arg = args;
             _sendtime = secondsToWait;

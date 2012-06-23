@@ -27,6 +27,8 @@
 
 using System;
 using System.Collections;
+using System.IO;
+using System.Text;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -91,59 +93,24 @@ namespace Aurora.Modules.Caps
         {
             OSDMap retVal = new OSDMap();
             retVal["ObjectAdd"] = CapsUtil.CreateCAPS("ObjectAdd", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
-                                                       delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ObjectAdd"],
+                                                       delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                        {
-                                                           return ProcessAdd(m_dhttpMethod, agentID);
+                                                           return ProcessAdd(request, agentID);
                                                        }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ObjectAdd"],
-                                                        m_dhttpMethod => ProcessAdd(m_dhttpMethod, agentID)));
-#endif
-
-            retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
-                                                      }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                        m_dhttpMethod =>
-                                                        ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID)
+        public byte[] ProcessAdd(Stream request, UUID AgentId)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-
-            OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
-            string response = OSDParser.SerializeLLSDXmlString(osd);
-            responsedata["str_response_string"] = response;
-            return responsedata;
-        }
-
-        public Hashtable ProcessAdd(Hashtable request, UUID AgentId)
-        {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 400; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "Request wasn't what was expected";
             IScenePresence avatar;
 
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
-                return responsedata;
+                return new byte[0];
 
 
-            OSD r = OSDParser.DeserializeLLSDXml((string) request["requestbody"]);
+            OSD r = OSDParser.DeserializeLLSDXml(request);
             //UUID session_id = UUID.Zero;
             bool bypass_raycast = false;
             uint everyone_mask = 0;
@@ -180,35 +147,29 @@ namespace Aurora.Modules.Caps
             int state = 0;
 
             if (r.Type != OSDType.Map) // not a proper req
-                return responsedata;
+                return new byte[0];
 
             OSDMap rm = (OSDMap) r;
 
             if (rm.ContainsKey("ObjectData")) //v2
             {
                 if (rm["ObjectData"].Type != OSDType.Map)
-                {
-                    responsedata["str_response_string"] = "Has ObjectData key, but data not in expected format";
-                    return responsedata;
-                }
+                    return Encoding.UTF8.GetBytes("Has ObjectData key, but data not in expected format");
 
                 OSDMap ObjMap = (OSDMap) rm["ObjectData"];
 
                 bypass_raycast = ObjMap["BypassRaycast"].AsBoolean();
-                everyone_mask = readuintval(ObjMap["EveryoneMask"]);
-                flags = readuintval(ObjMap["Flags"]);
-                group_mask = readuintval(ObjMap["GroupMask"]);
+                everyone_mask = ObjMap["EveryoneMask"];
+                flags = ObjMap["Flags"];
+                group_mask = ObjMap["GroupMask"];
                 material = ObjMap["Material"].AsInteger();
-                next_owner_mask = readuintval(ObjMap["NextOwnerMask"]);
+                next_owner_mask = ObjMap["NextOwnerMask"];
                 p_code = ObjMap["PCode"].AsInteger();
 
                 if (ObjMap.ContainsKey("Path"))
                 {
                     if (ObjMap["Path"].Type != OSDType.Map)
-                    {
-                        responsedata["str_response_string"] = "Has Path key, but data not in expected format";
-                        return responsedata;
-                    }
+                        return Encoding.UTF8.GetBytes("Has Path key, but data not in expected format");
 
                     OSDMap PathMap = (OSDMap) ObjMap["Path"];
                     path_begin = PathMap["Begin"].AsInteger();
@@ -230,10 +191,7 @@ namespace Aurora.Modules.Caps
                 if (ObjMap.ContainsKey("Profile"))
                 {
                     if (ObjMap["Profile"].Type != OSDType.Map)
-                    {
-                        responsedata["str_response_string"] = "Has Profile key, but data not in expected format";
-                        return responsedata;
-                    }
+                        return Encoding.UTF8.GetBytes("Has Profile key, but data not in expected format");
 
                     OSDMap ProfileMap = (OSDMap) ObjMap["Profile"];
 
@@ -255,17 +213,14 @@ namespace Aurora.Modules.Caps
                 }
                 catch (Exception)
                 {
-                    responsedata["str_response_string"] =
-                        "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
-                    return responsedata;
+                    return Encoding.UTF8.GetBytes("RayEnd, RayStart, Scale or Rotation wasn't in the expected format");
                 }
 
                 if (rm.ContainsKey("AgentData"))
                 {
                     if (rm["AgentData"].Type != OSDType.Map)
                     {
-                        responsedata["str_response_string"] = "Has AgentData key, but data not in expected format";
-                        return responsedata;
+                        return Encoding.UTF8.GetBytes("Has AgentData key, but data not in expected format");
                     }
 
                     OSDMap AgentDataMap = (OSDMap) rm["AgentData"];
@@ -279,13 +234,13 @@ namespace Aurora.Modules.Caps
                 //v1
                 bypass_raycast = rm["bypass_raycast"].AsBoolean();
 
-                everyone_mask = readuintval(rm["everyone_mask"]);
-                flags = readuintval(rm["flags"]);
+                everyone_mask = rm["everyone_mask"];
+                flags = rm["flags"];
                 group_id = rm["group_id"].AsUUID();
-                group_mask = readuintval(rm["group_mask"]);
+                group_mask = rm["group_mask"];
                 hollow = rm["hollow"].AsInteger();
                 material = rm["material"].AsInteger();
-                next_owner_mask = readuintval(rm["next_owner_mask"]);
+                next_owner_mask = rm["next_owner_mask"];
                 hollow = rm["hollow"].AsInteger();
                 p_code = rm["p_code"].AsInteger();
                 path_begin = rm["path_begin"].AsInteger();
@@ -322,9 +277,7 @@ namespace Aurora.Modules.Caps
                 }
                 catch (Exception)
                 {
-                    responsedata["str_response_string"] =
-                        "RayEnd, RayStart, Scale or Rotation wasn't in the expected format";
-                    return responsedata;
+                    return Encoding.UTF8.GetBytes("RayEnd, RayStart, Scale or Rotation wasn't in the expected format");
                 }
             }
 
@@ -359,7 +312,6 @@ namespace Aurora.Modules.Caps
             pbs.State = (byte) state;
 
             SceneObjectGroup obj = null;
-            ;
 
             string reason;
             if (m_scene.Permissions.CanRezObject(1, avatar.UUID, pos, out reason))
@@ -376,7 +328,7 @@ namespace Aurora.Modules.Caps
 
 
             if (obj == null)
-                return responsedata;
+                return new byte[0];
 
             SceneObjectPart rootpart = obj.RootPart;
             rootpart.Shape = pbs;
@@ -387,32 +339,9 @@ namespace Aurora.Modules.Caps
             rootpart.NextOwnerMask = next_owner_mask;
             rootpart.Material = (byte) material;
 
-
-            m_scene.PhysicsScene.AddPhysicsActorTaint(rootpart.PhysActor);
-
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = String.Format("<llsd><map><key>local_id</key>{0}</map></llsd>",
-                                                                ConvertUintToBytes(obj.LocalId));
-
-            return responsedata;
-        }
-
-        private uint readuintval(OSD obj)
-        {
-            byte[] tmp = obj.AsBinary();
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(tmp);
-            return Utils.BytesToUInt(tmp);
-        }
-
-        private string ConvertUintToBytes(uint val)
-        {
-            byte[] resultbytes = Utils.UIntToBytes(val);
-            if (BitConverter.IsLittleEndian)
-                Array.Reverse(resultbytes);
-            return String.Format("<binary encoding=\"base64\">{0}</binary>", Convert.ToBase64String(resultbytes));
+            OSDMap map = new OSDMap();
+            map["local_id"] = obj.LocalId;
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
     }
 }

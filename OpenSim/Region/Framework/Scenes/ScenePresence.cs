@@ -1220,7 +1220,7 @@ namespace OpenSim.Region.Framework.Scenes
                     actor.Flying = true;
                 else if (m_flyDisabled)
                     actor.Flying = false;
-                else
+                else if(actor.Flying != ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0))
                     actor.Flying = ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
 
                 if (actor.Flying != oldflying)
@@ -2672,7 +2672,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
                                                  new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
-            scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;

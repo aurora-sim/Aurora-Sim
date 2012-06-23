@@ -266,6 +266,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public override bool ThrottleUpdates { get; set; }
 
+        public override bool IsTruelyColliding { get; set; }
         public override bool IsColliding
         {
             get { return (_collidingStep == _scene.SimulationStep); }
@@ -325,7 +326,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             get { return _preJumping; }
         }
 
-        public void Destroy()
+        public override void Destroy()
         {
 #if (!ISWIN)
             _scene.TaintedObject(delegate()

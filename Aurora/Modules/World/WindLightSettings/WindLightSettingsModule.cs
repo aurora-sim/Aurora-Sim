@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Aurora.Framework;
@@ -213,48 +214,35 @@ namespace Aurora.Modules.WindlightSettings
             OSDMap retVal = new OSDMap();
             retVal["DispatchWindLightSettings"] = CapsUtil.CreateCAPS("DispatchWindLightSettings", "");
             //Sets the windlight settings
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchWindLightSettings"],
+                                                      delegate(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return DispatchWindLightSettings(m_dhttpMethod, agentID);
+                                                          return DispatchWindLightSettings(path, request, httpRequest,
+                                                              httpResponse, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchWindLightSettings"],
-                                                        m_dhttpMethod =>
-                                                        DispatchWindLightSettings(m_dhttpMethod, agentID)));
-#endif
 
             retVal["RetrieveWindLightSettings"] = CapsUtil.CreateCAPS("RetrieveWindLightSettings", "");
             //Retrieves the windlight settings for a specifc parcel or region
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["RetrieveWindLightSettings"],
+                                                      delegate(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return RetrieveWindLightSettings(m_dhttpMethod, agentID);
+                                                          return RetrieveWindLightSettings(path, request, httpRequest,
+                                                              httpResponse, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["RetrieveWindLightSettings"],
-                                                        m_dhttpMethod =>
-                                                        RetrieveWindLightSettings(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable RetrieveWindLightSettings(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] RetrieveWindLightSettings(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
-                return responsedata; //They don't exist
+                return new byte[0]; //They don't exist
             IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             OSDMap retVal = new OSDMap();
             if (rm.ContainsKey("RegionID"))
             {
@@ -329,25 +317,19 @@ namespace Aurora.Modules.WindlightSettings
                 retVal.Add("Type", OSD.FromInteger(2));
             }
 
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(retVal);
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(retVal);
         }
 
-        private Hashtable DispatchWindLightSettings(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] DispatchWindLightSettings(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = m_scene.GetScenePresence(agentID);
             if (SP == null)
-                return responsedata; //They don't exist
+                return new byte[0]; //They don't exist
 
             MainConsole.Instance.Info("[WindLightSettings]: Got a request to update WindLight from " + SP.Name);
 
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             RegionLightShareData lsd = new RegionLightShareData();
             lsd.FromOSD(rm);
@@ -361,7 +343,7 @@ namespace Aurora.Modules.WindlightSettings
                 if (lsd.type == 0) //Region
                 {
                     if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
-                        return responsedata; // No permissions
+                        return new byte[0]; // No permissions
 #if (!ISWIN)
                     bool found = false;
                     foreach (RegionLightShareData regionLsd in m_WindlightSettings.Values)
@@ -388,14 +370,13 @@ namespace Aurora.Modules.WindlightSettings
                     {
                         ILandObject land = parcelManagement.GetLandObject((int) SP.AbsolutePosition.X,
                                                                           (int) SP.AbsolutePosition.Y);
-                        if (
-                            !SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
-                            return responsedata; // No permissions
+                        if (SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
+                            return new byte[0]; // No permissions
                         IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (ORSM == null || !ORSM.AllowParcelWindLight)
                         {
                             SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
-                            return responsedata;
+                            return new byte[0];
                         }
 
                         OSDMap map = land.LandData.GenericData;
@@ -405,9 +386,7 @@ namespace Aurora.Modules.WindlightSettings
                             innerMap = (OSDMap) map["WindLight"];
 
                         if (innerMap.ContainsKey(lsd.minEffectiveAltitude.ToString()))
-                        {
                             innerMap.Remove(lsd.minEffectiveAltitude.ToString());
-                        }
 
                         land.LandData.AddGenericData("WindLight", innerMap);
                         //Update the client
@@ -420,7 +399,7 @@ namespace Aurora.Modules.WindlightSettings
                 if (lsd.type == 0) //Region
                 {
                     if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
-                        return responsedata; // No permissions
+                        return new byte[0]; // No permissions
 
                     foreach (RegionLightShareData regionLSD in m_WindlightSettings.Values)
                     {
@@ -428,7 +407,7 @@ namespace Aurora.Modules.WindlightSettings
                         if (checkAltitude(lsd, regionLSD, out message))
                         {
                             SP.ControllingClient.SendAlertMessage(message);
-                            return responsedata;
+                            return new byte[0];
                         }
                     }
                     SaveWindLightSettings(lsd.minEffectiveAltitude, lsd);
@@ -441,14 +420,13 @@ namespace Aurora.Modules.WindlightSettings
                     {
                         ILandObject land = parcelManagement.GetLandObject((int) SP.AbsolutePosition.X,
                                                                           (int) SP.AbsolutePosition.Y);
-                        if (
-                            !SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
-                            return responsedata; // No permissions
+                        if (!SP.Scene.Permissions.GenericParcelPermission(SP.UUID, land, (ulong) GroupPowers.LandOptions))
+                            return new byte[0]; // No permissions
                         IOpenRegionSettingsModule ORSM = SP.Scene.RequestModuleInterface<IOpenRegionSettingsModule>();
                         if (ORSM == null || !ORSM.AllowParcelWindLight)
                         {
                             SP.ControllingClient.SendAlertMessage("Parcel WindLight is disabled in this region.");
-                            return responsedata;
+                            return new byte[0];
                         }
 
                         OSDMap map = land.LandData.GenericData;
@@ -467,7 +445,7 @@ namespace Aurora.Modules.WindlightSettings
                             if (checkAltitude(lsd, parcelLSD, out message))
                             {
                                 SP.ControllingClient.SendAlertMessage(message);
-                                return responsedata;
+                                return new byte[0];
                             }
                         }
 
@@ -480,7 +458,7 @@ namespace Aurora.Modules.WindlightSettings
                 }
             }
             SP.ControllingClient.SendAlertMessage("WindLight Settings updated.");
-            return responsedata;
+            return new byte[0];
         }
 
         public bool checkAltitude(RegionLightShareData lsd, RegionLightShareData regionLSD, out string message)

@@ -162,17 +162,7 @@ namespace Aurora.Modules.Entities.BuySell
 
                     if (inventoryModule != null)
                     {
-                        if (inventoryModule.AddInventoryItem(item))
-                        {
-                            remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                        }
-                        else
-                        {
-                            if (m_dialogModule != null)
-                                m_dialogModule.SendAlertToUser(remoteClient,
-                                                               "Cannot buy now. Your inventory is unavailable");
-                            return false;
-                        }
+                        inventoryModule.AddInventoryItem(item, () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
                     }
                     break;
 

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Timers;
@@ -1812,59 +1813,37 @@ namespace Aurora.Modules.Land
             OSDMap retVal = new OSDMap();
             retVal["RemoteParcelRequest"] = CapsUtil.CreateCAPS("RemoteParcelRequest", remoteParcelRequestPath);
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["RemoteParcelRequest"],
+                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
                                                        {
-                                                           return RemoteParcelRequest(request, path, param, agentID);
+                                                           return RemoteParcelRequest(request, agentID);
                                                        }));
-#else
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["RemoteParcelRequest"],
-                                                          (request, path, param, httpRequest, httpResponse) =>
-                                                          RemoteParcelRequest(request, path, param,
-                                                                              agentID)));
-#endif
             retVal["ParcelPropertiesUpdate"] = CapsUtil.CreateCAPS("ParcelPropertiesUpdate", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
+                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
                                                        {
-                                                           return ProcessPropertiesUpdate(request, path, param, agentID);
+                                                           return ProcessPropertiesUpdate(request, agentID);
                                                        }));
-#else
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelPropertiesUpdate"],
-                                                          (request, path, param, httpRequest, httpResponse) =>
-                                                          ProcessPropertiesUpdate(request, path, param,
-                                                                                  agentID)));
-#endif
             retVal["ParcelMediaURLFilterList"] = CapsUtil.CreateCAPS("ParcelMediaURLFilterList", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
-                                                       delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
+                                                       delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
                                                        {
-                                                           return ProcessParcelMediaURLFilterList(request, path, param, agentID);
+                                                           return ProcessParcelMediaURLFilterList(request, agentID);
                                                        }));
-#else
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["ParcelMediaURLFilterList"],
-                                                          (request, path, param, httpRequest, httpResponse) =>
-                                                          ProcessParcelMediaURLFilterList(request, path,
-                                                                                          param, agentID)));
-#endif
-
 
             return retVal;
         }
 
-        private string ProcessParcelMediaURLFilterList(string request, string path, string param, UUID agentID)
+        private byte[] ProcessParcelMediaURLFilterList(Stream request, UUID agentID)
         {
             IClientAPI client;
             if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
-                return OSDParser.SerializeLLSDXmlString(new OSDMap());
+                return OSDParser.SerializeLLSDXmlBytes(new OSDMap());
             }
             OSDMap args = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
@@ -1875,16 +1854,16 @@ namespace Aurora.Modules.Land
             resp["local-id"] = o.LandData.LocalID;
             resp["list"] = respList;
 
-            return OSDParser.SerializeLLSDXmlString(resp);
+            return OSDParser.SerializeLLSDXmlBytes(resp);
         }
 
-        private string ProcessPropertiesUpdate(string request, string path, string param, UUID agentID)
+        private byte[] ProcessPropertiesUpdate(Stream request, UUID agentID)
         {
             IClientAPI client;
             if (!m_scene.ClientManager.TryGetValue(agentID, out client))
             {
                 MainConsole.Instance.WarnFormat("[LAND] unable to retrieve IClientAPI for {0}", agentID.ToString());
-                return OSDParser.SerializeLLSDXmlString(new OSDMap());
+                return new byte[0];
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
@@ -1924,10 +1903,9 @@ namespace Aurora.Modules.Land
             if (land != null)
                 land.UpdateLandProperties(land_update, client);
             else
-            {
                 MainConsole.Instance.WarnFormat("[LAND] unable to find parcelID {0}", parcelID);
-            }
-            return OSDParser.SerializeLLSDXmlString(new OSDMap());
+
+            return OSDParser.SerializeLLSDXmlBytes(new OSDMap());
         }
 
         // We create the InfoUUID by using the regionHandle (64 bit), and the local (integer) x
@@ -1946,7 +1924,7 @@ namespace Aurora.Modules.Land
         //     <uuid>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</uuid>
         //   </map>
         // </llsd>
-        private string RemoteParcelRequest(string request, string path, string param, UUID agentID)
+        private byte[] RemoteParcelRequest(Stream request, UUID agentID)
         {
             UUID parcelID = UUID.Zero;
             try
@@ -1993,7 +1971,7 @@ namespace Aurora.Modules.Land
             if (parcelID != UUID.Zero)
                 MainConsole.Instance.DebugFormat("[RemoteParcelRequest]: Found parcelID {0}", parcelID);
 
-            return OSDParser.SerializeLLSDXmlString(res);
+            return OSDParser.SerializeLLSDXmlBytes(res);
         }
 
         #endregion

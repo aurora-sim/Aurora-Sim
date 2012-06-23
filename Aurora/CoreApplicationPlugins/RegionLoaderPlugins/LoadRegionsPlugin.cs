@@ -135,7 +135,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     if (loader.Default && loader.Enabled)
                     {
-                        loader.AddRegion(new string[0]);
+                        loader.CreateRegion();
                         goto reload;
                     }
                 }

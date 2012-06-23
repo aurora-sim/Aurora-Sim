@@ -54,10 +54,6 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
 
-#if NET_4_0
-using System.Threading.Tasks;
-#endif
-
 namespace Aurora.Framework
 {
     /// <summary>
@@ -69,10 +65,7 @@ namespace Aurora.Framework
         QueueUserWorkItem,
         BeginInvoke,
         SmartThreadPool,
-        Thread,
-#if NET_4_0
-        Await
-#endif
+        Thread
     }
 
     /// <summary>
@@ -1498,9 +1491,6 @@ namespace Aurora.Framework
                 case FireAndForgetMethod.UnsafeQueueUserWorkItem:
                 case FireAndForgetMethod.QueueUserWorkItem:
                 case FireAndForgetMethod.BeginInvoke:
-#if NET_4_0
-                case FireAndForgetMethod.Await:
-#endif
                     int workerThreads, iocpThreads;
                     ThreadPool.GetAvailableThreads(out workerThreads, out iocpThreads);
                     return workerThreads;
@@ -1543,25 +1533,10 @@ namespace Aurora.Framework
                     });
                     thread.Start(obj);
                     break;
-#if NET_4_0
-                case FireAndForgetMethod.Await:
-                    AwaitCallback(callback, obj);
-                    break;
-#endif
                 default:
                     throw new NotImplementedException();
             }
         }
-
-#if NET_4_0
-        private static async void AwaitCallback(WaitCallback callback, object o)
-        {
-            await TaskEx.Run(() =>
-                {
-                    callback(o);
-                });
-        }
-#endif
 
         private static object SmartThreadPoolCallback(object o)
         {

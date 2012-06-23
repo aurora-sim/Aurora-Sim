@@ -850,7 +850,6 @@ namespace Aurora.Modules.Terrain
             client.OnBakeTerrain += client_OnBakeTerrain;
             client.OnLandUndo += client_OnLandUndo;
             client.OnGodlikeMessage += client_onGodlikeMessage;
-            client.OnUnackedTerrain += client_OnUnackedTerrain;
             client.OnRegionHandShakeReply += SendLayerData;
 
             //Add them to the cache
@@ -874,7 +873,6 @@ namespace Aurora.Modules.Terrain
             client.OnBakeTerrain -= client_OnBakeTerrain;
             client.OnLandUndo -= client_OnLandUndo;
             client.OnGodlikeMessage -= client_onGodlikeMessage;
-            client.OnUnackedTerrain -= client_OnUnackedTerrain;
             client.OnRegionHandShakeReply -= SendLayerData;
 
             //Remove them from the cache
@@ -978,9 +976,15 @@ namespace Aurora.Modules.Terrain
                     //Need to make sure we don't send the same ones over and over
                     if (!terrainarray[x, y])
                     {
+                        Vector3 posToCheckFrom = new Vector3(presence.AbsolutePosition.X % m_scene.RegionInfo.RegionSizeX,
+                            presence.AbsolutePosition.Y % m_scene.RegionInfo.RegionSizeY, presence.AbsolutePosition.Z);
+                        int xx, yy;
+                        Util.UlongToInts(presence.RootAgentHandle, out xx, out yy);
+                        int xOffset = m_scene.RegionInfo.RegionLocX - xx;
+                        int yOffset = m_scene.RegionInfo.RegionLocY - yy;
                         //Check which has less distance, camera or avatar position, both have to be done
-                        if (Util.DistanceLessThan(presence.AbsolutePosition,
-                                                  new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,
+                        if (Util.DistanceLessThan(posToCheckFrom,
+                            new Vector3(x * Constants.TerrainPatchSize + (xOffset > 0 ? -xOffset : xOffset), y * Constants.TerrainPatchSize + (yOffset > 0 ? -yOffset : yOffset),
                                                               0), presence.DrawDistance + 50) ||
                             Util.DistanceLessThan(presence.CameraPosition,
                                                   new Vector3(x*Constants.TerrainPatchSize, y*Constants.TerrainPatchSize,
@@ -1721,12 +1725,6 @@ namespace Aurora.Modules.Terrain
             }
         }
 
-        protected void client_OnUnackedTerrain(IClientAPI client, int patchX, int patchY)
-        {
-            //MainConsole.Instance.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, m_channel.GetSerialised(m_scene));
-        }
-
         private void StoreUndoState()
         {
             lock (m_undo)
@@ -1908,6 +1906,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceRescaleTerrain(string[] cmd)
         {
+            if (cmd.Count() < 4)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -1972,6 +1975,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceElevateTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -1986,6 +1994,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceMultiplyTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -2000,6 +2013,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceLowerTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)
@@ -2014,6 +2032,11 @@ namespace Aurora.Modules.Terrain
 
         private void InterfaceFillTerrain(string[] cmd)
         {
+            if (cmd.Count() < 3)
+            {
+                MainConsole.Instance.Info("You do not have enough parameters. Please look at 'terrain help' for more info.");
+                return;
+            }
             List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
 
             foreach (TerrainModule tmodule in m)

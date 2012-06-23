@@ -94,10 +94,8 @@ namespace OpenSim.Services.MessagingService
             ulong requestingRegion = message["RequestingRegion"].AsULong();
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             if (capsService == null)
-            {
-                //MainConsole.Instance.Info("[AgentProcessing]: Failed OnMessageReceived ICapsService is null");
                 return new OSDMap();
-            }
+
             IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
 
             IRegionClientCapsService regionCaps = null;
@@ -119,7 +117,7 @@ namespace OpenSim.Services.MessagingService
                     Util.UlongToInts(requestingRegion, out x, out y);
                     GridRegion requestingGridRegion = GridService.GetRegionByPosition(UUID.Zero, x, y);
                     if (requestingGridRegion != null)
-                        EnableChildAgentsForRegion(requestingGridRegion);
+                        Util.FireAndForget((o) => EnableChildAgentsForRegion(requestingGridRegion));
                 }
             }
             else if (message["Method"] == "DisableSimulator")
@@ -217,23 +215,28 @@ namespace OpenSim.Services.MessagingService
                     AgentData AgentData = new AgentData();
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
-
-                    OSDMap result = new OSDMap();
-                    string reason = "";
-                    result["Success"] = TeleportAgent(ref destination, TeleportFlags, DrawDistance,
-                                                      Circuit, AgentData, AgentID, requestingRegion, out reason);
-                    result["Reason"] = reason;
-                    //Remove the region flags, not the regions problem
-                    destination.Flags = 0;
-                    result["Destination"] = destination.ToOSD(); //Send back the new destination
-                    return result;
+                    string ResponseURL = body["ResponseURL"].AsString();
+                    Util.FireAndForget(delegate
+                    {
+                        OSDMap result = new OSDMap();
+                        string reason = "";
+                        result["success"] = TeleportAgent(ref destination, TeleportFlags, DrawDistance,
+                                                          Circuit, AgentData, AgentID, requestingRegion, out reason);
+                        result["Reason"] = reason;
+                        //Remove the region flags, not the regions problem
+                        destination.Flags = 0;
+                        result["Destination"] = destination.ToOSD(); //Send back the new destination
+                        WebUtils.PostToService(rootCaps.LoopbackRegionIP.ToString() + ResponseURL, result);
+                    });
+                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse",true) };
                 }
             }
             else if (message["Method"] == "CrossAgent")
             {
                 if (regionCaps == null || clientCaps == null)
                     return null;
-                if (clientCaps.GetRootCapsService().RegionHandle == regionCaps.RegionHandle)
+                IRegionClientCapsService rootCaps = clientCaps.GetRootCapsService();
+                if (rootCaps == null || rootCaps.RegionHandle == regionCaps.RegionHandle)
                 {
                     //This is a simulator message that tells us to cross the agent
                     OSDMap body = ((OSDMap) message["Message"]);
@@ -248,24 +251,29 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
 
-                    OSDMap result = new OSDMap();
-                    string reason = "";
-                    result["Success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
-                                                   AgentID, requestingRegion, out reason);
-                    result["Reason"] = reason;
-                    return result;
+                    string ResponseURL = message["ResponseURL"].AsString();
+                    Util.FireAndForget(delegate
+                    {
+                        OSDMap result = new OSDMap();
+                        string reason = "";
+                        result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
+                                                       AgentID, requestingRegion, out reason);
+                        result["reason"] = reason;
+                        WebUtils.PostToService(rootCaps.Region.ServerURI + ResponseURL, result);
+                    });
+                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
                 }
                 else if (clientCaps.InTeleport)
                 {
                     OSDMap result = new OSDMap();
-                    result["Success"] = false;
+                    result["success"] = false;
                     result["Note"] = false;
                     return result;
                 }
                 else
                 {
                     OSDMap result = new OSDMap();
-                    result["Success"] = false;
+                    result["success"] = false;
                     result["Note"] = false;
                     return result;
                 }
@@ -382,7 +390,7 @@ namespace OpenSim.Services.MessagingService
         public virtual void EnableChildAgents(UUID AgentID, ulong requestingRegion, int DrawDistance,
                                               AgentCircuitData circuit)
         {
-            Util.FireAndForget(delegate
+            Util.FireAndForget((o) =>
                                    {
                                        int count = 0;
                                        int x, y;
@@ -428,7 +436,7 @@ namespace OpenSim.Services.MessagingService
 
         public virtual void EnableChildAgentsForPosition(IRegionClientCapsService caps, Vector3 position)
         {
-            Util.FireAndForget(delegate
+            Util.FireAndForget((o) =>
                                    {
                                        int count = 0;
                                        IGridService gridService = m_registry.RequestModuleInterface<IGridService>();

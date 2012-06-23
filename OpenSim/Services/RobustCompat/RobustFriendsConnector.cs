@@ -37,7 +37,7 @@ using OpenSim.Services.Interfaces;
 using FriendInfo = OpenSim.Services.Interfaces.FriendInfo;
 using OpenMetaverse;
 
-namespace OpenSim.Services.Connectors.Friends
+namespace OpenSim.Services.Robust
 {
     public class RobustFriendsServicesConnector : IService, IFriendsService
     {

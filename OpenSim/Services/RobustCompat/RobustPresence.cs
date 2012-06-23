@@ -9,7 +9,7 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustPresence : IAgentInfoService, IService
     {

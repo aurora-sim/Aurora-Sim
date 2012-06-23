@@ -1732,8 +1732,6 @@ namespace Aurora.BotManager
         public event SetScriptRunning OnSetScriptRunning;
         public event UpdateVector OnAutoPilotGo;
 
-        public event TerrainUnacked OnUnackedTerrain;
-
         public event RegionHandleRequest OnRegionHandleRequest;
         public event ParcelInfoRequest OnParcelInfoRequest;
 
@@ -2082,10 +2080,6 @@ namespace Aurora.BotManager
         }
 
         public void SendPrimUpdate(IEnumerable<EntityUpdate> updates)
-        {
-        }
-
-        public void FlushPrimUpdates()
         {
         }
 

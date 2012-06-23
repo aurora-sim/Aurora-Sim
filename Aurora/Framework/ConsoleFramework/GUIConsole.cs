@@ -34,9 +34,6 @@ using System.Timers;
 using Nini.Config;
 using log4net.Core;
 using Timer = System.Timers.Timer;
-#if NET_4_0
-using System.Threading.Tasks;
-#endif
 
 namespace Aurora.Framework
 {
@@ -356,14 +353,12 @@ namespace Aurora.Framework
         }
 
         public bool Processing = true;
-#if !NET_4_0
         private delegate void PromptEvent();
 
         private IAsyncResult result;
         private PromptEvent action;
         private readonly Object m_consoleLock = new Object();
         private bool m_calledEndInvoke;
-#endif
 
         /// <summary>
         ///   Starts the prompt for the console. This will never stop until the region is closed.

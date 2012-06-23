@@ -77,6 +77,10 @@
 
     ;; Should registration of new regions (existing regions can still connect) be allowed currently?
     AllowNewRegistrations = true
+	
+	;; You can allow a region to register with the grid passing a password that must match
+	AllowNewRegistrationsWithPass = false
+	RegisterRegionPassword = 
     
     ;; Should any registrations be allowed currently?
     DisableRegistrations = false

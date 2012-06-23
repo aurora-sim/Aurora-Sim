@@ -71,10 +71,10 @@ namespace Aurora.Modules
             }
             else //IWC
             {
-                string[] session = SessionID.Split('|');
+                /*string[] session = SessionID.Split('|');
                 ISyncMessagePosterService smps = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
                 //Forward it on
-                result = smps.Get(message, UUID.Parse(session[0]), ulong.Parse(session[1]));
+                result = smps.Get(message, UUID.Parse(session[0]), ulong.Parse(session[1]));*/
             }
 
             return result;
