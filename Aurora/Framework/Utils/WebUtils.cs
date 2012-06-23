@@ -338,7 +338,7 @@ namespace Aurora.Simulation.Base
         {
             // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
 
-            lock (EndPointLock(url))
+            //lock (EndPointLock(url))
             {
                 string errorMessage = "unknown error";
                 int tickstart = Util.EnvironmentTickCount();

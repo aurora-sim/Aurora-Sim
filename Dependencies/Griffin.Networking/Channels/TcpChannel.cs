@@ -136,8 +136,11 @@ namespace Griffin.Networking.Channels
         protected virtual void Disconnect()
         {
             _logger.Debug("Disconnecting socket.");
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Disconnect(true);
+            if (_socket != null)
+            {
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Disconnect(true);
+            }
             Dispose(true);
             SendUpstream(new Disconnected(null));
         }
@@ -358,7 +361,8 @@ namespace Griffin.Networking.Channels
 #if NET_3_5
                 _socket.Close();
 #else
-                _socket.Dispose();
+                if(_socket != null)
+                    _socket.Dispose();
 #endif
                 _stream.Close();
                 _stream.Dispose();
