@@ -38,11 +38,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private short[] _heightMap;
         private RegionInfo m_region;
 
-        //protected internal string sceneIdentifier;
-
-        public BasicScene(string _sceneIdentifier)
+        public BasicScene()
         {
-            //sceneIdentifier = _sceneIdentifier;
         }
 
         public override bool DisableCollisions

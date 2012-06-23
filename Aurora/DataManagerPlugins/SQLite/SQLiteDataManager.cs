@@ -1050,9 +1050,6 @@ namespace Aurora.DataManager.SQLite
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
-            if (coldef.defaultValue != null)
-            {
-            }
             return symbol + (coldef.isNull ? " NULL" : " NOT NULL") +
                 ((coldef.isNull && coldef.defaultValue == null) ? " DEFAULT NULL" : 
                 (coldef.defaultValue != null ? " DEFAULT " + (coldef.defaultValue.StartsWith("'") && coldef.defaultValue.EndsWith("'") ? coldef.defaultValue : "'" + coldef.defaultValue + "'") : ""));
