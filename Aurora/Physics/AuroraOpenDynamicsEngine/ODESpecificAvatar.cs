@@ -9,6 +9,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
     public class ODESpecificAvatar : AuroraODECharacter
     {
+        #region Declares
+
+        public d.Mass ShellMass;
+        protected Vector3 _zeroPosition;
+
+        #endregion
         #region Constructor
 
         public ODESpecificAvatar(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Quaternion rotation,
@@ -40,19 +46,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (!m_shouldBePhysical)
                 return false;
 
-            Vector3 vec = Vector3.Zero;
-            d.Vector3 vel = d.BodyGetLinearVel(Body);
-            d.Vector3 tempPos;
-            d.BodyCopyPosition(Body, out tempPos);
+            Vector3 vec = Vector3.Zero, tempPos;
+            Vector3 vel = d.BodyGetLinearVel(Body).ToVector3();
+            d.Vector3 tempPosD;
+            d.BodyCopyPosition(Body, out tempPosD);
+            tempPos = tempPosD.ToVector3();
 
             #region Flight Ceiling
 
             // rex, added height check
 
             if (m_pidControllerActive == false)
-            {
                 _zeroPosition = tempPos;
-            }
 
             if (_parent_scene.m_useFlightCeilingHeight && tempPos.Z > _parent_scene.m_flightCeilingHeight)
             {
@@ -713,6 +718,88 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax, 5e6f);
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax2, 5e6f);
             d.JointSetAMotorParam(Amotor, (int)dParam.FMax3, 5e6f);
+
+            Velocity = Vector3.Zero;
+
+            _parent_scene.actor_name_map[Shell] = this;
+        }
+
+        #endregion
+
+        #region Destroy
+
+        public void DestroyBodyThreadLocked()
+        {
+            if (Amotor != IntPtr.Zero)
+            {
+                // Kill the Amotor
+                d.JointDestroy(Amotor);
+                Amotor = IntPtr.Zero;
+            }
+            //kill the Geometry
+            _parent_scene.waitForSpaceUnlock(_parent_scene.space);
+
+            if (Body != IntPtr.Zero)
+            {
+                //kill the body
+                d.BodyDestroy(Body);
+
+                Body = IntPtr.Zero;
+            }
+
+            if (Shell != IntPtr.Zero)
+            {
+                d.GeomDestroy(Shell);
+                Shell = IntPtr.Zero;
+            }
+        }
+
+        #endregion
+
+        #region Taints
+
+        public Vector3 GetAngularVelocity()
+        {
+            Vector3 rvec;
+            rvec = d.BodyGetAngularVel(Body).ToVector3();
+            return rvec;
+        }
+
+        public Vector3 GetLinearVelocity()
+        {
+            return d.BodyGetLinearVel(Body).ToVector3();
+        }
+
+        public Vector3 GetPosition()
+        {
+            return d.BodyGetPosition(Body).ToVector3();
+        }
+
+        public void SetRotationLocked(Quaternion taintRot)
+        {
+            d.Quaternion q = new d.Quaternion
+            {
+                W = taintRot.W,
+                X = taintRot.X,
+                Y = taintRot.Y,
+                Z = taintRot.Z
+            };
+            d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
+        }
+
+        public void SetPositionLocked(Vector3 taintPos)
+        {
+            d.BodySetPosition(Body, taintPos.X, taintPos.Y, taintPos.Z);
+
+            _position.X = taintPos.X;
+            _position.Y = taintPos.Y;
+            _position.Z = taintPos.Z;
+        }
+
+        public void SetForceLocked(Vector3 taintForce)
+        {
+            if (taintForce.X != 0f || taintForce.Y != 0f || taintForce.Z != 0)
+                d.BodyAddForce(Body, taintForce.X, taintForce.Y, taintForce.Z);
         }
 
         #endregion

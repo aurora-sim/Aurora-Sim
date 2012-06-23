@@ -1610,8 +1610,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                 {
                     float m_mass = _mass;
-                    d.Vector3 dcpos = d.BodyGetPosition(Body);
-                    d.Vector3 vel = d.BodyGetLinearVel(Body);
+                    Vector3 dcpos = d.BodyGetPosition(Body).ToVector3();
+                    Vector3 vel = d.BodyGetLinearVel(Body).ToVector3();
 
                     float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3();

@@ -50,7 +50,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected float PID_D;
         protected float PID_P;
         public IntPtr Shell = IntPtr.Zero;
-        public d.Mass ShellMass;
         protected bool ShouldBeWalking = true;
         protected bool StartingUnderWater = true;
         protected bool WasUnderWater;
@@ -60,7 +59,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected Vector3 _velocity;
         protected bool _wasZeroFlagFlying;
         protected bool _zeroFlag;
-        protected d.Vector3 _zeroPosition;
         public bool bad;
         protected bool flying;
         protected float lastUnderwaterPush;
@@ -493,7 +491,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 vec;
             try
             {
-                vec = d.BodyGetPosition(Body).ToVector3();
+                vec = _parent_ref.GetPosition();
             }
             catch (NullReferenceException)
             {
@@ -519,7 +517,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             try
             {
-                vec = d.BodyGetLinearVel(Body).ToVector3();
+                vec = _parent_ref.GetLinearVelocity();
             }
             catch (NullReferenceException)
             {
@@ -531,7 +529,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             Vector3 rvec;
             try
             {
-                rvec = d.BodyGetAngularVel(Body).ToVector3();
+                rvec = _parent_ref.GetAngularVelocity();
             }
             catch (NullReferenceException)
             {
@@ -831,73 +829,36 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 case changes.Add:
                     // Create avatar capsule and related ODE data
-                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero)) // && Amotor == IntPtr.Zero))
+                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
                     {
                         MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
                                    + (Shell != IntPtr.Zero ? "Shell " : "")
-                                   + (Body != IntPtr.Zero ? "Body " : "")
-                            );
-                        // + (Amotor!=IntPtr.Zero ? "Amotor ":""));
+                                   + (Body != IntPtr.Zero ? "Body " : ""));
                     }
                     _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
-                        //, _parent_scene.avStandupTensor);
 
-                    _parent_scene.actor_name_map[Shell] = this;
                     _parent_scene.AddCharacter(this);
                     m_isPhysical = true;
                     break;
                 case changes.Remove:
                     _parent_scene.RemoveCharacter(this);
                     // destroy avatar capsule and related ODE data
-                    if (Amotor != IntPtr.Zero)
-                    {
-                        // Kill the Amotor
-                        d.JointDestroy(Amotor);
-                        Amotor = IntPtr.Zero;
-                    }
-                    //kill the Geometry
-                    _parent_scene.waitForSpaceUnlock(_parent_scene.space);
-
-                    if (Body != IntPtr.Zero)
-                    {
-                        //kill the body
-                        d.BodyDestroy(Body);
-
-                        Body = IntPtr.Zero;
-                    }
-
-                    if (Shell != IntPtr.Zero)
-                    {
-                        d.GeomDestroy(Shell);
-                        Shell = IntPtr.Zero;
-                    }
+                    _parent_ref.DestroyBodyThreadLocked();
                     m_isPhysical = false;
                     break;
                 case changes.CapsuleLength:
                     float taintCapsul = (float)val;
                     if (Shell != IntPtr.Zero && Body != IntPtr.Zero) // && Amotor != IntPtr.Zero)
                     {
-                        if (Amotor != IntPtr.Zero)
-                        {
-                            // Kill the Amotor
-                            d.JointDestroy(Amotor);
-                            Amotor = IntPtr.Zero;
-                        }
+                        //Destroy the old body
+                        _parent_ref.DestroyBodyThreadLocked();
+
                         m_pidControllerActive = true;
-                        // no lock needed on _parent_scene.OdeLock because we are called from within the thread lock in OdePlugin's simulate()
                         float prevCapsule = CAPSULE_LENGTH;
                         CAPSULE_LENGTH = taintCapsul;
-                        //MainConsole.Instance.Info("[SIZE]: " + CAPSULE_LENGTH.ToString());
-                        d.BodyDestroy(Body);
-                        Body = IntPtr.Zero;
-                        d.GeomDestroy(Shell);
-                        Shell = IntPtr.Zero;
+
                         _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y,
                                                   _position.Z + (CAPSULE_LENGTH - prevCapsule));
-                        //, _parent_scene.avStandupTensor);
-                        Velocity = Vector3.Zero;
-
-                        _parent_scene.actor_name_map[Shell] = this;
                     }
                     else
                     {
@@ -909,39 +870,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
                 case changes.Position:
                     Vector3 taintPos = (Vector3)val;
-                    if (!taintPos.ApproxEquals(_position, 0.05f))
-                    {
-                        if (Body != IntPtr.Zero)
-                        {
-                            d.BodySetPosition(Body, taintPos.X, taintPos.Y, taintPos.Z);
-
-                            _position.X = taintPos.X;
-                            _position.Y = taintPos.Y;
-                            _position.Z = taintPos.Z;
-                        }
-                    }
+                    if (!taintPos.ApproxEquals(_position, 0.05f) && Body != null)
+                        _parent_ref.SetPositionLocked(taintPos);
                     break;
                 case changes.Rotation:
                     if (Body != IntPtr.Zero)
-                    {
-                        Quaternion taintRot = (Quaternion)val;
-                        d.Quaternion q = new d.Quaternion
-                        {
-                            W = taintRot.W,
-                            X = taintRot.X,
-                            Y = taintRot.Y,
-                            Z = taintRot.Z
-                        };
-                        d.BodySetQuaternion(Body, ref q); // just keep in sync with rest of simutator
-                    }
+                        _parent_ref.SetRotationLocked((Quaternion)val);
                     break;
                 case changes.Force:
                     if (Body != IntPtr.Zero)
-                    {
-                        Vector3 taintForce = (Vector3)val;
-                        if (taintForce.X != 0f || taintForce.Y != 0f || taintForce.Z != 0)
-                            d.BodyAddForce(Body, taintForce.X, taintForce.Y, taintForce.Z);
-                    }
+                        _parent_ref.SetForceLocked((Vector3)val);
                     break;
             }
         }

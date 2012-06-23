@@ -2357,7 +2357,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Dictionary<int, PointGravity> m_pointGravityPositions = new Dictionary<int, PointGravity>();
         private bool pointGravityInUse;
 
-        public void CalculateGravity(float mass, d.Vector3 position, bool allowNormalGravity, float gravityModifier,
+        public void CalculateGravity(float mass, Vector3 position, bool allowNormalGravity, float gravityModifier,
                                      ref Vector3 forceVector)
         {
             if (normalGravityEnabled && allowNormalGravity)
@@ -2369,11 +2369,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             if (pointGravityInUse)
             {
-                Vector3 pos = new Vector3(position.X, position.Y, position.Z);
                 //Find the nearby centers of gravity
                 foreach (PointGravity pg in m_pointGravityPositions.Values)
                 {
-                    float distance = Vector3.DistanceSquared(pg.Position, pos);
+                    float distance = Vector3.DistanceSquared(pg.Position, position);
                     if (distance < pg.Radius*pg.Radius)
                     {
                         float d = (distance/(pg.Radius*pg.Radius));
@@ -2389,9 +2388,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         else
                         {
                             //Pulls the actor toward the point
-                            forceVector.X += (pg.Position.X - pos.X)*pg.GravForce*radiusScaling*mass*gravityModifier;
-                            forceVector.Y += (pg.Position.Y - pos.Y)*pg.GravForce*radiusScaling*mass*gravityModifier;
-                            forceVector.Z += (pg.Position.Z - pos.Z)*pg.GravForce*radiusScaling*mass*gravityModifier;
+                            forceVector.X += (pg.Position.X - position.X) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            forceVector.Y += (pg.Position.Y - position.Y) * pg.GravForce * radiusScaling * mass * gravityModifier;
+                            forceVector.Z += (pg.Position.Z - position.Z) * pg.GravForce * radiusScaling * mass * gravityModifier;
                             /*if (forceVector.Z < 50 && forceVector.Z > 0)
                                 forceVector.Z = 0;
                             else if (forceVector.Z > -50 && forceVector.Z < 0)
