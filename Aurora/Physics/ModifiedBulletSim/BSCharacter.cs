@@ -326,7 +326,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             get { return _preJumping; }
         }
 
-        public void Destroy()
+        public override void Destroy()
         {
 #if (!ISWIN)
             _scene.TaintedObject(delegate()

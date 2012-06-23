@@ -28,7 +28,7 @@ namespace Griffin.Networking.Http.Handlers
         private readonly int _bufferSize;
         private readonly int _sizeLimit;
         private IMessage _currentMessage;
-        private static BufferPool _bufferPool ;
+        //private static BufferPool _bufferPool ;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BodyDecoder"/> class.
@@ -43,7 +43,7 @@ namespace Griffin.Networking.Http.Handlers
             _decoderService = decoderService;
             _bufferSize = bufferSize;
             _sizeLimit = sizeLimit;
-            _bufferPool = new BufferPool(_bufferSize, 10, 1000);
+            //_bufferPool = new BufferPool(_bufferSize, 10, 1000);
         }
 
         /// <summary>
@@ -122,8 +122,9 @@ namespace Griffin.Networking.Http.Handlers
                     _currentMessage.Body = new FileStream(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")), FileMode.CreateNew);
                 else
                 {
-                    var slice = _bufferPool.PopSlice();
-                    _currentMessage.Body = new BufferPoolStream(_bufferPool, slice);
+                    //var slice = _bufferPool.PopSlice();
+                    //_currentMessage.Body = new BufferPoolStream(_bufferPool, slice);
+                    _currentMessage.Body = new MemoryStream();
                 }
             }
 

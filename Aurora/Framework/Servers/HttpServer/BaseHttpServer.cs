@@ -1294,6 +1294,9 @@ namespace Aurora.Framework.Servers.HttpServer
                         return;
                     }
 
+                    if (request.InputStream != null)
+                        request.InputStream.Dispose();
+
                     if (buffer == null)
                     {
                         if (response.OutputStream.CanWrite)

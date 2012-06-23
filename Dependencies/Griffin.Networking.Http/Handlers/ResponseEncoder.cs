@@ -12,7 +12,7 @@ namespace Griffin.Networking.Http.Handlers
     /// </summary>
     public class ResponseEncoder : IDownstreamHandler
     {
-        readonly BufferPool _pool = new BufferPool(65536, 100, 10000);
+        //readonly BufferPool _pool = new BufferPool(65536, 100, 10000);
 
         /// <summary>
         /// Process message
@@ -44,7 +44,8 @@ namespace Griffin.Networking.Http.Handlers
         /// <param name="response">Response containing call headers.</param>
         public Stream SerializeHeaders(IResponse response)
         {
-            var stream = new BufferPoolStream(_pool, _pool.PopSlice());
+            //var stream = new BufferPoolStream(_pool, _pool.PopSlice());
+            var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
 
             writer.WriteLine("{0} {1} {2}", response.ProtocolVersion, (int)response.StatusCode, response.StatusDescription);

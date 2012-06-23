@@ -168,6 +168,8 @@ namespace Aurora.Framework.Servers.HttpServer
             if (_httpResponse.Body != null)
                 _httpResponse.Body.Position = 0;
             _httpContext.SendDownstream(new SendHttpResponse(_httpRequest, _httpResponse));
+            if (_httpResponse.Body != null)
+                _httpResponse.Body.Dispose();
         }
 
         #region Implementation of IDisposable

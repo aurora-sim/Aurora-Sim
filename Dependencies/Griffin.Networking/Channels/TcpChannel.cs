@@ -42,7 +42,10 @@ namespace Griffin.Networking.Channels
             _pipeline = pipeline;
             _pool = pool;
             Pipeline.SetChannel(this);
-            _readBuffer = pool.PopSlice();
+            if (pool == null)
+                _readBuffer = new BufferSlice(new byte[65535], 0, 65535, 0);
+            else
+                _readBuffer = pool.PopSlice();
             _stream = new PeekableMemoryStream(_readBuffer.Buffer, _readBuffer.StartOffset, _readBuffer.Capacity);
         }
 
@@ -353,16 +356,19 @@ namespace Griffin.Networking.Channels
 
             try
             {
+                if (!disposing || _socket == null)
+                    return;
                 if (_socket.Connected)
                 {
                     _socket.Shutdown(SocketShutdown.Both);
                     _socket.Disconnect(true);
                 }
+                if (!disposing || _socket == null)
+                    return;
 #if NET_3_5
                 _socket.Close();
 #else
-                if(_socket != null)
-                    _socket.Dispose();
+                _socket.Dispose();
 #endif
                 _stream.Close();
                 _stream.Dispose();

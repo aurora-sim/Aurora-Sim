@@ -41,18 +41,18 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected readonly CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
         protected AuroraODEPhysicsScene _parent_scene;
-        public IntPtr Amotor = IntPtr.Zero;
         protected float AvatarHalfsize;
-        public IntPtr Body = IntPtr.Zero;
         public float CAPSULE_LENGTH = 2.140599f;
         public float CAPSULE_RADIUS = 0.37f;
         public float MinimumGroundFlightOffset = 3f;
         protected float PID_D;
         protected float PID_P;
-        public IntPtr Shell = IntPtr.Zero;
         protected bool ShouldBeWalking = true;
         protected bool StartingUnderWater = true;
         protected bool WasUnderWater;
+        public IntPtr Amotor = IntPtr.Zero;
+        public IntPtr Body = IntPtr.Zero;
+        public IntPtr Shell = IntPtr.Zero;
 
         protected Vector3 _position;
         protected Vector3 _target_velocity;

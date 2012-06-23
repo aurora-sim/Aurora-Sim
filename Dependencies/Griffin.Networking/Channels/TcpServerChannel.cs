@@ -18,7 +18,7 @@ namespace Griffin.Networking.Channels
     {
         private readonly IPipelineFactory _childPipelineFactory;
         private TcpListener _listener;
-        readonly BufferPool _bufferPool = new BufferPool(65535, 100, 200);
+        readonly BufferPool _bufferPool = null;//new BufferPool(65535, 100, 200);
         private ILogger _logger = LogManager.GetLogger<TcpServerChannel>();
 
         /// <summary>
