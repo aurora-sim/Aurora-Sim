@@ -2741,7 +2741,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_vehicle.ProcessSetCameraPos(CameraRotation);
         }
 
-        public void DoAChange(changes what, object arg)
+        public override void ProcessTaints(changes what, object arg)
         {
             if (m_frozen && what != changes.Add && what != changes.Remove && what != changes.Delete)
                 return;

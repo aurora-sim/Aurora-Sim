@@ -120,7 +120,7 @@ namespace OpenSim.Services.MessagingService
                     if (result != "")
                     {
                         OSDMap r = OSDParser.DeserializeJson(result) as OSDMap;
-                        if (r == null || r.ContainsKey("WillHaveResponse"))
+                        if (r == null || !r.ContainsKey("WillHaveResponse"))
                             response(null);
                     }
                     else

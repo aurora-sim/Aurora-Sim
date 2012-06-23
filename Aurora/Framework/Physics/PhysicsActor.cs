@@ -366,7 +366,7 @@ namespace Aurora.Framework
         {
         }
 
-        public virtual void DoAChange(changes changes, object p)
+        public virtual void ProcessTaints(changes changes, object p)
         {
         }
     }

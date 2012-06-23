@@ -440,7 +440,14 @@ namespace Aurora.Modules.Attachments
                         IEntity e;
                         if(!m_scene.SceneGraph.TryGetEntity(objatt.UUID, out e))//if (updateUUIDs)
                         {
-                            m_scene.SceneGraph.AddPrimToScene(objatt);
+                            foreach (var prim in objatt.ChildrenEntities())
+                                prim.LocalId = 0;
+                            bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, false);
+                            if (!success)
+                            {
+                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                                return null;
+                            }
                             forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                         }
                         else
@@ -448,7 +455,7 @@ namespace Aurora.Modules.Attachments
                             if (e as ISceneEntity != null)
                                 (e as ISceneEntity).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
-                            return null;//It was already added
+                            return (e as ISceneEntity);//It was already added
                             /*foreach (var prim in objatt.ChildrenEntities())
                                 prim.LocalId = 0;
                             bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);

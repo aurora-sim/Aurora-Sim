@@ -822,7 +822,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
-        public void ProcessTaints(changes taint, object val)
+        public override void ProcessTaints(changes taint, object val)
         {
             if (!m_shouldBePhysical)
                 return;

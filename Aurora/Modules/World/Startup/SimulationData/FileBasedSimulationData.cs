@@ -690,22 +690,16 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
             MainConsole.Instance.Debug("[FileBasedSimulationData]: Reading file for " + scene.RegionInfo.RegionName);
             List<uint> foundLocalIDs = new List<uint>();
-            GZipStream m_loadStream;
-            try
-            {
-                m_loadStream =
-                    new GZipStream(
-                        ArchiveHelpers.GetStream(((m_loadDirectory == "" || m_loadDirectory == "/")
+            var stream = ArchiveHelpers.GetStream((m_loadDirectory == "" || m_loadDirectory == "/")
                                                       ? m_fileName
-                                                      : Path.Combine(m_loadDirectory, m_fileName))),
-                        CompressionMode.Decompress);
-            }
-            catch
+                                                      : Path.Combine(m_loadDirectory, m_fileName));
+            if(stream == null)
             {
                 if (CheckForOldDataBase())
                     SaveBackup(m_saveDirectory, false);
                 return;
             }
+            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
 
             byte[] data;
@@ -775,10 +769,13 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                             data = null;
                             foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
                             {
-                                if (!foundLocalIDs.Contains(part.LocalId))
-                                    foundLocalIDs.Add(part.LocalId);
-                                else
-                                    part.LocalId = 0; //Reset it! Only use it once!
+                                lock (foundLocalIDs)
+                                {
+                                    if (!foundLocalIDs.Contains(part.LocalId))
+                                        foundLocalIDs.Add(part.LocalId);
+                                    else
+                                        part.LocalId = 0; //Reset it! Only use it once!
+                                }
                             }
                             m_groups.Add(sceneObject);
                         }

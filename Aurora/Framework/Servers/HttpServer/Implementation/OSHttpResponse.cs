@@ -165,7 +165,8 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </summary>
         public void Send()
         {
-            _httpResponse.Body.Position = 0;
+            if (_httpResponse.Body != null)
+                _httpResponse.Body.Position = 0;
             _httpContext.SendDownstream(new SendHttpResponse(_httpRequest, _httpResponse));
         }
 

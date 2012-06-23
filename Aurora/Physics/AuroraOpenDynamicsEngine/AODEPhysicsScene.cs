@@ -1853,7 +1853,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                             while (ChangesQueue.TryDequeue(out item))
                             {
-                                try { item.actor.DoAChange(item.what, item.arg); } catch { }
+                                try { item.actor.ProcessTaints(item.what, item.arg); } catch { }
                                 if (tlimit-- <= 0)
                                     break;
                             }
