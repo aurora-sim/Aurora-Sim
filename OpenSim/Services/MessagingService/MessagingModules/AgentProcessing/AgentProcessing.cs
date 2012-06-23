@@ -226,7 +226,7 @@ namespace OpenSim.Services.MessagingService
                         //Remove the region flags, not the regions problem
                         destination.Flags = 0;
                         result["Destination"] = destination.ToOSD(); //Send back the new destination
-                        WebUtils.PostToService(rootCaps.LoopbackRegionIP.ToString() + ResponseURL, result);
+                        WebUtils.PostToService(ResponseURL, result);
                     });
                     return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse",true) };
                 }
@@ -259,7 +259,7 @@ namespace OpenSim.Services.MessagingService
                         result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
                                                        AgentID, requestingRegion, out reason);
                         result["reason"] = reason;
-                        WebUtils.PostToService(rootCaps.Region.ServerURI + ResponseURL, result);
+                        WebUtils.PostToService(ResponseURL, result);
                     });
                     return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
                 }
