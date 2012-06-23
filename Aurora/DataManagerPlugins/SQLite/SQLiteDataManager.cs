@@ -1050,7 +1050,12 @@ namespace Aurora.DataManager.SQLite
                 default:
                     throw new DataManagerException("Unknown column type.");
             }
-            return symbol + (coldef.isNull ? " NULL" : " NOT NULL") + ((coldef.isNull && coldef.defaultValue == null) ? " DEFAULT NULL" : (coldef.defaultValue != null ? (coldef.Type == ColumnType.Char && coldef.defaultValue.StartsWith("'") && coldef.defaultValue.EndsWith("'") ? " DEFAULT " + coldef.defaultValue : " DEFAULT '" + coldef.defaultValue.MySqlEscape() + "'") : ""));
+            if (coldef.defaultValue != null)
+            {
+            }
+            return symbol + (coldef.isNull ? " NULL" : " NOT NULL") +
+                ((coldef.isNull && coldef.defaultValue == null) ? " DEFAULT NULL" : 
+                (coldef.defaultValue != null ? " DEFAULT " + (coldef.defaultValue.StartsWith("'") && coldef.defaultValue.EndsWith("'") ? coldef.defaultValue : "'" + coldef.defaultValue + "'") : ""));
         }
 
         protected override List<ColumnDefinition> ExtractColumnsFromTable(string tableName)
