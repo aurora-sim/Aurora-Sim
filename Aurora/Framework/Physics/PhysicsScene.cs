@@ -65,7 +65,7 @@ namespace Aurora.Framework
             get { return false; }
         }
 
-        public abstract bool DisableCollisions { get; set; }
+        public virtual bool DisableCollisions { get; set; }
 
         public virtual List<PhysicsObject> ActiveObjects
         {

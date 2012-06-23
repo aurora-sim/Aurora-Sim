@@ -231,8 +231,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float m_avDecayTime = 0.985f;
         public float m_avStopDecaying = 2.05f;
 
-        public override bool DisableCollisions { get; set; }
-
         public override bool UseUnderWaterPhysics
         {
             get { return AllowUnderwaterPhysics; }
