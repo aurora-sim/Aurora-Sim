@@ -743,7 +743,7 @@ namespace Aurora.Modules.InventoryAccess
                     group = CreateObjectFromInventory (item, remoteClient, itemID, out doc);
                 }
             }
-            if(group == null && doc != null && (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
+            if (group == null && doc != null && doc.FirstChild != null && (doc.FirstChild.OuterXml.StartsWith("<groups>") ||
                 (doc.FirstChild.NextSibling != null &&
                 doc.FirstChild.NextSibling.OuterXml.StartsWith ("<groups>"))))
             {

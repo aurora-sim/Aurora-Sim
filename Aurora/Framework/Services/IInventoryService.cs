@@ -174,6 +174,16 @@ namespace OpenSim.Services.Interfaces
         bool AddItem(InventoryItemBase item);
 
         /// <summary>
+        ///   Add a new item to the local sim's temp cache as it is in a queue to be added later
+        /// </summary>
+        /// <param name = "item">
+        ///   The item to be added.  If item.FolderID == UUID.Zero then the item is added to the most suitable system
+        ///   folder.  If there is no suitable folder then the item is added to the user's root inventory folder.
+        /// </param>
+        /// <returns>true if the item was successfully added, false if it was not</returns>
+        bool AddItemToTempCache(InventoryItemBase item);
+
+        /// <summary>
         ///   Update an item in the user's inventory
         /// </summary>
         /// <param name = "item"></param>

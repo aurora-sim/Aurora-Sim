@@ -15,6 +15,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected Vector3 _zeroPosition;
 
         #endregion
+
         #region Constructor
 
         public ODESpecificAvatar(String avName, AuroraODEPhysicsScene parent_scene, Vector3 pos, Quaternion rotation,

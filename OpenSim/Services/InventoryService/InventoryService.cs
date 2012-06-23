@@ -49,6 +49,7 @@ namespace OpenSim.Services.InventoryService
         protected IInventoryData m_Database;
         protected ILibraryService m_LibraryService;
         protected IUserAccountService m_UserAccountService;
+        protected Dictionary<UUID, InventoryItemBase> _tempItemCache = new Dictionary<UUID, InventoryItemBase>();
 
         #endregion
 
@@ -746,11 +747,19 @@ namespace OpenSim.Services.InventoryService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool AddItem(InventoryItemBase item)
         {
+            if (_tempItemCache.ContainsKey(item.ID))
+                _tempItemCache.Remove(item.ID);
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
             return AddItem(item, true);
+        }
+
+        public virtual bool AddItemToTempCache(InventoryItemBase item)
+        {
+            _tempItemCache[item.ID] = item;
+            return true;
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
@@ -848,6 +857,8 @@ namespace OpenSim.Services.InventoryService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual InventoryItemBase GetItem(InventoryItemBase item)
         {
+            if (_tempItemCache.ContainsKey(item.ID))
+                return _tempItemCache[item.ID];
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;

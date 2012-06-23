@@ -31,7 +31,6 @@ using System.Reflection;
 using OdeAPI;
 using OpenMetaverse;
 using Aurora.Framework;
-//using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {

@@ -667,6 +667,11 @@ namespace OpenSim.Services.Robust
             return item;
         }
 
+        public bool AddItemToTempCache(InventoryItemBase item)
+        {
+            return false;
+        }
+
         #region Constructors
 
         private readonly string m_url = "";
@@ -681,6 +686,5 @@ namespace OpenSim.Services.Robust
         }
 
         #endregion
-
     }
 }
