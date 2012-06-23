@@ -178,11 +178,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             }
         }
 
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override Vector3 Velocity
         {
             get { return _velocity; }
@@ -199,8 +194,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 #endif
             }
         }
-
-        public override Vector3 Torque { get; set; }
 
         public override float CollisionScore { get; set; }
 
@@ -290,24 +283,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         {
             get { return _rotationalVelocity; }
             set { _rotationalVelocity = value; }
-        }
-
-        public override float Buoyancy
-        {
-            get { return _buoyancy; }
-            set
-            {
-                _buoyancy = value;
-#if (!ISWIN)
-                _scene.TaintedObject(delegate()
-                {
-                    // simulate flying by changing the effect of gravity
-                    BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID, _buoyancy);
-                });
-#else
-                _scene.TaintedObject(() => BulletSimAPI.SetObjectBuoyancy(_scene.WorldID, LocalID, _buoyancy));
-#endif
-            }
         }
 
         public override bool IsJumping

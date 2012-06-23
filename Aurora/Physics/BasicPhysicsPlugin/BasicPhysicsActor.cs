@@ -69,12 +69,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override float Buoyancy
-        {
-            get { return 0f; }
-            set { return; }
-        }
-
         public override bool FloatOnWater
         {
             set { return; }
@@ -120,18 +114,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override Vector3 Velocity { get; set; }
-
-        public override Vector3 Torque
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
 
         public override float CollisionScore
         {
@@ -199,14 +182,14 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { return; }
         }
 
-        public override float Buoyancy
+        public override bool FloatOnWater
         {
-            get { return 0f; }
             set { return; }
         }
 
-        public override bool FloatOnWater
+        public override float Buoyancy
         {
+            get { return 0f; }
             set { return; }
         }
 

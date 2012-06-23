@@ -174,6 +174,9 @@ namespace Aurora.Framework
         public virtual void SetCameraPos(Quaternion CameraRotation) { }
         public virtual bool BuildingRepresentation { get; set; }
         public virtual bool BlockPhysicalReconstruction { get; set; }
+        public abstract float Buoyancy { get; set; }
+        public abstract Vector3 CenterOfMass { get; }
+        public abstract Vector3 Torque { get; set; }
 
         //set never appears to be called
         public virtual bool VolumeDetect
@@ -334,9 +337,7 @@ namespace Aurora.Framework
         public abstract float Mass { get; }
         public abstract Vector3 Force { get; set; }
 
-        public abstract Vector3 CenterOfMass { get; }
         public abstract Vector3 Velocity { get; set; }
-        public abstract Vector3 Torque { get; set; }
         public abstract float CollisionScore { get; set; }
         public abstract Quaternion Orientation { get; set; }
         public abstract int PhysicsActorType { get; }
@@ -348,7 +349,6 @@ namespace Aurora.Framework
         public abstract bool IsTruelyColliding { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
-        public abstract float Buoyancy { get; set; }
 
         public abstract void AddForce(Vector3 force, bool pushforce);
         public abstract void SubscribeEvents(int ms);
@@ -560,12 +560,6 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override float Buoyancy
-        {
-            get { return 0f; }
-            set { return; }
-        }
-
         public override bool FloatOnWater
         {
             set { return; }
@@ -588,18 +582,7 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override Vector3 Velocity
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override Vector3 Torque
         {
             get { return Vector3.Zero; }
             set { return; }
