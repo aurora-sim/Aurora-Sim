@@ -853,6 +853,8 @@ More configuration options and info can be found in the Configuration/Data/FileB
                 DoNoGUIWarning();
             }
 
+            if (!File.Exists(connString))
+                return false;
             simStore.Initialise(connString);
 
             IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
