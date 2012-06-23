@@ -395,7 +395,7 @@ namespace Aurora.Simulation.Base
                 catch (Exception ex)
                 {
                     if (ex is System.UriFormatException)
-                        errorMessage = ex.ToString() + " " + ex.StackTrace;
+                        errorMessage = ex.ToString() + " " + new System.Diagnostics.StackTrace().ToString();
                     else
                         errorMessage = ex.Message;
                     if (request != null)
