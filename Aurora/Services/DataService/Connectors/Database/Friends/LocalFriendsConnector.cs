@@ -131,7 +131,7 @@ namespace Aurora.Services.DataService
 
             //These are used to get the other flags below
 
-            for (int i = 0; i < query.Count; i += 3)
+            for (int i = 0; i < query.Count; i += 2)
             {
                 FriendInfo info = new FriendInfo
                 {
