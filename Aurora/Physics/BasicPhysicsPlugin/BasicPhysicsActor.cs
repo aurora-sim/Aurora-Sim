@@ -170,12 +170,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override Vector3 RotationalVelocity { get; set; }
 
-        public override bool SetAlwaysRun
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override uint LocalID
         {
             get { return 0; }
@@ -204,8 +198,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get { return false; }
             set { return; }
         }
-
-        public override bool Flying { get; set; }
 
         public override bool IsTruelyColliding { get; set; }
         public override bool IsColliding { get; set; }

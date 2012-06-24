@@ -122,6 +122,8 @@ namespace Aurora.Framework
         public abstract bool IsJumping { get; }
         public abstract float SpeedModifier { get; set; }
         public abstract bool IsPreJumping { get; }
+        public abstract bool Flying { get; set; }
+        public abstract bool SetAlwaysRun { get; set; }
 
         public virtual void AddMovementForce(Vector3 force) { }
         public virtual void SetMovementForce(Vector3 force) { }
@@ -196,6 +198,10 @@ namespace Aurora.Framework
         {
             if (OnPhysicalRepresentationChanged != null)
                 OnPhysicalRepresentationChanged();
+        }
+
+        public virtual void Destroy()
+        {
         }
     }
 
@@ -342,8 +348,6 @@ namespace Aurora.Framework
         public abstract Quaternion Orientation { get; set; }
         public abstract int PhysicsActorType { get; }
         public abstract bool IsPhysical { get; set; }
-        public abstract bool Flying { get; set; }
-        public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }
         public abstract bool IsTruelyColliding { get; set; }
@@ -376,12 +380,6 @@ namespace Aurora.Framework
         public override Vector3 Position
         {
             get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override bool SetAlwaysRun
-        {
-            get { return false; }
             set { return; }
         }
 
@@ -459,12 +457,6 @@ namespace Aurora.Framework
         }
 
         public override bool IsPhysical
-        {
-            get { return false; }
-            set { return; }
-        }
-
-        public override bool Flying
         {
             get { return false; }
             set { return; }
