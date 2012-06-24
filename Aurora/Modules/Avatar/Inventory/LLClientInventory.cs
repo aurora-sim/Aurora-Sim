@@ -1387,7 +1387,7 @@ namespace Aurora.Modules.Inventory
             }
 
             m_scene.InventoryService.AddItemToTempCache(item);
-            _addInventoryItemQueue.Add(item.Owner, new List<AddInventoryItemStore>() { new AddInventoryItemStore() { Item = item, Complete = onSuccess } });
+            _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore() { Item = item, Complete = onSuccess });
         }
 
         protected class AddInventoryItemStore

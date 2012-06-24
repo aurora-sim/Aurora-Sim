@@ -119,6 +119,19 @@ namespace Aurora.Framework
             }
         }
 
+        public void Add(UUID agentid, T data)
+        {
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            lock (_queue)
+            {
+                _queue[agentid] = timestamp;
+                if (!_saveQueueData.ContainsKey(agentid))
+                    _saveQueueData.Add(agentid, new List<T>());
+                _saveQueueData[agentid].Add(data);
+                _updateTimer.Start();
+            }
+        }
+
         private void timer_elapsed(object sender, EventArgs ea)
         {
             long now = DateTime.Now.Ticks;

@@ -111,7 +111,7 @@ namespace Aurora.Framework
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
-                new List<string>(listAsString.Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));
+                new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
             return value;
         }
 
@@ -1827,7 +1827,7 @@ namespace Aurora.Framework
                 result += commandParams[i] + " ";
             }
 
-            return result;
+            return result.Substring(0, result.Length - 1);
         }
 
         public static string BasePathCombine(string p)

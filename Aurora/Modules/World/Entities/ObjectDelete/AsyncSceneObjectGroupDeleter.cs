@@ -135,18 +135,18 @@ namespace Aurora.Modules.Entities.ObjectDelete
 
         private void DeleteGroups(List<ISceneEntity> objectGroups)
         {
-            m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
-                                             {
-                                                 lock (objectGroups)
-                                                 {
-                                                     foreach (ISceneEntity grp in objectGroups)
-                                                     {
-                                                         avatar.ControllingClient.SendKillObject(
-                                                             m_scene.RegionInfo.RegionHandle,
-                                                             grp.ChildrenEntities().ToArray());
-                                                     }
-                                                 }
-                                             });
+            lock (objectGroups)
+            {
+                m_scene.ForEachScenePresence(delegate(IScenePresence avatar)
+                {
+                    foreach (ISceneEntity grp in objectGroups)
+                    {
+                        avatar.ControllingClient.SendKillObject(
+                            m_scene.RegionInfo.RegionHandle,
+                            grp.ChildrenEntities().ToArray());
+                    }
+                });
+            }
         }
 
         public void DoDeleteObject(object o)
