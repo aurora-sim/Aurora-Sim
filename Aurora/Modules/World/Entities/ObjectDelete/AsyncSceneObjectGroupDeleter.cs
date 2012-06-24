@@ -141,9 +141,10 @@ namespace Aurora.Modules.Entities.ObjectDelete
                 {
                     foreach (ISceneEntity grp in objectGroups)
                     {
-                        avatar.ControllingClient.SendKillObject(
-                            m_scene.RegionInfo.RegionHandle,
-                            grp.ChildrenEntities().ToArray());
+                        if (avatar != null && avatar.ControllingClient != null)
+                            avatar.ControllingClient.SendKillObject(
+                                m_scene.RegionInfo.RegionHandle,
+                                grp.ChildrenEntities().ToArray());
                     }
                 });
             }
