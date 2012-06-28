@@ -169,6 +169,24 @@ namespace Aurora.Modules.InventoryAccess
 
                     return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
                 }
+                if ((InventoryType)item.InvType == InventoryType.Gesture)
+                {
+                    if (!m_scene.Permissions.CanEditNotecard(itemID, UUID.Zero, remoteClient.AgentId))
+                    {
+                        remoteClient.SendAlertMessage("Insufficient permissions to edit gesture");
+                        return FailedPermissionsNotecardCAPSUpdate(UUID.Zero, itemID);
+                    }
+
+                    UUID newID;
+                    if ((newID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
+                        item.AssetID = newID;
+                    else
+                        remoteClient.SendAlertMessage("Failed to update gesture asset");
+
+                    m_scene.InventoryService.UpdateItem(item);
+
+                    return SuccessNotecardCAPSUpdate(item.AssetID, itemID);
+                }
                 if ((InventoryType)item.InvType == InventoryType.LSL)
                 {
                     if (!m_scene.Permissions.CanEditScript(itemID, UUID.Zero, remoteClient.AgentId))

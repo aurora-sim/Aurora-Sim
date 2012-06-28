@@ -2021,11 +2021,22 @@ namespace Aurora.Modules.Inventory
                     return ScriptTaskInventory(agentID, path, request, httpRequest, httpResponse);
                 }));
 
+            retVal["UpdateGestureTaskInventory"] = CapsUtil.CreateCAPS("UpdateGestureTaskInventory", "");
+            retVal["UpdateNotecardTaskInventory"] = retVal["UpdateGestureTaskInventory"];
+
+            //Region Server bound
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateGestureTaskInventory"],
+                delegate(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+                {
+                    return TaskInventoryUpdaterHandle(agentID, path, request, httpRequest, httpResponse);
+                }));
+
             retVal["UpdateScriptAgentInventory"] = CapsUtil.CreateCAPS("UpdateScriptAgentInventory", "");
             retVal["UpdateNotecardAgentInventory"] = retVal["UpdateScriptAgentInventory"];
-            retVal["UpdateScriptAgent"] = retVal["UpdateNotecardAgentInventory"];
+            retVal["UpdateGestureAgentInventory"] = retVal["UpdateScriptAgentInventory"];
+            retVal["UpdateScriptAgent"] = retVal["UpdateScriptAgentInventory"];
             //Unless the script engine goes, region server bound
-            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateNotecardAgentInventory"], delegate(
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UpdateScriptAgentInventory"], delegate(
                 string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 return NoteCardAgentInventory(agentID, path, request, httpRequest, httpResponse);
@@ -2063,6 +2074,55 @@ namespace Aurora.Modules.Inventory
                         item_id,
                         task_id,
                         is_script_running,
+                        capsBase + uploaderPath,
+                        MainServer.Instance,
+                        AgentID);
+
+                MainServer.Instance.AddStreamHandler(
+                    new GenericStreamHandler("POST", capsBase + uploaderPath, uploader.uploaderCaps));
+
+                string uploaderURL = MainServer.Instance.ServerURI + capsBase +
+                                     uploaderPath;
+
+                map = new OSDMap();
+                map["uploader"] = uploaderURL;
+                map["state"] = "upload";
+                return OSDParser.SerializeLLSDXmlBytes(map);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.Error("[CAPS]: " + e);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Called by the script task update handler.  Provides a URL to which the client can upload a new asset.
+        /// </summary>
+        /// <param name="AgentID"></param>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <param name="param"></param>
+        /// <param name="httpRequest">HTTP request header object</param>
+        /// <param name="httpResponse">HTTP response header object</param>
+        /// <returns></returns>
+        public byte[] TaskInventoryUpdaterHandle(UUID AgentID, string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
+        {
+            try
+            {
+                OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+                UUID item_id = map["item_id"].AsUUID();
+                UUID task_id = map["task_id"].AsUUID();
+                string capsBase = "/CAPS/" + UUID.Random();
+                string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
+
+                TaskInventoryUpdater uploader =
+                    new TaskInventoryUpdater(
+                        m_scene,
+                        item_id,
+                        task_id,
                         capsBase + uploaderPath,
                         MainServer.Instance,
                         AgentID);
@@ -2236,7 +2296,7 @@ namespace Aurora.Modules.Inventory
                 }
                 catch (Exception e)
                 {
-                    MainConsole.Instance.Error("[CAPS]: " + e);
+                    MainConsole.Instance.Error("[CAPS]: " + e.ToString());
                 }
 
                 // XXX Maybe this should be some meaningful error packet
@@ -2317,6 +2377,83 @@ namespace Aurora.Modules.Inventory
                     part.GetProperties(remoteClient);
                 }
                 return errors;
+            }
+        }
+
+        /// <summary>
+        /// This class is a callback invoked when a client sends asset data to
+        /// a task inventory script update url
+        /// </summary>
+        public class TaskInventoryUpdater
+        {
+            private readonly string uploaderPath = String.Empty;
+            private readonly UUID inventoryItemID;
+            private readonly UUID primID;
+            private readonly IHttpServer httpListener;
+            private readonly IScene m_scene;
+            private readonly UUID AgentID;
+
+            public TaskInventoryUpdater(IScene scene, UUID inventoryItemID, UUID primID,
+                                              string path, IHttpServer httpServer, UUID agentID)
+            {
+
+                this.inventoryItemID = inventoryItemID;
+                this.primID = primID;
+                AgentID = agentID;
+                m_scene = scene;
+
+                uploaderPath = path;
+                httpListener = httpServer;
+            }
+
+            /// <summary>
+            ///
+            /// </summary>
+            /// <param name="data"></param>
+            /// <param name="path"></param>
+            /// <param name="param"></param>
+            /// <returns></returns>
+            public byte[] uploaderCaps(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            {
+                try
+                {
+                    IClientAPI client;
+                    m_scene.ClientManager.TryGetValue(AgentID, out client);
+                    UUID newAssetID = UUID.Zero;
+                    byte[] data = HttpServerHandlerHelpers.ReadFully(request);
+                    ISceneChildEntity part = m_scene.GetSceneObjectPart(primID);
+                    if (part != null)
+                    {
+                        // Retrieve item
+                        TaskInventoryItem item = part.Inventory.GetInventoryItem(inventoryItemID);
+
+                        if (item != null)
+                        {
+                            if ((item.Type == (int)InventoryType.Notecard || item.Type == (int)InventoryType.Gesture || item.Type == 21 /* Gesture... again*/)
+                                && m_scene.Permissions.CanViewNotecard(inventoryItemID, primID, AgentID))
+                            {
+                                if ((newAssetID = m_scene.AssetService.UpdateContent(item.AssetID, data)) != UUID.Zero)
+                                {
+                                    item.AssetID = newAssetID;
+                                    part.Inventory.UpdateInventoryItem(item);
+                                }
+                            }
+                        }
+                    }
+                    OSDMap map = new OSDMap();
+                    map["new_asset"] = newAssetID;
+                    map["state"] = "complete";
+                    httpListener.RemoveStreamHandler("POST", uploaderPath);
+                    return OSDParser.SerializeLLSDXmlBytes(map);
+                }
+                catch (Exception e)
+                {
+                    MainConsole.Instance.Error("[CAPS]: " + e.ToString());
+                }
+
+                // XXX Maybe this should be some meaningful error packet
+                return null;
             }
         }
 
