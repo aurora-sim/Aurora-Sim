@@ -1307,7 +1307,7 @@ namespace Aurora.Framework.Servers.HttpServer
                         else
                             return;//The handler took care of sending it for us
                     }
-                    else if (buffer.Length == 0)
+                    else if (buffer == MainServer.BadRequest)
                     {
                         response.StatusCode = (int)HttpStatusCode.BadRequest;
                         buffer = Encoding.UTF8.GetBytes("Bad Request");

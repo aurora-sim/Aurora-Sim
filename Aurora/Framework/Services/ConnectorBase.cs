@@ -301,7 +301,7 @@ namespace Aurora.Framework
             {
                 MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
             }
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         public byte[] HandleMap(OSDMap args)
@@ -317,21 +317,21 @@ namespace Aurora.Framework
                         if (m_SessionID == "")
                         {
                             if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
                         else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
-                            return new byte[0];
+                            return MainServer.BadRequest;
                         if (methodInfo.Attribute.UsePassword)
                         {
                             if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
                         if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
                         {
                             UUID userID = args["UserID"].AsUUID();
                             IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
                             if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
 
                         ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
@@ -358,7 +358,7 @@ namespace Aurora.Framework
             else
                 MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
 
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)

@@ -211,7 +211,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 if (requestmap["items"].Type == OSDType.Unknown)
-                    return new byte[0]; //Its dead, Jim!!!
+                    return MainServer.BadRequest;
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
                 OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
