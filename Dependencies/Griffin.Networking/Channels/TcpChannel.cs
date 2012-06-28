@@ -141,8 +141,12 @@ namespace Griffin.Networking.Channels
             _logger.Debug("Disconnecting socket.");
             if (_socket != null && _socket.Connected)
             {
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Disconnect(true);
+                try
+                {
+                    _socket.Shutdown(SocketShutdown.Both);
+                    _socket.Disconnect(true);
+                }
+                catch (SocketException) { }
             }
             Dispose(true);
             SendUpstream(new Disconnected(null));
