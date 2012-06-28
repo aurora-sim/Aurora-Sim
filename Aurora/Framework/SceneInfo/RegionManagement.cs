@@ -15,6 +15,7 @@ namespace Aurora.Framework
         private ISceneManager _sceneManager;
         private IRegionInfoConnector _regionInfoConnector;
         private string _url = "";
+        private bool m_enabled = false;
 
         public RegionManagement() { }
         public RegionManagement(string url, string password)
@@ -39,6 +40,7 @@ namespace Aurora.Framework
                 string password = config.GetString("RemoteAccessPassword", "");
                 if (password != "")
                 {
+                    m_enabled = true;
                     Init(m_registry, Name, password);
                     SetDoRemoteCalls(false);
                 }
@@ -47,6 +49,7 @@ namespace Aurora.Framework
 
         public void Initialize(ISimulationBase simBase)
         {
+            if (!m_enabled) return;
             _regionInfoConnector = Aurora.DataManager.DataManager.RequestPlugin<IRegionInfoConnector>();
             _sceneManager = m_registry.RequestModuleInterface<ISceneManager>();
         }
