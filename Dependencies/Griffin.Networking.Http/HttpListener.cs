@@ -47,9 +47,9 @@ namespace Griffin.Networking.Http
         /// </remarks>
         public void HandleUpstream(IPipelineHandlerContext context, IPipelineMessage message)
         {
-            var msg = message as PipelineFailure;
+            /*var msg = message as PipelineFailure;
             if (msg != null)
-                throw new TargetInvocationException("Pipeline failed", msg.Exception);
+                throw new TargetInvocationException("Pipeline failed", msg.Exception);*/
         }
 
         /// <summary>

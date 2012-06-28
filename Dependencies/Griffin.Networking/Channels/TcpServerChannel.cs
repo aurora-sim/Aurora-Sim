@@ -94,7 +94,6 @@ namespace Griffin.Networking.Channels
                 _listener.Stop();
                 _listener = null;
             }
-
         }
     }
 

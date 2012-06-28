@@ -139,7 +139,7 @@ namespace Griffin.Networking.Channels
         protected virtual void Disconnect()
         {
             _logger.Debug("Disconnecting socket.");
-            if (_socket != null)
+            if (_socket != null && _socket.Connected)
             {
                 _socket.Shutdown(SocketShutdown.Both);
                 _socket.Disconnect(true);
@@ -373,11 +373,10 @@ namespace Griffin.Networking.Channels
                 _stream.Close();
                 _stream.Dispose();
             }
-            catch (Exception err)
+            catch (Exception)
             {
-                Console.WriteLine(err.ToString());
+                //Console.WriteLine(err.ToString());
             }
-
 
             _socket = null;
 
