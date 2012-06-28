@@ -864,24 +864,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 foreach (ISceneEntity t in sortableList)
                 {
+                    //Always send the root child first!
                     EntityUpdate update = new EntityUpdate(t.RootChild, PrimUpdateFlags.ForcedFullUpdate);
                     QueueEntityUpdate(update);
-#if (!ISWIN)
-                    foreach (ISceneChildEntity child in t.ChildrenEntities())
-                    {
-                        if (!child.IsRoot)
-                        {
-                            update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                            QueueEntityUpdate(update);
-                        }
-                    }
-#else
                     foreach (ISceneChildEntity child in t.ChildrenEntities().Where(child => !child.IsRoot))
                     {
                         update = new EntityUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                         QueueEntityUpdate(update);
                     }
-#endif
                 }
             }
 
