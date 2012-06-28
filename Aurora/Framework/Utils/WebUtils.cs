@@ -47,6 +47,8 @@ namespace Aurora.Simulation.Base
 {
     public static class WebUtils
     {
+        // this is the header field used to communicate the local request id
+        // used for performance and debugging
         public const string OSHeaderRequestID = "opensim-request-id";
 
         // number of milliseconds a call can take before it is considered
@@ -55,23 +57,6 @@ namespace Aurora.Simulation.Base
         
         private static int m_requestNumber;
         private const int m_defaultTimeout = 20000;
-
-        // this is the header field used to communicate the local request id
-        // used for performance and debugging
-
-        public static byte[] SerializeResult(XmlSerializer xs, object data)
-        {
-            MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8) {Formatting = Formatting.Indented};
-            xs.Serialize(xw, data);
-            xw.Flush();
-
-            ms.Seek(0, SeekOrigin.Begin);
-            byte[] ret = ms.GetBuffer();
-            Array.Resize(ref ret, (int) ms.Length);
-
-            return ret;
-        }
 
         public static Dictionary<string, object> ParseQueryString(string query)
         {
@@ -431,110 +416,6 @@ namespace Aurora.Simulation.Base
                                      data != null ? data.AsString() : "");
                 return "";
             }
-        }
-
-        public static OSDMap ServiceFormRequest(string url, NameValueCollection data, int timeout)
-        {
-            int reqnum = m_requestNumber++;
-            string method = (data != null && data["RequestMethod"] != null) ? data["RequestMethod"] : "unknown";
-            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start form request for {1}, method {2}",reqnum,url,method);
-
-            string errorMessage = "unknown error";
-            int tickstart = Util.EnvironmentTickCount();
-            int tickdata = 0;
-
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-                request.Method = "POST";
-                request.Timeout = timeout;
-                request.KeepAlive = false;
-                request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout/4;
-                request.Headers[OSHeaderRequestID] = reqnum.ToString();
-
-                if (data != null)
-                {
-                    string queryString = BuildQueryString(data);
-                    byte[] buffer = Encoding.UTF8.GetBytes(queryString);
-
-                    request.ContentLength = buffer.Length;
-                    request.ContentType = "application/x-www-form-urlencoded";
-
-                    using (Stream requestStream = request.GetRequestStream())
-                        requestStream.Write(buffer, 0, buffer.Length);
-                }
-
-                // capture how much time was spent writing, this may seem silly
-                // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
-                    {
-                        string responseStr = null;
-
-                        responseStr = responseStream.GetStreamString();
-                        OSD responseOSD = OSDParser.Deserialize(responseStr);
-                        if (responseOSD.Type == OSDType.Map)
-                            return (OSDMap) responseOSD;
-                    }
-                }
-            }
-            catch (WebException we)
-            {
-                errorMessage = we.Message;
-                if (we.Status == WebExceptionStatus.ProtocolError)
-                {
-                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
-                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                }
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                if (tickdiff > LongCallTime)
-                    MainConsole.Instance.InfoFormat(
-                        "[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
-                        reqnum, url, method, tickdiff, tickdata);
-            }
-
-            MainConsole.Instance.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
-            return ErrorResponseMap(errorMessage);
-        }
-
-        /// <summary>
-        ///   Create a response map for an error, trying to keep
-        ///   the result formats consistent
-        /// </summary>
-        private static OSDMap ErrorResponseMap(string msg)
-        {
-            OSDMap result = new OSDMap();
-            result["Success"] = "False";
-            result["Message"] = OSD.FromString("Service request failed: " + msg);
-            return result;
-        }
-
-        /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
-        /// </summary>
-        public static OSDMap PostToService(string url, NameValueCollection data)
-        {
-            return ServiceFormRequest(url, data, 10000);
-        }
-
-        public static string BuildQueryString(NameValueCollection parameters)
-        {
-            List<string> items = new List<string>(parameters.Count);
-            items.AddRange(from string key in parameters.Keys let values = parameters.GetValues(key) where values != null from value in values select String.Concat(key, "=", HttpUtility.UrlEncode(value ?? String.Empty)));
-
-            return String.Join("&", items.ToArray());
         }
 
         /// <summary>

@@ -174,7 +174,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
             }
             finally
             {

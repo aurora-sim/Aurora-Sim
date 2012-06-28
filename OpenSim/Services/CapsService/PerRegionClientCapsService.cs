@@ -225,7 +225,7 @@ namespace OpenSim.Services.CapsService
 
         #region Overriden Http Server methods
 
-        public void AddStreamHandler(string method, IRequestHandler handler)
+        public void AddStreamHandler(string method, IStreamedRequestHandler handler)
         {
             Server.AddStreamHandler(handler);
             AddCAPS(method, handler.Path);

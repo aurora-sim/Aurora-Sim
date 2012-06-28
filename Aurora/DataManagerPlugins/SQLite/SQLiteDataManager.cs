@@ -41,12 +41,10 @@ namespace Aurora.DataManager.SQLite
 {
     public class SQLiteLoader : DataManagerBase
     {
-        private SQLiteConnection m_Connection;
-
         protected Dictionary<string, FieldInfo> m_Fields = new Dictionary<string, FieldInfo>();
-
-//        private static bool m_spammedmessage = false;
+        protected string _connectionString;
         private static bool m_copiedFile = false;
+
         public SQLiteLoader ()
         {
             if (Environment.OSVersion.Platform == PlatformID.MacOSX ||
@@ -83,19 +81,26 @@ namespace Aurora.DataManager.SQLite
 
         public override void ConnectToDatabase(string connectionString, string migratorName, bool validateTables)
         {
+            _connectionString = connectionString;
             string[] s1 = connectionString.Split(new[] { "Data Source=", "," }, StringSplitOptions.RemoveEmptyEntries);
             if (Path.GetFileName(s1[0]) == s1[0]) //Only add this if we arn't an absolute path already
                 connectionString = connectionString.Replace("Data Source=", "Data Source=" + Util.BasePathCombine("") + "\\");
-            m_Connection = new SQLiteConnection(connectionString);
-            m_Connection.Open();
+            SQLiteConnection connection = new SQLiteConnection(connectionString);
+            connection.Open();
             var migrationManager = new MigrationManager(this, migratorName, validateTables);
             migrationManager.DetermineOperation();
             migrationManager.ExecuteOperation();
+            connection.Close();
         }
 
-        public override void CloseDatabase()
+        public override void CloseDatabase(DataReaderConnection conn)
         {
-            m_Connection.Close();
+            if (conn == null)
+                return;
+            if (conn.DataReader != null)
+                conn.DataReader.Close();
+            if (conn != null && conn.Connection != null && conn.Connection is SQLiteConnection)
+                ((SQLiteConnection)conn.Connection).Close();
         }
 
         #endregion
@@ -106,13 +111,8 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
-                var newConnection =
-                    (SQLiteConnection) (m_Connection).Clone();
-                if (newConnection.State != ConnectionState.Open)
-                    newConnection.Open();
-                cmd.Connection = newConnection;
-                SQLiteDataReader reader = cmd.ExecuteReader();
-                return reader;
+                PrepReader(ref cmd);
+                return cmd.ExecuteReader();
             }
             catch (SQLiteException ex)
             {
@@ -133,15 +133,9 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
-#if Experimental
-                var newConnection = m_Connection;
-#else
-                var newConnection =
-                    (SQLiteConnection)((ICloneable)m_Connection).Clone();
-#endif
-                if (newConnection.State != ConnectionState.Open)
-                    newConnection.Open();
-                cmd.Connection = newConnection;
+                SQLiteConnection connection = new SQLiteConnection(_connectionString);
+                connection.Open();
+                cmd.Connection = connection;
             }
             catch (SQLiteException ex)
             {
@@ -161,15 +155,9 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
-/*#if Experimental
-                var newConnection = m_Connection;
-#else*/
-                var newConnection =
-                    (SQLiteConnection) (m_Connection).Clone();
-//#endif
-                if (newConnection.State != ConnectionState.Open)
-                    newConnection.Open();
-                var cmd = newConnection.CreateCommand();
+                SQLiteConnection connection = new SQLiteConnection(_connectionString);
+                connection.Open();
+                var cmd = connection.CreateCommand();
                 cmd.CommandText = query;
                 return cmd;
             }
@@ -188,20 +176,11 @@ namespace Aurora.DataManager.SQLite
         {
             try
             {
-                lock (m_Connection)
-                {
-/*#if Experimental
-                    var newConnection = m_Connection;
-#else*/
-                    var newConnection =
-                        (SQLiteConnection) (m_Connection).Clone();
-//#endif
-                    if (newConnection.State != ConnectionState.Open)
-                        newConnection.Open();
-                    cmd.Connection = newConnection;
-                    UnescapeSQL(cmd);
-                    return cmd.ExecuteNonQuery();
-                }
+                PrepReader(ref cmd);
+                UnescapeSQL(cmd);
+                var value = cmd.ExecuteNonQuery();
+                cmd.Connection.Close();
+                return value;
             }
             catch (SQLiteException ex)
             {
@@ -282,21 +261,26 @@ namespace Aurora.DataManager.SQLite
             }
         }
 
-        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
+        public override DataReaderConnection QueryData(string whereClause, string table, string wantedValue)
         {
             string query = String.Format("select {0} from {1} {2}",wantedValue, table, whereClause);
-            return QueryData2(query);
+            SQLiteConnection conn;
+            var data = QueryData2(query, out conn);
+            return new DataReaderConnection { DataReader = data, Connection = conn };
         }
 
-        public override IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue)
+        public override DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue)
         {
             string query = string.Format("SELECT {0} FROM {1} {2}", wantedValue, tables, whereClause);
-            return QueryData2(query);
+            SQLiteConnection conn;
+            var data = QueryData2(query, out conn);
+            return new DataReaderConnection { DataReader = data, Connection = conn };
         }
 
-        private IDataReader QueryData2(string query)
+        private IDataReader QueryData2(string query, out SQLiteConnection conn)
         {
             var cmd = PrepReader(query);
+            conn = cmd.Connection;
             return cmd.ExecuteReader();
         }
 

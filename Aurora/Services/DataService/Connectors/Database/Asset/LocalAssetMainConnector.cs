@@ -46,14 +46,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         public AssetBase GetMeta(UUID uuid)
         {
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             try
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets",
                                     "id, name, description, assetType, local, temporary, asset_flags, creatorID");
-                while (dr.Read())
+                while (dr.DataReader.Read())
                 {
-                    return LoadAssetFromDataRead(dr);
+                    return LoadAssetFromDataRead(dr.DataReader);
                 }
                 MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetMeta({0}) - Asset was not found.", uuid);
             }
@@ -63,7 +63,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             finally
             {
-                if (dr != null) dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             return null;
         }
@@ -185,14 +185,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
 
         private AssetBase GetAsset(UUID uuid, bool displaywarning)
         {
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             try
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "'", "assets",
                                     "id, name, description, assetType, local, temporary, asset_flags, creatorID, data");
-                while (dr != null && dr.Read())
+                while (dr != null && dr.DataReader.Read())
                 {
-                    return LoadAssetFromDataRead(dr);
+                    return LoadAssetFromDataRead(dr.DataReader);
                 }
                 if (displaywarning)
                     MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetAsset({0}) - Asset was not found.", uuid);
@@ -203,20 +203,19 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             finally
             {
-                if (dr != null)
-                    dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             return null;
         }
 
         public Byte[] GetData(UUID uuid)
         {
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             try
             {
                 dr = m_Gd.QueryData("where id = '" + uuid + "' LIMIT 1", "assets", "data");
                 if (dr != null)
-                    return (byte[])dr["data"];
+                    return (byte[])dr.DataReader["data"];
                 MainConsole.Instance.WarnFormat("[LocalAssetDatabase] GetData({0}) - Asset was not found.", uuid);
             }
             catch (Exception e)
@@ -225,7 +224,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             finally
             {
-                if (dr != null) dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             return null;
         }

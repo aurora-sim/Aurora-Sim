@@ -64,7 +64,7 @@ namespace Aurora.Framework.Servers.HttpServer
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
-        protected Dictionary<string, IRequestHandler> m_streamHandlers = new Dictionary<string, IRequestHandler>();
+        protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers = new Dictionary<string, IStreamedRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
         protected X509Certificate2 m_cert;
         protected SslProtocols m_sslProtocol = SslProtocols.None;
@@ -152,7 +152,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
         /// <param name="handler"></param>
-        public void AddStreamHandler(IRequestHandler handler)
+        public void AddStreamHandler(IStreamedRequestHandler handler)
         {
             string httpMethod = handler.HttpMethod;
             string path = handler.Path;
@@ -279,7 +279,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return !String.IsNullOrEmpty(bestMatch);
         }
 
-        internal bool TryGetStreamHandler(string handlerKey, out IRequestHandler streamHandler)
+        internal bool TryGetStreamHandler(string handlerKey, out IStreamedRequestHandler streamHandler)
         {
             string bestMatch = null;
 
@@ -1251,47 +1251,19 @@ namespace Aurora.Framework.Servers.HttpServer
                 //Fix the current Culture
                 Culture.SetCurrentCulture();
 
-                IRequestHandler requestHandler;
+                IStreamedRequestHandler requestHandler;
                 if (_server.TryGetStreamHandler(BaseHttpServer.GetHandlerKey(request.HttpMethod, path), out requestHandler))
                 {
                     response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
 
-                    if (requestHandler is IStreamedRequestHandler)
+                    try
                     {
-                        try
-                        {
-                            IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
-                            buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
-                        }
-                        catch (Exception ex)
-                        {
-                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
-                        }
+                        IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
+                        buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
                     }
-                    else if (requestHandler is IGenericHTTPHandler)
+                    catch (Exception ex)
                     {
-                        IGenericHTTPHandler HTTPRequestHandler = requestHandler as IGenericHTTPHandler;
-
-                        string requestBody = "";
-                        if (request.InputStream != null)
-                        {
-                            using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
-                                requestBody = reader.ReadToEnd();
-                        }
-
-                        Hashtable keysvals = new Hashtable();
-                        Hashtable headervals = new Hashtable();
-
-                        foreach (string queryname in request.QueryString.AllKeys)
-                            keysvals.Add(queryname, request.QueryString[queryname]);
-
-                        foreach (string headername in request.Headers.AllKeys)
-                            headervals[headername] = request.Headers[headername];
-
-                        keysvals.Add("requestbody", requestBody);
-                        keysvals.Add("headers", headervals);
-                        SendGenericHTTPResponse(HTTPRequestHandler.Handle(path, keysvals), response, request);
-                        return;
+                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
                     }
 
                     if (request.InputStream != null)
