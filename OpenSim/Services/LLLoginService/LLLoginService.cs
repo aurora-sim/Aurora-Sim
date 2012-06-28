@@ -377,7 +377,6 @@ namespace OpenSim.Services.LLLoginService
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
-                m_InventoryService.CreateUserRootFolder(account.PrincipalID);
 
                 if (profileData != null)
                 {
@@ -572,8 +571,7 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 avappearance = FixCurrentOutFitFolder(account.PrincipalID, avappearance);
-                inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-
+                
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //

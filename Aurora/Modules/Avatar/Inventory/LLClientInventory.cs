@@ -61,9 +61,7 @@ namespace Aurora.Modules.Inventory
 
         protected IScene m_scene;
 
-        protected ListCombiningTimedSaving<InventoryItemBase> _moveInventoryItemQueue = new ListCombiningTimedSaving<InventoryItemBase>();
-        protected ListCombiningTimedSaving<AddInventoryItemStore> _addInventoryItemQueue = new ListCombiningTimedSaving<AddInventoryItemStore>();
-
+        
         #endregion
 
         #region INonSharedRegionModule members
@@ -81,9 +79,6 @@ namespace Aurora.Modules.Inventory
             scene.EventManager.OnRegisterCaps += EventManagerOnRegisterCaps;
             scene.EventManager.OnNewClient += EventManager_OnNewClient;
             scene.EventManager.OnClosingClient += EventManager_OnClosingClient;
-
-            _moveInventoryItemQueue.Start(2, _saveMovedItems);
-            _addInventoryItemQueue.Start(0.5, _saveAddedItems);
         }
 
         public void RegionLoaded (IScene scene)
@@ -528,7 +523,7 @@ namespace Aurora.Modules.Inventory
                                              BasePermissions = baseMask,
                                              CreationDate = creationDate
                                          };
-            AddInventoryItem(item, () =>
+            m_scene.InventoryService.AddItemAsync(item, () =>
             {
                 IAvatarFactory avFactory = m_scene.RequestModuleInterface<IAvatarFactory>();
                 if (avFactory != null)
@@ -709,25 +704,7 @@ namespace Aurora.Modules.Inventory
             //MainConsole.Instance.DebugFormat(
             //    "[AGENT INVENTORY]: Moving {0} items for user {1}", items.Count, remoteClient.AgentId);
 
-
-            _moveInventoryItemQueue.Add(remoteClient.AgentId, items);
-        }
-
-        private void _saveMovedItems(UUID agentID, List<InventoryItemBase> itemsToMove)
-        {
-            if (!m_scene.InventoryService.MoveItems(agentID, itemsToMove))
-                MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to move items for user " + agentID);
-        }
-
-        private void _saveAddedItems(UUID agentID, List<AddInventoryItemStore> itemsToAdd)
-        {
-            foreach (AddInventoryItemStore item in itemsToAdd)
-            {
-                if (!m_scene.InventoryService.AddItem(item.Item))
-                    MainConsole.Instance.Warn("[AGENT INVENTORY]: Failed to add items for user " + agentID);
-                else if(item.Complete != null)
-                    item.Complete();
-            }
+            m_scene.InventoryService.MoveItemsAsync(remoteClient.AgentId, items, null);
         }
         
         /// <summary>
@@ -1353,47 +1330,7 @@ namespace Aurora.Modules.Inventory
         /// <param name="item">The item to add</param>
         public void AddInventoryItem(InventoryItemBase item)
         {
-            AddInventoryItem(item, null);
-        }
-
-        /// <summary>
-        /// Add the given inventory item to a user's inventory.
-        /// </summary>
-        /// <param name="item">The item to add</param>
-        public void AddInventoryItem(InventoryItemBase item, NoParam onSuccess)
-        {
-            if (UUID.Zero == item.Folder)
-            {
-                InventoryFolderBase f = m_scene.InventoryService.GetFolderForType(item.Owner, (InventoryType)item.InvType, (AssetType)item.AssetType);
-                if (f != null)
-                {
-                    item.Folder = f.ID;
-                }
-                else
-                {
-                    f = m_scene.InventoryService.GetRootFolder(item.Owner);
-                    if (f != null)
-                    {
-                        item.Folder = f.ID;
-                    }
-                    else
-                    {
-                        MainConsole.Instance.WarnFormat(
-                            "[LLClientInventory]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
-                            item.Owner, item.Name);
-                        return;
-                    }
-                }
-            }
-
-            m_scene.InventoryService.AddItemToTempCache(item);
-            _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore() { Item = item, Complete = onSuccess });
-        }
-
-        protected class AddInventoryItemStore
-        {
-            public InventoryItemBase Item;
-            public NoParam Complete;
+            m_scene.InventoryService.AddItemAsync(item, null);
         }
 
         /// <summary>
@@ -1404,285 +1341,8 @@ namespace Aurora.Modules.Inventory
         /// in which the item is to be placed.</param>
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
-            AddInventoryItem(item, () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
-        }
-
-        /// <summary>
-        /// Give an inventory item from one user to another
-        /// </summary>
-        /// <param name="recipient"></param>
-        /// <param name="senderId">ID of the sender of the item</param>
-        /// <param name="itemId"></param>
-        /// <param name="recipientFolderId">
-        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
-        /// appropriate default folder.
-        /// </param>
-        /// <returns>
-        /// The inventory item copy given, null if the give was unsuccessful
-        /// </returns>
-        public InventoryItemBase GiveInventoryItem (
-            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId)
-        {
-            return GiveInventoryItem (recipient, senderId, itemId, recipientFolderId, true);
-        }
-
-        /// <summary>
-        /// Give an inventory item from one user to another
-        /// </summary>
-        /// <param name="recipient"></param>
-        /// <param name="senderId">ID of the sender of the item</param>
-        /// <param name="itemId"></param>
-        /// <param name="recipientFolderId">
-        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
-        /// appropriate default folder.
-        /// </param>
-        /// <param name="doOwnerCheck">This is for when the item is being given away publically, such as when it is posted on a group notice</param>
-        /// <returns>
-        /// The inventory item copy given, null if the give was unsuccessful
-        /// </returns>
-        public InventoryItemBase GiveInventoryItem (
-            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck)
-        {
-            InventoryItemBase item = new InventoryItemBase (itemId, senderId);
-            item = m_scene.InventoryService.GetItem (item);
-            return InnerGiveInventoryItem (recipient, senderId, item, recipientFolderId, doOwnerCheck);
-        }
-
-        public InventoryItemBase InnerGiveInventoryItem (
-            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
-        {
-            if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
-            {
-                if (!m_scene.Permissions.BypassPermissions())
-                {
-                    if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
-                        return null;
-                }
-
-                IUserManagement uman = m_scene.RequestModuleInterface<IUserManagement> ();
-                if (uman != null)
-                    uman.AddUser (item.CreatorIdAsUuid, item.CreatorData);
-
-                // Insert a copy of the item into the recipient
-                InventoryItemBase itemCopy = new InventoryItemBase
-                                                 {
-                                                     Owner = recipient,
-                                                     CreatorId = item.CreatorId,
-                                                     CreatorData = item.CreatorData,
-                                                     ID = UUID.Random(),
-                                                     AssetID = item.AssetID,
-                                                     Description = item.Description,
-                                                     Name = item.Name,
-                                                     AssetType = item.AssetType,
-                                                     InvType = item.InvType,
-                                                     Folder = recipientFolderId
-                                                 };
-
-                if (m_scene.Permissions.PropagatePermissions() && recipient != senderId)
-                {
-                    // Trying to do this right this time. This is evil. If
-                    // you believe in Good, go elsewhere. Vampires and other
-                    // evil creatores only beyond this point. You have been
-                    // warned.
-
-                    // We're going to mask a lot of things by the next perms
-                    // Tweak the next perms to be nicer to our data
-                    //
-                    // In this mask, all the bits we do NOT want to mess
-                    // with are set. These are:
-                    //
-                    // Transfer
-                    // Copy
-                    // Modufy
-                    const uint permsMask = ~((uint)PermissionMask.Copy |
-                                             (uint)PermissionMask.Transfer |
-                                             (uint)PermissionMask.Modify);
-
-                    // Now, reduce the next perms to the mask bits
-                    // relevant to the operation
-                    uint nextPerms = permsMask | (item.NextPermissions &
-                                      ((uint)PermissionMask.Copy |
-                                       (uint)PermissionMask.Transfer |
-                                       (uint)PermissionMask.Modify));
-
-                    // nextPerms now has all bits set, except for the actual
-                    // next permission bits.
-
-                    // This checks for no mod, no copy, no trans.
-                    // This indicates an error or messed up item. Do it like
-                    // SL and assume trans
-                    if (nextPerms == permsMask)
-                        nextPerms |= (uint)PermissionMask.Transfer;
-
-                    // Inventory owner perms are the logical AND of the
-                    // folded perms and the root prim perms, however, if
-                    // the root prim is mod, the inventory perms will be
-                    // mod. This happens on "take" and is of little concern
-                    // here, save for preventing escalation
-
-                    // This hack ensures that items previously permalocked
-                    // get unlocked when they're passed or rezzed
-                    uint basePerms = item.BasePermissions |
-                                    (uint)PermissionMask.Move;
-                    uint ownerPerms = item.CurrentPermissions;
-
-                    // If this is an object, root prim perms may be more
-                    // permissive than folded perms. Use folded perms as
-                    // a mask
-                    if (item.InvType == (int)InventoryType.Object)
-                    {
-                        // Create a safe mask for the current perms
-                        uint foldedPerms = (item.CurrentPermissions & 7) << 13;
-                        foldedPerms |= permsMask;
-
-                        bool isRootMod = (item.CurrentPermissions &
-                                          (uint)PermissionMask.Modify) != 0;
-
-                        // Mask the owner perms to the folded perms
-                        ownerPerms &= foldedPerms;
-                        basePerms &= foldedPerms;
-
-                        // If the root was mod, let the mask reflect that
-                        // We also need to adjust the base here, because
-                        // we should be able to edit in-inventory perms
-                        // for the root prim, if it's mod.
-                        if (isRootMod)
-                        {
-                            ownerPerms |= (uint)PermissionMask.Modify;
-                            basePerms |= (uint)PermissionMask.Modify;
-                        }
-                    }
-
-                    // These will be applied to the root prim at next rez.
-                    // The slam bit (bit 3) and folded permission (bits 0-2)
-                    // are preserved due to the above mangling
-                    ownerPerms &= nextPerms;
-
-                    // Mask the base permissions. This is a conservative
-                    // approach altering only the three main perms
-                    basePerms &= nextPerms;
-
-                    // Assign to the actual item. Make sure the slam bit is
-                    // set, if it wasn't set before.
-                    itemCopy.BasePermissions = basePerms;
-                    itemCopy.CurrentPermissions = ownerPerms | 16; // Slam
-
-                    itemCopy.NextPermissions = item.NextPermissions;
-
-                    // This preserves "everyone can move"
-                    itemCopy.EveryOnePermissions = item.EveryOnePermissions &
-                                                   nextPerms;
-
-                    // Intentionally killing "share with group" here, as
-                    // the recipient will not have the group this is
-                    // set to
-                    itemCopy.GroupPermissions = 0;
-                }
-                else
-                {
-                    itemCopy.CurrentPermissions = item.CurrentPermissions;
-                    itemCopy.NextPermissions = item.NextPermissions;
-                    itemCopy.EveryOnePermissions = item.EveryOnePermissions & item.NextPermissions;
-                    itemCopy.GroupPermissions = item.GroupPermissions & item.NextPermissions;
-                    itemCopy.BasePermissions = item.BasePermissions;
-                }
-
-                if (itemCopy.Folder == UUID.Zero)
-                {
-                    InventoryFolderBase folder = m_scene.InventoryService.GetFolderForType (recipient, (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
-
-                    if (folder != null)
-                    {
-                        itemCopy.Folder = folder.ID;
-                    }
-                }
-
-                itemCopy.GroupID = UUID.Zero;
-                itemCopy.GroupOwned = false;
-                itemCopy.Flags = item.Flags;
-                itemCopy.SalePrice = item.SalePrice;
-                itemCopy.SaleType = item.SaleType;
-
-                AddInventoryItem(itemCopy, () =>
-                    {
-                        IInventoryAccessModule invAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                        if (invAccess != null)
-                            invAccess.TransferInventoryAssets(itemCopy, senderId, recipient);
-                        if (!m_scene.Permissions.BypassPermissions())
-                        {
-                            if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-                            {
-                                List<UUID> items = new List<UUID> { item.ID };
-                                m_scene.InventoryService.DeleteItems(senderId, items);
-                            }
-                        }
-                    });
-
-                return itemCopy;
-            }
-            MainConsole.Instance.WarnFormat("[LLClientInventory]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
-            return null;
-        }
-
-        /// <summary>
-        /// Give an entire inventory folder from one user to another.  The entire contents (including all descendent
-        /// folders) is given.
-        /// </summary>
-        /// <param name="recipientId"></param>
-        /// <param name="senderId">ID of the sender of the item</param>
-        /// <param name="folderId"></param>
-        /// <param name="recipientParentFolderId">
-        /// The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
-        /// recipient folder is the root folder
-        /// </param>
-        /// <returns>
-        /// The inventory folder copy given, null if the copy was unsuccessful
-        /// </returns>
-        public InventoryFolderBase GiveInventoryFolder(
-            UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId)
-        {
-            // Retrieve the folder from the sender
-            InventoryFolderBase folder = m_scene.InventoryService.GetFolder(new InventoryFolderBase(folderId));
-            if (null == folder)
-            {
-                MainConsole.Instance.ErrorFormat(
-                     "[LLClientInventory]: Could not find inventory folder {0} to give", folderId);
-                return null;
-            }
-
-            //Find the folder for the receiver
-            if (recipientParentFolderId == UUID.Zero)
-            {
-                InventoryFolderBase recipientRootFolder = m_scene.InventoryService.GetRootFolder(recipientId);
-                if (recipientRootFolder != null)
-                    recipientParentFolderId = recipientRootFolder.ID;
-                else
-                {
-                    MainConsole.Instance.WarnFormat("[LLClientInventory]: Unable to find root folder for receiving agent");
-                    return null;
-                }
-            }
-
-            UUID newFolderId = UUID.Random();
-            InventoryFolderBase newFolder
-                = new InventoryFolderBase(
-                    newFolderId, folder.Name, recipientId, folder.Type, recipientParentFolderId, folder.Version);
-            m_scene.InventoryService.AddFolder(newFolder);
-
-            // Give all the subfolders
-            InventoryCollection contents = m_scene.InventoryService.GetFolderContent(senderId, folderId);
-            foreach (InventoryFolderBase childFolder in contents.Folders)
-            {
-                GiveInventoryFolder(recipientId, senderId, childFolder.ID, newFolder.ID);
-            }
-
-            // Give all the items
-            foreach (InventoryItemBase item in contents.Items)
-            {
-                InnerGiveInventoryItem (recipientId, senderId, item, newFolder.ID, true);
-            }
-
-            return newFolder;
+            m_scene.InventoryService.AddItemAsync(item, 
+                () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
         }
 
         /// <summary>

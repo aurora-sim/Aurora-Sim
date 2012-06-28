@@ -53,13 +53,6 @@ namespace OpenSim.Services.Interfaces
         bool CreateUserInventory(UUID user, bool createDefaultItems);
 
         /// <summary>
-        ///   Create the root folder for a given user (local only)
-        /// </summary>
-        /// <param name = "user"></param>
-        /// <returns></returns>
-        bool CreateUserRootFolder(UUID principalID);
-
-        /// <summary>
         ///   Gets the skeleton of the inventory -- folders only (local only)
         /// </summary>
         /// <param name = "userId"></param>
@@ -174,16 +167,6 @@ namespace OpenSim.Services.Interfaces
         bool AddItem(InventoryItemBase item);
 
         /// <summary>
-        ///   Add a new item to the local sim's temp cache as it is in a queue to be added later
-        /// </summary>
-        /// <param name = "item">
-        ///   The item to be added.  If item.FolderID == UUID.Zero then the item is added to the most suitable system
-        ///   folder.  If there is no suitable folder then the item is added to the user's root inventory folder.
-        /// </param>
-        /// <returns>true if the item was successfully added, false if it was not</returns>
-        bool AddItemToTempCache(InventoryItemBase item);
-
-        /// <summary>
         ///   Update an item in the user's inventory
         /// </summary>
         /// <param name = "item"></param>
@@ -234,6 +217,8 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
+        #region OSD methods
+
         /// <summary>
         ///   Get an OSDArray of the items in the given folder - local only
         /// </summary>
@@ -248,7 +233,23 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "itemID"></param>
         /// <returns></returns>
         OSDArray GetItem(UUID itemID);
+
+        #endregion
+
+        #region Async methods
+
+        void AddItemAsync(InventoryItemBase item, NoParam success);
+        void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success);
+        void GiveInventoryItemAsync(UUID recipient, UUID senderId, UUID itemId,
+            UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success);
+        void GiveInventoryFolderAsync(
+            UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success);
+
+        #endregion
     }
+
+    public delegate void GiveFolderParam(InventoryFolderBase folder);
+    public delegate void GiveItemParam(InventoryItemBase item);
 
     public interface IInventoryData : IAuroraDataPlugin
     {

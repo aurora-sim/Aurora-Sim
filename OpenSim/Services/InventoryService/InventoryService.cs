@@ -90,47 +90,30 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void FinishedStartup()
         {
+            _addInventoryItemQueue.Start(2, (agentID, itemsToAdd) =>
+                {
+                    foreach (AddInventoryItemStore item in itemsToAdd)
+                    {
+                        AddItem(item.Item);
+                        _tempItemCache.Remove(item.Item.ID);
+                        if(item.Complete != null)
+                            item.Complete();
+                    }
+                });
+            _moveInventoryItemQueue.Start(2, (agentID, itemsToMove) =>
+                {
+                    foreach (var item in itemsToMove)
+                    {
+                        MoveItems(agentID, item.Items);
+                        if (item.Complete != null)
+                            item.Complete();
+                    }
+                });
         }
 
         #endregion
 
         #region IInventoryService Members
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public virtual bool CreateUserRootFolder(UUID principalID)
-        {
-            object remoteValue = DoRemote(principalID);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
-
-            bool result = false;
-
-            InventoryFolderBase rootFolder = GetRootFolder(principalID);
-
-            if (rootFolder == null)
-            {
-                List<InventoryFolderBase> rootFolders = GetInventorySkeleton(principalID);
-                if (rootFolders.Count == 0)
-                    rootFolder = CreateFolder(principalID, UUID.Zero, (int)AssetType.RootFolder, "My Inventory");
-                else
-                {
-                    rootFolder = new InventoryFolderBase
-                    {
-                        Name = "My Inventory",
-                        Type = (short)AssetType.RootFolder,
-                        Version = 1,
-                        ID = rootFolders[0].ParentID,
-                        Owner = principalID,
-                        ParentID = UUID.Zero
-                    };
-
-
-                    m_Database.StoreFolder(rootFolder);
-                }
-                result = true;
-            }
-            return result;
-        }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems)
@@ -747,8 +730,6 @@ namespace OpenSim.Services.InventoryService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool AddItem(InventoryItemBase item)
         {
-            if (_tempItemCache.ContainsKey(item.ID))
-                _tempItemCache.Remove(item.ID);
             object remoteValue = DoRemote(item);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
@@ -756,19 +737,8 @@ namespace OpenSim.Services.InventoryService
             return AddItem(item, true);
         }
 
-        public virtual bool AddItemToTempCache(InventoryItemBase item)
-        {
-            _tempItemCache[item.ID] = item;
-            return true;
-        }
-
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual bool AddItem(InventoryItemBase item, bool doParentFolderCheck)
         {
-            object remoteValue = DoRemote(item);
-            if (remoteValue != null || m_doRemoteOnly)
-                return remoteValue == null ? false : (bool)remoteValue;
-
             if (doParentFolderCheck)
             {
                 InventoryFolderBase folder = GetFolder(new InventoryFolderBase(item.Folder));
@@ -956,8 +926,6 @@ namespace OpenSim.Services.InventoryService
             return folders[0];
         }
 
-
-
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public virtual List<InventoryItemBase> GetActiveGestures(UUID principalID)
         {
@@ -980,6 +948,325 @@ namespace OpenSim.Services.InventoryService
             }
             return null;
         }
+
+        #endregion
+
+        #region Asynchronous Commands
+        
+        protected ListCombiningTimedSaving<AddInventoryItemStore> _addInventoryItemQueue = new ListCombiningTimedSaving<AddInventoryItemStore>();
+        protected ListCombiningTimedSaving<MoveInventoryItemStore> _moveInventoryItemQueue = new ListCombiningTimedSaving<MoveInventoryItemStore>();
+
+        public void AddItemAsync(InventoryItemBase item, NoParam success)
+        {
+            if (UUID.Zero == item.Folder)
+            {
+                InventoryFolderBase f = GetFolderForType(item.Owner, (InventoryType)item.InvType, (AssetType)item.AssetType);
+                if (f != null)
+                    item.Folder = f.ID;
+                else
+                {
+                    f = GetRootFolder(item.Owner);
+                    if (f != null)
+                        item.Folder = f.ID;
+                    else
+                    {
+                        MainConsole.Instance.WarnFormat(
+                            "[LLClientInventory]: Could not find root folder for {0} when trying to add item {1} with no parent folder specified",
+                            item.Owner, item.Name);
+                        return;
+                    }
+                }
+            }
+
+            if (!_tempItemCache.ContainsKey(item.ID))
+                _tempItemCache.Add(item.ID, item);
+            _addInventoryItemQueue.Add(item.Owner, new AddInventoryItemStore(item, success));
+        }
+
+        public void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success)
+        {
+            _moveInventoryItemQueue.Add(agentID, new MoveInventoryItemStore(items, success));
+        }
+
+        /// <summary>
+        /// Give an entire inventory folder from one user to another.  The entire contents (including all descendent
+        /// folders) is given.
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="folderId"></param>
+        /// <param name="recipientParentFolderId">
+        /// The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
+        /// recipient folder is the root folder
+        /// </param>
+        /// <returns>
+        /// The inventory folder copy given, null if the copy was unsuccessful
+        /// </returns>
+        public void GiveInventoryFolderAsync(
+            UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success)
+        {
+            Util.FireAndForget(o =>
+            {
+                // Retrieve the folder from the sender
+                InventoryFolderBase folder = GetFolder(new InventoryFolderBase(folderId));
+                if (null == folder)
+                {
+                    MainConsole.Instance.ErrorFormat(
+                            "[InventoryService]: Could not find inventory folder {0} to give", folderId);
+                    success(null);
+                    return;
+                }
+
+                //Find the folder for the receiver
+                if (recipientParentFolderId == UUID.Zero)
+                {
+                    InventoryFolderBase recipientRootFolder = GetRootFolder(recipientId);
+                    if (recipientRootFolder != null)
+                        recipientParentFolderId = recipientRootFolder.ID;
+                    else
+                    {
+                        MainConsole.Instance.WarnFormat("[InventoryService]: Unable to find root folder for receiving agent");
+                        success(null);
+                        return;
+                    }
+                }
+
+                UUID newFolderId = UUID.Random();
+                InventoryFolderBase newFolder
+                    = new InventoryFolderBase(
+                        newFolderId, folder.Name, recipientId, folder.Type, recipientParentFolderId, folder.Version);
+                AddFolder(newFolder);
+
+                // Give all the subfolders
+                InventoryCollection contents = GetFolderContent(senderId, folderId);
+                foreach (InventoryFolderBase childFolder in contents.Folders)
+                {
+                    GiveInventoryFolderAsync(recipientId, senderId, childFolder.ID, newFolder.ID, null);
+                }
+
+                // Give all the items
+                foreach (InventoryItemBase item in contents.Items)
+                {
+                    InnerGiveInventoryItem(recipientId, senderId, item, newFolder.ID, true);
+                }
+                success(newFolder);
+            });
+        }
+
+        /// <summary>
+        /// Give an inventory item from one user to another
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId">ID of the sender of the item</param>
+        /// <param name="itemId"></param>
+        /// <param name="recipientFolderId">
+        /// The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
+        /// appropriate default folder.
+        /// </param>
+        /// <param name="doOwnerCheck">This is for when the item is being given away publically, such as when it is posted on a group notice</param>
+        /// <returns>
+        /// The inventory item copy given, null if the give was unsuccessful
+        /// </returns>
+        public void GiveInventoryItemAsync (UUID recipient, UUID senderId, UUID itemId, 
+            UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success)
+        {
+            Util.FireAndForget(o =>
+            {
+                InventoryItemBase item = new InventoryItemBase(itemId, senderId);
+                item = GetItem(item);
+                success(InnerGiveInventoryItem(recipient, senderId,
+                    item, recipientFolderId, doOwnerCheck));
+            });
+        }
+
+        private InventoryItemBase InnerGiveInventoryItem(
+            UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
+        {
+            if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
+            {
+                if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
+                    return null;
+
+                IUserManagement uman = m_registry.RequestModuleInterface<IUserManagement>();
+                if (uman != null)
+                    uman.AddUser(item.CreatorIdAsUuid, item.CreatorData);
+
+                // Insert a copy of the item into the recipient
+                InventoryItemBase itemCopy = new InventoryItemBase
+                {
+                    Owner = recipient,
+                    CreatorId = item.CreatorId,
+                    CreatorData = item.CreatorData,
+                    ID = UUID.Random(),
+                    AssetID = item.AssetID,
+                    Description = item.Description,
+                    Name = item.Name,
+                    AssetType = item.AssetType,
+                    InvType = item.InvType,
+                    Folder = recipientFolderId
+                };
+
+                if (recipient != senderId)
+                {
+                    // Trying to do this right this time. This is evil. If
+                    // you believe in Good, go elsewhere. Vampires and other
+                    // evil creatores only beyond this point. You have been
+                    // warned.
+
+                    // We're going to mask a lot of things by the next perms
+                    // Tweak the next perms to be nicer to our data
+                    //
+                    // In this mask, all the bits we do NOT want to mess
+                    // with are set. These are:
+                    //
+                    // Transfer
+                    // Copy
+                    // Modufy
+                    const uint permsMask = ~((uint)PermissionMask.Copy |
+                                             (uint)PermissionMask.Transfer |
+                                             (uint)PermissionMask.Modify);
+
+                    // Now, reduce the next perms to the mask bits
+                    // relevant to the operation
+                    uint nextPerms = permsMask | (item.NextPermissions &
+                                      ((uint)PermissionMask.Copy |
+                                       (uint)PermissionMask.Transfer |
+                                       (uint)PermissionMask.Modify));
+
+                    // nextPerms now has all bits set, except for the actual
+                    // next permission bits.
+
+                    // This checks for no mod, no copy, no trans.
+                    // This indicates an error or messed up item. Do it like
+                    // SL and assume trans
+                    if (nextPerms == permsMask)
+                        nextPerms |= (uint)PermissionMask.Transfer;
+
+                    // Inventory owner perms are the logical AND of the
+                    // folded perms and the root prim perms, however, if
+                    // the root prim is mod, the inventory perms will be
+                    // mod. This happens on "take" and is of little concern
+                    // here, save for preventing escalation
+
+                    // This hack ensures that items previously permalocked
+                    // get unlocked when they're passed or rezzed
+                    uint basePerms = item.BasePermissions |
+                                    (uint)PermissionMask.Move;
+                    uint ownerPerms = item.CurrentPermissions;
+
+                    // If this is an object, root prim perms may be more
+                    // permissive than folded perms. Use folded perms as
+                    // a mask
+                    if (item.InvType == (int)InventoryType.Object)
+                    {
+                        // Create a safe mask for the current perms
+                        uint foldedPerms = (item.CurrentPermissions & 7) << 13;
+                        foldedPerms |= permsMask;
+
+                        bool isRootMod = (item.CurrentPermissions &
+                                          (uint)PermissionMask.Modify) != 0;
+
+                        // Mask the owner perms to the folded perms
+                        ownerPerms &= foldedPerms;
+                        basePerms &= foldedPerms;
+
+                        // If the root was mod, let the mask reflect that
+                        // We also need to adjust the base here, because
+                        // we should be able to edit in-inventory perms
+                        // for the root prim, if it's mod.
+                        if (isRootMod)
+                        {
+                            ownerPerms |= (uint)PermissionMask.Modify;
+                            basePerms |= (uint)PermissionMask.Modify;
+                        }
+                    }
+
+                    // These will be applied to the root prim at next rez.
+                    // The slam bit (bit 3) and folded permission (bits 0-2)
+                    // are preserved due to the above mangling
+                    ownerPerms &= nextPerms;
+
+                    // Mask the base permissions. This is a conservative
+                    // approach altering only the three main perms
+                    basePerms &= nextPerms;
+
+                    // Assign to the actual item. Make sure the slam bit is
+                    // set, if it wasn't set before.
+                    itemCopy.BasePermissions = basePerms;
+                    itemCopy.CurrentPermissions = ownerPerms | 16; // Slam
+
+                    itemCopy.NextPermissions = item.NextPermissions;
+
+                    // This preserves "everyone can move"
+                    itemCopy.EveryOnePermissions = item.EveryOnePermissions &
+                                                   nextPerms;
+
+                    // Intentionally killing "share with group" here, as
+                    // the recipient will not have the group this is
+                    // set to
+                    itemCopy.GroupPermissions = 0;
+                }
+                else
+                {
+                    itemCopy.CurrentPermissions = item.CurrentPermissions;
+                    itemCopy.NextPermissions = item.NextPermissions;
+                    itemCopy.EveryOnePermissions = item.EveryOnePermissions & item.NextPermissions;
+                    itemCopy.GroupPermissions = item.GroupPermissions & item.NextPermissions;
+                    itemCopy.BasePermissions = item.BasePermissions;
+                }
+
+                if (itemCopy.Folder == UUID.Zero)
+                {
+                    InventoryFolderBase folder = GetFolderForType(recipient,
+                        (InventoryType)itemCopy.InvType, (AssetType)itemCopy.AssetType);
+
+                    if (folder != null)
+                        itemCopy.Folder = folder.ID;
+                }
+
+                itemCopy.GroupID = UUID.Zero;
+                itemCopy.GroupOwned = false;
+                itemCopy.Flags = item.Flags;
+                itemCopy.SalePrice = item.SalePrice;
+                itemCopy.SaleType = item.SaleType;
+
+                AddItemAsync(itemCopy, () =>
+                {
+                    if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                        DeleteItems(senderId, new List<UUID> { item.ID });
+                });
+
+                return itemCopy;
+            }
+            MainConsole.Instance.WarnFormat("[InventoryService]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
+            return null;
+        }
+
+        #region Internal Classes
+
+        protected class AddInventoryItemStore
+        {
+            public AddInventoryItemStore(InventoryItemBase item, NoParam success)
+            {
+                Item = item;
+                Complete = success;
+            }
+            public InventoryItemBase Item;
+            public NoParam Complete;
+        }
+
+        protected class MoveInventoryItemStore
+        {
+            public MoveInventoryItemStore(List<InventoryItemBase> items, NoParam success)
+            {
+                Items = items;
+                Complete = success;
+            }
+            public List<InventoryItemBase> Items;
+            public NoParam Complete;
+        }
+
+        #endregion
 
         #endregion
 

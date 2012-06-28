@@ -1046,10 +1046,6 @@ namespace Aurora.Modules.InventoryAccess
             return NewGroup;
         }
 
-        public virtual void TransferInventoryAssets(InventoryItemBase item, UUID sender, UUID receiver)
-        {
-        }
-
         public virtual bool GetAgentInventoryItem(IClientAPI remoteClient, UUID itemID, UUID requestID)
         {
             InventoryItemBase assetRequestItem = GetItem(remoteClient.AgentId, itemID);

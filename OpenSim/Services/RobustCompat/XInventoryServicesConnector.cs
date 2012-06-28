@@ -56,11 +56,6 @@ namespace OpenSim.Services.Robust
             return false;
         }
 
-        public virtual bool CreateUserRootFolder(UUID principalID)
-        {
-            return false;
-        }
-
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
             return null;
@@ -667,11 +662,6 @@ namespace OpenSim.Services.Robust
             return item;
         }
 
-        public bool AddItemToTempCache(InventoryItemBase item)
-        {
-            return false;
-        }
-
         #region Constructors
 
         private readonly string m_url = "";
@@ -683,6 +673,28 @@ namespace OpenSim.Services.Robust
         public XInventoryServicesConnector(string url)
         {
             m_url = url;
+        }
+
+        #endregion
+
+        #region Async Functions
+
+        public void AddItemAsync(InventoryItemBase item, NoParam success)
+        {
+            AddItem(item);
+            success();
+        }
+
+        public void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success)
+        {
+        }
+
+        public void GiveInventoryItemAsync(UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success)
+        {
+        }
+
+        public void GiveInventoryFolderAsync(UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success)
+        {
         }
 
         #endregion

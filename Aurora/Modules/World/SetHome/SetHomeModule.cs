@@ -189,17 +189,16 @@ namespace Aurora.Modules.SetHome
 #endif
                     if (found)
                     {
-                        InventoryItemBase item = null;
-                        ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
-                        if (inventoryModule != null)
-                            item = inventoryModule.GiveInventoryItem(agentID, lastOwnerID, ItemID, FolderID);
-
-                        IClientAPI client;
-                        m_scene.ClientManager.TryGetValue(agentID, out client);
-                        if (item != null)
-                            client.SendBulkUpdateInventory(item);
-                        else
-                            client.SendAlertMessage("Failed to retrieve item");
+                        m_scene.InventoryService.GiveInventoryItemAsync(agentID, lastOwnerID, ItemID, FolderID, false,
+                            (item) =>
+                        {
+                            IClientAPI client;
+                            m_scene.ClientManager.TryGetValue(agentID, out client);
+                            if (item != null)
+                                client.SendBulkUpdateInventory(item);
+                            else
+                                client.SendAlertMessage("Failed to retrieve item");
+                        });
                     }
                 }
             }

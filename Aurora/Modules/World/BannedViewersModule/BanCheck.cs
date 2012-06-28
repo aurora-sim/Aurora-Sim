@@ -119,7 +119,6 @@ namespace Aurora.Modules.Ban
         private bool m_debug = false;
         private bool m_checkOnLogin = false;
         private bool m_checkOnTimer = true;
-        private int TimerMinutes = 60;
         private bool m_enabled = false;
 
         private Aurora.Framework.ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater = new ListCombiningTimedSaving<PresenceInfo>();
