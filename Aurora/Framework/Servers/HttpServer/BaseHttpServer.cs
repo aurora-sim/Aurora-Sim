@@ -1316,7 +1316,6 @@ namespace Aurora.Framework.Servers.HttpServer
                     respcontentLength = buffer.Length;
                     try
                     {
-
                         if (buffer != MainServer.NoResponse)
                             response.OutputStream.Write(buffer, 0, buffer.Length);
                         response.Send();

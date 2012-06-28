@@ -387,7 +387,13 @@ namespace Aurora.Simulation.Base
                     if (we.Status == WebExceptionStatus.ProtocolError)
                     {
                         HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                        errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
+                        if (webResponse.StatusCode == HttpStatusCode.BadRequest)
+                            MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
+                                             data != null ? OSDParser.SerializeJsonString(data) : "");
+                        else
+                            MainConsole.Instance.WarnFormat("[WebUtils]: {0} to {1}, data {2}, response {3}", webResponse.StatusCode, url,
+                                             data != null ? OSDParser.SerializeJsonString(data) : "", webResponse.StatusDescription);
+                        return "";
                     }
                     if (request != null)
                         request.Abort();
