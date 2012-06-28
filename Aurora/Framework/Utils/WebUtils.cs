@@ -55,7 +55,6 @@ namespace Aurora.Simulation.Base
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
         
-        private static int m_requestNumber;
         private const int m_defaultTimeout = 20000;
 
         public static Dictionary<string, object> ParseQueryString(string query)

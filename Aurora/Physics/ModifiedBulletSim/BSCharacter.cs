@@ -43,7 +43,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         private Vector3 _acceleration;
         private UUID _avID;
         private String _avName;
-        private float _buoyancy;
         private bool _collidingGround;
         private long _collidingGroundStep;
         private long _collidingStep;
@@ -83,7 +82,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             _size = size;
             _orientation = Quaternion.Identity;
             _velocity = Vector3.Zero;
-            _buoyancy = 0f; // characters return a buoyancy of zero
             _scale = new Vector3(1f, 1f, 1f);
             float AVvolume =
                 (float) (Math.PI*Math.Pow(_scene.Params.avatarCapsuleRadius, 2)*_scene.Params.avatarCapsuleHeight);

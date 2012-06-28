@@ -5,9 +5,6 @@
     ;; Just basic standalone mode, no HG, no IWC
     Include-Standalone = Configuration/Standalone/Standalone.ini
 
-    ;; If you would like to enable IWC, uncomment this file and comment the Include-Standalone file
-    ;Include-IWC = Configuration/Standalone/StandaloneIWC.ini
-
 [GridService]
     ;; Next, we can specify properties of regions, including default and fallback regions
     ;; The syntax is: Region_<RegionName> = <flags>

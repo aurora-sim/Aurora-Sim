@@ -428,7 +428,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         #endregion
 
-        public void Destroy()
+        public override void Destroy()
         {
             // MainConsole.Instance.DebugFormat("{0}: Destroy", LogHeader);
             // Undo any vehicle properties
