@@ -239,6 +239,37 @@ namespace OpenSim.Services.GridService
 
         #region IGridRegistrationService Members
 
+        public OSDMap RegionRemoteHandlerURL(GridRegion regionInfo, UUID sessionID, UUID oldSessionID)
+        {
+            List<GridRegistrationURLs> urls = m_genericsConnector.GetGenerics<GridRegistrationURLs>(
+                regionInfo.RegionID, "RegionRegistrationUrls");
+            m_genericsConnector.RemoveGeneric(regionInfo.RegionID, "RegionRegistrationUrls");
+            if ((urls == null) || (urls.Count == 0) || (urls[0].Expiration < DateTime.UtcNow))
+            {
+                urls = new List<GridRegistrationURLs>();
+                OSDMap hostnames = new OSDMap();
+                OSDMap databaseSave = new OSDMap
+                                          {
+                                              {
+                                                  "regionURI",
+                                                  "http://" + regionInfo.ExternalEndPoint.Address + ":" + regionInfo.ExternalEndPoint.Port + "/region" + UUID.Random()
+                                              }
+                                          };
+                OSDMap ports = new OSDMap { { "regionURI", regionInfo.InternalEndPoint.Port } };
+
+                GridRegistrationURLs urls2 = new GridRegistrationURLs
+                {
+                    URLS = databaseSave,
+                    SessionID = sessionID.ToString(),
+                    Ports = ports,
+                    HostNames = hostnames,
+                    Expiration = DateTime.UtcNow.AddMinutes(m_timeBeforeTimeout * 60)
+                };
+                urls.Add(urls2);
+            }
+            m_genericsConnector.AddGeneric(regionInfo.RegionID, "RegionRegistrationUrls", sessionID.ToString(), urls[0].ToOSD());
+            return urls[0].ToOSD();
+        }
         public OSDMap GetUrlForRegisteringClient(string SessionID)
         {
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,

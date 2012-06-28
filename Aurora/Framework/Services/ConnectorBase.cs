@@ -168,8 +168,7 @@ namespace Aurora.Framework
                     map.Add(info.Name, osd);
                 i++;
             }
-            List<string> m_ServerURIs =
-                urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+            List<string> m_ServerURIs = GetURIs(urlOverrides, map, url, userID);
             OSDMap response = null;
             int loops2Do = (m_ServerURIs.Count < m_OSDRequestTryCount) ? m_ServerURIs.Count : m_OSDRequestTryCount;
             for (int index = 0; index < loops2Do; index++)
@@ -208,6 +207,10 @@ namespace Aurora.Framework
             return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
+        protected virtual List<string> GetURIs(bool urlOverrides, OSDMap map, string url, UUID userID)
+        {
+            return urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+        }
         private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
         {
             method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();

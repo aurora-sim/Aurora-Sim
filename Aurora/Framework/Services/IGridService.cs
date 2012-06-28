@@ -217,6 +217,7 @@ namespace OpenSim.Services.Interfaces
         public UUID SessionID;
         public int RegionFlags = 0;
         public OSDMap Urls = new OSDMap();
+		public OSDMap RegionRemote;
 
         public override OSDMap ToOSD()
         {
@@ -226,6 +227,7 @@ namespace OpenSim.Services.Interfaces
             map["SessionID"] = SessionID;
             map["RegionFlags"] = RegionFlags;
             map["Urls"] = Urls;
+			map["RegionRemote"] = RegionRemote;
             return map;
         }
 
@@ -237,6 +239,7 @@ namespace OpenSim.Services.Interfaces
             SessionID = map["SessionID"];
             RegionFlags = map["RegionFlags"];
             Urls = (OSDMap)map["Urls"];
+			RegionRemote = (OSDMap)map["RegionRemote"];
         }
     }
 
@@ -660,6 +663,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="p"></param>
         void UpdateUrlsForClient(string SessionID);
+		OSDMap RegionRemoteHandlerURL(GridRegion regionInfo, UUID sessionID, UUID oldSessionID);
     }
 
     /// <summary>

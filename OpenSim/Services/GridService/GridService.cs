@@ -31,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using Aurora.DataManager;
 using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse;
@@ -334,10 +335,17 @@ namespace OpenSim.Services.GridService
             if (remoteValue != null || m_doRemoteOnly) {
                 rr = (RegisterRegion)remoteValue;
                 if (rr != null)
+				{
                     m_registry.RequestModuleInterface<IConfigurationService> ().AddNewUrls (
                         regionInfos.RegionHandle.ToString (),
                         rr.Urls
-                    );
+                        );
+                    //Set up the external handlers
+                    IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+                    GridRegistrationService.GridRegistrationURLs grurl = new GridRegistrationService.GridRegistrationURLs();
+                    grurl.FromOSD(rr.RegionRemote);
+                    server.AddStreamHandler(new ServerHandler(grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + regionInfos.ExternalEndPoint.Port, ""), regionInfos.SessionID.ToString(), m_registry));
+                }
                 else
                     rr = new RegisterRegion { Error = "Could not reach grid service." };
                 return rr;
@@ -564,8 +572,15 @@ namespace OpenSim.Services.GridService
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
                                       regionInfos.RegionName, regionInfos.RegionLocX, regionInfos.RegionLocY);
                     return new RegisterRegion
-                               { Error = "", Neighbors = neighbors, RegionFlags = regionInfos.Flags, SessionID = SessionID, Urls = 
-                    m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString())};
+                    {
+                        Error = "",
+                        Neighbors = neighbors,
+                        RegionFlags = regionInfos.Flags,
+                        SessionID = SessionID,
+                        Urls =
+                            m_registry.RequestModuleInterface<IGridRegistrationService>().GetUrlForRegisteringClient(regionInfos.RegionHandle.ToString()),
+                        RegionRemote = m_registry.RequestModuleInterface<IGridRegistrationService>().RegionRemoteHandlerURL(regionInfos, SessionID, oldSessionID)
+                    };
                 }
             }
             catch (Exception e)
