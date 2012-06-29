@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -70,7 +71,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string archiveXML = "";
-            if (FileName.EndsWith(".database"))
+            if (FileName.EndsWith(".database2"))
             {
                 IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
@@ -136,7 +137,7 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(assetsMap);
-                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, out items);
+                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, account.PrincipalID, out items);
             }
             catch (Exception ex)
             {
@@ -151,11 +152,12 @@ namespace Aurora.Modules.Archivers
             return appearance;
         }
 
-        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, out List<InventoryItemBase> items)
+        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, UUID agentid, out List<InventoryItemBase> items)
         {
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
-
+            IAssetService m_AssetService;
+            m_AssetService = m_registry.RequestModuleInterface<IAssetService>().InnerService;
             items = new List<InventoryItemBase>();
 
             // Wearables
@@ -174,29 +176,12 @@ namespace Aurora.Modules.Archivers
 
                         if (item != null)
                         {
-                            InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
-                                                                    {
-                                                                        Name = item.Name,
-                                                                        Description = item.Description,
-                                                                        InvType = item.InvType,
-                                                                        CreatorId = item.CreatorId,
-                                                                        CreatorData = item.CreatorData,
-                                                                        CreatorIdAsUuid = item.CreatorIdAsUuid,
-                                                                        NextPermissions = item.NextPermissions,
-                                                                        CurrentPermissions = item.CurrentPermissions,
-                                                                        BasePermissions = item.BasePermissions,
-                                                                        EveryOnePermissions = item.EveryOnePermissions,
-                                                                        GroupPermissions = item.GroupPermissions,
-                                                                        AssetType = item.AssetType,
-                                                                        AssetID = item.AssetID,
-                                                                        GroupID = item.GroupID,
-                                                                        GroupOwned = item.GroupOwned,
-                                                                        SalePrice = item.SalePrice,
-                                                                        SaleType = item.SaleType,
-                                                                        Flags = item.Flags,
-                                                                        CreationDate = item.CreationDate,
-                                                                        Folder = destinationFolder.ID
-                                                                    };
+
+                            InventoryItemBase destinationItem = (InventoryItemBase)item.Clone();
+                            destinationItem.ID = UUID.Random();
+                            destinationItem.Folder = destinationFolder.ID;
+                            destinationItem.Owner = agentid;
+
                             if (InventoryService != null)
                                 InventoryService.AddItem(destinationItem);
                             items.Add(destinationItem);
@@ -256,6 +241,40 @@ namespace Aurora.Modules.Archivers
                             CreationDate = item.CreationDate,
                             Folder = destinationFolder.ID
                         };
+
+                        if (destinationItem.InvType == (int)InventoryType.Object)
+                        {
+                            if (destinationItem.InvType == (int)InventoryType.Object)
+                            {
+                                AssetBase attobj = m_AssetService.Get(destinationItem.AssetID.ToString());
+
+                                if (attobj != null)
+                                {
+                                    string xmlData = Utils.BytesToString(attobj.Data);
+                                    XmlDocument doc = new XmlDocument();
+                                    try
+                                    {
+                                        doc.LoadXml(xmlData);
+                                    }
+                                    catch
+                                    {
+                                        continue;
+                                    }
+                                    XmlNodeList nl = doc.DocumentElement.SelectNodes("//UUID/UUID");
+                                    if (nl != null)
+                                    {
+                                        foreach (XmlNode node in nl)
+                                        {
+                                            node.InnerText = UUID.Random().ToString();
+                                        }
+                                    }
+                                    attobj.Data = Utils.StringToBytes(doc.OuterXml);
+                                    attobj.ID = m_AssetService.Store(attobj);
+                                    destinationItem.AssetID = attobj.ID;
+                                }
+                            }
+                        }
+
                         if (InventoryService != null)
                             InventoryService.AddItem(destinationItem);
                         items.Add(destinationItem);

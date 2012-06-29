@@ -511,15 +511,17 @@ namespace OpenSim.Services.LLLoginService
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
-                            m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
+                            avappearance = m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
+                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                         }
                         else
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                             AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
+                            avappearance = appearance;
                         }
-                        avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
+                        //avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
                     else
                     {
