@@ -532,12 +532,14 @@ namespace Aurora.Modules.Archivers
             else if (assetBinaryChangeRecord.ContainsKey(item.AssetID))
                 item.AssetID = assetBinaryChangeRecord[item.AssetID];
 
-            m_registry.RequestModuleInterface<IInventoryService>().AddItem(item);
-            MainConsole.Instance.WarnFormat(
+            if (!m_registry.RequestModuleInterface<IInventoryService>().AddItem(item))
+            {
+                MainConsole.Instance.WarnFormat(
                 "[AGENT INVENTORY]: Agent {0} could not add item {1} {2}",
                 item.Owner, item.Name, item.ID);
-
-            return false;
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
