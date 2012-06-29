@@ -71,7 +71,7 @@ namespace Aurora.Modules.Archivers
             }
 
             string archiveXML = "";
-            if (FileName.EndsWith(".database2"))
+            if (FileName.EndsWith(".database"))
             {
                 IAvatarArchiverConnector archiver = DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>();
                 if (archiver != null)
