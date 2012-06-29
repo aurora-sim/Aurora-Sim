@@ -1152,7 +1152,7 @@ namespace OpenSim.Services.LLLoginService
                     newcopy.ID = UUID.Random();
                     newcopy.Folder = folderForAppearance.ID;
                     newcopy.Owner = user;
-                    m_InventoryService.AddItem(newcopy);
+                    
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {
@@ -1175,6 +1175,21 @@ namespace OpenSim.Services.LLLoginService
                                 (doc.FirstChild.NextSibling != null &&
                                  doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
                                 continue;
+
+                            if (doc.DocumentElement != null)
+                            {
+                                XmlNodeList nl = doc.DocumentElement.SelectNodes("//UUID/UUID");
+                                if (nl != null)
+                                {
+                                    foreach (XmlNode node in nl)
+                                    {
+                                        node.InnerText = UUID.Random().ToString();
+                                    }
+                                }
+                            }
+                            attobj.Data = Utils.StringToBytes(doc.OuterXml);
+                            attobj.ID = m_AssetService.Store(attobj);
+                            newcopy.AssetID = attobj.ID;
 
                             string xml = "";
                             if ((doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration) &&
@@ -1201,6 +1216,7 @@ namespace OpenSim.Services.LLLoginService
                             }
                         }
                     }
+                    m_InventoryService.AddItem(newcopy);
                 }
             }
             return avappearance;
