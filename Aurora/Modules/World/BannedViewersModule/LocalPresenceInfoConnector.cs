@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Nini.Config;
@@ -171,15 +172,6 @@ namespace Aurora.Modules.Ban
             // 2 == Flags
 
             filter = new QueryFilter();
-            filter.orMultiFilters["Flags"] = new List<object>(5)
-                                                 {
-                                                     "SuspectedAltAccountOfKnown",
-                                                     "Known",
-                                                     "SuspectedAltAccountOfSuspected",
-                                                     "Banned",
-                                                     "Suspected"
-                                                 };
-
             query = GD.Query(new[] { "AgentID" }, "baninfo", filter, null, null, null);
 
             foreach (string ID in query)
@@ -333,10 +325,6 @@ namespace Aurora.Modules.Ban
                 AddFlag (ref suspectedInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
             }
 
-            //Add each user to the list of alts, then add the lists of both together
-            info.KnownAlts.Add (suspectedInfo.AgentID.ToString ());
-            suspectedInfo.KnownAlts.Add (info.AgentID.ToString ());
-
             //Add the lists together
             List<string> alts = new List<string> ();
             foreach (string alt in info.KnownAlts)
@@ -349,11 +337,15 @@ namespace Aurora.Modules.Ban
                 if (!alts.Contains (alt))
                     alts.Add (alt);
             }
+            if(!alts.Contains(suspectedInfo.AgentID.ToString()))
+                alts.Add(suspectedInfo.AgentID.ToString());
+            if (!alts.Contains(info.AgentID.ToString()))
+                alts.Add(info.AgentID.ToString());
 
             //If we have added a flag, we need to update ALL alts as well
-            if (addedFlag && alts.Count != 0)
+            if (addedFlag || alts.Count != 0)
             {
-                foreach (string alt in alts)
+                foreach (string alt in alts.Where(s => s != suspectedInfo.AgentID.ToString() && s != info.AgentID.ToString()))
                 {
                     PresenceInfo altInfo = GetPresenceInfo (UUID.Parse (alt));
                     if (altInfo != null)
@@ -381,16 +373,17 @@ namespace Aurora.Modules.Ban
                             //Flag 'em
                             AddFlag (ref altInfo, PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown);
                         }
+                        altInfo.KnownAlts = new List<string>(alts.Where(s => s != altInfo.AgentID.ToString()));
 
                         //And update them in the db
-                        UpdatePresenceInfo (suspectedInfo);
+                        UpdatePresenceInfo(altInfo);
                     }
                 }
             }
 
             //Replace both lists now that they are merged
-            info.KnownAlts = alts;
-            suspectedInfo.KnownAlts = alts;
+            info.KnownAlts = new List<string>(alts.Where(s => s != info.AgentID.ToString()));
+            suspectedInfo.KnownAlts = new List<string>(alts.Where(s => s != suspectedInfo.AgentID.ToString()));
 
             //Update them, as we changed their info, we get updated below
             UpdatePresenceInfo (suspectedInfo);

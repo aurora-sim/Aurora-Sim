@@ -3536,23 +3536,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     group.UpdateGroupRotationR(rot);
 
                     //group.ApplyPhysics(m_physicalPrim);
+                    World.SceneGraph.AddPrimToScene(group);
                     if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                     {
                         group.RootPart.PhysActor.OnPhysicalRepresentationChanged += delegate
-                                                                                        {
-                                                                                            float groupmass = group.GetMass();
-                                                                                            //Apply the velocity to the object
-                                                                                            //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
-                                                                                            // @Above: Err.... no. Read http://lslwiki.net/lslwiki/wakka.php?wakka=llRezObject
-                                                                                            //    Notice the "Creates ("rezzes") object's inventory object centered at position pos (in region coordinates) with velocity vel"
-                                                                                            //    This means SET the velocity to X, not just temperarily add it!
-                                                                                            //   -- Revolution Smythe
-                                                                                            llSetForce(new LSL_Vector(vel * groupmass), 0);
-                                                                                            group.RootPart.PhysActor.ForceSetVelocity(vel * groupmass);
-                                                                                            group.RootPart.PhysActor.Velocity = vel * groupmass;
-                                                                                        };
+                        {
+                            float groupmass = group.GetMass();
+                            //Apply the velocity to the object
+                            //llApplyImpulse(new LSL_Vector(llvel.X * groupmass, llvel.Y * groupmass, llvel.Z * groupmass), 0);
+                            // @Above: Err.... no. Read http://lslwiki.net/lslwiki/wakka.php?wakka=llRezObject
+                            //    Notice the "Creates ("rezzes") object's inventory object centered at position pos (in region coordinates) with velocity vel"
+                            //    This means SET the velocity to X, not just temperarily add it!
+                            //   -- Revolution Smythe
+                            llSetForce(new LSL_Vector(vel * groupmass), 0);
+                            group.RootPart.PhysActor.ForceSetVelocity(vel * groupmass);
+                            group.RootPart.PhysActor.Velocity = vel * groupmass;
+                        };
                     }
-                    World.SceneGraph.AddPrimToScene(group);
 
                     group.CreateScriptInstances(param, true, StateSource.ScriptedRez, RezzedFrom, false);
 

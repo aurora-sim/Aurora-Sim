@@ -85,18 +85,18 @@ namespace Aurora.DataManager.Migration.Migrators
         public override void FinishedMigration(IDataConnector genericData)
         {
             if (!genericData.TableExists("estates")) return;
-            IDataReader dr = genericData.QueryData("WHERE `Key` = 'EstateID'", "estates", "`ID`, `Key`, `Value`");
+            DataReaderConnection dr = genericData.QueryData("WHERE `Key` = 'EstateID'", "estates", "`ID`, `Key`, `Value`");
 
             if (dr != null)
             {
                 try
                 {
-                    while (dr.Read())
+                    while (dr.DataReader.Read())
                     {
                         try
                         {
-                            UUID ID = UUID.Parse(dr["ID"].ToString());
-                            string value = dr["Value"].ToString();
+                            UUID ID = UUID.Parse(dr.DataReader["ID"].ToString());
+                            string value = dr.DataReader["Value"].ToString();
                             QueryFilter filter = new QueryFilter();
                             filter.andFilters["`ID`"] = value;
                             filter.andFilters["`Key`"] = "EstateSettings";
@@ -129,7 +129,8 @@ namespace Aurora.DataManager.Migration.Migrators
                 }
                 finally
                 {
-                    dr.Close();
+                    dr.DataReader.Close();
+                    genericData.CloseDatabase(dr);
                 }
             }
         }

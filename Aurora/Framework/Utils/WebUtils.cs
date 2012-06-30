@@ -47,31 +47,15 @@ namespace Aurora.Simulation.Base
 {
     public static class WebUtils
     {
+        // this is the header field used to communicate the local request id
+        // used for performance and debugging
         public const string OSHeaderRequestID = "opensim-request-id";
 
         // number of milliseconds a call can take before it is considered
         // a "long" call for warning & debugging purposes
         public const int LongCallTime = 500;
         
-        private static int m_requestNumber;
         private const int m_defaultTimeout = 20000;
-
-        // this is the header field used to communicate the local request id
-        // used for performance and debugging
-
-        public static byte[] SerializeResult(XmlSerializer xs, object data)
-        {
-            MemoryStream ms = new MemoryStream();
-            XmlTextWriter xw = new XmlTextWriter(ms, Util.UTF8) {Formatting = Formatting.Indented};
-            xs.Serialize(xw, data);
-            xw.Flush();
-
-            ms.Seek(0, SeekOrigin.Begin);
-            byte[] ret = ms.GetBuffer();
-            Array.Resize(ref ret, (int) ms.Length);
-
-            return ret;
-        }
 
         public static Dictionary<string, object> ParseQueryString(string query)
         {
@@ -283,307 +267,154 @@ namespace Aurora.Simulation.Base
         }
 
         /// <summary>
+        ///   POST URL-encoded form data to a web service that returns LLSD or
+        ///   JSON data
+        /// </summary>
+        public static string PostToService(string url, OSDMap data)
+        {
+            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout);
+        }
+
+        /// <summary>
+        ///   GET JSON-encoded data to a web service that returns LLSD or
+        ///   JSON data
+        /// </summary>
+        public static string GetFromService(string url)
+        {
+            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout);
+        }
+
+        /// <summary>
         ///   PUT JSON-encoded data to a web service that returns LLSD or
         ///   JSON data
         /// </summary>
-        public static OSDMap PutToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse,
-                                          bool returnRawResult)
+        public static string PutToService(string url, OSDMap data)
         {
-            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout, careAboutResponse, deserializeResponse,
-                                     returnRawResult);
+            return ServiceOSDRequest(url, data, "PUT", m_defaultTimeout);
         }
 
         /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
+        /// Dictionary of end points
         /// </summary>
-        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse)
+        private static Dictionary<string, object> m_endpointSerializer = new Dictionary<string, object>();
+
+        private static object EndPointLock(string url)
         {
-            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse, false);
+            System.Uri uri = new System.Uri(url);
+            string endpoint = string.Format("{0}:{1}", uri.Host, uri.Port);
+
+            lock (m_endpointSerializer)
+            {
+                object eplock = null;
+
+                if (!m_endpointSerializer.TryGetValue(endpoint, out eplock))
+                {
+                    eplock = new object();
+                    m_endpointSerializer.Add(endpoint, eplock);
+                    // m_log.WarnFormat("[WEB UTIL] add a new host to end point serializer {0}",endpoint);
+                }
+
+                return eplock;
+            }
         }
 
-        /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
-        /// </summary>
-        public static OSDMap PostToService(string url, OSDMap data, int timeout, bool careAboutResponse, bool deserializeResponse)
+        public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
         {
-            return ServiceOSDRequest(url, data, "POST", timeout, careAboutResponse, deserializeResponse, false);
-        }
-
-        /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
-        /// </summary>
-        public static OSDMap PostToService(string url, OSDMap data, bool careAboutResponse, bool deserializeResponse,
-                                           bool returnRawResult)
-        {
-            return ServiceOSDRequest(url, data, "POST", m_defaultTimeout, careAboutResponse, deserializeResponse,
-                                     returnRawResult);
-        }
-
-        public static OSDMap GetFromService(string url, bool careAboutResponse, bool deserializeResponse,
-                                            bool returnRawResult)
-        {
-            return ServiceOSDRequest(url, null, "GET", m_defaultTimeout, careAboutResponse, deserializeResponse,
-                                     returnRawResult);
-        }
-
-        public static OSDMap ServiceOSDRequest(string url, OSDMap data, string method, int timeout,
-                                               bool careAboutResponse, bool deserializeResponse, bool returnRawResult)
-        {
-            int reqnum = m_requestNumber++;
             // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
 
-            string errorMessage = "unknown error";
-            int tickstart = Util.EnvironmentTickCount();
-            int tickdata = 0;
-            int tickserialize = 0;
-
-            if (url == "")
-                return ErrorResponseMap("No URL given.");
-
-            try
+            //lock (EndPointLock(url))
             {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-                request.Method = method;
-                request.Timeout = timeout;
-                request.KeepAlive = false;
-                request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout/4;
-                request.Headers[OSHeaderRequestID] = reqnum.ToString();
-
-                // If there is some input, write it into the request
-                if (data != null)
-                {
-                    string strBuffer = OSDParser.SerializeJsonString(data);
-                    byte[] buffer = Encoding.UTF8.GetBytes(strBuffer);
-
-                    request.ContentType = "application/json";
-                    request.ContentLength = buffer.Length; //Count bytes to send
-                    if (buffer.Length > 0)
-                        using (Stream requestStream = request.GetRequestStream())
-                            requestStream.Write(buffer, 0, buffer.Length); //Send it
-                }
-
-                // capture how much time was spent writing, this may seem silly
-                // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
-                    {
-                        // capture how much time was spent writing, this may seem silly
-                        // but with the number concurrent requests, this often blocks
-                        tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                        if (careAboutResponse)
-                        {
-                            string responseStr = null;
-                            responseStr = responseStream.GetStreamString();
-                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                            return CanonicalizeResults(responseStr, deserializeResponse, returnRawResult);
-                        }
-                        else
-                            return new OSDMap();
-                    }
-                }
-            }
-            catch (WebException we)
-            {
-                errorMessage = we.Message;
-                if (we.Status == WebExceptionStatus.ProtocolError)
-                {
-                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
-                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                }
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                // This just dumps a warning for any operation that takes more than 500 ms
-                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                if (MainConsole.Instance.IsEnabled(Level.Trace))
-                {
-                    MainConsole.Instance.TraceFormat(
-                        "[WebUtils]: osd request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
-                        reqnum, url, method, tickdiff, tickdata, tickserialize);
-                }
-                else
-                {
-                    if (tickdiff > LongCallTime)
-                        MainConsole.Instance.InfoFormat(
-                            "[WebUtils]: osd request took too long <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing, {5}ms deserializing",
-                            reqnum, url, method, tickdiff, tickdata, tickserialize);
-                }
-            }
-
-            MainConsole.Instance.WarnFormat("[WebUtils] <{0}> osd request failed: {1} to {2}, data {3}", reqnum, errorMessage, url,
-                             data != null ? data.AsString() : "");
-            return ErrorResponseMap(errorMessage);
-        }
-
-        /// <summary>
-        ///   Since there are no consistencies in the way web requests are
-        ///   formed, we need to do a little guessing about the result format.
-        ///   Keys:
-        ///   Success|success == the success fail of the request
-        ///   _RawResult == the raw string that came back
-        ///   _Result == the OSD unpacked string
-        /// </summary>
-        private static OSDMap CanonicalizeResults(string response, bool deserializeResponse, bool returnRawResult)
-        {
-            OSDMap result = new OSDMap();
-
-            if (returnRawResult)
-            {
-                OSD responseOSD = OSDParser.Deserialize(response);
-                if (responseOSD.Type == OSDType.Map)
-                    result = (OSDMap) responseOSD;
-                return result;
-            }
-
-            // Default values
-            result["Success"] = OSD.FromBoolean(true);
-            result["success"] = OSD.FromBoolean(true);
-            result["_RawResult"] = OSD.FromString(response);
-            result["_Result"] = new OSDMap();
-
-            if (response.Equals("true", StringComparison.OrdinalIgnoreCase))
-                return result;
-
-            if (response.Equals("false", StringComparison.OrdinalIgnoreCase))
-            {
-                result["Success"] = OSD.FromBoolean(false);
-                result["success"] = OSD.FromBoolean(false);
-                return result;
-            }
-
-            if (deserializeResponse)
-            {
+                string errorMessage = "unknown error";
+                int tickstart = Util.EnvironmentTickCount();
+                int tickdata = 0;
+                int tickserialize = 0;
+                byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
+                HttpWebRequest request = null;
                 try
                 {
-                    OSD responseOSD = OSDParser.Deserialize(response);
-                    if (responseOSD.Type == OSDType.Map)
+                    request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = method;
+                    request.Timeout = timeout;
+                    request.KeepAlive = false;
+                    request.MaximumAutomaticRedirections = 10;
+                    request.ReadWriteTimeout = timeout / 4;
+
+                    // If there is some input, write it into the request
+                    if (buffer != null && buffer.Length > 0)
                     {
-                        result["_Result"] = responseOSD;
-                        return result;
+                        request.ContentType = "application/json";
+                        request.ContentLength = buffer.Length; //Count bytes to send
+                        using (Stream requestStream = request.GetRequestStream())
+                            requestStream.Write(buffer, 0, buffer.Length); //Send it
+                    }
+
+                    // capture how much time was spent writing, this may seem silly
+                    // but with the number concurrent requests, this often blocks
+                    tickdata = Util.EnvironmentTickCountSubtract(tickstart);
+
+                    using (WebResponse response = request.GetResponse())
+                    {
+                        using (Stream responseStream = response.GetResponseStream())
+                        {
+                            // capture how much time was spent writing, this may seem silly
+                            // but with the number concurrent requests, this often blocks
+                            tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
+                            string responseStr = responseStream.GetStreamString();
+                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
+                            return responseStr;
+                        }
                     }
                 }
-                catch (Exception e)
+                catch (WebException we)
                 {
-                    // don't need to treat this as an error... we're just guessing anyway
-                    MainConsole.Instance.InfoFormat("[WebUtils] couldn't decode <{0}>: {1}", response, e.Message);
-                }
-            }
-
-            return result;
-        }
-
-        public static OSDMap ServiceFormRequest(string url, NameValueCollection data, int timeout)
-        {
-            int reqnum = m_requestNumber++;
-            string method = (data != null && data["RequestMethod"] != null) ? data["RequestMethod"] : "unknown";
-            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start form request for {1}, method {2}",reqnum,url,method);
-
-            string errorMessage = "unknown error";
-            int tickstart = Util.EnvironmentTickCount();
-            int tickdata = 0;
-
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-                request.Method = "POST";
-                request.Timeout = timeout;
-                request.KeepAlive = false;
-                request.MaximumAutomaticRedirections = 10;
-                request.ReadWriteTimeout = timeout/4;
-                request.Headers[OSHeaderRequestID] = reqnum.ToString();
-
-                if (data != null)
-                {
-                    string queryString = BuildQueryString(data);
-                    byte[] buffer = Encoding.UTF8.GetBytes(queryString);
-
-                    request.ContentLength = buffer.Length;
-                    request.ContentType = "application/x-www-form-urlencoded";
-                    using (Stream requestStream = request.GetRequestStream())
-                        requestStream.Write(buffer, 0, buffer.Length);
-                }
-
-                // capture how much time was spent writing, this may seem silly
-                // but with the number concurrent requests, this often blocks
-                tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                using (WebResponse response = request.GetResponse())
-                {
-                    using (Stream responseStream = response.GetResponseStream())
+                    errorMessage = we.Message;
+                    if (we.Status == WebExceptionStatus.ProtocolError)
                     {
-                        string responseStr = null;
-
-                        responseStr = responseStream.GetStreamString();
-                        OSD responseOSD = OSDParser.Deserialize(responseStr);
-                        if (responseOSD.Type == OSDType.Map)
-                            return (OSDMap) responseOSD;
+                        HttpWebResponse webResponse = (HttpWebResponse)we.Response;
+                        if (webResponse.StatusCode == HttpStatusCode.BadRequest)
+                            MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
+                                             data != null ? OSDParser.SerializeJsonString(data) : "");
+                        else
+                            MainConsole.Instance.WarnFormat("[WebUtils]: {0} to {1}, data {2}, response {3}", webResponse.StatusCode, url,
+                                             data != null ? OSDParser.SerializeJsonString(data) : "", webResponse.StatusDescription);
+                        return "";
+                    }
+                    if (request != null)
+                        request.Abort();
+                }
+                catch (Exception ex)
+                {
+                    if (ex is System.UriFormatException)
+                        errorMessage = ex.ToString() + " " + new System.Diagnostics.StackTrace().ToString();
+                    else
+                        errorMessage = ex.Message;
+                    if (request != null)
+                        request.Abort();
+                }
+                finally
+                {
+                    if (MainConsole.Instance != null)
+                    {
+                        if (errorMessage == "unknown error")
+                        {
+                            // This just dumps a warning for any operation that takes more than 500 ms
+                            int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
+                            MainConsole.Instance.TraceFormat(
+                                "[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                url, method, tickdiff, tickdata, tickserialize);
+                            if (tickdiff > 5000)
+                                MainConsole.Instance.InfoFormat(
+                                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
+                                    url, method, tickdiff, tickdata, tickserialize);
+                        }
                     }
                 }
+
+                if (MainConsole.Instance != null)
+                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
+                                     data != null ? data.AsString() : "");
+                return "";
             }
-            catch (WebException we)
-            {
-                errorMessage = we.Message;
-                if (we.Status == WebExceptionStatus.ProtocolError)
-                {
-                    HttpWebResponse webResponse = (HttpWebResponse) we.Response;
-                    errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                }
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                if (tickdiff > LongCallTime)
-                    MainConsole.Instance.InfoFormat(
-                        "[WebUtils]: form request <{0}> (URI:{1}, METHOD:{2}) took {3}ms overall, {4}ms writing",
-                        reqnum, url, method, tickdiff, tickdata);
-            }
-
-            MainConsole.Instance.WarnFormat("[WebUtils]: <{0}> form request failed: {1}", reqnum, errorMessage);
-            return ErrorResponseMap(errorMessage);
-        }
-
-        /// <summary>
-        ///   Create a response map for an error, trying to keep
-        ///   the result formats consistent
-        /// </summary>
-        private static OSDMap ErrorResponseMap(string msg)
-        {
-            OSDMap result = new OSDMap();
-            result["Success"] = "False";
-            result["Message"] = OSD.FromString("Service request failed: " + msg);
-            return result;
-        }
-
-        /// <summary>
-        ///   POST URL-encoded form data to a web service that returns LLSD or
-        ///   JSON data
-        /// </summary>
-        public static OSDMap PostToService(string url, NameValueCollection data)
-        {
-            return ServiceFormRequest(url, data, 10000);
-        }
-
-        public static string BuildQueryString(NameValueCollection parameters)
-        {
-            List<string> items = new List<string>(parameters.Count);
-            items.AddRange(from string key in parameters.Keys let values = parameters.GetValues(key) where values != null from value in values select String.Concat(key, "=", HttpUtility.UrlEncode(value ?? String.Empty)));
-
-            return String.Join("&", items.ToArray());
         }
 
         /// <summary>

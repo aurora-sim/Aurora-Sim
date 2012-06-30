@@ -274,6 +274,7 @@ namespace OpenSim.Services.CapsService
         private readonly Queue<OSD> queue = new Queue<OSD>();
         private string m_capsPath;
         private int m_ids;
+        private bool _isValid = false;
         private IRegionClientCapsService m_service;
 
         #endregion
@@ -419,7 +420,15 @@ namespace OpenSim.Services.CapsService
             return responsedata;
         }
 
-        public Hashtable ProcessQueue(Hashtable request, UUID agentID)
+        public byte[] NoEvents(OSHttpResponse response)
+        {
+            response.StatusCode = 502;
+            response.ContentType = "text/plain";
+            response.StatusDescription = "Upstream error:";
+            return System.Text.Encoding.UTF8.GetBytes("Upstream error: ");
+        }
+
+        public byte[] ProcessQueue(OSHttpResponse response, UUID agentID)
         {
             // TODO: this has to be redone to not busy-wait (and block the thread),
             // TODO: as soon as we have a non-blocking way to handle HTTP-requests.
@@ -441,12 +450,10 @@ namespace OpenSim.Services.CapsService
                     element = queue.Dequeue();
             }
 
-            Hashtable responsedata = new Hashtable();
-
             if (element == null)
             {
                 //MainConsole.Instance.ErrorFormat("[EVENTQUEUE]: Nothing to process in " + m_scene.RegionInfo.RegionName);
-                return NoEvents(UUID.Zero, agentID);
+                return NoEvents(response);
             }
 
             OSDArray array = new OSDArray {element};
@@ -489,18 +496,18 @@ namespace OpenSim.Services.CapsService
 
             m_ids++;
 
-            responsedata["int_response_code"] = 200;
-            responsedata["content_type"] = "application/xml";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(events);
-            //MainConsole.Instance.DebugFormat("[EVENTQUEUE]: sending response for {0} in region {1}: {2}", agentID, m_scene.RegionInfo.RegionName, responsedata["str_response_string"]);
-
-            return responsedata;
+            response.ContentType = "application/xml";
+            return OSDParser.SerializeLLSDXmlBytes(events);
         }
 
         public Hashtable EventQueuePoll(Hashtable request)
         {
             return new Hashtable();
+        }
+
+        public bool Valid()
+        {
+            return _isValid;
         }
 
         #endregion
@@ -518,22 +525,18 @@ namespace OpenSim.Services.CapsService
 
 
             // Register this as a caps handler
-#if (!ISWIN)
-            IRequestHandler rhandler = new RestHTTPHandler("POST", m_capsPath,
-                                                           delegate(Hashtable m_dhttpMethod)
+            m_service.AddStreamHandler("EventQueueGet", new GenericStreamHandler("POST", m_capsPath,
+                                                           delegate(string path, System.IO.Stream request,
+                                                               OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                            {
-                                                               return ProcessQueue(m_dhttpMethod, service.AgentID);
-                                                           });
-#else
-            IRequestHandler rhandler = new RestHTTPHandler("POST", m_capsPath,
-                                                           m_dhttpMethod => ProcessQueue(m_dhttpMethod, service.AgentID));
-#endif
-            m_service.AddStreamHandler("EventQueueGet", rhandler);
+                                                               return ProcessQueue(httpResponse, service.AgentID);
+                                                           }));
 
             // This will persist this beyond the expiry of the caps handlers
+            _isValid = true;
             MainServer.Instance.AddPollServiceHTTPHandler(
                 m_capsPath, EventQueuePoll,
-                new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, service.AgentID));
+                new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid, service.AgentID));
 
             Random rnd = new Random(Environment.TickCount);
             m_ids = rnd.Next(30000000);
@@ -546,6 +549,7 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            _isValid = false;
             m_service.RemoveStreamHandler("EventQueueGet", "POST", m_capsPath);
             MainServer.Instance.RemovePollServiceHTTPHandler("POST", m_capsPath);
         }

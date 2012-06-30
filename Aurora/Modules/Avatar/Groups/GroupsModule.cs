@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Nini.Config;
@@ -1288,7 +1289,7 @@ namespace Aurora.Modules.Groups
             client.SendGroupActiveProposals(groupID, transactionID, proposals);
         }
 
-        private string GroupProposalBallot(string request, UUID agentID)
+        private byte[] GroupProposalBallot(string request, UUID agentID)
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
@@ -1300,10 +1301,10 @@ namespace Aurora.Modules.Groups
 
             OSDMap resp = new OSDMap();
             resp["voted"] = OSD.FromBoolean(true);
-            return OSDParser.SerializeLLSDXmlString(resp);
+            return OSDParser.SerializeLLSDXmlBytes(resp);
         }
 
-        private string StartGroupProposal(string request, UUID agentID)
+        private byte[] StartGroupProposal(string request, UUID agentID)
         {
             OSDMap map = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
@@ -1332,7 +1333,7 @@ namespace Aurora.Modules.Groups
 
             OSDMap resp = new OSDMap();
             resp["voted"] = OSD.FromBoolean(true);
-            return OSDParser.SerializeLLSDXmlString(resp);
+            return OSDParser.SerializeLLSDXmlBytes(resp);
         }
 
         private void OnRequestAvatarProperties(IClientAPI remoteClient, UUID avatarID)
@@ -1693,15 +1694,14 @@ namespace Aurora.Modules.Groups
                      (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
-                InventoryItemBase item = null;
-                ILLClientInventory inventoryModule =
-                    remoteClient.Scene.RequestModuleInterface<ILLClientInventory>();
-                if (inventoryModule != null) //The imSessionID stores the itemID
-                    item = inventoryModule.GiveInventoryItem(remoteClient.AgentId, im.imSessionID,
-                                                             im.imSessionID, FolderID, false);
+                remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, im.imSessionID,
+                    im.imSessionID, FolderID, false,
+                    (item) =>
+                    {
 
-                if (item != null)
-                    remoteClient.SendBulkUpdateInventory(item);
+                        if (item != null)
+                            remoteClient.SendBulkUpdateInventory(item);
+                    });
                 //GroupAttachmentCache.Remove(im.imSessionID);
             }
             else if ((im.dialog == 210))
@@ -1806,31 +1806,19 @@ namespace Aurora.Modules.Groups
             OSDMap retVal = new OSDMap();
             retVal["GroupProposalBallot"] = CapsUtil.CreateCAPS("GroupProposalBallot", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["GroupProposalBallot"],
-                                                      delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["GroupProposalBallot"],
+                                                      delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
                                                       {
-                                                          return GroupProposalBallot(request, agentID);
+                                                          return GroupProposalBallot(request.ReadUntilEnd(), agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["GroupProposalBallot"],
-                                                          (request, path, param, httpRequest, httpResponse) =>
-                                                          GroupProposalBallot(request, agentID)));
-#endif
             retVal["StartGroupProposal"] = CapsUtil.CreateCAPS("StartGroupProposal", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["StartGroupProposal"],
-                                                      delegate(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["StartGroupProposal"],
+                                                      delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
                                                       {
-                                                          return StartGroupProposal(request, agentID);
+                                                          return StartGroupProposal(request.ReadUntilEnd(), agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestStreamHandler("POST", retVal["StartGroupProposal"],
-                                                          (request, path, param, httpRequest, httpResponse) =>
-                                                          StartGroupProposal(request, agentID)));
-#endif
             return retVal;
         }
 

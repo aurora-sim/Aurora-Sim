@@ -1588,6 +1588,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             return fullretstr;
         }
 
+        private GlobalFunctionDefinition _currentFunctionDeclaration = null;
         /// <summary>
         ///   Generates the code for a GlobalFunctionDefinition node.
         /// </summary>
@@ -1598,6 +1599,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             MethodVariables.Clear();
             VariablesToRename.Clear();
             StringBuilder retstr = new StringBuilder();
+            _currentFunctionDeclaration = gf;
 
             // we need to separate the argument declaration list from other kids
             List<SYMBOL> argumentDeclarationListKids = new List<SYMBOL>();
@@ -1644,6 +1646,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
 
             IsParentEnumerable = false;
+            _currentFunctionDeclaration = null;
             return retstr.ToString();
         }
 
@@ -2184,7 +2187,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     retstr += GenerateLine("yield break;", rs);
                 else
                 {
-                    retstr += Generate("yield return ", rs);
+                    retstr += Generate(string.Format("yield return ({0})", _currentFunctionDeclaration.ReturnType), rs);
                     foreach (SYMBOL kid in rs.kids)
                         retstr += GenerateNode(kid);
                     retstr += GenerateLine(";", null);
@@ -2194,7 +2197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             }
             else
             {
-                retstr += Generate("return ", rs);
+                retstr += Generate(string.Format("return ({0})", _currentFunctionDeclaration.ReturnType), rs);
 
                 foreach (SYMBOL kid in rs.kids)
                     retstr += GenerateNode(kid);

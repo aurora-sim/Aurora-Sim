@@ -400,8 +400,18 @@ namespace Aurora.Framework
         /// </summary>
         public List<AvatarAttachment> GetAttachments()
         {
-            lock(m_attachments)
+            lock (m_attachments)
                 return (from kvp in m_attachments from attach in kvp.Value select new AvatarAttachment(attach)).ToList();
+        }
+
+        /// <summary>
+        ///   Get a list of the attachments, note that there may be
+        ///   duplicate attachpoints
+        /// </summary>
+        public Dictionary<int, List<AvatarAttachment>> GetAttachmentsDictionary()
+        {
+            lock (m_attachments)
+                return new Dictionary<int, List<AvatarAttachment>>(m_attachments);
         }
 
         internal void AppendAttachment(AvatarAttachment attach)
@@ -468,7 +478,8 @@ namespace Aurora.Framework
             }
             else
             {
-                return ReplaceAttachment(new AvatarAttachment(attachpoint, item, asset));
+                AppendAttachment(new AvatarAttachment(attachpoint, item, asset));
+                return true;
             }
         }
 

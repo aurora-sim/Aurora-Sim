@@ -84,26 +84,25 @@ namespace Aurora.Services.DataService
         public List<AvatarArchive> GetAvatarArchives(bool isPublic)
         {
             List<AvatarArchive> returnValue = new List<AvatarArchive>();
+            DataReaderConnection RetVal = null;
             try
             {
-                IDataReader RetVal = GD.QueryData("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
-                while (RetVal.Read())
+                RetVal = GD.QueryData("where IsPublic = 1", "avatararchives", "Name, Snapshot, IsPublic");
+                while (RetVal.DataReader.Read())
                 {
                     AvatarArchive Archive = new AvatarArchive
                                                 {
-                                                    Name = RetVal["Name"].ToString(),
-                                                    Snapshot = RetVal["Snapshot"].ToString(),
-                                                    IsPublic = int.Parse(RetVal["IsPublic"].ToString())
+                                                    Name = RetVal.DataReader["Name"].ToString(),
+                                                    Snapshot = RetVal.DataReader["Snapshot"].ToString(),
+                                                    IsPublic = int.Parse(RetVal.DataReader["IsPublic"].ToString())
                                                 };
                     returnValue.Add(Archive);
                 }
-                RetVal.Close();
-                RetVal.Dispose();
             }
             catch
             {
+                GD.CloseDatabase(RetVal);
             }
-            GD.CloseDatabase();
             return returnValue;
         }
 

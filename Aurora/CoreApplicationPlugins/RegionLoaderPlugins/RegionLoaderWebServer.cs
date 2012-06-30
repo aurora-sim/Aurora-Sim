@@ -68,7 +68,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 openSim.ApplicationRegistry.StackModuleInterface<IRegionLoader>(this);
         }
 
-        public void AddRegion(string[] cmd)
+        public void CreateRegion()
         {
         }
 

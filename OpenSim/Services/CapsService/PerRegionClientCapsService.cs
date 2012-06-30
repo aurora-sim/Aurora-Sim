@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using OpenMetaverse;
@@ -224,7 +225,7 @@ namespace OpenSim.Services.CapsService
 
         #region Overriden Http Server methods
 
-        public void AddStreamHandler(string method, IRequestHandler handler)
+        public void AddStreamHandler(string method, IStreamedRequestHandler handler)
         {
             Server.AddStreamHandler(handler);
             AddCAPS(method, handler.Path);
@@ -260,7 +261,7 @@ namespace OpenSim.Services.CapsService
                 m_capsUrlBase = CapsUrl2;
             Disabled = false;
             //Add our SEED cap
-            AddStreamHandler("SEED", new RestStreamHandler("POST", m_capsUrlBase, CapsRequest));
+            AddStreamHandler("SEED", new GenericStreamHandler("POST", m_capsUrlBase, CapsRequest));
         }
 
         public void Close()
@@ -270,11 +271,11 @@ namespace OpenSim.Services.CapsService
             RemoveCAPS ();
         }
 
-        public virtual string CapsRequest(string request, string path, string param,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public virtual byte[] CapsRequest(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
         {
             MainConsole.Instance.Info("[CapsHandlers]: Handling Seed Cap request at " + CapsUrl);
-            return OSDParser.SerializeLLSDXmlString(registeredCAPS);
+            return OSDParser.SerializeLLSDXmlBytes(registeredCAPS);
         }
 
         #endregion

@@ -37,7 +37,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class MessagingServiceInPostHandler : BaseStreamHandler
+    public class MessagingServiceInPostHandler : BaseRequestHandler
     {
         private readonly string m_SessionID;
         private readonly IAsyncMessageRecievedService m_handler;
@@ -96,14 +96,14 @@ namespace OpenSim.Services.MessagingService
         private byte[] FailureResult()
         {
             OSDMap map = new OSDMap();
-            map["Success"] = false;
+            map["success"] = false;
             return ReturnResult(map);
         }
 
         private byte[] SuccessResult()
         {
             OSDMap map = new OSDMap();
-            map["Success"] = true;
+            map["success"] = true;
             return ReturnResult(map);
         }
 

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -38,7 +39,7 @@ using OpenSim.Services.Interfaces;
 using Aurora.Framework.Capabilities;
 using Aurora.Simulation.Base;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustCaps : INonSharedRegionModule
     {
@@ -123,7 +124,7 @@ namespace OpenSim.Services.RobustCompat
             }
             if ((presence.CallbackURI != null) && !presence.CallbackURI.Equals (""))
             {
-                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000, false, false, false);
+                WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000);
                 presence.CallbackURI = null;
             }
 #if (!ISWIN)
@@ -345,23 +346,12 @@ namespace OpenSim.Services.RobustCompat
         private void AddCapsHandler(AgentCircuitData circuit)
         {
             //Used by incoming (home) agents from HG
-#if (!ISWIN)
-            MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                delegate(string request, string path, string param2,
-                      OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
+                delegate(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
                     {
-                        return CapsRequest(request, path, param2, httpRequest, httpResponse,
-                                           circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
+                        return CapsRequest(circuit.ServiceURLs["IncomingCAPSHandler"].ToString());
                     }));
-#else
-            MainServer.Instance.AddStreamHandler(new RestStreamHandler("POST", CapsUtil.GetCapsSeedPath(circuit.CapsPath),
-                                                                       (request, path, param2, httpRequest, httpResponse)
-                                                                       =>
-                                                                       CapsRequest(request, path, param2, httpRequest,
-                                                                                   httpResponse,
-                                                                                   circuit.ServiceURLs[
-                                                                                       "IncomingCAPSHandler"].ToString())));
-#endif
         }
 
         public void RegionLoaded (IScene scene)
@@ -390,11 +380,9 @@ namespace OpenSim.Services.RobustCompat
 
         #region Virtual caps handler
 
-        public virtual string CapsRequest (string request, string path, string param,
-                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse, string url)
+        public virtual byte[] CapsRequest(string url)
         {
-            OSDMap response = WebUtils.PostToService (url, new OSDMap (), true, false, true);
-            return OSDParser.SerializeLLSDXmlString (response);
+            return System.Text.Encoding.UTF8.GetBytes (WebUtils.PostToService (url, new OSDMap ()));
         }
 
         #endregion

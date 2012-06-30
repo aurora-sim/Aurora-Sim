@@ -97,7 +97,8 @@ namespace Aurora.Services.DataService
         private EstateSettings ReturnEstateSettings(object remoteValue)
         {
             EstateSettings es = (EstateSettings)remoteValue;
-            es.OnSave += SaveEstateSettings;
+            if(es != null)
+                es.OnSave += SaveEstateSettings;
             return es;
         }
 

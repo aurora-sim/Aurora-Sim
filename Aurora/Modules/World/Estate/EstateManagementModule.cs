@@ -140,40 +140,28 @@ namespace Aurora.Modules.Estate
             OSDMap retVal = new OSDMap();
             retVal["DispatchRegionInfo"] = CapsUtil.CreateCAPS("DispatchRegionInfo", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchRegionInfo"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"], agentID);
+                                                          return DispatchRegionInfo(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchRegionInfo"],
-                                                        m_dhttpMethod =>
-                                                        DispatchRegionInfo(m_dhttpMethod, retVal["DispatchRegionInfo"],
-                                                                           agentID)));
-#endif
             retVal["EstateChangeInfo"] = CapsUtil.CreateCAPS("EstateChangeInfo", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["EstateChangeInfo"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"], agentID);
+                                                          return EstateChangeInfo(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["EstateChangeInfo"],
-                                                        m_dhttpMethod =>
-                                                        EstateChangeInfo(m_dhttpMethod, retVal["EstateChangeInfo"],
-                                                                         agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable EstateChangeInfo(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private byte[] EstateChangeInfo(Stream request, UUID agentID)
         {
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
-                return new Hashtable();
+                return new byte[0];
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             string estate_name = rm["estate_name"].AsString();
             bool allow_direct_teleport = rm["allow_direct_teleport"].AsBoolean();
@@ -213,20 +201,15 @@ namespace Aurora.Modules.Estate
 
             sendDetailedEstateData(remoteClient, invoice);
 
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(new OSDMap());
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(new OSDMap());
         }
 
-        private Hashtable DispatchRegionInfo(Hashtable m_dhttpMethod, UUID capuuid, UUID agentID)
+        private byte[] DispatchRegionInfo(Stream request, UUID agentID)
         {
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
-                return new Hashtable();
+                return new byte[0];
 
-            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml((string)m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
 
             int agent_limit = rm["agent_limit"].AsInteger();
             bool allow_damage = rm["allow_damage"].AsBoolean();
@@ -244,32 +227,20 @@ namespace Aurora.Modules.Estate
 
 
             m_scene.RegionInfo.RegionSettings.BlockTerraform = block_terraform;
-
-                m_scene.RegionInfo.RegionSettings.BlockFly = block_fly;
-
-                m_scene.RegionInfo.RegionSettings.AllowDamage = allow_damage;
-
-                m_scene.RegionInfo.RegionSettings.RestrictPushing = restrict_pushobject;
-
-
-
-                m_scene.RegionInfo.RegionSettings.AllowLandResell = allow_land_resell;
-
-                m_scene.RegionInfo.RegionSettings.AgentLimit = agent_limit;
-
+            m_scene.RegionInfo.RegionSettings.BlockFly = block_fly;
+            m_scene.RegionInfo.RegionSettings.AllowDamage = allow_damage;
+            m_scene.RegionInfo.RegionSettings.RestrictPushing = restrict_pushobject;
+            m_scene.RegionInfo.RegionSettings.AllowLandResell = allow_land_resell;
+            m_scene.RegionInfo.RegionSettings.AgentLimit = agent_limit;
             m_scene.RegionInfo.RegionSettings.ObjectBonus = prim_bonus;
-
             m_scene.RegionInfo.RegionSettings.MinimumAge = minimum_agent_age;
-
             if (sim_access <= 13)
                 m_scene.RegionInfo.RegionSettings.Maturity = 0;
             else if (sim_access <= 21)
                 m_scene.RegionInfo.RegionSettings.Maturity = 1;
             else
                 m_scene.RegionInfo.RegionSettings.Maturity = 2;
-
             m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide = allow_parcel_changes;
-
             m_scene.RegionInfo.RegionSettings.BlockShowInSearch = block_parcel_search;
 
             m_scene.RegionInfo.RegionSettings.Save();
@@ -277,13 +248,7 @@ namespace Aurora.Modules.Estate
 
             sendRegionInfoPacketToAll();
 
-            
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
+            return new byte[0];
         }
 
         public void setEstateTerrainBaseTexture(int level, UUID texture)

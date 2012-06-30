@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -53,7 +54,7 @@ namespace Aurora.Modules.WorldMap
         private IConfigSource m_config;
         private readonly ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
 
-        private readonly Queue<MapItemRequester> m_itemsToRequest = new Queue<MapItemRequester> ();
+        private readonly ConcurrentQueue<MapItemRequester> m_itemsToRequest = new ConcurrentQueue<MapItemRequester>();
         private bool itemRequesterIsRunning;
         private static AuroraThreadPool threadpool;
         private static AuroraThreadPool blockthreadpool;
@@ -268,9 +269,7 @@ namespace Aurora.Modules.WorldMap
             while(true)
             {
                 MapItemRequester item = null;
-                if(m_itemsToRequest.Count > 0)
-                    item = m_itemsToRequest.Dequeue ();
-                if (item == null)
+                if(!m_itemsToRequest.TryDequeue(out item))
                     break; //Nothing in the queue
 
                 List<mapItemReply> mapitems;
@@ -378,7 +377,7 @@ namespace Aurora.Modules.WorldMap
         }
 
         private bool blockRequesterIsRunning;
-        private readonly Queue<MapBlockRequester> m_blockitemsToRequest = new Queue<MapBlockRequester> ();
+        private readonly ConcurrentQueue<MapBlockRequester> m_blockitemsToRequest = new ConcurrentQueue<MapBlockRequester>();
 
         private class MapBlockRequester
         {
@@ -398,9 +397,7 @@ namespace Aurora.Modules.WorldMap
                 while(true)
                 {
                     MapBlockRequester item = null;
-                    if(m_blockitemsToRequest.Count > 0)
-                        item = m_blockitemsToRequest.Dequeue();
-                    if (item == null)
+                    if(!m_blockitemsToRequest.TryDequeue(out item))
                         break;
                     List<MapBlockData> mapBlocks = new List<MapBlockData>();
 

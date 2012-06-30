@@ -122,6 +122,7 @@ namespace Aurora.Modules.Attachments
                 presence.RegisterModuleInterface(attachmentsPlugin);
 
                 List<AvatarAttachment> attachments = appearance.Appearance.GetAttachments();
+                MainConsole.Instance.InfoFormat( "[ATTACHMENTS MODULE]:  Found {0} attachments to attach to avatar {1}", attachments.Count, presence.Name);
                 foreach (AvatarAttachment attach in attachments)
                 {
                     try
@@ -156,20 +157,10 @@ namespace Aurora.Modules.Attachments
                 foreach (ISceneEntity entity in entities)
                 {
                     receiver.SceneViewer.QueuePartForUpdate(entity.RootChild, PrimUpdateFlags.ForcedFullUpdate);
-#if (!ISWIN)
-                    foreach (ISceneChildEntity child in entity.ChildrenEntities())
+                    foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
                     {
-                        if (!child.IsRoot)
-                        {
-                            receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                        }
+                        receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
                     }
-#else
-                                               foreach (ISceneChildEntity child in entity.ChildrenEntities().Where(child => !child.IsRoot))
-                                               {
-                                                   receiver.SceneViewer.QueuePartForUpdate(child, PrimUpdateFlags.ForcedFullUpdate);
-                                               }
-#endif
                 }
             }
             else
@@ -265,7 +256,7 @@ namespace Aurora.Modules.Attachments
             IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
             if (presence != null && presence.SuccessfullyMadeRootAgent)
             {
-                ISceneEntity att = RezSingleAttachmentFromInventory(remoteClient, itemID, UUID.Zero, AttachmentPt, true);
+                ISceneEntity att = RezSingleAttachmentFromInventory(remoteClient, itemID, UUID.Zero, AttachmentPt, false);
 
                 if (null == att)
                     return UUID.Zero;
@@ -442,24 +433,46 @@ namespace Aurora.Modules.Attachments
                     ISceneEntity[] atts = GetAttachmentsForAvatar(remoteClient.AgentId);
                     foreach (var obj in atts)
                         if (obj.UUID == objatt.UUID)
-                            updateUUIDs = false;
+                            updateUUIDs = false;//If the user is already wearing it, don't readd
                     bool forceUpdateOnNextDeattach = false;
                     try
                     {
-                        if (updateUUIDs)
+                        bool foundDuplicate = false;
+                        foreach (var obj in atts)
+                            if (obj.RootChild.FromUserInventoryItemID == objatt.RootChild.FromUserInventoryItemID)
+                                foundDuplicate = true;
+                        IEntity e;
+                        if(!m_scene.SceneGraph.TryGetEntity(objatt.UUID, out e))//if (updateUUIDs)
                         {
-                            m_scene.SceneGraph.AddPrimToScene(objatt);
+                            foreach (var prim in objatt.ChildrenEntities())
+                                prim.LocalId = 0;
+                            bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, false);
+                            if (!success)
+                            {
+                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                                return null;
+                            }
                             forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                         }
                         else
                         {
-                            foreach (var prim in objatt.ChildrenEntities())
+                            if (!foundDuplicate)
                             {
-                                prim.LocalId = 0;
+                                if (m_scene.SceneGraph.AddPrimToScene(objatt))
+                                    forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                             }
+                            else
+                            {
+                                if (e as ISceneEntity != null)
+                                    (e as ISceneEntity).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+
+                                return (e as ISceneEntity);//It was already added
+                            }
+                            /*foreach (var prim in objatt.ChildrenEntities())
+                                prim.LocalId = 0;
                             bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);
                             if (!success)
-                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
+                                MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!"); */
                         }
                     }
                     catch { }
@@ -467,9 +480,7 @@ namespace Aurora.Modules.Attachments
                     //If we updated the attachment, we need to save the change
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
-                    {
                         FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID, forceUpdateOnNextDeattach);
-                    }
                     else
                         objatt = null;//Presence left, kill the attachment
                     #endregion
@@ -722,7 +733,7 @@ namespace Aurora.Modules.Attachments
                 }
             }
 
-            MainConsole.Instance.InfoFormat(
+            MainConsole.Instance.DebugFormat(
                 "[ATTACHMENTS MODULE]: Retrieved single object {0} for attachment to {1} on point {2} localID {3}",
                 group.Name, remoteClient.Name, AttachmentPt, group.LocalId);
 
@@ -770,21 +781,6 @@ namespace Aurora.Modules.Attachments
 
             group.RootChild.SetParentLocalId (presence.LocalId);
             group.SetAttachmentPoint(Convert.ToByte(AttachmentPt));
-
-            AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
-            if (attPlugin != null)
-            {
-                attPlugin.AddAttachment (group);
-                presence.SetAttachments(attPlugin.Get());
-                IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-
-                bool save = appearance.Appearance.CheckWhetherAttachmentChanged(AttachmentPt, itemID, assetID);
-                if (save)
-                {
-                    appearance.Appearance.SetAttachments(attPlugin.Get());
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
-                }
-            }
 
             // Killing it here will cause the client to deselect it
             // It then reappears on the avatar, deselected
@@ -837,11 +833,17 @@ namespace Aurora.Modules.Attachments
                 item = m_scene.InventoryService.GetItem(item);
                 //Update the ItemID with the new item
                 group.SetFromItemID(itemID, item.AssetID);
+            }
 
-                //If we updated the attachment, we need to save the change
+            AvatarAttachments attPlugin = presence.RequestModuleInterface<AvatarAttachments>();
+            if (attPlugin != null)
+            {
+                attPlugin.AddAttachment (group);
+                presence.SetAttachments(attPlugin.Get());
                 IAvatarAppearanceModule appearance = presence.RequestModuleInterface<IAvatarAppearanceModule>();
-                if (appearance.Appearance.SetAttachment(AttachmentPt, itemID, item.AssetID))
-                    AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
+
+                appearance.Appearance.SetAttachments(attPlugin.Get());
+                AvatarFactory.QueueAppearanceSave(remoteClient.AgentId);
             }
 
 

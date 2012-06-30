@@ -168,8 +168,7 @@ namespace Aurora.Framework
                     map.Add(info.Name, osd);
                 i++;
             }
-            List<string> m_ServerURIs =
-                urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+            List<string> m_ServerURIs = GetURIs(urlOverrides, map, url, userID);
             OSDMap response = null;
             int loops2Do = (m_ServerURIs.Count < m_OSDRequestTryCount) ? m_ServerURIs.Count : m_OSDRequestTryCount;
             for (int index = 0; index < loops2Do; index++)
@@ -208,6 +207,10 @@ namespace Aurora.Framework
             return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
+        protected virtual List<string> GetURIs(bool urlOverrides, OSDMap map, string url, UUID userID)
+        {
+            return urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+        }
         private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
         {
             method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
@@ -219,7 +222,7 @@ namespace Aurora.Framework
         public bool GetOSDMap(string url, OSDMap map, out OSDMap response)
         {
             response = null;
-            string resp = ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
+            string resp = WebUtils.ServiceOSDRequest(url, map, "POST", m_OSDRequestTimeout);
             
             if (resp == "" || resp.StartsWith("<"))
                 return false;
@@ -235,128 +238,13 @@ namespace Aurora.Framework
             return response["Success"];
         }
 
-        /// <summary>
-        /// Dictionary of end points
-        /// </summary>
-        private static Dictionary<string, object> m_endpointSerializer = new Dictionary<string, object>();
-
-        private static object EndPointLock(string url)
-        {
-            System.Uri uri = new System.Uri(url);
-            string endpoint = string.Format("{0}:{1}", uri.Host, uri.Port);
-
-            lock (m_endpointSerializer)
-            {
-                object eplock = null;
-
-                if (!m_endpointSerializer.TryGetValue(endpoint, out eplock))
-                {
-                    eplock = new object();
-                    m_endpointSerializer.Add(endpoint, eplock);
-                    // m_log.WarnFormat("[WEB UTIL] add a new host to end point serializer {0}",endpoint);
-                }
-
-                return eplock;
-            }
-        }
-
-        public static string ServiceOSDRequest(string url, OSDMap data, string method, int timeout)
-        {
-            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> start osd request for {1}, method {2}",reqnum,url,method);
-
-            lock (EndPointLock(url))
-            {
-                string errorMessage = "unknown error";
-                int tickstart = Util.EnvironmentTickCount();
-                int tickdata = 0;
-                int tickserialize = 0;
-                byte[] buffer = data != null ? Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(data, true)) : null;
-                HttpWebRequest request = null;
-                try
-                {
-                    request = (HttpWebRequest)WebRequest.Create(url);
-                    request.Method = method;
-                    request.Timeout = timeout;
-                    request.KeepAlive = false;
-                    request.MaximumAutomaticRedirections = 10;
-                    request.ReadWriteTimeout = timeout / 4;
-
-                    // If there is some input, write it into the request
-                    if (buffer != null && buffer.Length > 0)
-                    {
-                        request.ContentType = "application/json";
-                        request.ContentLength = buffer.Length; //Count bytes to send
-                        using (Stream requestStream = request.GetRequestStream())
-                             requestStream.Write(buffer, 0, buffer.Length); //Send it
-                    }
-
-                    // capture how much time was spent writing, this may seem silly
-                    // but with the number concurrent requests, this often blocks
-                    tickdata = Util.EnvironmentTickCountSubtract(tickstart);
-
-                    using (WebResponse response = request.GetResponse())
-                    {
-                        using (Stream responseStream = response.GetResponseStream())
-                        {
-                            // capture how much time was spent writing, this may seem silly
-                            // but with the number concurrent requests, this often blocks
-                            tickserialize = Util.EnvironmentTickCountSubtract(tickstart) - tickdata;
-                            string responseStr = responseStream.GetStreamString();
-                            // MainConsole.Instance.DebugFormat("[WEB UTIL]: <{0}> response is <{1}>",reqnum,responseStr);
-                            return responseStr;
-                        }
-                    }
-                }
-                catch (WebException we)
-                {
-                    errorMessage = we.Message;
-                    if (we.Status == WebExceptionStatus.ProtocolError)
-                    {
-                        HttpWebResponse webResponse = (HttpWebResponse)we.Response;
-                        errorMessage = String.Format("[{0}] {1}", webResponse.StatusCode, webResponse.StatusDescription);
-                    }
-                    if(request != null)
-                        request.Abort();
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = ex.Message;
-                    if (request != null)
-                        request.Abort();
-                }
-                finally
-                {
-                    if (MainConsole.Instance != null)
-                    {
-                        if (errorMessage == "unknown error")
-                        {
-                            // This just dumps a warning for any operation that takes more than 500 ms
-                            int tickdiff = Util.EnvironmentTickCountSubtract(tickstart);
-                            MainConsole.Instance.TraceFormat(
-                                "[WebUtils]: osd request (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                url, method, tickdiff, tickdata, tickserialize);
-                            if (tickdiff > 5000)
-                                MainConsole.Instance.InfoFormat(
-                                    "[WebUtils]: osd request took too long (URI:{0}, METHOD:{1}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
-                                    url, method, tickdiff, tickdata, tickserialize);
-                        }
-                    }
-                }
-
-                if (MainConsole.Instance != null)
-                    MainConsole.Instance.WarnFormat("[WebUtils] osd request failed: {0} to {1}, data {2}", errorMessage, url,
-                                     data != null ? data.AsString() : "");
-                return "";
-            }
-        }
-
         public bool CheckPassword(string password)
         {
             return password == m_password;
         }
     }
 
-    public class ServerHandler : BaseStreamHandler
+    public class ServerHandler : BaseRequestHandler
     {
         protected string m_SessionID;
         protected IRegistryCore m_registry;
@@ -416,7 +304,7 @@ namespace Aurora.Framework
             {
                 MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
             }
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         public byte[] HandleMap(OSDMap args)
@@ -424,51 +312,56 @@ namespace Aurora.Framework
             if (args.ContainsKey("Method"))
             {
                 string method = args["Method"].AsString();
-
-                MethodImplementation methodInfo;
-                if (GetMethodInfo(method, args.Count - 1, out methodInfo))
+                try
                 {
-                    if (m_SessionID == "")
+                    MethodImplementation methodInfo;
+                    if (GetMethodInfo(method, args.Count - 1, out methodInfo))
                     {
-                        if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
-                            return new byte[0];
-                    }
-                    else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
-                        return new byte[0];
-                    if (methodInfo.Attribute.UsePassword)
-                    {
-                        if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
-                            return new byte[0];
-                    }
-                    if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
-                    {
-                        UUID userID = args["UserID"].AsUUID();
-                        IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
-                        if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
-                            return new byte[0];
-                    }
+                        if (m_SessionID == "")
+                        {
+                            if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
+                                return MainServer.BadRequest;
+                        }
+                        else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
+                            return MainServer.BadRequest;
+                        if (methodInfo.Attribute.UsePassword)
+                        {
+                            if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
+                                return MainServer.BadRequest;
+                        }
+                        if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
+                        {
+                            UUID userID = args["UserID"].AsUUID();
+                            IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
+                            if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
+                                return MainServer.BadRequest;
+                        }
 
+                        ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
+                        object[] parameters = new object[paramInfo.Length];
+                        int paramNum = 0;
+                        foreach (ParameterInfo param in paramInfo)
+                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
 
-                    ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
-                    object[] parameters = new object[paramInfo.Length];
-                    int paramNum = 0;
-                    foreach (ParameterInfo param in paramInfo)
-                        parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
-
-                    object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
-                    OSDMap response = new OSDMap();
-                    if (o == null)//void method
-                        response["Value"] = "null";
-                    else
-                        response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
-                    response["Success"] = true;
-                    return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                        object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
+                        OSDMap response = new OSDMap();
+                        if (o == null)//void method
+                            response["Value"] = "null";
+                        else
+                            response["Value"] = Util.MakeOSD(o, methodInfo.Method.ReturnType);
+                        response["Success"] = true;
+                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(response, true));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainConsole.Instance.WarnFormat("[ServerHandler]: Error occured for method {0}: {1}", method, ex.ToString());
                 }
             }
             else
                 MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
 
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)

@@ -534,7 +534,7 @@ namespace Aurora.Modules.Scripting
                     response.Close();
             }
 
-            Status = (int) OSHttpStatusCode.SuccessOk;
+            Status = (int)HttpStatusCode.OK;
             _finished = true;
         }
 

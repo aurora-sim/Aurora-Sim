@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
+using System.IO;
 using OpenMetaverse.StructuredData;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
@@ -43,7 +45,7 @@ namespace OpenSim.Services.CapsService
             m_service = service;
 
             m_service.AddStreamHandler("SimulatorFeatures",
-                                       new RestHTTPHandler("GET", m_service.CreateCAPS("SimulatorFeatures", ""),
+                                       new GenericStreamHandler("GET", m_service.CreateCAPS("SimulatorFeatures", ""),
                                                            SimulatorFeaturesCAP));
         }
 
@@ -58,7 +60,8 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        private Hashtable SimulatorFeaturesCAP(Hashtable mDhttpMethod)
+        private byte[] SimulatorFeaturesCAP(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap data = new OSDMap();
             data["MeshRezEnabled"] = true;
@@ -81,12 +84,7 @@ namespace OpenSim.Services.CapsService
             //data["DataUrls"] = m_service.Registry.RequestModuleInterface<IGridRegistrationService> ().GetUrlForRegisteringClient (m_service.AgentID + "|" + m_service.RegionHandle);
 
             //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(data);
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(data);
         }
     }
 }

@@ -94,7 +94,7 @@ namespace Aurora.Framework.Serialization
                 {
                     // In many cases the user will put in a plain old filename that cannot be found so assume that
                     // this is the problem rather than confusing the issue with a UriFormatException
-                    throw new Exception(String.Format("Cannot find file {0}", path));
+                    return null;
                 }
             }
         }

@@ -93,12 +93,10 @@ namespace Aurora.Modules
             m_remoteService.Post(request, RegionHandle);
         }
 
-        public OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle)
+        public void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response)
         {
-            OSDMap get = m_localService.Get(request, userID, RegionHandle);
-            if (get == null)
-                get = m_remoteService.Get(request, userID, RegionHandle);
-            return get;
+            m_localService.Get(request, userID, RegionHandle, response);
+            m_remoteService.Get(request, userID, RegionHandle, response);
         }
 
         #endregion

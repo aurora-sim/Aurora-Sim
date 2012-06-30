@@ -156,7 +156,6 @@ namespace Aurora.Services.DataService
             catch
             {
             }
-            GD.CloseDatabase();
             return rv;
         }
 

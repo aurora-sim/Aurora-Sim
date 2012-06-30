@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using System.Reflection;
 using Nini.Config;
 using OpenMetaverse;
@@ -219,23 +220,18 @@ namespace Aurora.Modules.Gods
             OSDMap retVal = new OSDMap();
             retVal["UntrustedSimulatorMessage"] = CapsUtil.CreateCAPS("UntrustedSimulatorMessage", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UntrustedSimulatorMessage"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["UntrustedSimulatorMessage"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return UntrustedSimulatorMessage(agentID, m_dhttpMethod);
+                                                          return UntrustedSimulatorMessage(agentID, request);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["UntrustedSimulatorMessage"],
-                                                        m_dhttpMethod =>
-                                                        UntrustedSimulatorMessage(agentID, m_dhttpMethod)));
-#endif
             return retVal;
         }
 
-        private Hashtable UntrustedSimulatorMessage(UUID AgentID, Hashtable mDhttpMethod)
+        private byte[] UntrustedSimulatorMessage(UUID AgentID, Stream request)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             if (rm["message"] == "GodKickUser")
             {
                 OSDArray innerArray = ((OSDArray) ((OSDMap) rm["body"])["UserInfo"]);
@@ -246,13 +242,7 @@ namespace Aurora.Modules.Gods
                 uint kickFlags = innerMap["KickFlags"].AsUInteger();
                 KickUser(AgentID, sessionID, toKick, kickFlags, reason);
             }
-            //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
+            return new byte[0];
         }
 
         /// <summary>

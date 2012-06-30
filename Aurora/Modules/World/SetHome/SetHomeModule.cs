@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
@@ -108,64 +109,33 @@ namespace Aurora.Modules.SetHome
             OSDMap retVal = new OSDMap();
             retVal["ServerReleaseNotes"] = CapsUtil.CreateCAPS("ServerReleaseNotes", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["ServerReleaseNotes"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return ProcessServerReleaseNotes(m_dhttpMethod, agentID);
+                                                          return ProcessServerReleaseNotes(agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ServerReleaseNotes"],
-                                                        m_dhttpMethod =>
-                                                        ProcessServerReleaseNotes(m_dhttpMethod, agentID)));
-#endif
 
             retVal["CopyInventoryFromNotecard"] = CapsUtil.CreateCAPS("CopyInventoryFromNotecard", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["CopyInventoryFromNotecard"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
+                                                          return CopyInventoryFromNotecard(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["CopyInventoryFromNotecard"],
-                                                        m_dhttpMethod =>
-                                                        CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
-#endif
-
-            // note: this seems to be pointed to the CopyInventoryFromNotecard function?? I looked but didn't find anything similar
-            retVal["ExportObject"] = CapsUtil.CreateCAPS("ExportObject", "");
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
-                                                      delegate(Hashtable m_dhttpMethod)
-                                                      {
-                                                          return CopyInventoryFromNotecard(m_dhttpMethod, agentID);
-                                                      }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["ExportObject"],
-                                                        m_dhttpMethod =>
-                                                        CopyInventoryFromNotecard(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable ProcessServerReleaseNotes(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] ProcessServerReleaseNotes(UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-
             OSDMap osd = new OSDMap {{"ServerReleaseNotes", new OSDString(Utilities.GetServerReleaseNotesURL())}};
-            string response = OSDParser.SerializeLLSDXmlString(osd);
-            responsedata["str_response_string"] = response;
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(osd);
         }
 
-        private Hashtable CopyInventoryFromNotecard(Hashtable mDhttpMethod, UUID agentID)
+        private byte[] CopyInventoryFromNotecard(Stream request, UUID agentID)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
             UUID FolderID = rm["folder-id"].AsUUID();
             UUID ItemID = rm["item-id"].AsUUID();
             UUID NotecardID = rm["notecard-id"].AsUUID();
@@ -219,28 +189,21 @@ namespace Aurora.Modules.SetHome
 #endif
                     if (found)
                     {
-                        InventoryItemBase item = null;
-                        ILLClientInventory inventoryModule = m_scene.RequestModuleInterface<ILLClientInventory>();
-                        if (inventoryModule != null)
-                            item = inventoryModule.GiveInventoryItem(agentID, lastOwnerID, ItemID, FolderID);
-
-                        IClientAPI client;
-                        m_scene.ClientManager.TryGetValue(agentID, out client);
-                        if (item != null)
-                            client.SendBulkUpdateInventory(item);
-                        else
-                            client.SendAlertMessage("Failed to retrieve item");
+                        m_scene.InventoryService.GiveInventoryItemAsync(agentID, lastOwnerID, ItemID, FolderID, false,
+                            (item) =>
+                        {
+                            IClientAPI client;
+                            m_scene.ClientManager.TryGetValue(agentID, out client);
+                            if (item != null)
+                                client.SendBulkUpdateInventory(item);
+                            else
+                                client.SendAlertMessage("Failed to retrieve item");
+                        });
                     }
                 }
             }
 
-            //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
+            return new byte[0];
         }
 
         /// <summary>

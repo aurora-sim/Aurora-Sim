@@ -65,7 +65,6 @@ namespace Aurora.Modules.Startup
             IMesher meshEngine = null;
             if (_MeshPlugins.ContainsKey(meshEngineName))
             {
-                MainConsole.Instance.Debug("[Physics]: Loading meshing engine: " + meshEngineName);
                 meshEngine = _MeshPlugins[meshEngineName].GetMesher(config);
             }
             else
@@ -77,7 +76,7 @@ namespace Aurora.Modules.Startup
             if (_PhysPlugins.ContainsKey(physEngineName))
             {
                 MainConsole.Instance.Debug("[Physics]: Loading physics engine: " + physEngineName);
-                PhysicsScene result = _PhysPlugins[physEngineName].GetScene(region.RegionName);
+                PhysicsScene result = _PhysPlugins[physEngineName].GetScene();
                 result.Initialise(meshEngine, region, registry);
                 result.PostInitialise(config);
                 return result;

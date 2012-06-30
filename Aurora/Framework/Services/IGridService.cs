@@ -53,9 +53,10 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="regionInfos"> </param>
         /// <param name="oldSessionID"></param>
+        /// <param name="password"> </param>
         /// <returns></returns>
         /// <exception cref="System.Exception">Thrown if region registration failed</exception>
-        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID);
+        RegisterRegion RegisterRegion(GridRegion regionInfos, UUID oldSessionID, string password);
 
         /// <summary>
         /// Deregister a region with the grid service.
@@ -185,14 +186,14 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
         /// </summary>
-        /// <param name="RegionID"></param>
-        void SetRegionUnsafe (UUID RegionID);
+        /// <param name="id"></param>
+        void SetRegionUnsafe (UUID id);
 
         /// <summary>
         /// The region (RegionID) has been determined to be safe, allow agents to log into it again
         /// </summary>
-        /// <param name="RegionID"></param>
-        void SetRegionSafe (UUID RegionID);
+        /// <param name="id"></param>
+        void SetRegionSafe (UUID id);
 
         /// <summary>
         /// Verify the given SessionID for the given region
@@ -216,6 +217,7 @@ namespace OpenSim.Services.Interfaces
         public UUID SessionID;
         public int RegionFlags = 0;
         public OSDMap Urls = new OSDMap();
+		public OSDMap RegionRemote;
 
         public override OSDMap ToOSD()
         {
@@ -225,6 +227,7 @@ namespace OpenSim.Services.Interfaces
             map["SessionID"] = SessionID;
             map["RegionFlags"] = RegionFlags;
             map["Urls"] = Urls;
+			map["RegionRemote"] = RegionRemote;
             return map;
         }
 
@@ -236,6 +239,7 @@ namespace OpenSim.Services.Interfaces
             SessionID = map["SessionID"];
             RegionFlags = map["RegionFlags"];
             Urls = (OSDMap)map["Urls"];
+			RegionRemote = (OSDMap)map["RegionRemote"];
         }
     }
 
@@ -659,6 +663,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="p"></param>
         void UpdateUrlsForClient(string SessionID);
+		OSDMap RegionRemoteHandlerURL(GridRegion regionInfo, UUID sessionID, UUID oldSessionID);
     }
 
     /// <summary>

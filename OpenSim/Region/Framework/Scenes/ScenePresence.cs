@@ -1220,7 +1220,7 @@ namespace OpenSim.Region.Framework.Scenes
                     actor.Flying = true;
                 else if (m_flyDisabled)
                     actor.Flying = false;
-                else
+                else if(actor.Flying != ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0))
                     actor.Flying = ((flags & AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
 
                 if (actor.Flying != oldflying)
@@ -1956,6 +1956,8 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 direc.Normalize();
+                if (!actor.Flying && direc.Z < 0.2f)
+                    direc.Z = 0;//Disable walking up into the air unless we are attempting to jump
                 actor.SetMovementForce(direc * 1.2f);
             }
         }
@@ -2672,7 +2674,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
                                                  new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
 
-            scene.AddPhysicsActorTaint(m_physicsActor);
             m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
             m_physicsActor.OnCollisionUpdate += PhysicsCollisionUpdate;

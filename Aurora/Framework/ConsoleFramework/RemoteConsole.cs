@@ -212,7 +212,7 @@ namespace Aurora.Framework
             string uri = "/ReadResponses/" + sessionID.ToString() + "/";
 
             m_Server.AddPollServiceHTTPHandler(uri, HandleHttpPoll,
-                                               new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents,
+                                               new PollServiceEventArgs(null, HasEvents, GetEvents, NoEvents, Valid,
                                                                         sessionID));
 
             XmlDocument xmldoc = new XmlDocument();
@@ -240,6 +240,11 @@ namespace Aurora.Framework
             reply["content_type"] = "text/xml";
 
             return reply;
+        }
+
+        private bool Valid()
+        {
+            return true;
         }
 
         private Hashtable HandleHttpPoll(Hashtable request)

@@ -182,30 +182,29 @@ namespace Aurora.Modules.Inventory
                                           "into agent {1}'s inventory",
                                           folderID, im.toAgentID);
 
-                        InventoryFolderBase folder = null;
-                        ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                        if (inventoryModule != null)
-                            folder = inventoryModule.GiveInventoryFolder(receipientID, client.AgentId, folderID,
-                                                                             UUID.Zero);
+                        scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
+                            folderID, UUID.Zero, (folder) =>
+                            {
 
-                        if (folder == null)
-                        {
-                            client.SendAgentAlertMessage("Can't find folder to give. Nothing given.", false);
-                            return;
-                        }
+                                if (folder == null)
+                                {
+                                    client.SendAgentAlertMessage("Can't find folder to give. Nothing given.", false);
+                                    return;
+                                }
 
-                        // The outgoing binary bucket should contain only the byte which signals an asset folder is
-                        // being copied and the following bytes for the copied folder's UUID
-                        copyID = folder.ID;
-                        byte[] copyIDBytes = copyID.GetBytes();
-                        im.binaryBucket = new byte[1 + copyIDBytes.Length];
-                        im.binaryBucket[0] = (byte) AssetType.Folder;
-                        Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
+                                // The outgoing binary bucket should contain only the byte which signals an asset folder is
+                                // being copied and the following bytes for the copied folder's UUID
+                                copyID = folder.ID;
+                                byte[] copyIDBytes = copyID.GetBytes();
+                                im.binaryBucket = new byte[1 + copyIDBytes.Length];
+                                im.binaryBucket[0] = (byte)AssetType.Folder;
+                                Array.Copy(copyIDBytes, 0, im.binaryBucket, 1, copyIDBytes.Length);
 
-                        if (user != null)
-                            user.ControllingClient.SendBulkUpdateInventory(folder);
+                                if (user != null)
+                                    user.ControllingClient.SendBulkUpdateInventory(folder);
 
-                        im.imSessionID = folderID;
+                                im.imSessionID = folderID;
+                            });
                     }
                     else
                     {
@@ -218,28 +217,26 @@ namespace Aurora.Modules.Inventory
                                           "into agent {1}'s inventory",
                                           itemID, im.toAgentID);
 
-                        InventoryItemBase itemCopy = null;
-                        ILLClientInventory inventoryModule = scene.RequestModuleInterface<ILLClientInventory>();
-                        if (inventoryModule != null)
-                            itemCopy = inventoryModule.GiveInventoryItem(
+                        scene.InventoryService.GiveInventoryItemAsync(
                                 im.toAgentID,
-                                im.fromAgentID, itemID, UUID.Zero);
-
-                        if (itemCopy == null)
+                                im.fromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
                         {
-                            client.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
-                            return;
-                        }
+                            if (itemCopy == null)
+                            {
+                                client.SendAgentAlertMessage("Can't find item to give. Nothing given.", false);
+                                return;
+                            }
 
-                        copyID = itemCopy.ID;
-                        Array.Copy(copyID.GetBytes(), 0, im.binaryBucket, 1, 16);
+                            copyID = itemCopy.ID;
+                            Array.Copy(copyID.GetBytes(), 0, im.binaryBucket, 1, 16);
 
-                        if (user != null)
-                        {
-                            user.ControllingClient.SendBulkUpdateInventory(itemCopy);
-                        }
+                            if (user != null)
+                            {
+                                user.ControllingClient.SendBulkUpdateInventory(itemCopy);
+                            }
 
-                        im.imSessionID = itemID;
+                            im.imSessionID = itemID;
+                        });
                     }
 
                     user.ControllingClient.SendInstantMessage(im);

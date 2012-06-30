@@ -9,13 +9,13 @@ rem ## Default Visual Studio choice (2008, 2010)
 set vstudio=2010
 
 rem ## Default .NET Framework (3_5, 4_0 (Unsupported on VS2008))
-set framework=3_5
+set framework=4_0
 
 rem ## Default architecture (86 (for 32bit), 64, AnyCPU)
 set bits=AnyCPU
 
-rem ## Whether or not to add the .net4 flag
-set net4=
+rem ## Whether or not to add the .net3.5 flag
+set conditionals=
 
 rem ## Default "configuration" choice ((r)elease, (d)ebug)
 set configuration=r
@@ -52,7 +52,6 @@ goto framework
 
     :frameworkcheck
     if %vstudio%==2008 goto frameworkerror
-	echo WARNING: .net4 may cause script errors!
     goto bits
 
     :frameworkerror
@@ -88,14 +87,16 @@ if exist Compile.*.bat (
     del Compile.*.bat
 )
 
+if %framework%==3_5 set conditionals=NET_3_5
+if %framework%==4_0 set conditionals=NET_4_0
+
 echo Calling Prebuild for target %vstudio% with framework %framework%...
-bin\Prebuild.exe /target vs%vstudio% /targetframework v%framework%
+bin\Prebuild.exe /target vs%vstudio% /targetframework v%framework% /conditionals ISWIN;%conditionals%
 
 echo.
 echo Creating compile batch file for your convinence...
 if %framework%==3_5 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild
 if %framework%==4_0 set fpath=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild
-if %framework%==4_0 set net4=;NET4
 if %bits%==x64 set args=/p:Platform=x64
 if %bits%==x86 set args=/p:Platform=x86
 if %configuration%==r  (
@@ -110,7 +111,7 @@ if %configuration%==release set cfg=/p:Configuration=Release
 if %configuration%==debug set cfg=/p:Configuration=Debug
 set filename=Compile.VS%vstudio%.net%framework%.%bits%.%configuration%.bat
 
-echo %fpath% Aurora.sln %args% %cfg% > %filename% /p:DefineConstants="ISWIN%net4%"
+echo %fpath% Aurora.sln %args% %cfg% > %filename% /p:DefineConstants="ISWIN;%conditionals%"
 
 echo.
 set /p compile_at_end="Done, %filename% created. Compile now? (y,n) [%compile_at_end%]"

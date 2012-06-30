@@ -65,7 +65,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 string path = Path.Combine(s, assemblyName) + ".dll";
 
                 if (File.Exists(path))
-                    return Assembly.LoadFrom(path);
+                    return Assembly.Load(AssemblyName.GetAssemblyName(path));
             }
             return null;
         }

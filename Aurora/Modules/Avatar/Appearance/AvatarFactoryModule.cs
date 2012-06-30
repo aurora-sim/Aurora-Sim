@@ -656,7 +656,7 @@ textures 1
                         }
                         item.CreatorId = UUID.Zero.ToString();
                         item.AssetID = m_underPantsUUID;
-                        m_scene.InventoryService.AddItem(item);
+                        m_scene.InventoryService.AddItemAsync(item, null);
                         client.SendInventoryItemCreateUpdate(item, 0);
                         wear.ItemID = item.ID;
                     }
@@ -712,7 +712,7 @@ textures 1
                         }
                         item.CreatorId = UUID.Zero.ToString();
                         item.AssetID = m_underShirtUUID;
-                        m_scene.InventoryService.AddItem(item);
+                        m_scene.InventoryService.AddItemAsync(item, null);
                         client.SendInventoryItemCreateUpdate(item, 0);
                         wear.ItemID = item.ID;
                     }

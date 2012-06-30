@@ -896,9 +896,6 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual ISceneEntity AddNewPrim(
             UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape)
         {
-            //MainConsole.Instance.DebugFormat(
-            //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
-
             SceneObjectGroup sceneObject = new SceneObjectGroup (ownerID, pos, rot, shape, m_DefaultObjectName, m_parentScene);
 
             // If an entity creator has been registered for this prim type then use that
@@ -957,8 +954,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (target2.ParentEntity != null)
                 {
                     pos = target2.AbsolutePosition;
-                    //MainConsole.Instance.Info("[OBJECTREZ]: TargetPos: " + pos.ToString() + ", RayStart: " + RayStart.ToString() + ", RayEnd: " + RayEnd.ToString() + ", Volume: " + Util.GetDistanceTo(RayStart,RayEnd).ToString() + ", mag1: " + Util.GetMagnitude(RayStart).ToString() + ", mag2: " + Util.GetMagnitude(RayEnd).ToString());
-                    //MainConsole.Instance.Info("[OBJECTREZ]: AXOrigin: " + AXOrigin.ToString() + "AXdirection: " + AXdirection.ToString());
                     // TODO: Raytrace better here
 
                     //EntityIntersection ei = m_sceneGraph.GetClosestIntersectingPrim(new Ray(AXOrigin, AXdirection), false, false);

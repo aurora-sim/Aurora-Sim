@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -136,7 +137,7 @@ namespace Aurora.Modules.Archivers
             try
             {
                 LoadAssets(assetsMap);
-                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, out items);
+                appearance = CopyWearablesAndAttachments(account.PrincipalID, UUID.Zero, appearance, folderForAppearance, account.PrincipalID, out items);
             }
             catch (Exception ex)
             {
@@ -151,11 +152,12 @@ namespace Aurora.Modules.Archivers
             return appearance;
         }
 
-        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, out List<InventoryItemBase> items)
+        private AvatarAppearance CopyWearablesAndAttachments(UUID destination, UUID source, AvatarAppearance avatarAppearance, InventoryFolderBase destinationFolder, UUID agentid, out List<InventoryItemBase> items)
         {
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
-
+            IAssetService m_AssetService;
+            m_AssetService = m_registry.RequestModuleInterface<IAssetService>().InnerService;
             items = new List<InventoryItemBase>();
 
             // Wearables
@@ -174,31 +176,11 @@ namespace Aurora.Modules.Archivers
 
                         if (item != null)
                         {
-                            InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
-                                                                    {
-                                                                        Name = item.Name,
-                                                                        Description = item.Description,
-                                                                        InvType = item.InvType,
-                                                                        CreatorId = item.CreatorId,
-                                                                        CreatorData = item.CreatorData,
-                                                                        CreatorIdAsUuid = item.CreatorIdAsUuid,
-                                                                        NextPermissions = item.NextPermissions,
-                                                                        CurrentPermissions = item.CurrentPermissions,
-                                                                        BasePermissions = item.BasePermissions,
-                                                                        EveryOnePermissions = item.EveryOnePermissions,
-                                                                        GroupPermissions = item.GroupPermissions,
-                                                                        AssetType = item.AssetType,
-                                                                        AssetID = item.AssetID,
-                                                                        GroupID = item.GroupID,
-                                                                        GroupOwned = item.GroupOwned,
-                                                                        SalePrice = item.SalePrice,
-                                                                        SaleType = item.SaleType,
-                                                                        Flags = item.Flags,
-                                                                        CreationDate = item.CreationDate,
-                                                                        Folder = destinationFolder.ID
-                                                                    };
-                            if (InventoryService != null)
-                                InventoryService.AddItem(destinationItem);
+
+                            InventoryItemBase destinationItem = InventoryService.InnerGiveInventoryItem(destination,
+                                                                                                    destination, item,
+                                                                                                    destinationFolder.ID,
+                                                                                                    false);
                             items.Add(destinationItem);
                             MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}",
                                                              destinationItem.ID, destinationFolder.ID);
@@ -233,31 +215,10 @@ namespace Aurora.Modules.Archivers
 
                     if (item != null)
                     {
-                        InventoryItemBase destinationItem = new InventoryItemBase(UUID.Random(), destination)
-                        {
-                            Name = item.Name,
-                            Description = item.Description,
-                            InvType = item.InvType,
-                            CreatorId = item.CreatorId,
-                            CreatorData = item.CreatorData,
-                            CreatorIdAsUuid = item.CreatorIdAsUuid,
-                            NextPermissions = item.NextPermissions,
-                            CurrentPermissions = item.CurrentPermissions,
-                            BasePermissions = item.BasePermissions,
-                            EveryOnePermissions = item.EveryOnePermissions,
-                            GroupPermissions = item.GroupPermissions,
-                            AssetType = item.AssetType,
-                            AssetID = item.AssetID,
-                            GroupID = item.GroupID,
-                            GroupOwned = item.GroupOwned,
-                            SalePrice = item.SalePrice,
-                            SaleType = item.SaleType,
-                            Flags = item.Flags,
-                            CreationDate = item.CreationDate,
-                            Folder = destinationFolder.ID
-                        };
-                        if (InventoryService != null)
-                            InventoryService.AddItem(destinationItem);
+                        InventoryItemBase destinationItem = InventoryService.InnerGiveInventoryItem(destination,
+                                                                                                    destination, item,
+                                                                                                    destinationFolder.ID,
+                                                                                                    false);
                         items.Add(destinationItem);
                         MainConsole.Instance.DebugFormat("[RADMIN]: Added item {0} to folder {1}", destinationItem.ID, destinationFolder.ID);
 

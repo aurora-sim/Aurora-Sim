@@ -57,15 +57,5 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="agent"></param>
         void CacheAgent(IAgentInfo agent);
-
-        /// <summary>
-        ///   Checks whether the mac address and viewer are allowed to connect to this grid.
-        ///   Note: we only allow for this on the grid side
-        /// </summary>
-        /// <param name = "Mac"></param>
-        /// <param name = "viewer"></param>
-        /// <param name = "reason">The reason (if any) the user is blocked</param>
-        /// <returns></returns>
-        bool CheckMacAndViewer(string Mac, string viewer, out string reason);
     }
 }

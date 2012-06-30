@@ -191,14 +191,14 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             ResetTimer(15000);
             if (lastNotFound.Contains(uuid.ToString())) return null;
             string databaseTable = "auroraassets_" + uuid.ToString().Substring(0, 1);
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             AssetBase asset = null;
             try
             {
                 // get the asset
                 dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
                                     "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
-                asset = LoadAssetFromDR(dr);
+                asset = LoadAssetFromDR(dr.DataReader);
 
                 if ((asset == null) && (needsConversion))
                 {
@@ -217,7 +217,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                     databaseTable = "auroraassets_old";
                     dr = m_Gd.QueryData("WHERE id = '" + uuid + "' LIMIT 1", databaseTable,
                                         "id, hash_code, parent_id, creator_id, name, description, asset_type, create_time, access_time, asset_flags, host_uri");
-                    asset = LoadAssetFromDR(dr);
+                    asset = LoadAssetFromDR(dr.DataReader);
                     if (asset != null)
                     {
                         bool results = false;
@@ -254,7 +254,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             finally
             {
-                if (dr != null) dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             return asset;
         }
@@ -889,7 +889,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
         private AssetBase Convert2BH(UUID uuid)
         {
             AssetBase asset = null;
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             try
             {
                 if (m_convertingAssets.TryGetValue(uuid, out asset))
@@ -898,32 +898,30 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
                                                 "id, name, description, assetType, local, temporary, asset_flags, CreatorID, create_time, data");
                 if (dr != null)
                 {
-                    while (dr != null && dr.Read())
+                    while (dr != null && dr.DataReader.Read())
                     {
                         asset = new AssetBase()
                         {
-                            ID = UUID.Parse(dr["id"].ToString()),
-                            Name = dr["name"].ToString(),
-                            TypeAsset = (AssetType)int.Parse(dr["assetType"].ToString()),
-                            CreatorID = UUID.Parse(dr["CreatorID"].ToString()),
-                            Flags = (AssetFlags)int.Parse(dr["asset_flags"].ToString()),
-                            Data = (Byte[])dr["data"],
-                            Description = dr["description"].ToString(),
-                            CreationDate = UnixTimeStampToDateTime(int.Parse(dr["create_time"].ToString())),
+                            ID = UUID.Parse(dr.DataReader["id"].ToString()),
+                            Name = dr.DataReader["name"].ToString(),
+                            TypeAsset = (AssetType)int.Parse(dr.DataReader["assetType"].ToString()),
+                            CreatorID = UUID.Parse(dr.DataReader["CreatorID"].ToString()),
+                            Flags = (AssetFlags)int.Parse(dr.DataReader["asset_flags"].ToString()),
+                            Data = (Byte[])dr.DataReader["data"],
+                            Description = dr.DataReader["description"].ToString(),
+                            CreationDate = UnixTimeStampToDateTime(int.Parse(dr.DataReader["create_time"].ToString())),
                             LastAccessed = DateTime.Now,
-                            DatabaseTable = "auroraassets_" + dr["id"].ToString().Substring(0, 1),
+                            DatabaseTable = "auroraassets_" + dr.DataReader["id"].ToString().Substring(0, 1),
                             MetaOnly = false,
-                            ParentID = UUID.Parse(dr["id"].ToString())
+                            ParentID = UUID.Parse(dr.DataReader["id"].ToString())
                         };
 
                         // set the flags
-                        if (dr["local"].ToString().Equals("1") ||
-                            dr["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
+                        if (dr.DataReader["local"].ToString().Equals("1") ||
+                            dr.DataReader["local"].ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase))
                             asset.Flags |= AssetFlags.Local;
-                        if (bool.Parse(dr["temporary"].ToString()))
+                        if (bool.Parse(dr.DataReader["temporary"].ToString()))
                             asset.Flags |= AssetFlags.Temporary;
-                        dr.Close();
-                        dr = null;
                         m_convertingAssets[uuid] = asset;
 
                         ResetTimer(1000); //Fire the timer in 1s to finish conversion
@@ -1061,7 +1059,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Asset
             }
             finally
             {
-                if (dr != null) dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             return asset;
         }

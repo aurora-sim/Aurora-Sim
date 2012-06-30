@@ -15,6 +15,7 @@ namespace Aurora.Framework
         private ISceneManager _sceneManager;
         private IRegionInfoConnector _regionInfoConnector;
         private string _url = "";
+        private bool m_enabled = false;
 
         public RegionManagement() { }
         public RegionManagement(string url, string password)
@@ -39,6 +40,7 @@ namespace Aurora.Framework
                 string password = config.GetString("RemoteAccessPassword", "");
                 if (password != "")
                 {
+                    m_enabled = true;
                     Init(m_registry, Name, password);
                     SetDoRemoteCalls(false);
                 }
@@ -61,6 +63,7 @@ namespace Aurora.Framework
 
         public void PostStart()
         {
+            if (!m_enabled) return;
             IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
             server.AddStreamHandler(new ServerHandler("/regionmanagement", "", m_registry));
         }
@@ -366,7 +369,7 @@ namespace Aurora.Framework
             if (conn != null)
             {
                 EstateSettings es = conn.GetEstateSettings(regionID);
-                if (es == null)
+                if (es == null || es.EstateID == 0)
                     return "";
                 else
                     return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, es.EstateOwner).Name;

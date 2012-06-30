@@ -42,10 +42,10 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             return true;
         }
 
-        public PhysicsScene GetScene(String sceneIdentifier)
+        public PhysicsScene GetScene()
         {
             if (_mScene == null)
-                _mScene = new BSScene(sceneIdentifier);
+                _mScene = new BSScene();
             return (_mScene);
         }
 

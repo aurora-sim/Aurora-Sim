@@ -28,8 +28,8 @@ namespace OpenSim.Services.CapsService.CAPModules
         /// <param name="agentID"></param>
         /// <param name="caps"></param>
         /// <returns></returns>
-        public string ViewerStatsReport(string request, string path, string param,
-                                                                OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] ViewerStatsReport(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
         {
             IUserStatsDataConnector dataConnector = Aurora.DataManager.DataManager.RequestPlugin<IUserStatsDataConnector>();
 
@@ -37,13 +37,13 @@ namespace OpenSim.Services.CapsService.CAPModules
             vsm.Deserialize((OSDMap)OSDParser.DeserializeLLSDXml(request));
             dataConnector.UpdateUserStats(vsm, m_service.AgentID, m_service.Region.RegionID);
 
-            return String.Empty;
+            return MainServer.BlankResponse;
         }
 
         public void RegisterCaps(IRegionClientCapsService service)
         {
             m_service = service;
-            service.AddStreamHandler("ViewerStats", new RestStreamHandler("POST", service.CreateCAPS("ViewerStats", ""), ViewerStatsReport));
+            service.AddStreamHandler("ViewerStats", new GenericStreamHandler("POST", service.CreateCAPS("ViewerStats", ""), ViewerStatsReport));
         }
 
         public void DeregisterCaps()

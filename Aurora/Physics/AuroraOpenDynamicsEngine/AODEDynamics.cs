@@ -667,7 +667,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Terrain checks
 
-            bool underground = false;
             Vector3 rotatedSize = parent.Size * parent.Orientation;
             float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
             if (pos.Z < terrainHeight - 5)
@@ -676,13 +675,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_lastPositionVector = pos;
                     //Make sure that we don't have an explosion the next frame with the posChange
                 d.BodySetPosition(Body, pos.X, pos.Y, pos.Z);
-                underground = true;
             }
             else if (pos.Z < terrainHeight)
-            {
                 m_newVelocity.Z += 1;
-                underground = true;
-            }
 
             #endregion
 

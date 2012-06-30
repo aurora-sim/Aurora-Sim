@@ -196,9 +196,9 @@ namespace Aurora.Modules.ActivityDetectors
                 if (syncPoster != null)
                     syncPoster.Post(SyncMessageHelper.SendChildAgentUpdate(agentpos, sp.Scene.RegionInfo.RegionHandle),
                                     sp.Scene.RegionInfo.RegionHandle);
-                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Get(
+                client.Scene.RequestModuleInterface<ISyncMessagePosterService>().Post(
                     SyncMessageHelper.AgentLoggedOut(client.AgentId, client.Scene.RegionInfo.RegionHandle),
-                    client.AgentId, client.Scene.RegionInfo.RegionHandle);
+                    client.Scene.RegionInfo.RegionHandle);
             }
         }
     }

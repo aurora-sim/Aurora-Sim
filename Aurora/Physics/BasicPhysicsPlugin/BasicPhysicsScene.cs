@@ -34,15 +34,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
     public class BasicScene : PhysicsScene
     {
-        private readonly List<PhysicsActor> _actors = new List<PhysicsActor>();
+        private readonly List<PhysicsCharacter> _actors = new List<PhysicsCharacter>();
         private short[] _heightMap;
         private RegionInfo m_region;
 
-        //protected internal string sceneIdentifier;
-
-        public BasicScene(string _sceneIdentifier)
+        public BasicScene()
         {
-            //sceneIdentifier = _sceneIdentifier;
         }
 
         public override bool DisableCollisions
@@ -106,13 +103,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             return null;
         }
 
-        public override void AddPhysicsActorTaint(PhysicsActor prim)
-        {
-        }
-
         public override void Simulate(float timeStep)
         {
-            foreach (PhysicsActor actor in _actors)
+            foreach (PhysicsCharacter actor in _actors)
             {
                 Vector3 actorPosition = actor.Position;
                 Vector3 actorVelocity = actor.Velocity;

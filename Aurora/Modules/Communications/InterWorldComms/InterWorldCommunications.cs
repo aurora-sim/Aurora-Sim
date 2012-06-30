@@ -327,9 +327,10 @@ namespace Aurora.Modules
                 callThem["OurIdentifier"] = Utilities.GetAddress();
 
                 callThem["Method"] = "ConnectionRequest";
-                OSDMap result = WebUtils.PostToService(host, callThem, true, false, true);
-                if (result["Success"])
+                string resultStr = WebUtils.PostToService(host, callThem);
+                if (resultStr != "")
                 {
+                    OSDMap result = OSDParser.DeserializeJson(resultStr) as OSDMap;
                     //Add their URLs back again
                     MainConsole.Instance.Warn("Successfully Connected to " + host);
                     IWC.AddNewConnectionFromRequest(result["OurIdentifier"], result);
@@ -346,17 +347,14 @@ namespace Aurora.Modules
             urls["RegionHandle"] = regionHandle;
 
             urls["Method"] = "NewURLs";
-            OSDMap result = WebUtils.PostToService(url, urls, true, false, true);
-            if (result["Success"])
-                return true;
-            return false;
+            return WebUtils.PostToService(url, urls) != "";
         }
     }
 
     /// <summary>
     ///   This class deals with incoming requests (secure and insecure) from other hosts
     /// </summary>
-    public class IWCIncomingConnections : BaseStreamHandler
+    public class IWCIncomingConnections : BaseRequestHandler
     {
         private readonly InterWorldCommunications IWC;
 
@@ -401,7 +399,7 @@ namespace Aurora.Modules
             string ident = userID + "|" + regionhandle;
             IWC.AddNewConnectionFromRequest(userID.ToString(), args);
             OSDMap result = new OSDMap();
-            result["Success"] = true;
+            result["success"] = true;
             string json = OSDParser.SerializeJsonString(result);
             UTF8Encoding enc = new UTF8Encoding();
             return enc.GetBytes(json);
@@ -420,7 +418,7 @@ namespace Aurora.Modules
                 {
                     //Fu**in hackers
                     //No making region handle sessionIDs!
-                    result["Success"] = false;
+                    result["success"] = false;
                 }
                 else
                 {
@@ -431,7 +429,7 @@ namespace Aurora.Modules
                     result["OurIdentifier"] = Utilities.GetAddress();
                     MainConsole.Instance.Warn(theirIdent + " successfully connected to us");
                     IWC.AddNewConnectionFromRequest(theirIdent, args);
-                    result["Success"] = true;
+                    result["success"] = true;
                 }
             }
 

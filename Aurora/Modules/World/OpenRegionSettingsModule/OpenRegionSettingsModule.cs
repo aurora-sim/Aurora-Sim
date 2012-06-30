@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -303,36 +304,22 @@ namespace Aurora.Modules.OpenRegionSettingsModule
             retVal["DispatchOpenRegionSettings"] = CapsUtil.CreateCAPS("DispatchOpenRegionSettings", "");
 
             //Sets the OpenRegionSettings
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchOpenRegionSettings"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["DispatchOpenRegionSettings"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return DispatchOpenRegionSettings(m_dhttpMethod, agentID);
+                                                          return DispatchOpenRegionSettings(request, agentID);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["DispatchOpenRegionSettings"],
-                                                        m_dhttpMethod =>
-                                                        DispatchOpenRegionSettings(m_dhttpMethod, agentID)));
-#endif
             return retVal;
         }
 
-        private Hashtable DispatchOpenRegionSettings(Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] DispatchOpenRegionSettings(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
             IScenePresence SP = m_scene.GetScenePresence(agentID);
-            if (SP == null)
-                return responsedata; //They don't exist
+            if (SP == null || !SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
+                return new byte[0];
 
-            if (!SP.Scene.Permissions.CanIssueEstateCommand(SP.UUID, false))
-                return responsedata; // No permissions
-
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) m_dhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             m_settings.DefaultDrawDistance = rm["draw_distance"].AsInteger();
             m_settings.ForceDrawDistance = rm["force_draw_distance"].AsBoolean();
@@ -360,14 +347,12 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
             //Update the database
             if (connector != null)
-            {
                 connector.SetSettings(m_scene.RegionInfo.RegionID, m_settings);
-            }
 
             //Update all clients about changes
             SendToAllClients();
 
-            return responsedata;
+            return new byte[0];
         }
 
         #endregion

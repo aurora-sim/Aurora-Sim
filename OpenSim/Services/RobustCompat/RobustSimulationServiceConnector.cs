@@ -33,7 +33,7 @@ using OpenSim.Services.Connectors.Simulation;
 using OpenSim.Services.Interfaces;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustSimulationServicesConnector : SimulationServiceConnector
     {

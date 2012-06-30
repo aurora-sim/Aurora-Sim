@@ -122,7 +122,7 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    RegionManager.StartSynchronously(true, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                    RegionManager.StartSynchronously(false, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
                 }
             }
             catch
@@ -131,6 +131,30 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 RegionLoaderFileSystem system = new RegionLoaderFileSystem ();
                 system.Initialise (m_configSource, m_openSim);
                 system.AddRegion (new string[0]);
+            }
+        }
+
+        public void CreateRegion()
+        {
+            try
+            {
+                if (m_noGUI)
+                {
+                    RegionLoaderFileSystem system = new RegionLoaderFileSystem();
+                    system.Initialise(m_configSource, m_openSim);
+                    system.AddRegion(new string[0]);
+                }
+                else
+                {
+                    RegionManager.StartSynchronously(true, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                }
+            }
+            catch
+            {
+                //Probably no winforms
+                RegionLoaderFileSystem system = new RegionLoaderFileSystem();
+                system.Initialise(m_configSource, m_openSim);
+                system.AddRegion(new string[0]);
             }
         }
 

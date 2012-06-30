@@ -22,7 +22,6 @@ echo.
 echo You have the following choices:
 echo	- aurora: Launches Aurora
 echo	- server: Launches Aurora Grid services
-echo	- config: Launches the configurator to configure Aurora
 echo	- quit: Quits
 echo.
 
@@ -34,10 +33,6 @@ if %choice%==aurora (
 )
 if %choice%==server (
 	set app="Aurora.Server.exe"
-	goto launchcycle
-)
-if %choice%==config (
-	set app="Aurora.Configurator.exe"
 	goto launchcycle
 )
 if %choice%==quit goto eof

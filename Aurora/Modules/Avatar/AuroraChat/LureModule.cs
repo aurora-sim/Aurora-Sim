@@ -137,11 +137,12 @@ namespace Aurora.Modules.Chat
 		public void OnStartLure(byte lureType, string message, UUID targetid, IClientAPI client)
 		{
             IScenePresence presence = client.Scene.GetScenePresence (client.AgentId);
+            Vector3 position = presence.AbsolutePosition + new Vector3(2, 0, 0) * presence.Rotation;
             UUID dest = Util.BuildFakeParcelID(
                 client.Scene.RegionInfo.RegionHandle,
-				(uint)presence.AbsolutePosition.X,
-				(uint)presence.AbsolutePosition.Y,
-                (uint)presence.AbsolutePosition.Z);
+                (uint)position.X,
+                (uint)position.Y,
+                (uint)position.Z);
 
             string mainGridURL = GetMainGridURL ();
             message += "@" + mainGridURL;//Add it to the message

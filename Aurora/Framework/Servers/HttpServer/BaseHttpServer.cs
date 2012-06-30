@@ -35,35 +35,41 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Xml;
-using HttpServer;
 using Nwc.XmlRpc;
 using OpenMetaverse.StructuredData;
-using HttpListener = HttpServer.HttpListener;
-using LogPrio = HttpServer.LogPrio;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+using Griffin.Networking;
+using Griffin.Networking.Buffers;
+using Griffin.Networking.Http.Handlers;
+using Griffin.Networking.Http.Implementation;
+using Griffin.Networking.Http.Messages;
+using Griffin.Networking.Http.Protocol;
+using Griffin.Networking.Http.Services;
+using Griffin.Networking.Http.Services.Authentication;
+using Griffin.Networking.Http.Services.BodyDecoders;
+using Griffin.Networking.Http.Services.Errors;
+using Griffin.Networking.Logging;
+using Griffin.Networking.Messages;
+using Griffin.Networking.Pipelines;
+using HttpListener = Griffin.Networking.Http.HttpListener;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
     public class BaseHttpServer : IHttpServer
     {
-        private readonly HttpServerLogWriter httpserverlog = new HttpServerLogWriter();
-
-        private volatile int NotSocketErrors = 0;
-        
         public volatile bool HTTPDRunning = false;
 
-        protected HttpListener m_httpListener;
+        protected HttpListener _httpListener;
         protected Dictionary<string, XmlRpcMethod> m_rpcHandlers = new Dictionary<string, XmlRpcMethod>();
         protected Dictionary<string, bool> m_rpcHandlersKeepAlive = new Dictionary<string, bool>();
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
-        protected Dictionary<string, IRequestHandler> m_streamHandlers = new Dictionary<string, IRequestHandler>();
+        protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers = new Dictionary<string, IStreamedRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
         protected X509Certificate2 m_cert;
         protected SslProtocols m_sslProtocol = SslProtocols.None;
 
-        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers =
-            new Dictionary<string, PollServiceEventArgs>();
+        protected Dictionary<string, PollServiceEventArgs> m_pollHandlers = new Dictionary<string, PollServiceEventArgs>();
 
         protected bool m_isSecure;
         protected uint m_port;
@@ -71,7 +77,15 @@ namespace Aurora.Framework.Servers.HttpServer
 
         protected IPAddress m_listenIPAddress = IPAddress.Any;
 
+        internal PollServiceRequestManager PollServiceManager { get { return m_PollServiceManager; } }
+
         private PollServiceRequestManager m_PollServiceManager;
+
+        public MessageHandler MessageHandler
+        {
+            get;
+            private set;
+        }
 
         public uint Port
         {
@@ -138,7 +152,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
         /// <param name="handler"></param>
-        public void AddStreamHandler(IRequestHandler handler)
+        public void AddStreamHandler(IStreamedRequestHandler handler)
         {
             string httpMethod = handler.HttpMethod;
             string path = handler.Path;
@@ -154,10 +168,12 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        private static string GetHandlerKey(string httpMethod, string path)
+        internal static string GetHandlerKey(string httpMethod, string path)
         {
             return httpMethod + ":" + path;
         }
+
+        #region Add Handlers
 
         public bool AddXmlRPCHandler(string method, XmlRpcMethod handler)
         {
@@ -173,18 +189,6 @@ namespace Aurora.Framework.Servers.HttpServer
             }
 
             return true;
-        }
-
-        public XmlRpcMethod GetXmlRPCHandler(string method)
-        {
-            lock (m_rpcHandlers)
-            {
-                if (m_rpcHandlers.ContainsKey(method))
-                {
-                    return m_rpcHandlers[method];
-                }
-                return null;
-            }
         }
 
         public bool AddHTTPHandler(string methodName, GenericHTTPMethod handler)
@@ -235,402 +239,47 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
-        private void OnRequest(object source, RequestEventArgs args)
-        {
-            try
-            {
-                IHttpClientContext context = (IHttpClientContext)source;
-                IHttpRequest request = args.Request;
+        #endregion
 
-                PollServiceEventArgs psEvArgs;
-
-                if (TryGetPollServiceHTTPHandler(request.UriPath, out psEvArgs))
-                {
-                    PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
-
-                    if (psEvArgs.Request != null)
-                    {
-                        OSHttpRequest req = new OSHttpRequest(context, request);
-
-                        Stream requestStream = req.InputStream;
-
-                        Encoding encoding = Encoding.UTF8;
-                        StreamReader reader = new StreamReader(requestStream, encoding);
-
-                        string requestBody = reader.ReadToEnd();
-
-                        Hashtable keysvals = new Hashtable();
-                        Hashtable headervals = new Hashtable();
-
-                        string[] querystringkeys = req.QueryString.AllKeys;
-                        string[] rHeaders = req.Headers.AllKeys;
-
-                        keysvals.Add("body", requestBody);
-                        keysvals.Add("uri", req.RawUrl);
-                        keysvals.Add("content-type", req.ContentType);
-                        keysvals.Add("http-method", req.HttpMethod);
-
-                        foreach (string queryname in querystringkeys)
-                        {
-                            keysvals.Add(queryname, req.QueryString[queryname]);
-                        }
-
-                        foreach (string headername in rHeaders)
-                        {
-                            headervals[headername] = req.Headers[headername];
-                        }
-
-                        keysvals.Add("headers", headervals);
-                        keysvals.Add("querystringkeys", querystringkeys);
-
-                        psEvArgs.Request(psreq.RequestID, keysvals);
-                    }
-
-                    m_PollServiceManager.Enqueue(psreq);
-                }
-                else
-                {
-                    OnHandleRequestIOThread(context, request);
-                }
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: OnRequest() failed with {0}{1}", e, e.StackTrace);
-            }
-        }
-
-        public void OnHandleRequestIOThread(IHttpClientContext context, IHttpRequest request)
-        {
-            OSHttpRequest req = new OSHttpRequest(context, request);
-            OSHttpResponse resp = new OSHttpResponse(new HttpResponse(context, request), context);
-            HandleRequest(req, resp);
-
-            // !!!HACK ALERT!!!
-            // There seems to be a bug in the underlying http code that makes subsequent requests
-            // come up with trash in Accept headers. Until that gets fixed, we're cleaning them up here.
-            if (request.AcceptTypes != null)
-                for (int i = 0; i < request.AcceptTypes.Length; i++)
-                    request.AcceptTypes[i] = string.Empty;
-        }
-
-        // public void ConvertIHttpClientContextToOSHttp(object stateinfo)
-        // {
-        //     HttpServerContextObj objstate = (HttpServerContextObj)stateinfo;
-
-        //     OSHttpRequest request = objstate.oreq;
-        //     OSHttpResponse resp = objstate.oresp;
-
-        //     HandleRequest(request,resp);
-        // }
+        #region Finding Handlers
 
         /// <summary>
-        /// This methods is the start of incoming HTTP request handling.
+        /// Checks if we have an Exact path in the LLSD handlers for the path provided
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
-        public virtual void HandleRequest(OSHttpRequest request, OSHttpResponse response)
+        /// <param name="path">URI of the request</param>
+        /// <returns>true if we have one, false if not</returns>
+        internal bool DoWeHaveALLSDHandler(string path)
         {
-            if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
-            {
-                try
-                {
-                    SendHTML500(response);
-                }
-                catch
-                {
-                }
+            string[] pathbase = path.Split('/');
+            string searchquery = "/";
 
-                return;
+            if (pathbase.Length < 1)
+                return false;
+
+            for (int i = 1; i < pathbase.Length; i++)
+            {
+                searchquery += pathbase[i];
+                if (pathbase.Length - 1 != i)
+                    searchquery += "/";
             }
 
-            string reqnum = "unknown";
-            int tickstart = Environment.TickCount;
-            string RawUrl = request.RawUrl;
-            string HTTPMethod = request.HttpMethod;
-            long contentLength = request.ContentLength64;
+            string bestMatch = null;
 
-            try
-            {
-                if (request.Headers["opensim-request-id"] != null)
-                    reqnum = String.Format("{0}:{1}", request.RemoteIPEndPoint, request.Headers["opensim-request-id"]);
-                // MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: <{0}> handle request for {1}",reqnum,request.RawUrl);
+            foreach (string pattern in m_llsdHandlers.Keys)
+                if (searchquery.StartsWith(pattern) && searchquery.Length >= pattern.Length)
+                    bestMatch = pattern;
 
-                //Fix the current Culture
-                Culture.SetCurrentCulture();
+            // extra kicker to remove the default XMLRPC login case..  just in case..
+            if (path != "/" && bestMatch == "/" && searchquery != "/")
+                return false;
 
-                //response.KeepAlive = true;
-                response.SendChunked = false;
+            if (path == "/")
+                return false;
 
-                IRequestHandler requestHandler;
-
-                string path = request.RawUrl;
-                string handlerKey = GetHandlerKey(request.HttpMethod, path);
-
-                //                MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Handling {0} request for {1}", request.HttpMethod, path);
-
-                if (TryGetStreamHandler(handlerKey, out requestHandler))
-                {
-                    //MainConsole.Instance.Debug("[BASE HTTP SERVER]: Found Stream Handler");
-                    // Okay, so this is bad, but should be considered temporary until everything is IStreamHandler.
-                    byte[] buffer = null;
-
-                    response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
-
-
-                    if (requestHandler is IStreamedRequestHandler)
-                    {
-                        try
-                        {
-                            IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
-
-                            buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
-                        }
-                        catch (Exception ex)
-                        {
-                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex.ToString() + ".");
-                        }
-                    }
-                    else if (requestHandler is IGenericHTTPHandler)
-                    {
-                        //MainConsole.Instance.Debug("[BASE HTTP SERVER]: Found Caps based HTTP Handler");
-                        IGenericHTTPHandler HTTPRequestHandler = requestHandler as IGenericHTTPHandler;
-                        Stream requestStream = request.InputStream;
-
-                        Encoding encoding = Encoding.UTF8;
-                        StreamReader reader = new StreamReader(requestStream, encoding);
-
-                        string requestBody = reader.ReadToEnd();
-
-                        reader.Close();
-                        //requestStream.Close();
-
-                        Hashtable keysvals = new Hashtable();
-                        Hashtable headervals = new Hashtable();
-                        //string host = String.Empty;
-
-                        string[] querystringkeys = request.QueryString.AllKeys;
-                        string[] rHeaders = request.Headers.AllKeys;
-
-
-                        foreach (string queryname in querystringkeys)
-                        {
-                            keysvals.Add(queryname, request.QueryString[queryname]);
-                        }
-
-                        foreach (string headername in rHeaders)
-                        {
-                            //MainConsole.Instance.Warn("[HEADER]: " + headername + "=" + request.Headers[headername]);
-                            headervals[headername] = request.Headers[headername];
-                        }
-
-                        //                        if (headervals.Contains("Host"))
-                        //                        {
-                        //                            host = (string)headervals["Host"];
-                        //                        }
-
-                        keysvals.Add("requestbody", requestBody);
-                        keysvals.Add("headers", headervals);
-                        if (keysvals.Contains("method"))
-                        {
-                            //MainConsole.Instance.Warn("[HTTP]: Contains Method");
-                            //string method = (string)keysvals["method"];
-                            //MainConsole.Instance.Warn("[HTTP]: " + requestBody);
-
-                        }
-                        DoHTTPGruntWork(HTTPRequestHandler.Handle(path, keysvals), response, request);
-                        return;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            IStreamHandler streamHandler = (IStreamHandler)requestHandler;
-
-                            using (MemoryStream memoryStream = new MemoryStream())
-                            {
-                                streamHandler.Handle(path, request.InputStream, memoryStream, request, response);
-                                memoryStream.Flush();
-                                buffer = memoryStream.ToArray();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex.ToString() + ".");
-                        }
-                    }
-
-                    request.InputStream.Close();
-
-                    // HTTP IN support. The script engine takes it from here
-                    // Nothing to worry about for us.
-                    //
-                    if (buffer == null)
-                        return;
-                    if (buffer.Length == 0)//Just send the end of connection 0
-                        buffer = new byte[1] { 0 };
-
-                    if (!response.SendChunked)
-                        response.ContentLength64 = buffer.LongLength;
-
-                    try
-                    {
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
-                    }
-                    catch (HttpListenerException)
-                    {
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP request abnormally terminated.");
-                    }
-                    //
-                    try
-                    {
-                        if(!response.KeepAlive)
-                            response.ReuseContext = false;
-                        response.Send();
-                    }
-                    catch (SocketException e)
-                    {
-                        response.ReuseContext = false; // This has to be here to prevent a Linux/Mono crash
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                    }
-                    catch (IOException e)
-                    {
-                        response.ReuseContext = false; // This has to be here to prevent a Linux/Mono crash
-                        MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
-                    }
-                    //This makes timeouts VERY bad if enabled
-                    /*try
-                    {
-                        //Clean up after ourselves
-                        response.OutputStream.Close();
-                        response.FreeContext();
-                    }
-                    catch(Exception ex)
-                    {
-                        MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: ISSUE WITH CLEANUP {0}", ex.ToString());
-                    }
-                    response = null;*/
-                    return;
-                }
-
-                if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
-                {
-#if (!ISWIN)
-                    foreach (string strAccept in request.AcceptTypes)
-                    {
-                        if (strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json"))
-                        {
-                            HandleLLSDRequests(request, response);
-                            return;
-                        }
-                    }
-#else
-                    if (request.AcceptTypes.Any(strAccept => strAccept.Contains("application/llsd+xml") ||
-                                                             strAccept.Contains("application/llsd+json")))
-                    {
-                        HandleLLSDRequests(request, response);
-                        return;
-                    }
-#endif
-                }
-
-                switch (request.ContentType)
-                {
-                    case null:
-                    case "text/html":
-                    case "application/x-www-form-urlencoded":
-                        //                        MainConsole.Instance.DebugFormat(
-                        //                            "[BASE HTTP SERVER]: Found a text/html content type for request {0}", request.RawUrl);
-                        HandleHTTPRequest(request, response);
-                        return;
-
-                    case "application/llsd+xml":
-                    case "application/xml+llsd":
-                    case "application/llsd+json":
-                        //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: found a application/llsd+xml content type");
-                        HandleLLSDRequests(request, response);
-                        return;
-
-                    case "text/xml":
-                    case "application/xml":
-                    case "application/json":
-                    default:
-                        if (request.ContentType == "application/x-gzip")
-                        {
-                            System.IO.Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
-                            request.InputStream = inputStream;
-                        }
-                        //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: in default handler");
-                        // Point of note..  the DoWeHaveA methods check for an EXACT path
-                        //                        if (request.RawUrl.Contains("/CAPS/EQG"))
-                        //                        {
-                        //                            int i = 1;
-                        //                        }
-                        //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: Checking for LLSD Handler");
-                        if (DoWeHaveALLSDHandler(request.RawUrl))
-                        {
-                            //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: Found LLSD Handler");
-                            HandleLLSDRequests(request, response);
-                            return;
-                        }
-
-                        //                        MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Checking for HTTP Handler for request {0}", request.RawUrl);
-                        if (DoWeHaveAHTTPHandler(request.RawUrl))
-                        {
-                            //                            MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Found HTTP Handler for request {0}", request.RawUrl);
-                            HandleHTTPRequest(request, response);
-                            return;
-                        }
-
-                        //MainConsole.Instance.Info("[Debug BASE HTTP SERVER]: Generic XMLRPC");
-                        // generic login request.
-                        if (!HandleXmlRpcRequests(request, response))
-                        {
-                            SendHTML404(response, "");
-                        }
-
-                        return;
-                }
-            }
-            catch (SocketException e)
-            {
-                response.ReuseContext = false; //If it errored, be safe and don't use it again
-                // At least on linux, it appears that if the client makes a request without requiring the response,
-                // an unconnected socket exception is thrown when we close the response output stream.  There's no
-                // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
-                // the exception instead.
-                //
-                // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
-                // with the minimum first
-                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux", e);
-            }
-            catch (IOException)
-            {
-                response.ReuseContext = false; //If it errored, be safe and don't use it again
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw ");
-                SendHTML500(response);
-            }
-            catch (Exception e)
-            {
-                response.ReuseContext = false; //If it errored, be safe and don't use it again
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0}", e);
-                SendHTML500(response);
-            }
-            finally
-            {
-                int tickdiff = Environment.TickCount - tickstart;
-                if (MainConsole.Instance.IsEnabled(log4net.Core.Level.Trace))
-                    MainConsole.Instance.TraceFormat("[BASE HTTP SERVER]: request for {0} on port {3}, {2} took {1} ms", RawUrl, tickdiff, HTTPMethod, Port);
-                // Every month or so this will wrap and give bad numbers, not really a problem
-                // since its just for reporting, 500ms limit can be adjusted
-                if (tickdiff > 500)
-                {
-                    response.ReuseContext = false; //If it took a long time, don't use it again
-                    MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request <{0}> for {1},{3} took {2} ms for a request sized {4}", reqnum, RawUrl, tickdiff, HTTPMethod, ((float)contentLength) / 1024 / 1024);
-                }
-            }
+            return !String.IsNullOrEmpty(bestMatch);
         }
 
-        private bool TryGetStreamHandler(string handlerKey, out IRequestHandler streamHandler)
+        internal bool TryGetStreamHandler(string handlerKey, out IStreamedRequestHandler streamHandler)
         {
             string bestMatch = null;
 
@@ -659,7 +308,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        private bool TryGetPollServiceHTTPHandler(string handlerKey, out PollServiceEventArgs oServiceEventArgs)
+        internal bool TryGetPollServiceHTTPHandler(string handlerKey, out PollServiceEventArgs oServiceEventArgs)
         {
             string bestMatch = null;
 
@@ -688,7 +337,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        private bool TryGetHTTPHandler(string handlerKey, out GenericHTTPMethod HTTPHandler)
+        internal bool TryGetHTTPHandler(string handlerKey, out GenericHTTPMethod HTTPHandler)
         {
             //            MainConsole.Instance.DebugFormat("[BASE HTTP HANDLER]: Looking for HTTP handler for {0}", handlerKey);
 
@@ -720,367 +369,11 @@ namespace Aurora.Framework.Servers.HttpServer
         }
 
         /// <summary>
-        /// Try all the registered xmlrpc handlers when an xmlrpc request is received.
-        /// Sends back an XMLRPC unknown request response if no handler is registered for the requested method.
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
-        private bool HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
-        {
-            Stream requestStream = request.InputStream;
-
-            Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            reader.Close();
-            requestStream.Close();
-            //MainConsole.Instance.Debug(requestBody);
-            requestBody = requestBody.Replace("<base64></base64>", "");
-            XmlRpcRequest xmlRprcRequest = null;
-
-            try
-            {
-                if(requestBody.StartsWith("<?xml"))
-                    xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
-            }
-            catch (XmlException)
-            {
-            }
-
-            if (xmlRprcRequest != null)
-            {
-                string methodName = xmlRprcRequest.MethodName;
-                if (methodName != null)
-                {
-                    xmlRprcRequest.Params.Add(request.RemoteIPEndPoint); // Param[1]
-                    XmlRpcResponse xmlRpcResponse;
-
-                    XmlRpcMethod method;
-                    bool methodWasFound;
-                    lock (m_rpcHandlers)
-                    {
-                        methodWasFound = m_rpcHandlers.TryGetValue(methodName, out method);
-                    }
-
-                    if (methodWasFound)
-                    {
-                        xmlRprcRequest.Params.Add(request.Url); // Param[2]
-                        xmlRprcRequest.Params.Add(request.Headers.Get("X-Forwarded-For")); // Param[3]
-
-                        try
-                        {
-                            xmlRpcResponse = method(xmlRprcRequest, request.RemoteIPEndPoint);
-                        }
-                        catch (Exception e)
-                        {
-                            string errorMessage
-                                = String.Format(
-                                    "Requested method [{0}] from {1} threw exception: {2} {3}",
-                                    methodName, request.RemoteIPEndPoint.Address, e, e.StackTrace);
-
-                            MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: {0}", errorMessage);
-
-                            // if the registered XmlRpc method threw an exception, we pass a fault-code along
-                            xmlRpcResponse = new XmlRpcResponse();
-
-                            // Code probably set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
-                            xmlRpcResponse.SetFault(-32603, errorMessage);
-                        }
-
-                        // if the method wasn't found, we can't determine KeepAlive state anyway, so lets do it only here
-                        response.KeepAlive = m_rpcHandlersKeepAlive[methodName];
-                    }
-                    else
-                    {
-                        xmlRpcResponse = new XmlRpcResponse();
-
-                        // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
-                        xmlRpcResponse.SetFault(
-                            XmlRpcErrorCodes.SERVER_ERROR_METHOD,
-                            String.Format("Requested method [{0}] not found", methodName));
-                    }
-
-                    string responseString = XmlRpcResponseSerializer.Singleton.Serialize(xmlRpcResponse);
-
-                    response.ContentType = "text/xml";
-
-                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-                    response.SendChunked = false;
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentEncoding = Encoding.UTF8;
-                    try
-                    {
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
-                    }
-                    catch (Exception ex)
-                    {
-                        MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-                    }
-                    finally
-                    {
-                        try
-                        {
-                            response.Send();
-                            //response.FreeContext();
-                        }
-                        catch (SocketException e)
-                        {
-                            // This has to be here to prevent a Linux/Mono crash
-                            MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                        }
-                        catch (IOException e)
-                        {
-                            MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
-                        }
-                    }
-                    return true;
-                }
-                //HandleLLSDRequests(request, response);
-                response.ContentType = "text/plain";
-                response.StatusCode = 404;
-                response.StatusDescription = "Not Found";
-                response.ProtocolVersion = "HTTP/1.0";
-                byte[] buf = Encoding.UTF8.GetBytes("Not found");
-                response.KeepAlive = false;
-
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: Handler not found for http request {0}, port {1}", request.RawUrl, Port);
-
-                response.SendChunked = false;
-                response.ContentLength64 = buf.Length;
-                response.ContentEncoding = Encoding.UTF8;
-
-                try
-                {
-                    response.OutputStream.Write(buf, 0, buf.Length);
-                }
-                catch (Exception ex)
-                {
-                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-                }
-                finally
-                {
-                    try
-                    {
-                        response.Send();
-                        //response.FreeContext();
-                    }
-                    catch (SocketException e)
-                    {
-                        // This has to be here to prevent a Linux/Mono crash
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                    }
-                    catch (IOException e)
-                    {
-                        MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
-                    }
-                }
-                return true;
-                //responseString = "Error";
-            }
-
-            return false;
-        }
-
-        private void HandleLLSDRequests(OSHttpRequest request, OSHttpResponse response)
-        {
-            //MainConsole.Instance.Warn("[BASE HTTP SERVER]: We've figured out it's a LLSD Request");
-            Stream requestStream = request.InputStream;
-
-            Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            reader.Close();
-            requestStream.Close();
-
-            //MainConsole.Instance.DebugFormat("[OGP]: {0}:{1}", request.RawUrl, requestBody);
-            response.KeepAlive = true;
-
-            OSD llsdRequest = null;
-            OSD llsdResponse = null;
-
-            bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") && requestBody.Contains("viewer_digest"));
-
-            if (requestBody.Length == 0)
-            // Get Request
-            {
-                requestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
-            }
-            try
-            {
-                llsdRequest = OSDParser.Deserialize(requestBody);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-            }
-
-            if (llsdRequest != null)// && m_defaultLlsdHandler != null)
-            {
-
-                LLSDMethod llsdhandler = null;
-
-                if (TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
-                {
-                    // we found a registered llsd handler to service this request
-                    llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
-                }
-                else
-                {
-                    // we didn't find a registered llsd handler to service this request
-                    // .. give em the failed message
-                    llsdResponse = GenerateNoLLSDHandlerResponse();
-                }
-
-            }
-            else
-            {
-                llsdResponse = GenerateNoLLSDHandlerResponse();
-            }
-            byte[] buffer = new byte[0];
-            if (llsdResponse.ToString() == "shutdown404!")
-            {
-                response.ContentType = "text/plain";
-                response.StatusCode = 404;
-                response.StatusDescription = "Not Found";
-                response.ProtocolVersion = "HTTP/1.0";
-                buffer = Encoding.UTF8.GetBytes("Not found");
-            }
-            else
-            {
-                // Select an appropriate response format
-                buffer = BuildLLSDResponse(request, response, llsdResponse);
-            }
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-            response.KeepAlive = true;
-
-            try
-            {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-            }
-            finally
-            {
-                //response.OutputStream.Close();
-                try
-                {
-                    response.Send();
-                    response.OutputStream.Flush();
-                    //response.FreeContext();
-                    //response.OutputStream.Close();
-                }
-                catch (IOException e)
-                {
-                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: LLSD IOException {0}.", e);
-                }
-                catch (SocketException e)
-                {
-                    // This has to be here to prevent a Linux/Mono crash
-                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: LLSD issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                }
-            }
-        }
-
-        private byte[] BuildLLSDResponse(OSHttpRequest request, OSHttpResponse response, OSD llsdResponse)
-        {
-            if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
-            {
-                foreach (string strAccept in request.AcceptTypes)
-                {
-                    switch (strAccept)
-                    {
-                        case "application/llsd+xml":
-                        case "application/xml":
-                        case "text/xml":
-                            response.ContentType = strAccept;
-                            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-                        case "application/llsd+json":
-                        case "application/json":
-                            response.ContentType = strAccept;
-                            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-                    }
-                }
-            }
-
-            if (!String.IsNullOrEmpty(request.ContentType))
-            {
-                switch (request.ContentType)
-                {
-                    case "application/llsd+xml":
-                    case "application/xml":
-                    case "text/xml":
-                        response.ContentType = request.ContentType;
-                        return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-                    case "application/llsd+json":
-                    case "application/json":
-                        response.ContentType = request.ContentType;
-                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-                }
-            }
-
-            // response.ContentType = "application/llsd+json";
-            // return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
-            response.ContentType = "application/llsd+xml";
-            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
-        }
-
-        /// <summary>
-        /// Checks if we have an Exact path in the LLSD handlers for the path provided
-        /// </summary>
-        /// <param name="path">URI of the request</param>
-        /// <returns>true if we have one, false if not</returns>
-        private bool DoWeHaveALLSDHandler(string path)
-        {
-            string[] pathbase = path.Split('/');
-            string searchquery = "/";
-
-            if (pathbase.Length < 1)
-                return false;
-
-            for (int i = 1; i < pathbase.Length; i++)
-            {
-                searchquery += pathbase[i];
-                if (pathbase.Length - 1 != i)
-                    searchquery += "/";
-            }
-
-            string bestMatch = null;
-
-            foreach (string pattern in m_llsdHandlers.Keys)
-            {
-
-                if (searchquery.StartsWith(pattern) && searchquery.Length >= pattern.Length)
-                {
-
-                    bestMatch = pattern;
-
-                }
-            }
-
-            // extra kicker to remove the default XMLRPC login case..  just in case..
-            if (path != "/" && bestMatch == "/" && searchquery != "/")
-                return false;
-
-            if (path == "/")
-                return false;
-
-            return !String.IsNullOrEmpty(bestMatch);
-        }
-
-        /// <summary>
         /// Checks if we have an Exact path in the HTTP handlers for the path provided
         /// </summary>
         /// <param name="path">URI of the request</param>
         /// <returns>true if we have one, false if not</returns>
-        private bool DoWeHaveAHTTPHandler(string path)
+        internal bool DoWeHaveAHTTPHandler(string path)
         {
             string[] pathbase = path.Split('/');
             string searchquery = "/";
@@ -1117,7 +410,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        private bool TryGetLLSDHandler(string path, out LLSDMethod llsdHandler)
+        internal bool TryGetLLSDHandler(string path, out LLSDMethod llsdHandler)
         {
             llsdHandler = null;
             // Pull out the first part of the path
@@ -1171,139 +464,30 @@ namespace Aurora.Framework.Servers.HttpServer
             return true;
         }
 
-        private OSDMap GenerateNoLLSDHandlerResponse()
+        internal bool TryGetXMLHandler(string methodName, out XmlRpcMethod handler)
         {
-            OSDMap map = new OSDMap();
-            map["reason"] = OSD.FromString("LLSDRequest");
-            map["message"] = OSD.FromString("No handler registered for LLSD Requests");
-            map["login"] = OSD.FromString("false");
-            return map;
+            lock (m_rpcHandlers)
+                return m_rpcHandlers.TryGetValue(methodName, out handler);
         }
 
-        public void HandleHTTPRequest(OSHttpRequest request, OSHttpResponse response)
+        internal bool GetXMLHandlerIsKeepAlive(string methodName)
         {
-            //            MainConsole.Instance.DebugFormat(
-            //                "[BASE HTTP SERVER]: HandleHTTPRequest for request to {0}, method {1}",
-            //                request.RawUrl, request.HttpMethod);
+            return m_rpcHandlersKeepAlive[methodName];
+        }
 
-            switch (request.HttpMethod)
+        public XmlRpcMethod GetXmlRPCHandler(string method)
+        {
+            lock (m_rpcHandlers)
             {
-                case "OPTIONS":
-                    response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
-                    return;
-
-                default:
-                    HandleContentVerbs(request, response);
-                    return;
+                if (m_rpcHandlers.ContainsKey(method))
+                {
+                    return m_rpcHandlers[method];
+                }
+                return null;
             }
         }
 
-        private void HandleContentVerbs(OSHttpRequest request, OSHttpResponse response)
-        {
-            //            MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: HandleContentVerbs for request to {0}", request.RawUrl);
-
-            // This is a test.  There's a workable alternative..  as this way sucks.
-            // We'd like to put this into a text file parhaps that's easily editable.
-            //
-            // For this test to work, I used the following secondlife.exe parameters
-            // "C:\Program Files\SecondLifeWindLight\SecondLifeWindLight.exe" -settings settings_windlight.xml -channel "Second Life WindLight"  -set SystemLanguage en-us -loginpage http://10.1.1.2:8002/?show_login_form=TRUE -loginuri http://10.1.1.2:8002 -user 10.1.1.2
-            //
-            // Even after all that, there's still an error, but it's a start.
-            //
-            // I depend on show_login_form being in the secondlife.exe parameters to figure out
-            // to display the form, or process it.
-            // a better way would be nifty.
-
-            Stream requestStream = request.InputStream;
-
-            Encoding encoding = Encoding.UTF8;
-            StreamReader reader = new StreamReader(requestStream, encoding);
-
-            string requestBody = reader.ReadToEnd();
-            // avoid warning for now
-            reader.ReadToEnd();
-            reader.Close();
-            requestStream.Close();
-
-            Hashtable keysvals = new Hashtable();
-            Hashtable headervals = new Hashtable();
-
-            Hashtable requestVars = new Hashtable();
-
-            string host = String.Empty;
-
-            string[] querystringkeys = request.QueryString.AllKeys;
-            string[] rHeaders = request.Headers.AllKeys;
-
-            keysvals.Add("body", requestBody);
-            keysvals.Add("uri", request.RawUrl);
-            keysvals.Add("content-type", request.ContentType);
-            keysvals.Add("http-method", request.HttpMethod);
-
-            foreach (string queryname in querystringkeys)
-            {
-                //                MainConsole.Instance.DebugFormat(
-                //                    "[BASE HTTP SERVER]: Got query paremeter {0}={1}", queryname, request.QueryString[queryname]);
-                keysvals.Add(queryname, request.QueryString[queryname]);
-                requestVars.Add(queryname, keysvals[queryname]);
-            }
-
-            foreach (string headername in rHeaders)
-            {
-                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + headername + "=" + request.Headers[headername]);
-                headervals[headername] = request.Headers[headername];
-            }
-
-            if (headervals.Contains("Host"))
-            {
-                host = (string)headervals["Host"];
-            }
-
-            keysvals.Add("headers", headervals);
-            keysvals.Add("querystringkeys", querystringkeys);
-            keysvals.Add("requestvars", requestVars);
-            //            keysvals.Add("form", request.Form);
-
-            if (keysvals.Contains("method"))
-            {
-                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: Contains Method");
-                string method = (string)keysvals["method"];
-                //                MainConsole.Instance.Debug("[BASE HTTP SERVER]: " + requestBody);
-                GenericHTTPMethod requestprocessor;
-                bool foundHandler = TryGetHTTPHandler(method, out requestprocessor);
-                if (foundHandler)
-                {
-                    Hashtable responsedata1 = requestprocessor(keysvals);
-                    DoHTTPGruntWork(responsedata1, response, request);
-
-                    //SendHTML500(response);
-                }
-                else
-                {
-                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found");
-                    SendHTML404(response, host);
-                }
-            }
-            else
-            {
-                GenericHTTPMethod requestprocessor;
-                bool foundHandler = TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor);
-                if (foundHandler)
-                {
-                    Hashtable responsedata2 = requestprocessor(keysvals);
-                    DoHTTPGruntWork(responsedata2, response, request);
-
-                    //SendHTML500(response);
-                }
-                else
-                {
-                    //                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: Handler Not Found2");
-                    SendHTML404(response, host);
-                }
-            }
-        }
-
-        private bool TryGetHTTPHandlerPathBased(string path, out GenericHTTPMethod httpHandler)
+        internal bool TryGetHTTPHandlerPathBased(string path, out GenericHTTPMethod httpHandler)
         {
             httpHandler = null;
             // Pull out the first part of the path
@@ -1365,244 +549,36 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        internal void DoHTTPGruntWork(Hashtable responsedata, OSHttpResponse response, OSHttpRequest request)
-        {
-            //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
-            byte[] buffer;
-            if (responsedata.Count == 0)
-            {
-                response.StatusCode = 404;
-                buffer = Encoding.UTF8.GetBytes("404");
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
-                return;
-            }
-            int responsecode = (int)responsedata["int_response_code"];
-            string responseString = (string)responsedata["str_response_string"];
-            string contentType = (string)responsedata["content_type"];
-
-
-            if (responsedata.ContainsKey("error_status_text"))
-            {
-                response.StatusDescription = (string)responsedata["error_status_text"];
-            }
-            if (responsedata.ContainsKey("http_protocol_version"))
-            {
-                response.ProtocolVersion = (string)responsedata["http_protocol_version"];
-            }
-
-            if (responsedata.ContainsKey("keepalive"))
-            {
-                bool keepalive = (bool)responsedata["keepalive"];
-                response.KeepAlive = keepalive;
-
-            }
-
-            if (responsedata.ContainsKey("reusecontext"))
-                response.ReuseContext = (bool)responsedata["reusecontext"];
-
-            //Even though only one other part of the entire code uses HTTPHandlers, we shouldn't expect this
-            //and should check for NullReferenceExceptions
-
-            if (string.IsNullOrEmpty(contentType))
-            {
-                contentType = "text/html";
-            }
-
-            // The client ignores anything but 200 here for web login, so ensure that this is 200 for that
-
-            response.StatusCode = responsecode;
-
-            if (responsecode == (int)OSHttpStatusCode.RedirectMovedPermanently)
-            {
-                response.RedirectLocation = (string)responsedata["str_redirect_location"];
-                response.StatusCode = responsecode;
-            }
-
-            response.AddHeader("Content-Type", contentType);
-
-
-            if (!(contentType.Contains("image")
-                || contentType.Contains("x-shockwave-flash")
-                || contentType.Contains("application/x-oar")
-                || contentType.Contains("application/vnd.ll.mesh")))
-            {
-                // Text
-                buffer = Encoding.UTF8.GetBytes(responseString);
-            }
-            else
-            {
-                // Binary!
-                buffer = Convert.FromBase64String(responseString);
-            }
-
-            bool sendBuffer = true;
-
-            string ETag = Util.SHA1Hash(buffer.ToString());
-            response.AddHeader("ETag", ETag);
-            List<string> rHeaders = request.Headers.AllKeys.ToList<string>();
-            if (rHeaders.Contains("if-none-match") && request.Headers["if-none-match"].IndexOf(ETag) >= 0)
-            {
-                response.StatusCode = 304;
-                response.StatusDescription = "Not Modified";
-                sendBuffer = false;
-            }
-
-
-            try
-            {
-                if (sendBuffer)
-                {
-                    response.SendChunked = false;
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentEncoding = Encoding.UTF8;
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[HTTPD]: Error - " + ex);
-            }
-            finally
-            {
-                //response.OutputStream.Close();
-                try
-                {
-                    response.OutputStream.Flush();
-                    response.Send();
-
-                    //if (!response.KeepAlive && response.ReuseContext)
-                    //    response.FreeContext();
-                }
-                catch (SocketException e)
-                {
-                    // This has to be here to prevent a Linux/Mono crash
-                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                }
-                catch (IOException e)
-                {
-                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: New Error in HTTP Server sending: " + e);
-                }
-            }
-        }
-
-        public void SendHTML404(OSHttpResponse response, string host)
-        {
-            // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
-            //MSIE doesn't allow for 400 pages to show... so we send 200 for now
-            response.StatusCode = 200;
-            //response.StatusCode = 400;
-            response.AddHeader("Content-type", "text/html");
-
-            string responseString = GetHTTP404(host);
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-
-            try
-            {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-            }
-            finally
-            {
-                //response.OutputStream.Close();
-                try
-                {
-                    response.Send();
-                    //response.FreeContext();
-                }
-                catch (SocketException e)
-                {
-                    // This has to be here to prevent a Linux/Mono crash
-                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                }
-            }
-        }
-
-        public void SendHTML500(OSHttpResponse response)
-        {
-            // I know this statuscode is dumb, but the client doesn't respond to 404s and 500s
-            response.StatusCode = (int)OSHttpStatusCode.SuccessOk;
-            response.AddHeader("Content-type", "text/html");
-
-            string responseString = GetHTTP500();
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-            response.SendChunked = false;
-            response.ContentLength64 = buffer.Length;
-            response.ContentEncoding = Encoding.UTF8;
-            try
-            {
-                response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
-            }
-            finally
-            {
-                //response.OutputStream.Close();
-                try
-                {
-                    response.Send();
-                    //response.FreeContext();
-                }
-                catch (SocketException e)
-                {
-                    // This has to be here to prevent a Linux/Mono crash
-                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER] XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                }
-            }
-        }
+        #endregion
 
         public void Start()
         {
-            StartHTTP();
-        }
-
-        private void StartHTTP()
-        {
             try
             {
-                //m_httpListener = new HttpListener();
-                NotSocketErrors = 0;
-                if (!m_isSecure)
-                {
-                    //m_httpListener.Prefixes.Add("http://+:" + m_port + "/");
-                    //m_httpListener.Prefixes.Add("http://10.1.1.5:" + m_port + "/");
-                    m_httpListener = HttpListener.Create(m_listenIPAddress, (int)m_port/*, httpserverlog*/);
-                    m_httpListener.ExceptionThrown += httpServerException;
-                    m_httpListener.LogWriter = httpserverlog;
+                var factory = new DelegatePipelineFactory();
+                factory.AddDownstreamHandler(() => new ResponseEncoder());
+                factory.AddUpstreamHandler(() => new HeaderDecoder(new HttpParser()));
+                var decoder = new CompositeBodyDecoder();
+                decoder.Add("application/json", new JsonBodyDecoder());
+                decoder.Add("application/xml", new JsonBodyDecoder());
+                decoder.Add("application/llsd+json", new JsonBodyDecoder());
+                decoder.Add("application/llsd+xml", new JsonBodyDecoder());
+                decoder.Add("application/xml+llsd", new JsonBodyDecoder());
+                decoder.Add("application/octet-stream", new JsonBodyDecoder());
+                decoder.Add("text/html", new JsonBodyDecoder());
+                decoder.Add("text/xml", new JsonBodyDecoder());
+                decoder.Add("text/www-form-urlencoded", new JsonBodyDecoder());
+                decoder.Add("text/x-www-form-urlencoded", new JsonBodyDecoder());
 
-                    // Uncomment this line in addition to those in HttpServerLogWriter
-                    // if you want more detailed trace information from the HttpServer
-                    //m_httpListener2.UseTraceLogs = true;
-
-                    //m_httpListener2.DisconnectHandler = httpServerDisconnectMonitor;
-                }
-                else
-                {
-                    m_httpListener = HttpListener.Create(IPAddress.Any, (int)m_port, m_cert, m_sslProtocol);
-                    m_httpListener.ExceptionThrown += httpServerException;
-                    m_httpListener.LogWriter = httpserverlog;
-                }
-
-                m_httpListener.RequestReceived += OnRequest;
-                m_httpListener.Start(64);
+                factory.AddUpstreamHandler(() => new BodyDecoder(decoder, 65535, int.MaxValue));
+                factory.AddUpstreamHandler(() => (MessageHandler = new MessageHandler(this)));
+                _httpListener = new HttpListener(factory);
+                _httpListener.Start(new IPEndPoint(IPAddress.Any, (int)Port));
 
                 // Long Poll Service Manager with 3 worker threads a 25 second timeout for no events
                 m_PollServiceManager = new PollServiceRequestManager(this, 3, 25000);
                 HTTPDRunning = true;
+                MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: Listening on port {0}", Port);
             }
             catch (Exception e)
             {
@@ -1615,48 +591,20 @@ namespace Aurora.Framework.Servers.HttpServer
             }
         }
 
-        public void httpServerDisconnectMonitor(IHttpClientContext source, SocketError err)
-        {
-            switch (err)
-            {
-                case SocketError.NotSocket:
-                    NotSocketErrors++;
-
-                    break;
-            }
-        }
-
-        public void httpServerException(object source, Exception exception)
-        {
-            MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: {0} had an exception {1}", source, exception);
-            /*
-             if (HTTPDRunning)// && NotSocketErrors > 5)
-             {
-                 Stop();
-                 Thread.Sleep(200);
-                 StartHTTP();
-                 MainConsole.Instance.Warn("[HTTPSERVER]: Died.  Trying to kick.....");
-             }
-             */
-        }
-
         public void Stop()
         {
             HTTPDRunning = false;
             try
             {
-                m_httpListener.ExceptionThrown -= httpServerException;
-                //m_httpListener2.DisconnectHandler = null;
-
-                m_httpListener.LogWriter = null;
-                m_httpListener.RequestReceived -= OnRequest;
-                m_httpListener.Stop();
+                _httpListener.Stop();
             }
             catch (NullReferenceException)
             {
                 MainConsole.Instance.Warn("[BASE HTTP SERVER]: Null Reference when stopping HttpServer.");
             }
         }
+
+        #region Remove Handlers
 
         public void RemoveStreamHandler(string httpMethod, string path)
         {
@@ -1671,7 +619,7 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             lock (m_HTTPHandlers)
             {
-                if (httpMethod != null && httpMethod.Length == 0)
+                if (httpMethod == "")
                 {
                     m_HTTPHandlers.Remove(path);
                     return;
@@ -1685,9 +633,9 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             lock (m_pollHandlers)
             {
-                if (m_pollHandlers.ContainsKey(httpMethod))
+                if (m_pollHandlers.ContainsKey(path))
                 {
-                    m_pollHandlers.Remove(httpMethod);
+                    m_pollHandlers.Remove(path);
                 }
             }
 
@@ -1723,7 +671,525 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
-        public string GetHTTP404(string host)
+        #endregion
+    }
+
+    public class MessageHandler : IUpstreamHandler, IDisposable
+    {
+        private BaseHttpServer _server;
+        public MessageHandler(BaseHttpServer server)
+        {
+            _server = server;
+        }
+
+        /// <summary>
+        /// Handle an message
+        /// </summary>
+        /// <param name="context">Context unique for this handler instance</param>
+        /// <param name="message">Message to process</param>
+        /// <remarks>
+        /// All messages that can't be handled MUST be send up the chain using <see cref="IPipelineHandlerContext.SendUpstream"/>.
+        /// </remarks>
+        public void HandleUpstream(IPipelineHandlerContext context, IPipelineMessage message)
+        {
+            var msg = message as ReceivedHttpRequest;
+            if (msg == null)
+            {
+                if (message is PipelineFailure)
+                    MainConsole.Instance.ErrorFormat("[BaseHttpServer]: Failed to get message, {0}", (message as PipelineFailure).Exception);
+                return;
+            }
+
+            //MainConsole.Instance.Warn("Taking in request " + msg.HttpRequest.Uri.ToString());
+
+            var request = msg.HttpRequest;
+            PollServiceEventArgs psEvArgs;
+            OSHttpRequest req = new OSHttpRequest(context, request);
+
+            if (_server.TryGetPollServiceHTTPHandler(request.Uri.AbsolutePath, out psEvArgs))
+            {
+                PollServiceHttpRequest psreq = new PollServiceHttpRequest(psEvArgs, context, request);
+
+                if (psEvArgs.Request != null)
+                {
+                    string requestBody;
+                    using (StreamReader reader = new StreamReader(req.InputStream, Encoding.UTF8))
+                        requestBody = reader.ReadToEnd();
+
+                    Hashtable keysvals = new Hashtable(), headervals = new Hashtable();
+
+                    string[] querystringkeys = req.QueryString.AllKeys;
+                    string[] rHeaders = req.Headers.AllKeys;
+
+                    keysvals.Add("body", requestBody);
+                    keysvals.Add("uri", req.RawUrl);
+                    keysvals.Add("content-type", req.ContentType);
+                    keysvals.Add("http-method", req.HttpMethod);
+
+                    foreach (string queryname in querystringkeys)
+                        keysvals.Add(queryname, req.QueryString[queryname]);
+
+                    foreach (string headername in rHeaders)
+                        headervals[headername] = req.Headers[headername];
+
+                    keysvals.Add("headers", headervals);
+                    keysvals.Add("querystringkeys", querystringkeys);
+
+                    psEvArgs.Request(psreq.RequestID, keysvals);
+                }
+
+                _server.PollServiceManager.Enqueue(psreq);
+            }
+            else
+                HandleRequest(req, req.MakeResponse(HttpStatusCode.OK, "OK"));
+        }
+
+        #region Generic HTTP Handlers
+
+        internal void SendGenericHTTPResponse(Hashtable responsedata, OSHttpResponse response, OSHttpRequest request)
+        {
+            //MainConsole.Instance.Info("[BASE HTTP SERVER]: Doing HTTP Grunt work with response");
+            byte[] buffer;
+            if (responsedata.Count == 0)
+            {
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                buffer = Encoding.UTF8.GetBytes("404");
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Send();
+                return;
+            }
+
+            int responsecode = (int)responsedata["int_response_code"];
+            string responseString = (string)responsedata["str_response_string"];
+            string contentType = (string)responsedata["content_type"];
+
+            if (responsedata.ContainsKey("error_status_text"))
+                response.StatusDescription = (string)responsedata["error_status_text"];
+
+            if (responsedata.ContainsKey("keepalive"))
+                response.KeepAlive = (bool)responsedata["keepalive"];
+
+            response.ContentType = string.IsNullOrEmpty(contentType) ? "text/html" : contentType;
+
+            response.StatusCode = responsecode;
+
+            if (responsecode == (int)OSHttpStatusCode.RedirectMovedPermanently)
+            {
+                response.RedirectLocation = (string)responsedata["str_redirect_location"];
+                response.StatusCode = responsecode;
+            }
+
+            if (contentType != null && !(contentType.Contains("image")
+                                         || contentType.Contains("x-shockwave-flash")
+                                         || contentType.Contains("application/x-oar")
+                                         || contentType.Contains("application/vnd.ll.mesh")))
+            {
+                // Text
+                buffer = Encoding.UTF8.GetBytes(responseString);
+            }
+            else
+            {
+                // Binary!
+                buffer = Convert.FromBase64String(responseString);
+            }
+
+            bool sendBuffer = true;
+
+            string ETag = Util.SHA1Hash(buffer.ToString());
+            response.AddHeader("ETag", ETag);
+            List<string> rHeaders = request.Headers.AllKeys.ToList();
+            if (rHeaders.Contains("if-none-match") && request.Headers["if-none-match"].IndexOf(ETag) >= 0)
+            {
+                response.StatusCode = 304;
+                response.StatusDescription = "Not Modified";
+                sendBuffer = false;
+            }
+
+
+            try
+            {
+                if (sendBuffer)
+                {
+                    response.ContentEncoding = Encoding.UTF8;
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Warn("[HTTPD]: Error - " + ex);
+            }
+            finally
+            {
+                try
+                {
+                    response.Send();
+                }
+                catch (SocketException e)
+                {
+                    // This has to be here to prevent a Linux/Mono crash
+                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+                }
+                catch (IOException e)
+                {
+                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                }
+            }
+        }
+
+        private void HandleHTTPRequest(OSHttpRequest request, OSHttpResponse response)
+        {
+            switch (request.HttpMethod)
+            {
+                case "OPTIONS":
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                    return;
+
+                default:
+                    HandleContentVerbs(request, response);
+                    return;
+            }
+        }
+
+        private void HandleContentVerbs(OSHttpRequest request, OSHttpResponse response)
+        {
+            string requestBody = "";
+            if (request.InputStream != null)
+            {
+                using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
+                    requestBody = reader.ReadToEnd();
+            }
+
+            Hashtable keysvals = new Hashtable();
+            Hashtable headervals = new Hashtable();
+            Hashtable requestVars = new Hashtable();
+
+            string host = String.Empty;
+
+            keysvals.Add("body", requestBody);
+            keysvals.Add("uri", request.RawUrl);
+            keysvals.Add("content-type", request.ContentType);
+            keysvals.Add("http-method", request.HttpMethod);
+
+            foreach (string queryname in request.QueryString.AllKeys)
+            {
+                keysvals.Add(queryname, request.QueryString[queryname]);
+                requestVars.Add(queryname, keysvals[queryname]);
+            }
+
+            foreach (string headername in request.Headers.AllKeys)
+                headervals[headername] = request.Headers[headername];
+
+            if (headervals.Contains("Host"))
+            {
+                host = (string)headervals["Host"];
+            }
+
+            keysvals.Add("headers", headervals);
+            keysvals.Add("querystringkeys", request.QueryString.AllKeys);
+            keysvals.Add("requestvars", requestVars);
+            //            keysvals.Add("form", request.Form);
+
+            GenericHTTPMethod requestprocessor;
+            if (keysvals.Contains("method"))
+            {
+                string method = (string)keysvals["method"];
+                if (_server.TryGetHTTPHandler(method, out requestprocessor))
+                    SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
+                else
+                    SendHTML404(response, host);
+            }
+            else
+            {
+                if (_server.TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor))
+                    SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
+                else
+                    SendHTML404(response, host);
+            }
+        }
+
+        #endregion
+
+        #region LLSD Handlers
+
+        private OSDMap GenerateNoLLSDHandlerResponse()
+        {
+            OSDMap map = new OSDMap();
+            map["reason"] = OSD.FromString("LLSDRequest");
+            map["message"] = OSD.FromString("No handler registered for LLSD Requests");
+            map["login"] = OSD.FromString("false");
+            return map;
+        }
+
+        private void HandleLLSDRequests(OSHttpRequest request, OSHttpResponse response)
+        {
+            string requestBody;
+            using(StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
+                requestBody = reader.ReadToEnd();
+
+            response.KeepAlive = true;
+            response.ContentEncoding = Encoding.UTF8;
+
+            OSD llsdRequest = null, llsdResponse = null;
+
+            bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") && requestBody.Contains("viewer_digest"));
+
+            if (requestBody.Length == 0)
+                requestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
+
+            try
+            {
+                llsdRequest = OSDParser.Deserialize(requestBody);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Warn("[BASE HTTP SERVER]: Error - " + ex);
+            }
+
+            if (llsdRequest != null)
+            {
+                LLSDMethod llsdhandler = null;
+                if (_server.TryGetLLSDHandler(request.RawUrl, out llsdhandler) && !LegacyLLSDLoginLibOMV)
+                {
+                    // we found a registered llsd handler to service this request
+                    llsdResponse = llsdhandler(request.RawUrl, llsdRequest, request.RemoteIPEndPoint);
+                }
+                else
+                {
+                    // we didn't find a registered llsd handler to service this request
+                    // .. give em the failed message
+                    llsdResponse = GenerateNoLLSDHandlerResponse();
+                }
+            }
+            else
+                llsdResponse = GenerateNoLLSDHandlerResponse();
+
+            byte[] buffer = new byte[0];
+            if (llsdResponse.ToString() == "shutdown404!")
+            {
+                response.ContentType = "text/plain";
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                response.StatusDescription = "Not Found";
+                buffer = Encoding.UTF8.GetBytes("Not found");
+            }
+            else
+            {
+                // Select an appropriate response format
+                buffer = BuildLLSDResponse(request, response, llsdResponse);
+            }
+
+            try
+            {
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Send();
+            }
+            catch (IOException e)
+            {
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: LLSD IOException {0}.", e);
+            }
+            catch (SocketException e)
+            {
+                // This has to be here to prevent a Linux/Mono crash
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: LLSD issue {0}.\nNOTE: this may be spurious on Linux.", e);
+            }
+        }
+
+        private byte[] BuildLLSDResponse(OSHttpRequest request, OSHttpResponse response, OSD llsdResponse)
+        {
+            if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
+            {
+                foreach (string strAccept in request.AcceptTypes)
+                {
+                    switch (strAccept)
+                    {
+                        case "application/llsd+xml":
+                        case "application/xml":
+                        case "text/xml":
+                            response.ContentType = strAccept;
+                            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
+                        case "application/llsd+json":
+                        case "application/json":
+                            response.ContentType = strAccept;
+                            return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
+                    }
+                }
+            }
+
+            if (!String.IsNullOrEmpty(request.ContentType))
+            {
+                switch (request.ContentType)
+                {
+                    case "application/llsd+xml":
+                    case "application/xml":
+                    case "text/xml":
+                        response.ContentType = request.ContentType;
+                        return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
+                    case "application/llsd+json":
+                    case "application/json":
+                        response.ContentType = request.ContentType;
+                        return Encoding.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
+                }
+            }
+
+            // response.ContentType = "application/llsd+json";
+            // return Util.UTF8.GetBytes(OSDParser.SerializeJsonString(llsdResponse));
+            response.ContentType = "application/llsd+xml";
+            return OSDParser.SerializeLLSDXmlBytes(llsdResponse);
+        }
+
+        #endregion
+
+        #region XML Handlers
+
+        /// <summary>
+        /// Try all the registered xmlrpc handlers when an xmlrpc request is received.
+        /// Sends back an XMLRPC unknown request response if no handler is registered for the requested method.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        private bool HandleXmlRpcRequests(OSHttpRequest request, OSHttpResponse response)
+        {
+            XmlRpcRequest xmlRprcRequest = null;
+            string requestBody;
+
+            using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
+                requestBody = reader.ReadToEnd();
+
+            requestBody = requestBody.Replace("<base64></base64>", "");
+
+            try
+            {
+                if (requestBody.StartsWith("<?xml"))
+                    xmlRprcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
+            }
+            catch (XmlException)
+            {
+            }
+
+            if (xmlRprcRequest != null)
+            {
+                string methodName = xmlRprcRequest.MethodName;
+                byte[] buf;
+                if (methodName != null)
+                {
+                    xmlRprcRequest.Params.Add(request.RemoteIPEndPoint);
+                    XmlRpcResponse xmlRpcResponse;
+                    XmlRpcMethod method;
+
+                    if (_server.TryGetXMLHandler(methodName, out method))
+                    {
+                        xmlRprcRequest.Params.Add(request.Url); // Param[2]
+                        xmlRprcRequest.Params.Add(request.Headers.Get("X-Forwarded-For")); // Param[3]
+
+                        try
+                        {
+                            xmlRpcResponse = method(xmlRprcRequest, request.RemoteIPEndPoint);
+                        }
+                        catch (Exception e)
+                        {
+                            MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: Requested method [{0}] from {1} threw exception: {2} {3}",
+                                    methodName, request.RemoteIPEndPoint.Address, e, e.StackTrace);
+
+                            // if the registered XmlRpc method threw an exception, we pass a fault-code along
+                            xmlRpcResponse = new XmlRpcResponse();
+
+                            // Code probably set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
+                            xmlRpcResponse.SetFault(-32603, string.Format("Requested method [{0}] from {1} threw exception: {2} {3}",
+                                    methodName, request.RemoteIPEndPoint.Address, e, e.StackTrace));
+                        }
+
+                        // if the method wasn't found, we can't determine KeepAlive state anyway, so lets do it only here
+                        response.KeepAlive = _server.GetXMLHandlerIsKeepAlive(methodName);
+                    }
+                    else
+                    {
+                        xmlRpcResponse = new XmlRpcResponse();
+
+                        // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
+                        xmlRpcResponse.SetFault(
+                            XmlRpcErrorCodes.SERVER_ERROR_METHOD,
+                            String.Format("Requested method [{0}] not found", methodName));
+                    }
+
+                    buf = Encoding.UTF8.GetBytes(XmlRpcResponseSerializer.Singleton.Serialize(xmlRpcResponse));
+                    response.ContentType = "text/xml";
+                }
+                else
+                {
+                    response.ContentType = "text/plain";
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    response.StatusDescription = "Not Found";
+                    buf = Encoding.UTF8.GetBytes("Not found");
+                    response.ContentEncoding = Encoding.UTF8;
+                }
+
+                try
+                {
+                    response.OutputStream.Write(buf, 0, buf.Length);
+                    response.Send();
+                }
+                catch (SocketException e)
+                {
+                    // This has to be here to prevent a Linux/Mono crash
+                    MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+                }
+                catch (IOException e)
+                {
+                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region Default Error Code Handlers (404/500)
+
+        private void SendHTML404(OSHttpResponse response, string host)
+        {
+            // I know this statuscode is dumb, but the client/MSIE doesn't respond to 404s and 500s
+            response.StatusCode = (int)HttpStatusCode.OK;
+            response.AddHeader("Content-type", "text/html");
+
+            byte[] buffer = Encoding.UTF8.GetBytes(GetHTTP404(host));
+
+            response.ContentEncoding = Encoding.UTF8;
+
+            try
+            {
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Send();
+            }
+            catch (SocketException e)
+            {
+                // This has to be here to prevent a Linux/Mono crash
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+            }
+        }
+
+        private void SendHTML500(OSHttpResponse response)
+        {
+            // I know this statuscode is dumb, but the client/MSIE doesn't respond to 404s and 500s
+            response.StatusCode = (int)HttpStatusCode.OK;
+            response.AddHeader("Content-type", "text/html");
+
+            byte[] buffer = Encoding.UTF8.GetBytes(GetHTTP500());
+
+            response.ContentEncoding = Encoding.UTF8;
+            try
+            {
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Send();
+            }
+            catch (SocketException e)
+            {
+                // This has to be here to prevent a Linux/Mono crash
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER] XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+            }
+        }
+
+        private string GetHTTP404(string host)
         {
             string file = Path.Combine(".", "http_404.html");
             if (!File.Exists(file))
@@ -1735,7 +1201,7 @@ namespace Aurora.Framework.Servers.HttpServer
             return result;
         }
 
-        public string GetHTTP500()
+        private string GetHTTP500()
         {
             string file = Path.Combine(".", "http_500.html");
             if (!File.Exists(file))
@@ -1757,62 +1223,188 @@ namespace Aurora.Framework.Servers.HttpServer
         {
             return "<HTML><HEAD><TITLE>500 Internal Server Error</TITLE><BODY><BR /><H1>Ooops!</H1><P>The server you requested is overun by knomes! Find hippos quick!</P></BODY></HTML>";
         }
-    }
 
-    public class HttpServerContextObj
-    {
-        public IHttpClientContext context = null;
-        public IHttpRequest req = null;
-        public OSHttpRequest oreq = null;
-        public OSHttpResponse oresp = null;
+        #endregion
 
-        public HttpServerContextObj(IHttpClientContext contxt, IHttpRequest reqs)
+        /// <summary>
+        /// This methods is the start of incoming HTTP request handling.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
+        public virtual void HandleRequest(OSHttpRequest request, OSHttpResponse response)
         {
-            context = contxt;
-            req = reqs;
-        }
-
-        public HttpServerContextObj(OSHttpRequest osreq, OSHttpResponse osresp)
-        {
-            oreq = osreq;
-            oresp = osresp;
-        }
-    }
-
-    /// <summary>
-    /// Relays HttpServer log messages to our own logging mechanism.
-    /// </summary>
-    /// To use this you must uncomment the switch section
-    ///
-    /// You may also be able to get additional trace information from HttpServer if you uncomment the UseTraceLogs
-    /// property in StartHttp() for the HttpListener
-    public class HttpServerLogWriter : ILogWriter
-    {
-        public void Write(object source, LogPrio priority, string message)
-        {
-            switch (priority)
+            if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
             {
-                case LogPrio.Trace:
-                    MainConsole.Instance.Format(new log4net.Core.Level(0, "None"), "[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Debug:
-                    MainConsole.Instance.Format(new log4net.Core.Level(0, "None"), "[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Error:
-                    MainConsole.Instance.ErrorFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Info:
-                    MainConsole.Instance.InfoFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Warning:
-                    MainConsole.Instance.WarnFormat("[{0}]: {1}", source, message);
-                    break;
-                case LogPrio.Fatal:
-                    MainConsole.Instance.ErrorFormat("[{0}]: FATAL! - {1}", source, message);
-                    break;
+                SendHTML500(response);
+                return;
             }
 
-            return;
+            int tickstart = Environment.TickCount;
+            string RawUrl = request.RawUrl;
+            string HTTPMethod = request.HttpMethod;
+            long contentLength = request.ContentLength;
+            string path = request.RawUrl;
+            byte[] buffer = null;
+            int respcontentLength = -1;
+            try
+            {
+                //Fix the current Culture
+                Culture.SetCurrentCulture();
+
+                IStreamedRequestHandler requestHandler;
+                if (_server.TryGetStreamHandler(BaseHttpServer.GetHandlerKey(request.HttpMethod, path), out requestHandler))
+                {
+                    response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
+
+                    try
+                    {
+                        IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
+                        buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
+                    }
+
+                    if (request.InputStream != null)
+                        request.InputStream.Dispose();
+
+                    if (buffer == null)
+                    {
+                        if (response.OutputStream.CanWrite)
+                        {
+                            response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                            buffer = Encoding.UTF8.GetBytes("Internal Server Error");
+                        }
+                        else
+                            return;//The handler took care of sending it for us
+                    }
+                    else if (buffer == MainServer.BadRequest)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        buffer = Encoding.UTF8.GetBytes("Bad Request");
+                    }
+
+                    respcontentLength = buffer.Length;
+                    try
+                    {
+                        if (buffer != MainServer.NoResponse)
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        response.Send();
+                    }
+                    catch (SocketException e)
+                    {
+                        // This has to be here to prevent a Linux/Mono crash
+                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+                    }
+                    catch (HttpListenerException)
+                    {
+                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP request abnormally terminated.");
+                    }
+                    catch (IOException e)
+                    {
+                        MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                    }
+                    finally
+                    {
+                        buffer = null;
+                    }
+                    return;
+                }
+
+                if (request.AcceptTypes != null && request.AcceptTypes.Length > 0)
+                {
+                    if (request.AcceptTypes.Any(strAccept => strAccept.Contains("application/llsd+xml") || strAccept.Contains("application/llsd+json")))
+                    {
+                        HandleLLSDRequests(request, response);
+                        return;
+                    }
+                }
+
+                
+
+                switch (request.ContentType)
+                {
+                    case null:
+                    case "text/html":
+                    case "application/x-www-form-urlencoded":
+                        HandleHTTPRequest(request, response);
+                        return;
+
+                    case "application/llsd+xml":
+                    case "application/xml+llsd":
+                    case "application/llsd+json":
+                        HandleLLSDRequests(request, response);
+                        return;
+
+                    case "text/xml":
+                    case "application/xml":
+                    case "application/json":
+                    default:
+                        if (request.ContentType == "application/x-gzip")
+                        {
+                            Stream inputStream = new System.IO.Compression.GZipStream(request.InputStream, System.IO.Compression.CompressionMode.Decompress);
+                            request.InputStream = inputStream;
+                        }
+                        if (_server.DoWeHaveALLSDHandler(request.RawUrl))
+                            HandleLLSDRequests(request, response);
+                        else if (_server.DoWeHaveAHTTPHandler(request.RawUrl))
+                            HandleHTTPRequest(request, response);
+                        else if (!HandleXmlRpcRequests(request, response))
+                            SendHTML404(response, "");
+
+                        return;
+                }
+            }
+            catch (SocketException e)
+            {
+                // At least on linux, it appears that if the client makes a request without requiring the response,
+                // an unconnected socket exception is thrown when we close the response output stream.  There's no
+                // obvious way to tell if the client didn't require the response, so instead we'll catch and ignore
+                // the exception instead.
+                //
+                // An alternative may be to turn off all response write exceptions on the HttpListener, but let's go
+                // with the minimum first
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HandleRequest threw {0}.\nNOTE: this may be spurious on Linux", e);
+            }
+            catch (IOException)
+            {
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw ");
+                SendHTML500(response);
+            }
+            catch (Exception e)
+            {
+                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0}", e);
+                SendHTML500(response);
+            }
+            finally
+            {
+                int tickdiff = Environment.TickCount - tickstart;
+                // Every month or so this will wrap and give bad numbers, not really a problem
+                // since its just for reporting, 500ms limit can be adjusted
+                if (tickdiff > 500)
+                    MainConsole.Instance.InfoFormat("[BASE HTTP SERVER]: slow request for {0}/{1} on port {2} took {3} ms for a request sized {4}mb response sized {5}mb", HTTPMethod, RawUrl, _server.Port, tickdiff, ((float)contentLength) / 1024 / 1024, ((float)respcontentLength) / 1024 / 1024);
+                else if (MainConsole.Instance.IsEnabled(log4net.Core.Level.Trace))
+                    MainConsole.Instance.TraceFormat("[BASE HTTP SERVER]: request for {0}/{1} on port {2} took {3} ms", HTTPMethod, RawUrl, _server.Port, tickdiff);
+
+                
+            }
+        }
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            _server = null;
+        }
+
+        #endregion
+    }
+
+    public class JsonBodyDecoder : IBodyDecoder
+    {
+        public void Decode(IRequest message)
+        {
         }
     }
 }

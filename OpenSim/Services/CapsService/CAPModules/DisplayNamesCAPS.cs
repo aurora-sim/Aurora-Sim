@@ -52,35 +52,7 @@ namespace OpenSim.Services.CapsService
         private IProfileConnector m_profileConnector;
         private IRegionClientCapsService m_service;
         private IUserAccountService m_userService;
-
-        #region Stream Handler
-
-        #region Delegates
-
-        public delegate byte[] StreamHandlerCallback(
-            string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-        #endregion
-
-        public class StreamHandler : BaseStreamHandler
-        {
-            private readonly StreamHandlerCallback m_callback;
-
-            public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
-                : base(httpMethod, path)
-            {
-                m_callback = callback;
-            }
-
-            public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest,
-                                          OSHttpResponse httpResponse)
-            {
-                return m_callback(path, request, httpRequest, httpResponse);
-            }
-        }
-
-        #endregion
-
+        
         #region ICapsServiceConnector Members
 
         public void RegisterCaps(IRegionClientCapsService service)
@@ -103,12 +75,12 @@ namespace OpenSim.Services.CapsService
 
             string post = CapsUtil.CreateCAPS("SetDisplayName", "");
             service.AddCAPS("SetDisplayName", post);
-            service.AddStreamHandler("SetDisplayName", new RestHTTPHandler("POST", post,
+            service.AddStreamHandler("SetDisplayName", new GenericStreamHandler("POST", post,
                                                                            ProcessSetDisplayName));
 
             post = CapsUtil.CreateCAPS("GetDisplayNames", "");
             service.AddCAPS("GetDisplayNames", post);
-            service.AddStreamHandler("GetDisplayNames", new StreamHandler("GET", post,
+            service.AddStreamHandler("GetDisplayNames", new GenericStreamHandler("GET", post,
                                                                           ProcessGetDisplayName));
         }
 
@@ -132,11 +104,12 @@ namespace OpenSim.Services.CapsService
         /// <param name = "mDhttpMethod"></param>
         /// <param name = "agentID"></param>
         /// <returns></returns>
-        private Hashtable ProcessSetDisplayName(Hashtable mDhttpMethod)
+        private byte[] ProcessSetDisplayName(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             try
             {
-                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+                OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 OSDArray display_name = (OSDArray) rm["display_name"];
                 string oldDisplayName = display_name[0].AsString();
                 string newDisplayName = display_name[1].AsString();
@@ -199,14 +172,8 @@ namespace OpenSim.Services.CapsService
             catch
             {
             }
-            //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
 
-            return responsedata;
+            return MainServer.BlankResponse;
         }
 
         /// <summary>
@@ -264,11 +231,7 @@ namespace OpenSim.Services.CapsService
             map["bad_ids"] = bad_ids;
             map["bad_usernames"] = bad_usernames;
 
-            byte[] m = OSDParser.SerializeLLSDXmlBytes(map);
-            httpResponse.Body.Write(m, 0, m.Length);
-            httpResponse.StatusCode = (int) HttpStatusCode.OK;
-            httpResponse.Send();
-            return null;
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         private void PackUserInfo(IUserProfileInfo info, UserAccount account, ref OSDArray agents)

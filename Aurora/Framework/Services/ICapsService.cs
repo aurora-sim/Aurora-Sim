@@ -390,7 +390,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "method"></param>
         /// <param name = "handler"></param>
-        void AddStreamHandler(string method, IRequestHandler handler);
+        void AddStreamHandler(string method, IStreamedRequestHandler handler);
 
         /// <summary>
         ///   Remove an old handler for a CAPS message

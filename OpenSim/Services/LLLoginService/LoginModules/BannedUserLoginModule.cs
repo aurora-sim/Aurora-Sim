@@ -38,6 +38,7 @@ namespace OpenSim.Services.LLLoginService
 
         public LoginResponse Login(Hashtable request, UserAccount account, IAgentInfo agentInfo, string authType, string password, out object data)
         {
+            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
             data = null;
 
             if (request == null)
@@ -60,14 +61,6 @@ namespace OpenSim.Services.LLLoginService
             if (request.Contains("channel") && request["channel"] != null)
                 channel = request["channel"].ToString();
 
-            IAgentConnector agentData = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
-            if (mac != "")
-            {
-                string reason = "";
-                if (!agentData.CheckMacAndViewer(mac, channel, out reason))
-                    return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant,
-                        reason, false);
-            }
             bool AcceptedNewTOS = false;
             //This gets if the viewer has accepted the new TOS
             if (!agentInfo.AcceptTOS && tosExists)

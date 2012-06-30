@@ -406,11 +406,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
         public void sortChulls(List<CHull> hulls)
         {
-#if (!ISWIN)
-            hulls.Sort(delegate(CHull a, CHull b) { return a.mVolume.CompareTo(b.mVolume); });
-#else
             hulls.Sort((a, b) => a.mVolume.CompareTo(b.mVolume));
-#endif
         }
     }
 }

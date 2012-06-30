@@ -110,7 +110,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public IMesher mesher;
 
-        public BSScene(string identifier)
+        public BSScene()
         {
             m_initialized = false;
         }
@@ -414,13 +414,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             BSPrim prim = new BSPrim(entity, isPhysical, this);
             lock (m_prims) m_prims.Add(entity.LocalId, prim);
             return prim;
-        }
-
-        // This is a call from the simulator saying that some physical property has been updated.
-        // The BulletSim driver senses the changing of relevant properties so this taint 
-        // information call is not needed.
-        public override void AddPhysicsActorTaint(PhysicsActor prim)
-        {
         }
 
         // Simulate one timestep

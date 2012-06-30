@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
+using System.IO;
 using Aurora.DataManager;
 using Aurora.Framework;
 using OpenMetaverse;
@@ -49,7 +51,7 @@ namespace OpenSim.Services.CapsService
             m_userService = service.Registry.RequestModuleInterface<IUserAccountService>();
             m_profileConnector = DataManager.RequestPlugin<IProfileConnector>();
             m_service.AddStreamHandler("MeshUploadFlag",
-                                       new RestHTTPHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
+                                       new GenericStreamHandler("GET", m_service.CreateCAPS("MeshUploadFlag", ""),
                                                            MeshUploadFlagCAP));
         }
 
@@ -64,7 +66,8 @@ namespace OpenSim.Services.CapsService
 
         #endregion
 
-        private Hashtable MeshUploadFlagCAP(Hashtable mDhttpMethod)
+        private byte[] MeshUploadFlagCAP(string path, Stream request,
+                                  OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap data = new OSDMap();
             UserAccount acct = m_userService.GetUserAccount(UUID.Zero, m_service.AgentID);
@@ -82,12 +85,7 @@ namespace OpenSim.Services.CapsService
             data["is_display_name_default"] = isDisplayNameNDefault;
 
             //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = OSDParser.SerializeLLSDXmlString(data);
-            return responsedata;
+            return OSDParser.SerializeLLSDXmlBytes(data);
         }
     }
 }

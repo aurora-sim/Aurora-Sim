@@ -143,17 +143,18 @@ namespace Aurora.Modules.Sound
                                                  if (dis > 100.0) // Max audio distance
                                                      return;
 
-                                                 /*if (grp.IsAttachment)
-                {
-                    if (grp.GetAttachmentPoint() > 30) // HUD
-                    {
-                        if (sp.ControllingClient.AgentId != grp.OwnerID)
-                            return;
-                    }
+                                                 if (part.IsAttachment)
+                                                 {
+                                                    if (part.ParentEntity.GetAttachmentPoint() >= (uint)OpenMetaverse.AttachmentPoint.HUDCenter2 &&
+                                                        part.ParentEntity.GetAttachmentPoint() <= (uint)OpenMetaverse.AttachmentPoint.HUDBottomRight) // HUD
+                                                    {
+                                                        if (sp.ControllingClient.AgentId != part.OwnerID)
+                                                            return;
+                                                    }
 
-                    if (sp.ControllingClient.AgentId == grp.OwnerID)
-                        dis = 0;
-                }*/
+                                                    if (sp.ControllingClient.AgentId == part.OwnerID)
+                                                        dis = 0;
+                                                 }
 
                                                  //Check to see if the person is local and the av is in the same parcel
                                                  if (LocalOnly && sp.CurrentParcelUUID != ILO.LandData.GlobalID)

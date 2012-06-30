@@ -31,6 +31,7 @@ using Aurora.Framework;
 
 namespace OpenSim.Services.Interfaces
 {
+    public delegate void GetResponse(OSDMap response);
     /// <summary>
     ///   This Service deals with posting events to a (local or remote) host
     ///   This is used for secure communications between regions and the grid service
@@ -40,7 +41,6 @@ namespace OpenSim.Services.Interfaces
     {
         /// <summary>
         ///   Post a request to all hosts that we have
-        ///   This is asyncronous.
         /// </summary>
         /// <param name = "request"></param>
         void Post(OSDMap request, ulong RegionHandle);
@@ -48,11 +48,10 @@ namespace OpenSim.Services.Interfaces
         /// <summary>
         ///   Post a request to all hosts that we have
         ///   Returns an OSDMap of the response.
-        ///   This is syncronous
         /// </summary>
         /// <param name = "request"></param>
         /// <returns></returns>
-        OSDMap Get(OSDMap request, UUID userID, ulong RegionHandle);
+        void Get(OSDMap request, UUID userID, ulong RegionHandle, GetResponse response);
     }
 
     public delegate OSDMap MessageReceived(OSDMap message);

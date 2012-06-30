@@ -297,7 +297,7 @@ namespace Aurora.DataManager
 
         public abstract List<string> QueryFullData(string whereClause, string table, string wantedValue);
 
-        public abstract IDataReader QueryData(string whereClause, string table, string wantedValue);
+        public abstract DataReaderConnection QueryData(string whereClause, string table, string wantedValue);
 
         public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, string table, string wantedValue);
 
@@ -305,7 +305,7 @@ namespace Aurora.DataManager
 
         public abstract Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
 
-        public abstract IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue);
+        public abstract DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue);
 
         public abstract List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
 
@@ -336,7 +336,7 @@ namespace Aurora.DataManager
 
         public abstract void ConnectToDatabase(string connectionString, string migratorName, bool validateTables);
 
-        public abstract void CloseDatabase();
+        public abstract void CloseDatabase(DataReaderConnection connection);
 
         public abstract IGenericData Copy();
         public abstract string ConCat(string[] toConcat);

@@ -114,14 +114,7 @@ namespace Aurora.Services.DataService
                 replyData.UnpackRegionInfoData((OSDMap)OSDParser.DeserializeJson(t));
                 Infos.Add(replyData);
             }
-            //Sort by startup number
-            Infos.Sort(RegionInfoStartupSorter);
             return Infos.ToArray();
-        }
-
-        private int RegionInfoStartupSorter(RegionInfo A, RegionInfo B)
-        {
-            return A.NumberStartup.CompareTo(B.NumberStartup);
         }
 
         public RegionInfo GetRegionInfo (UUID regionID)

@@ -41,11 +41,6 @@ namespace Aurora.Modules.Agent.Xfer
         private readonly Dictionary<ulong, XferDownLoad> Transfers = new Dictionary<ulong, XferDownLoad>();
         private IScene m_scene;
 
-        public bool IsSharedModule
-        {
-            get { return false; }
-        }
-
         #region INonSharedRegionModule Members
 
         public void Initialise(IConfigSource config)
