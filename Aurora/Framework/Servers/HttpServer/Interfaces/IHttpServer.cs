@@ -111,7 +111,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// Add a stream handler to the http server.  If the handler already exists, then nothing happens.
         /// </summary>
         /// <param name="handler"></param>
-        void AddStreamHandler(IRequestHandler handler);
+        void AddStreamHandler(IStreamedRequestHandler handler);
 
         bool AddXmlRPCHandler(string method, XmlRpcMethod handler);
         bool AddXmlRPCHandler(string method, XmlRpcMethod handler, bool keepAlive);
@@ -137,9 +137,5 @@ namespace Aurora.Framework.Servers.HttpServer
         void RemoveStreamHandler(string httpMethod, string path);
 
         void RemoveXmlRPCHandler(string method);
-
-        string GetHTTP404(string host);
-
-        string GetHTTP500();
     }
 }

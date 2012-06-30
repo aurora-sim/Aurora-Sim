@@ -56,7 +56,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
-        public PhysicsScene GetScene(String sceneIdentifier)
+        public PhysicsScene GetScene()
         {
             lock (m_lock)
             {
@@ -71,7 +71,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_initialized = true;
                     }
 
-                    _mScene = new AuroraODEPhysicsScene(sceneIdentifier);
+                    _mScene = new AuroraODEPhysicsScene();
                 }
             }
             

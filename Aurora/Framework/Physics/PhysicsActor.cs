@@ -122,10 +122,13 @@ namespace Aurora.Framework
         public abstract bool IsJumping { get; }
         public abstract float SpeedModifier { get; set; }
         public abstract bool IsPreJumping { get; }
+        public abstract bool Flying { get; set; }
+        public abstract bool SetAlwaysRun { get; set; }
 
         public virtual void AddMovementForce(Vector3 force) { }
         public virtual void SetMovementForce(Vector3 force) { }
 
+        public virtual void Destroy() { }
 
         public delegate bool checkForRegionCrossing();
         public event checkForRegionCrossing OnCheckForRegionCrossing;
@@ -173,6 +176,9 @@ namespace Aurora.Framework
         public virtual void SetCameraPos(Quaternion CameraRotation) { }
         public virtual bool BuildingRepresentation { get; set; }
         public virtual bool BlockPhysicalReconstruction { get; set; }
+        public abstract float Buoyancy { get; set; }
+        public abstract Vector3 CenterOfMass { get; }
+        public abstract Vector3 Torque { get; set; }
 
         //set never appears to be called
         public virtual bool VolumeDetect
@@ -193,6 +199,70 @@ namespace Aurora.Framework
             if (OnPhysicalRepresentationChanged != null)
                 OnPhysicalRepresentationChanged();
         }
+
+        public virtual void Destroy()
+        {
+        }
+    }
+
+    /// <summary>
+    ///   this are prim change comands replace old taints
+    ///   but for now use a single comand per call since argument passing still doesn't support multiple comands
+    /// </summary>
+    public enum changes
+    {
+        Add = 0, // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
+        Remove,
+        Delete,
+        Link,
+        // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
+        //  or removes from a object if arg is null
+        DeLink,
+        Position,
+        // arg Vector3 new position in world coords. Changes prim position. Prim must know if it is root or child
+        Orientation,
+        // arg Quaternion new orientation in world coords. Changes prim position. Prim must know it it is root or child
+        PosOffset, // not in use
+        // arg Vector3 new position in local coords. Changes prim position in object
+        OriOffset, // not in use
+        // arg Vector3 new position in local coords. Changes prim velocity in object
+        Velocity,
+        // arg Quaternion new rotation in local coords. Changes avatar rotation in object
+        Rotation,
+        // arg float new capsule length of avatar. Changes avatar height
+        CapsuleLength,
+        AngVelocity,
+        Acceleration,
+        Force,
+        Torque,
+
+        AddForce,
+        AddAngForce,
+        AngLock,
+
+        Size,
+        Shape,
+
+        CollidesWater,
+        VolumeDtc,
+
+        Physical,
+        Selected,
+        disabled,
+
+        VehicleType,
+        VehicleFloatParam,
+        VehicleVectorParam,
+        VehicleRotationParam,
+        VehicleFlags,
+        VehicleSetCameraPos,
+
+        buildingrepresentation,
+        blockphysicalreconstruction,
+
+
+
+        Null //keep this last used do dim the methods array. does nothing but pulsing the prim
     }
 
     public abstract class PhysicsActor
@@ -273,20 +343,16 @@ namespace Aurora.Framework
         public abstract float Mass { get; }
         public abstract Vector3 Force { get; set; }
 
-        public abstract Vector3 CenterOfMass { get; }
         public abstract Vector3 Velocity { get; set; }
-        public abstract Vector3 Torque { get; set; }
         public abstract float CollisionScore { get; set; }
         public abstract Quaternion Orientation { get; set; }
         public abstract int PhysicsActorType { get; }
         public abstract bool IsPhysical { get; set; }
-        public abstract bool Flying { get; set; }
-        public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }
+        public abstract bool IsTruelyColliding { get; set; }
         public abstract bool FloatOnWater { set; }
         public abstract Vector3 RotationalVelocity { get; set; }
-        public abstract float Buoyancy { get; set; }
 
         public abstract void AddForce(Vector3 force, bool pushforce);
         public abstract void SubscribeEvents(int ms);
@@ -303,6 +369,10 @@ namespace Aurora.Framework
         public virtual void ForceSetPosition(Vector3 position)
         {
         }
+
+        public virtual void ProcessTaints(changes changes, object p)
+        {
+        }
     }
 
     public class NullObjectPhysicsActor : PhysicsObject
@@ -310,12 +380,6 @@ namespace Aurora.Framework
         public override Vector3 Position
         {
             get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override bool SetAlwaysRun
-        {
-            get { return false; }
             set { return; }
         }
 
@@ -398,23 +462,14 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override bool Flying
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override bool ThrottleUpdates
         {
             get { return false; }
             set { return; }
         }
 
-        public override bool IsColliding
-        {
-            get { return false; }
-            set { return; }
-        }
+        public override bool IsColliding { get; set; }
+        public override bool IsTruelyColliding { get; set; }
 
         public override int PhysicsActorType
         {
@@ -497,12 +552,6 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override float Buoyancy
-        {
-            get { return 0f; }
-            set { return; }
-        }
-
         public override bool FloatOnWater
         {
             set { return; }
@@ -525,18 +574,7 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override Vector3 Velocity
-        {
-            get { return Vector3.Zero; }
-            set { return; }
-        }
-
-        public override Vector3 Torque
         {
             get { return Vector3.Zero; }
             set { return; }
@@ -572,11 +610,8 @@ namespace Aurora.Framework
             set { return; }
         }
 
-        public override bool IsColliding
-        {
-            get { return false; }
-            set { return; }
-        }
+        public override bool IsTruelyColliding { get; set; }
+        public override bool IsColliding { get; set; }
 
         public override int PhysicsActorType
         {

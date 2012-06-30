@@ -119,8 +119,9 @@ namespace Aurora.Modules.Ban
         private bool m_debug = false;
         private bool m_checkOnLogin = false;
         private bool m_checkOnTimer = true;
-        private int TimerMinutes = 60;
         private bool m_enabled = false;
+
+        private Aurora.Framework.ListCombiningTimedSaving<PresenceInfo> _checkForSimilaritiesLater = new ListCombiningTimedSaving<PresenceInfo>();
 
         #endregion
 
@@ -156,14 +157,9 @@ namespace Aurora.Modules.Ban
 
             m_checkOnLogin = config.GetBoolean ("CheckForSimilaritiesOnLogin", m_checkOnLogin);
             m_checkOnTimer = config.GetBoolean ("CheckForSimilaritiesOnTimer", m_checkOnTimer);
-            TimerMinutes = config.GetInt ("MinutesForTimerToCheck", TimerMinutes);
 
             if (m_checkOnTimer)
-            {
-                System.Timers.Timer timer = new System.Timers.Timer (TimerMinutes * 1000 * 60);
-                timer.Elapsed += new System.Timers.ElapsedEventHandler (CheckOnTimer);
-                timer.Start ();
-            }
+                _checkForSimilaritiesLater.Start(5, CheckForSimilaritiesMultiple);
 
             GrieferAllowLevel = (AllowLevel)Enum.Parse (typeof (AllowLevel), config.GetString ("GrieferAllowLevel", "AllowKnown"));
 
@@ -173,9 +169,9 @@ namespace Aurora.Modules.Ban
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
-                    "UserInfo", "UserInfo [UUID] or [First] [Last]", "Info on a given user", UserInfo);
+                    "show user info", "show user info [UUID] or [First] [Last]", "Info on a given user", UserInfo);
                 MainConsole.Instance.Commands.AddCommand(
-                    "SetUserInfo", "SetUserInfo [UUID] or [First] [Last] [Flags]", "Sets the info of the given user [Flags]: Clean, Suspected, Known, Banned", SetUserInfo);
+                    "set user info", "set user info [UUID] or [First] [Last] [Flags]", "Sets the info of the given user [Flags]: Clean, Suspected, Known, Banned", SetUserInfo);
                 MainConsole.Instance.Commands.AddCommand(
                     "block user", "block user [UUID] or [Name]", "Blocks a given user from connecting anymore", BlockUser);
                 MainConsole.Instance.Commands.AddCommand(
@@ -191,9 +187,10 @@ namespace Aurora.Modules.Ban
 
         #region Private and Protected members
 
-        void CheckOnTimer(object sender, System.Timers.ElapsedEventArgs e)
+        private void CheckForSimilaritiesMultiple(UUID agentID, List<PresenceInfo> info)
         {
-            presenceInfo.Check(m_useIncludeList ? m_allowedViewers : m_bannedViewers, m_useIncludeList);
+            foreach(PresenceInfo i in info)
+                presenceInfo.Check(i, m_useIncludeList ? m_allowedViewers : m_bannedViewers, m_useIncludeList);
         }
 
         private void CheckForSimilarities(PresenceInfo info)
@@ -255,11 +252,16 @@ namespace Aurora.Modules.Ban
 
         protected void UserInfo(string[] cmdparams)
         {
+            if (cmdparams.Length < 4)
+            {
+                MainConsole.Instance.Info("Wrong number of parameters for show user info");
+                return;
+            }
             UUID AgentID;
             PresenceInfo info;
-            if (!UUID.TryParse(cmdparams[1], out AgentID))
+            if (!UUID.TryParse(cmdparams[3], out AgentID))
             {
-                UserAccount account = m_accountService.GetUserAccount(UUID.Zero, cmdparams[1], cmdparams[2]);
+                UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 3));
                 if (account == null)
                 {
                     MainConsole.Instance.Warn("Cannot find user.");
@@ -278,6 +280,11 @@ namespace Aurora.Modules.Ban
 
         protected void BlockUser(string[] cmdparams)
         {
+            if (cmdparams.Length < 3)
+            {
+                MainConsole.Instance.Info("Wrong number of parameters for block user");
+                return;
+            }
             UUID AgentID;
             PresenceInfo info;
             if (!UUID.TryParse(cmdparams[2], out AgentID))
@@ -319,6 +326,11 @@ namespace Aurora.Modules.Ban
 
         protected void UnBlockUser(string[] cmdparams)
         {
+            if (cmdparams.Length < 3)
+            {
+                MainConsole.Instance.Info("Wrong number of parameters for block user");
+                return;
+            }
             UUID AgentID;
             PresenceInfo info;
             if (!UUID.TryParse(cmdparams[2], out AgentID))
@@ -352,12 +364,17 @@ namespace Aurora.Modules.Ban
 
         protected void SetUserInfo(string[] cmdparams)
         {
+            if (cmdparams.Length < 5)
+            {
+                MainConsole.Instance.Info("Wrong number of parameters for set user info");
+                return;
+            }
             UUID AgentID;
             PresenceInfo info;
-            int Num = 2;
-            if (!UUID.TryParse(cmdparams[1], out AgentID))
+            int Num = 4;
+            if (!UUID.TryParse(cmdparams[3], out AgentID))
             {
-                UserAccount account = m_accountService.GetUserAccount(UUID.Zero, cmdparams[1], cmdparams[2]);
+                UserAccount account = m_accountService.GetUserAccount(UUID.Zero, Util.CombineParams(cmdparams, 3, 5));
                 if (account == null)
                 {
                     MainConsole.Instance.Warn("Cannot find user.");
@@ -387,14 +404,30 @@ namespace Aurora.Modules.Ban
 
         private void DisplayUserInfo(PresenceInfo info)
         {
-            MainConsole.Instance.Info("User Info for " + info.AgentID);
+            UserAccount account = m_accountService.GetUserAccount(UUID.Zero, info.AgentID);
+            if (account != null)
+                MainConsole.Instance.Info("User Info for " + account.Name);
+            else
+                MainConsole.Instance.Info("User Info for " + info.AgentID);
             MainConsole.Instance.Info("   AgentID: " + info.AgentID);
             MainConsole.Instance.Info("   Flags: " + info.Flags);
-            /*MainConsole.Instance.Info("   ID0: " + info.LastKnownID0);
+            MainConsole.Instance.Info("   ID0: " + info.LastKnownID0);
             MainConsole.Instance.Info("   IP: " + info.LastKnownIP);
-            MainConsole.Instance.Info("   Mac: " + info.LastKnownMac);
+            //MainConsole.Instance.Info("   Mac: " + info.LastKnownMac);
             MainConsole.Instance.Info("   Viewer: " + info.LastKnownViewer);
-            MainConsole.Instance.Info("   Platform: " + info.Platform);*/
+            MainConsole.Instance.Info("   Platform: " + info.Platform);
+            if (info.KnownAlts.Count > 0)
+            {
+                MainConsole.Instance.Info("   Known Alt Accounts: ");
+                foreach (var acc in info.KnownAlts)
+                {
+                    account = m_accountService.GetUserAccount(UUID.Zero, UUID.Parse(acc));
+                    if (account != null)
+                        MainConsole.Instance.Info("   " + account.Name);
+                    else
+                        MainConsole.Instance.Info("   " + acc);
+                }
+            }
         }
 
         private bool CheckClient(UUID AgentID, out string message)
@@ -405,6 +438,8 @@ namespace Aurora.Modules.Ban
 
             if (m_checkOnLogin)
                 CheckForSimilarities(info);
+            else
+                _checkForSimilaritiesLater.Add(AgentID, info);
 
             if (!CheckThreatLevel(info, out message))
                 return false;
@@ -472,9 +507,11 @@ namespace Aurora.Modules.Ban
             else if (GrieferAllowLevel == AllowLevel.AllowCleanOnly)
             { 
                 //Allow people with only clean flag or suspected alt
-                if ((info.Flags & PresenceInfo.PresenceInfoFlags.Clean) == PresenceInfo.PresenceInfoFlags.Clean)
-                    return true;
-                else
+                if ((info.Flags & PresenceInfo.PresenceInfoFlags.Suspected) == PresenceInfo.PresenceInfoFlags.Suspected ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.Banned) == PresenceInfo.PresenceInfoFlags.Banned)
                 {
                     message = "Not a Clean agent and have been denied access.";
                     return false;
@@ -484,14 +521,13 @@ namespace Aurora.Modules.Ban
             {
                 //Block all alts of knowns, and suspected alts of knowns
                 if ((info.Flags & PresenceInfo.PresenceInfoFlags.Known) == PresenceInfo.PresenceInfoFlags.Known ||
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown || 
-                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown)
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.SuspectedAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown) == PresenceInfo.PresenceInfoFlags.KnownAltAccountOfKnown ||
+                    (info.Flags & PresenceInfo.PresenceInfoFlags.Banned) == PresenceInfo.PresenceInfoFlags.Banned)
                 {
                     message = "Not a Clean agent and have been denied access.";
                     return false;
                 }
-                else
-                    return true;
             }
 
             return true;

@@ -32,6 +32,7 @@
     UseRegistrationService = false
 	OSDRequestTimeout = 10000
 	OSDRequestTryCount = 5
+	RegisterRegionPassword = 
 [Handlers]
 
     AbuseReportHandler = AbuseReportsService

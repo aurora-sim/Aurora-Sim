@@ -152,7 +152,11 @@ namespace Aurora.Modules.Archivers
             string fileName = MainConsole.Instance.Prompt("What file name should we load?",
                                                              scene.RegionInfo.RegionName + ".abackup");
 
-            GZipStream m_loadStream = new GZipStream(ArchiveHelpers.GetStream(fileName), CompressionMode.Decompress);
+
+            var stream = ArchiveHelpers.GetStream(fileName);
+            if (stream == null)
+                throw new FileNotFoundException();
+            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
 
             LoadRegionBackup(reader, scene);

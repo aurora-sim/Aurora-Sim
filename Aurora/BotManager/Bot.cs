@@ -622,7 +622,7 @@ namespace Aurora.BotManager
             TravelMode state;
             bool teleport;
             if(!ForceCloseToPoint)
-                m_closeToPoint = m_controller.PhysicsActor.Flying ? 1.5f : 1.0f;
+                m_closeToPoint = m_controller.PhysicsActor is PhysicsCharacter && ((PhysicsCharacter)m_controller.PhysicsActor).Flying ? 1.5f : 1.0f;
             if (m_nodeGraph.GetNextPosition(m_controller.AbsolutePosition, m_closeToPoint, 60, out pos, out state,
                                             out teleport))
             {
@@ -880,7 +880,8 @@ namespace Aurora.BotManager
                 //If we were having to fly to here, stop flying
                 if (jumpTry > 0)
                 {
-                    m_controller.PhysicsActor.Flying = false;
+                    if(m_controller.PhysicsActor is PhysicsCharacter)
+                        ((PhysicsCharacter)m_controller.PhysicsActor).Flying = false;
                     walkTo(m_controller.AbsolutePosition);
                     //Fix the animation from flying > walking
                     m_controller.UpdateMovementAnimations(false);
@@ -1732,8 +1733,6 @@ namespace Aurora.BotManager
         public event SetScriptRunning OnSetScriptRunning;
         public event UpdateVector OnAutoPilotGo;
 
-        public event TerrainUnacked OnUnackedTerrain;
-
         public event RegionHandleRequest OnRegionHandleRequest;
         public event ParcelInfoRequest OnParcelInfoRequest;
 
@@ -2082,10 +2081,6 @@ namespace Aurora.BotManager
         }
 
         public void SendPrimUpdate(IEnumerable<EntityUpdate> updates)
-        {
-        }
-
-        public void FlushPrimUpdates()
         {
         }
 

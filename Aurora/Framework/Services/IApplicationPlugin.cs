@@ -126,7 +126,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   select 'wantedValue' from 'table' 'whereClause'
         /// </summary>
-        IDataReader QueryData(string whereClause, string table, string wantedValue);
+        DataReaderConnection QueryData(string whereClause, string table, string wantedValue);
 
         /// <summary>
         ///   select 'wantedValue' from 'table' where 'keyRow' = 'keyValue'
@@ -138,7 +138,7 @@ namespace Aurora.Framework
 
         List<string> Query(string[] wantedValue, QueryTables tables, QueryFilter queryFilter, Dictionary<string, bool> sort, uint? start, uint? count);
         Dictionary<string, List<string>> QueryNames(string[] keyRow, object[] keyValue, QueryTables tables, string wantedValue);
-        IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue);
+        DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue);
         List<string> QueryFullData(string whereClause, QueryTables tables, string wantedValue);
 
         #endregion
@@ -239,7 +239,7 @@ namespace Aurora.Framework
         /// <summary>
         ///   Close the given database connection
         /// </summary>
-        void CloseDatabase();
+        void CloseDatabase(DataReaderConnection connection);
 
         /// <summary>
         ///   in the sql the strings will return joined fields
@@ -247,6 +247,17 @@ namespace Aurora.Framework
         /// <param name = "toConCat"></param>
         /// <returns></returns>
         string ConCat(string[] toConCat);
+    }
+
+    public class DataReaderConnection : System.IDisposable
+    {
+        public IDataReader DataReader;
+        public object Connection;
+
+        public void Dispose()
+        {
+            DataReader.Dispose();
+        }
     }
 
     public class QueryFilter

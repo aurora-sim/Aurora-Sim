@@ -306,7 +306,6 @@ namespace Aurora.Framework
                 args["trust_binaries_from_foreign_sims"] = OSD.FromBoolean(TrustBinariesFromForeignSims);
                 args["allow_script_crossing"] = OSD.FromBoolean(AllowScriptCrossing);
                 args["allow_physical_prims"] = OSD.FromBoolean (AllowPhysicalPrims);
-                args["number_startup"] = OSD.FromInteger (NumberStartup);
                 args["startupType"] = OSD.FromInteger((int)Startup);
                 args["RegionSettings"] = RegionSettings.ToOSD();
             }
@@ -373,8 +372,6 @@ namespace Aurora.Framework
                 AllowScriptCrossing = args["allow_script_crossing"].AsBoolean();
             if (args.ContainsKey("allow_physical_prims"))
                 AllowPhysicalPrims = args["allow_physical_prims"].AsBoolean();
-            if(args.ContainsKey("number_startup"))
-                NumberStartup = args["number_startup"].AsInteger();
             if (args.ContainsKey ("startupType"))
                 Startup = (StartupType)args["startupType"].AsInteger();
             if(args.ContainsKey("InfiniteRegion"))

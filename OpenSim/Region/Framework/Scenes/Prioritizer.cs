@@ -48,16 +48,6 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public enum UpdatePrioritizationSchemes
-    {
-        Time = 0,
-        Distance = 1,
-        SimpleAngularDistance = 2,
-        FrontBack = 3,
-        BestAvatarResponsiveness = 4,
-        OOB = 5
-    }
-
     public class Culler : ICuller
     {
         private readonly Dictionary<uint, bool> m_previousCulled = new Dictionary<uint, bool>();
@@ -364,32 +354,12 @@ namespace OpenSim.Region.Framework.Scenes
     {
         private readonly double m_childReprioritizationDistance = 20.0;
 
-        public UpdatePrioritizationSchemes UpdatePrioritizationScheme =
-            UpdatePrioritizationSchemes.BestAvatarResponsiveness;
-
         public Prioritizer(IScene scene)
         {
             IConfig interestConfig = scene.Config.Configs["InterestManagement"];
             if (interestConfig != null)
-            {
-                string update_prioritization_scheme =
-                    interestConfig.GetString("UpdatePrioritizationScheme", "BestAvatarResponsiveness").Trim().ToLower();
                 m_childReprioritizationDistance = interestConfig.GetDouble("ChildReprioritizationDistance", 20.0);
-                try
-                {
-                    UpdatePrioritizationScheme =
-                        (UpdatePrioritizationSchemes)
-                        Enum.Parse(typeof (UpdatePrioritizationSchemes), update_prioritization_scheme, true);
-                }
-                catch (Exception)
-                {
-                    MainConsole.Instance.Warn(
-                        "[Prioritizer]: UpdatePrioritizationScheme was not recognized, setting to default prioritizer BestAvatarResponsiveness");
-                    UpdatePrioritizationScheme = UpdatePrioritizationSchemes.BestAvatarResponsiveness;
-                }
-            }
 
-            //MainConsole.Instance.Info("[Prioritizer]: Using the " + UpdatePrioritizationScheme + " prioritization scheme");
         }
 
         #region IPrioritizer Members
@@ -406,33 +376,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (entity == null)
                 return double.PositiveInfinity;
 
-            bool adjustRootPriority = true;
             try
             {
-                /*switch (UpdatePrioritizationScheme)
-                {
-                    case UpdatePrioritizationSchemes.Time:
-                        priority = GetPriorityByTime();
-                        break;
-                    case UpdatePrioritizationSchemes.Distance:
-                        priority = GetPriorityByDistance(client, entity);
-                        break;
-                    case UpdatePrioritizationSchemes.SimpleAngularDistance:
-                        priority = GetPriorityByDistance(client, entity); //This (afaik) always has been the same in OpenSim as just distance (it is in 0.6.9 anyway)
-                        break;
-                    case UpdatePrioritizationSchemes.FrontBack:
-                        priority = GetPriorityByFrontBack(client, entity);
-                        break;
-                    case UpdatePrioritizationSchemes.BestAvatarResponsiveness:
-                        priority = GetPriorityByBestAvatarResponsiveness(client, entity);
-                        break;
-                    case UpdatePrioritizationSchemes.OOB:*/
-                adjustRootPriority = false; //It doesn't need it
                 priority = GetPriorityByOOBDistance(client, entity);
-                /*break;
-                    default:
-                        throw new InvalidOperationException("UpdatePrioritizationScheme not defined.");
-                }*/
             }
             catch (Exception ex)
             {
@@ -442,32 +388,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 //Set it to max if it errors
                 priority = double.PositiveInfinity;
-            }
-
-            // Adjust priority so that root prims are sent to the viewer first.  This is especially important for 
-            // attachments acting as huds, since current viewers fail to display hud child prims if their updates
-            // arrive before the root one.
-
-            if (adjustRootPriority && entity is ISceneChildEntity)
-            {
-                ISceneChildEntity sop = ((ISceneChildEntity) entity);
-                if (sop.IsRoot)
-                {
-                    ISceneEntity grp = sop.ParentEntity;
-                    priority -= (grp.BSphereRadiusSQ + 0.5f);
-                }
-
-
-                if (sop.IsRoot)
-                {
-                    if (priority >= double.MinValue + 0.05)
-                        priority -= 0.05;
-                }
-                else
-                {
-                    if (priority <= double.MaxValue - 0.05)
-                        priority += 0.05;
-                }
             }
 
             return priority;
@@ -496,7 +416,6 @@ namespace OpenSim.Region.Framework.Scenes
                 entityPos = g.AbsolutePosition + g.OOBoffset*g.GroupRotation;
                 distsq = g.BSphereRadiusSQ - Vector3.DistanceSquared(presencePos, entityPos);
             }
-
             else if (entity is SceneObjectPart)
             {
                 SceneObjectPart p = (SceneObjectPart) entity;
@@ -511,7 +430,6 @@ namespace OpenSim.Region.Framework.Scenes
                     distsq = -p.clampedAABdistanceToSQ(presencePos) + 1.0f;
                 }
             }
-
             else
             {
                 entityPos = entity.AbsolutePosition;
@@ -522,166 +440,6 @@ namespace OpenSim.Region.Framework.Scenes
                 distsq = 0.0f;
 
             return distsq;
-        }
-
-        private double GetPriorityByTime()
-        {
-            return DateTime.UtcNow.ToOADate();
-        }
-
-        private double GetPriorityByDistance(IScenePresence presence, IEntity entity)
-        {
-            // If this is an update for our own avatar give it the highest priority
-            if (presence == entity)
-                return 0.0;
-
-            // Use the camera position for local agents and avatar position for remote agents
-            Vector3 presencePos = (presence.IsChildAgent)
-                                      ? presence.AbsolutePosition
-                                      : presence.CameraPosition;
-
-            // Use group position for child prims
-            Vector3 entityPos = entity.AbsolutePosition;
-
-            return Vector3.DistanceSquared(presencePos, entityPos);
-        }
-
-        private double GetPriorityByFrontBack(IScenePresence presence, IEntity entity)
-        {
-            // If this is an update for our own avatar give it the highest priority
-            if (presence == entity)
-                return 0.0;
-
-            // Use group position for child prims
-            Vector3 entityPos = entity.AbsolutePosition;
-            if (entity is SceneObjectPart)
-            {
-                // Can't use Scene.GetGroupByPrim() here, since the entity may have been delete from the scene
-                // before its scheduled update was triggered
-                //entityPos = m_scene.GetGroupByPrim(entity.LocalId).AbsolutePosition;
-                entityPos = ((SceneObjectPart) entity).ParentGroup.AbsolutePosition;
-            }
-            else
-            {
-                entityPos = entity.AbsolutePosition;
-            }
-
-            if (!presence.IsChildAgent)
-            {
-                // Root agent. Use distance from camera and a priority decrease for objects behind us
-                Vector3 camPosition = presence.CameraPosition;
-                Vector3 camAtAxis = presence.CameraAtAxis;
-
-                // Distance
-                double priority = Vector3.DistanceSquared(camPosition, entityPos);
-
-                // Plane equation
-                float d = -Vector3.Dot(camPosition, camAtAxis);
-                float p = Vector3.Dot(camAtAxis, entityPos) + d;
-                if (p < 0.0f) priority *= 2.0;
-
-                return priority;
-            }
-            else
-            {
-                // Child agent. Use the normal distance method
-                Vector3 presencePos = presence.AbsolutePosition;
-
-                return Vector3.DistanceSquared(presencePos, entityPos);
-            }
-        }
-
-        private double GetPriorityByBestAvatarResponsiveness(IScenePresence presence, IEntity entity)
-        {
-            // If this is an update for our own avatar give it the highest priority
-            if (presence.UUID == entity.UUID)
-                return 0.0;
-            if (entity == null)
-                return double.NaN;
-            if (entity is IScenePresence)
-                return 1.0;
-
-            // Use group position for child prims
-            Vector3 entityPos = entity.AbsolutePosition;
-
-            if (!presence.IsChildAgent)
-            {
-                // Root agent. Use distance from camera and a priority decrease for objects behind us
-                Vector3 camPosition = presence.CameraPosition;
-                Vector3 camAtAxis = presence.CameraAtAxis;
-
-                // Distance
-                double priority = Vector3.DistanceSquared(camPosition, entityPos);
-
-                // Plane equation
-                float d = -Vector3.Dot(camPosition, camAtAxis);
-                float p = Vector3.Dot(camAtAxis, entityPos) + d;
-                if (p < 0.0f) priority *= 2.0;
-
-                //Add distance again to really emphasize it
-                priority += Vector3.DistanceSquared(presence.AbsolutePosition, entityPos);
-
-                if ((Vector3.Distance(presence.AbsolutePosition, entityPos)/2) > presence.DrawDistance)
-                {
-                    //Outside of draw distance!
-                    priority *= 2;
-                }
-
-                SceneObjectPart rootPart = null;
-                if (entity is SceneObjectPart)
-                {
-                    if (((SceneObjectPart) entity).ParentGroup != null &&
-                        ((SceneObjectPart) entity).ParentGroup.RootPart != null)
-                        rootPart = ((SceneObjectPart) entity).ParentGroup.RootPart;
-                }
-                if (entity is SceneObjectGroup)
-                {
-                    if (((SceneObjectGroup) entity).RootPart != null)
-                        rootPart = ((SceneObjectGroup) entity).RootPart;
-                }
-
-                if (rootPart != null)
-                {
-                    PhysicsActor physActor = rootPart.PhysActor;
-
-                    // Objects avatars are sitting on should be prioritized more
-                    if (presence.ParentID == rootPart.UUID)
-                    {
-                        //Objects that are physical get more priority.
-                        if (physActor != null && physActor.IsPhysical)
-                            return 0.0;
-                        else
-                            return 1.2;
-                    }
-
-                    if (physActor == null || physActor.IsPhysical)
-                        priority /= 2; //Emphasize physical objs
-
-                    //Factor in the size of objects as well, big ones are MUCH more important than small ones
-                    float size = rootPart.ParentGroup.GroupScale().Length();
-                    //Cap size at 200 so that it doesn't completely overwhelm other objects
-                    if (size > 200)
-                        size = 200;
-
-                    //Do it dynamically as well so that larger prims get smaller quicker
-                    priority /= size > 40 ? (size/35) : (size > 20 ? (size/17) : 1);
-
-                    if (rootPart.IsAttachment)
-                    {
-                        //Attachments are always high!
-                        priority = 0.5;
-                    }
-                }
-                //Closest first!
-                return priority;
-            }
-            else
-            {
-                // Child agent. Use the normal distance method
-                Vector3 presencePos = presence.AbsolutePosition;
-
-                return Vector3.DistanceSquared(presencePos, entityPos);
-            }
         }
     }
 }

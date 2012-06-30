@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -51,7 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         /// </summary>
         private readonly StartPerformanceQueue LUQueue = new StartPerformanceQueue();
 
-        private readonly Queue<QueueItemStruct> ScriptEvents = new Queue<QueueItemStruct>();
+        private readonly ConcurrentQueue<QueueItemStruct> ScriptEvents = new ConcurrentQueue<QueueItemStruct>();
 
         private readonly PriorityQueue<QueueItemStruct, Int64> SleepingScriptEvents =
             new PriorityQueue<QueueItemStruct, Int64>(10, DateTimeComparer);
@@ -65,7 +66,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         private DateTime NextSleepersTest = DateTime.Now;
         public bool RunInMainProcessingThread;
         public bool ScriptChangeIsRunning;
-        private int ScriptEventCount;
 
         private int SleepingScriptEventCount;
         public AuroraThreadPool cmdThreadpool;
@@ -477,17 +477,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                           CurrentlyAt = null
                       };
 
-            lock (ScriptEvents)
-            {
-                ScriptEvents.Enqueue(QIS);
-                ScriptEventCount++;
-#if Debug
-                MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
-#endif
-            }
+            ScriptEvents.Enqueue(QIS);
 
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
-            if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount / 2)) * EventPerformance)
+            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount / 2)) * EventPerformance)
             {
                 scriptThreadpool.QueueEvent(eventLoop, 2);
             }
@@ -523,18 +516,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
             }
             else
-            {
-                lock (ScriptEvents)
-                {
-                    ScriptEvents.Enqueue(QIS);
-                    ScriptEventCount++;
-#if Debug
-                MainConsole.Instance.Warn (ScriptEventCount + ", " + QIS.functionName);
-#endif
-                }
-            }
+                ScriptEvents.Enqueue(QIS);
+
             long threadCount = Interlocked.Read(ref scriptThreadpool.nthreads);
-            if (threadCount == 0 || threadCount < (ScriptEventCount + (SleepingScriptEventCount / 2)) * EventPerformance)
+            if (threadCount == 0 || threadCount < (ScriptEvents.Count + (SleepingScriptEventCount / 2)) * EventPerformance)
             {
                 scriptThreadpool.QueueEvent(eventLoop, 2);
             }
@@ -620,35 +605,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 //If we can, get the next event
                 if (Interlocked.CompareExchange(ref m_CheckingEvents, 1, 0) == 0)
                 {
-                    lock (ScriptEvents)
+                    if (ScriptEvents.TryDequeue(out QIS))
                     {
-                        if (ScriptEvents.Count > 0)
-                            QIS = ScriptEvents.Dequeue();
                         Interlocked.Exchange(ref m_CheckingEvents, 0);
-                    }
-                    if (QIS != null)
-                    {
 #if Debug
                         MainConsole.Instance.Warn(QIS.functionName + "," + ScriptEvents.Count);
 #endif
                         EventSchExec(QIS);
-                        lock (ScriptEvents)
-                            ScriptEventCount--;
                         //numScriptsProcessed++;
                     }
+                    else
+                        Interlocked.Exchange(ref m_CheckingEvents, 0);
                 }
                 //Process a bunch each time
                 //if (ScriptEventCount > 0 && numScriptsProcessed < minNumScriptsToProcess)
                 //    goto processMoreScripts;
 
-                if (ScriptEventCount == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
+                if (ScriptEvents.Count == 0 && NextSleepersTest.Ticks != DateTime.MaxValue.Ticks)
                     timeToSleep = (int)(NextSleepersTest - DateTime.Now).TotalMilliseconds;
                 if (timeToSleep < 5)
                     timeToSleep = 5;
                 if (timeToSleep > 50)
                     timeToSleep = 50;
 
-                if (SleepingScriptEventCount == 0 && ScriptEventCount == 0)
+                if (SleepingScriptEventCount == 0 && ScriptEvents.Count == 0)
                 {
                     numberOfEmptyWork++;
                     if (numberOfEmptyWork > EMPTY_WORK_KILL_THREAD_TIME)
@@ -660,7 +640,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                         timeToSleep += 10;
                 }
                 else if (Interlocked.Read(ref scriptThreadpool.nthreads) >
-                         (ScriptEventCount + (int)((SleepingScriptEventCount / 2f + 0.5f))) ||
+                         (ScriptEvents.Count + (int)((SleepingScriptEventCount / 2f + 0.5f))) ||
                          Interlocked.Read(ref scriptThreadpool.nthreads) > MaxScriptThreads)
                 {
                     numberOfEmptyWork++;
@@ -730,11 +710,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                 {
                     QIS.EventsProcData.State = ScriptEventsState.Running;
-                    lock (ScriptEvents)
-                    {
-                        this.ScriptEvents.Enqueue(QIS);
-                        ScriptEventCount++;
-                    }
+                    this.ScriptEvents.Enqueue(QIS);
                 }
             }
         }

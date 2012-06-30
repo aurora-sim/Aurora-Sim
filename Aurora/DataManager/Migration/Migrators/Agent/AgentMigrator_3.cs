@@ -81,12 +81,14 @@ namespace Aurora.DataManager.Migration.Migrators
                 IndexDef(new string[1] { "OwnerUUID" }, IndexType.Index)
             ));
 
+            //Remove in the next schema update... we're not using this anymore
             AddSchema("macban", ColDefs(
                 ColDef("macAddress", ColumnTypes.String50)
             ), IndexDefs(
                 IndexDef(new string[1] { "macAddress" }, IndexType.Primary)
             ));
 
+            //Remove in the next schema update... we're not using this anymore
             AddSchema("bannedviewers", ColDefs(
                 ColDef("Client", ColumnTypes.String50)
             ), IndexDefs(

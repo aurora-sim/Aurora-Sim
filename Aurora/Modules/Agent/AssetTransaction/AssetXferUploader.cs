@@ -227,12 +227,8 @@ namespace Aurora.Modules.Agent.AssetTransaction
                                              CreationDate = Util.UnixTimeSinceEpoch()
                                          };
 
-            ILLClientInventory inventoryModule =
-                m_userTransactions.Manager.MyScene.RequestModuleInterface<ILLClientInventory>();
-            if (inventoryModule != null && inventoryModule.AddInventoryItem(item))
-                remoteClient.SendInventoryItemCreateUpdate(item, callbackID);
-            else
-                remoteClient.SendAlertMessage("Unable to create inventory item");
+            m_userTransactions.Manager.MyScene.InventoryService.AddItemAsync(item,
+                    () => remoteClient.SendInventoryItemCreateUpdate(item, callbackID));
         }
 
         /// <summary>

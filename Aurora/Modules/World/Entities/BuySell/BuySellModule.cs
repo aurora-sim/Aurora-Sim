@@ -160,20 +160,8 @@ namespace Aurora.Modules.Entities.BuySell
                     item.CurrentPermissions |= 16; // Slam!
                     item.CreationDate = Util.UnixTimeSinceEpoch();
 
-                    if (inventoryModule != null)
-                    {
-                        if (inventoryModule.AddInventoryItem(item))
-                        {
-                            remoteClient.SendInventoryItemCreateUpdate(item, 0);
-                        }
-                        else
-                        {
-                            if (m_dialogModule != null)
-                                m_dialogModule.SendAlertToUser(remoteClient,
-                                                               "Cannot buy now. Your inventory is unavailable");
-                            return false;
-                        }
-                    }
+                    m_scene.InventoryService.AddItemAsync(item,
+                        () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
                     break;
 
                 case 3: // Sell contents

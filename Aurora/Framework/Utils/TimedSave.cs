@@ -83,10 +83,10 @@ namespace Aurora.Framework
 
         private readonly Timer _updateTimer = new Timer();
         private const int _checkTime = 500; // milliseconds to wait between checks for updates
-        private int _sendtime = 3;
+        private double _sendtime = 3;
         private TimeElapsed _arg;
 
-        public void Start(int secondsToWait, TimeElapsed args)
+        public void Start(double secondsToWait, TimeElapsed args)
         {
             _arg = args;
             _sendtime = secondsToWait;
@@ -115,6 +115,19 @@ namespace Aurora.Framework
                 if (!_saveQueueData.ContainsKey(agentid))
                     _saveQueueData.Add(agentid, new List<T>());
                 _saveQueueData[agentid].AddRange(data);
+                _updateTimer.Start();
+            }
+        }
+
+        public void Add(UUID agentid, T data)
+        {
+            long timestamp = DateTime.Now.Ticks + Convert.ToInt64(_sendtime * 1000 * 10000);
+            lock (_queue)
+            {
+                _queue[agentid] = timestamp;
+                if (!_saveQueueData.ContainsKey(agentid))
+                    _saveQueueData.Add(agentid, new List<T>());
+                _saveQueueData[agentid].Add(data);
                 _updateTimer.Start();
             }
         }

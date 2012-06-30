@@ -92,7 +92,10 @@ namespace Aurora.Modules.Archivers
         {
             try
             {
-                m_loadStream = new GZipStream(ArchiveHelpers.GetStream(loadPath), CompressionMode.Decompress);
+                var stream = ArchiveHelpers.GetStream(loadPath);
+                if (stream == null)
+                    throw new FileNotFoundException();
+                m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             }
             catch (EntryPointNotFoundException e)
             {
@@ -191,9 +194,6 @@ namespace Aurora.Modules.Archivers
                 TarArchiveReader.TarEntryType entryType;
                 while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                 {
-                    //MainConsole.Instance.DebugFormat(
-                    //    "[ARCHIVER]: Successfully read {0} ({1} bytes)", filePath, data.Length);
-
                     if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
                         continue;
 
@@ -215,7 +215,8 @@ namespace Aurora.Modules.Archivers
                                 {
                                     UUID aid = asset.ID;
                                     asset.ID = m_scene.AssetService.Store(asset);
-                                    if (asset.ID != aid) assetBinaryChangeRecord.Add(aid, asset.ID);
+                                    if (asset.ID != aid && asset.ID != UUID.Zero) 
+                                        assetBinaryChangeRecord.Add(aid, asset.ID);
                                 }
                                 else
                                 {
@@ -352,7 +353,6 @@ namespace Aurora.Modules.Archivers
                     {
                         groupsToBackup.Add(sceneObject);
                         sceneObject.ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
-                        sceneObjectsLoadedCount++;
                         sceneObject.CreateScriptInstances(0, false, StateSource.RegionStart, UUID.Zero, true);
                     }
                     sceneObjectsLoadedCount++;

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -134,8 +135,8 @@ namespace OpenSim.Services
             return response;
         }
 
-        public string RestGetGridInfoMethod(string request, string path, string param,
-                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public byte[] RestGetGridInfoMethod(string path, Stream request, OSHttpRequest httpRequest,
+                                                            OSHttpResponse httpResponse)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -146,7 +147,7 @@ namespace OpenSim.Services
             }
             sb.Append("</gridinfo>\n");
 
-            return sb.ToString();
+            return Encoding.UTF8.GetBytes(sb.ToString());
         }
     }
 }

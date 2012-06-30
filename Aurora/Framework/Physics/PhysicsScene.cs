@@ -65,7 +65,7 @@ namespace Aurora.Framework
             get { return false; }
         }
 
-        public abstract bool DisableCollisions { get; set; }
+        public virtual bool DisableCollisions { get; set; }
 
         public virtual List<PhysicsObject> ActiveObjects
         {
@@ -79,52 +79,62 @@ namespace Aurora.Framework
 
         public virtual int StatPhysicsTaintTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatPhysicsMoveTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatCollisionOptimizedTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatSendCollisionsTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatAvatarUpdatePosAndVelocity
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatPrimUpdatePosAndVelocity
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatUnlockedArea
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatFindContactsTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatContactLoopTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public virtual int StatCollisionAccountingTime
         {
-            get { return 0; }
+            get;
+            protected set;
         }
 
         public event OnCollisionEvent OnCollisionEvent;
@@ -147,7 +157,6 @@ namespace Aurora.Framework
         public abstract void DeletePrim(PhysicsObject prim);
 
         public abstract PhysicsObject AddPrimShape(ISceneChildEntity entity);
-        public abstract void AddPhysicsActorTaint(PhysicsActor prim);
 
         public abstract void Simulate(float timeStep);
 
@@ -285,10 +294,6 @@ namespace Aurora.Framework
         public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
         {
             return new NullObjectPhysicsActor();
-        }
-
-        public override void AddPhysicsActorTaint(PhysicsActor prim)
-        {
         }
 
         public override void Simulate(float timeStep)

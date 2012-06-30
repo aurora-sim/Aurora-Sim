@@ -55,7 +55,7 @@ namespace OpenSim.Services
         #endregion
     }
 
-    public class HeloServerGetHandler : BaseStreamHandler
+    public class HeloServerGetHandler : BaseRequestHandler
     {
         private readonly string m_HandlersType;
 
@@ -76,7 +76,7 @@ namespace OpenSim.Services
             httpResponse.AddHeader("X-Handlers-Provided", m_HandlersType);
             httpResponse.StatusCode = (int) HttpStatusCode.OK;
             httpResponse.StatusDescription = "OK";
-            return new byte[0];
+            return MainServer.BlankResponse;
         }
     }
 }

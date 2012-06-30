@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -130,7 +131,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event StatusChange OnChildAgentStatus;
         public event GenericMessage OnGenericMessage;
         public event BuyObjectInventory OnBuyObjectInventory;
-        public event TerrainUnacked OnUnackedTerrain;
         public event SetEstateTerrainBaseTexture OnSetEstateTerrainBaseTexture;
 
 #pragma warning restore 67
@@ -332,9 +332,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private readonly IGroupsModule m_GroupsModule;
 
         private int m_cachedTextureSerial;
-
-        private readonly Aurora.Framework.LocklessQueue<object> m_UpdatesQueue =
-            new Aurora.Framework.LocklessQueue<object>();
 
         private bool m_disableFacelights;
 
@@ -4351,15 +4348,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 ISceneViewer viewer = sp.SceneViewer;
                 viewer.SendPrimUpdates(nprimdates, navadates);
             }
-        }
-
-        public void FlushPrimUpdates()
-        {
-            MainConsole.Instance.Info("[CLIENT]: Flushing prim updates for " + m_firstName + " " + m_lastName);
-
-            ISceneViewer viewer = m_scene.GetScenePresence(AgentId).SceneViewer;
-            while (m_UpdatesQueue.Count > 0)
-                viewer.SendPrimUpdates(m_udpServer.PrimUpdatesPerCallback, m_udpServer.PrimUpdatesPerCallback);
         }
 
         #endregion Primitive Packet/Data Sending Methods

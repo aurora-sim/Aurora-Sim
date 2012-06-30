@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Aurora.Framework;
@@ -31,40 +32,30 @@ namespace Aurora.Modules
             OSDMap map = new OSDMap();
 
             map["ServerFeatures"] = CapsUtil.CreateCAPS("ServerFeatures", "");
-            httpServer.AddStreamHandler(new RestHTTPHandler("POST", map["ServerFeatures"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            httpServer.AddStreamHandler(new GenericStreamHandler("POST", map["ServerFeatures"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return SetServerFeature(m_dhttpMethod, agentID);
+                                                          return SetServerFeature(request, agentID);
                                                       }));
-            httpServer.AddStreamHandler(new RestHTTPHandler("GET", map["ServerFeatures"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            httpServer.AddStreamHandler(new GenericStreamHandler("GET", map["ServerFeatures"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return GetServerFeature(m_dhttpMethod, agentID);
+                                                          return GetServerFeature(request, agentID);
                                                       }));
 
             return map;
         }
 
-        private Hashtable SetServerFeature (Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] SetServerFeature(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-
-            return responsedata;
+            return new byte[0];
         }
 
-        private Hashtable GetServerFeature (Hashtable m_dhttpMethod, UUID agentID)
+        private byte[] GetServerFeature(Stream request, UUID agentID)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = BuildSettingsXML();
-
-            return responsedata;
+            return Encoding.UTF8.GetBytes(BuildSettingsXML());
         }
 
         public void RegionLoaded (IScene scene)

@@ -74,8 +74,6 @@ namespace Aurora.Modules.Wind.Plugins
                 m_varStrength = windConfig.GetFloat("var_strength", 5.0F);
                 m_varDirection = windConfig.GetFloat("var_direction", 30.0F);
                 m_rateChange = windConfig.GetFloat("rate_change", 1.0F);
-
-                LogSettings();
             }
         }
 

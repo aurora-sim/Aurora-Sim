@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 using Aurora.Simulation.Base;
 using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
-namespace OpenSim.Services.RobustCompat
+namespace OpenSim.Services.Robust
 {
     public class RobustGridServicesConnector : IGridService, IService
     {
@@ -101,7 +101,7 @@ namespace OpenSim.Services.RobustCompat
 
         #region IGridService
 
-        public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID)
+        public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID, string password)
         {
             Dictionary<string, object> rinfo = regionInfo.ToKVP();
             Dictionary<string, object> sendData = new Dictionary<string, object>();
@@ -782,11 +782,11 @@ namespace OpenSim.Services.RobustCompat
             return null;
         }
 
-        public void SetRegionUnsafe(UUID RegionID)
+        public void SetRegionUnsafe(UUID id)
         {
         }
 
-        public void SetRegionSafe(UUID RegionID)
+        public void SetRegionSafe(UUID id)
         {
         }
 

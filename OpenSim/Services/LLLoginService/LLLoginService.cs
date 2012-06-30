@@ -377,7 +377,6 @@ namespace OpenSim.Services.LLLoginService
                         return LLFailedLoginResponse.InventoryProblem;
                     }
                 }
-                m_InventoryService.CreateUserRootFolder(account.PrincipalID);
 
                 if (profileData != null)
                 {
@@ -512,15 +511,17 @@ namespace OpenSim.Services.LLLoginService
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name +
                                 ", loading the default avatar from " + m_DefaultUserAvatarArchive + ".");
-                            m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
+                            avappearance = m_ArchiveService.LoadAvatarArchive(m_DefaultUserAvatarArchive, account.Name);
+                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                         }
                         else
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
                             AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
+                            avappearance = appearance;
                         }
-                        avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
+                        //avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
                     else
                     {
@@ -572,8 +573,7 @@ namespace OpenSim.Services.LLLoginService
                 }
 
                 avappearance = FixCurrentOutFitFolder(account.PrincipalID, avappearance);
-                inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
-
+                
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
@@ -1148,11 +1148,9 @@ namespace OpenSim.Services.LLLoginService
                 // ok, now we have a empty folder, lets add the items 
                 foreach (InventoryItemBase itemBase in itemsInFolder)
                 {
-                    InventoryItemBase newcopy = (InventoryItemBase) itemBase.Clone();
-                    newcopy.ID = UUID.Random();
-                    newcopy.Folder = folderForAppearance.ID;
-                    newcopy.Owner = user;
-                    m_InventoryService.AddItem(newcopy);
+                    InventoryItemBase newcopy = m_InventoryService.InnerGiveInventoryItem(user, folderOwnerID, itemBase,
+                                                                                                    folderForAppearance.ID,
+                                                                                                    true);
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {
@@ -1201,6 +1199,7 @@ namespace OpenSim.Services.LLLoginService
                             }
                         }
                     }
+                    m_InventoryService.AddItem(newcopy);
                 }
             }
             return avappearance;

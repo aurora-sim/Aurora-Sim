@@ -57,7 +57,7 @@ namespace OpenSim.Services
                     (uint) handlerConfig.GetInt("GridInfoInHandlerPort", 0));
             GridInfoHandlers handlers = new GridInfoHandlers(config, registry);
 
-            server.AddStreamHandler(new RestStreamHandler("GET", "/get_grid_info",
+            server.AddStreamHandler(new GenericStreamHandler("GET", "/get_grid_info",
                                                           handlers.RestGetGridInfoMethod));
             server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
         }

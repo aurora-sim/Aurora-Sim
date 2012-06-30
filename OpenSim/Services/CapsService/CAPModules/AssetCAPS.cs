@@ -33,6 +33,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Web;
 using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
@@ -41,33 +42,12 @@ using Aurora.Framework.Servers.HttpServer;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Imaging;
+using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace OpenSim.Services.CapsService
 {
     public class AssetCAPS : ICapsServiceConnector
     {
-        #region Stream Handler
-
-        public delegate byte[] StreamHandlerCallback(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-
-        public class StreamHandler : BaseStreamHandler
-        {
-            readonly StreamHandlerCallback m_callback;
-
-            public StreamHandler(string httpMethod, string path, StreamHandlerCallback callback)
-                : base(httpMethod, path)
-            {
-                m_callback = callback;
-            }
-
-            public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
-            {
-                return m_callback(path, request, httpRequest, httpResponse);
-            }
-        }
-
-        #endregion Stream Handler
-
         private const string m_uploadBakedTexturePath = "0010";
         protected IAssetService m_assetService;
         protected IRegionClientCapsService m_service;
@@ -81,13 +61,13 @@ namespace OpenSim.Services.CapsService
             m_assetService = service.Registry.RequestModuleInterface<IAssetService>();
 
             service.AddStreamHandler("GetTexture",
-                new StreamHandler("GET", service.CreateCAPS("GetTexture", ""),
+                new GenericStreamHandler("GET", service.CreateCAPS("GetTexture", ""),
                                                         ProcessGetTexture));
             service.AddStreamHandler("UploadBakedTexture",
-                new RestStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
+                new GenericStreamHandler("POST", service.CreateCAPS("UploadBakedTexture", m_uploadBakedTexturePath),
                                                         UploadBakedTexture));
             service.AddStreamHandler("GetMesh",
-                new RestHTTPHandler("GET", service.CreateCAPS("GetMesh", ""),
+                new GenericStreamHandler("GET", service.CreateCAPS("GetMesh", ""),
                                                        ProcessGetMesh));
         }
 
@@ -116,7 +96,7 @@ namespace OpenSim.Services.CapsService
             if (m_assetService == null)
             {
                 httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
-                return null;
+                return MainServer.NoResponse;
             }
 
             UUID textureID;
@@ -124,9 +104,7 @@ namespace OpenSim.Services.CapsService
             {
                 string[] formats;
                 if (!string.IsNullOrEmpty(format))
-                {
                     formats = new[] { format.ToLower() };
-                }
                 else
                 {
                     formats = WebUtils.GetPreferredImageTypes(httpRequest.Headers.Get("Accept"));
@@ -134,11 +112,11 @@ namespace OpenSim.Services.CapsService
                         formats = new[] { DefaultFormat }; // default
                 }
                 // OK, we have an array with preferred formats, possibly with only one entry
-                httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                byte[] response;
                 foreach (string f in formats)
                 {
-                    if (FetchTexture(httpRequest, httpResponse, textureID, f))
-                        break;
+                    if (FetchTexture(httpRequest, httpResponse, textureID, f, out response))
+                        return response;
                 }
             }
             else
@@ -146,10 +124,8 @@ namespace OpenSim.Services.CapsService
                 MainConsole.Instance.Warn("[GETTEXTURE]: Failed to parse a texture_id from GetTexture request: " + httpRequest.Url);
             }
 
-            httpResponse.Send();
-            httpRequest.InputStream.Close();
-            httpRequest = null;
-            return null;
+            httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+            return MainServer.NoResponse;
         }
 
         /// <summary>
@@ -160,7 +136,7 @@ namespace OpenSim.Services.CapsService
         /// <param name="textureID"></param>
         /// <param name="format"></param>
         /// <returns>False for "caller try another codec"; true otherwise</returns>
-        private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format)
+        private bool FetchTexture(OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID textureID, string format, out byte[] response)
         {
             MainConsole.Instance.DebugFormat("[GETTEXTURE]: {0} with requested format {1}", textureID, format);
             AssetBase texture;
@@ -179,6 +155,7 @@ namespace OpenSim.Services.CapsService
                     if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                        response = MainServer.NoResponse;
                         return true;
                     }
                     WriteTextureData(httpRequest, httpResponse, texture, format);
@@ -188,6 +165,7 @@ namespace OpenSim.Services.CapsService
                     string textureUrl = REDIRECT_URL + textureID.ToString();
                     MainConsole.Instance.Debug("[GETTEXTURE]: Redirecting texture request to " + textureUrl);
                     httpResponse.RedirectLocation = textureUrl;
+                    response = MainServer.NoResponse;
                     return true;
                 }
             }
@@ -208,11 +186,12 @@ namespace OpenSim.Services.CapsService
                         if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                         {
                             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                            response = MainServer.NoResponse;
                             return true;
                         }
                         if (format == DefaultFormat)
                         {
-                            WriteTextureData(httpRequest, httpResponse, texture, format);
+                            response = WriteTextureData(httpRequest, httpResponse, texture, format);
                             texture = null;
                             return true;
                         }
@@ -220,11 +199,14 @@ namespace OpenSim.Services.CapsService
                                                              texture.CreatorID)
                                                    {Data = ConvertTextureData(texture, format)};
                         if (newTexture.Data.Length == 0)
+                        {
+                            response = MainServer.NoResponse;
                             return false; // !!! Caller try another codec, please!
+                        }
 
                         newTexture.Flags = AssetFlags.Collectable | AssetFlags.Temporary;
                         newTexture.ID = m_assetService.Store(newTexture);
-                        WriteTextureData(httpRequest, httpResponse, newTexture, format);
+                        response = WriteTextureData(httpRequest, httpResponse, newTexture, format);
                         newTexture = null;
                         return true;
                     }
@@ -234,10 +216,11 @@ namespace OpenSim.Services.CapsService
                     if (texture.Type != (sbyte)AssetType.Texture && texture.Type != (sbyte)AssetType.Unknown && texture.Type != (sbyte)AssetType.Simstate)
                     {
                         httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+                        response = MainServer.NoResponse;
                         return true;
                     }
                     //MainConsole.Instance.DebugFormat("[GETTEXTURE]: texture was in the cache");
-                    WriteTextureData(httpRequest, httpResponse, texture, format);
+                    response = WriteTextureData(httpRequest, httpResponse, texture, format);
                     texture = null;
                     return true;
                 }
@@ -247,10 +230,11 @@ namespace OpenSim.Services.CapsService
             // not found
             MainConsole.Instance.Warn("[GETTEXTURE]: Texture " + textureID + " not found");
             httpResponse.StatusCode = (int)System.Net.HttpStatusCode.NotFound;
+            response = MainServer.NoResponse;
             return true;
         }
 
-        private void WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
+        private byte[] WriteTextureData(OSHttpRequest request, OSHttpResponse response, AssetBase texture, string format)
         {
             m_service.Registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler(
                 "AssetRequested", new object[] {m_service.Registry, texture, m_service.AgentID});
@@ -268,6 +252,7 @@ namespace OpenSim.Services.CapsService
                     if (start >= texture.Data.Length)
                     {
                         response.StatusCode = (int)System.Net.HttpStatusCode.RequestedRangeNotSatisfiable;
+                        return MainServer.NoResponse;
                     }
                     else
                     {
@@ -282,30 +267,30 @@ namespace OpenSim.Services.CapsService
                         else
                             response.StatusCode = (int)System.Net.HttpStatusCode.OK;
 
-                        response.ContentLength = len;
                         response.ContentType = texture.TypeString;
                         response.AddHeader("Content-Range", String.Format("bytes {0}-{1}/{2}", start, end, texture.Data.Length));
-
-                        response.Body.Write(texture.Data, start, len);
+                        byte[] array = new byte[len];
+                        Array.Copy(texture.Data, start, array, 0, len);
+                        return array;
                     }
                 }
                 else
                 {
                     MainConsole.Instance.Warn("[GETTEXTURE]: Malformed Range header: " + range);
                     response.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+                    return MainServer.NoResponse;
                 }
             }
             else // JP2's or other formats
             {
                 // Full content request
                 response.StatusCode = (int)System.Net.HttpStatusCode.OK;
-                response.ContentLength = texture.Data.Length;
                 response.ContentType = texture.TypeString;
                 if (format == DefaultFormat)
                     response.ContentType = texture.TypeString;
                 else
                     response.ContentType = "image/" + format;
-                response.Body.Write(texture.Data, 0, texture.Data.Length);
+                return texture.Data;
             }
         }
 
@@ -405,9 +390,7 @@ namespace OpenSim.Services.CapsService
 
         #region Baked Textures
 
-        public string UploadBakedTexture(string request, string path,
-                string param, OSHttpRequest httpRequest,
-                OSHttpResponse httpResponse)
+        public byte[] UploadBakedTexture(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             try
             {
@@ -422,14 +405,14 @@ namespace OpenSim.Services.CapsService
                 uploader.OnUpLoad += BakedTextureUploaded;
 
                 m_service.AddStreamHandler(uploadpath,
-                        new BinaryStreamHandler("POST", uploadpath,
+                        new GenericStreamHandler("POST", uploadpath,
                         uploader.uploaderCaps));
 
                 string uploaderURL = m_service.HostUri + uploadpath;
                 OSDMap map = new OSDMap();
                 map["uploader"] = uploaderURL;
                 map["state"] = "upload";
-                return OSDParser.SerializeLLSDXmlString(map);
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
             catch (Exception e)
             {
@@ -463,21 +446,21 @@ namespace OpenSim.Services.CapsService
             /// <param name="path"></param>
             /// <param name="param"></param>
             /// <returns></returns>
-            public string uploaderCaps(byte[] data, string path, string param)
+            public byte[] uploaderCaps(string path, Stream request,
+                                                            OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
                 handlerUpLoad = OnUpLoad;
                 UUID newAssetID;
-                handlerUpLoad(data, out newAssetID);
+                handlerUpLoad(HttpServerHandlerHelpers.ReadFully(request), out newAssetID);
 
                 string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["item_id"] = UUID.Zero;
                 map["state"] = "complete";
-                res = OSDParser.SerializeLLSDXmlString(map);
                 clientCaps.RemoveStreamHandler(uploadMethod, "POST", uploaderPath);
 
-                return res;
+                return OSDParser.SerializeLLSDXmlBytes(map);
             }
         }
 
@@ -491,31 +474,22 @@ namespace OpenSim.Services.CapsService
             asset.ID = newAssetID;
         }
 
-        public Hashtable ProcessGetMesh(Hashtable request)
+        public byte[] ProcessGetMesh(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 400; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "Request wasn't what was expected";
+            httpResponse.ContentType = "text/plain";
 
             string meshStr = string.Empty;
 
-            if (request.ContainsKey("mesh_id"))
-                meshStr = request["mesh_id"].ToString();
+
+            if (httpRequest.QueryString["mesh_id"] != null)
+                meshStr = httpRequest.QueryString["mesh_id"];
 
 
             UUID meshID = UUID.Zero;
             if (!String.IsNullOrEmpty(meshStr) && UUID.TryParse(meshStr, out meshID))
             {
                 if (m_assetService == null)
-                {
-                    responsedata["int_response_code"] = 404; //501; //410; //404;
-                    responsedata["content_type"] = "text/plain";
-                    responsedata["keepalive"] = false;
-                    responsedata["str_response_string"] = "The asset service is unavailable.  So is your mesh.";
-                    return responsedata;
-                }
+                    return Encoding.UTF8.GetBytes("The asset service is unavailable.  So is your mesh.");
 
                 // Only try to fetch locally cached textures. Misses are redirected
                 AssetBase mesh = m_assetService.GetCached(meshID.ToString());
@@ -523,18 +497,16 @@ namespace OpenSim.Services.CapsService
                 {
                     if (mesh.Type == (SByte)AssetType.Mesh)
                     {
-                        responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
-                        responsedata["content_type"] = "application/vnd.ll.mesh";
-                        responsedata["int_response_code"] = 200;
+                        httpResponse.StatusCode = 200;
+                        httpResponse.ContentType = "application/vnd.ll.mesh";
+                        return mesh.Data;
                     }
                     // Optionally add additional mesh types here
                     else
                     {
-                        responsedata["int_response_code"] = 404; //501; //410; //404;
-                        responsedata["content_type"] = "text/plain";
-                        responsedata["keepalive"] = false;
-                        responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
-                        return responsedata;
+                        httpResponse.StatusCode = 404; //501; //410; //404;
+                        httpResponse.ContentType = "text/plain";
+                        return Encoding.UTF8.GetBytes("Unfortunately, this asset isn't a mesh.");
                     }
                 }
                 else
@@ -544,34 +516,31 @@ namespace OpenSim.Services.CapsService
                     {
                         if (mesh.Type == (SByte)AssetType.Mesh)
                         {
-                            responsedata["str_response_string"] = Convert.ToBase64String(mesh.Data);
-                            responsedata["content_type"] = "application/vnd.ll.mesh";
-                            responsedata["int_response_code"] = 200;
+                            httpResponse.StatusCode = 200;
+                            httpResponse.ContentType = "application/vnd.ll.mesh";
+                            return mesh.Data;
                         }
                         // Optionally add additional mesh types here
                         else
                         {
-                            responsedata["int_response_code"] = 404; //501; //410; //404;
-                            responsedata["content_type"] = "text/plain";
-                            responsedata["keepalive"] = false;
-                            responsedata["str_response_string"] = "Unfortunately, this asset isn't a mesh.";
-                            return responsedata;
+                            httpResponse.StatusCode = 404; //501; //410; //404;
+                            httpResponse.ContentType = "text/plain";
+                            return Encoding.UTF8.GetBytes("Unfortunately, this asset isn't a mesh.");
                         }
                     }
 
                     else
                     {
-                        responsedata["int_response_code"] = 404; //501; //410; //404;
-                        responsedata["content_type"] = "text/plain";
-                        responsedata["keepalive"] = false;
-                        responsedata["str_response_string"] = "Your Mesh wasn't found.  Sorry!";
-                        return responsedata;
+                        httpResponse.StatusCode = 404; //501; //410; //404;
+                        httpResponse.ContentType = "text/plain";
+                        return Encoding.UTF8.GetBytes("Your Mesh wasn't found.  Sorry!");
                     }
                 }
 
             }
 
-            return responsedata;
+            httpResponse.StatusCode = 404;
+            return Encoding.UTF8.GetBytes("Failed to find mesh");
         }
 
         #endregion

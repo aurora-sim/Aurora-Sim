@@ -38,7 +38,7 @@ using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Services.Interfaces;
 
-namespace OpenSim.Services.Connectors
+namespace OpenSim.Services.Robust
 {
     public class XInventoryServicesConnector : IInventoryService, IService
     {
@@ -52,11 +52,6 @@ namespace OpenSim.Services.Connectors
         #region IInventoryService Members
 
         public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems)
-        {
-            return false;
-        }
-
-        public virtual bool CreateUserRootFolder(UUID principalID)
         {
             return false;
         }
@@ -530,6 +525,11 @@ namespace OpenSim.Services.Connectors
             return new List<InventoryItemBase>();
         }
 
+        public InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
+        {
+            return item;
+        }
+
         public OSDArray GetItem(UUID ItemID)
         {
             IInventoryData database = DataManager.RequestPlugin<IInventoryData>();
@@ -682,5 +682,26 @@ namespace OpenSim.Services.Connectors
 
         #endregion
 
+        #region Async Functions
+
+        public void AddItemAsync(InventoryItemBase item, NoParam success)
+        {
+            AddItem(item);
+            success();
+        }
+
+        public void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success)
+        {
+        }
+
+        public void GiveInventoryItemAsync(UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success)
+        {
+        }
+
+        public void GiveInventoryFolderAsync(UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success)
+        {
+        }
+
+        #endregion
     }
 }

@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Nini.Config;
 using OpenMetaverse;
@@ -92,22 +93,18 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
             OSDMap retVal = new OSDMap();
             retVal["GetObjectPhysicsData"] = CapsUtil.CreateCAPS("GetObjectPhysicsData", "");
 
-#if (!ISWIN)
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetObjectPhysicsData"],
-                                                      delegate(Hashtable m_dhttpMethod)
+            server.AddStreamHandler(new GenericStreamHandler("POST", retVal["GetObjectPhysicsData"],
+                                                      delegate(string path, Stream request,
+                                                        OSHttpRequest httpRequest, OSHttpResponse httpResponse)
                                                       {
-                                                          return GetObjectPhysicsData(agentID, m_dhttpMethod);
+                                                          return GetObjectPhysicsData(agentID, request);
                                                       }));
-#else
-            server.AddStreamHandler(new RestHTTPHandler("POST", retVal["GetObjectPhysicsData"],
-                                                        m_dhttpMethod => GetObjectPhysicsData(agentID, m_dhttpMethod)));
-#endif
             return retVal;
         }
 
-        private Hashtable GetObjectPhysicsData(UUID agentID, Hashtable mDhttpMethod)
+        private byte[] GetObjectPhysicsData(UUID agentID, Stream request)
         {
-            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml((string) mDhttpMethod["requestbody"]);
+            OSDMap rm = (OSDMap) OSDParser.DeserializeLLSDXml(request);
 
             OSDArray keys = (OSDArray) rm["object_ids"];
 
@@ -125,12 +122,7 @@ namespace Aurora.Modules.Entities.PhysicsMaterials
 #endif
             }
             //Send back data
-            Hashtable responsedata = new Hashtable();
-            responsedata["int_response_code"] = 200; //501; //410; //404;
-            responsedata["content_type"] = "text/plain";
-            responsedata["keepalive"] = false;
-            responsedata["str_response_string"] = "";
-            return responsedata;
+            return new byte[0];
         }
     }
 }

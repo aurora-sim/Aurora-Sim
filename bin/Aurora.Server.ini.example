@@ -77,6 +77,10 @@
 
     ;; Should registration of new regions (existing regions can still connect) be allowed currently?
     AllowNewRegistrations = true
+	
+	;; You can allow a region to register with the grid passing a password that must match
+	AllowNewRegistrationsWithPass = false
+	RegisterRegionPassword = 
     
     ;; Should any registrations be allowed currently?
     DisableRegistrations = false
@@ -143,12 +147,6 @@
     ;
     ;; Main configuration without IWC
     Include-Main = AuroraServerConfiguration/Main.ini
-    
-    ;; Configuration with IWC enabled
-    ;Include-IWCMain = AuroraServerConfiguration/IWCMain.ini
-    
-    ;; Configuration with IWC and HG (not included) enabled
-    ;Include-IWCHGMain = AuroraServerConfiguration/IWCHGMain.ini
 	
     ;;Other .ini files to add...
     Include-Login = AuroraServerConfiguration/Login.ini
