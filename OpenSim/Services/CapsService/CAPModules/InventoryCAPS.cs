@@ -43,7 +43,6 @@ namespace OpenSim.Services.CapsService
 {
     public class InventoryCAPS : ICapsServiceConnector
     {
-        private static readonly string m_newInventory = "0002";
         private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
@@ -114,7 +113,7 @@ namespace OpenSim.Services.CapsService
 
             service.AddStreamHandler("NewFileAgentInventory",
                                      new GenericStreamHandler("POST",
-                                                           service.CreateCAPS("NewFileAgentInventory", m_newInventory),
+                                                           service.CreateCAPS("NewFileAgentInventory", ""),
                                                            NewAgentInventoryRequest));
             service.AddStreamHandler("NewFileAgentInventoryVariablePrice",
                                      new GenericStreamHandler("POST",

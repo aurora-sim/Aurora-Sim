@@ -3343,10 +3343,7 @@ namespace OpenSim.Region.Framework.Scenes
                         LinkNonRootPart(part, oldGroupPosition, oldRootRotation, linkNum++);
                         part.FixOffsetPosition(part.OffsetPosition, true);
                         if (part.PhysActor != null && m_rootPart.PhysActor != null)
-                        {
                             part.PhysActor.link(m_rootPart.PhysActor);
-                            Scene.PhysicsScene.AddPhysicsActorTaint(part.PhysActor);
-                        }
                     }
                 }
 #else

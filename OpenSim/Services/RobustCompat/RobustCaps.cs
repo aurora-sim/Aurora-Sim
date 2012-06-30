@@ -255,7 +255,7 @@ namespace OpenSim.Services.Robust
             // MainConsole.Instance.DebugFormat("[PRESENCE CONNECTOR]: queryString = {0}", reqString);
             foreach (string url in urls)
             {
-                string resp = SynchronousRestFormsRequester.MakeRequest("POST",
+                SynchronousRestFormsRequester.MakeRequest("POST",
                            url,
                            reqString);
             }

@@ -43,6 +43,7 @@ namespace Aurora.Framework
         protected Object m_lock = new Object();
         private int m_sleepTime;
         protected int m_timesToIterate;
+        protected Thread m_thread;
 
         /// <summary>
         ///   Add this delegate to the tracker so that it can run.
@@ -76,9 +77,9 @@ namespace Aurora.Framework
             m_timesToIterate = timesToIterate;
             m_sleepTime = sleepTime;
 
-            Thread thread = new Thread(Run)
+            m_thread = new Thread(Run)
                                 {IsBackground = true, Name = "ThreadMonitor", Priority = ThreadPriority.Normal};
-            thread.Start();
+            m_thread.Start();
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace Aurora.Framework
                             bool isRunning = false;
                             if (!CallAndWait(intHB.millisecondTimeOut, intHB.heartBeat, out isRunning))
                             {
-                                Console.WriteLine("WARNING: Could not run Heartbeat in specified limits!");
+                                MainConsole.Instance.Warn("[ThreadTracker]: Could not run Heartbeat in specified limits!");
                             }
                             else if (!isRunning)
                             {
@@ -194,6 +195,9 @@ namespace Aurora.Framework
                 m_heartbeats.Clear();
                 //Kill it
                 m_timesToIterate = -1;
+                if (m_thread != null)
+                    m_thread.Join();
+                m_thread = null;
             }
         }
 
