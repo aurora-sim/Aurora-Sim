@@ -54,6 +54,11 @@ namespace Griffin.Networking.Channels
         {
             try
             {
+                if (_listener == null)
+                {
+                    HandleException(new NullReferenceException());
+                    return;
+                }
                 Socket socket = _listener.EndAcceptSocket(ar);
                 _listener.BeginAcceptSocket(OnAcceptSocket, null);
                 _logger.Debug("Accepted client from " + socket.RemoteEndPoint);
