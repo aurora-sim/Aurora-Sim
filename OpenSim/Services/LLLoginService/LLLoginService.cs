@@ -1148,11 +1148,9 @@ namespace OpenSim.Services.LLLoginService
                 // ok, now we have a empty folder, lets add the items 
                 foreach (InventoryItemBase itemBase in itemsInFolder)
                 {
-                    InventoryItemBase newcopy = (InventoryItemBase) itemBase.Clone();
-                    newcopy.ID = UUID.Random();
-                    newcopy.Folder = folderForAppearance.ID;
-                    newcopy.Owner = user;
-                    
+                    InventoryItemBase newcopy = m_InventoryService.InnerGiveInventoryItem(user, folderOwnerID, itemBase,
+                                                                                                    folderForAppearance.ID,
+                                                                                                    true);
 
                     if (newcopy.InvType == (int) InventoryType.Object)
                     {
@@ -1175,21 +1173,6 @@ namespace OpenSim.Services.LLLoginService
                                 (doc.FirstChild.NextSibling != null &&
                                  doc.FirstChild.NextSibling.OuterXml.StartsWith("<groups>")))
                                 continue;
-
-                            if (doc.DocumentElement != null)
-                            {
-                                XmlNodeList nl = doc.DocumentElement.SelectNodes("//UUID/UUID");
-                                if (nl != null)
-                                {
-                                    foreach (XmlNode node in nl)
-                                    {
-                                        node.InnerText = UUID.Random().ToString();
-                                    }
-                                }
-                            }
-                            attobj.Data = Utils.StringToBytes(doc.OuterXml);
-                            attobj.ID = m_AssetService.Store(attobj);
-                            newcopy.AssetID = attobj.ID;
 
                             string xml = "";
                             if ((doc.FirstChild.NodeType == XmlNodeType.XmlDeclaration) &&

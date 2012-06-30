@@ -525,6 +525,11 @@ namespace OpenSim.Services.Robust
             return new List<InventoryItemBase>();
         }
 
+        public InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
+        {
+            return item;
+        }
+
         public OSDArray GetItem(UUID ItemID)
         {
             IInventoryData database = DataManager.RequestPlugin<IInventoryData>();

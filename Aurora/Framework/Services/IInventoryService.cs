@@ -217,6 +217,8 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
+        InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck);
+
         #region OSD methods
 
         /// <summary>
