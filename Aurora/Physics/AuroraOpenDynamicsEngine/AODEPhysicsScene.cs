@@ -618,6 +618,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int NotSkipedCount = 0;
 
+            d.ContactGeom maxDepthC = new d.ContactGeom();
             //StatContactLoopTime = CollectTime(() =>
             {
                 #region Contact Loop
@@ -630,6 +631,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (curContact.depth > maxDepthContact.PenetrationDepth)
                     {
+                        maxDepthC = curContact;
                         maxDepthContact.PenetrationDepth = curContact.depth;
                         maxDepthContact.Position.X = curContact.pos.X;
                         maxDepthContact.Position.Y = curContact.pos.Y;
@@ -639,6 +641,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                         maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
                     }
+                }
+            }
+            {
+                {
+                    IntPtr joint = IntPtr.Zero;
+                    curContact = maxDepthC;
 
                     bool p2col = true;
 
@@ -659,7 +667,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     // appears to be phantom for the world
 
                     // No collision on volume detect prims
-                    if ((p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect) ||
+                    /*if ((p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect) ||
                         (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect))
                         continue;
 
@@ -668,7 +676,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (m_filterCollisions &&
                         checkDupe(curContact, p2.PhysicsActorType))
-                        continue;
+                        continue;*/
                     if (m_filterCollisions)
                         _perloopContact.Add(curContact);
 
@@ -687,9 +695,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         {
                             newGlobalcontact = new d.Contact();
                             newGlobalcontact.surface.mode |= d.ContactFlags.SoftERP;
-                            newGlobalcontact.surface.mu = 255;
-                            newGlobalcontact.surface.bounce = 0.1f;
-                            newGlobalcontact.surface.soft_erp = 0.1025f;
+                            newGlobalcontact.surface.mu = 75;
+                            newGlobalcontact.surface.bounce =  0.1f;
+                            newGlobalcontact.surface.soft_erp = 0.05025f;
                             //GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
                             joint = CreateContacJoint(curContact);
                         }
@@ -1793,7 +1801,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float hfmin = _heightmap.Min();
             float hfmax = _heightmap.Max();
 
-            SimulationChangesQueue.Enqueue(() =>
+            //SimulationChangesQueue.Enqueue(() =>
             {
                 if (RegionTerrain != IntPtr.Zero)
                 {
@@ -1842,7 +1850,43 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 TerrainHeightFieldHeights = heightMap;
                 ODETerrainHeightFieldHeights = _heightmap;
-            });
+            }//);
+            /*var mesh = new OpenSim.Region.Physics.Meshing.Mesh(523452345);
+            for (int i = 0; i < m_region.RegionSizeX - 1; i++)
+            {
+                for (int j = 0; j < m_region.RegionSizeY - 1; j++)
+                {
+                    mesh.Add(new Triangle(
+                        new Vertex(i, j, m_channel[i, j]),
+                        new Vertex(i + 1, j, m_channel[i + 1, j]),
+                        new Vertex(i + 1, j  + 1, m_channel[i + 1, j + 1])));
+                }
+            }
+            System.IntPtr vertices, indices;
+            int vertexCount, indexCount;
+            int vertexStride, triStride;
+            mesh.getVertexListAsPtrToFloatArray(out vertices, out vertexStride, out vertexCount);
+            // Note, that vertices are fixed in unmanaged heap
+            mesh.getIndexListAsPtrToIntArray(out indices, out triStride, out indexCount);
+            // Also fixed, needs release after usage
+
+            if (vertexCount == 0 || indexCount == 0)
+                return;
+
+            mesh.releaseSourceMeshData(); // free up the original mesh data to save memory
+            var _triMeshData = d.GeomTriMeshDataCreate();
+
+            d.GeomTriMeshDataBuildSimple(_triMeshData, vertices, vertexStride, vertexCount, indices, indexCount,
+                                         triStride);
+            d.GeomTriMeshDataPreprocess(_triMeshData);
+            var RegionTerrain = d.CreateTriMesh(space, _triMeshData, null, null, null);
+
+            d.GeomSetCategoryBits(RegionTerrain, (int)(CollisionCategories.Land));
+            d.GeomSetCollideBits(RegionTerrain, (int)(CollisionCategories.Space));
+
+            actor_name_map[RegionTerrain] = new NullObjectPhysicsActor();
+
+            TerrainHeightFieldHeights = heightMap;*/
         }
 
         public double GetWaterLevel(float x, float y)

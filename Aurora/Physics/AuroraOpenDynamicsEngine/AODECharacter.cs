@@ -234,8 +234,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return m_iscolliding; }
             set
             {
-                m_iscolliding = value;
-                /*if (value)
+                if (value)
                 {
                     m_colliderfilter += 2;
                     if (m_colliderfilter > 2)
@@ -248,7 +247,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderfilter = 0;
                 }
 
-                m_iscolliding = m_colliderfilter != 0;*/
+                m_iscolliding = m_colliderfilter != 0;
             }
         }
 

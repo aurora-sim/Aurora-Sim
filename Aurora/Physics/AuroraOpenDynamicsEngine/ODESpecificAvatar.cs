@@ -338,6 +338,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
+                    MainConsole.Instance.Warn("not colliding");
                     if (flying)
                     {
                         // we're flying
