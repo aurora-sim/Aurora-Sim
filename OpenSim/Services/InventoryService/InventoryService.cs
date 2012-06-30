@@ -1079,7 +1079,7 @@ namespace OpenSim.Services.InventoryService
             });
         }
 
-        private InventoryItemBase InnerGiveInventoryItem(
+        public InventoryItemBase InnerGiveInventoryItem(
             UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
         {
             if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
