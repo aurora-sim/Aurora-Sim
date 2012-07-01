@@ -82,6 +82,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected int m_timeBetweenBackupSaves = 1440; //One day
         protected int m_timeBetweenSaves = 5;
         protected byte[] m_water;
+        protected bool m_shutdown = false;
+        protected Object m_saveLock = new Object();
 
         #region ISimulationDataStore Members
 
@@ -224,9 +226,13 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             //The sim is shutting down, we need to save one last backup
             try
             {
-                if (!m_saveChanges || !m_saveBackups)
-                    return;
-                SaveBackup(m_saveDirectory, false);
+                lock (m_saveLock)
+                {
+                    m_shutdown = true;
+                    if (!m_saveChanges || !m_saveBackups)
+                        return;
+                    SaveBackup(m_saveDirectory, false);
+                }
             }
             catch (Exception ex)
             {
@@ -333,8 +339,12 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_saveTimer.Stop();
                 try
                 {
-                    SaveBackup(m_saveDirectory, false);
-                    m_requiresSave = false;
+                    lock (m_saveLock)
+                    {
+                        if(!m_shutdown)
+                            SaveBackup(m_saveDirectory, false);
+                        m_requiresSave = false;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -359,8 +369,13 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                 m_saveTimer.Stop();
                 try
                 {
-                    if (m_saveChanges && m_saveBackups)
-                        SaveBackup(m_saveDirectory, m_keepOldSave && !m_oldSaveHasBeenSaved);
+                    lock(m_saveLock)
+                    {
+                        if (m_saveChanges && m_saveBackups && !m_shutdown)
+                        {
+                            SaveBackup(m_saveDirectory, m_keepOldSave && !m_oldSaveHasBeenSaved);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -384,7 +399,13 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         {
             try
             {
-                SaveBackup(m_oldSaveDirectory, true);
+                lock(m_saveLock)
+                {
+                    if(!m_shutdown)
+                    {
+                        SaveBackup(m_oldSaveDirectory, true);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -696,7 +717,15 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             if(stream == null)
             {
                 if (CheckForOldDataBase())
-                    SaveBackup(m_saveDirectory, false);
+                {
+                    lock (m_saveLock)
+                    {
+                        if (!m_shutdown)
+                        {
+                            SaveBackup(m_saveDirectory, false);
+                        }
+                    }
+                }
                 return;
             }
             GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
