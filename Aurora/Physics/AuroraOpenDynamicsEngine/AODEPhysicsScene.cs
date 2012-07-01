@@ -1556,6 +1556,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ChangesQueue.Enqueue(item);
         }
 
+        /// <summary>
+        ///   Called to queue a change to a prim
+        ///   to use in place of old taint mechanism so changes do have a time sequence
+        /// </summary>
+        public void AddSimulationChange(NoParam del)
+        {
+            SimulationChangesQueue.Enqueue(del);
+        }
+
         #endregion
 
         #region Simulation Loop
@@ -1586,88 +1595,79 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 try
                 {
-                    StatPhysicsTaintTime = CollectTime(() =>
+                    int tlimit = 500;
+                    AODEchangeitem item;
+
+                    while (ChangesQueue.TryDequeue(out item))
                     {
-                        int tlimit = 500;
-                        AODEchangeitem item;
+                        try { item.actor.ProcessTaints(item.what, item.arg); }
+                        catch { }
+                        if (tlimit-- <= 0)
+                            break;
+                    }
 
-                        while (ChangesQueue.TryDequeue(out item))
-                        {
-                            try { item.actor.ProcessTaints(item.what, item.arg); }
-                            catch { }
-                            if (tlimit-- <= 0)
-                                break;
-                        }
+                    NoParam del;
+                    while (SimulationChangesQueue.TryDequeue(out del))
+                        try { del(); }
+                        catch { }
 
-                        NoParam del;
-                        while (SimulationChangesQueue.TryDequeue(out del))
-                            try { del(); }
-                            catch { }
-
-                        if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
-                        {
-                            //Tell the mesher that we are done with the initialization 
-                            //  of prim meshes and that it can clear it's in memory cache
-                            m_hasSetUpPrims = true;
-                            mesher.FinishedMeshing();
-                        }
-                        else if (!m_hasSetUpPrims)
-                            return; //Don't do physics until the sim is completely set up
-                    });
-
-                    StatPhysicsMoveTime = CollectTime(() =>
+                    if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
                     {
-                        // Move characters
-                        lock (_characters)
-                        {
-                            List<ODESpecificAvatar> defects = new List<ODESpecificAvatar>();
-                            foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
-                                if (actor.Move(ODE_STEPSIZE))
-                                    defects.Add(actor);
+                        //Tell the mesher that we are done with the initialization 
+                        //  of prim meshes and that it can clear it's in memory cache
+                        m_hasSetUpPrims = true;
+                        mesher.FinishedMeshing();
+                    }
+                    else if (!m_hasSetUpPrims)
+                        return; //Don't do physics until the sim is completely set up
 
-                            if (defects.Count != 0)
+                    // Move characters
+                    lock (_characters)
+                    {
+                        List<ODESpecificAvatar> defects = new List<ODESpecificAvatar>();
+                        foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
+                            if (actor.Move(ODE_STEPSIZE))
+                                defects.Add(actor);
+
+                        if (defects.Count != 0)
+                        {
+                            foreach (ODESpecificAvatar defect in defects)
                             {
-                                foreach (ODESpecificAvatar defect in defects)
-                                {
-                                    defect.Destroy();
-                                    RemoveCharacter(defect);
-                                    AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
-                                                                        m_region.RegionSizeY / 2,
-                                                                        m_region.RegionSizeZ / 2), defect.Orientation,
-                                                new Vector3(defect.CAPSULE_RADIUS * 2, defect.CAPSULE_RADIUS * 2,
-                                                            defect.CAPSULE_LENGTH * 2), true, defect.LocalID, defect.UUID);
-                                }
+                                defect.Destroy();
+                                RemoveCharacter(defect);
+                                AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
+                                                                    m_region.RegionSizeY / 2,
+                                                                    m_region.RegionSizeZ / 2), defect.Orientation,
+                                            new Vector3(defect.CAPSULE_RADIUS * 2, defect.CAPSULE_RADIUS * 2,
+                                                        defect.CAPSULE_LENGTH * 2), true, defect.LocalID, defect.UUID);
                             }
                         }
+                    }
 
-                        // Move other active objects
-                        lock (_activeprimsLock)
+                    // Move other active objects
+                    lock (_activeprimsLock)
+                    {
+                        List<AuroraODEPrim> defects = new List<AuroraODEPrim>();
+                        foreach (AuroraODEPrim prim in _activeprims)
                         {
-                            List<AuroraODEPrim> defects = new List<AuroraODEPrim>();
-                            foreach (AuroraODEPrim prim in _activeprims)
+                            prim.m_collisionscore = 0;
+                            prim.Move(ODE_STEPSIZE, ref defects);
+                        }
+                        if (defects.Count > 0)
+                        {
+                            foreach (AuroraODEPrim defect in defects)
                             {
-                                prim.m_collisionscore = 0;
-                                prim.Move(ODE_STEPSIZE, ref defects);
-                            }
-                            if (defects.Count > 0)
-                            {
-                                foreach (AuroraODEPrim defect in defects)
-                                {
-                                    //Destroy it
-                                    RemovePrimThreadLocked(defect);
-                                    defect.ParentEntity.PhysActor = null; //Delete it
-                                }
+                                //Destroy it
+                                RemovePrimThreadLocked(defect);
+                                defect.ParentEntity.PhysActor = null; //Delete it
                             }
                         }
-                        if (m_rayCastManager != null)
-                            m_rayCastManager.ProcessQueuedRequests();
-                    });
+                    }
+                    if (m_rayCastManager != null)
+                        m_rayCastManager.ProcessQueuedRequests();
 
-                    StatCollisionOptimizedTime = CollectTime(() =>
-                    {
-                        if (!DisableCollisions)
-                            collision_optimized(timeElapsed);
-                    });
+                    if (!DisableCollisions)
+                        collision_optimized(timeElapsed);
 
                     d.WorldQuickStep(world, ODE_STEPSIZE);
                     d.JointGroupEmpty(contactgroup);
@@ -1683,93 +1683,83 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             IsLocked = false;
 
-            StatUnlockedArea = CollectTime(() =>
+            PhysicsObject prm;
+            while (RemoveQueue.TryDequeue(out prm))
             {
-                PhysicsObject prm;
-                while (RemoveQueue.TryDequeue(out prm))
-                {
-                    RemovePrim(prm);
-                }
-                while (DeleteQueue.TryDequeue(out prm))
-                {
-                    DeletePrim(prm);
-                }
-
-                if (ActiveAddCollisionQueue.Count > 0)
-                {
-                    lock (_collisionEventListLock)
-                    {
-                        foreach (PhysicsActor obj in ActiveAddCollisionQueue.Where(obj => !_collisionEventDictionary.ContainsKey(obj.UUID)))
-                            _collisionEventDictionary.Add(obj.UUID, obj);
-                    }
-                    ActiveAddCollisionQueue.Clear();
-                }
-                if (ActiveRemoveCollisionQueue.Count > 0)
-                {
-                    lock (_collisionEventListLock)
-                    {
-                        foreach (PhysicsActor obj in ActiveRemoveCollisionQueue)
-                            _collisionEventDictionary.Remove(obj.UUID);
-                    }
-                    ActiveRemoveCollisionQueue.Clear();
-                }
-            });
-
-            StatSendCollisionsTime = CollectTime(() =>
+                AuroraODEPrim p = (AuroraODEPrim)prm;
+                p.setPrimForRemoval();
+            }
+            while (DeleteQueue.TryDequeue(out prm))
             {
-                if (!DisableCollisions)
-                {
-                    lock (_characters)
-                    {
-                        foreach (AuroraODECharacter av in _characters.Where(av => av != null))
-                            av.SendCollisions();
-                    }
-                    lock (_collisionEventListLock)
-                    {
-                        foreach (PhysicsActor obj in _collisionEventDictionary.Values.Where(obj => obj != null))
-                            obj.SendCollisions();
-                    }
-                }
-            });
+                AuroraODEPrim p = (AuroraODEPrim)prm;
+                p.setPrimForDeletion();
+            }
 
-            StatAvatarUpdatePosAndVelocity = CollectTime(() =>
+            if (ActiveAddCollisionQueue.Count > 0)
             {
-                if (!DisableCollisions)
+                lock (_collisionEventListLock)
                 {
-                    lock (_characters)
-                    {
-                        foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
-                        {
-                            if (actor.bad)
-                                MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
-                            else
-                                actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                        }
-                    }
+                    foreach (PhysicsActor obj in ActiveAddCollisionQueue.Where(obj => !_collisionEventDictionary.ContainsKey(obj.UUID)))
+                        _collisionEventDictionary.Add(obj.UUID, obj);
                 }
-                lock (_badCharacter)
+                ActiveAddCollisionQueue.Clear();
+            }
+            if (ActiveRemoveCollisionQueue.Count > 0)
+            {
+                lock (_collisionEventListLock)
                 {
-                    if (_badCharacter.Count > 0)
-                    {
-                        foreach (AuroraODECharacter chr in _badCharacter)
-                        {
-                            RemoveCharacter(chr);
-                        }
-                        _badCharacter.Clear();
-                    }
+                    foreach (PhysicsActor obj in ActiveRemoveCollisionQueue)
+                        _collisionEventDictionary.Remove(obj.UUID);
                 }
-            });
+                ActiveRemoveCollisionQueue.Clear();
+            }
 
-            StatPrimUpdatePosAndVelocity = CollectTime(() =>
+            if (!DisableCollisions)
             {
-                lock (_activeprimsLock)
+                lock (_characters)
                 {
-                    foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
+                    foreach (AuroraODECharacter av in _characters.Where(av => av != null))
+                        av.SendCollisions();
+                }
+                lock (_collisionEventListLock)
+                {
+                    foreach (PhysicsActor obj in _collisionEventDictionary.Values.Where(obj => obj != null))
+                        obj.SendCollisions();
+                }
+            }
+
+            if (!DisableCollisions)
+            {
+                lock (_characters)
+                {
+                    foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                     {
-                        actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+                        if (actor.bad)
+                            MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
+                        else
+                            actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                     }
                 }
-            });
+            }
+            lock (_badCharacter)
+            {
+                if (_badCharacter.Count > 0)
+                {
+                    foreach (AuroraODECharacter chr in _badCharacter)
+                    {
+                        RemoveCharacter(chr);
+                    }
+                    _badCharacter.Clear();
+                }
+            }
+
+            lock (_activeprimsLock)
+            {
+                foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
+                {
+                    actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+                }
+            }
         }
 
         private int CollectTime(NoParam del)
@@ -1801,7 +1791,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             float hfmin = _heightmap.Min();
             float hfmax = _heightmap.Max();
 
-            //SimulationChangesQueue.Enqueue(() =>
+            SimulationChangesQueue.Enqueue(() =>
             {
                 if (RegionTerrain != IntPtr.Zero)
                 {
@@ -1850,7 +1840,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 TerrainHeightFieldHeights = heightMap;
                 ODETerrainHeightFieldHeights = _heightmap;
-            }//);
+            });
+            //Trimesh terrain
             /*var mesh = new OpenSim.Region.Physics.Meshing.Mesh(523452345);
             for (int i = 0; i < m_region.RegionSizeX - 1; i++)
             {
@@ -1905,31 +1896,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void Dispose()
         {
-            SimulationChangesQueue.Enqueue(() =>
+            lock (_prims)
             {
-                lock (_prims)
+                foreach (AuroraODEPrim prm in _prims)
                 {
-                    foreach (AuroraODEPrim prm in _prims)
-                    {
-                        RemovePrim(prm);
-                    }
+                    RemovePrim(prm);
                 }
+            }
 
-                //foreach (OdeCharacter act in _characters)
-                //{
-                //RemoveAvatar(act);
-                //}
+            //foreach (OdeCharacter act in _characters)
+            //{
+            //RemoveAvatar(act);
+            //}
 
-                if (ContactgeomsArray != IntPtr.Zero)
-                    Marshal.FreeHGlobal(ContactgeomsArray);
-                if (GlobalContactsArray != IntPtr.Zero)
-                    Marshal.FreeHGlobal(GlobalContactsArray);
+            if (ContactgeomsArray != IntPtr.Zero)
+                Marshal.FreeHGlobal(ContactgeomsArray);
+            if (GlobalContactsArray != IntPtr.Zero)
+                Marshal.FreeHGlobal(GlobalContactsArray);
 
-                d.WorldDestroy(world);
-                //d.CloseODE();
-                m_rayCastManager.Dispose();
-                m_rayCastManager = null;
-            });
+            d.WorldDestroy(world);
+            //d.CloseODE();
+            m_rayCastManager.Dispose();
+            m_rayCastManager = null;
         }
 
         #endregion

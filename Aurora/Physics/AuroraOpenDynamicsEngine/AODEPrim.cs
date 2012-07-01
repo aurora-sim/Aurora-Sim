@@ -367,7 +367,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value.IsFinite())
                 {
-                    AddChange(changes.Force, new object[2] { value, false });
+                    _parent_scene.AddSimulationChange(() => changeforce(value, false));
                 }
                 else
                 {
@@ -2401,7 +2401,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (force.IsFinite())
             {
-                AddChange(changes.Force, new object[2] { force, pushforce });
+                _parent_scene.AddSimulationChange(() => changeforce(force, pushforce));
             }
             else
             {
@@ -2672,11 +2672,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_rotationalVelocity = (Vector3)arg;
         }
 
-        private void changeforce(Object arg)
+        private void changeforce(Vector3 force, bool pushforce)
         {
-            object[] args = (object[])arg;
-            Vector3 force = (Vector3)args[0];
-            if ((bool)args[1])
+            if (pushforce)
             {
                 if (IsPhysical && m_vehicle.Type != Vehicle.TYPE_NONE)
                     m_vehicle.ProcessForceTaint(force);
@@ -2808,10 +2806,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     break;
                 case changes.AngVelocity:
                     changeangvelocity(arg);
-                    break;
-
-                case changes.Force:
-                    changeforce(arg);
                     break;
 
                 case changes.Torque:
