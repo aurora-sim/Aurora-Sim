@@ -157,21 +157,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
 
             m_isPhysical = false; // current status: no ODE information exists
-            _parent_scene.AddSimulationChange(() =>
-                {
-                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
-                    {
-                        MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
-                                   + (Shell != IntPtr.Zero ? "Shell " : "")
-                                   + (Body != IntPtr.Zero ? "Body " : ""));
-                    }
-                    _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
-
-                    _parent_scene.AddCharacter(this);
-                    m_isPhysical = true;
-
-                });
+            _parent_scene.AddSimulationChange(() => RebuildAvatar());
             m_name = avName;
+        }
+
+        public void RebuildAvatar()
+        {
+            if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
+            {
+                MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
+                           + (Shell != IntPtr.Zero ? "Shell " : "")
+                           + (Body != IntPtr.Zero ? "Body " : ""));
+            }
+            _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
+
+            _parent_scene.AddCharacter(this);
+            m_isPhysical = true;
         }
 
         #endregion
@@ -323,7 +324,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
                     Velocity = Vector3.Zero;
 
-                    _parent_scene.AddChange(this, changes.CapsuleLength, (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f);
+                    _parent_scene.AddSimulationChange(() => RebuildAvatar());
                 }
                 else
                 {

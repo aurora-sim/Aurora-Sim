@@ -204,7 +204,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             CalcPrimBodyData();
 
-            AddChange(changes.Add, null);
+            _parent_scene.AddSimulationChange(() => changeadd());
         }
 
         public ISceneChildEntity ParentEntity
@@ -219,8 +219,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value)
                     m_buildingRepresentation = value;
-                else
-                    AddChange(changes.buildingrepresentation, null);
+                //else
+                //    _parent_scene.AddSimulationChange(() => m_buildingRepresentation = false);
             }
         }
 
@@ -232,7 +232,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (value)
                     m_blockPhysicalReconstruction = value;
                 else
-                    AddChange(changes.blockphysicalreconstruction, value);
+                    _parent_scene.AddSimulationChange(() =>
+                    {
+                        if (value)
+                            DestroyBody();
+                        else
+                        {
+                            m_blockPhysicalReconstruction = false;
+                            if (!childPrim)
+                                MakeBody();
+                        }
+                        if (!childPrim && childrenPrim.Count > 0)
+                        {
+                            foreach (AuroraODEPrim prm in childrenPrim)
+                                prm.BlockPhysicalReconstruction = value;
+                        }
+                    });
             }
         }
 
@@ -259,7 +274,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool VolumeDetect
         {
             get { return m_isVolumeDetect; }
-            set { AddChange(changes.VolumeDtc, value); }
+            set { _parent_scene.AddSimulationChange(() => changevoldtc(value)); }
         }
 
         public override bool Selected
@@ -272,7 +287,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // through it while it's selected
                 m_collisionscore = 0;
                 if ((IsPhysical && !_zeroFlag) || !value)
-                    AddChange(changes.Selected, value);
+                    _parent_scene.AddSimulationChange(() => changeSelectedStatus(value));
                 else
                     m_isSelected = value;
                 if (m_isSelected)
@@ -291,7 +306,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             set
             {
-                AddChange(changes.Physical, value);
+                _parent_scene.AddSimulationChange(() => changePhysicsStatus(value));
                 if (!value) // Zero the remembered last velocity
                     m_lastVelocity = Vector3.Zero;
             }
@@ -332,7 +347,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 showposition = value;
                 fakepos++;
-                AddChange(changes.Position, value);
+                _parent_scene.AddSimulationChange(() => changePosition(value));
                 //MainConsole.Instance.Info("[PHYSICS]: " + _position.ToString());
             }
         }
@@ -343,13 +358,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    AddChange(changes.Size, value);
-                }
+                    _parent_scene.AddSimulationChange(() => changesize(value));
                 else
-                {
                     MainConsole.Instance.Warn("[PHYSICS]: Got NaN Size on object");
-                }
             }
         }
 
@@ -379,7 +390,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override int VehicleType
         {
             get { return (int)m_vehicle.Type; }
-            set { AddChange(changes.VehicleType, value); }
+            set { _parent_scene.AddSimulationChange(() => changeVehicleType(value)); }
         }
 
         public override Vector3 CenterOfMass
@@ -413,7 +424,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override PrimitiveBaseShape Shape
         {
-            set { AddChange(changes.Shape, value); }
+            set { _parent_scene.AddSimulationChange(() => changeshape(value)); }
         }
 
         public override Vector3 Velocity
@@ -434,9 +445,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    AddChange(changes.Velocity, value);
-                }
+                    _parent_scene.AddSimulationChange(() => changevelocity(value));
                 else
                 {
                     MainConsole.Instance.Warn("[PHYSICS]: Got NaN Velocity in Object");
@@ -457,11 +466,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                    AddChange(changes.Torque, value);
+                    _parent_scene.AddSimulationChange(() => changeSetTorque(value));
                 else
-                {
                     MainConsole.Instance.Warn("[PHYSICS]: Got NaN Torque in Object");
-                }
             }
         }
 
@@ -486,7 +493,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     showorientation = value;
                     fakeori++;
-                    AddChange(changes.Orientation, value);
+                    _parent_scene.AddSimulationChange(() => changeOrientation(value));
                 }
                 else
                     MainConsole.Instance.Warn("[PHYSICS]: Got NaN quaternion Orientation from Scene in Object");
@@ -513,13 +520,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 if (value.IsFinite())
-                {
-                    AddChange(changes.AngVelocity, value);
-                }
+                    _parent_scene.AddSimulationChange(() => changeangvelocity(value));
                 else
-                {
                     MainConsole.Instance.Warn("[PHYSICS]: Got NaN RotationalVelocity in Object");
-                }
             }
         }
 
@@ -531,7 +534,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool FloatOnWater
         {
-            set { AddChange(changes.CollidesWater, value); }
+            set { _parent_scene.AddSimulationChange(() => changefloatonwater(value)); }
         }
 
         public override void ClearVelocity()
@@ -941,9 +944,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return true;
         }
 
-        private void changeAngularLock(Object arg)
+        private void changeAngularLock(Vector3 newlock)
         {
-            Vector3 newlock = (Vector3)arg;
             // do we have a Physical object?
             if (Body != IntPtr.Zero)
             {
@@ -2144,9 +2146,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
 
-        public void changefloatonwater(object arg)
+        public void changefloatonwater(bool arg)
         {
-            m_collidesWater = (bool)arg;
+            m_collidesWater = arg;
 
             if (prim_geom != IntPtr.Zero)
             {
@@ -2250,15 +2252,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             ;
         }
 
-        public void changeshape(object arg)
+        public void changeshape(PrimitiveBaseShape arg)
         {
-            _pbs = (PrimitiveBaseShape)arg;
+            _pbs = arg;
             changeprimsizeshape();
         }
 
-        public void changesize(object arg)
+        public void changesize(Vector3 arg)
         {
-            _size = (Vector3)arg;
+            _size = arg;
             changeprimsizeshape();
         }
 
@@ -2278,9 +2280,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void changeSetTorque(Object arg)
+        public void changeSetTorque(Vector3 newtorque)
         {
-            Vector3 newtorque = (Vector3)arg;
             if (!m_isSelected)
             {
                 if (IsPhysical && Body != IntPtr.Zero)
@@ -2290,23 +2291,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public void changeAddAngularForce(object arg)
+        public void changeAddAngularForce(Vector3 arg)
         {
             if (!m_isSelected)
             {
                 if (IsPhysical)
-                {
-                    m_angularforceacc += (Vector3)arg * 100;
-                }
+                    m_angularforceacc += arg * 100;
 
                 m_collisionscore = 0;
                 m_interpenetrationcount = 0;
             }
         }
 
-        private void changevelocity(object arg)
+        private void changevelocity(Vector3 arg)
         {
-            _velocity = (Vector3)arg;
+            _velocity = arg;
             if (!m_isSelected)
             {
                 if (IsPhysical)
@@ -2335,7 +2334,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            AddChange(changes.Remove, null);
+            _parent_scene.AddSimulationChange(() =>
+            {
+                if (_parent != null)
+                {
+                    AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                    parent.ChildRemove(this);
+                }
+                else
+                    ChildRemove(this);
+
+                RemoveGeom();
+                m_targetSpace = IntPtr.Zero;
+                _parent_scene.RemovePrimThreadLocked(this);
+            });
         }
 
         public void setPrimForDeletion()
@@ -2352,36 +2364,51 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            AddChange(changes.Delete, null);
+            _parent_scene.AddSimulationChange(() => deletePrimLocked());
+        }
+
+        private void deletePrimLocked()
+        {
+            if (_parent != null)
+            {
+                AuroraODEPrim parent = (AuroraODEPrim)_parent;
+                parent.DestroyBody();
+            }
+            else
+                DestroyBody();
+
+            RemoveGeom();
+            m_targetSpace = IntPtr.Zero;
+            _parent_scene.RemovePrimThreadLocked(this);
         }
 
         public override void VehicleFloatParam(int param, float value)
         {
             strVehicleFloatParam strf = new strVehicleFloatParam { param = param, value = value };
-            AddChange(changes.VehicleFloatParam, strf);
+            _parent_scene.AddSimulationChange(() => changeVehicleFloatParam(strf.param, strf.value));
         }
 
         public override void VehicleVectorParam(int param, Vector3 value)
         {
             strVehicleVectorParam strv = new strVehicleVectorParam { param = param, value = value };
-            AddChange(changes.VehicleVectorParam, strv);
+            _parent_scene.AddSimulationChange(() => changeVehicleVectorParam(strv.param, strv.value));
         }
 
         public override void VehicleRotationParam(int param, Quaternion rotation)
         {
             strVehicleQuartParam strq = new strVehicleQuartParam { param = param, value = rotation };
-            AddChange(changes.VehicleRotationParam, strq);
+            _parent_scene.AddSimulationChange(() => changeVehicleRotationParam(strq.param, strq.value));
         }
 
         public override void VehicleFlags(int param, bool remove)
         {
             strVehicleBoolParam strb = new strVehicleBoolParam { param = param, value = remove };
-            AddChange(changes.VehicleFlags, strb);
+            _parent_scene.AddSimulationChange(() => changeVehicleFlags(strb.param, strb.value));
         }
 
         public override void SetCameraPos(Quaternion CameraRotation)
         {
-            AddChange(changes.VehicleSetCameraPos, CameraRotation);
+            _parent_scene.AddSimulationChange(() => changeSetCameraPos(CameraRotation));
         }
 
         internal static bool QuaternionIsFinite(Quaternion q)
@@ -2413,13 +2440,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void AddAngularForce(Vector3 force, bool pushforce)
         {
             if (force.IsFinite())
-            {
-                AddChange(changes.AddAngForce, force);
-            }
+                _parent_scene.AddSimulationChange(() => changeAddAngularForce(force));
             else
-            {
                 MainConsole.Instance.Warn("[PHYSICS]: Got Invalid Angular force vector from Scene in Object");
-            }
         }
 
         public override void CrossingFailure()
@@ -2439,12 +2462,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void link(PhysicsObject obj)
         {
-            AddChange(changes.Link, obj);
+            _parent_scene.AddSimulationChange(() => changelink((AuroraODEPrim)obj));
         }
 
         public override void delink()
         {
-            AddChange(changes.DeLink, null);
+            _parent_scene.AddSimulationChange(() => changelink(null));
         }
 
         public override void LockAngularMotion(Vector3 axis)
@@ -2456,7 +2479,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 axis.Y = (axis.Y > 0) ? 1f : 0f;
                 axis.Z = (axis.Z > 0) ? 1f : 0f;
                 MainConsole.Instance.DebugFormat("[axislock]: <{0},{1},{2}>", axis.X, axis.Y, axis.Z);
-                AddChange(changes.AngLock, axis);
+                _parent_scene.AddSimulationChange(() => changeAngularLock(axis));
             }
             else
             {
@@ -2667,9 +2690,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _acceleration = (Vector3)arg;
         }
 
-        private void changeangvelocity(Object arg)
+        private void changeangvelocity(Vector3 arg)
         {
-            m_rotationalVelocity = (Vector3)arg;
+            m_rotationalVelocity = arg;
         }
 
         private void changeforce(Vector3 force, bool pushforce)
@@ -2685,9 +2708,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_force = force;
         }
 
-        private void changevoldtc(Object arg)
+        private void changevoldtc(bool arg)
         {
-            m_isVolumeDetect = (bool)arg;
+            m_isVolumeDetect = arg;
         }
 
         private void donullchange()
@@ -2724,194 +2747,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private void changeSetCameraPos(Quaternion CameraRotation)
         {
             m_vehicle.ProcessSetCameraPos(CameraRotation);
-        }
-
-        public override void ProcessTaints(changes what, object arg)
-        {
-            if (m_frozen && what != changes.Add && what != changes.Remove && what != changes.Delete)
-                return;
-
-            if (prim_geom == IntPtr.Zero && what != changes.Add &&
-                what != changes.Remove && what != changes.Delete)
-            {
-                m_frozen = true;
-                return;
-            }
-
-            // nasty switch
-            switch (what)
-            {
-                case changes.Add:
-                    changeadd();
-                    break;
-                case changes.Remove:
-                    if (_parent != null)
-                    {
-                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                        parent.ChildRemove(this);
-                    }
-                    else
-                        ChildRemove(this);
-
-                    RemoveGeom();
-                    m_targetSpace = IntPtr.Zero;
-                    _parent_scene.RemovePrimThreadLocked(this);
-                    break;
-
-                case changes.Delete:
-                    if (_parent != null)
-                    {
-                        AuroraODEPrim parent = (AuroraODEPrim)_parent;
-                        parent.DestroyBody();
-                    }
-                    else
-                        DestroyBody();
-
-                    RemoveGeom();
-                    m_targetSpace = IntPtr.Zero;
-                    _parent_scene.RemovePrimThreadLocked(this);
-                    break;
-
-                case changes.Link:
-                    AuroraODEPrim tmp = (AuroraODEPrim)arg;
-                    changelink(tmp);
-                    break;
-
-                case changes.DeLink:
-                    changelink(null);
-                    break;
-
-                case changes.Position:
-                    changePosition((Vector3)arg);
-                    break;
-
-                case changes.Orientation:
-                    changeOrientation((Quaternion)arg);
-                    break;
-
-                case changes.PosOffset:
-                    donullchange();
-                    break;
-
-                case changes.OriOffset:
-                    donullchange();
-                    break;
-
-                case changes.Velocity:
-                    changevelocity(arg);
-                    break;
-
-                case changes.Acceleration:
-                    changeacceleration(arg);
-                    break;
-                case changes.AngVelocity:
-                    changeangvelocity(arg);
-                    break;
-
-                case changes.Torque:
-                    changeSetTorque(arg);
-                    break;
-
-                case changes.AddForce:
-                    changeAddForce(arg);
-                    break;
-
-                case changes.AddAngForce:
-                    changeAddAngularForce(arg);
-                    break;
-
-                case changes.AngLock:
-                    changeAngularLock(arg);
-                    break;
-
-                case changes.Size:
-                    changesize(arg);
-                    break;
-
-                case changes.Shape:
-                    changeshape(arg);
-                    break;
-
-                case changes.CollidesWater:
-                    changefloatonwater(arg);
-                    break;
-
-                case changes.VolumeDtc:
-                    changevoldtc(arg);
-                    break;
-
-                case changes.Physical:
-                    changePhysicsStatus((bool)arg);
-                    break;
-
-                case changes.Selected:
-                    changeSelectedStatus((bool)arg);
-                    break;
-
-                case changes.disabled:
-                    changedisable();
-                    break;
-
-                //                case changes.buildingrepresentation:
-                //                    m_buildingRepresentation = false;
-                //                    break;
-                case changes.blockphysicalreconstruction:
-                    if ((bool)arg)
-                        DestroyBody();
-                    else
-                    {
-                        m_blockPhysicalReconstruction = false;
-                        if (!childPrim)
-                            MakeBody();
-                    }
-                    if (!childPrim && childrenPrim.Count > 0)
-                    {
-                        foreach (AuroraODEPrim prm in childrenPrim)
-                            prm.BlockPhysicalReconstruction = (bool)arg;
-                    }
-                    break;
-
-                case changes.VehicleType:
-                    changeVehicleType((int)arg);
-                    break;
-
-                case changes.VehicleFloatParam:
-                    strVehicleFloatParam strf = (strVehicleFloatParam)arg;
-                    changeVehicleFloatParam(strf.param, strf.value);
-                    break;
-
-                case changes.VehicleVectorParam:
-                    strVehicleVectorParam strv = (strVehicleVectorParam)arg;
-                    changeVehicleVectorParam(strv.param, strv.value);
-                    break;
-
-                case changes.VehicleRotationParam:
-                    strVehicleQuartParam strq = (strVehicleQuartParam)arg;
-                    changeVehicleRotationParam(strq.param, strq.value);
-                    break;
-
-                case changes.VehicleFlags:
-                    strVehicleBoolParam strb = (strVehicleBoolParam)arg;
-                    changeVehicleFlags(strb.param, strb.value);
-                    break;
-
-                case changes.VehicleSetCameraPos:
-                    changeSetCameraPos((Quaternion)arg);
-                    break;
-
-                case changes.Null:
-                    donullchange();
-                    break;
-
-                default:
-                    donullchange();
-                    break;
-            }
-        }
-
-        public void AddChange(changes what, object arg)
-        {
-            _parent_scene.AddChange(this, what, arg);
         }
 
         #region Material/Contact setting/getting

@@ -354,11 +354,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.BodySetGravityMode(Body, false);
             d.BodySetAutoDisableFlag(Body, false);
 
-            _position.X = npositionX;
-            _position.Y = npositionY;
-            _position.Z = npositionZ;
-
-            _parent_scene.AddChange(this, changes.Position, _position);
+            Position = new Vector3(npositionX, npositionY, npositionZ);
 
             d.BodySetMass(Body, ref ShellMass);
             d.GeomSetBody(Shell, Body);

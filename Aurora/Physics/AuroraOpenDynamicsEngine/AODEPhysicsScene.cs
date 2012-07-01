@@ -134,14 +134,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
         }
 
-        public struct AODEchangeitem
-        {
-            public Object arg;
-            public PhysicsActor actor;
-            public changes what;
-        }
-
-        public ConcurrentQueue<AODEchangeitem> ChangesQueue = new ConcurrentQueue<AODEchangeitem>();
         public ConcurrentQueue<NoParam> SimulationChangesQueue = new ConcurrentQueue<NoParam>();
 
         protected readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
@@ -1550,16 +1542,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   Called to queue a change to a prim
         ///   to use in place of old taint mechanism so changes do have a time sequence
         /// </summary>
-        public void AddChange(PhysicsActor actor, changes what, Object arg)
-        {
-            AODEchangeitem item = new AODEchangeitem { actor = actor, what = what, arg = arg };
-            ChangesQueue.Enqueue(item);
-        }
-
-        /// <summary>
-        ///   Called to queue a change to a prim
-        ///   to use in place of old taint mechanism so changes do have a time sequence
-        /// </summary>
         public void AddSimulationChange(NoParam del)
         {
             SimulationChangesQueue.Enqueue(del);
@@ -1595,23 +1577,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 try
                 {
-                    int tlimit = 500;
-                    AODEchangeitem item;
-
-                    while (ChangesQueue.TryDequeue(out item))
-                    {
-                        try { item.actor.ProcessTaints(item.what, item.arg); }
-                        catch { }
-                        if (tlimit-- <= 0)
-                            break;
-                    }
-
                     NoParam del;
                     while (SimulationChangesQueue.TryDequeue(out del))
                         try { del(); }
                         catch { }
 
-                    if (ChangesQueue.Count == 0 && !m_hasSetUpPrims)
+                    if (SimulationChangesQueue.Count == 0 && !m_hasSetUpPrims)
                     {
                         //Tell the mesher that we are done with the initialization 
                         //  of prim meshes and that it can clear it's in memory cache

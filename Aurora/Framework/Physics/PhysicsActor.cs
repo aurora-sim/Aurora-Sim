@@ -205,66 +205,6 @@ namespace Aurora.Framework
         }
     }
 
-    /// <summary>
-    ///   this are prim change comands replace old taints
-    ///   but for now use a single comand per call since argument passing still doesn't support multiple comands
-    /// </summary>
-    public enum changes
-    {
-        Add = 0, // arg null. finishs the prim creation. should be used internally only ( to remove later ?)
-        Remove,
-        Delete,
-        Link,
-        // arg AuroraODEPrim new parent prim or null to delink. Makes the prim part of a object with prim parent as root
-        //  or removes from a object if arg is null
-        DeLink,
-        Position,
-        // arg Vector3 new position in world coords. Changes prim position. Prim must know if it is root or child
-        Orientation,
-        // arg Quaternion new orientation in world coords. Changes prim position. Prim must know it it is root or child
-        PosOffset, // not in use
-        // arg Vector3 new position in local coords. Changes prim position in object
-        OriOffset, // not in use
-        // arg Vector3 new position in local coords. Changes prim velocity in object
-        Velocity,
-        // arg Quaternion new rotation in local coords. Changes avatar rotation in object
-        Rotation,
-        // arg float new capsule length of avatar. Changes avatar height
-        CapsuleLength,
-        AngVelocity,
-        Acceleration,
-        Force,
-        Torque,
-
-        AddForce,
-        AddAngForce,
-        AngLock,
-
-        Size,
-        Shape,
-
-        CollidesWater,
-        VolumeDtc,
-
-        Physical,
-        Selected,
-        disabled,
-
-        VehicleType,
-        VehicleFloatParam,
-        VehicleVectorParam,
-        VehicleRotationParam,
-        VehicleFlags,
-        VehicleSetCameraPos,
-
-        buildingrepresentation,
-        blockphysicalreconstruction,
-
-
-
-        Null //keep this last used do dim the methods array. does nothing but pulsing the prim
-    }
-
     public abstract class PhysicsActor
     {
         // disable warning: public events
@@ -367,10 +307,6 @@ namespace Aurora.Framework
         }
 
         public virtual void ForceSetPosition(Vector3 position)
-        {
-        }
-
-        public virtual void ProcessTaints(changes changes, object p)
         {
         }
     }
