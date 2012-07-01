@@ -2583,7 +2583,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.RotationalVelocity = Vector3.Zero;
-                    part.PhysActor.UnSubscribeEvents();
                     part.m_hasSubscribedToCollisionEvent = false;
                     part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
                     part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;

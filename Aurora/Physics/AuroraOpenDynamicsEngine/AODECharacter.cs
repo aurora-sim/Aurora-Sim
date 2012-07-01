@@ -58,7 +58,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected Vector3 _velocity;
         protected bool _wasZeroFlagFlying;
         protected bool _zeroFlag;
-        public bool bad;
         protected bool flying;
         protected float lastUnderwaterPush;
         protected int m_ZeroUpdateSent;
@@ -479,7 +478,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public void UpdatePositionAndVelocity(float timestep)
         {
-            if (!m_shouldBePhysical)
+            if (!IsPhysical)
                 return;
 
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
@@ -490,7 +489,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (NullReferenceException)
             {
-                bad = true;
                 _parent_scene.BadCharacter(this);
                 vec = new Vector3(_position.X, _position.Y, _position.Z);
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
@@ -792,16 +790,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Collision events
-
-        public override void SubscribeEvents(int ms)
-        {
-            _parent_scene.addCollisionEventReporting(this);
-        }
-
-        public override void UnSubscribeEvents()
-        {
-            _parent_scene.remCollisionEventReporting(this);
-        }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {

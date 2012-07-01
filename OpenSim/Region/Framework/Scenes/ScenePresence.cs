@@ -935,8 +935,6 @@ namespace OpenSim.Region.Framework.Scenes
                         m_physicsActor.OnOutOfBounds -= OutOfBoundsCall;
                     if (m_physicsActor != null)
                         m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
-                    if (m_physicsActor != null)
-                        m_physicsActor.UnSubscribeEvents();
                     m_physicsActor = null;
                 }
             }
@@ -2681,7 +2679,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.OnCheckForRegionCrossing += CheckForBorderCrossing;
 
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
-            m_physicsActor.SubscribeEvents(500);
             m_physicsActor.Orientation = Rotation;
 
             //Tell any events about it

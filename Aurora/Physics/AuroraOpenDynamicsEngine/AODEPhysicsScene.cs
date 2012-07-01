@@ -43,18 +43,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
     {
         #region Declares
 
-        public struct ContactParameter
-        {
-            public float bounce;
-            public float mu;
-
-            public ContactParameter(float _mu, float _bounce)
-            {
-                mu = _mu;
-                bounce = _bounce;
-            }
-        }
-
         public float ODE_STEPSIZE = 0.020f;
         protected float m_timeDilation = 1.0f;
 
@@ -143,7 +131,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected readonly object _collisionEventListLock = new object();
 
-        protected readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
 
 
@@ -477,7 +464,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     aSpace = d.HashSpaceCreate(space);
                     staticPrimspace[i, j] = aSpace;
                     d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
-                    waitForSpaceUnlock(aSpace);
                     d.HashSpaceSetLevels(aSpace, -2, 8);
                     d.SpaceSetSublevel(aSpace, 1);
                 }
@@ -756,8 +742,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool result = false;
 
             ActorTypes at = (ActorTypes) atype;
-            //Stopwatch watch = new Stopwatch();
-            //watch.Start();
             foreach (d.ContactGeom contact in _perloopContact)
             {
                 //if ((contact.g1 == contactGeom.g1 && contact.g2 == contactGeom.g2))
@@ -777,15 +761,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             result = true;
                             break;
                         }
-                        else
-                        {
-                            //MainConsole.Instance.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
-                        }
-                    }
-                    else
-                    {
-                        //MainConsole.Instance.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
-                        //int i = 0;
                     }
                 }
                 else if (at == ActorTypes.Prim)
@@ -809,16 +784,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                                 break;
                             }
                         }
-                        //MainConsole.Instance.DebugFormat("[Collsion]: Depth {0}", Math.Abs(contact.depth - contactGeom.depth));
-                        //MainConsole.Instance.DebugFormat("[Collision]: <{0},{1},{2}>", Math.Abs(contactGeom.normal.X - contact.normal.X), Math.Abs(contactGeom.normal.Y - contact.normal.Y), Math.Abs(contactGeom.normal.Z - contact.normal.Z));
                     }
                 }
-
-                //}
             }
 
-            //watch.Stop();
-            //MainConsole.Instance.Warn(watch.ElapsedMilliseconds);
             return result;
         }
 
@@ -826,7 +795,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (!p2.SubscribedEvents() && !p1.SubscribedEvents())
                 return;
-            FireCollisionEvent(p1, p2, contact);
             if (p1.SubscribedEvents())
                 p1.AddCollisionEvent(p2.LocalID, contact);
             if (p2.SubscribedEvents())
@@ -840,46 +808,26 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private void collision_optimized(float timeStep)
         {
             m_global_contactcount = 0;
-/*
-            if (m_EnableAutoConfig)
+            //Clear out all the colliding attributes before we begin to collide anyone
+            foreach (AuroraODECharacter chr in _characters)
             {
-                if (Math.Abs ((m_timeDilation * contactsPerCollision - contacts.Length)) > 10)
-                {
-                    //This'll cause weird physics inworld
-                    //m_currentmaxContactsbeforedeath = Math.Max(100, (int)(maxContactsbeforedeath * TimeDilation));
-                    contacts = new d.ContactGeom[Math.Max (5, (int)(m_timeDilation * contactsPerCollision))];
-                    MainConsole.Instance.DebugFormat ("[ODE]: AutoConfig: changing contact amount to {0}, {1}%", contacts.Length, (m_timeDilation * contactsPerCollision) / contactsPerCollision * 100);
-                }
-                else if(contactsPerCollision - contacts.Length < 10 &&
-                    contacts.Length != contactsPerCollision)
-                {
-                    contacts = new d.ContactGeom[contactsPerCollision];
-                }
+                chr.IsColliding = false;
+                chr.IsTruelyColliding = false;
             }
-*/
-            lock (_characters)
+            foreach (AuroraODECharacter chr in _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
             {
-                //Clear out all the colliding attributes before we begin to collide anyone
-                foreach (AuroraODECharacter chr in _characters)
+                // test the avatar's geometry for collision with the space
+                // This will return near and the space that they are the closest to
+                // And we'll run this again against the avatar and the space segment
+                // This will return with a bunch of possible objects in the space segment
+                // and we'll run it again on all of them.
+                try
                 {
-                    chr.IsColliding = false;
-                    chr.IsTruelyColliding = false;
+                    d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
                 }
-                foreach (AuroraODECharacter chr in _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
+                catch (AccessViolationException)
                 {
-                    // test the avatar's geometry for collision with the space
-                    // This will return near and the space that they are the closest to
-                    // And we'll run this again against the avatar and the space segment
-                    // This will return with a bunch of possible objects in the space segment
-                    // and we'll run it again on all of them.
-                    try
-                    {
-                        d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
-                    }
-                    catch (AccessViolationException)
-                    {
-                        MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
-                    }
+                    MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                 }
             }
 
@@ -1064,41 +1012,49 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return newAv;
         }
 
-        public void AddCharacter(AuroraODECharacter chr)
+        /// <summary>
+        /// Adds a character to the list of avatars in the scene
+        /// Internally locked, as it is called only in the Simulation Changes loop
+        /// </summary>
+        /// <param name="chr"></param>
+        internal void AddCharacter(AuroraODECharacter chr)
         {
-            lock (_characters)
-            {
-                if (!_characters.Contains(chr))
-                {
-                    if (!chr.bad)
-                        _characters.Add(chr);
-                    else
-                        MainConsole.Instance.DebugFormat("[PHYSICS] Did not add BAD actor {0} to characters list", chr.m_uuid);
-                }
-            }
+            if (!_characters.Contains(chr))
+                _characters.Add(chr);
         }
 
-        public void RemoveCharacter(AuroraODECharacter chr)
+        /// <summary>
+        /// Removes a character from the list of avatars currently in the scene
+        /// Internally locked, as it is called only in the Simulation Changes loop
+        /// </summary>
+        /// <param name="chr"></param>
+        internal void RemoveCharacter(AuroraODECharacter chr)
         {
-            lock (_characters)
-            {
-                _characters.Remove(chr);
-            }
-        }
-
-        public void BadCharacter(AuroraODECharacter chr)
-        {
-            lock (_badCharacter)
-            {
-                if (!_badCharacter.Contains(chr))
-                    _badCharacter.Add(chr);
-            }
+            _characters.Remove(chr);
         }
 
         public override void RemoveAvatar(PhysicsCharacter actor)
         {
             //MainConsole.Instance.Debug("[PHYSICS]:ODELOCK");
             ((AuroraODECharacter) actor).Destroy();
+        }
+
+        internal void BadCharacter(AuroraODECharacter chr)
+        {
+            RemoveAvatar(chr);
+            AddAvatar(chr.Name, new Vector3(m_region.RegionSizeX / 2,
+                                                m_region.RegionSizeY / 2,
+                                                m_region.RegionSizeZ / 2), chr.Orientation,
+                        new Vector3(chr.CAPSULE_RADIUS * 2, chr.CAPSULE_RADIUS * 2,
+                                    chr.CAPSULE_LENGTH * 2), true, chr.LocalID, chr.UUID);
+        }
+
+        internal void BadPrim(AuroraODEPrim auroraODEPrim)
+        {
+            DeletePrim(auroraODEPrim);
+            //Can't really do this here... as it will be readded before the delete gets called, which is wrong...
+            //So... leave the prim out there for now
+            //AddPrimShape(auroraODEPrim.ParentEntity);
         }
 
         public override PhysicsObject AddPrimShape(ISceneChildEntity entity)
@@ -1117,7 +1073,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return newPrim;
         }
 
-        public void addActivePrim(AuroraODEPrim activatePrim)
+        internal void addActivePrim(AuroraODEPrim activatePrim)
         {
             // adds active prim..   (ones that should be iterated over in collisions_optimized
             lock (_activeprimsLock)
@@ -1133,7 +1089,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_timeDilation = value; }
         }
 
-        public void remActivePrim(AuroraODEPrim deactivatePrim)
+        internal void remActivePrim(AuroraODEPrim deactivatePrim)
         {
             lock (_activeprimsLock)
                 _activeprims.Remove(deactivatePrim);
@@ -1141,20 +1097,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override void RemovePrim(PhysicsObject prim)
         {
-            if (prim is AuroraODEPrim)
-            {
-                //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
-                RemoveQueue.Enqueue(prim);
-            }
+            //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
+            RemoveQueue.Enqueue(prim);
         }
 
         public override void DeletePrim(PhysicsObject prim)
         {
-            if (prim is AuroraODEPrim)
-            {
-                //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
-                DeleteQueue.Enqueue(prim);
-            }
+            //Add the prim to a queue which will be removed when Simulate has finished what it's doing.
+            DeleteQueue.Enqueue(prim);
         }
 
         ///<summary>
@@ -1166,45 +1116,43 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///  that the space was using.
         ///</summary>
         ///<param name = "prim"></param>
-        public void RemovePrimThreadLocked(AuroraODEPrim prim)
+        internal void RemovePrimThreadLocked(AuroraODEPrim prim)
         {
-            //Console.WriteLine("RemovePrimThreadLocked " +  prim.m_primName);
-            lock (prim)
+            remCollisionEventReporting(prim);
+            remActivePrim(prim);
+            prim.m_frozen = true;
+            if (prim.prim_geom != IntPtr.Zero)
             {
-                remCollisionEventReporting(prim);
-                remActivePrim(prim);
-                prim.m_frozen = true;
-                if (prim.prim_geom != IntPtr.Zero)
+                prim.DestroyBody();
+                prim.IsPhysical = false;
+                prim.m_targetSpace = IntPtr.Zero;
+                try
                 {
-                    prim.DestroyBody();
-                    prim.IsPhysical = false;
-                    prim.m_targetSpace = IntPtr.Zero;
-                    try
+                    if (prim.prim_geom != IntPtr.Zero)
                     {
-                        if (prim.prim_geom != IntPtr.Zero)
-                        {
-                            d.GeomDestroy(prim.prim_geom);
-                            prim.prim_geom = IntPtr.Zero;
-                        }
-                        else
-                        {
-                            MainConsole.Instance.Warn("[PHYSICS]: Unable to remove prim from physics scene");
-                        }
+                        d.GeomDestroy(prim.prim_geom);
+                        prim.prim_geom = IntPtr.Zero;
                     }
-                    catch (AccessViolationException)
+                    else
                     {
-                        MainConsole.Instance.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
+                        MainConsole.Instance.Warn("[PHYSICS]: Unable to remove prim from physics scene");
                     }
                 }
-                if (!prim.childPrim)
+                catch (AccessViolationException)
                 {
-                    lock (prim.childrenPrim)
-                        foreach (AuroraODEPrim prm in prim.childrenPrim)
-                            RemovePrimThreadLocked(prm);
+                    MainConsole.Instance.Info("[PHYSICS]: Couldn't remove prim from physics scene, it was already be removed.");
                 }
-                lock (_prims)
-                    _prims.Remove(prim);
             }
+            if (!prim.childPrim)
+            {
+                lock (prim.childrenPrim)
+                    foreach (AuroraODEPrim prm in prim.childrenPrim)
+                        RemovePrimThreadLocked(prm);
+            }
+            if (prim.ParentEntity != null)
+                prim.ParentEntity.PhysActor = null; //Delete it
+            lock (_prims)
+                _prims.Remove(prim);
         }
 
         #endregion
@@ -1227,22 +1175,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // we don't need to test physical here because this function should
             // never be called if the prim is physical(active)
 
-            // All physical prim end up in the root space
-            //Thread.Sleep(20);
             if (currentspace != space)
             {
-                //MainConsole.Instance.Info("[SPACE]: C:" + currentspace.ToString() + " g:" + geom.ToString());
-                //if (currentspace == IntPtr.Zero)
-                //{
-                //int adfadf = 0;
-                //}
                 if (d.SpaceQuery(currentspace, geom) && currentspace != IntPtr.Zero)
                 {
                     if (d.GeomIsSpace(currentspace))
-                    {
-                        waitForSpaceUnlock(currentspace);
                         d.SpaceRemove(currentspace, geom);
-                    }
                     else
                     {
                         MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" + currentspace +
@@ -1255,10 +1193,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (sGeomIsIn != IntPtr.Zero)
                     {
                         if (d.GeomIsSpace(currentspace))
-                        {
-                            waitForSpaceUnlock(sGeomIsIn);
                             d.SpaceRemove(sGeomIsIn, geom);
-                        }
                         else
                         {
                             MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
@@ -1299,10 +1234,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     if (d.SpaceQuery(currentspace, geom))
                     {
                         if (d.GeomIsSpace(currentspace))
-                        {
-                            waitForSpaceUnlock(currentspace);
                             d.SpaceRemove(currentspace, geom);
-                        }
                         else
                         {
                             MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
@@ -1315,10 +1247,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (sGeomIsIn != IntPtr.Zero)
                         {
                             if (d.GeomIsSpace(sGeomIsIn))
-                            {
-                                waitForSpaceUnlock(sGeomIsIn);
                                 d.SpaceRemove(sGeomIsIn, geom);
-                            }
                             else
                             {
                                 MainConsole.Instance.Info("[Physics]: Invalid Scene passed to 'recalculatespace':" +
@@ -1388,12 +1317,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return returnint;
         }
 
-        internal void waitForSpaceUnlock(IntPtr space)
-        {
-            //if (space != IntPtr.Zero)
-            //while (d.SpaceLockQuery(space)) { } // Wait and do nothing
-        }
-
         /// <summary>
         ///   Debug space message for printing the space that a prim/avatar is in.
         /// </summary>
@@ -1413,7 +1336,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name = "pbs"></param>
         /// <returns></returns>
-        public bool needsMeshing(ISceneChildEntity entity)
+        internal bool needsMeshing(ISceneChildEntity entity)
         {
             PrimitiveBaseShape pbs = entity.Shape;
             // most of this is redundant now as the mesher will return null if it cant mesh a prim
@@ -1599,47 +1522,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         return; //Don't do physics until the sim is completely set up
 
                     // Move characters
-                    lock (_characters)
-                    {
-                        List<ODESpecificAvatar> defects = new List<ODESpecificAvatar>();
-                        foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
-                            if (actor.Move(ODE_STEPSIZE))
-                                defects.Add(actor);
-
-                        if (defects.Count != 0)
-                        {
-                            foreach (ODESpecificAvatar defect in defects)
-                            {
-                                defect.Destroy();
-                                RemoveCharacter(defect);
-                                AddAvatar(defect.Name, new Vector3(m_region.RegionSizeX / 2,
-                                                                    m_region.RegionSizeY / 2,
-                                                                    m_region.RegionSizeZ / 2), defect.Orientation,
-                                            new Vector3(defect.CAPSULE_RADIUS * 2, defect.CAPSULE_RADIUS * 2,
-                                                        defect.CAPSULE_LENGTH * 2), true, defect.LocalID, defect.UUID);
-                            }
-                        }
-                    }
+                    foreach (ODESpecificAvatar actor in _characters.Where(actor => actor != null).Cast<ODESpecificAvatar>())
+                        actor.Move(ODE_STEPSIZE);
 
                     // Move other active objects
                     lock (_activeprimsLock)
-                    {
-                        List<AuroraODEPrim> defects = new List<AuroraODEPrim>();
                         foreach (AuroraODEPrim prim in _activeprims)
-                        {
-                            prim.m_collisionscore = 0;
-                            prim.Move(ODE_STEPSIZE, ref defects);
-                        }
-                        if (defects.Count > 0)
-                        {
-                            foreach (AuroraODEPrim defect in defects)
-                            {
-                                //Destroy it
-                                RemovePrimThreadLocked(defect);
-                                defect.ParentEntity.PhysActor = null; //Delete it
-                            }
-                        }
-                    }
+                            prim.Move(ODE_STEPSIZE);
+
                     if (m_rayCastManager != null)
                         m_rayCastManager.ProcessQueuedRequests();
 
@@ -1693,48 +1583,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             if (!DisableCollisions)
             {
-                lock (_characters)
-                {
-                    foreach (AuroraODECharacter av in _characters.Where(av => av != null))
-                        av.SendCollisions();
-                }
+                foreach (AuroraODECharacter av in _characters.Where(av => av != null))
+                    av.SendCollisions();
                 lock (_collisionEventListLock)
                 {
                     foreach (PhysicsActor obj in _collisionEventDictionary.Values.Where(obj => obj != null))
                         obj.SendCollisions();
                 }
-            }
 
-            if (!DisableCollisions)
-            {
-                lock (_characters)
-                {
-                    foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
-                    {
-                        if (actor.bad)
-                            MainConsole.Instance.WarnFormat("[PHYSICS]: BAD Actor {0} in _characters list was not removed?", actor.m_uuid);
-                        else
-                            actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
-                    }
-                }
-            }
-            lock (_badCharacter)
-            {
-                if (_badCharacter.Count > 0)
-                {
-                    foreach (AuroraODECharacter chr in _badCharacter)
-                    {
-                        RemoveCharacter(chr);
-                    }
-                    _badCharacter.Clear();
-                }
-            }
-
-            lock (_activeprimsLock)
-            {
-                foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
-                {
+                foreach (AuroraODECharacter actor in _characters.Where(actor => actor != null))
                     actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
+
+                lock (_activeprimsLock)
+                {
+                    foreach (AuroraODEPrim actor in _activeprims.Where(actor => actor.IsPhysical))
+                        actor.UpdatePositionAndVelocity(nodesteps * ODE_STEPSIZE);
                 }
             }
         }
@@ -1940,8 +1803,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             foreach (AuroraODEPrim prm in collidingPrims)
             {
-                returncolliders[prm.m_localID] = prm.CollisionScore;
-                prm.CollisionScore = 0f;
+                returncolliders[prm.LocalID] = prm.CollisionScore;
+                prm.resetCollisionAccounting();
             }
             return returncolliders;
         }

@@ -68,9 +68,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private readonly Vector3 _torque = Vector3.Zero;
         private readonly int body_autodisable_frames = 20;
         private readonly AuroraODEDynamics m_vehicle;
-        public IntPtr Amotor = IntPtr.Zero;
-        public d.Matrix3 AmotorRotation;
-        public IntPtr Body = IntPtr.Zero;
+        private IntPtr Amotor = IntPtr.Zero;
+        public IntPtr Body { get; private set; }
         private CollisionEventUpdate CollisionEventsThisFrame;
 
         private float PID_D = 35f;
@@ -80,23 +79,23 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         private IMesh _mesh;
         private Quaternion _orientation;
         private PhysicsObject _parent;
-        internal ISceneChildEntity _parent_entity;
+        private ISceneChildEntity _parent_entity;
         private PrimitiveBaseShape _pbs;
         private Vector3 _position;
         private Vector3 _size;
-        public IntPtr _triMeshData;
+        private IntPtr _triMeshData;
         private Vector3 _velocity;
-        public bool _zeroFlag;
-        public volatile bool childPrim;
+        private bool _zeroFlag;
+        internal volatile bool childPrim;
         internal List<AuroraODEPrim> childrenPrim = new List<AuroraODEPrim>();
         private int fakeori; // control the use of above
         private int fakepos; // control the use of above
         private bool hasOOBoffsetFromMesh; // if true we did compute it form mesh centroid, else from aabb
         private bool iscolliding;
         private Vector3 m_angularforceacc;
-        public Vector3 m_angularlock = Vector3.One;
-        internal bool m_blockPhysicalReconstruction;
-        internal bool m_buildingRepresentation;
+        private Vector3 m_angularlock = Vector3.One;
+        private bool m_blockPhysicalReconstruction;
+        private bool m_buildingRepresentation;
 
         // KF: These next 7 params apply to llSetHoverHeight(float height, integer water, float tau),
         // and are for non-VEHICLES only.
@@ -113,54 +112,41 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         // Default, Collide with Other Geometries, spaces and Bodies
         private CollisionCategories m_collisionFlags = m_default_collisionFlags;
-        public float m_collisionscore;
+        internal float m_collisionscore;
         private int m_crossingfailures;
 
-        public bool m_disabled;
-        public bool m_eventsubscription;
+        internal bool m_disabled;
+        private bool m_eventsubscription;
         //This disables the prim so that it cannot do much anything at all
 
         private Vector3 m_force;
         private Vector3 m_forceacc;
-        public bool m_frozen;
-        public int m_interpenetrationcount;
+        internal bool m_frozen;
         private bool m_isSelected;
 
-        internal bool m_isVolumeDetect; // If true, this prim only detects collisions but doesn't collide actively
+        private bool m_isVolumeDetect; // If true, this prim only detects collisions but doesn't collide actively
         private bool m_isphysical;
         private int m_lastUpdateSent;
         private Vector3 m_lastVelocity;
         private Quaternion m_lastorientation;
         private Vector3 m_lastposition;
-        public uint m_localID;
-        internal int m_material = (int)Material.Wood;
-        public bool m_primIsRemoved;
+        private uint m_localID;
+        private int m_material = (int)Material.Wood;
+        private bool m_primIsRemoved;
         private Vector3 m_pushForce;
-        public bool m_returnCollisions;
         private Vector3 m_rotationalVelocity;
-        public IntPtr m_targetSpace = IntPtr.Zero;
+        internal IntPtr m_targetSpace = IntPtr.Zero;
 
         private bool m_throttleUpdates;
-
-        public bool outofBounds;
-
-        public AuroraODEPhysicsScene.ContactParameter primContactParam = new AuroraODEPhysicsScene.ContactParameter(
-            0.6f, 0.5f); // wood
 
         private float primMass; // prim own mass
 
         public Vector3 primOOBoffset; // is centroid out of mesh or rest aabb
-        public float primOOBradiusSQ;
         public Vector3 primOOBsize; // prim real dimensions from mesh 
         public IntPtr prim_geom;
-        public d.Mass primdMass; // prim inertia information on it's own referencial
+        private d.Mass primdMass; // prim inertia information on it's own referencial
         private Quaternion showorientation; // tmp hack see showposition
-        private Vector3 showposition; // a temp hack for now rest of code expects position to be changed imediatly
-        //private bool testRealGravity;
-        //private int throttleCounter;
-
-        public AuroraODEPhysicsScene.ContactParameter vehicleContactParam = new AuroraODEPhysicsScene.ContactParameter(
-            0, 0);
+        private Vector3 showposition; // a temp hack for now rest of code expects position to be changed immediately
 
         public AuroraODEPrim(ISceneChildEntity entity, AuroraODEPhysicsScene parent_scene, bool pisPhysical)
         {
@@ -285,7 +271,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // is physical or the object is modified somehow *IN THE FUTURE*
                 // without this, if an avatar selects prim, they can walk right
                 // through it while it's selected
-                m_collisionscore = 0;
                 if ((IsPhysical && !_zeroFlag) || !value)
                     _parent_scene.AddSimulationChange(() => changeSelectedStatus(value));
                 else
@@ -342,13 +327,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 else
                     return _position;
             }
-
             set
             {
                 showposition = value;
                 fakepos++;
                 _parent_scene.AddSimulationChange(() => changePosition(value));
-                //MainConsole.Instance.Info("[PHYSICS]: " + _position.ToString());
             }
         }
 
@@ -750,12 +733,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.GeomSetCategoryBits(prim_geom, (int)m_collisionCategories);
             d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
 
-            m_interpenetrationcount = 0;
-            m_collisionscore = 0;
-
             if (m_targetSpace != _parent_scene.space)
             {
-                _parent_scene.waitForSpaceUnlock(m_targetSpace);
                 if (d.SpaceQuery(m_targetSpace, prim_geom))
                     d.SpaceRemove(m_targetSpace, prim_geom);
 
@@ -781,7 +760,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (prm.m_targetSpace != _parent_scene.space)
                     {
-                        _parent_scene.waitForSpaceUnlock(m_targetSpace);
                         if (d.SpaceQuery(prm.m_targetSpace, prm.prim_geom))
                             d.SpaceRemove(prm.m_targetSpace, prm.prim_geom);
 
@@ -790,8 +768,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
 
                     prm.m_disabled = false;
-                    prm.m_interpenetrationcount = 0;
-                    prm.m_collisionscore = 0;
                     _parent_scene.addActivePrim(prm);
                 }
             }
@@ -810,7 +786,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         {
             if (prm.m_targetSpace != null && prm.m_targetSpace == _parent_scene.space)
             {
-                _parent_scene.waitForSpaceUnlock(m_targetSpace);
                 if (d.SpaceQuery(prm.m_targetSpace, prm.prim_geom))
                     d.SpaceRemove(prm.m_targetSpace, prm.prim_geom);
             }
@@ -865,7 +840,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             _mass = primMass;
             m_disabled = true;
-            m_collisionscore = 0;
         }
 
         public bool setMesh(AuroraODEPhysicsScene parent_scene, IMesh mesh)
@@ -927,7 +901,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 m_MeshToTriMeshMap[mesh.Key] = _triMeshData;
             }
 
-            _parent_scene.waitForSpaceUnlock(m_targetSpace);
             try
             {
                 if (prim_geom == IntPtr.Zero)
@@ -1276,7 +1249,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     && _size.X == _size.Y && _size.Y == _size.Z)
                 {
                     // it's a sphere
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
                     try
                     {
                         SetGeom(d.CreateSphere(m_targetSpace, _size.X * 0.5f));
@@ -1289,7 +1261,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
                     try
                     {
                         SetGeom(d.CreateBox(m_targetSpace, _size.X, _size.Y, _size.Z));
@@ -1409,7 +1380,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (newpos != _position)
                 {
-                    _parent_scene.waitForSpaceUnlock(m_targetSpace);
                     IntPtr tempspace = _parent_scene.recalculateSpaceForGeom(prim_geom, newpos, m_targetSpace);
                     m_targetSpace = tempspace;
                     d.GeomSetPosition(prim_geom, newpos.X, newpos.Y, newpos.Z);
@@ -1550,7 +1520,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
         */
 
-        public void Move(float timestep, ref List<AuroraODEPrim> defects)
+        public void Move(float timestep)
         {
             if (m_isphysical && Body != IntPtr.Zero && !m_isSelected && !childPrim && !m_blockPhysicalReconstruction)
             // KF: Only move root prims.
@@ -1568,7 +1538,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         d.BodySetForce(Body, 0, 0, 0);
                         d.BodySetLinearVel(Body, 0, 0, 0);
                         d.BodySetAngularVel(Body, 0, 0, 0);
-                        defects.Add(this.childPrim ? (AuroraODEPrim)_parent : this);
+                        _parent_scene.BadPrim(this.childPrim ? (AuroraODEPrim)_parent : this);
                     }
                     else
                     {
@@ -1598,195 +1568,16 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 else
                 {
-                    float m_mass = _mass;
                     Vector3 dcpos = d.BodyGetPosition(Body).ToVector3();
                     Vector3 vel = d.BodyGetLinearVel(Body).ToVector3();
 
-                    float gravModifier = (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier;
                     Vector3 gravForce = new Vector3();
-                    _parent_scene.CalculateGravity(m_mass, dcpos, true, gravModifier, ref gravForce);
+                    _parent_scene.CalculateGravity(_mass, dcpos, true,
+                        (1.0f - m_buoyancy) * _parent_entity.GravityMultiplier, ref gravForce);
 
-                    /*
-                                        Vector3 windForce = new Vector3 ();
-                                        _parent_scene.AddWindForce(m_mass, dcpos, ref windForce);
-                                        fx += windForce.X;
-                                        fy += windForce.Y;
-                                        fz += windForce.Z;
-                    */
-                    /*#region PID
-                    if (_parent_entity.PIDActive)
-                    {
-                        //Console.WriteLine("PID " +  m_primName);
-                        // KF - this is for object move? eg. llSetPos() ?
-                        //if (!d.BodyIsEnabled(Body))
-                        //d.BodySetForce(Body, 0f, 0f, 0f);
-                        // If we're using the PID controller, then we have no gravity
-                        //fz = (-1 * _parent_scene.gravityz) * m_mass;     //KF: ?? Prims have no global gravity,so simply...
-                        fz = 0f;
-
-                        //  no lock; for now it's only called from within Simulate()
-
-                        // If the PID Controller isn't active then we set our force
-                        // calculating base velocity to the current position
-
-                        if ((_parent_entity.PIDTau < 1) && (_parent_entity.PIDTau != 0))
-                        {
-                            //PID_G = PID_G / m_PIDTau;
-                            _parent_entity.PIDTau = 1;
-                        }
-
-                        if ((PID_G - _parent_entity.PIDTau) <= 0)
-                        {
-                            PID_G = _parent_entity.PIDTau + 1;
-                        }
-                        //PidStatus = true;
-
-                        _target_velocity.X = (float)(_parent_entity.PIDTarget.X - dcpos.X) * ((PID_G - _parent_entity.PIDTau) * timestep);
-                        _target_velocity.Y = (float)(_parent_entity.PIDTarget.Y - dcpos.Y) * ((PID_G - _parent_entity.PIDTau) * timestep);
-                        _target_velocity.Z = (float)(_parent_entity.PIDTarget.Z - dcpos.Z) * ((PID_G - _parent_entity.PIDTau) * timestep);
-
-                        //  if velocity is zero, use position control; otherwise, velocity control
-
-                        if (_target_velocity.ApproxEquals (Vector3.Zero, 0.05f))
-                        {
-                            //  keep track of where we stopped.  No more slippin' & slidin'
-
-                            // We only want to deactivate the PID Controller if we think we want to have our surrogate
-                            // react to the physics scene by moving it's position.
-                            // Avatar to Avatar collisions
-                            // Prim to avatar collisions
-
-                            //fx = (_target_velocity.X - vel.X) * (PID_D) + (_zeroPosition.X - pos.X) * (PID_P * 2);
-                            //fy = (_target_velocity.Y - vel.Y) * (PID_D) + (_zeroPosition.Y - pos.Y) * (PID_P * 2);
-                            //fz = fz + (_target_velocity.Z - vel.Z) * (PID_D) + (_zeroPosition.Z - pos.Z) * PID_P;
-                            d.BodySetPosition (Body, _parent_entity.PIDTarget.X, _parent_entity.PIDTarget.Y, _parent_entity.PIDTarget.Z);
-                            d.BodySetLinearVel (Body, 0, 0, 0);
-                            d.BodySetForce (Body, 0, 0, 0);
-                            d.BodySetAngularVel (Body, 0, 0, 0);
-                            d.BodySetTorque (Body, 0, 0, 0);
-                            //Fake physical....
-                            //IsPhysical = false;
-                            //m_isSelected = true;
-                            if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
-                            {
-                                /*d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
-                            }
-                            return;
-                        }
-                        else
-                        {
-                            _zeroFlag = false;
-
-                            // We're flying and colliding with something
-                            fx = (float)((_target_velocity.X) - vel.X) * (PID_D);
-                            fy = (float)((_target_velocity.Y) - vel.Y) * (PID_D);
-
-                            // vec.Z = (_target_velocity.Z - vel.Z) * PID_D + (_zeroPosition.Z - pos.Z) * PID_P;
-
-                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
-                        }
-                    }        // end if (m_usePID)
-                    #endregion*/
-                    /*#region Hover PID
-                    // Hover PID Controller needs to be mutually exlusive to MoveTo PID controller
-                    if (_parent_entity.PIDHoverActive && !_parent_entity.PIDActive)
-                    {
-                        //Console.WriteLine("Hover " +  m_primName);
-
-                        // If we're using the PID controller, then we have no gravity
-                        fx = -_parent_scene.gravityx;
-                        fy = -_parent_scene.gravityy;
-                        fz = -_parent_scene.gravityz;
-
-                        //  no lock; for now it's only called from within Simulate()
-
-                        // If the PID Controller isn't active then we set our force
-                        // calculating base velocity to the current position
-
-                        if ((_parent_entity.PIDTau < 1))
-                        {
-                            PID_G = PID_G / _parent_entity.PIDTau;
-                        }
-
-                        if ((PID_G - _parent_entity.PIDTau) <= 0)
-                        {
-                            PID_G = _parent_entity.PIDTau + 1;
-                        }
-
-
-                        // Where are we, and where are we headed?
-                        float m_targetHoverHeight = 0;
-                        //    Non-Vehicles have a limited set of Hover options.
-                        // determine what our target height really is based on HoverType
-                        switch (_parent_entity.PIDHoverType)
-                        {
-                            case PIDHoverType.Ground:
-                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY ((float)dcpos.X, (float)dcpos.Y);
-                                m_targetHoverHeight = m_groundHeight + _parent_entity.PIDHoverHeight;
-                                break;
-                            case PIDHoverType.GroundAndWater:
-                                m_groundHeight = _parent_scene.GetTerrainHeightAtXY ((float)dcpos.X, (float)dcpos.Y);
-                                m_waterHeight = (float)_parent_scene.GetWaterLevel ((float)dcpos.X, (float)dcpos.Y);
-                                if (m_groundHeight > m_waterHeight)
-                                {
-                                    m_targetHoverHeight = m_groundHeight + _parent_entity.PIDHoverHeight;
-                                }
-                                else
-                                {
-                                    m_targetHoverHeight = m_waterHeight + _parent_entity.PIDHoverHeight;
-                                }
-                                break;
-
-                        }     // end switch (m_PIDHoverType)
-
-
-                        _target_velocity.X = 0;
-                        _target_velocity.Y = 0;
-                        _target_velocity.Z = (float)(m_targetHoverHeight - dcpos.Z) * ((PID_G - _parent_entity.PIDHoverTau) * timestep);
-
-                        //  if velocity is zero, use position control; otherwise, velocity control
-
-                        if (_target_velocity.ApproxEquals (Vector3.Zero, 0.1f))
-                        {
-                            //  keep track of where we stopped.  No more slippin' & slidin'
-
-                            // We only want to deactivate the PID Controller if we think we want to have our surrogate
-                            // react to the physics scene by moving it's position.
-                            // Avatar to Avatar collisions
-                            // Prim to avatar collisions
-
-                            d.BodySetPosition (prim_geom, dcpos.X, dcpos.Y, m_targetHoverHeight);
-                            d.BodySetLinearVel (Body, vel.X, vel.Y, 0);
-                            d.BodyAddForce (Body, 0, 0, fz);
-                            if (Amotor != IntPtr.Zero && !m_angularlock.ApproxEquals (Vector3.One, 0.003f))
-                            {
-                                d.JointSetAMotorParam (Amotor, (int)dParam.LowStop, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop3, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.LoStop2, -0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop, 0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop3, 0.0000000001f);
-                                d.JointSetAMotorParam (Amotor, (int)dParam.HiStop2, 0.0000000001f);
-                            }
-                            return;
-                        }
-                        else
-                        {
-                            _zeroFlag = false;
-
-                            // We're flying and colliding with something
-                            fz = (float)(fz + ((_target_velocity.Z - vel.Z) * (PID_D)));
-                        }
-                    }
-                    #endregion*/
-
-                    fx *= m_mass;
-                    fy *= m_mass;
-                    fz *= m_mass;
+                    fx *= _mass;
+                    fy *= _mass;
+                    fz *= _mass;
 
                     fx += gravForce.X;
                     fy += gravForce.Y;
@@ -1816,40 +1607,12 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     #endregion
 
-                    // 35n times the mass per second applied maximum.
-                    /*
-                                        float nmax = 35f * m_mass;
-                                        float nmin = -35f * m_mass;
-
-                                        if (fx > nmax)
-                                            fx = nmax;
-                                        if (fx < nmin)
-                                            fx = nmin;
-                                        if (fy > nmax)
-                                            fy = nmax;
-                                        if (fy < nmin)
-                                            fy = nmin;
-                    */
                     if (Math.Abs(fx) < 0.01)
                         fx = 0;
                     if (Math.Abs(fy) < 0.01)
                         fy = 0;
                     if (Math.Abs(fz) < 0.01)
                         fz = 0;
-
-                    //Keep us out of terrain if possible
-                    //Not really needed... I fixed the bug where things would fall under the terrain
-                    /*float terrainHeight = _parent_scene.GetTerrainHeightAtXY (Position.X, Position.Y);
-                    Vector3 rotSize = Size * Orientation;
-                    float ourBasePos = (dcpos.Z + (rotSize.Z / 2));
-                    if (!_parent_entity.VolumeDetectActive && terrainHeight > ourBasePos)
-                    {
-                        //Scale it by surface - pos so that the object doesn't fly out of the terrain like a rocket
-                        fz += gravForce.Z * -1 * (terrainHeight - ourBasePos);//Get us up, but don't shoot us up
-                    }*/
-
-
-                    //MainConsole.Instance.Info("[OBJPID]: X:" + fx.ToString() + " Y:" + fy.ToString() + " Z:" + fz.ToString());
 
                     if (!d.BodyIsEnabled(Body))
                         d.BodyEnable(Body);
@@ -2087,10 +1850,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             return dq;
         }
 
-        private void resetCollisionAccounting()
+        internal void resetCollisionAccounting()
         {
             m_collisionscore = 0;
-            m_interpenetrationcount = 0;
             m_disabled = false;
         }
 
@@ -2151,13 +1913,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (prim_geom != IntPtr.Zero)
             {
                 if (m_collidesWater)
-                {
                     m_collisionFlags |= CollisionCategories.Water;
-                }
                 else
-                {
                     m_collisionFlags &= ~CollisionCategories.Water;
-                }
                 d.GeomSetCollideBits(prim_geom, (int)m_collisionFlags);
             }
         }
@@ -2273,8 +2031,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     else
                         m_vehicle.ProcessForceTaint((Vector3)arg);
                 }
-                m_collisionscore = 0;
-                m_interpenetrationcount = 0;
             }
         }
 
@@ -2291,14 +2047,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public void changeAddAngularForce(Vector3 arg)
         {
-            if (!m_isSelected)
-            {
-                if (IsPhysical)
-                    m_angularforceacc += arg * 100;
-
-                m_collisionscore = 0;
-                m_interpenetrationcount = 0;
-            }
+            if (!m_isSelected && IsPhysical)
+                m_angularforceacc += arg * 100;
         }
 
         private void changevelocity(Vector3 arg)
@@ -2791,8 +2541,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     //?????
                     break;
             }
-            primContactParam.mu = _parent_entity.Friction;
-            primContactParam.bounce = _parent_entity.Restitution;
         }
 
         public void GetContactParam(PhysicsActor actor, ref d.Contact contact)
@@ -3180,7 +2928,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             primOOBoffset.Z);
 
             primOOBsize *= 0.5f; // let obb size be a corner coords
-            primOOBradiusSQ = primOOBsize.LengthSquared();
         }
 
         #endregion

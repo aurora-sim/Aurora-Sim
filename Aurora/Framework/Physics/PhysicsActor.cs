@@ -179,6 +179,8 @@ namespace Aurora.Framework
         public abstract float Buoyancy { get; set; }
         public abstract Vector3 CenterOfMass { get; }
         public abstract Vector3 Torque { get; set; }
+        public abstract void SubscribeEvents(int ms);
+        public abstract void UnSubscribeEvents();
 
         //set never appears to be called
         public virtual bool VolumeDetect
@@ -295,8 +297,6 @@ namespace Aurora.Framework
         public abstract Vector3 RotationalVelocity { get; set; }
 
         public abstract void AddForce(Vector3 force, bool pushforce);
-        public abstract void SubscribeEvents(int ms);
-        public abstract void UnSubscribeEvents();
         public abstract bool SubscribedEvents();
 
         public abstract void SendCollisions();
@@ -561,14 +561,6 @@ namespace Aurora.Framework
         }
 
         public override void AddForce(Vector3 force, bool pushforce)
-        {
-        }
-
-        public override void SubscribeEvents(int ms)
-        {
-        }
-
-        public override void UnSubscribeEvents()
         {
         }
 

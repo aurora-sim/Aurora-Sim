@@ -137,14 +137,6 @@ namespace Aurora.Framework
             protected set;
         }
 
-        public event OnCollisionEvent OnCollisionEvent;
-
-        public void FireCollisionEvent(PhysicsActor actor, PhysicsActor collidedActor, ContactPoint contact)
-        {
-            if (OnCollisionEvent != null)
-                OnCollisionEvent(actor, collidedActor, contact);
-        }
-
         public abstract void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry);
         public abstract void PostInitialise(IConfigSource config);
 

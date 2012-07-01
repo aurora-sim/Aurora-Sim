@@ -389,7 +389,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         ContactResult collisionresult = new ContactResult
                                                             {
-                                                                ConsumerID = ((AuroraODEPrim) p1).m_localID,
+                                                                ConsumerID = ((AuroraODEPrim) p1).LocalID,
                                                                 Pos =
                                                                     new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
                                                                                 contacts[i].pos.Z),
@@ -411,7 +411,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         ContactResult collisionresult = new ContactResult
                                                             {
-                                                                ConsumerID = ((AuroraODEPrim) p2).m_localID,
+                                                                ConsumerID = ((AuroraODEPrim) p2).LocalID,
                                                                 Pos =
                                                                     new Vector3(contacts[i].pos.X, contacts[i].pos.Y,
                                                                                 contacts[i].pos.Z),

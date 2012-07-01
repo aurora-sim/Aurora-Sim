@@ -36,18 +36,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         /// <param name = "timeStep"></param>
         /// <returns>True if the avatar should be removed from the simulation</returns>
-        public bool Move(float timeStep)
+        public void Move(float timeStep)
         {
-            //  no lock; for now it's only called from within Simulate()
-
-            // If the PID Controller isn't active then we set our force
-            // calculating base velocity to the current position
-
-            if (Body == IntPtr.Zero)
-                return false;
-
-            if (!m_shouldBePhysical)
-                return false;
+            if (Body == IntPtr.Zero || !IsPhysical)
+                return;
 
             Vector3 vec = Vector3.Zero;
             Vector3 vel = d.BodyGetLinearVel(Body).ToVector3();
@@ -85,32 +77,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 MainConsole.Instance.Warn("[PHYSICS]: Avatar Position is non-finite!");
 
-                // destroy avatar capsule and related ODE data
-
-                if (Amotor != IntPtr.Zero)
-                {
-                    // Kill the Amotor
-                    d.JointDestroy(Amotor);
-                    Amotor = IntPtr.Zero;
-                }
-
-                //kill the Geometry
-                _parent_scene.waitForSpaceUnlock(_parent_scene.space);
-
-                if (Body != IntPtr.Zero)
-                {
-                    //kill the body
-                    d.BodyDestroy(Body);
-
-                    Body = IntPtr.Zero;
-                }
-
-                if (Shell != IntPtr.Zero)
-                {
-                    d.GeomDestroy(Shell);
-                    Shell = IntPtr.Zero;
-                }
-                return true;
+                _parent_scene.BadCharacter(this);
+                return;
             }
 
             #endregion
@@ -183,11 +151,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 {
                     m_preJumpCounter++;
                     TriggerMovementUpdate();
-                    return false;
+                    return;
                 }
             }
 
             #endregion
+
+            #region Gravity
 
             if (IsTruelyColliding)
                 _appliedFallingForce = 0;
@@ -215,6 +185,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _target_velocity.Z /= Multiplier;
                 vel.Z /= Multiplier;
             }
+
+            #endregion
+
             if (Flying)
                 #region Auto Fly Height
 
@@ -263,6 +236,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 #endregion
 
+            #region Force application
+
             if (!flying && !IsTruelyColliding)
             {
                 //Falling, and haven't yet hit the ground
@@ -295,7 +270,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.BodyEnable(Body);
                 d.BodyAddForce(Body, vec.X, vec.Y, vec.Z);
             }
-            return false;
+
+            #endregion
         }
 
         #endregion
@@ -313,7 +289,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name = "npositionZ"></param>
         public void AvatarGeomAndBodyCreation(float npositionX, float npositionY, float npositionZ) //, float tensor)
         {
-            _parent_scene.waitForSpaceUnlock(_parent_scene.space);
             if (CAPSULE_LENGTH <= 0)
             {
                 MainConsole.Instance.Warn(
@@ -416,8 +391,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.JointDestroy(Amotor);
                 Amotor = IntPtr.Zero;
             }
-            //kill the Geometry
-            _parent_scene.waitForSpaceUnlock(_parent_scene.space);
 
             if (Body != IntPtr.Zero)
             {
