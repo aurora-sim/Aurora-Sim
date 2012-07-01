@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using OdeAPI;
@@ -151,7 +151,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Check for underground
 
-            /*d.AABB aabb;
+            d.AABB aabb;
             d.GeomGetAABB(Shell, out aabb);
             float chrminZ = aabb.MinZ;
 
