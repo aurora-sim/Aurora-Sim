@@ -319,6 +319,11 @@ namespace OpenSim.Services.LLLoginService
             UUID secureSession = UUID.Zero;
 
             UserAccount account = AgentID != UUID.Zero ? m_UserAccountService.GetUserAccount(scopeID, AgentID) : m_UserAccountService.GetUserAccount(scopeID, Name);
+            if (account == null && m_AllowAnonymousLogin)
+            {
+                m_UserAccountService.CreateUser(Name, passwd.StartsWith("$1$") ? passwd.Remove(0, 3):passwd, "");
+                account = m_UserAccountService.GetUserAccount(scopeID, Name);
+            }
             if (account == null)
                 return LLFailedLoginResponse.AccountProblem;
 
