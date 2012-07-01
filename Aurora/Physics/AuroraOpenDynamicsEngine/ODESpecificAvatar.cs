@@ -272,6 +272,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
+                if(!flying)
+                    m_forceAppliedBeforeFalling = Vector3.Zero;
+                else
+                    m_forceAppliedBeforeFalling = _target_velocity;
                 vec.X += (_target_velocity.X * movementmult - vel.X) * PID_D * 2;
                 vec.Y += (_target_velocity.Y * movementmult - vel.Y) * PID_D * 2;
                 vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;
@@ -287,7 +291,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                m_forceAppliedBeforeFalling = _target_velocity;
                 _target_velocity *= 0.95f;
                 d.BodyEnable(Body);
                 d.BodyAddForce(Body, vec.X, vec.Y, vec.Z);

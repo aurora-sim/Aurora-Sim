@@ -1964,7 +1964,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         base.RequestPhysicsterseUpdate();
 
                         m_throttleUpdates = true;
-                        throttleCounter = 0;
                         _zeroFlag = true;
                         m_frozen = true;
                         return;
@@ -2057,7 +2056,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (needupdate)
                     {
-                        throttleCounter = 0;
                         m_lastposition = _position;
                         m_lastorientation = _orientation;
                         base.RequestPhysicsterseUpdate();
@@ -2702,7 +2700,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (IsPhysical && m_vehicle.Type != Vehicle.TYPE_NONE)
                     m_vehicle.ProcessForceTaint(force);
                 else
-                    m_pushForce = force * 100;
+                    m_pushForce = force;
             }
             else
                 m_force = force;
@@ -3226,7 +3224,5 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         #endregion
-
-        public int throttleCounter { get; set; }
     }
 }

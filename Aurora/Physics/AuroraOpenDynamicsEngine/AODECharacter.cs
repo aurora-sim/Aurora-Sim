@@ -242,9 +242,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (value)
                 {
-                    m_colliderfilter += 2;
-                    if (m_colliderfilter > 2)
-                        m_colliderfilter = 2;
+                    m_colliderfilter += 15;
+                    if (m_colliderfilter > 15)
+                        m_colliderfilter = 15;
                 }
                 else
                 {

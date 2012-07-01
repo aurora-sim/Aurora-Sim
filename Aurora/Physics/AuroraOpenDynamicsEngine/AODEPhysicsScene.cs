@@ -613,10 +613,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             //StatContactLoopTime = CollectTime(() =>
             #region Contact Loop
             {
-
                 for (int i = 0; i < count; i++)
                 {
-                    IntPtr joint = IntPtr.Zero;
                     if (!GetCurContactGeom(i, ref curContact))
                         break;
 
