@@ -610,10 +610,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             int NotSkipedCount = 0;
 
-            d.ContactGeom maxDepthC = new d.ContactGeom();
             //StatContactLoopTime = CollectTime(() =>
+            #region Contact Loop
             {
-                #region Contact Loop
 
                 for (int i = 0; i < count; i++)
                 {
@@ -623,7 +622,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                     if (curContact.depth > maxDepthContact.PenetrationDepth)
                     {
-                        maxDepthC = curContact;
                         maxDepthContact.PenetrationDepth = curContact.depth;
                         maxDepthContact.Position.X = curContact.pos.X;
                         maxDepthContact.Position.Y = curContact.pos.Y;
@@ -635,91 +633,19 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     }
                 }
             }
+            if (p1 is AuroraODECharacter || p2 is AuroraODECharacter)
+                AddODECollision(curContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
+            else
             {
+                for (int i = 0; i < count; i++)
                 {
-                    IntPtr joint = IntPtr.Zero;
-                    curContact = maxDepthC;
+                    if (!GetCurContactGeom(i, ref curContact))
+                        break;
+                    AddODECollision(curContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
 
-                    bool p2col = true;
-
-                    // We only need to test p2 for 'jump crouch purposes'
-                    if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
-                    {
-                        // Testing if the collision is at the feet of the avatar
-                        if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z * 0.6f))
-                            p2col = false;
-                    }
-
-                    p2.IsTruelyColliding = true;
-                    p2.IsColliding = p2col;
-
-                    // Logic for collision handling
-                    // Note, that if *all* contacts are skipped (VolumeDetect)
-                    // The prim still detects (and forwards) collision events but 
-                    // appears to be phantom for the world
-
-                    // No collision on volume detect prims
-                    /*if ((p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect) ||
-                        (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect))
-                        continue;
-
-                    if (curContact.depth < 0f)
-                        continue;//Has to be penetrating
-
-                    if (m_filterCollisions &&
-                        checkDupe(curContact, p2.PhysicsActorType))
-                        continue;*/
-                    if (m_filterCollisions)
-                        _perloopContact.Add(curContact);
-
-                    NotSkipedCount++;
-
-                    // If we're colliding against terrain
-                    if (p1.PhysicsActorType == (int)ActorTypes.Ground)
-                    {
-                        if (p2.PhysicsActorType == (int)ActorTypes.Prim)
-                        {
-                            ((AuroraODEPrim)p2).GetContactParam(p2, ref newGlobalcontact);
-
-                            joint = CreateContacJoint(curContact);
-                        }
-                        else
-                        {
-                            newGlobalcontact = new d.Contact();
-                            newGlobalcontact.surface.mode |= d.ContactFlags.SoftERP;
-                            newGlobalcontact.surface.mu = 75;
-                            newGlobalcontact.surface.bounce =  0.1f;
-                            newGlobalcontact.surface.soft_erp = 0.05025f;
-                            //GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
-                            joint = CreateContacJoint(curContact);
-                        }
-                        //Can't collide against anything else, agents do their own ground checks
-                    }
-                    else if ((p1.PhysicsActorType == (int)ActorTypes.Agent) &&
-                                (p2.PhysicsActorType == (int)ActorTypes.Agent))
-                    {
-                        GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
-
-                        joint = CreateContacJoint(curContact);
-                    }
-                    else if (p1.PhysicsActorType == (int)ActorTypes.Prim)
-                    {
-                        //Add restitution and friction changes
-                        ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
-
-                        joint = CreateContacJoint(curContact);
-                    }
-
-                    if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero)
-                    {
-                        d.JointAttach(joint, b1, b2);
-                        m_global_contactcount++;
-                        joint = IntPtr.Zero;
-                    }
                 }
-
-                #endregion
-            }//);
+            }
+            #endregion//);
 
             //StatCollisionAccountingTime = CollectTime(() =>
             {
@@ -736,6 +662,88 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
                 collision_accounting_events(p1, p2, maxDepthContact);
             }//);
+        }
+
+        private void AddODECollision(d.ContactGeom curContact, PhysicsActor p1, PhysicsActor p2, IntPtr b1, IntPtr b2, ContactPoint maxDepthContact, ref int NotSkipedCount)
+        {
+            IntPtr joint = IntPtr.Zero;
+
+            bool p2col = true;
+
+            // We only need to test p2 for 'jump crouch purposes'
+            if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
+            {
+                // Testing if the collision is at the feet of the avatar
+                if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z * 0.6f))
+                    p2col = false;
+            }
+
+            p2.IsTruelyColliding = true;
+            p2.IsColliding = p2col;
+
+            // Logic for collision handling
+            // Note, that if *all* contacts are skipped (VolumeDetect)
+            // The prim still detects (and forwards) collision events but 
+            // appears to be phantom for the world
+
+            // No collision on volume detect prims
+            if ((p1 is PhysicsObject && ((PhysicsObject)p1).VolumeDetect) ||
+                (p2 is PhysicsObject && ((PhysicsObject)p2).VolumeDetect))
+                return;
+
+            if (curContact.depth < 0f)
+                return;//Has to be penetrating
+
+            if (m_filterCollisions &&
+                checkDupe(curContact, p2.PhysicsActorType))
+                return;
+            if (m_filterCollisions)
+                _perloopContact.Add(curContact);
+
+            NotSkipedCount++;
+
+            // If we're colliding against terrain
+            if (p1.PhysicsActorType == (int)ActorTypes.Ground)
+            {
+                if (p2.PhysicsActorType == (int)ActorTypes.Prim)
+                {
+                    ((AuroraODEPrim)p2).GetContactParam(p2, ref newGlobalcontact);
+
+                    joint = CreateContacJoint(curContact);
+                }
+                else
+                {
+                    newGlobalcontact = new d.Contact();
+                    newGlobalcontact.surface.mode |= d.ContactFlags.SoftERP;
+                    newGlobalcontact.surface.mu = 75;
+                    newGlobalcontact.surface.bounce = 0.1f;
+                    newGlobalcontact.surface.soft_erp = 0.05025f;
+                    //GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
+                    joint = CreateContacJoint(curContact);
+                }
+                //Can't collide against anything else, agents do their own ground checks
+            }
+            else if ((p1.PhysicsActorType == (int)ActorTypes.Agent) &&
+                        (p2.PhysicsActorType == (int)ActorTypes.Agent))
+            {
+                GetContactParam(0.0f, AvatarContactBounce, ref newGlobalcontact);
+
+                joint = CreateContacJoint(curContact);
+            }
+            else if (p1.PhysicsActorType == (int)ActorTypes.Prim)
+            {
+                //Add restitution and friction changes
+                ((AuroraODEPrim)p1).GetContactParam(p2, ref newGlobalcontact);
+
+                joint = CreateContacJoint(curContact);
+            }
+
+            if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero)
+            {
+                d.JointAttach(joint, b1, b2);
+                m_global_contactcount++;
+                joint = IntPtr.Zero;
+            }
         }
 
         private void GetContactParam(float mu, float AvatarContactBounce, ref d.Contact newGlobalcontact)
