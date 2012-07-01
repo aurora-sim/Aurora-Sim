@@ -63,17 +63,20 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected float lastUnderwaterPush;
         protected int m_ZeroUpdateSent;
         protected bool m_alwaysRun;
+        protected int m_colliderfilter;
         protected CollisionCategories m_collisionCategories = (CollisionCategories.Character);
 
         // Default, Collide with Other Geometries, spaces, bodies and characters.
-        protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space
-            | CollisionCategories.Body | CollisionCategories.Character | CollisionCategories.Land);
+        protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space | CollisionCategories.Body | CollisionCategories.Character
+            //                                                        | CollisionCategories.Land
+                                                             );
 
         //        float m_UpdateTimecntr = 0;
         //        float m_UpdateFPScntr = 0.05f;
         protected bool m_isJumping;
         public bool m_isPhysical; // the current physical status
         protected bool m_iscolliding;
+        protected bool m_iscollidingGround;
 
         protected bool m_ispreJumping;
         protected Vector3 m_lastAngVelocity;
@@ -222,7 +225,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool IsTruelyColliding { get; set; }
 
-        protected int m_colliderfilter;
         /// <summary>
         ///   Returns if the avatar is colliding in general.
         ///   This includes the ground and objects and avatar.
@@ -231,11 +233,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public override bool IsColliding
         {
-            get { return m_iscolliding; }
+            get { return m_iscolliding || m_iscollidingGround; }
             set
             {
-                m_iscolliding = value;
-                /*if (value)
+                if (value)
                 {
                     m_colliderfilter += 2;
                     if (m_colliderfilter > 2)
@@ -248,7 +249,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         m_colliderfilter = 0;
                 }
 
-                m_iscolliding = m_colliderfilter != 0;*/
+                m_iscolliding = m_colliderfilter != 0;
             }
         }
 
