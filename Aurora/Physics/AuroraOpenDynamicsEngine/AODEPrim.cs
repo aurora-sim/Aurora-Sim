@@ -246,12 +246,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return (int)ActorTypes.Prim; }
         }
 
-        public override bool SetAlwaysRun
-        {
-            get { return false; }
-            set { return; }
-        }
-
         public override uint LocalID
         {
             get { return m_localID; }
@@ -301,13 +295,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (!value) // Zero the remembered last velocity
                     m_lastVelocity = Vector3.Zero;
             }
-        }
-
-        public override bool Flying
-        {
-            // no flying prims for you
-            get { return false; }
-            set { }
         }
 
         public override bool IsTruelyColliding { get; set; }

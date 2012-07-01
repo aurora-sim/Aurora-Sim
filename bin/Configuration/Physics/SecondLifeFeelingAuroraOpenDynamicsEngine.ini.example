@@ -61,7 +61,7 @@
     ;; Normal Gravity.  Feel like falling up?  change world_gravity to 9.8 instead of -9.8.  m/s
     world_gravityx = 0
     world_gravityy = 0
-    world_gravityz = -6.6
+    world_gravityz = -7.3
 
     ;; ##
     ;; ## Point Gravity Settings

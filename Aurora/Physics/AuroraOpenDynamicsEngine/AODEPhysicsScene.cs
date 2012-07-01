@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define USE_DRAWSTUFF
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -38,14 +36,10 @@ using Nini.Config;
 using OdeAPI;
 using OpenMetaverse;
 using Aurora.Framework;
-//using Ode.NET;
-#if USE_DRAWSTUFF
-using Drawstuff.NET;
-#endif
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
-    public sealed class AuroraODEPhysicsScene : PhysicsScene
+    public class AuroraODEPhysicsScene : PhysicsScene
     {
         #region Declares
 
@@ -62,9 +56,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         }
 
         public float ODE_STEPSIZE = 0.020f;
-        private float m_timeDilation = 1.0f;
+        protected float m_timeDilation = 1.0f;
 
-        private int framecount;
+        protected int framecount;
 
         public float gravityx;
         public float gravityy;
@@ -73,38 +67,38 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public Vector3 gravityVectorNormalized;
         public bool m_hasSetUpPrims;
 
-        private readonly IntPtr contactgroup;
+        protected readonly IntPtr contactgroup;
 
-        private float contactsurfacelayer = 0.001f;
+        protected float contactsurfacelayer = 0.001f;
 
         public int geomContactPointsStartthrottle = 3;
         public int geomUpdatesPerThrottledUpdate = 15;
 
-        private int contactsPerCollision = 80;
-        private IntPtr ContactgeomsArray = IntPtr.Zero;
+        protected int contactsPerCollision = 80;
+        protected IntPtr ContactgeomsArray = IntPtr.Zero;
 
-        private const int maxContactsbeforedeath = 2000;
-        private int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
+        protected const int maxContactsbeforedeath = 2000;
+        protected int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
 
-        private IntPtr GlobalContactsArray = IntPtr.Zero;
+        protected IntPtr GlobalContactsArray = IntPtr.Zero;
 
         public const d.ContactFlags CommumContactFlags =
             d.ContactFlags.SoftERP | d.ContactFlags.Bounce | d.ContactFlags.Approx1;
 
-        private d.Contact newGlobalcontact;
+        protected d.Contact newGlobalcontact;
 
-        private float AvatarContactBounce = 0.3f;
-        private float FrictionMovementMultiplier = 0.3f; // should lower than one
-        private float FrictionScale = 5.0f;
+        protected float AvatarContactBounce = 0.3f;
+        protected float FrictionMovementMultiplier = 0.3f; // should lower than one
+        protected float FrictionScale = 5.0f;
 
-        private int HashspaceLow = -3; // current ODE limits
-        private int HashspaceHigh = 8;
+        protected int HashspaceLow = -3; // current ODE limits
+        protected int HashspaceHigh = 8;
 
-        private int GridSpaceScaleBits = 5;
+        protected int GridSpaceScaleBits = 5;
                     // used to do shifts to find space from position. Value decided from region size in init
 
-        private int nspacesPerSideX = 8;
-        private int nspacesPerSideY = 8;
+        protected int nspacesPerSideX = 8;
+        protected int nspacesPerSideY = 8;
 
         public float PID_D = 2200f;
         public float PID_P = 900f;
@@ -113,7 +107,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float avHeightFudgeFactor = 0.52f;
         public float avMovementDivisorWalk = 1.3f;
         public float avMovementDivisorRun = 0.8f;
-        private float minimumGroundFlightOffset = 3f;
+        protected float minimumGroundFlightOffset = 3f;
         public float maximumMassObject = 100000.01f;
         public bool meshSculptedPrim = true;
         public bool forceSimplePrimMeshing = true;
@@ -124,13 +118,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float bodyPIDG = 25;
         public int geomCrossingFailuresBeforeOutofbounds = 1;
         public int bodyFramesAutoDisable = 10;
-        private bool m_filterCollisions;
+        protected bool m_filterCollisions;
 
-        private readonly d.NearCallback nearCallback;
-        private readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
-        private readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
-        private readonly object _activeprimsLock = new object();
-        private readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
+        protected readonly d.NearCallback nearCallback;
+        protected readonly HashSet<AuroraODECharacter> _characters = new HashSet<AuroraODECharacter>();
+        protected readonly HashSet<AuroraODEPrim> _prims = new HashSet<AuroraODEPrim>();
+        protected readonly object _activeprimsLock = new object();
+        protected readonly HashSet<AuroraODEPrim> _activeprims = new HashSet<AuroraODEPrim>();
 
         public override List<PhysicsObject> ActiveObjects
         {
@@ -149,24 +143,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public ConcurrentQueue<AODEchangeitem> ChangesQueue = new ConcurrentQueue<AODEchangeitem>();
 
-        private readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
+        protected readonly List<d.ContactGeom> _perloopContact = new List<d.ContactGeom>();
 
-        private readonly Dictionary<UUID, PhysicsActor> _collisionEventDictionary =
+        protected readonly Dictionary<UUID, PhysicsActor> _collisionEventDictionary =
             new Dictionary<UUID, PhysicsActor>();
 
-        private readonly object _collisionEventListLock = new object();
+        protected readonly object _collisionEventListLock = new object();
 
-        private readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
+        protected readonly HashSet<AuroraODECharacter> _badCharacter = new HashSet<AuroraODECharacter>();
         public Dictionary<IntPtr, PhysicsActor> actor_name_map = new Dictionary<IntPtr, PhysicsActor>();
 
 
         public IntPtr RegionTerrain;
-        private short[] TerrainHeightFieldHeights;
-        private short[] ODETerrainHeightFieldHeights;
-        private ITerrainChannel m_channel;
-        private float[] TerrainHeightFieldlimits;
-        private short[] WaterHeightFieldHeight;
-        private double WaterHeight = -1;
+        protected short[] TerrainHeightFieldHeights;
+        protected short[] ODETerrainHeightFieldHeights;
+        protected ITerrainChannel m_channel;
+        protected float[] TerrainHeightFieldlimits;
+        protected short[] WaterHeightFieldHeight;
+        protected double WaterHeight = -1;
         public bool m_EnableAutoConfig = true;
         public bool m_allowJump = true;
         public bool m_usepreJump = true;
@@ -177,15 +171,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float m_AvFlySpeed = 4.0f;
 
 
-        private int m_physicsiterations = 10;
-        //private int m_timeBetweenRevertingAutoConfigIterations = 50;
-        private const float m_SkipFramesAtms = 0.150f; // Drop frames gracefully at a 150 ms lag
-        private readonly PhysicsActor PANull = new NullObjectPhysicsActor();
-        private float step_time;
-        private RegionInfo m_region;
-        private IRegistryCore m_registry;
-        private IWindModule m_windModule;
-        private bool DoPhyWind;
+        protected int m_physicsiterations = 10;
+        //protected int m_timeBetweenRevertingAutoConfigIterations = 50;
+        protected const float m_SkipFramesAtms = 0.150f; // Drop frames gracefully at a 150 ms lag
+        protected readonly PhysicsActor PANull = new NullObjectPhysicsActor();
+        protected float step_time;
+        protected RegionInfo m_region;
+        protected IRegistryCore m_registry;
+        protected IWindModule m_windModule;
+        protected bool DoPhyWind;
 
         public RegionInfo Region
         {
@@ -208,13 +202,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public IMesher mesher;
 
-        private IConfigSource m_config;
+        protected IConfigSource m_config;
 
         public bool physics_logging;
         public int physics_logging_interval;
         public bool physics_logging_append_existing_logfile;
 
-        private volatile int m_global_contactcount;
+        protected volatile int m_global_contactcount;
 
 
         public Vector2 WorldExtents;
@@ -227,17 +221,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public float m_flightCeilingHeight = 2048.0f; // rex
         public bool m_useFlightCeilingHeight;
 
-        private AuroraODERayCastRequestManager m_rayCastManager;
-        private bool IsLocked;
-        private List<PhysicsObject> RemoveQueue;
-        private List<PhysicsObject> DeleteQueue;
-        private readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
-        private readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
+        protected AuroraODERayCastRequestManager m_rayCastManager;
+        protected bool IsLocked;
+        protected List<PhysicsObject> RemoveQueue;
+        protected List<PhysicsObject> DeleteQueue;
+        protected readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
+        protected readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
         public float m_avDecayTime = 0.985f;
         public float m_avStopDecaying = 2.05f;
-
-        public override bool DisableCollisions { get; set; }
 
         public override bool UseUnderWaterPhysics
         {
@@ -317,7 +309,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         ///   Sets many properties that ODE requires to be stable
         ///   These settings need to be tweaked 'exactly' right or weird stuff happens.
         /// </summary>
-        public AuroraODEPhysicsScene(string sceneIdentifier)
+        public AuroraODEPhysicsScene()
         {
             OdeLock = new Object();
             nearCallback = near;
@@ -332,28 +324,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 //contactgroup
 
                 d.WorldSetAutoDisableFlag(world, false);
-#if USE_DRAWSTUFF
-                
-                Thread viewthread = new Thread(new ParameterizedThreadStart(startvisualization));
-                viewthread.Start();
-#endif
             }
         }
-
-#if USE_DRAWSTUFF
-        public void startvisualization(object o)
-        {
-            ds.Functions fn;
-            fn.version = ds.VERSION;
-            fn.start = new ds.CallbackFunction(start);
-            fn.step = new ds.CallbackFunction(step);
-            fn.command = new ds.CallbackFunction(command);
-            fn.stop = null;
-            fn.path_to_textures = "./textures";
-            string[] args = new string[0];
-            ds.SimulationLoop(args.Length, args, 352, 288, ref fn);
-        }
-#endif
 
         // Initialize the mesh plugin
         public override void Initialise(IMesher meshmerizer, RegionInfo region, IRegistryCore registry)
@@ -370,19 +342,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             RemoveQueue = new List<PhysicsObject>();
             DeleteQueue = new List<PhysicsObject>();
             m_config = config;
-            // Defaults
-/*
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
-            {
-                PID_D = 3200.0f;
-                PID_P = 1400.0f;
-            }
-            else
-            {
- */
             PID_D = 2200.0f;
             PID_P = 900.0f;
-//            }
 
             if (m_config != null)
             {
@@ -477,10 +438,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             lock (OdeLock)
             {
                 // alloc unmanaged memory to receive information from colision contact joints              
-                ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision*d.ContactGeom.unmanagedSizeOf);
+                ContactgeomsArray = Marshal.AllocHGlobal(contactsPerCollision * d.ContactGeom.unmanagedSizeOf);
 
                 // alloc unmanaged memory to pass information to colision contact joints              
-                GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath*d.Contact.unmanagedSizeOf);
+                GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath * d.Contact.unmanagedSizeOf);
 
                 newGlobalcontact.surface.mode = CommumContactFlags;
                 newGlobalcontact.surface.soft_cfm = 0.0001f;
@@ -516,24 +477,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
                 if (WorldExtents.X < WorldExtents.Y)
                     // // constant is 1/log(2),  -3 for division by 8 plus 0.5 for rounding
-                    GridSpaceScaleBits = (int) (Math.Log(WorldExtents.X)*1.4426950f - 2.5f);
+                    GridSpaceScaleBits = (int)(Math.Log(WorldExtents.X) * 1.4426950f - 2.5f);
                 else
-                    GridSpaceScaleBits = (int) (Math.Log(WorldExtents.Y)*1.4426950f - 2.5f);
+                    GridSpaceScaleBits = (int)(Math.Log(WorldExtents.Y) * 1.4426950f - 2.5f);
 
                 if (GridSpaceScaleBits < 4) // no less than 16m side
                     GridSpaceScaleBits = 4;
                 else if (GridSpaceScaleBits > 10)
                     GridSpaceScaleBits = 10; // no more than 1Km side
 
-                int nspacesPerSideX2 = (int) (WorldExtents.X) >> GridSpaceScaleBits;
-                int nspacesPerSideY2 = (int) (WorldExtents.Y) >> GridSpaceScaleBits;
+                int nspacesPerSideX2 = (int)(WorldExtents.X) >> GridSpaceScaleBits;
+                int nspacesPerSideY2 = (int)(WorldExtents.Y) >> GridSpaceScaleBits;
 
-                if ((int) (WorldExtents.X) > nspacesPerSideX2 << GridSpaceScaleBits)
+                if ((int)(WorldExtents.X) > nspacesPerSideX2 << GridSpaceScaleBits)
                     nspacesPerSideX2++;
-                if ((int) (WorldExtents.Y) > nspacesPerSideY2 << GridSpaceScaleBits)
+                if ((int)(WorldExtents.Y) > nspacesPerSideY2 << GridSpaceScaleBits)
                     nspacesPerSideY2++;
 
-                staticPrimspace = new IntPtr[nspacesPerSideX2,nspacesPerSideY2];
+                staticPrimspace = new IntPtr[nspacesPerSideX2, nspacesPerSideY2];
 
                 IntPtr aSpace;
 
@@ -543,7 +504,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     {
                         aSpace = d.HashSpaceCreate(space);
                         staticPrimspace[i, j] = aSpace;
-                        d.GeomSetCategoryBits(aSpace, (int) CollisionCategories.Space);
+                        d.GeomSetCategoryBits(aSpace, (int)CollisionCategories.Space);
                         waitForSpaceUnlock(aSpace);
                         d.HashSpaceSetLevels(aSpace, -2, 8);
                         d.SpaceSetSublevel(aSpace, 1);
@@ -925,7 +886,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 p2.AddCollisionEvent(p1.LocalID, contact);
         }
 
-
         /// <summary>
         ///   This is our collision testing routine in ODE
         /// </summary>
@@ -1298,12 +1258,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             bool isPhysical = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Physics) != 0);
             bool isPhantom = ((entity.ParentEntity.RootChild.Flags & PrimFlags.Phantom) != 0);
             bool physical = isPhysical & !isPhantom;
-            /*IOpenRegionSettingsModule WSModule = entity.ParentEntity.Scene.RequestModuleInterface<IOpenRegionSettingsModule> ();
-            if (WSModule != null)
-                if (!WSModule.AllowPhysicalPrims)
-                    physical = false;*/
-            AuroraODEPrim newPrim;
-            newPrim = new AuroraODEPrim(entity, this, false);
+            AuroraODEPrim  newPrim = new AuroraODEPrim(entity, this, false);
 
             if (physical)
                 newPrim.IsPhysical = physical;
@@ -1321,8 +1276,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 if (!_activeprims.Contains(activatePrim))
                     _activeprims.Add(activatePrim);
-                //else
-                //  MainConsole.Instance.Warn("[PHYSICS]: Double Entry in _activeprims detected, potential crash immenent");
             }
         }
 
@@ -1335,9 +1288,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public void remActivePrim(AuroraODEPrim deactivatePrim)
         {
             lock (_activeprimsLock)
-            {
                 _activeprims.Remove(deactivatePrim);
-            }
         }
 
         public override void RemovePrim(PhysicsObject prim)

@@ -151,11 +151,11 @@ namespace OpenSim.Services
                 m_registry.RequestModuleInterface<IGridRegistrationService>();
             if (urlModule != null)
                 if (!urlModule.CheckThreatLevel(m_SessionID, "EQM_Post", ThreatLevel.None))
-                    return new byte[0];
+                    return MainServer.BadRequest;
 
             OSDMap request = WebUtils.GetOSDMap(body);
             if (request == null)
-                return null;
+                return MainServer.BlankResponse;
 
             return ProcessEnqueueEQMMessage(request);
         }
@@ -219,7 +219,7 @@ namespace OpenSim.Services
             }
             string resp = OSDParser.SerializeJsonString(response);
             if (resp == "")
-                return new byte[0];
+                return MainServer.BlankResponse;
             return Util.UTF8.GetBytes(resp);
         }
     }

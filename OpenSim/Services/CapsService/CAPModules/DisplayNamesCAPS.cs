@@ -173,7 +173,7 @@ namespace OpenSim.Services.CapsService
             {
             }
 
-            return new byte[0];
+            return MainServer.BlankResponse;
         }
 
         /// <summary>

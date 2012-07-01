@@ -101,7 +101,7 @@ namespace OpenSim.Services.MessagingService
                 foreach (string host in serverURIs)
                 {
                     string backURL = "/" + UUID.Random();
-                    request["ResponseURL"] = backURL;
+                    request["ResponseURL"] = MainServer.Instance.ServerURI + backURL;
                     OSDMap message = CreateWebRequest(request);
                     MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", backURL, (path, req,
                                   httpRequest, httpResponse) =>

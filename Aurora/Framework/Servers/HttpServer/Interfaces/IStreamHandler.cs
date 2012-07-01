@@ -31,7 +31,7 @@ using System.IO;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
-    public interface IRequestHandler: IDisposable
+    public interface IStreamedRequestHandler : IDisposable
     {
         // Return response content type
         string ContentType { get; }
@@ -41,16 +41,8 @@ namespace Aurora.Framework.Servers.HttpServer
 
         // Return path
         string Path { get; }
-    }
 
-    public interface IStreamedRequestHandler : IRequestHandler
-    {
         // Handle request stream, return byte array
         byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse);
-    }
-
-    public interface IGenericHTTPHandler : IRequestHandler
-    {
-        Hashtable Handle(string path, Hashtable request);
     }
 }

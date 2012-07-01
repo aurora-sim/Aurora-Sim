@@ -31,7 +31,6 @@ using System.Reflection;
 using OdeAPI;
 using OpenMetaverse;
 using Aurora.Framework;
-//using Ode.NET;
 
 namespace Aurora.Physics.AuroraOpenDynamicsEngine
 {
@@ -197,8 +196,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_localID = value; }
         }
 
-        public override float Buoyancy { get; set; }
-
         public override bool FloatOnWater
         {
             set { return; }
@@ -347,11 +344,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { return; }
         }
 
-        public override Vector3 CenterOfMass
-        {
-            get { return Vector3.Zero; }
-        }
-
         public override Vector3 Velocity
         {
             get
@@ -375,12 +367,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     MainConsole.Instance.Warn("[PHYSICS]: Got a NaN velocity from Scene in a Character");
                 }
             }
-        }
-
-        public override Vector3 Torque
-        {
-            get { return Vector3.Zero; }
-            set { return; }
         }
 
         public override float CollisionScore

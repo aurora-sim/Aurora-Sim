@@ -258,7 +258,6 @@ namespace Aurora.Simulation.Base
                     string mode = "1";
                     string dbregion = "1";
                     string worldName = "Aurora-Sim";
-                    string regionFlag = "Aurora";
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine("====================================================================\n");
             Console.WriteLine("========================= AURORA CONFIGURATOR ======================\n");
@@ -291,7 +290,7 @@ namespace Aurora.Simulation.Base
             }
             if (dbregion != null) dbregion = dbregion.Trim();
             Console.ResetColor();
-            Console.Write("Name of your Aurora-Sim: ");
+            Console.Write("Name of your Aurora-Sim Grid: ");
             Console.ForegroundColor = ConsoleColor.Green;
 
             worldName = Console.ReadLine();
@@ -378,15 +377,6 @@ namespace Aurora.Simulation.Base
                 ipAddress = Framework.Utilities.GetExternalIp();
             }
             Console.ResetColor();
-            Console.Write("The name you will use for your Welcome Land: ");
-            Console.ForegroundColor = ConsoleColor.Green;
-
-            regionFlag = Console.ReadLine();
-            if (regionFlag == string.Empty)
-            {
-                regionFlag = "Aurora";
-            }
-            Console.ResetColor();
             Console.Write("This installation is going to run on");
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("\n[1] .NET/Windows \n[2] *ix/Mono");
@@ -396,9 +386,7 @@ namespace Aurora.Simulation.Base
 
             platform = Console.ReadLine();
             if (platform == string.Empty)
-            {
                 platform = "1";
-            }
             if (platform != null) platform = platform.Trim();
             
             string str8 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
@@ -464,10 +452,6 @@ namespace Aurora.Simulation.Base
                             if (str4.Contains("127.0.0.1"))
                             {
                                 str4 = str4.Replace("127.0.0.1", ipAddress);
-                            }
-                            if (str4.Contains("Region_RegionName ="))
-                            {
-                                str4 = str4.Replace("Region_RegionName =", "Region_" + regionFlag.Replace(' ', '_') + " =");
                             }
                             writer.WriteLine(str4);
                         }
@@ -556,10 +540,6 @@ namespace Aurora.Simulation.Base
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
                         {
-                            if (str2.Contains("Region_Aurora ="))
-                            {
-                                str2 = str2.Replace("Region_Aurora =", "Region_" + regionFlag.Replace(' ', '_') + " =");
-                            }
                             if (str2.Contains("127.0.0.1"))
                             {
                                 str2 = str2.Replace("127.0.0.1", ipAddress);
@@ -575,14 +555,6 @@ namespace Aurora.Simulation.Base
                             if (str2.Contains("Welcome to Aurora Simulator"))
                             {
                                 str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
-                            }
-                            if (str2.Contains("AllowAnonymousLogin = false"))
-                            {
-                                str2 = str2.Replace("AllowAnonymousLogin = false", "AllowAnonymousLogin = true");
-                            }
-                            if (str2.Contains("DefaultHomeRegion = "))
-                            {
-                                str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + regionFlag + "\"");
                             }
                             writer.WriteLine(str2);
                         }
@@ -671,14 +643,6 @@ namespace Aurora.Simulation.Base
                             {
                                 str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
                             }
-                            if (str2.Contains("AllowAnonymousLogin = false"))
-                            {
-                                str2 = str2.Replace("AllowAnonymousLogin = false", "AllowAnonymousLogin = true");
-                            }
-                            if (str2.Contains("DefaultHomeRegion = "))
-                            {
-                                str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + regionFlag + "\"");
-                            }
                             writer.WriteLine(str2);
                         }
                     }
@@ -731,10 +695,6 @@ namespace Aurora.Simulation.Base
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("http://" + ipAddress + ":8003/");
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("\nNow AuroraServer.exe will start \nthen, please, start Aurora.exe.\nUse this name for your Welcome Land: ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(regionFlag);
-                Console.ForegroundColor = ConsoleColor.White;
                 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("====================================================================\n");
@@ -754,10 +714,6 @@ namespace Aurora.Simulation.Base
                 Console.WriteLine("\nYour loginuri is ");
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("http://" + ipAddress + ":9000/");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("\nNow Aurora.exe will start.\nPlease : use this name for your Welcome Land: ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(regionFlag);
                 Console.ForegroundColor = ConsoleColor.White;
                 
                 Console.ForegroundColor = ConsoleColor.Green;

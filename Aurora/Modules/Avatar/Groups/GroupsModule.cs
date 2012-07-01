@@ -1694,15 +1694,14 @@ namespace Aurora.Modules.Groups
                      (im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryAccepted))
             {
                 UUID FolderID = new UUID(im.binaryBucket, 0);
-                InventoryItemBase item = null;
-                ILLClientInventory inventoryModule =
-                    remoteClient.Scene.RequestModuleInterface<ILLClientInventory>();
-                if (inventoryModule != null) //The imSessionID stores the itemID
-                    item = inventoryModule.GiveInventoryItem(remoteClient.AgentId, im.imSessionID,
-                                                             im.imSessionID, FolderID, false);
+                remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, im.imSessionID,
+                    im.imSessionID, FolderID, false,
+                    (item) =>
+                    {
 
-                if (item != null)
-                    remoteClient.SendBulkUpdateInventory(item);
+                        if (item != null)
+                            remoteClient.SendBulkUpdateInventory(item);
+                    });
                 //GroupAttachmentCache.Remove(im.imSessionID);
             }
             else if ((im.dialog == 210))

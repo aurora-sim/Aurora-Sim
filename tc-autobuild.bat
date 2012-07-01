@@ -13,10 +13,10 @@ GOTO ParamLoop
 :ParamContinue
 
 rem use .NET 3.5 to build
-bin\Prebuild.exe /target vs2008 /targetframework v3_5
+bin\Prebuild.exe /target vs2008 /targetframework v3_5 /conditionals NET_3_5
 IF ERRORLEVEL 1 GOTO FAIL
 
-%WINDIR%\Microsoft.NET\Framework\v3.5\msbuild /t:Rebuild Aurora.sln
+%WINDIR%\Microsoft.NET\Framework\v3.5\msbuild /t:Rebuild Aurora.sln /p:DefineConstants="ISWIN;NET_3_5"
 IF ERRORLEVEL 1 GOTO FAIL
 
 IF NOT "%makearch%"=="yes" GOTO SkipArch

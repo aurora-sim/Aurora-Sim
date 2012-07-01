@@ -46,67 +46,12 @@ namespace OpenSim.Region.Framework.Interfaces
         void AddInventoryItem(InventoryItemBase item);
 
         /// <summary>
-        ///   Add the given inventory item to a user's inventory.
-        /// </summary>
-        /// <param name = "item">The item to add</param>
-        void AddInventoryItem(InventoryItemBase item, NoParam onSuccess);
-
-        /// <summary>
         ///   Add an inventory item to an avatar's inventory.
         /// </summary>
         /// <param name = "remoteClient">The remote client controlling the avatar</param>
         /// <param name = "item">The item.  This structure contains all the item metadata, including the folder
         ///   in which the item is to be placed.</param>
         void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item);
-
-        /// <summary>
-        ///   Give an inventory item from one user to another
-        /// </summary>
-        /// <param name = "recipient"></param>
-        /// <param name = "senderId">ID of the sender of the item</param>
-        /// <param name = "itemId"></param>
-        /// <param name = "recipientFolderId">
-        ///   The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
-        ///   appropriate default folder.
-        /// </param>
-        /// <returns>
-        ///   The inventory item copy given, null if the give was unsuccessful
-        /// </returns>
-        InventoryItemBase GiveInventoryItem(
-            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId);
-
-        /// <summary>
-        ///   Give an inventory item from one user to another
-        /// </summary>
-        /// <param name = "recipient"></param>
-        /// <param name = "senderId">ID of the sender of the item</param>
-        /// <param name = "itemId"></param>
-        /// <param name = "recipientFolderId">
-        ///   The id of the folder in which the copy item should go.  If UUID.Zero then the item is placed in the most
-        ///   appropriate default folder.
-        /// </param>
-        /// <returns>
-        ///   The inventory item copy given, null if the give was unsuccessful
-        /// </returns>
-        InventoryItemBase GiveInventoryItem(
-            UUID recipient, UUID senderId, UUID itemId, UUID recipientFolderId, bool doOwnerCheck);
-
-        /// <summary>
-        ///   Give an entire inventory folder from one user to another.  The entire contents (including all descendent
-        ///   folders) is given.
-        /// </summary>
-        /// <param name = "recipientId"></param>
-        /// <param name = "senderId">ID of the sender of the item</param>
-        /// <param name = "folderId"></param>
-        /// <param name = "recipientParentFolderId">
-        ///   The id of the receipient folder in which the send folder should be placed.  If UUID.Zero then the
-        ///   recipient folder is the root folder
-        /// </param>
-        /// <returns>
-        ///   The inventory folder copy given, null if the copy was unsuccessful
-        /// </returns>
-        InventoryFolderBase GiveInventoryFolder(
-            UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId);
 
         /// <summary>
         ///   Return the given objects to the agent given

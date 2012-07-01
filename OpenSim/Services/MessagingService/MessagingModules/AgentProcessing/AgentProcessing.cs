@@ -216,7 +216,7 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
                     string ResponseURL = body["ResponseURL"].AsString();
-                    Util.FireAndForget(delegate
+                    if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();
                         string reason = "";
@@ -226,9 +226,24 @@ namespace OpenSim.Services.MessagingService
                         //Remove the region flags, not the regions problem
                         destination.Flags = 0;
                         result["Destination"] = destination.ToOSD(); //Send back the new destination
-                        WebUtils.PostToService(rootCaps.LoopbackRegionIP.ToString() + ResponseURL, result);
-                    });
-                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse",true) };
+                        return result;
+                    }
+                    else
+                    {
+                        Util.FireAndForget(delegate
+                        {
+                            OSDMap result = new OSDMap();
+                            string reason = "";
+                            result["success"] = TeleportAgent(ref destination, TeleportFlags, DrawDistance,
+                                                              Circuit, AgentData, AgentID, requestingRegion, out reason);
+                            result["Reason"] = reason;
+                            //Remove the region flags, not the regions problem
+                            destination.Flags = 0;
+                            result["Destination"] = destination.ToOSD(); //Send back the new destination
+                            WebUtils.PostToService(ResponseURL, result);
+                        });
+                        return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
+                    }
                 }
             }
             else if (message["Method"] == "CrossAgent")
@@ -251,17 +266,30 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
 
-                    string ResponseURL = message["ResponseURL"].AsString();
-                    Util.FireAndForget(delegate
+                    string ResponseURL = body["ResponseURL"].AsString();
+                    if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();
                         string reason = "";
                         result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
                                                        AgentID, requestingRegion, out reason);
                         result["reason"] = reason;
-                        WebUtils.PostToService(rootCaps.Region.ServerURI + ResponseURL, result);
-                    });
-                    return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
+                        return result;
+                    }
+                    else
+                    {
+                        Util.FireAndForget(delegate
+                        {
+                            OSDMap result = new OSDMap();
+                            string reason = "";
+                            result["success"] = CrossAgent(Region, pos, Vel, Circuit, AgentData,
+                                                           AgentID, requestingRegion, out reason);
+                            result["reason"] = reason;
+                            if (ResponseURL != null)
+                                WebUtils.PostToService(ResponseURL, result);
+                        });
+                        return new OSDMap() { new KeyValuePair<string, OSD>("WillHaveResponse", true) };
+                    }
                 }
                 else if (clientCaps.InTeleport)
                 {

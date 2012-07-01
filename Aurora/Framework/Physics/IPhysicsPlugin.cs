@@ -8,7 +8,7 @@ namespace Aurora.Framework.Physics
     public interface IPhysicsPlugin
     {
         bool Init();
-        PhysicsScene GetScene(String sceneIdentifier);
+        PhysicsScene GetScene();
         string GetName();
         void Dispose();
     }

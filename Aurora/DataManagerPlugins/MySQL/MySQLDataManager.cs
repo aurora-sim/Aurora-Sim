@@ -80,8 +80,10 @@ namespace Aurora.DataManager.MySQL
             //connection.Dispose();
         }
 
-        public override void CloseDatabase()
+        public override void CloseDatabase(DataReaderConnection conn)
         {
+            if (conn != null && conn.DataReader != null)
+                conn.DataReader.Close();
             //Interlocked.Decrement (ref m_locked);
             //m_connection.Close();
             //m_connection.Dispose();
@@ -195,16 +197,16 @@ namespace Aurora.DataManager.MySQL
             }
         }
 
-        public override IDataReader QueryData(string whereClause, string table, string wantedValue)
+        public override DataReaderConnection QueryData(string whereClause, string table, string wantedValue)
         {
             string query = String.Format("select {0} from {1} {2}", wantedValue, table, whereClause);
-            return QueryData2(query);
+            return new DataReaderConnection { DataReader = QueryData2(query) };
         }
 
-        public override IDataReader QueryData(string whereClause, QueryTables tables, string wantedValue)
+        public override DataReaderConnection QueryData(string whereClause, QueryTables tables, string wantedValue)
         {
             string query = string.Format("SELECT {0} FROM {1} {2}", wantedValue, tables.ToSQL(), whereClause);
-            return QueryData2(query);
+            return new DataReaderConnection { DataReader = QueryData2(query) };
         }
 
         private IDataReader QueryData2(string query)

@@ -103,7 +103,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     for (int i = 0; i < 4; i++)
                     {
                         UUID cacheID = UUID.Combine(TERRAIN_CACHE_MAGIC, textureIDs[i]);
-                        AssetBase asset = assetService.Get(cacheID.ToString());
+                        AssetBase asset = assetService.GetCached(cacheID.ToString());
                         if ((asset != null) && (asset.Data != null) && (asset.Data.Length != 0))
                         {
                             try

@@ -433,10 +433,14 @@ namespace Aurora.Modules.Attachments
                     ISceneEntity[] atts = GetAttachmentsForAvatar(remoteClient.AgentId);
                     foreach (var obj in atts)
                         if (obj.UUID == objatt.UUID)
-                            updateUUIDs = false;
+                            updateUUIDs = false;//If the user is already wearing it, don't readd
                     bool forceUpdateOnNextDeattach = false;
                     try
                     {
+                        bool foundDuplicate = false;
+                        foreach (var obj in atts)
+                            if (obj.RootChild.FromUserInventoryItemID == objatt.RootChild.FromUserInventoryItemID)
+                                foundDuplicate = true;
                         IEntity e;
                         if(!m_scene.SceneGraph.TryGetEntity(objatt.UUID, out e))//if (updateUUIDs)
                         {
@@ -452,10 +456,18 @@ namespace Aurora.Modules.Attachments
                         }
                         else
                         {
-                            if (e as ISceneEntity != null)
-                                (e as ISceneEntity).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
+                            if (!foundDuplicate)
+                            {
+                                if (m_scene.SceneGraph.AddPrimToScene(objatt))
+                                    forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
+                            }
+                            else
+                            {
+                                if (e as ISceneEntity != null)
+                                    (e as ISceneEntity).ScheduleGroupUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
-                            return (e as ISceneEntity);//It was already added
+                                return (e as ISceneEntity);//It was already added
+                            }
                             /*foreach (var prim in objatt.ChildrenEntities())
                                 prim.LocalId = 0;
                             bool success = m_scene.SceneGraph.RestorePrimToScene(objatt, true);

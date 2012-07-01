@@ -38,6 +38,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 using OpenMetaverse;
 using Aurora.DataManager;
 using OpenMetaverse.StructuredData;
+using System.Text;
 
 namespace OpenSim.Services.CapsService
 {
@@ -133,21 +134,20 @@ namespace OpenSim.Services.CapsService
 
         private byte[] ProcessUpdateAgentLanguage(Stream request, UUID agentID)
         {
-            OSD r = OSDParser.DeserializeLLSDXml(request);
-            if (!(r is OSDMap))
-                return new byte[0];
-            OSDMap rm = (OSDMap)r;
+            OSDMap rm = OSDParser.DeserializeLLSDXml(request) as OSDMap;
+            if (rm == null)
+                return MainServer.BadRequest;
             IAgentConnector AgentFrontend = DataManager.RequestPlugin<IAgentConnector>();
             if (AgentFrontend != null)
             {
                 IAgentInfo IAI = AgentFrontend.GetAgent(agentID);
                 if (IAI == null)
-                    return new byte[0];
+                    return MainServer.BadRequest;
                 IAI.Language = rm["language"].AsString();
                 IAI.LanguageIsPublic = int.Parse(rm["language_is_public"].AsString()) == 1;
                 AgentFrontend.UpdateAgent(IAI);
             }
-            return new byte[0];
+            return MainServer.BlankResponse;
         }
 
         private byte[] ProcessAvatarPickerSearch(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -194,7 +194,7 @@ namespace OpenSim.Services.CapsService
                 agent.MaturityRating = maxLevel;
                 data.UpdateAgent(agent);
             }
-            return new byte[0];
+            return MainServer.BlankResponse;
         }
 
         private bool _isInTeleportCurrently = false;

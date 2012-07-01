@@ -123,7 +123,7 @@ namespace Aurora.BotManager
                     item.ID = UUID.Random();
                     item.Owner = m_character.AgentId;
                     item.Folder = UUID.Zero;
-                    scene.InventoryService.AddItem(item);
+                    scene.InventoryService.AddItemAsync(item, null);
                     //Now fix the ItemID
                     m_aCircuitData.Appearance.SetAttachment(t.AttachPoint, item.ID, t.AssetID);
                 }

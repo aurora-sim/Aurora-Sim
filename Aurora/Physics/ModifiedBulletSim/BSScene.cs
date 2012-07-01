@@ -110,7 +110,7 @@ namespace OpenSim.Region.Physics.BulletSPlugin
 
         public IMesher mesher;
 
-        public BSScene(string identifier)
+        public BSScene()
         {
             m_initialized = false;
         }

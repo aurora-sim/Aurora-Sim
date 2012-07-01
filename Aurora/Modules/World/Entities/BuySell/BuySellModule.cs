@@ -160,10 +160,8 @@ namespace Aurora.Modules.Entities.BuySell
                     item.CurrentPermissions |= 16; // Slam!
                     item.CreationDate = Util.UnixTimeSinceEpoch();
 
-                    if (inventoryModule != null)
-                    {
-                        inventoryModule.AddInventoryItem(item, () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
-                    }
+                    m_scene.InventoryService.AddItemAsync(item,
+                        () => remoteClient.SendInventoryItemCreateUpdate(item, 0));
                     break;
 
                 case 3: // Sell contents

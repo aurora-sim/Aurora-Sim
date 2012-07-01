@@ -107,7 +107,7 @@ namespace Aurora.Modules.Caps
             IScenePresence avatar;
 
             if (!m_scene.TryGetScenePresence(AgentId, out avatar))
-                return new byte[0];
+                return MainServer.BadRequest;
 
 
             OSD r = OSDParser.DeserializeLLSDXml(request);
@@ -147,7 +147,7 @@ namespace Aurora.Modules.Caps
             int state = 0;
 
             if (r.Type != OSDType.Map) // not a proper req
-                return new byte[0];
+                return MainServer.BadRequest;
 
             OSDMap rm = (OSDMap) r;
 
@@ -328,7 +328,7 @@ namespace Aurora.Modules.Caps
 
 
             if (obj == null)
-                return new byte[0];
+                return MainServer.BadRequest;
 
             SceneObjectPart rootpart = obj.RootPart;
             rootpart.Shape = pbs;

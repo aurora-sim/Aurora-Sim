@@ -168,8 +168,7 @@ namespace Aurora.Framework
                     map.Add(info.Name, osd);
                 i++;
             }
-            List<string> m_ServerURIs =
-                urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+            List<string> m_ServerURIs = GetURIs(urlOverrides, map, url, userID);
             OSDMap response = null;
             int loops2Do = (m_ServerURIs.Count < m_OSDRequestTryCount) ? m_ServerURIs.Count : m_OSDRequestTryCount;
             for (int index = 0; index < loops2Do; index++)
@@ -208,6 +207,10 @@ namespace Aurora.Framework
             return Util.OSDToObject(response["Value"], method.ReturnType);
         }
 
+        protected virtual List<string> GetURIs(bool urlOverrides, OSDMap map, string url, UUID userID)
+        {
+            return urlOverrides ? new List<string>() { url } : m_configService.FindValueOf(userID.ToString(), url, false);
+        }
         private void GetReflection(int upStack, StackTrace stackTrace, out MethodInfo method, out CanBeReflected reflection)
         {
             method = (MethodInfo)stackTrace.GetFrame(upStack).GetMethod();
@@ -301,7 +304,7 @@ namespace Aurora.Framework
             {
                 MainConsole.Instance.Warn("[ServerHandler]: Error occured: " + ex.ToString());
             }
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         public byte[] HandleMap(OSDMap args)
@@ -317,21 +320,21 @@ namespace Aurora.Framework
                         if (m_SessionID == "")
                         {
                             if (methodInfo.Attribute.ThreatLevel != ThreatLevel.None)
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
                         else if (!m_urlModule.CheckThreatLevel(m_SessionID, method, methodInfo.Attribute.ThreatLevel))
-                            return new byte[0];
+                            return MainServer.BadRequest;
                         if (methodInfo.Attribute.UsePassword)
                         {
                             if (!methodInfo.Reference.CheckPassword(args["Password"].AsString()))
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
                         if (methodInfo.Attribute.OnlyCallableIfUserInRegion)
                         {
                             UUID userID = args["UserID"].AsUUID();
                             IClientCapsService clientCaps = m_capsService.GetClientCapsService(userID);
                             if (userID == UUID.Zero || clientCaps == null || clientCaps.GetRootCapsService().RegionHandle != ulong.Parse(m_SessionID))
-                                return new byte[0];
+                                return MainServer.BadRequest;
                         }
 
                         ParameterInfo[] paramInfo = methodInfo.Method.GetParameters();
@@ -358,7 +361,7 @@ namespace Aurora.Framework
             else
                 MainConsole.Instance.Warn("[ServerHandler]: Post did not have a method block");
 
-            return new byte[0];
+            return MainServer.BadRequest;
         }
 
         private bool GetMethodInfo(string method, int parameters, out MethodImplementation methodInfo)

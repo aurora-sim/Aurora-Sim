@@ -301,7 +301,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received a GET ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return new byte[0];
+                return MainServer.NoResponse;
             }
 
             ObjectMediaResponse resp = new ObjectMediaResponse
@@ -339,7 +339,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received an UPDATE ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return new byte[0];
+                return MainServer.NoResponse;
             }
 
 //            MainConsole.Instance.DebugFormat("[MOAP]: Received {0} media entries for prim {1}", omu.FaceMedia.Length, primId);
@@ -356,7 +356,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received {0} media entries from client for prim {1} {2} but this prim has only {3} faces.  Dropping request.",
                     omu.FaceMedia.Length, part.Name, part.UUID, part.GetNumberOfSides());
-                return new byte[0];
+                return MainServer.NoResponse;
             }
 
             UUID agentId = default(UUID);
@@ -431,7 +431,7 @@ namespace Aurora.Modules.Entities.Media
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
-            return new byte[0];
+            return MainServer.NoResponse;
         }
 
         /// <summary>
@@ -461,7 +461,7 @@ namespace Aurora.Modules.Entities.Media
                 MainConsole.Instance.WarnFormat(
                     "[MOAP]: Received an ObjectMediaNavigateMessage for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return new byte[0];
+                return MainServer.NoResponse;
             }
 
             UUID agentId = default(UUID);
@@ -470,7 +470,7 @@ namespace Aurora.Modules.Entities.Media
                 agentId = m_omuCapUsers[path];
 
             if (!m_scene.Permissions.CanInteractWithPrimMedia(agentId, part.UUID, omn.Face))
-                return new byte[0];
+                return MainServer.NoResponse;
 
 //            MainConsole.Instance.DebugFormat(
 //                "[MOAP]: Received request to update media entry for face {0} on prim {1} {2} to {3}", 
@@ -478,7 +478,7 @@ namespace Aurora.Modules.Entities.Media
 
             // If media has never been set for this prim, then just return.
             if (null == part.Shape.Media)
-                return new byte[0];
+                return MainServer.NoResponse;
 
             MediaEntry me = null;
 
@@ -487,7 +487,7 @@ namespace Aurora.Modules.Entities.Media
 
             // Do the same if media has not been set up for a specific face
             if (null == me)
-                return new byte[0];
+                return MainServer.NoResponse;
 
             if (me.EnableWhiteList)
             {
@@ -497,7 +497,7 @@ namespace Aurora.Modules.Entities.Media
 //                        "[MOAP]: Blocking change of face {0} on prim {1} {2} to {3} since it's not on the enabled whitelist", 
 //                        omn.Face, part.Name, part.UUID, omn.URL);
 
-                    return new byte[0];
+                    return MainServer.NoResponse;
                 }
             }
 

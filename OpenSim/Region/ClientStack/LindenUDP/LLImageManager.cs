@@ -264,7 +264,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 {
                     try
                     {
-                        image = m_queue.Dequeue().Value;
+                        PriorityQueueItem<J2KImage, float> item;
+                        if (m_queue.TryDequeue(out item))
+                            image = item.Value;
                     }
                     catch (Exception)
                     {

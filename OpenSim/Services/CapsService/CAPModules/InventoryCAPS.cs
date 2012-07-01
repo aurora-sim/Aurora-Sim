@@ -43,7 +43,6 @@ namespace OpenSim.Services.CapsService
 {
     public class InventoryCAPS : ICapsServiceConnector
     {
-        private static readonly string m_newInventory = "0002";
         private IAssetService m_assetService;
         private IInventoryService m_inventoryService;
         private ILibraryService m_libraryService;
@@ -114,13 +113,19 @@ namespace OpenSim.Services.CapsService
 
             service.AddStreamHandler("NewFileAgentInventory",
                                      new GenericStreamHandler("POST",
-                                                           service.CreateCAPS("NewFileAgentInventory", m_newInventory),
+                                                           service.CreateCAPS("NewFileAgentInventory", ""),
                                                            NewAgentInventoryRequest));
             service.AddStreamHandler("NewFileAgentInventoryVariablePrice",
                                      new GenericStreamHandler("POST",
                                                            service.CreateCAPS("NewFileAgentInventoryVariablePrice", ""),
                                                            NewAgentInventoryRequestVariablePrice));
 
+            service.AddStreamHandler("CreateInventoryCategory",
+                                     new GenericStreamHandler("POST",
+                                                           service.CreateCAPS("CreateInventoryCategory", ""),
+                                                           CreateInventoryCategory));
+
+            
             /*method = delegate(string request, string path, string param,
                                                                 OSHttpRequest httpRequest, OSHttpResponse httpResponse)
             {
@@ -168,7 +173,7 @@ namespace OpenSim.Services.CapsService
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex);
+                MainConsole.Instance.Warn("[InventoryCaps]: SERIOUS ISSUE! " + ex.ToString());
             }
             finally
             {
@@ -211,7 +216,7 @@ namespace OpenSim.Services.CapsService
 
                 OSDMap requestmap = (OSDMap) OSDParser.DeserializeLLSDXml(request);
                 if (requestmap["items"].Type == OSDType.Unknown)
-                    return new byte[0]; //Its dead, Jim!!!
+                    return MainServer.BadRequest;
                 OSDArray foldersrequested = (OSDArray) requestmap["items"];
 
                 OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
@@ -408,6 +413,29 @@ namespace OpenSim.Services.CapsService
             map["uploader"] = uploaderURL;
             map["state"] = "upload";
             return map;
+        }
+
+        public byte[] CreateInventoryCategory(string path, Stream request, OSHttpRequest httpRequest,
+                                                                    OSHttpResponse httpResponse)
+        {
+            OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            UUID folder_id = map["folder_id"].AsUUID();
+            UUID parent_id = map["parent_id"].AsUUID();
+            int type = map["type"].AsInteger();
+            string name = map["name"].AsString();
+
+            UUID newFolderId = UUID.Random();
+            InventoryFolderBase newFolder
+                = new InventoryFolderBase(
+                    newFolderId, name, m_service.AgentID, (short)type, parent_id, 1);
+            m_inventoryService.AddFolder(newFolder);
+            OSDMap resp = new OSDMap();
+            resp["folder_id"] = folder_id;
+            resp["parent_id"] = parent_id;
+            resp["type"] = type;
+            resp["name"] = name;
+
+            return OSDParser.SerializeLLSDXmlBytes(map);
         }
 
         public string HandleInventoryItemCreate(string request, UUID AgentID)

@@ -111,7 +111,7 @@ namespace Aurora.Framework
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
-                new List<string>(listAsString.Split(new[] { ",", " " }, StringSplitOptions.RemoveEmptyEntries));
+                new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
             return value;
         }
 
@@ -1827,7 +1827,7 @@ namespace Aurora.Framework
                 result += commandParams[i] + " ";
             }
 
-            return result;
+            return result.Substring(0, result.Length - 1);
         }
 
         public static string BasePathCombine(string p)
@@ -2316,46 +2316,6 @@ namespace Aurora.Framework
         {
             iPAddress.Address = ResolveAddressForClient(iPAddress.Address, clientIP);
             return iPAddress;
-        }
-
-        public static string ServerURI(string uri)
-        {
-            if (uri == string.Empty)
-                return string.Empty;
-
-            // Get rid of eventual slashes at the end
-            uri = uri.TrimEnd('/');
-
-            IPAddress ipaddr1 = null;
-            string port1 = "";
-            try
-            {
-                ipaddr1 = GetHostFromURL(uri);
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                port1 = uri.Split(new[] { ':' })[2];
-            }
-            catch
-            {
-            }
-
-            // We tried our best to convert the domain names to IP addresses
-            return (ipaddr1 != null) ? "http://" + ipaddr1 + ":" + port1 : uri;
-        }
-
-        /// <summary>
-        ///   Converts a URL to a IPAddress
-        /// </summary>
-        /// <param name = "url">URL Standard Format</param>
-        /// <returns>A resolved IP Address</returns>
-        public static IPAddress GetHostFromURL(string url)
-        {
-            return GetHostFromDNS(url.Split(new[] { '/', ':' })[3]);
         }
 
         /// <summary>

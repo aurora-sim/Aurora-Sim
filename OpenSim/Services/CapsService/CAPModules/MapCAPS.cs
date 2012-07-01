@@ -42,7 +42,6 @@ namespace OpenSim.Services.CapsService
     {
         private const int m_mapDistance = 100;
         private readonly List<MapBlockData> m_mapLayer = new List<MapBlockData>();
-        private readonly string m_mapLayerPath = "0001";
         private bool m_allowCapsMessage = true;
         private IGridService m_gridService;
         private IRegionClientCapsService m_service;
@@ -64,10 +63,10 @@ namespace OpenSim.Services.CapsService
                 return MapLayerRequest(request.ReadUntilEnd(), httpRequest, httpResponse, m_service.AgentID);
             };
             m_service.AddStreamHandler("MapLayer",
-                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayer", m_mapLayerPath),
+                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayer", ""),
                                                              method));
             m_service.AddStreamHandler("MapLayerGod",
-                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", m_mapLayerPath),
+                                       new GenericStreamHandler("POST", m_service.CreateCAPS("MapLayerGod", ""),
                                                              method));
         }
 

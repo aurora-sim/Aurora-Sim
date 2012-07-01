@@ -154,43 +154,6 @@ namespace Aurora.Services.DataService
             GD.Insert("userdata", values.ToArray());
         }
 
-        /// <summary>
-        ///   Checks whether the mac address and viewer are allowed to connect to this grid.
-        ///   Note: we only allow for this on the grid side
-        /// </summary>
-        /// <param name = "Mac"></param>
-        /// <param name = "viewer"></param>
-        /// <param name = "reason"></param>
-        /// <returns></returns>
-        public bool CheckMacAndViewer(string Mac, string viewer, out string reason)
-        {
-            QueryFilter filter = new QueryFilter();
-            filter.andFilters["macaddress"] = Mac;
-            List<string> found = GD.Query(new string[] { "*" }, "macban", filter, null, null, null);
-
-            if (found.Count != 0)
-            {
-                //Found a mac that matched
-                reason = "Your Mac Address has been banned, please contact a grid administrator.";
-                MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Mac '{0}' is in the ban list", Mac);
-                return false;
-            }
-
-            //Viewer Ban Start
-            filter.andFilters.Remove("macaddress");
-            filter.andFilters["Client"] = viewer;
-            found = GD.Query(new string[] { "*" }, "bannedviewers", filter, null, null, null);
-
-            if (found.Count != 0)
-            {
-                reason = "The viewer you are using has been banned, please use a different viewer.";
-                MainConsole.Instance.InfoFormat("[AgentInfoConnector]: Viewer '{0}' is in the ban list", viewer);
-                return false;
-            }
-            reason = "";
-            return true;
-        }
-
         #endregion
 
         public void Dispose()

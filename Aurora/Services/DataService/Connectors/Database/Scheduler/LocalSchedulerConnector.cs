@@ -143,22 +143,22 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
         public List<SchedulerItem> ToRun()
         {
             List<SchedulerItem> returnValue = new List<SchedulerItem>();
-            IDataReader dr = null;
+            DataReaderConnection dr = null;
             try
             {
                 dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
                 if (dr != null)
                 {
-                    while (dr.Read())
+                    while (dr.DataReader.Read())
                     {
-                        returnValue.Add(LoadFromDataReader(dr));
+                        returnValue.Add(LoadFromDataReader(dr.DataReader));
                     }
                 }
             }
             catch{}
             finally
             {
-                if (dr != null) dr.Close();
+                m_Gd.CloseDatabase(dr);
             }
             
             return returnValue;

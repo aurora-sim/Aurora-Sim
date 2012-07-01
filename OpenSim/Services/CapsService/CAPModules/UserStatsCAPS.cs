@@ -37,7 +37,7 @@ namespace OpenSim.Services.CapsService.CAPModules
             vsm.Deserialize((OSDMap)OSDParser.DeserializeLLSDXml(request));
             dataConnector.UpdateUserStats(vsm, m_service.AgentID, m_service.Region.RegionID);
 
-            return new byte[0];
+            return MainServer.BlankResponse;
         }
 
         public void RegisterCaps(IRegionClientCapsService service)

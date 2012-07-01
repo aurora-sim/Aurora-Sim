@@ -194,7 +194,6 @@ namespace OpenSim.Services.AssetService
                 asset.ID = (UUID)remoteValue;
             }
             else
-                //MainConsole.Instance.DebugFormat("[ASSET SERVICE]: Store asset {0} {1}", asset.Name, asset.ID);
                 asset.ID = m_database.Store(asset);
             IImprovedAssetCache cache = m_registry.RequestModuleInterface<IImprovedAssetCache>();
             if (doDatabaseCaching && cache != null && asset != null && asset.Data != null && asset.Data.Length != 0)
