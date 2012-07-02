@@ -2236,12 +2236,8 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static IPAddress ResolveAddressForClient(IPAddress iPAddress, IPEndPoint clientIP)
         {
-            if (iPAddress == null)
+            /*if (iPAddress == null)
                 return clientIP.Address;
-            /*if(IsLanIP(clientIP.Address))
-            {
-                return clientIP.Address;
-            }*/
             if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)
@@ -2266,6 +2262,7 @@ namespace Aurora.Framework
                     }
                 }
             }
+            return iPAddress;*/
             return iPAddress;
         }
 
