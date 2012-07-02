@@ -1033,7 +1033,7 @@ namespace Aurora.Modules.EntityTransfer
 
             OSDMap responseMap = new OSDMap ();
             responseMap["CapsUrls"] = scene.EventManager.TriggerOnRegisterCaps (agent.AgentID);
-            responseMap["OurIPForClient"] = NetworkUtils.ResolveAddressForClient(NetworkUtils.GetHostFromDNS(MainServer.Instance.HostName), new IPEndPoint(IPAddress.Parse(agent.IPAddress), 0)).ToString();
+            responseMap["OurIPForClient"] = MainServer.Instance.HostName;
 
             // In all cases, add or update the circuit data with the new agent circuit data and teleport flags
             agent.teleportFlags = teleportFlags;

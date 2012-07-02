@@ -273,20 +273,9 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             //m_lastUpdateSent = false;
         }
 
-        public override void SubscribeEvents(int ms)
-        {
-            _subscribedEventsMs = ms;
-            _lastCollisionTime = Util.EnvironmentTickCount() - _subscribedEventsMs; // make first collision happen
-        }
-
-        public override void UnSubscribeEvents()
-        {
-            _subscribedEventsMs = 0;
-        }
-
         public override bool SubscribedEvents()
         {
-            return (_subscribedEventsMs > 0);
+            return true;
         }
 
         #region Movement/Update

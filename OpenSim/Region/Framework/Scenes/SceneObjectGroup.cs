@@ -2583,7 +2583,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part.PhysActor != null)
                 {
                     part.PhysActor.RotationalVelocity = Vector3.Zero;
-                    part.PhysActor.UnSubscribeEvents();
                     part.m_hasSubscribedToCollisionEvent = false;
                     part.PhysActor.OnCollisionUpdate -= part.PhysicsCollision;
                     part.PhysActor.OnRequestTerseUpdate -= part.PhysicsRequestingTerseUpdate;
@@ -3493,8 +3492,7 @@ namespace OpenSim.Region.Framework.Scenes
                         if (!m_rootPart.BlockGrab && !m_rootPart.BlockGrabObject)
                         {
                             Vector3 grabforce = pos - AbsolutePosition;
-                            grabforce = grabforce*m_rootPart.PhysActor.Mass;
-                            grabforce /= 10;
+                            grabforce = grabforce * m_rootPart.PhysActor.Mass;
                             m_rootPart.PhysActor.AddForce(grabforce, true);
                             // This is outside the above permissions condition
                             // so that if the object is locked the client moving the object

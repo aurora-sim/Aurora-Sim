@@ -49,9 +49,9 @@
     
     ;; The amount to multiply the jump by (can have a decimal point)
 	;; Second Life feeling
-    PreJumpMultiplierX = 5
-    PreJumpMultiplierY = 5
-    PreJumpMultiplierZ = 3.0
+    PreJumpMultiplierX = 2
+    PreJumpMultiplierY = 2
+    PreJumpMultiplierZ = 7.0
 
 
     ;; ##
@@ -61,7 +61,7 @@
     ;; Normal Gravity.  Feel like falling up?  change world_gravity to 9.8 instead of -9.8.  m/s
     world_gravityx = 0
     world_gravityy = 0
-    world_gravityz = -7.3
+    world_gravityz = -9.8
 
     ;; ##
     ;; ## Point Gravity Settings
@@ -94,7 +94,7 @@
 	
 	;; Walk speed.  Smaller is faster.
     ;; speed of movement with Always Run off
-    WalkSpeed = 1.5
+    WalkSpeed = 1.75
     
 	;; Run speed.  Smaller is faster.
     ;; Speed of movement with Always Run on

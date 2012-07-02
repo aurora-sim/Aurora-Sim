@@ -53,6 +53,13 @@ namespace OpenSim.Services.Interfaces
         bool CreateUserInventory(UUID user, bool createDefaultItems);
 
         /// <summary>
+        ///   Create the entire inventory for a given user (local only)
+        /// </summary>
+        /// <param name = "user"></param>
+        /// <returns></returns>
+        bool CreateUserInventory(UUID user, bool createDefaultItems, out List<InventoryItemBase> defaultInventoryItems);
+
+        /// <summary>
         ///   Gets the skeleton of the inventory -- folders only (local only)
         /// </summary>
         /// <param name = "userId"></param>

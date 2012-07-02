@@ -226,8 +226,10 @@ namespace OpenSim.Services.Interfaces
             map["Neighbors"] = new OSDArray(Neighbors.ConvertAll<OSD>((region) => region.ToOSD()));
             map["SessionID"] = SessionID;
             map["RegionFlags"] = RegionFlags;
-            map["Urls"] = Urls;
-			map["RegionRemote"] = RegionRemote;
+            if (Urls != null)
+                map["Urls"] = Urls;
+            if(RegionRemote != null)
+			    map["RegionRemote"] = RegionRemote;
             return map;
         }
 
@@ -238,8 +240,10 @@ namespace OpenSim.Services.Interfaces
             Neighbors = n.ConvertAll<GridRegion>((osd) => { GridRegion r = new GridRegion(); r.FromOSD((OSDMap)osd); return r; });
             SessionID = map["SessionID"];
             RegionFlags = map["RegionFlags"];
-            Urls = (OSDMap)map["Urls"];
-			RegionRemote = (OSDMap)map["RegionRemote"];
+            if (map.ContainsKey("Urls"))
+                Urls = (OSDMap)map["Urls"];
+            if(map.ContainsKey("RegionRemote"))
+			    RegionRemote = (OSDMap)map["RegionRemote"];
         }
     }
 

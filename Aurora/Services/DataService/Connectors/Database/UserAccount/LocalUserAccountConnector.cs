@@ -101,7 +101,7 @@ namespace Aurora.Services.DataService
             row["FirstName"] = data.FirstName;
             row["LastName"] = data.LastName;
             row["Email"] = data.Email;
-            row["ServiceURLs"] = data.ServiceURLs;
+            row["ServiceURLs"] = Util.ConvertToString(data.ServiceURLs);
             row["Created"] = data.Created;
             row["UserLevel"] = data.UserLevel;
             row["UserFlags"] = data.UserFlags;
@@ -255,20 +255,9 @@ namespace Aurora.Services.DataService
                 data.ServiceURLs = new Dictionary<string, object>();
                 if (query[i + 5] != null)
                 {
-                    string[] URLs = query[i + 5].Split(new[] {' '});
-
-                    foreach (string url in URLs)
-                    {
-                        string[] parts = url.Split(new[] {'='});
-
-                        if (parts.Length != 2)
-                            continue;
-
-                        string name = HttpUtility.UrlDecode(parts[0]);
-                        string val = HttpUtility.UrlDecode(parts[1]);
-
-                        data.ServiceURLs[name] = val;
-                    }
+                    Dictionary<string, string> dict = Util.ConvertToDictionary(query[i + 5]);
+                    foreach (var v in dict)
+                        data.ServiceURLs[v.Key] = v.Value;
                 }
                 data.Created = Int32.Parse(query[i + 6]);
                 data.UserLevel = Int32.Parse(query[i + 7]);

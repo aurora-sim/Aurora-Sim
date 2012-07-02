@@ -132,14 +132,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override void SubscribeEvents(int ms)
-        {
-        }
-
-        public override void UnSubscribeEvents()
-        {
-        }
-
         public override bool SubscribedEvents()
         {
             return false;

@@ -215,7 +215,7 @@ namespace OpenSim.Services.MessagingService
                     AgentData AgentData = new AgentData();
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
-                    string ResponseURL = body["ResponseURL"].AsString();
+                    string ResponseURL = message["ResponseURL"].AsString();
                     if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();
@@ -266,7 +266,7 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
 
-                    string ResponseURL = body["ResponseURL"].AsString();
+                    string ResponseURL = message["ResponseURL"].AsString();
                     if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();
@@ -606,7 +606,10 @@ namespace OpenSim.Services.MessagingService
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
-                            ipAddress = IPAddress.Parse(ip);
+                            if (!IPAddress.TryParse(ip, out ipAddress))
+#pragma warning disable 618
+                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+#pragma warning restore 618
                         }
                         otherRegionService.AddCAPS(SimSeedCaps);
                         otherRegionsCapsURL = otherRegionService.CapsUrl;
@@ -1266,7 +1269,10 @@ namespace OpenSim.Services.MessagingService
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
-                            ipAddress = IPAddress.Parse(ip);
+                            if (!IPAddress.TryParse(ip, out ipAddress))
+#pragma warning disable 618
+                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+#pragma warning restore 618
                         }
                         region.ExternalEndPoint.Address = ipAddress;
                             //Fix this so that it gets sent to the client that way

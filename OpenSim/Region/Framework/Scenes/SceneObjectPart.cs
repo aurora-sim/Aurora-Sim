@@ -3907,7 +3907,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     m_hasSubscribedToCollisionEvent = false;
                     PhysActor.OnCollisionUpdate -= PhysicsCollision;
-                    PhysActor.UnSubscribeEvents();
                 }
             }
 

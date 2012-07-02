@@ -107,12 +107,36 @@ namespace Aurora.Framework
             return builder.ToString();
         }
 
+        public static string ConvertToString(Dictionary<string, object> list)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (var val in list)
+            {
+                builder.Append(val.Key + "=" + val.Value.ToString() + ",");
+            }
+            return builder.ToString();
+        }
+
         public static List<string> ConvertToList(string listAsString)
         {
             //Do both , and " " so that it removes any annoying spaces in the string added by users
             List<string> value =
                 new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
             return value;
+        }
+
+        public static Dictionary<string, string> ConvertToDictionary(string listAsString)
+        {
+            //Do both , and " " so that it removes any annoying spaces in the string added by users
+            List<string> value =
+                new List<string>(listAsString.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries));
+            Dictionary<string, string> dict = new Dictionary<string, string>();
+            foreach (var v in value)
+            {
+                var split = v.Split('=');
+                dict.Add(split[0], split[1]);
+            }
+            return dict;
         }
 
         public static string BuildYMDDateString(DateTime time)
@@ -2236,12 +2260,8 @@ namespace Aurora.Framework
         /// <returns></returns>
         public static IPAddress ResolveAddressForClient(IPAddress iPAddress, IPEndPoint clientIP)
         {
-            if (iPAddress == null)
+            /*if (iPAddress == null)
                 return clientIP.Address;
-            /*if(IsLanIP(clientIP.Address))
-            {
-                return clientIP.Address;
-            }*/
             if (iPAddress.Equals(clientIP.Address))
             {
                 if (useLocalhostLoopback)
@@ -2266,6 +2286,7 @@ namespace Aurora.Framework
                     }
                 }
             }
+            return iPAddress;*/
             return iPAddress;
         }
 

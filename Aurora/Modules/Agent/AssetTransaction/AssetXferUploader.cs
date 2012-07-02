@@ -47,6 +47,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
         private uint m_createItemCallback;
         private string m_description = String.Empty;
         private bool m_finished;
+        private object _finishedLock = new object();
         public bool Finished { get { return m_finished; } }
         private string m_name = String.Empty;
         private bool m_storeLocal;
@@ -136,17 +137,20 @@ namespace Aurora.Modules.Agent.AssetTransaction
 
         protected void SendCompleteMessage(IClientAPI remoteClient)
         {
-            m_finished = true;
-            if (FinishedEvent != null)
-                FinishedEvent();
+            lock (_finishedLock)
+            {
+                m_finished = true;
+                if (FinishedEvent != null)
+                    FinishedEvent();
 
-            if (m_createItem)
-            {
-                DoCreateItem(m_createItemCallback, remoteClient);
-            }
-            else if (m_storeLocal)
-            {
-                m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+                if (m_createItem)
+                {
+                    DoCreateItem(m_createItemCallback, remoteClient);
+                }
+                else if (m_storeLocal)
+                {
+                    m_asset.ID = m_userTransactions.Manager.MyScene.AssetService.Store(m_asset);
+                }
             }
             remoteClient.SendAssetUploadCompleteMessage((sbyte) m_asset.Type, true, m_asset.ID);
 
@@ -181,14 +185,17 @@ namespace Aurora.Modules.Agent.AssetTransaction
                 m_asset.Description = description;
                 m_asset.Type = type;
 
-                if (m_finished)
+                lock (_finishedLock)
                 {
-                    DoCreateItem(callbackID, remoteClient);
-                }
-                else
-                {
-                    m_createItem = true; //set flag so the inventory item is created when upload is complete
-                    m_createItemCallback = callbackID;
+                    if (m_finished)
+                    {
+                        DoCreateItem(callbackID, remoteClient);
+                    }
+                    else
+                    {
+                        m_createItem = true; //set flag so the inventory item is created when upload is complete
+                        m_createItemCallback = callbackID;
+                    }
                 }
             }
         }
@@ -237,9 +244,12 @@ namespace Aurora.Modules.Agent.AssetTransaction
         /// <returns>null if the asset has not finished uploading</returns>
         public AssetBase GetAssetData()
         {
-            if (m_finished)
+            lock (_finishedLock)
             {
-                return m_asset;
+                if (m_finished)
+                {
+                    return m_asset;
+                }
             }
 
             return null;

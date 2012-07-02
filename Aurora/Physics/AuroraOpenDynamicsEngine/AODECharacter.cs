@@ -58,25 +58,21 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected Vector3 _velocity;
         protected bool _wasZeroFlagFlying;
         protected bool _zeroFlag;
-        public bool bad;
         protected bool flying;
         protected float lastUnderwaterPush;
         protected int m_ZeroUpdateSent;
         protected bool m_alwaysRun;
-        protected int m_colliderfilter;
         protected CollisionCategories m_collisionCategories = (CollisionCategories.Character);
 
         // Default, Collide with Other Geometries, spaces, bodies and characters.
-        protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space | CollisionCategories.Body | CollisionCategories.Character
-            //                                                        | CollisionCategories.Land
-                                                             );
+        protected const CollisionCategories m_collisionFlags = (CollisionCategories.Geom | CollisionCategories.Space
+            | CollisionCategories.Body | CollisionCategories.Character | CollisionCategories.Land);
 
         //        float m_UpdateTimecntr = 0;
         //        float m_UpdateFPScntr = 0.05f;
         protected bool m_isJumping;
         public bool m_isPhysical; // the current physical status
         protected bool m_iscolliding;
-        protected bool m_iscollidingGround;
 
         protected bool m_ispreJumping;
         protected Vector3 m_lastAngVelocity;
@@ -160,16 +156,22 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
 
             m_isPhysical = false; // current status: no ODE information exists
-            _parent_scene.AddChange(this, changes.Add, null);
-            _parent_scene.AddChange(this, changes.CapsuleLength, CAPSULE_LENGTH);
-            _parent_scene.AddChange(this, changes.Position, _position);
-/*
-            m_UpdateTimecntr = 0;
-            m_UpdateFPScntr = 2.5f * parent_scene.StepTime; // this parameter needs retunning and possible came from ini file
-            if (m_UpdateTimecntr > .1f) // try to keep it under 100ms
-                m_UpdateTimecntr = .1f;
- */
+            _parent_scene.AddSimulationChange(() => RebuildAvatar());
             m_name = avName;
+        }
+
+        public void RebuildAvatar()
+        {
+            if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
+            {
+                MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
+                           + (Shell != IntPtr.Zero ? "Shell " : "")
+                           + (Body != IntPtr.Zero ? "Body " : ""));
+            }
+            _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
+
+            _parent_scene.AddCharacter(this);
+            m_isPhysical = true;
         }
 
         #endregion
@@ -225,6 +227,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         public override bool IsTruelyColliding { get; set; }
 
+        protected int m_colliderfilter;
         /// <summary>
         ///   Returns if the avatar is colliding in general.
         ///   This includes the ground and objects and avatar.
@@ -233,14 +236,14 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public override bool IsColliding
         {
-            get { return m_iscolliding || m_iscollidingGround; }
+            get { return m_iscolliding; }
             set
             {
                 if (value)
                 {
-                    m_colliderfilter += 2;
-                    if (m_colliderfilter > 2)
-                        m_colliderfilter = 2;
+                    m_colliderfilter += 15;
+                    if (m_colliderfilter > 15)
+                        m_colliderfilter = 15;
                 }
                 else
                 {
@@ -263,27 +266,28 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             get { return _position; }
             set
             {
-                if (Body == IntPtr.Zero || Shell == IntPtr.Zero)
+                if (value.IsFinite())
                 {
-                    if (value.IsFinite())
+                    if (value.Z > 9999999f || value.Z < -90f)
                     {
-                        if (value.Z > 9999999f || value.Z < -90f)
-                        {
-                            value.Z =
-                                _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f,
-                                                                   _parent_scene.Region.RegionSizeY * 0.5f) + 5;
-                        }
-
-                        _position.X = value.X;
-                        _position.Y = value.Y;
-                        _position.Z = value.Z;
-
-                        _parent_scene.AddChange(this, changes.Position, value);
+                        value.Z =
+                            _parent_scene.GetTerrainHeightAtXY(_parent_scene.Region.RegionSizeX * 0.5f,
+                                                               _parent_scene.Region.RegionSizeY * 0.5f) + 5;
                     }
-                    else
+
+                    _position.X = value.X;
+                    _position.Y = value.Y;
+                    _position.Z = value.Z;
+
+                    _parent_scene.AddSimulationChange(() =>
                     {
-                        MainConsole.Instance.Warn("[PHYSICS]: Got a NaN Position from Scene on a Character");
-                    }
+                        if (!value.ApproxEquals(_position, 0.05f) && Body != null)
+                            _parent_ref.SetPositionLocked(value);
+                    });
+                }
+                else
+                {
+                    MainConsole.Instance.Warn("[PHYSICS]: Got a NaN Position from Scene on a Character");
                 }
             }
         }
@@ -319,7 +323,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
                     Velocity = Vector3.Zero;
 
-                    _parent_scene.AddChange(this, changes.CapsuleLength, (SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f);
+                    _parent_scene.AddSimulationChange(() => RebuildAvatar());
                 }
                 else
                 {
@@ -381,7 +385,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set
             {
                 m_taintRotation = value;
-                _parent_scene.AddChange(this, changes.Rotation, value);
+                _parent_scene.AddSimulationChange(() =>
+                {
+                    if (Body != IntPtr.Zero)
+                        _parent_ref.SetRotationLocked(value);
+                });
             }
         }
 
@@ -470,7 +478,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// </summary>
         public void UpdatePositionAndVelocity(float timestep)
         {
-            if (!m_shouldBePhysical)
+            if (!IsPhysical)
                 return;
 
             //  no lock; called from Simulate() -- if you call this from elsewhere, gotta lock or do Monitor.Enter/Exit!
@@ -481,7 +489,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             catch (NullReferenceException)
             {
-                bad = true;
                 _parent_scene.BadCharacter(this);
                 vec = new Vector3(_position.X, _position.Y, _position.Z);
                 base.RaiseOutOfBounds(_position); // Tells ScenePresence that there's a problem!
@@ -738,7 +745,11 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 if (pushforce)
                 {
                     m_pidControllerActive = false;
-                    _parent_scene.AddChange(this, changes.Force, force * 100);
+                    _parent_scene.AddSimulationChange(() =>
+                    {
+                        if (Body != IntPtr.Zero)
+                            _parent_ref.SetForceLocked((Vector3)force);
+                    });
                 }
                 else
                 {
@@ -765,7 +776,13 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override void Destroy()
         {
             m_isPhysical = true;
-            _parent_scene.AddChange(this, changes.Remove, null);
+            _parent_scene.AddSimulationChange(() =>
+            {
+                _parent_scene.RemoveCharacter(this);
+                // destroy avatar capsule and related ODE data
+                _parent_ref.DestroyBodyThreadLocked();
+                m_isPhysical = false;
+            });
         }
 
         #endregion
@@ -773,16 +790,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         #endregion
 
         #region Collision events
-
-        public override void SubscribeEvents(int ms)
-        {
-            _parent_scene.addCollisionEventReporting(this);
-        }
-
-        public override void UnSubscribeEvents()
-        {
-            _parent_scene.remCollisionEventReporting(this);
-        }
 
         public override void AddCollisionEvent(uint CollidedWith, ContactPoint contact)
         {
@@ -804,70 +811,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public override bool SubscribedEvents()
         {
             return true;
-        }
-
-        public override void ProcessTaints(changes taint, object val)
-        {
-            if (!m_shouldBePhysical)
-                return;
-
-            switch (taint)
-            {
-                case changes.Add:
-                    // Create avatar capsule and related ODE data
-                    if (!(Shell == IntPtr.Zero && Body == IntPtr.Zero))
-                    {
-                        MainConsole.Instance.Warn("[PHYSICS]: re-creating the following avatar ODE data, even though it already exists - "
-                                   + (Shell != IntPtr.Zero ? "Shell " : "")
-                                   + (Body != IntPtr.Zero ? "Body " : ""));
-                    }
-                    _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y, _position.Z);
-
-                    _parent_scene.AddCharacter(this);
-                    m_isPhysical = true;
-                    break;
-                case changes.Remove:
-                    _parent_scene.RemoveCharacter(this);
-                    // destroy avatar capsule and related ODE data
-                    _parent_ref.DestroyBodyThreadLocked();
-                    m_isPhysical = false;
-                    break;
-                case changes.CapsuleLength:
-                    float taintCapsul = (float)val;
-                    if (Shell != IntPtr.Zero && Body != IntPtr.Zero) // && Amotor != IntPtr.Zero)
-                    {
-                        //Destroy the old body
-                        _parent_ref.DestroyBodyThreadLocked();
-
-                        m_pidControllerActive = true;
-                        float prevCapsule = CAPSULE_LENGTH;
-                        CAPSULE_LENGTH = taintCapsul;
-
-                        _parent_ref.AvatarGeomAndBodyCreation(_position.X, _position.Y,
-                                                  _position.Z + (CAPSULE_LENGTH - prevCapsule));
-                    }
-                    else
-                    {
-                        MainConsole.Instance.Warn("[PHYSICS]: trying to change capsule size, but the following ODE data is missing - "
-                                   + (Shell == IntPtr.Zero ? "Shell " : "")
-                                   + (Body == IntPtr.Zero ? "Body " : "")
-                            );
-                    }
-                    break;
-                case changes.Position:
-                    Vector3 taintPos = (Vector3)val;
-                    if (!taintPos.ApproxEquals(_position, 0.05f) && Body != null)
-                        _parent_ref.SetPositionLocked(taintPos);
-                    break;
-                case changes.Rotation:
-                    if (Body != IntPtr.Zero)
-                        _parent_ref.SetRotationLocked((Quaternion)val);
-                    break;
-                case changes.Force:
-                    if (Body != IntPtr.Zero)
-                        _parent_ref.SetForceLocked((Vector3)val);
-                    break;
-            }
         }
 
         #endregion
