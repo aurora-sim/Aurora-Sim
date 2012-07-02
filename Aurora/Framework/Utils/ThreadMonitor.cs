@@ -44,6 +44,7 @@ namespace Aurora.Framework
         private int m_sleepTime;
         protected int m_timesToIterate;
         protected Thread m_thread;
+		private bool startedshutdown = false;
 
         /// <summary>
         ///   Add this delegate to the tracker so that it can run.
@@ -91,7 +92,7 @@ namespace Aurora.Framework
             try
             {
                 List<InternalHeartbeat> hbToRemove = null;
-                while (m_timesToIterate >= 0)
+                while ((m_timesToIterate >= 0) && (!startedshutdown))
                 {
                     lock (m_lock)
                     {
@@ -189,6 +190,7 @@ namespace Aurora.Framework
 
         public void Stop()
         {
+			startedshutdown = true;
             lock (m_lock)
             {
                 //Remove all
