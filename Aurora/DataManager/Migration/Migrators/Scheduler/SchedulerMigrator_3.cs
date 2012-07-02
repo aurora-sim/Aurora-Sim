@@ -67,7 +67,7 @@ namespace Aurora.DataManager.Migration.Migrators.Scheduler
             ), IndexDefs(
                 IndexDef(new[] { "id" }, IndexType.Primary),
                 IndexDef(new[] { "runs_next", "enabled" },IndexType.Index),
-                IndexDef(new[] { "schedule_for", "fire_params" }, IndexType.Index)
+                IndexDef(new[] { "schedule_for", "fire_function" }, IndexType.Index)
             ));
 
             AddSchema("scheduler_history", ColDefs(
