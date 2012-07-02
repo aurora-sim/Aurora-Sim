@@ -90,7 +90,7 @@ namespace OpenSim.Services.InventoryService
 
         public virtual void FinishedStartup()
         {
-            _addInventoryItemQueue.Start(2, (agentID, itemsToAdd) =>
+            _addInventoryItemQueue.Start(0.5, (agentID, itemsToAdd) =>
                 {
                     foreach (AddInventoryItemStore item in itemsToAdd)
                     {
@@ -100,7 +100,7 @@ namespace OpenSim.Services.InventoryService
                             item.Complete();
                     }
                 });
-            _moveInventoryItemQueue.Start(2, (agentID, itemsToMove) =>
+            _moveInventoryItemQueue.Start(0.5, (agentID, itemsToMove) =>
                 {
                     foreach (var item in itemsToMove)
                     {
@@ -122,6 +122,12 @@ namespace OpenSim.Services.InventoryService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
+            List<InventoryItemBase> items;
+            return CreateUserInventory(principalID, createDefaultItems, out items);
+        }
+
+        public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems, out List<InventoryItemBase> defaultItems)
+        {
             // This is braindeaad. We can't ever communicate that we fixed
             // an existing inventory. Well, just return root folder status,
             // but check sanity anyway.
@@ -235,7 +241,7 @@ namespace OpenSim.Services.InventoryService
                 if (f.Type == (short)AssetType.Inbox) return true;
                 return false;
             }))
-                CreateFolder(principalID, rootFolder.ID, (int) AssetType.Inbox, "Received Items");
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.Inbox, "Received Items");
 
             if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
             {
@@ -244,8 +250,16 @@ namespace OpenSim.Services.InventoryService
             }))
                 CreateFolder(principalID, rootFolder.ID, (int)AssetType.Outbox, "Merchant Outbox");
 
+            if (!Array.Exists(sysFolders, delegate(InventoryFolderBase f)
+            {
+                if (f.Type == (short)AssetType.CurrentOutfitFolder) return true;
+                return false;
+            }))
+                CreateFolder(principalID, rootFolder.ID, (int)AssetType.CurrentOutfitFolder, "Current Outfit");
+
             if (createDefaultItems && m_LibraryService != null)
             {
+                defaultItems = new List<InventoryItemBase>();
                 InventoryFolderBase bodypartFolder = GetFolderForType(principalID, InventoryType.Unknown,
                                                                       AssetType.Bodypart);
                 InventoryFolderBase clothingFolder = GetFolderForType(principalID, InventoryType.Unknown,
@@ -259,7 +273,7 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Bodypart,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Shape,
-                    ID = AvatarWearable.DEFAULT_BODY_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 AssetBase asset = m_AssetService.Get(AvatarWearable.DEFAULT_BODY_ASSET.ToString());
@@ -276,6 +290,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShape.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultShape.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultShape, false);
+                    defaultItems.Add(defaultShape);
                 }
 
                 InventoryItemBase defaultSkin = new InventoryItemBase
@@ -285,7 +300,7 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Bodypart,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Skin,
-                    ID = AvatarWearable.DEFAULT_SKIN_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SKIN_ASSET.ToString());
@@ -302,6 +317,7 @@ namespace OpenSim.Services.InventoryService
                     defaultSkin.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultSkin.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultSkin, false);
+                    defaultItems.Add(defaultSkin);
                 }
 
                 InventoryItemBase defaultHair = new InventoryItemBase
@@ -311,7 +327,7 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Bodypart,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Hair,
-                    ID = AvatarWearable.DEFAULT_HAIR_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_HAIR_ASSET.ToString());
@@ -328,6 +344,7 @@ namespace OpenSim.Services.InventoryService
                     defaultHair.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultHair.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultHair, false);
+                    defaultItems.Add(defaultHair);
                 }
 
                 InventoryItemBase defaultEyes = new InventoryItemBase
@@ -337,7 +354,7 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Bodypart,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Eyes,
-                    ID = AvatarWearable.DEFAULT_EYES_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_EYES_ASSET.ToString());
@@ -354,6 +371,7 @@ namespace OpenSim.Services.InventoryService
                     defaultEyes.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultEyes.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultEyes, false);
+                    defaultItems.Add(defaultEyes);
                 }
 
                 InventoryItemBase defaultShirt = new InventoryItemBase
@@ -363,12 +381,26 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Clothing,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Shirt,
-                    ID = AvatarWearable.DEFAULT_SHIRT_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_SHIRT_ASSET.ToString());
                 if (asset != null)
                 {
+                    OpenMetaverse.Assets.AssetClothing clothingOld = new OpenMetaverse.Assets.AssetClothing(asset.ID, asset.Data);
+                    clothingOld.Decode();
+                    OpenMetaverse.Assets.AssetClothing clothing = new OpenMetaverse.Assets.AssetClothing()
+                    {
+                        Creator = m_LibraryService.LibraryOwner,
+                        Name = "Default shirt",
+                        Owner = principalID,
+                        Permissions = new Permissions((uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All),
+                        WearableType = WearableType.Shirt,
+                        Textures = new Dictionary<AvatarTextureIndex,UUID>() { { AvatarTextureIndex.UpperShirt, UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f") } }
+                    };
+                    clothing.Encode();
+                    asset.Data = clothing.AssetData;
+                    string data = Utils.BytesToString(asset.Data);
                     asset.ID = UUID.Random();
                     asset.ID = m_AssetService.Store(asset);
                     defaultShirt.AssetID = asset.ID;
@@ -380,6 +412,7 @@ namespace OpenSim.Services.InventoryService
                     defaultShirt.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultShirt.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultShirt, false);
+                    defaultItems.Add(defaultShirt);
                 }
 
                 InventoryItemBase defaultPants = new InventoryItemBase
@@ -389,12 +422,21 @@ namespace OpenSim.Services.InventoryService
                     AssetType = (int)AssetType.Clothing,
                     InvType = (int)InventoryType.Wearable,
                     Flags = (uint)WearableType.Pants,
-                    ID = AvatarWearable.DEFAULT_PANTS_ITEM
+                    ID = UUID.Random()
                 };
                 //Give a new copy to every person
                 asset = m_AssetService.Get(AvatarWearable.DEFAULT_PANTS_ASSET.ToString());
                 if (asset != null)
                 {
+                    OpenMetaverse.Assets.AssetClothing clothing = new OpenMetaverse.Assets.AssetClothing()
+                    {
+                        Creator = m_LibraryService.LibraryOwner,
+                        Name = "Default pants",
+                        Owner = principalID,
+                        Permissions = new Permissions((uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All, (uint)PermissionMask.All),
+                        WearableType = WearableType.Pants,
+                        Textures = new Dictionary<AvatarTextureIndex, UUID>() { { AvatarTextureIndex.LowerPants, UUID.Parse("5748decc-f629-461c-9a36-a35a221fe21f") } }
+                    };
                     asset.ID = UUID.Random();
                     asset.ID = m_AssetService.Store(asset);
                     defaultPants.AssetID = asset.ID;
@@ -406,8 +448,11 @@ namespace OpenSim.Services.InventoryService
                     defaultPants.EveryOnePermissions = (uint)PermissionMask.None;
                     defaultPants.NextPermissions = (uint)PermissionMask.All;
                     AddItem(defaultPants, false);
+                    defaultItems.Add(defaultPants);
                 }
             }
+            else
+                defaultItems = new List<InventoryItemBase>();
 
             return result;
         }

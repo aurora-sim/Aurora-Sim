@@ -56,6 +56,12 @@ namespace OpenSim.Services.Robust
             return false;
         }
 
+        public virtual bool CreateUserInventory(UUID principalID, bool createDefaultItems, out List<InventoryItemBase> items)
+        {
+            items = null;
+            return false;
+        }
+
         public virtual List<InventoryFolderBase> GetInventorySkeleton(UUID principalID)
         {
             return null;

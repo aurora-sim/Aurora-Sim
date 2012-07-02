@@ -356,6 +356,7 @@ namespace OpenSim.Services.LLLoginService
             try
             {
                 string DisplayName = account.Name;
+                AvatarAppearance avappearance = null;
                 IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
 
                 //
@@ -369,12 +370,24 @@ namespace OpenSim.Services.LLLoginService
                 List<InventoryFolderBase> inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                 if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                 {
-                    m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "");
+                    List<InventoryItemBase> defaultItems;
+                    m_InventoryService.CreateUserInventory(account.PrincipalID, m_DefaultUserAvatarArchive == "", out defaultItems);
                     inventorySkel = m_InventoryService.GetInventorySkeleton(account.PrincipalID);
                     if (m_RequireInventory && ((inventorySkel == null) || (inventorySkel.Count == 0)))
                     {
                         MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: unable to retrieve user inventory", account.Name);
                         return LLFailedLoginResponse.InventoryProblem;
+                    }
+                    if (defaultItems.Count > 0)
+                    {
+                        avappearance = new AvatarAppearance(account.PrincipalID);
+                        avappearance.SetWearable((int)WearableType.Shape, new AvatarWearable(defaultItems[0].ID, defaultItems[0].AssetID));
+                        avappearance.SetWearable((int)WearableType.Skin, new AvatarWearable(defaultItems[1].ID, defaultItems[1].AssetID));
+                        avappearance.SetWearable((int)WearableType.Hair, new AvatarWearable(defaultItems[2].ID, defaultItems[2].AssetID));
+                        avappearance.SetWearable((int)WearableType.Eyes, new AvatarWearable(defaultItems[3].ID, defaultItems[3].AssetID));
+                        avappearance.SetWearable((int)WearableType.Shirt, new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
+                        avappearance.SetWearable((int)WearableType.Pants, new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
+                        m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                     }
                 }
 
@@ -500,10 +513,10 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Get the avatar
                 //
-                AvatarAppearance avappearance;
                 if (m_AvatarService != null)
                 {
-                    avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
+                    if(avappearance == null)
+                        avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     if (avappearance == null)
                     {
                         //Create an appearance for the user if one doesn't exist
@@ -517,9 +530,8 @@ namespace OpenSim.Services.LLLoginService
                         else
                         {
                             MainConsole.Instance.Error("[LLoginService]: Cannot find an appearance for user " + account.Name + ", setting to the default avatar.");
-                            AvatarAppearance appearance = new AvatarAppearance(account.PrincipalID);
-                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(appearance));
-                            avappearance = appearance;
+                            avappearance = new AvatarAppearance(account.PrincipalID);
+                            m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                         }
                         //avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
@@ -1214,12 +1226,9 @@ namespace OpenSim.Services.LLLoginService
             List<UUID> OtherStuff = new List<UUID>();
             foreach (var i in ic)
             {
-
                 InventoryItemBase linkedItem = null;
                 if ((linkedItem = m_InventoryService.GetItem(new InventoryItemBase(i.AssetID))) == null)
-                {
                     brokenLinks.Add(i.ID);
-                }
                 else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
                             linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
                             linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
@@ -1252,7 +1261,19 @@ namespace OpenSim.Services.LLLoginService
                         }
                         else
                         {
-                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
+                            InventoryItemBase linkedItem3 = new InventoryItemBase();
+                            linkedItem3.AssetID = wearable[ii].ItemID;
+                            linkedItem3.AssetType = (int)AssetType.Link;
+                            linkedItem3.CurrentPermissions = (uint)PermissionMask.All;
+                            linkedItem3.EveryOnePermissions = (uint)PermissionMask.All;
+                            linkedItem3.GroupPermissions = (uint)PermissionMask.All;
+                            linkedItem3.BasePermissions = (uint)PermissionMask.All;
+                            linkedItem3.NextPermissions = (uint)PermissionMask.All;
+                            linkedItem3.Folder = CurrentOutFitFolder.ID;
+                            linkedItem3.CreatorId = user.ToString();
+                            linkedItem3.InvType = (int)InventoryType.Wearable;
+                            m_InventoryService.AddItem(linkedItem3);
+                            //avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                         }
                     }
                 }
