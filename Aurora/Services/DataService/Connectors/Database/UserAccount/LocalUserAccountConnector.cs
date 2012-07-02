@@ -253,7 +253,7 @@ namespace Aurora.Services.DataService
                 data.Email = query[i + 4];
 
                 data.ServiceURLs = new Dictionary<string, object>();
-                if (query[i + 5] != null)
+                if ((query[i + 5] != null) && (query[i + 5].Contains("=")))
                 {
                     Dictionary<string, string> dict = Util.ConvertToDictionary(query[i + 5]);
                     foreach (var v in dict)
