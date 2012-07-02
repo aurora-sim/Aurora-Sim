@@ -606,7 +606,10 @@ namespace OpenSim.Services.MessagingService
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
-                            ipAddress = IPAddress.Parse(ip);
+                            if (!IPAddress.TryParse(ip, out ipAddress))
+#pragma warning disable 618
+                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+#pragma warning restore 618
                         }
                         otherRegionService.AddCAPS(SimSeedCaps);
                         otherRegionsCapsURL = otherRegionService.CapsUrl;
@@ -1266,7 +1269,10 @@ namespace OpenSim.Services.MessagingService
                         if (responseMap.ContainsKey("OurIPForClient"))
                         {
                             string ip = responseMap["OurIPForClient"].AsString();
-                            ipAddress = IPAddress.Parse(ip);
+                            if (!IPAddress.TryParse(ip, out ipAddress))
+#pragma warning disable 618
+                                ipAddress = Dns.GetHostByName(ip).AddressList[0];
+#pragma warning restore 618
                         }
                         region.ExternalEndPoint.Address = ipAddress;
                             //Fix this so that it gets sent to the client that way
