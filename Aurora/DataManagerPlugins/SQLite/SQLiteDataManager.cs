@@ -335,14 +335,17 @@ namespace Aurora.DataManager.SQLite
         private List<string> QueryFullData2(string query)
         {
             var cmd = PrepReader(query);
-            using (IDataReader reader = cmd.ExecuteReader())
+            using (SqliteDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
                 while (reader.Read())
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    if (reader.HasRows)
                     {
-                        RetVal.Add(reader.GetValue(i).ToString());
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            RetVal.Add(reader.GetValue(i).ToString());
+                        }
                     }
                 }
                 //reader.Close();
@@ -423,15 +426,20 @@ namespace Aurora.DataManager.SQLite
 
             var cmd = PrepReader(query);
             AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
+            using (SqliteDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new List<string>();
                 while (reader.Read())
                 {
-                    for (i = 0; i < reader.FieldCount; i++)
+                    if (reader.HasRows)
                     {
-                        Type r = reader[i].GetType();
-                        RetVal.Add(r == typeof(DBNull) ? null : reader[i].ToString());
+                        for (i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (reader[i] == null)
+                                RetVal.Add(null);
+                            else
+                                RetVal.Add(reader[i] == null ? nulll : reader[i].ToString());
+                        }
                     }
                 }
                 //reader.Close();
@@ -466,18 +474,21 @@ namespace Aurora.DataManager.SQLite
             query = query.Remove(query.Length - 5);
             var cmd = PrepReader(query);
             AddParams(ref cmd, ps);
-            using (IDataReader reader = cmd.ExecuteReader())
+            using (SqliteDataReader reader = cmd.ExecuteReader())
             {
                 var RetVal = new Dictionary<string, List<string>>();
                 while (reader.Read())
                 {
-                    for (i = 0; i < reader.FieldCount; i++)
+                    if (reader.HasRows)
                     {
-                        Type r = reader[i].GetType();
-                        if (r == typeof (DBNull))
-                            AddValueToList(ref RetVal, reader.GetName(i), null);
-                        else
-                            AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
+                        for (i = 0; i < reader.FieldCount; i++)
+                        {
+                            Type r = reader[i].GetType();
+                            if (r == typeof(DBNull))
+                                AddValueToList(ref RetVal, reader.GetName(i), null);
+                            else
+                                AddValueToList(ref RetVal, reader.GetName(i), reader[i].ToString());
+                        }
                     }
                 }
                 //reader.Close();
@@ -1146,35 +1157,39 @@ namespace Aurora.DataManager.SQLite
             }
 
             var cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
-            using (IDataReader rdr = cmd.ExecuteReader())
+            using (SqliteDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())
                 {
-                    var name = rdr["name"];
-                    var type = rdr["type"];
-                    object defaultValue = rdr["dflt_value"];
-
-                    ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
-                    typeDef.isNull = uint.Parse(rdr["notnull"].ToString()) == 0;
-                    typeDef.defaultValue = defaultValue == null || defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
-
-                    if (
-                        uint.Parse(rdr["pk"].ToString()) == 1 &&
-                        primary != null &&
-                        isFaux == true &&
-                        primary.Fields.Length == 1 &&
-                        primary.Fields[0].ToLower() == name.ToString().ToLower() &&
-                        (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
-                    )
+                    if (rdr.HasRows)
                     {
-                        typeDef.auto_increment = true;
+
+                        var name = rdr["name"];
+                        var type = rdr["type"];
+                        object defaultValue = rdr["dflt_value"];
+
+                        ColumnTypeDef typeDef = ConvertTypeToColumnType(type.ToString());
+                        typeDef.isNull = uint.Parse(rdr["notnull"].ToString()) == 0;
+                        typeDef.defaultValue = defaultValue == null || defaultValue.GetType() == typeof(System.DBNull) ? null : defaultValue.ToString();
+
+                        if (
+                            uint.Parse(rdr["pk"].ToString()) == 1 &&
+                            primary != null &&
+                            isFaux == true &&
+                            primary.Fields.Length == 1 &&
+                            primary.Fields[0].ToLower() == name.ToString().ToLower() &&
+                            (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
+                        )
+                        {
+                            typeDef.auto_increment = true;
+                        }
+
+                        defs.Add(new ColumnDefinition
+                        {
+                            Name = name.ToString(),
+                            Type = typeDef,
+                        });
                     }
-
-                    defs.Add(new ColumnDefinition
-                    {
-                        Name = name.ToString(),
-                        Type = typeDef,
-                    });
                 }
                 rdr.Close();
             }
@@ -1197,19 +1212,23 @@ namespace Aurora.DataManager.SQLite
             List<string> fields = new List<string>();
 
             SqliteCommand cmd = PrepReader(string.Format("PRAGMA table_info({0})", tableName));
-            using (IDataReader rdr = cmd.ExecuteReader())
+            using (SqliteDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())
                 {
-                    if (uint.Parse(rdr["pk"].ToString()) > 0)
+                    if (rdr.HasRows)
                     {
-                        fields.Add(rdr["name"].ToString());
-                        if (autoIncrementField == null)
+
+                        if (uint.Parse(rdr["pk"].ToString()) > 0)
                         {
-                            ColumnTypeDef typeDef = ConvertTypeToColumnType(rdr["type"].ToString());
-                            if (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
+                            fields.Add(rdr["name"].ToString());
+                            if (autoIncrementField == null)
                             {
-                                autoIncrementField = rdr["name"].ToString();
+                                ColumnTypeDef typeDef = ConvertTypeToColumnType(rdr["type"].ToString());
+                                if (typeDef.Type == ColumnType.Integer || typeDef.Type == ColumnType.TinyInt)
+                                {
+                                    autoIncrementField = rdr["name"].ToString();
+                                }
                             }
                         }
                     }
@@ -1221,11 +1240,12 @@ namespace Aurora.DataManager.SQLite
 
             cmd = PrepReader(string.Format("PRAGMA index_list({0})", tableName));
             Dictionary<string, bool> indices = new Dictionary<string, bool>();
-            using (IDataReader rdr = cmd.ExecuteReader())
+            using (SqliteDataReader rdr = cmd.ExecuteReader())
             {
                 while (rdr.Read())
                 {
-                    indices[rdr["name"].ToString()] = (uint.Parse(rdr["unique"].ToString()) > 0);
+                    if (rdr.HasRows)
+                        indices[rdr["name"].ToString()] = (uint.Parse(rdr["unique"].ToString()) > 0);
                 }
                 rdr.Close();
             }
@@ -1240,11 +1260,12 @@ namespace Aurora.DataManager.SQLite
                 };
                 fields = new List<string>();
                 cmd = PrepReader(string.Format("PRAGMA index_info({0})", index.Key));
-                using (IDataReader rdr = cmd.ExecuteReader())
+                using (SqliteDataReader rdr = cmd.ExecuteReader())
                 {
                     while (rdr.Read())
                     {
-                        fields.Add(rdr["name"].ToString());
+                        if (rdr.HasRows)
+                            fields.Add(rdr["name"].ToString());
                     }
                     rdr.Close();
                 }
