@@ -357,6 +357,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 string DisplayName = account.Name;
                 AvatarAppearance avappearance = null;
+                bool newAvatar = false;
                 IProfileConnector profileData = DataManager.RequestPlugin<IProfileConnector>();
 
                 //
@@ -388,6 +389,7 @@ namespace OpenSim.Services.LLLoginService
                         avappearance.SetWearable((int)WearableType.Shirt, new AvatarWearable(defaultItems[4].ID, defaultItems[4].AssetID));
                         avappearance.SetWearable((int)WearableType.Pants, new AvatarWearable(defaultItems[5].ID, defaultItems[5].AssetID));
                         m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
+                        newAvatar = true;
                     }
                 }
 
@@ -557,17 +559,20 @@ namespace OpenSim.Services.LLLoginService
                             if (messedUp)
                                 avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                         }
-                        //Also verify that all baked texture indices exist
-                        foreach (byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
+                        if (!newAvatar)
                         {
-                            if (BakedTextureIndex == 19) //Skirt isn't used unless you have a skirt
-                                continue;
-                            if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                            //Also verify that all baked texture indices exist
+                            foreach (byte BakedTextureIndex in AvatarAppearance.BAKE_INDICES)
                             {
-                                MainConsole.Instance.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
-                                avappearance = new AvatarAppearance(account.PrincipalID);
-                                m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
-                                break;
+                                if (BakedTextureIndex == 19) //Skirt isn't used unless you have a skirt
+                                    continue;
+                                if (avappearance.Texture.GetFace(BakedTextureIndex).TextureID == AppearanceManager.DEFAULT_AVATAR_TEXTURE)
+                                {
+                                    MainConsole.Instance.Warn("[LLOGIN SERVICE]: Bad texture index for user " + account.Name + " for " + BakedTextureIndex + "!");
+                                    avappearance = new AvatarAppearance(account.PrincipalID);
+                                    m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1261,19 +1266,7 @@ namespace OpenSim.Services.LLLoginService
                         }
                         else
                         {
-                            InventoryItemBase linkedItem3 = new InventoryItemBase();
-                            linkedItem3.AssetID = wearable[ii].ItemID;
-                            linkedItem3.AssetType = (int)AssetType.Link;
-                            linkedItem3.CurrentPermissions = (uint)PermissionMask.All;
-                            linkedItem3.EveryOnePermissions = (uint)PermissionMask.All;
-                            linkedItem3.GroupPermissions = (uint)PermissionMask.All;
-                            linkedItem3.BasePermissions = (uint)PermissionMask.All;
-                            linkedItem3.NextPermissions = (uint)PermissionMask.All;
-                            linkedItem3.Folder = CurrentOutFitFolder.ID;
-                            linkedItem3.CreatorId = user.ToString();
-                            linkedItem3.InvType = (int)InventoryType.Wearable;
-                            m_InventoryService.AddItem(linkedItem3);
-                            //avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
+                            avappearance.Wearables[i] = AvatarWearable.DefaultWearables[i];
                         }
                     }
                 }
@@ -1283,7 +1276,6 @@ namespace OpenSim.Services.LLLoginService
             List<UUID> items2UnAttach = new List<UUID>();
             foreach (KeyValuePair<int, List<AvatarAttachment>> attachmentSpot in avappearance.Attachments)
             {
-
                 foreach (AvatarAttachment attachment in attachmentSpot.Value)
                 {
                     if (!OtherStuff.Contains(attachment.ItemID))

@@ -617,8 +617,8 @@ namespace Aurora.Framework
             for (uint i = 0; i < TEXTURE_COUNT; i++)
             {
                 textures.Add(m_texture.FaceTextures[i] != null
-                                 ? OSD.FromUUID(m_texture.FaceTextures[i].TextureID)
-                                 : OSD.FromUUID(AppearanceManager.DEFAULT_AVATAR_TEXTURE));
+                                    ? OSD.FromUUID(m_texture.FaceTextures[i].TextureID)
+                                    : OSD.FromUUID(AppearanceManager.DEFAULT_AVATAR_TEXTURE));
             }
             data["textures"] = textures;
 
