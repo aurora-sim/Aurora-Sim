@@ -215,7 +215,7 @@ namespace OpenSim.Services.MessagingService
                     AgentData AgentData = new AgentData();
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
-                    string ResponseURL = body["ResponseURL"].AsString();
+                    string ResponseURL = message["ResponseURL"].AsString();
                     if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();
@@ -266,7 +266,7 @@ namespace OpenSim.Services.MessagingService
                     AgentData.Unpack((OSDMap) body["AgentData"]);
                     regionCaps.Disabled = false;
 
-                    string ResponseURL = body["ResponseURL"].AsString();
+                    string ResponseURL = message["ResponseURL"].AsString();
                     if (ResponseURL == "")
                     {
                         OSDMap result = new OSDMap();

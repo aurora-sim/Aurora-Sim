@@ -335,16 +335,19 @@ namespace OpenSim.Services.GridService
             if (remoteValue != null || m_doRemoteOnly) {
                 rr = (RegisterRegion)remoteValue;
                 if (rr != null)
-				{
-                    m_registry.RequestModuleInterface<IConfigurationService> ().AddNewUrls (
-                        regionInfos.RegionHandle.ToString (),
+                {
+                    m_registry.RequestModuleInterface<IConfigurationService>().AddNewUrls(
+                        regionInfos.RegionHandle.ToString(),
                         rr.Urls
                         );
-                    //Set up the external handlers
-                    IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
-                    GridRegistrationService.GridRegistrationURLs grurl = new GridRegistrationService.GridRegistrationURLs();
-                    grurl.FromOSD(rr.RegionRemote);
-                    server.AddStreamHandler(new ServerHandler(grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + regionInfos.ExternalEndPoint.Port, ""), regionInfos.SessionID.ToString(), m_registry));
+                    if (rr.RegionRemote != null)
+                    {
+                        //Set up the external handlers
+                        IHttpServer server = m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(0);
+                        GridRegistrationService.GridRegistrationURLs grurl = new GridRegistrationService.GridRegistrationURLs();
+                        grurl.FromOSD(rr.RegionRemote);
+                        server.AddStreamHandler(new ServerHandler(grurl.URLS["regionURI"].AsString().Replace("http://" + regionInfos.ExternalEndPoint.Address + ":" + regionInfos.ExternalEndPoint.Port, ""), regionInfos.SessionID.ToString(), m_registry));
+                    }
                 }
                 else
                     rr = new RegisterRegion { Error = "Could not reach grid service." };
