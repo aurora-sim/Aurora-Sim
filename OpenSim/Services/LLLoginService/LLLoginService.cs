@@ -325,16 +325,19 @@ namespace OpenSim.Services.LLLoginService
                 account = m_UserAccountService.GetUserAccount(scopeID, Name);
             }
             if (account == null)
+            {
+                MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}: no account found", Name);
                 return LLFailedLoginResponse.AccountProblem;
+            }
+
+            if (account.UserLevel < 0)//No allowing anyone less than 0
+                return LLFailedLoginResponse.PermanentBannedProblem;
 
             if (account.UserLevel < m_MinLoginLevel)
             {
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {1}, reason: login is blocked for user level {0}", account.UserLevel, account.Name);
                 return LLFailedLoginResponse.LoginBlockedProblem;
             }
-
-            if (account.UserLevel < 0)//No allowing anyone less than 0
-                return LLFailedLoginResponse.PermanentBannedProblem;
 
             IAgentInfo agent = null;
             IAgentConnector agentData = DataManager.RequestPlugin<IAgentConnector>();
@@ -475,18 +478,18 @@ namespace OpenSim.Services.LLLoginService
                 }
                 if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
+                    GridRegion DefaultRegion = null;
                     if (m_GridService != null)
                     {
                         if (m_DefaultHomeRegion != "")
                         {
-                            GridRegion newHomeRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
-                            if (newHomeRegion != null)
-                                guinfo.HomeRegionID = guinfo.CurrentRegionID = newHomeRegion.RegionID;
+                            DefaultRegion = m_GridService.GetRegionByName(account.ScopeID, m_DefaultHomeRegion);
+                            if (DefaultRegion != null)
+                                guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
                         }
                         if (guinfo.HomeRegionID == UUID.Zero)
                         {
                             List<GridRegion> DefaultRegions = m_GridService.GetDefaultRegions(account.ScopeID);
-                            GridRegion DefaultRegion = null;
                             DefaultRegion = DefaultRegions.Count == 0 ? null : DefaultRegions[0];
 
                             if (DefaultRegion != null)
@@ -501,6 +504,9 @@ namespace OpenSim.Services.LLLoginService
 
                     m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
                     m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
+
+                    MainConsole.Instance.Info("[LLLoginService]: User did not have a home, set to " +
+                        DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName);
                 }
 
                 //
