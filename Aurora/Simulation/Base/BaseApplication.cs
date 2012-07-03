@@ -258,37 +258,42 @@ namespace Aurora.Simulation.Base
                     string mode = "1";
                     string dbregion = "1";
                     string worldName = "Aurora-Sim";
+                    string DefaultRegion = "Aurora";
+                    string registrationURL = "127.0.0.1";
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine("====================================================================\n");
             Console.WriteLine("========================= AURORA CONFIGURATOR ======================\n");
             Console.WriteLine("====================================================================\n");
             Console.ResetColor();
-
-            Console.Write("This installation is going to run in \n");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write("[1] Standalone Mode \n[2] Grid Mode");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("\nChoose 1 or 2 [1]: ");
-            Console.ForegroundColor = ConsoleColor.Green;
-            mode = Console.ReadLine();
-            if (mode == string.Empty)
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
             {
-                mode = "1";
+                Console.Write("This installation is going to run in \n");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("[1] Standalone Mode \n[2] Grid Mode");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nChoose 1 or 2 [1]: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                mode = Console.ReadLine();
+                if (mode == string.Empty)
+                {
+                    mode = "1";
+                }
+                if (mode != null) mode = mode.Trim();
+                Console.ResetColor();
+                Console.Write("Which database do you want to use for the region ? \n(this will not affect Aurora.Server)");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("\n[1] MySQL \n[2] SQLite");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nChoose 1 or 2 [1]: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                dbregion = Console.ReadLine();
+                if (dbregion == string.Empty)
+                {
+                    dbregion = "1";
+                }
+                if (dbregion != null) dbregion = dbregion.Trim();
             }
-            if (mode != null) mode = mode.Trim();
-            Console.ResetColor();
-            Console.Write("Which database do you want to use for the region ? \n(this will not affect Aurora.Server)");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write("\n[1] MySQL \n[2] SQLite");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("\nChoose 1 or 2 [1]: ");
-            Console.ForegroundColor = ConsoleColor.Green;
-            dbregion = Console.ReadLine();
-            if (dbregion == string.Empty)
-            {
-                dbregion = "1";
-            }
-            if (dbregion != null) dbregion = dbregion.Trim();
             Console.ResetColor();
             Console.Write("Name of your Aurora-Sim Grid: ");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -296,77 +301,125 @@ namespace Aurora.Simulation.Base
             worldName = Console.ReadLine();
             if (worldName != null) worldName = worldName == string.Empty ? "My Aurora" : worldName.Trim();
             Console.ResetColor();
-            if (dbregion != null && dbregion.Equals("1"))
+            Console.Write("Name of Default Region for your grid: ");
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            DefaultRegion = Console.ReadLine();
+            if (DefaultRegion != null) DefaultRegion = DefaultRegion == string.Empty ? "Aurora" : DefaultRegion.Trim();
+            Console.ResetColor();
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
             {
-                Console.Write("MySql database name for your region: [aurora]");
-                Console.ForegroundColor = ConsoleColor.Green;
+                        mode = "2";
+                        Console.ResetColor();
+                        Console.Write("MySql database name for Aurora.Server: [aurora]");
+                        Console.ForegroundColor = ConsoleColor.Green;
 
-                string str2 = Console.ReadLine();
-                if (str2 != string.Empty)
-                {
-                    dbSchema = str2;
-                }
+                        string str5 = Console.ReadLine();
+                        if (str5 != string.Empty)
+                        {
+                            dbSchema = str5;
+                        }
+
+                        Console.ResetColor();
+                        Console.Write("MySql database IP: [localhost]");
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        string str6 = Console.ReadLine();
+                        if (str6 != string.Empty)
+                        {
+                            dbSource = str6;
+                        }
+                        Console.ResetColor();
+                        Console.Write("MySql database user account: [aurora]");
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        string str7 = Console.ReadLine();
+                        if (str7 != string.Empty)
+                        {
+                            dbUser = str7;
+                        }
+                        Console.ResetColor();
+                        Console.Write("MySql database password for that account: ");
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        dbPasswd = Console.ReadLine();
+               
 
                 Console.ResetColor();
-                Console.Write("MySql database IP: [localhost]");
+                Console.Write("Your external domain name (preferred) or IP address: [" + Framework.Utilities.GetExternalIp() + "]");
                 Console.ForegroundColor = ConsoleColor.Green;
 
-                string str3 = Console.ReadLine();
-                if (str3 != string.Empty)
+                ipAddress = Console.ReadLine();
+                if (ipAddress == string.Empty)
                 {
-                    dbSource = str3;
+                    ipAddress = Framework.Utilities.GetExternalIp();
                 }
                 Console.ResetColor();
-                Console.Write("MySql database user account: [aurora]");
+                Console.Write("This installation is going to run on");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("\n[1] .NET/Windows \n[2] *ix/Mono");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("\nChoose 1 or 2 [1]: ");
                 Console.ForegroundColor = ConsoleColor.Green;
 
-                string str4 = Console.ReadLine();
-                if (str4 != string.Empty)
-                {
-                    dbUser = str4;
-                }
-                Console.ResetColor();
-                Console.Write("MySql database password for that account: ");
-                Console.ForegroundColor = ConsoleColor.Green;
-
-                dbPasswd = Console.ReadLine();
+                platform = Console.ReadLine();
+                if (platform == string.Empty)
+                    platform = "1";
+                if (platform != null) platform = platform.Trim();
             }
-            if (mode != null && mode.Equals("2"))
+
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
             {
-                Console.ResetColor();
-                Console.Write("MySql database name for Aurora.Server: [aurora]");
-                Console.ForegroundColor = ConsoleColor.Green;
-
-                string str5 = Console.ReadLine();
-                if (str5 != string.Empty)
+                if (dbregion != null && dbregion.Equals("1"))
                 {
-                    dbSchema = str5;
+                    Console.Write("MySql database name for your region: [aurora]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    string str2 = Console.ReadLine();
+                    if (str2 != string.Empty)
+                    {
+                        dbSchema = str2;
+                    }
+
+                    Console.ResetColor();
+                    Console.Write("MySql database IP: [localhost]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    string str3 = Console.ReadLine();
+                    if (str3 != string.Empty)
+                    {
+                        dbSource = str3;
+                    }
+                    Console.ResetColor();
+                    Console.Write("MySql database user account: [aurora]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    string str4 = Console.ReadLine();
+                    if (str4 != string.Empty)
+                    {
+                        dbUser = str4;
+                    }
+                    Console.ResetColor();
+                    Console.Write("MySql database password for that account: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    dbPasswd = Console.ReadLine();
                 }
-
-                Console.ResetColor();
-                Console.Write("MySql database IP: [localhost]");
-                Console.ForegroundColor = ConsoleColor.Green;
-
-                string str6 = Console.ReadLine();
-                if (str6 != string.Empty)
+            
+                if (mode != null && mode.Equals("2"))
                 {
-                    dbSource = str6;
-                }
-                Console.ResetColor();
-                Console.Write("MySql database user account: [aurora]");
-                Console.ForegroundColor = ConsoleColor.Green;
+                    Console.ResetColor();
+                    Console.Write("RegistrationURL of the Grid you want to join (Please refer to Grid Owners for this URL : this has to be the same of AuroraServer HostName: [" + Framework.Utilities.GetExternalIp() + "]");
+                    Console.ForegroundColor = ConsoleColor.Green;
 
-                string str7 = Console.ReadLine();
-                if (str7 != string.Empty)
-                {
-                    dbUser = str7;
-                }
-                Console.ResetColor();
-                Console.Write("MySql database password for that account: ");
-                Console.ForegroundColor = ConsoleColor.Green;
-
-                dbPasswd = Console.ReadLine();
-            }
+                    registrationURL = Console.ReadLine();
+                    if (registrationURL == string.Empty)
+                    {
+                        registrationURL = Framework.Utilities.GetExternalIp();
+                    }
+                }       
             Console.ResetColor();
             Console.Write("Your external domain name (preferred) or IP address: [" + Framework.Utilities.GetExternalIp() + "]");
             Console.ForegroundColor = ConsoleColor.Green;
@@ -383,12 +436,12 @@ namespace Aurora.Simulation.Base
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("\nChoose 1 or 2 [1]: ");
             Console.ForegroundColor = ConsoleColor.Green;
-
+            
             platform = Console.ReadLine();
             if (platform == string.Empty)
                 platform = "1";
             if (platform != null) platform = platform.Trim();
-            
+            }
             string str8 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
             try
             {
@@ -403,9 +456,9 @@ namespace Aurora.Simulation.Base
                             {
                                 str2 = str8;
                             }
-                            if (str2.Contains("127.0.0.1"))
+                            if (str2.Contains(";HostName = 127.0.0.1") && mode.Equals("1"))
                             {
-                                str2 = str2.Replace("127.0.0.1", ipAddress);
+                                str2 = str2.Replace(";HostName = 127.0.0.1", "HostName = " + ipAddress);
                             }
                             if (str2.Contains("NoGUI = false") && platform.Equals("2"))
                             {
@@ -433,14 +486,17 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your Aurora.ini has been successfully configured");
-            
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                {
+                Console.WriteLine("Your Aurora.ini has been successfully configured");
+                }
         
             string str9 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
             
-                using (TextReader reader = new StreamReader("AuroraServer.ini.example"))
+                using (TextReader reader = new StreamReader("Aurora.Server.ini.example"))
                 {
-                    using (TextWriter writer = new StreamWriter("AuroraServer.ini"))
+                    using (TextWriter writer = new StreamWriter("Aurora.Server.ini"))
                     {
                         string str4;
                         while ((str4 = reader.ReadLine()) != null)
@@ -453,15 +509,22 @@ namespace Aurora.Simulation.Base
                             {
                                 str4 = str4.Replace("127.0.0.1", ipAddress);
                             }
+                            if (str4.Contains(";Region_RegionName"))
+                            {
+                                str4 = str4.Replace(";Region_RegionName", "Region_" + DefaultRegion );
+                            }
                             writer.WriteLine(str4);
                         }
                     }
                 }
-            
-            
+                        
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AuroraServer.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                {
+                Console.WriteLine("Your Aurora.Server.ini has been successfully configured");
+                }
+
             using (TextReader reader = new StreamReader("Configuration/Data/Data.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("Configuration/Data/Data.ini"))
@@ -484,8 +547,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your Data.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                {
+                Console.WriteLine("Your Data.ini has been successfully configured");
+                }
+
             using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/Data.ini"))
@@ -508,8 +575,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AuroraServer Data.ini has been successfully configured");
-    
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+            Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+            {
+                Console.WriteLine("Your AuroraServer Data.ini has been successfully configured");
+            }
+                
             using (TextReader reader = new StreamReader("Configuration/Main.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("Configuration/Main.ini"))
@@ -531,8 +602,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your Main.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+            {
+                Console.WriteLine("Your Main.ini has been successfully configured");
+            }
+                    
             using (TextReader reader = new StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("Configuration/Standalone/StandaloneCommon.ini"))
@@ -540,9 +615,21 @@ namespace Aurora.Simulation.Base
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
                         {
+                            if (str2.Contains(";login = http://127.0.0.1:9000/"))
+                            {
+                                str2 = str2.Replace(";login = http://127.0.0.1:9000/", "login = http://" + ipAddress + ":9000/");
+                            }
                             if (str2.Contains("127.0.0.1"))
                             {
                                 str2 = str2.Replace("127.0.0.1", ipAddress);
+                            }
+                            if (str2.Contains("Region_Aurora ="))
+                            {
+                                str2 = str2.Replace("Region_Aurora =", "Region_" + DefaultRegion + " =");
+                            }
+                            if (str2.Contains("DefaultHomeRegion = \"\""))
+                            {
+                                str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + DefaultRegion + "\"");
                             }
                             if (str2.Contains("My Aurora Simulator"))
                             {
@@ -560,9 +647,13 @@ namespace Aurora.Simulation.Base
                         }
                     }
                 }
-            
-            Console.WriteLine("Your StandaloneCommon.ini has been successfully configured");
-   
+
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe" && mode.Equals("1"))
+            {
+                Console.WriteLine("Your StandaloneCommon.ini has been successfully configured");
+            }
+                   
             using (TextReader reader = new StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("Configuration/Grid/AuroraGridCommon.ini"))
@@ -572,7 +663,7 @@ namespace Aurora.Simulation.Base
                         {
                             if (str2.Contains("127.0.0.1"))
                             {
-                                str2 = str2.Replace("127.0.0.1", ipAddress);
+                                str2 = str2.Replace("127.0.0.1", registrationURL);
                             }
 
                             writer.WriteLine(str2);
@@ -581,9 +672,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AuroraGridCommon.ini has been successfully configured");
-        
-
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+    Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe" && mode.Equals("2"))
+            {
+                Console.WriteLine("Your AuroraGridCommon.ini has been successfully configured");
+            }
+            
             using (TextReader reader = new StreamReader("Configuration/Data/MySQL.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("Configuration/Data/MySQL.ini"))
@@ -606,8 +700,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your MySQL.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+            {
+                Console.WriteLine("Your MySQL.ini has been successfully configured");
+            }
+                    
             using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/MySQL.ini"))
@@ -630,8 +728,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your AuroraServer MySQL.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+            {
+                Console.WriteLine("Your AuroraServer MySQL.ini has been successfully configured");
+            }
+                    
                 using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
                 {
                     using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini"))
@@ -642,6 +744,10 @@ namespace Aurora.Simulation.Base
                             if (str2.Contains("Welcome to Aurora Simulator"))
                             {
                                 str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
+                            }
+                            if (str2.Contains("DefaultHomeRegion = \"\""))
+                            {
+                                str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + DefaultRegion + "\"");
                             }
                             writer.WriteLine(str2);
                         }
@@ -658,6 +764,10 @@ namespace Aurora.Simulation.Base
                         string str2;
                         while ((str2 = reader.ReadLine()) != null)
                         {
+                            if (str2.Contains(";login = http://127.0.0.1:8002/"))
+                            {
+                                str2 = str2.Replace(";login = http://127.0.0.1:8002/", "login = http://" + ipAddress + ":8002/");
+                            }
                             if (str2.Contains("127.0.0.1"))
                             {
                                 str2 = str2.Replace("127.0.0.1", ipAddress);
@@ -676,8 +786,12 @@ namespace Aurora.Simulation.Base
                 }
             
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Your GridInfoService.ini has been successfully configured");
-        
+            if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+            {
+                Console.WriteLine("Your GridInfoService.ini has been successfully configured");
+            }
+                    
             if (mode.Equals("2"))
             {
                 Console.ForegroundColor = ConsoleColor.Green;
@@ -725,9 +839,8 @@ namespace Aurora.Simulation.Base
                 catch
                 {
                 }
-            }
-                
-          }
+           }     
+         }
             
         }
 
@@ -740,23 +853,26 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance = new LocalConsole();
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("\n\n*************Running Aurora.Configurator*************");
-                
-                    string dbSource = "localhost";
-                    string dbPasswd = "aurora";
-                    string dbSchema = "aurora";
-                    string dbUser = "aurora";
-                    string ipAddress = Framework.Utilities.GetExternalIp();
-                    string platform = "1";
-                    string mode = "1";
-                    string dbregion = "1";
-                    string worldName = "Aurora-Sim";
-                    string regionFlag = "Aurora";
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
-                    Console.WriteLine("====================================================================\n");
-                    Console.WriteLine("========================= AURORA CONFIGURATOR ======================\n");
-                    Console.WriteLine("====================================================================\n");
-                    Console.ResetColor();
 
+                string dbSource = "localhost";
+                string dbPasswd = "aurora";
+                string dbSchema = "aurora";
+                string dbUser = "aurora";
+                string ipAddress = Framework.Utilities.GetExternalIp();
+                string platform = "1";
+                string mode = "1";
+                string dbregion = "1";
+                string worldName = "Aurora-Sim";
+                string DefaultRegion = "Aurora";
+                string registrationURL = "127.0.0.1";
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine("====================================================================\n");
+                Console.WriteLine("========================= AURORA CONFIGURATOR ======================\n");
+                Console.WriteLine("====================================================================\n");
+                Console.ResetColor();
+                if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                    Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                {
                     Console.Write("This installation is going to run in \n");
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("[1] Standalone Mode \n[2] Grid Mode");
@@ -782,13 +898,85 @@ namespace Aurora.Simulation.Base
                         dbregion = "1";
                     }
                     if (dbregion != null) dbregion = dbregion.Trim();
+                }
+                Console.ResetColor();
+                Console.Write("Name of your Aurora-Sim Grid: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                worldName = Console.ReadLine();
+                if (worldName != null) worldName = worldName == string.Empty ? "My Aurora" : worldName.Trim();
+                Console.ResetColor();
+                Console.Write("Name of Default Region for your grid: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+
+                DefaultRegion = Console.ReadLine();
+                if (DefaultRegion != null) DefaultRegion = DefaultRegion == string.Empty ? "Aurora" : DefaultRegion.Trim();
+                Console.ResetColor();
+                if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                    Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                {
+                    mode = "2";
                     Console.ResetColor();
-                    Console.Write("Name of your Aurora-Sim: ");
+                    Console.Write("MySql database name for Aurora.Server: [aurora]");
                     Console.ForegroundColor = ConsoleColor.Green;
 
-                    worldName = Console.ReadLine();
-                    if (worldName != null) worldName = worldName == string.Empty ? "My Aurora" : worldName.Trim();
+                    string str5 = Console.ReadLine();
+                    if (str5 != string.Empty)
+                    {
+                        dbSchema = str5;
+                    }
+
                     Console.ResetColor();
+                    Console.Write("MySql database IP: [localhost]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    string str6 = Console.ReadLine();
+                    if (str6 != string.Empty)
+                    {
+                        dbSource = str6;
+                    }
+                    Console.ResetColor();
+                    Console.Write("MySql database user account: [aurora]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    string str7 = Console.ReadLine();
+                    if (str7 != string.Empty)
+                    {
+                        dbUser = str7;
+                    }
+                    Console.ResetColor();
+                    Console.Write("MySql database password for that account: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    dbPasswd = Console.ReadLine();
+
+
+                    Console.ResetColor();
+                    Console.Write("Your external domain name (preferred) or IP address: [" + Framework.Utilities.GetExternalIp() + "]");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    ipAddress = Console.ReadLine();
+                    if (ipAddress == string.Empty)
+                    {
+                        ipAddress = Framework.Utilities.GetExternalIp();
+                    }
+                    Console.ResetColor();
+                    Console.Write("This installation is going to run on");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("\n[1] .NET/Windows \n[2] *ix/Mono");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("\nChoose 1 or 2 [1]: ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+
+                    platform = Console.ReadLine();
+                    if (platform == string.Empty)
+                        platform = "1";
+                    if (platform != null) platform = platform.Trim();
+                }
+
+                if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                    Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                {
                     if (dbregion != null && dbregion.Equals("1"))
                     {
                         Console.Write("MySql database name for your region: [aurora]");
@@ -824,41 +1012,18 @@ namespace Aurora.Simulation.Base
 
                         dbPasswd = Console.ReadLine();
                     }
+
                     if (mode != null && mode.Equals("2"))
                     {
                         Console.ResetColor();
-                        Console.Write("MySql database name for Aurora.Server: [aurora]");
+                        Console.Write("RegistrationURL of the Grid you want to join (Please refer to Grid Owners for this URL : this has to be the same of AuroraServer HostName: [" + Framework.Utilities.GetExternalIp() + "]");
                         Console.ForegroundColor = ConsoleColor.Green;
 
-                        string str5 = Console.ReadLine();
-                        if (str5 != string.Empty)
+                        registrationURL = Console.ReadLine();
+                        if (registrationURL == string.Empty)
                         {
-                            dbSchema = str5;
+                            registrationURL = Framework.Utilities.GetExternalIp();
                         }
-
-                        Console.ResetColor();
-                        Console.Write("MySql database IP: [localhost]");
-                        Console.ForegroundColor = ConsoleColor.Green;
-
-                        string str6 = Console.ReadLine();
-                        if (str6 != string.Empty)
-                        {
-                            dbSource = str6;
-                        }
-                        Console.ResetColor();
-                        Console.Write("MySql database user account: [aurora]");
-                        Console.ForegroundColor = ConsoleColor.Green;
-
-                        string str7 = Console.ReadLine();
-                        if (str7 != string.Empty)
-                        {
-                            dbUser = str7;
-                        }
-                        Console.ResetColor();
-                        Console.Write("MySql database password for that account: ");
-                        Console.ForegroundColor = ConsoleColor.Green;
-
-                        dbPasswd = Console.ReadLine();
                     }
                     Console.ResetColor();
                     Console.Write("Your external domain name (preferred) or IP address: [" + Framework.Utilities.GetExternalIp() + "]");
@@ -870,15 +1035,6 @@ namespace Aurora.Simulation.Base
                         ipAddress = Framework.Utilities.GetExternalIp();
                     }
                     Console.ResetColor();
-                    Console.Write("The name you will use for your Welcome Land: ");
-                    Console.ForegroundColor = ConsoleColor.Green;
-
-                    regionFlag = Console.ReadLine();
-                    if (regionFlag == string.Empty)
-                    {
-                        regionFlag = "Aurora";
-                    }
-                    Console.ResetColor();
                     Console.Write("This installation is going to run on");
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("\n[1] .NET/Windows \n[2] *ix/Mono");
@@ -888,380 +1044,407 @@ namespace Aurora.Simulation.Base
 
                     platform = Console.ReadLine();
                     if (platform == string.Empty)
-                    {
                         platform = "1";
-                    }
                     if (platform != null) platform = platform.Trim();
-
-                    string str8 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
-                    try
-                    {
-                        using (TextReader reader = new StreamReader("Aurora.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Aurora.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Define-<HostName>"))
-                                    {
-                                        str2 = str8;
-                                    }
-                                    if (str2.Contains("127.0.0.1"))
-                                    {
-                                        str2 = str2.Replace("127.0.0.1", ipAddress);
-                                    }
-                                    if (str2.Contains("NoGUI = false") && platform.Equals("2"))
-                                    {
-                                        str2 = str2.Replace("NoGUI = false", "NoGUI = true");
-                                    }
-                                    if (str2.Contains("Default = RegionLoaderDataBaseSystem") && platform.Equals("2"))
-                                    {
-                                        str2 = str2.Replace("Default = RegionLoaderDataBaseSystem", "Default = RegionLoaderFileSystem");
-                                    }
-                                    if (str2.Contains("RegionLoaderDataBaseSystem_Enabled = true") && platform.Equals("2"))
-                                    {
-                                        str2 = str2.Replace("RegionLoaderDataBaseSystem_Enabled = true", "RegionLoaderDataBaseSystem_Enabled = false");
-                                    }
-                                    if (str2.Contains("RegionLoaderFileSystem_Enabled = false") && platform.Equals("2"))
-                                    {
-                                        str2 = str2.Replace("RegionLoaderFileSystem_Enabled = false", "RegionLoaderFileSystem_Enabled = true");
-                                    }
-                                    if (str2.Contains("RegionLoaderWebServer_Enabled = true") && platform.Equals("2"))
-                                    {
-                                        str2 = str2.Replace("RegionLoaderWebServer_Enabled = true", "RegionLoaderWebServer_Enabled = false");
-                                    }
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Aurora.ini has been successfully configured");
-
-
-                        string str9 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
-
-                        using (TextReader reader = new StreamReader("AuroraServer.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("AuroraServer.ini"))
-                            {
-                                string str4;
-                                while ((str4 = reader.ReadLine()) != null)
-                                {
-                                    if (str4.Contains("Define-<HostName>"))
-                                    {
-                                        str4 = str9;
-                                    }
-                                    if (str4.Contains("127.0.0.1"))
-                                    {
-                                        str4 = str4.Replace("127.0.0.1", ipAddress);
-                                    }
-                                    if (str4.Contains("Region_RegionName ="))
-                                    {
-                                        str4 = str4.Replace("Region_RegionName =", "Region_" + regionFlag.Replace(' ', '_') + " =");
-                                    }
-                                    writer.WriteLine(str4);
-                                }
-                            }
-                        }
-
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your AuroraServer.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("Configuration/Data/Data.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Configuration/Data/Data.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Include-SQLite = Configuration/Data/SQLite.ini") && dbregion.Equals("1"))
-                                    {
-                                        str2 = str2.Replace("Include-SQLite = Configuration/Data/SQLite.ini", ";Include-SQLite = Configuration/Data/SQLite.ini");
-                                    }
-                                    if (str2.Contains(";Include-MySQL = Configuration/Data/MySQL.ini") && dbregion.Equals("1"))
-                                    {
-                                        str2 = str2.Replace(";Include-MySQL = Configuration/Data/MySQL.ini", "Include-MySQL = Configuration/Data/MySQL.ini");
-                                    }
-
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Data.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/Data.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini"))
-                                    {
-                                        str2 = str2.Replace("Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini", ";Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini");
-                                    }
-                                    if (str2.Contains(";Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini"))
-                                    {
-                                        str2 = str2.Replace(";Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini", "Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini");
-                                    }
-
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your AuroraServer Data.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("Configuration/Main.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Configuration/Main.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Include-Standalone = Configuration/Standalone/StandaloneCommon.ini") && (mode.Equals("2")))
-                                    {
-                                        str2 = str2.Replace("Include-Standalone = Configuration/Standalone/StandaloneCommon.ini", ";Include-Standalone = Configuration/Standalone/StandaloneCommon.ini");
-                                    }
-                                    if (str2.Contains(";Include-Grid = Configuration/Grid/AuroraGridCommon.ini") && (mode.Equals("2")))
-                                    {
-                                        str2 = str2.Replace(";Include-Grid = Configuration/Grid/AuroraGridCommon.ini", "Include-Grid = Configuration/Grid/AuroraGridCommon.ini");
-                                    }
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Main.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Configuration/Standalone/StandaloneCommon.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Region_Aurora ="))
-                                    {
-                                        str2 = str2.Replace("Region_Aurora =", "Region_" + regionFlag.Replace(' ', '_') + " =");
-                                    }
-                                    if (str2.Contains("127.0.0.1"))
-                                    {
-                                        str2 = str2.Replace("127.0.0.1", ipAddress);
-                                    }
-                                    if (str2.Contains("My Aurora Simulator"))
-                                    {
-                                        str2 = str2.Replace("My Aurora Simulator", worldName);
-                                    }
-                                    if (str2.Contains("AuroraSim"))
-                                    {
-                                        str2 = str2.Replace("AuroraSim", worldName);
-                                    }
-                                    if (str2.Contains("Welcome to Aurora Simulator"))
-                                    {
-                                        str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
-                                    }
-                                    if (str2.Contains("AllowAnonymousLogin = false"))
-                                    {
-                                        str2 = str2.Replace("AllowAnonymousLogin = false", "AllowAnonymousLogin = true");
-                                    }
-                                    if (str2.Contains("DefaultHomeRegion = "))
-                                    {
-                                        str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + regionFlag + "\"");
-                                    }
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.WriteLine("Your StandaloneCommon.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Configuration/Grid/AuroraGridCommon.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("127.0.0.1"))
-                                    {
-                                        str2 = str2.Replace("127.0.0.1", ipAddress);
-                                    }
-
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your AuroraGridCommon.ini has been successfully configured");
-
-
-                        using (TextReader reader = new StreamReader("Configuration/Data/MySQL.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("Configuration/Data/MySQL.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
-                                    {
-                                        str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
-                                    }
-                                    if (str2.Contains("Data Source=localhost"))
-                                    {
-                                        str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
-                                    }
-
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your MySQL.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/MySQL.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
-                                    {
-                                        str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
-                                    }
-                                    if (str2.Contains("Data Source=localhost"))
-                                    {
-                                        str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
-                                    }
-
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your AuroraServer MySQL.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("Welcome to Aurora Simulator"))
-                                    {
-                                        str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
-                                    }
-                                    if (str2.Contains("AllowAnonymousLogin = false"))
-                                    {
-                                        str2 = str2.Replace("AllowAnonymousLogin = false", "AllowAnonymousLogin = true");
-                                    }
-                                    if (str2.Contains("DefaultHomeRegion = "))
-                                    {
-                                        str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + regionFlag + "\"");
-                                    }
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your Login.ini has been successfully configured");
-
-                        using (TextReader reader = new StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
-                        {
-                            using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/GridInfoService.ini"))
-                            {
-                                string str2;
-                                while ((str2 = reader.ReadLine()) != null)
-                                {
-                                    if (str2.Contains("127.0.0.1"))
-                                    {
-                                        str2 = str2.Replace("127.0.0.1", ipAddress);
-                                    }
-                                    if (str2.Contains("the lost continent of hippo"))
-                                    {
-                                        str2 = str2.Replace("the lost continent of hippo", worldName);
-                                    }
-                                    if (str2.Contains("hippogrid"))
-                                    {
-                                        str2 = str2.Replace("hippogrid", worldName);
-                                    }
-                                    writer.WriteLine(str2);
-                                }
-                            }
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Your GridInfoService.ini has been successfully configured");
-
-                        if (mode.Equals("2"))
-                        {
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("====================================================================\n");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("Your world is ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine(worldName);
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("\nYour loginuri is ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("http://" + ipAddress + ":8002/");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("\nThis is the Registration URL: ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("http://" + ipAddress + ":8003/");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("\nReloading configs for Aurora.Server... ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("Done !");
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("====================================================================\n");
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                        }
-                        else if (mode.Equals("1"))
-                        {
-
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("====================================================================\n");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("Your world is ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine(worldName);
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("\nYour loginuri is ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("http://" + ipAddress + ":9000/");
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.WriteLine("\nReloading Configs for Aurora.... ");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("Done !!!");
-                            Console.ForegroundColor = ConsoleColor.White;
-
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("====================================================================\n");
-                            Console.ForegroundColor = ConsoleColor.White;
-                        }
-
-                    }
-                    catch
-                    {
-                    }
                 }
+                string str8 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
+                try
+                {
+                    using (TextReader reader = new StreamReader("Aurora.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Aurora.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Define-<HostName>"))
+                                {
+                                    str2 = str8;
+                                }
+                                if (str2.Contains(";HostName = 127.0.0.1") && mode.Equals("1"))
+                                {
+                                    str2 = str2.Replace(";HostName = 127.0.0.1", "HostName = " + ipAddress);
+                                }
+                                if (str2.Contains("NoGUI = false") && platform.Equals("2"))
+                                {
+                                    str2 = str2.Replace("NoGUI = false", "NoGUI = true");
+                                }
+                                if (str2.Contains("Default = RegionLoaderDataBaseSystem") && platform.Equals("2"))
+                                {
+                                    str2 = str2.Replace("Default = RegionLoaderDataBaseSystem", "Default = RegionLoaderFileSystem");
+                                }
+                                if (str2.Contains("RegionLoaderDataBaseSystem_Enabled = true") && platform.Equals("2"))
+                                {
+                                    str2 = str2.Replace("RegionLoaderDataBaseSystem_Enabled = true", "RegionLoaderDataBaseSystem_Enabled = false");
+                                }
+                                if (str2.Contains("RegionLoaderFileSystem_Enabled = false") && platform.Equals("2"))
+                                {
+                                    str2 = str2.Replace("RegionLoaderFileSystem_Enabled = false", "RegionLoaderFileSystem_Enabled = true");
+                                }
+                                if (str2.Contains("RegionLoaderWebServer_Enabled = true") && platform.Equals("2"))
+                                {
+                                    str2 = str2.Replace("RegionLoaderWebServer_Enabled = true", "RegionLoaderWebServer_Enabled = false");
+                                }
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                    {
+                        Console.WriteLine("Your Aurora.ini has been successfully configured");
+                    }
+
+                    string str9 = string.Format("Define-<HostName> = \"{0}\"", ipAddress);
+
+                    using (TextReader reader = new StreamReader("Aurora.Server.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Aurora.Server.ini"))
+                        {
+                            string str4;
+                            while ((str4 = reader.ReadLine()) != null)
+                            {
+                                if (str4.Contains("Define-<HostName>"))
+                                {
+                                    str4 = str9;
+                                }
+                                if (str4.Contains("127.0.0.1"))
+                                {
+                                    str4 = str4.Replace("127.0.0.1", ipAddress);
+                                }
+                                if (str4.Contains(";Region_RegionName"))
+                                {
+                                    str4 = str4.Replace(";Region_RegionName", "Region_" + DefaultRegion);
+                                }
+                                writer.WriteLine(str4);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                    {
+                        Console.WriteLine("Your Aurora.Server.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("Configuration/Data/Data.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Configuration/Data/Data.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Include-SQLite = Configuration/Data/SQLite.ini") && dbregion.Equals("1"))
+                                {
+                                    str2 = str2.Replace("Include-SQLite = Configuration/Data/SQLite.ini", ";Include-SQLite = Configuration/Data/SQLite.ini");
+                                }
+                                if (str2.Contains(";Include-MySQL = Configuration/Data/MySQL.ini") && dbregion.Equals("1"))
+                                {
+                                    str2 = str2.Replace(";Include-MySQL = Configuration/Data/MySQL.ini", "Include-MySQL = Configuration/Data/MySQL.ini");
+                                }
+
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                    {
+                        Console.WriteLine("Your Data.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/Data.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/Data.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini"))
+                                {
+                                    str2 = str2.Replace("Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini", ";Include-SQLite = AuroraServerConfiguration/Data/SQLite.ini");
+                                }
+                                if (str2.Contains(";Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini"))
+                                {
+                                    str2 = str2.Replace(";Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini", "Include-MySQL = AuroraServerConfiguration/Data/MySQL.ini");
+                                }
+
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+                    Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                    {
+                        Console.WriteLine("Your AuroraServer Data.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("Configuration/Main.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Configuration/Main.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Include-Standalone = Configuration/Standalone/StandaloneCommon.ini") && (mode.Equals("2")))
+                                {
+                                    str2 = str2.Replace("Include-Standalone = Configuration/Standalone/StandaloneCommon.ini", ";Include-Standalone = Configuration/Standalone/StandaloneCommon.ini");
+                                }
+                                if (str2.Contains(";Include-Grid = Configuration/Grid/AuroraGridCommon.ini") && (mode.Equals("2")))
+                                {
+                                    str2 = str2.Replace(";Include-Grid = Configuration/Grid/AuroraGridCommon.ini", "Include-Grid = Configuration/Grid/AuroraGridCommon.ini");
+                                }
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                    {
+                        Console.WriteLine("Your Main.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("Configuration/Standalone/StandaloneCommon.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Configuration/Standalone/StandaloneCommon.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains(";login = http://127.0.0.1:9000/"))
+                                {
+                                    str2 = str2.Replace(";login = http://127.0.0.1:9000/", "login = http://" + ipAddress + ":9000/");
+                                }
+                                if (str2.Contains("127.0.0.1"))
+                                {
+                                    str2 = str2.Replace("127.0.0.1", ipAddress);
+                                }
+                                if (str2.Contains("Region_Aurora ="))
+                                {
+                                    str2 = str2.Replace("Region_Aurora =", "Region_" + DefaultRegion + " =");
+                                }
+                                if (str2.Contains("DefaultHomeRegion = \"\""))
+                                {
+                                    str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + DefaultRegion + "\"");
+                                }
+                                if (str2.Contains("My Aurora Simulator"))
+                                {
+                                    str2 = str2.Replace("My Aurora Simulator", worldName);
+                                }
+                                if (str2.Contains("AuroraSim"))
+                                {
+                                    str2 = str2.Replace("AuroraSim", worldName);
+                                }
+                                if (str2.Contains("Welcome to Aurora Simulator"))
+                                {
+                                    str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
+                                }
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+                Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe" && mode.Equals("1"))
+                    {
+                        Console.WriteLine("Your StandaloneCommon.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("Configuration/Grid/AuroraGridCommon.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Configuration/Grid/AuroraGridCommon.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("127.0.0.1"))
+                                {
+                                    str2 = str2.Replace("127.0.0.1", registrationURL);
+                                }
+
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+            Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe" && mode.Equals("2"))
+                    {
+                        Console.WriteLine("Your AuroraGridCommon.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("Configuration/Data/MySQL.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("Configuration/Data/MySQL.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
+                                {
+                                    str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
+                                }
+                                if (str2.Contains("Data Source=localhost"))
+                                {
+                                    str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
+                                }
+
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.exe" ||
+        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.vshost.exe")
+                    {
+                        Console.WriteLine("Your MySQL.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("AuroraServerConfiguration/Data/MySQL.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Data/MySQL.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Database=opensim;User ID=opensim;Password=***;"))
+                                {
+                                    str2 = str2.Replace("Database=opensim;User ID=opensim;Password=***;", "Database=" + dbSchema + ";User ID=" + dbUser + ";Password=" + dbPasswd + ";");
+                                }
+                                if (str2.Contains("Data Source=localhost"))
+                                {
+                                    str2 = str2.Replace("Data Source=localhost", "Data Source=" + dbSource);
+                                }
+
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                    {
+                        Console.WriteLine("Your AuroraServer MySQL.ini has been successfully configured");
+                    }
+
+                    using (TextReader reader = new StreamReader("AuroraServerConfiguration/Login.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/Login.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains("Welcome to Aurora Simulator"))
+                                {
+                                    str2 = str2.Replace("Welcome to Aurora Simulator", "Welcome to " + worldName);
+                                }
+                                if (str2.Contains("DefaultHomeRegion = \"\""))
+                                {
+                                    str2 = str2.Replace("DefaultHomeRegion = \"\"", "DefaultHomeRegion = \"" + DefaultRegion + "\"");
+                                }
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Your Login.ini has been successfully configured");
+
+                    using (TextReader reader = new StreamReader("AuroraServerConfiguration/GridInfoService.ini.example"))
+                    {
+                        using (TextWriter writer = new StreamWriter("AuroraServerConfiguration/GridInfoService.ini"))
+                        {
+                            string str2;
+                            while ((str2 = reader.ReadLine()) != null)
+                            {
+                                if (str2.Contains(";login = http://127.0.0.1:8002/"))
+                                {
+                                    str2 = str2.Replace(";login = http://127.0.0.1:8002/", "login = http://" + ipAddress + ":8002/");
+                                }
+                                if (str2.Contains("127.0.0.1"))
+                                {
+                                    str2 = str2.Replace("127.0.0.1", ipAddress);
+                                }
+                                if (str2.Contains("the lost continent of hippo"))
+                                {
+                                    str2 = str2.Replace("the lost continent of hippo", worldName);
+                                }
+                                if (str2.Contains("hippogrid"))
+                                {
+                                    str2 = str2.Replace("hippogrid", worldName);
+                                }
+                                writer.WriteLine(str2);
+                            }
+                        }
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    if (Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.exe" ||
+        Process.GetCurrentProcess().MainModule.ModuleName == "Aurora.Server.vshost.exe")
+                    {
+                        Console.WriteLine("Your GridInfoService.ini has been successfully configured");
+                    }
+
+                    if (mode.Equals("2"))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("====================================================================\n");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("Your world is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine(worldName);
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("\nYour loginuri is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("http://" + ipAddress + ":8002/");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("\nThis is the Registration URL: ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("http://" + ipAddress + ":8003/");
+                        Console.ForegroundColor = ConsoleColor.White;
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("====================================================================\n");
+                        Console.ResetColor();
+
+                    }
+                    else if (mode.Equals("1"))
+                    {
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("====================================================================\n");
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("Your world is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine(worldName);
+                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.WriteLine("\nYour loginuri is ");
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("http://" + ipAddress + ":9000/");
+                        Console.ForegroundColor = ConsoleColor.White;
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("====================================================================\n");
+                        Console.ResetColor();
+                    }
+
+                }
+                catch
+                {
+                }
+        }     
 
         public static void Startup(ArgvConfigSource originalConfigSource, IConfigSource configSource,
                                    ISimulationBase simBase, string[] cmdParameters)
