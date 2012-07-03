@@ -125,14 +125,14 @@
     DefaultHomeRegion = ""
     
     ;; If you want to set up URLs for things like the map, profiles, and search, add them here
-    MapTileURL = ""
-    WebProfileURL = ""
-    SearchURL = ""
-    OpenIDURL = ""
-    SnapshotConfigURL = ""
-    HelpURL = ""
-    VoiceServerType = "vivox"
-    MaxAgentGroups = 100
+    ;MapTileURL = ""
+    ;WebProfileURL = ""
+    ;SearchURL = ""
+    ;OpenIDURL = ""
+    ;SnapshotConfigURL = ""
+    ;HelpURL = ""
+    ;VoiceServerType = "vivox"
+    ;MaxAgentGroups = 100
 
     ;; Sets the tutorial URL for new users which will be displayed on first login.
     ;; This is a website that appears in the client telling the user how to move, fly, etc.
