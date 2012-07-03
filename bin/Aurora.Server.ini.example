@@ -1,8 +1,4 @@
 [Network]
-	
-    ;; 127.0.0.1 should be your IP address or DNS
-	Define-<HostName> = http://127.0.0.1
-	
 	;; Advanced configs
     http_listener_port = 8003
 	
@@ -21,7 +17,7 @@
 	https_ssl_protocol = "Default"
 	
 	;; This doesn't require any changes
-    HostName = <HostName>
+    HostName = http://127.0.0.1
 
 
 [Console]
@@ -142,10 +138,6 @@
     ;Include-FreeSwitch = AuroraServerConfiguration/FreeSwitch.ini
     
 [Includes]
-    ;;
-    ;; Select only one of the next three
-    ;
-    ;; Main configuration without IWC
     Include-Main = AuroraServerConfiguration/Main.ini
 	
     ;;Other .ini files to add...

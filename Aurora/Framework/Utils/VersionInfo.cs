@@ -98,16 +98,20 @@ namespace Aurora.Framework
                 string gitFile = Path.Combine(pathToGitFile, "HEAD");
                 if (File.Exists(gitFile))
                 {
-                    string[] lines = File.ReadAllLines(gitFile);
-                    string lastLine = lines[lines.Length - 1];
-                    string[] splitLastLine = lastLine.Split(new string[2] {" ", "\t"},
-                                                            StringSplitOptions.RemoveEmptyEntries);
-                    versionString = "Aurora-" + splitLastLine[1].Substring(0, 6) /*First 6 digits of the commit hash*/+
-                                    " " + splitLastLine[5] /*Time zone info*/;
-                    FileStream s = File.Open(gitCommitFileName, FileMode.Create);
-                    byte[] data = Encoding.UTF8.GetBytes(versionString);
-                    s.Write(data, 0, data.Length);
-                    s.Close();
+                    try
+                    {
+                        string[] lines = File.ReadAllLines(gitFile);
+                        string lastLine = lines[lines.Length - 1];
+                        string[] splitLastLine = lastLine.Split(new string[2] { " ", "\t" },
+                                                                StringSplitOptions.RemoveEmptyEntries);
+                        versionString = "Aurora-" + splitLastLine[1].Substring(0, 6) /*First 6 digits of the commit hash*/+
+                                        " " + splitLastLine[5] /*Time zone info*/;
+                        FileStream s = File.Open(gitCommitFileName, FileMode.Create);
+                        byte[] data = Encoding.UTF8.GetBytes(versionString);
+                        s.Write(data, 0, data.Length);
+                        s.Close();
+                    }
+                    catch { }
                 }
             }
             else if (File.Exists(gitCommitFileName))

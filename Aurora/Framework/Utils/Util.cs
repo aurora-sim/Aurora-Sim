@@ -68,6 +68,13 @@ namespace Aurora.Framework
         Thread
     }
 
+    public enum RuntimeEnvironment
+    {
+        NET,
+        WinMono,
+        Mono
+    }
+
     /// <summary>
     ///   Miscellaneous utility functions
     /// </summary>
@@ -1064,6 +1071,19 @@ namespace Aurora.Framework
             }
 
             return ru;
+        }
+
+        public static RuntimeEnvironment GetRuntimeEnvironment()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+                return RuntimeEnvironment.Mono;
+            else if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+                return RuntimeEnvironment.Mono;
+            else
+            {
+                return Type.GetType("Mono.Runtime") != null ? RuntimeEnvironment.WinMono :
+                    RuntimeEnvironment.NET;
+            }
         }
 
         /// <summary>

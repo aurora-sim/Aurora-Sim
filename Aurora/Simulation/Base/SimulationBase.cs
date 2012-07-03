@@ -467,7 +467,7 @@ namespace Aurora.Simulation.Base
 
         public virtual void runConfig(string[] cmd)
         {
-            BaseApplication.runConfigurator();
+            BaseApplication.Configure(true);
         }
 
         public virtual void HandleTimerScriptTime(string[] cmd)
