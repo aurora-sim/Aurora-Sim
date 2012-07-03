@@ -323,9 +323,9 @@ namespace Aurora.Framework
                                 {
                                     if (fn != null)
                                     {
-                                        cmdList = new List<string>(commandPath);
-                                        cmdList.AddRange(commandOptions);
-                                        fn(cmdList.ToArray());
+                                       cmdList = new List<string>(commandPath);
+                                       cmdList.AddRange(commandOptions);
+                                       fn(cmdList.ToArray());
                                     }
                                 }
 #else
