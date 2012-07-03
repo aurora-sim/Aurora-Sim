@@ -49,9 +49,9 @@
     
     ;; The amount to multiply the jump by (can have a decimal point)
 	;; Second Life feeling
-    PreJumpMultiplierX = 2
-    PreJumpMultiplierY = 2
-    PreJumpMultiplierZ = 7.0
+    PreJumpMultiplierX = 6
+    PreJumpMultiplierY = 6
+    PreJumpMultiplierZ = 12.0
 
 
     ;; ##
@@ -90,11 +90,11 @@
     aviesCanEscapeGravity = true
     
     ;; How many times faster the avatar will fly than a walking avatar
-    AvFlySpeed = 6.0
+    AvFlySpeed = 4.5
 	
 	;; Walk speed.  Smaller is faster.
     ;; speed of movement with Always Run off
-    WalkSpeed = 1.75
+    WalkSpeed = 1.5
     
 	;; Run speed.  Smaller is faster.
     ;; Speed of movement with Always Run on
