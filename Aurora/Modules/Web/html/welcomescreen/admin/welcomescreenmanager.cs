@@ -14,6 +14,9 @@ namespace Aurora.Modules.Web
     public class WelcomeScreenManagerPage : IWebInterfacePage
     {
         public string FilePath { get { return "html/welcomescreen/admin/index.html"; } }
+
+        public bool RequiresAuthentication { get { return false; } }
+        public bool RequiresAdminAuthentication { get { return false; } }
         
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
             Dictionary<string, object> requestParameters, ITranslator translator)
@@ -22,10 +25,9 @@ namespace Aurora.Modules.Web
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
             bool changed = false;
-            if (requestParameters.ContainsKey("submit"))
+            if (requestParameters.ContainsKey("Submit"))
             {
                 changed = true;
-                httpResponse.KeepAlive = false;
                 GridWelcomeScreen submittedInfo = new GridWelcomeScreen();
                 submittedInfo.SpecialWindowMessageTitle = requestParameters["SpecialWindowTitle"].ToString();
                 submittedInfo.SpecialWindowMessageText = requestParameters["SpecialWindowText"].ToString();

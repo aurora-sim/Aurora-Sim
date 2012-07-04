@@ -25,10 +25,10 @@
 {ChangesSavedSuccessfully}      Changes saved successfully
 
 -->
-{IsNotAuthenticatedBegin}
+{IsNotAdminAuthenticatedBegin}
 <meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
-{IsNotAuthenticatedEnd}
-{IsAuthenticatedBegin}
+{IsNotAdminAuthenticatedEnd}
+{IsAdminAuthenticatedBegin}
 <div id="content">
 	<div id="ContentHeaderCenter"><b>{WelcomeScreenManagerFor} {SystemName}</b></div>
 	<div id="loginscreen_manager">
@@ -74,10 +74,10 @@
 					</td>
 				</tr>
 				<tr>
-					<td colspan="6"><div align="center"><button id="submit" type="submit" name="submit">{Submit}</button></div>
+					<td colspan="6"><div align="center"><button id="Submit" type="Submit" name="Submit">{Submit}</button></div>
 				</tr>
 			</table>
 		</form>
 	</div>
 </div>
-{IsAuthenticatedEnd}
+{IsAdminAuthenticatedEnd}

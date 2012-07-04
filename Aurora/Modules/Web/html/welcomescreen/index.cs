@@ -11,6 +11,9 @@ namespace Aurora.Modules.Web
     {
         public string FilePath { get { return "html/welcomescreen/index.html"; } }
 
+        public bool RequiresAuthentication { get { return false; } }
+        public bool RequiresAdminAuthentication { get { return false; } }
+
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
             Dictionary<string, object> requestParameters, ITranslator translator)
         {

@@ -21,7 +21,7 @@ namespace Aurora.Modules.Web
 
         protected uint _port = 8002;
         protected bool _enabled = true;
-        protected Dictionary<string, IWebInterfacePage> pages = new Dictionary<string, IWebInterfacePage>();
+        protected Dictionary<string, IWebInterfacePage> _pages = new Dictionary<string, IWebInterfacePage>();
         protected List<ITranslator> _translators = new List<ITranslator>();
         protected ITranslator _defaultTranslator;
 
@@ -43,7 +43,7 @@ namespace Aurora.Modules.Web
 
             var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
             foreach(var page in webPages)
-                pages.Add(page.FilePath, page);
+                _pages.Add(page.FilePath, page);
 
             _translators = AuroraModuleLoader.PickupModules<ITranslator>();
             _defaultTranslator = _translators[0];
@@ -124,14 +124,17 @@ namespace Aurora.Modules.Web
             if (httpResponse.ContentType == null)
                 return MainServer.BadRequest;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
+            httpResponse.KeepAlive = false;
 
             if (httpResponse.ContentType == "text/html")
             {
                 var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
-                Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest.Query, httpResponse, requestParameters);
+                Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
                 if (httpResponse.StatusCode != 200)
                     return MainServer.NoResponse;
-                response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest.Query, httpRequest, httpResponse, requestParameters, vars));
+                if (vars == null)
+                    return MainServer.BadRequest;
+                response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest, httpResponse, requestParameters, vars));
             }
             else
                 response = File.ReadAllBytes(filename);
@@ -142,18 +145,28 @@ namespace Aurora.Modules.Web
 
         #region Helpers
 
-        protected Dictionary<string, object> AddVarsForPage(string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        protected Dictionary<string, object> AddVarsForPage(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
-            if (pages.ContainsKey(filename))
+            if (_pages.ContainsKey(filename))
             {
                 ITranslator translator = null;
-                if (query.ContainsKey("language"))
-                    translator = _translators.FirstOrDefault(t => t.LanguageName == query["language"].ToString());
+                if (httpRequest.Query.ContainsKey("language"))
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
                 if (translator == null)
                     translator = _defaultTranslator;
 
-                vars = pages[filename].Fill(this, filename, query, httpResponse, requestParameters, translator);
+                if (_pages[filename].RequiresAuthentication)
+                {
+                    if (!Authenticator.CheckAuthentication(httpRequest))
+                        return null;
+                    if (_pages[filename].RequiresAdminAuthentication)
+                    {
+                        if (!Authenticator.CheckAdminAuthentication(httpRequest))
+                            return null;
+                    }
+                }
+                vars = _pages[filename].Fill(this, filename, httpRequest.Query, httpResponse, requestParameters, translator);
                 vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
                 vars.Add("SystemName", "Testing Grid!");
                 return vars;
@@ -161,7 +174,7 @@ namespace Aurora.Modules.Web
             return null;
         }
 
-        protected string ConvertHTML(string file, Hashtable query, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
+        protected string ConvertHTML(string file, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
         {
             string html = CSHTMLCreator.BuildHTML(file, vars);
 
@@ -177,8 +190,8 @@ namespace Aurora.Modules.Web
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
-                        Dictionary<string, object> newVars = AddVarsForPage(filename, query, httpResponse, requestParameters);
-                        newLines[newLinesPos] = ConvertHTML(File.ReadAllText(filename), query, request, httpResponse, requestParameters, newVars);
+                        Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse, requestParameters);
+                        newLines[newLinesPos] = ConvertHTML(File.ReadAllText(filename), request, httpResponse, requestParameters, newVars);
                     }
                 }
                 else if (line.Trim().StartsWith("{"))
@@ -194,7 +207,7 @@ namespace Aurora.Modules.Web
                             newLines.RemoveAt(newLinesPos + 1);
                         pos = posToCheckFrom;
                         foreach (var dict in vars[keyToCheck] as List<Dictionary<string, object>>)
-                            newLines.Insert(newLinesPos++, ConvertHTML(string.Join(" ", repeatedLines.ToArray()), query, request, httpResponse, requestParameters, dict));
+                            newLines.Insert(newLinesPos++, ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request, httpResponse, requestParameters, dict));
                     }
                     else if (line.Trim().StartsWith("{IsAuthenticatedBegin}"))
                     {
@@ -218,10 +231,27 @@ namespace Aurora.Modules.Web
                             pos = posToCheckFrom;
                         }
                     }
-                    else if (line.Trim().StartsWith("{IsAuthenticatedEnd}") ||
-                        line.Trim().StartsWith("{IsNotAuthenticatedEnd}"))
+                    else if (line.Trim().StartsWith("{IsAdminAuthenticatedBegin}"))
                     {
-                        //newLines.RemoveAt(newLinesPos--);
+                        int posToCheckFrom;
+                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsAdminAuthenticatedEnd", out posToCheckFrom);
+                        if (!Authenticator.CheckAdminAuthentication(request))
+                        {
+                            for (int i = pos; i < posToCheckFrom; i++)
+                                newLines.RemoveAt(newLinesPos + 1);
+                            pos = posToCheckFrom;
+                        }
+                    }
+                    else if (line.Trim().StartsWith("{IsNotAdminAuthenticatedBegin}"))
+                    {
+                        int posToCheckFrom;
+                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsNotAdminAuthenticatedEnd", out posToCheckFrom);
+                        if (Authenticator.CheckAdminAuthentication(request))
+                        {
+                            for (int i = pos; i < posToCheckFrom; i++)
+                                newLines.RemoveAt(newLinesPos + 1);
+                            pos = posToCheckFrom;
+                        }
                     }
                 }
                 newLinesPos++;
