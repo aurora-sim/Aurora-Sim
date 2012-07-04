@@ -281,7 +281,8 @@ namespace OpenSim.Services.LLLoginService
             //
             // Get the account and check that it exists
             //
-            UserAccount account = m_UserAccountService.GetUserAccount(scopeID, AgentID);
+            UserAccount account = AgentID != UUID.Zero ? m_UserAccountService.GetUserAccount(scopeID, AgentID) :
+                m_UserAccountService.GetUserAccount(scopeID, name);
 
             if (account == null)
             {

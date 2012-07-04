@@ -946,6 +946,12 @@ namespace Aurora.Framework.Servers.HttpServer
                 else if (_server.TryGetStreamHTTPHandler(method, out streamProcessor))
                 {
                     int respLength = 0;
+                    if (request.InputStream != null)
+                    {
+                        request.InputStream.Close();
+                        MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
+                        request.InputStream = stream;
+                    }
                     HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
                 }
                 else
@@ -958,6 +964,12 @@ namespace Aurora.Framework.Servers.HttpServer
                 else if (_server.TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
                 {
                     int respLength = 0;
+                    if (request.InputStream != null)
+                    {
+                        request.InputStream.Close();
+                        MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(requestBody));
+                        request.InputStream = stream;
+                    }
                     HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
                 }
                 else

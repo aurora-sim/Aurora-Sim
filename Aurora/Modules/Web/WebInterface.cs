@@ -13,23 +13,39 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules.Communications
+namespace Aurora.Modules.Web
 {
     public class WebInterface : IService, IWebInterfaceModule
     {
-        private IRegistryCore _registry;
-        private string _infoMessageTitle = "Nothing to report at this time.";
-        private string _infoMessageText = "Grid is up and running.";
-        private string _infoMessageColor = "white";
-        private string _gridIsOnline = "OFFLINE";
-        private uint _port = 8002;
-        private bool _enabled = true;
+        #region Declares
+
+        internal string _infoMessageTitle = "Nothing to report at this time.";
+        internal string _infoMessageText = "Grid is up and running.";
+        internal string _infoMessageColor = "white";
+        internal string _gridIsOnline = "OFFLINE";
+        protected uint _port = 8002;
+        protected bool _enabled = true;
+        protected Dictionary<string, IWebInterfacePage> pages = new Dictionary<string, IWebInterfacePage>();
+
+        #endregion
+
+        #region Public Properties
+
+        public IRegistryCore Registry { get; protected set; }
 
         public string LoginScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; } }
 
+        #endregion
+
+        #region IService Members
+
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
-            _registry = registry;
+            Registry = registry;
+
+            var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
+            foreach(var page in webPages)
+                pages.Add(page.FilePath, page);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -46,14 +62,23 @@ namespace Aurora.Modules.Communications
             }
             if (_enabled)
             {
-                _registry.RegisterModuleInterface<IWebInterfaceModule>(this);
+                Registry.RegisterModuleInterface<IWebInterfaceModule>(this);
                 var server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(_port);
-                server.AddHTTPHandler("/welcomescreen/", new GenericStreamHandler("GET", "/welcomescreen/", WelcomePage));
+                server.AddHTTPHandler("/welcomescreen/", new GenericStreamHandler("GET", "/welcomescreen/", FindAndSendPage));
+                server.AddHTTPHandler("/", new GenericStreamHandler("GET", "/", FindAndSendPage));
 
                 MainConsole.Instance.Commands.AddCommand("web add news item", "web add news item", "Adds a news item to the web interface", (s) => AddNewsItem());
                 MainConsole.Instance.Commands.AddCommand("web remove news item", "web remove news item", "Removes a news item to the web interface", (s) => RemoveNewsItem());
             }
         }
+
+        public void FinishedStartup()
+        {
+        }
+
+        #endregion
+
+        #region Console commands
 
         private void AddNewsItem()
         {
@@ -86,30 +111,50 @@ namespace Aurora.Modules.Communications
             MainConsole.Instance.Info("News item was removed");
         }
 
-        public void FinishedStartup()
-        {
-        }
+        #endregion
 
-        public byte[] WelcomePage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        #region Page Sending
+
+        public byte[] FindAndSendPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
             httpResponse.ContentType = GetContentType(filename);
-
-            MainConsole.Instance.Warn("Serving " + filename);
+            if (httpResponse.ContentType == null)
+                return MainServer.BadRequest;
+            MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
 
             if (httpResponse.ContentType == "text/html")
             {
-                Dictionary<string, object> vars = new Dictionary<string, object>();
-                AddVars(Path.GetFileNameWithoutExtension(filename), httpRequest.Query, ref vars);
-                response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest.Query, vars));
+                var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
+                Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest.Query, httpResponse, requestParameters);
+                if (httpResponse.StatusCode != 200)
+                    return MainServer.NoResponse;
+                response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest.Query, httpResponse, requestParameters, vars));
             }
             else
                 response = File.ReadAllBytes(filename);
             return response;
         }
 
-        private string ConvertHTML(string file, Hashtable query, Dictionary<string, object> vars)
+        #endregion
+
+        #region Helpers
+
+        protected Dictionary<string, object> AddVarsForPage(string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        {
+            Dictionary<string, object> vars = new Dictionary<string, object>();
+            if (pages.ContainsKey(filename))
+            {
+                vars = pages[filename].Fill(this, filename, query, httpResponse, requestParameters);
+                vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
+                vars.Add("SystemName", "Testing Grid!");
+                return vars;
+            }
+            return null;
+        }
+
+        protected string ConvertHTML(string file, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
         {
             string html = CSHTMLCreator.BuildHTML(file, vars);
 
@@ -124,12 +169,11 @@ namespace Aurora.Modules.Communications
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
-                        Dictionary<string, object> newVars = new Dictionary<string, object>();
-                        AddVars(Path.GetFileNameWithoutExtension(filename), query, ref newVars);
-                        newLines[pos] = ConvertHTML(File.ReadAllText(filename), query, newVars);
+                        Dictionary<string, object> newVars = AddVarsForPage(filename, query, httpResponse, requestParameters);
+                        newLines[pos] = ConvertHTML(File.ReadAllText(filename), query, httpResponse, requestParameters, newVars);
                     }
                 }
-                else if(line.Trim().StartsWith("{"))
+                else if (line.Trim().StartsWith("{"))
                 {
                     int ind;
                     if ((ind = line.IndexOf("ArrayBegin}")) != -1)
@@ -145,7 +189,7 @@ namespace Aurora.Modules.Communications
                         if (vars.ContainsKey(keyToCheck))
                         {
                             foreach (var dict in vars[keyToCheck] as List<Dictionary<string, object>>)
-                                newLines.Insert(pos++, ConvertHTML(string.Join("\n", repeatedLines.ToArray()), query, dict));
+                                newLines.Insert(pos++, ConvertHTML(string.Join("\n", repeatedLines.ToArray()), query, httpResponse, requestParameters, dict));
                         }
                     }
                 }
@@ -154,71 +198,10 @@ namespace Aurora.Modules.Communications
             return string.Join("\n", newLines.ToArray());
         }
 
-        private void AddVars(string filename, Hashtable query, ref Dictionary<string, object> vars)
+        protected string GetContentType(string filename)
         {
-            vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
-            vars.Add("SystemName", "Testing Grid!");
-
-            if (filename == "gridstatus")
-            {
-                IConfigSource config = _registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
-                vars.Add("GridStatus", "GRID STATUS");
-                vars.Add("GridOnline", _gridIsOnline);
-                vars.Add("TotalUserCount", "Total Users");
-                vars.Add("UserCount", _registry.RequestModuleInterface<IUserAccountService>().
-                    NumberOfUserAccounts(UUID.Zero, "").ToString());
-                vars.Add("TotalRegionCount", "Total Region Count");
-                vars.Add("RegionCount", DataManager.DataManager.RequestPlugin<IRegionData>().
-                    Count((Framework.RegionFlags)0, (Framework.RegionFlags)0).ToString());
-                vars.Add("UniqueVisitors", "Unique Visitors last 30 days");
-                IAgentInfoConnector users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
-                vars.Add("UniqueVisitorCount", users.RecentlyOnline((uint)TimeSpan.FromDays(30).TotalSeconds, false).ToString());
-                vars.Add("OnlineNow", "Online Now");
-                vars.Add("OnlineNowCount", users.RecentlyOnline(5 * 60, true).ToString());
-                vars.Add("HGActiveText", "HyperGrid (HG)");
-                vars.Add("HGActive", "Disabled (TODO: FIX)");
-                vars.Add("VoiceActiveLabel", "Voice");
-                vars.Add("VoiceActive", config.Configs["Voice"] != null && config.Configs["Voice"].GetString("Module", "GenericVoice") != "GenericVoice" ? "Enabled" : "Disabled");
-                vars.Add("CurrencyActiveLabel", "Currency");
-                vars.Add("CurrencyActive", _registry.RequestModuleInterface<IMoneyModule>() != null ? "Enabled" : "Disabled");
-            }
-            else if (filename == "region_box")
-            {
-                List<Dictionary<string, object>> RegionListVars = new List<Dictionary<string, object>>();
-                var sortBy = new Dictionary<string, bool>();
-                if (query.ContainsKey("region"))
-                    sortBy.Add(query["region"].ToString(), true);
-                var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags)0, 
-                    Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden,
-                    null, null, sortBy);
-                foreach(var region in regions)
-                    RegionListVars.Add(new Dictionary<string, object> { { "RegionLocX", region.RegionLocX / Constants.RegionSize }, 
-                    { "RegionLocY", region.RegionLocY / Constants.RegionSize }, { "RegionName", region.RegionName } });
-
-                vars.Add("RegionList", RegionListVars);
-                vars.Add("RegionText", "Region");
-            }
-            else if (filename == "info_box")
-            {
-                vars.Add("Title", _infoMessageTitle);
-                vars.Add("Text", _infoMessageText);
-                vars.Add("Color", _infoMessageColor);
-            }
-            else if (filename == "news")
-            {
-                vars.Add("News", "News");
-
-                IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                var newsItems = connector.GetGenerics<GridNewsItem>(UUID.Zero, "WebGridNews");
-                if (newsItems.Count == 0)
-                    newsItems.Add(GridNewsItem.NoNewsItem);
-                vars.Add("NewsList", newsItems.ConvertAll<Dictionary<string, object>>(item => item.ToDictionary()));
-                vars.Add("Color", _infoMessageColor);
-            }
-        }
-
-        private string GetContentType(string filename)
-        {
+            if (!File.Exists(filename))
+                return null;
             switch(Path.GetExtension(filename))
             {
                 case ".jpeg":
@@ -239,13 +222,15 @@ namespace Aurora.Modules.Communications
             return "text/plain";
         }
 
-        private string GetFileNameFromHTMLPath(string path)
+        protected string GetFileNameFromHTMLPath(string path)
         {
             string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
             if (Path.GetFileName(file) == "")
                 file = Path.Combine(file, "index.html");
             return file;
         }
+
+        #endregion
     }
 
     internal class GridNewsItem : IDataTransferable
