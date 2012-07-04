@@ -10,7 +10,7 @@ namespace Aurora.Framework
     public delegate string HTTPReturned(Dictionary<string, string> variables);
     public class CSHTMLCreator
     {
-        public static string AddHTMLPage(string html, string urlToAppend, string methodName, Dictionary<string, string> variables, HTTPReturned eventDelegate)
+        public static string AddHTMLPage(string html, string urlToAppend, string methodName, Dictionary<string, object> variables, HTTPReturned eventDelegate)
         {
             string secret = Util.RandomClass.Next(0, int.MaxValue).ToString();
             string secret2 = Util.RandomClass.Next(0, int.MaxValue).ToString();
@@ -34,7 +34,7 @@ namespace Aurora.Framework
             return navUrl;
         }
 
-        private static Hashtable HandleResponse(Hashtable request, string urlToAppend, Dictionary<string, string> variables, HTTPReturned eventHandler)
+        private static Hashtable HandleResponse(Hashtable request, string urlToAppend, Dictionary<string, object> variables, HTTPReturned eventHandler)
         {
             Uri myUri = new Uri("http://localhost/index.php?" + request["body"]);
             Dictionary<string, string> newVars = new Dictionary<string, string>();
@@ -57,7 +57,7 @@ namespace Aurora.Framework
             return reply;
         }
 
-        private static Hashtable SetUpWebpage(Hashtable t, string url, string html, Dictionary<string, string> vars)
+        private static Hashtable SetUpWebpage(Hashtable t, string url, string html, Dictionary<string, object> vars)
         {
             Hashtable reply = new Hashtable();
             reply["str_response_string"] = BuildHTML(html, vars);
@@ -67,11 +67,12 @@ namespace Aurora.Framework
             return reply;
         }
 
-        private static string BuildHTML(string html, Dictionary<string, string> vars)
+        public static string BuildHTML(string html, Dictionary<string, object> vars)
         {
-            foreach (KeyValuePair<string, string> kvp in vars)
+            foreach (KeyValuePair<string, object> kvp in vars)
             {
-                html = html.Replace("{" + kvp.Key + "}", kvp.Value);
+                if(!(kvp.Value is IList))
+                    html = html.Replace("{" + kvp.Key + "}", kvp.Value.ToString());
             }
             return html;
         }

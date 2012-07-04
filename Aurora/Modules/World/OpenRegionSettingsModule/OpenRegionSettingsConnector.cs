@@ -55,7 +55,7 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         public string AddOpenRegionSettingsHTMLPage(UUID regionID)
         {
-            Dictionary<string, string> vars = new Dictionary<string,string>();
+            Dictionary<string, object> vars = new Dictionary<string, object>();
             IOpenRegionSettingsConnector orsc = DataManager.DataManager.RequestPlugin<IOpenRegionSettingsConnector>();
             if (orsc != null)
             {

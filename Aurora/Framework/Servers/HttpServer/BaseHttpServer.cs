@@ -66,6 +66,7 @@ namespace Aurora.Framework.Servers.HttpServer
         protected Dictionary<string, LLSDMethod> m_llsdHandlers = new Dictionary<string, LLSDMethod>();
         protected Dictionary<string, IStreamedRequestHandler> m_streamHandlers = new Dictionary<string, IStreamedRequestHandler>();
         protected Dictionary<string, GenericHTTPMethod> m_HTTPHandlers = new Dictionary<string, GenericHTTPMethod>();
+        protected Dictionary<string, IStreamedRequestHandler> m_HTTPStreamHandlers = new Dictionary<string, IStreamedRequestHandler>();
         protected X509Certificate2 m_cert;
         protected SslProtocols m_sslProtocol = SslProtocols.None;
 
@@ -208,6 +209,23 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
+        public bool AddHTTPHandler(string methodName, IStreamedRequestHandler handler)
+        {
+            //MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Registering {0}", methodName);
+
+            lock (m_HTTPStreamHandlers)
+            {
+                if (!m_HTTPStreamHandlers.ContainsKey(methodName))
+                {
+                    m_HTTPStreamHandlers.Add(methodName, handler);
+                    return true;
+                }
+            }
+
+            //must already have a handler for that path so return false
+            return false;
+        }
+
         public bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args)
         {
             bool pollHandlerResult = false;
@@ -333,6 +351,35 @@ namespace Aurora.Framework.Servers.HttpServer
                     return false;
                 }
                 oServiceEventArgs = m_pollHandlers[bestMatch];
+                return true;
+            }
+        }
+
+        internal bool TryGetStreamHTTPHandler(string handlerKey, out IStreamedRequestHandler handle)
+        {
+            string bestMatch = null;
+
+            lock (m_HTTPStreamHandlers)
+            {
+                if (m_HTTPStreamHandlers.TryGetValue(handlerKey, out handle))
+                    return true;
+                foreach (string pattern in m_HTTPStreamHandlers.Keys)
+                {
+                    if (handlerKey.StartsWith(pattern))
+                    {
+                        if (String.IsNullOrEmpty(bestMatch) || pattern.Length > bestMatch.Length)
+                        {
+                            bestMatch = pattern;
+                        }
+                    }
+                }
+
+                if (String.IsNullOrEmpty(bestMatch))
+                {
+                    handle = null;
+                    return false;
+                }
+                handle = m_HTTPStreamHandlers[bestMatch];
                 return true;
             }
         }
@@ -890,11 +937,17 @@ namespace Aurora.Framework.Servers.HttpServer
             //            keysvals.Add("form", request.Form);
 
             GenericHTTPMethod requestprocessor;
+            IStreamedRequestHandler streamProcessor;
             if (keysvals.Contains("method"))
             {
                 string method = (string)keysvals["method"];
                 if (_server.TryGetHTTPHandler(method, out requestprocessor))
                     SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
+                else if (_server.TryGetStreamHTTPHandler(method, out streamProcessor))
+                {
+                    int respLength = 0;
+                    HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
+                }
                 else
                     SendHTML404(response, host);
             }
@@ -902,6 +955,11 @@ namespace Aurora.Framework.Servers.HttpServer
             {
                 if (_server.TryGetHTTPHandlerPathBased(request.RawUrl, out requestprocessor))
                     SendGenericHTTPResponse(requestprocessor(keysvals), response, request);
+                else if (_server.TryGetStreamHTTPHandler(request.RawUrl, out streamProcessor))
+                {
+                    int respLength = 0;
+                    HandleStreamHandler(request, response, request.RawUrl, ref respLength, streamProcessor);
+                }
                 else
                     SendHTML404(response, host);
             }
@@ -1244,7 +1302,6 @@ namespace Aurora.Framework.Servers.HttpServer
             string HTTPMethod = request.HttpMethod;
             long contentLength = request.ContentLength;
             string path = request.RawUrl;
-            byte[] buffer = null;
             int respcontentLength = -1;
             try
             {
@@ -1254,61 +1311,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 IStreamedRequestHandler requestHandler;
                 if (_server.TryGetStreamHandler(BaseHttpServer.GetHandlerKey(request.HttpMethod, path), out requestHandler))
                 {
-                    response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
-
-                    try
-                    {
-                        IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
-                        buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
-                    }
-                    catch (Exception ex)
-                    {
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
-                    }
-
-                    if (request.InputStream != null)
-                        request.InputStream.Dispose();
-
-                    if (buffer == null)
-                    {
-                        if (response.OutputStream.CanWrite)
-                        {
-                            response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                            buffer = Encoding.UTF8.GetBytes("Internal Server Error");
-                        }
-                        else
-                            return;//The handler took care of sending it for us
-                    }
-                    else if (buffer == MainServer.BadRequest)
-                    {
-                        response.StatusCode = (int)HttpStatusCode.BadRequest;
-                        buffer = Encoding.UTF8.GetBytes("Bad Request");
-                    }
-
-                    respcontentLength = buffer.Length;
-                    try
-                    {
-                        if (buffer != MainServer.NoResponse)
-                            response.OutputStream.Write(buffer, 0, buffer.Length);
-                        response.Send();
-                    }
-                    catch (SocketException e)
-                    {
-                        // This has to be here to prevent a Linux/Mono crash
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
-                    }
-                    catch (HttpListenerException)
-                    {
-                        MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP request abnormally terminated.");
-                    }
-                    catch (IOException e)
-                    {
-                        MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
-                    }
-                    finally
-                    {
-                        buffer = null;
-                    }
+                    HandleStreamHandler(request, response, path, ref respcontentLength, requestHandler);
                     return;
                 }
 
@@ -1320,8 +1323,6 @@ namespace Aurora.Framework.Servers.HttpServer
                         return;
                     }
                 }
-
-                
 
                 switch (request.ContentType)
                 {
@@ -1388,6 +1389,66 @@ namespace Aurora.Framework.Servers.HttpServer
                     MainConsole.Instance.TraceFormat("[BASE HTTP SERVER]: request for {0}/{1} on port {2} took {3} ms", HTTPMethod, RawUrl, _server.Port, tickdiff);
 
                 
+            }
+        }
+
+        private static void HandleStreamHandler(OSHttpRequest request, OSHttpResponse response, string path, ref int respcontentLength, IStreamedRequestHandler requestHandler)
+        {
+            byte[] buffer = null;
+            response.ContentType = requestHandler.ContentType; // Lets do this defaulting before in case handler has varying content type.
+            
+            try
+            {
+                IStreamedRequestHandler streamedRequestHandler = requestHandler as IStreamedRequestHandler;
+                buffer = streamedRequestHandler.Handle(path, request.InputStream, request, response);
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP handler threw an exception " + ex + ".");
+            }
+
+            if (request.InputStream != null)
+                request.InputStream.Dispose();
+
+            if (buffer == null)
+            {
+                if (response.OutputStream.CanWrite)
+                {
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    buffer = Encoding.UTF8.GetBytes("Internal Server Error");
+                }
+                else
+                    return;//The handler took care of sending it for us
+            }
+            else if (buffer == MainServer.BadRequest)
+            {
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                buffer = Encoding.UTF8.GetBytes("Bad Request");
+            }
+
+            respcontentLength = buffer.Length;
+            try
+            {
+                if (buffer != MainServer.NoResponse)
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Send();
+            }
+            catch (SocketException e)
+            {
+                // This has to be here to prevent a Linux/Mono crash
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: XmlRpcRequest issue {0}.\nNOTE: this may be spurious on Linux.", e);
+            }
+            catch (HttpListenerException)
+            {
+                MainConsole.Instance.WarnFormat("[BASE HTTP SERVER]: HTTP request abnormally terminated.");
+            }
+            catch (IOException e)
+            {
+                MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+            }
+            finally
+            {
+                buffer = null;
             }
         }
 

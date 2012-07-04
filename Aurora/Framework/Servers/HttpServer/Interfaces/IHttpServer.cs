@@ -67,15 +67,14 @@ namespace Aurora.Framework.Servers.HttpServer
 
         /// <summary>
         /// Add a handler for an HTTP request.
-        /// </summary>
         /// 
         /// This handler can actually be invoked either as 
         /// 
-        /// http://<hostname>:<port>/?method=<methodName> 
+        /// http://hostname:port/?method=methodName 
         /// 
         /// or
         /// 
-        /// http://<hostname>:<port><method>
+        /// http://hostname:portmethodName
         /// 
         /// if the method name starts with a slash.  For example, AddHTTPHandler("/object/", ...) on a standalone region
         /// server will register a handler that can be invoked with either
@@ -89,7 +88,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// In addition, the handler invoked by the HTTP server for any request is the one when best matches the request
         /// URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
         /// the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
-        /// 
+        /// </summary>
         /// <param name="methodName"></param>
         /// <param name="handler"></param>
         /// <returns>
@@ -97,10 +96,41 @@ namespace Aurora.Framework.Servers.HttpServer
         /// </returns>
         bool AddHTTPHandler(string methodName, GenericHTTPMethod handler);
 
+        /// <summary>
+        /// Add a handler for an HTTP request.
+        /// 
+        /// This handler can actually be invoked either as 
+        /// 
+        /// http://hostname:port/?method=methodName 
+        /// 
+        /// or
+        /// 
+        /// http://hostname:portmethodName
+        /// 
+        /// if the method name starts with a slash.  For example, AddHTTPHandler("/object/", ...) on a standalone region
+        /// server will register a handler that can be invoked with either
+        /// 
+        /// http://localhost:9000/?method=/object/
+        /// 
+        /// or
+        /// 
+        /// http://localhost:9000/object/
+        ///
+        /// In addition, the handler invoked by the HTTP server for any request is the one when best matches the request
+        /// URI.  So if a handler for "/myapp/" is registered and a request for "/myapp/page" is received, then
+        /// the "/myapp/" handler is invoked if no "/myapp/page" handler exists.
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="handler"></param>
+        /// <returns>
+        /// true if the handler was successfully registered, false if a handler with the same name already existed.
+        /// </returns>
+        bool AddHTTPHandler(string methodName, IStreamedRequestHandler handler);
+
         bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args);
 
         /// <summary>
-        /// Adds a LLSD handler, yay.
+        /// Adds a LLSD handler
         /// </summary>
         /// <param name="path">/resource/ path</param>
         /// <param name="handler">handle the LLSD response</param>

@@ -679,7 +679,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             if (System.IO.File.Exists(path) && region != null)
             {
                 html = System.IO.File.ReadAllText(path);
-                Dictionary<string, string> vars = new Dictionary<string, string>();
+                Dictionary<string, object> vars = new Dictionary<string, object>();
                 vars.Add("Region Name", region.RegionName);
                 vars.Add("Region Location X", (region.RegionLocX / Constants.RegionSize).ToString());
                 vars.Add("Region Location Y", (region.RegionLocY / Constants.RegionSize).ToString());
