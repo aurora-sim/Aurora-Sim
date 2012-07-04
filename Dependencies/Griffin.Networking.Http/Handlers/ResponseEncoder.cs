@@ -85,6 +85,8 @@ namespace Griffin.Networking.Http.Handlers
                     writer.Write(";expires={0}", cookie.Expires.ToString("R"));
                 if (!string.IsNullOrEmpty(cookie.Path))
                     writer.Write(";path={0}", cookie.Path);
+                if (!string.IsNullOrEmpty(cookie.Domain))
+                    writer.Write(";domain={0}", cookie.Domain);
 
                 writer.WriteLine();
             }

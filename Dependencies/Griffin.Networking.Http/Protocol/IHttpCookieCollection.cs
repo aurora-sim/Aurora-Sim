@@ -20,7 +20,7 @@ namespace Griffin.Networking.Http.Specification
         /// <summary>
         /// Gets the cookie of a given identifier (<c>null</c> if not existing).
         /// </summary>
-        T this[string id] { get; }
+        T this[string id] { get; set; }
 
         /// <summary>
         /// Remove all cookies.

@@ -5,12 +5,12 @@ using System.Text;
 
 namespace Griffin.Networking.Http.Implementation
 {
-    class HttpCookie : IHttpCookie
+    public class HttpCookie : IHttpCookie
     {
         /// <summary>
         /// Gets the cookie identifier.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Gets value. 

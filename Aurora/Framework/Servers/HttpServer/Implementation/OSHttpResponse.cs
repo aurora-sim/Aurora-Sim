@@ -29,7 +29,10 @@ using System;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Web;
 using Griffin.Networking;
+using Griffin.Networking.Http;
+using Griffin.Networking.Http.Implementation;
 using Griffin.Networking.Http.Protocol;
 using Griffin.Networking.Http.Messages;
 
@@ -54,6 +57,27 @@ namespace Aurora.Framework.Servers.HttpServer
             _httpContext = context;
             _httpRequest = request;
             _httpResponse = response;
+        }
+
+        public System.Web.HttpCookieCollection Cookies
+        {
+            get
+            {
+                var cookies = _httpResponse.Cookies;
+                HttpCookieCollection httpCookies = new HttpCookieCollection();
+                foreach (var cookie in cookies)
+                    httpCookies.Add(new System.Web.HttpCookie(cookie.Name, cookie.Value));
+                return httpCookies;
+            }
+        }
+
+        public void AddCookie(System.Web.HttpCookie cookie)
+        {
+            _httpResponse.Cookies[cookie.Name] = new HttpResponseCookie()
+            {
+                Expires = cookie.Expires, 
+                Name = cookie.Name, Path = cookie.Path, Value = cookie.Value
+            };
         }
 
         /// <summary>

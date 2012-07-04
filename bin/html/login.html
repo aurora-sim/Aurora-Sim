@@ -1,0 +1,41 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{Login}            Login
+{UserNameText}     User Name
+{PasswordText}     Password
+{ForgotPassword}   Forgot Password?
+{Submit}           Submit
+
+-->
+
+<script language="javascript" type="text/javascript">
+	addEvent(window, "load", function() { document.getElementById("login_input").focus(); } );
+</script>
+<div id="content">
+    <div id="ContentHeaderLeft"><h5>{SystemName}</h5></div>
+    <div id="ContentHeaderCenter"></div>
+    <div id="ContentHeaderRight"><h5><? echo $webui_login; ?></h5></div>
+    <div id="login">
+		<form action="login_attempt.html" method="GET">
+			<table>
+				<tr>
+					<td class="odd" width="51%"><span id="logname_label">{UserNameText}*</span></td>
+					<td class="odd"><div class="roundedinput"><input require="true" label="username" id="login_input" name="username" type="text"/></div></td>
+				</tr>
+				<tr>
+					<td class="even"><span id="password_label">{PasswordText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
+				</tr>
+				<tr>
+					<td class="odd"><a href="forgotpass.html">{ForgotPassword}</a></td>                
+					<td class="odd">
+						<div class="center">
+							<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Submit}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>

@@ -21,14 +21,21 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
-            string username = query["username"].ToString();
-            string password = query["password"].ToString();
-
-            ILoginService loginService = webInterface.Registry.RequestModuleInterface<ILoginService>();
-            if (loginService.VerifyClient(UUID.Zero, username, "UserAccount", password, UUID.Zero))
+            if (query.ContainsKey("username") && query.ContainsKey("password"))
             {
-                httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
-                httpResponse.AddHeader("Location", "http://129.21.125.225:9000/welcomescreen/");
+                string username = query["username"].ToString().Replace('+', ' ');
+                string password = query["password"].ToString();
+
+                ILoginService loginService = webInterface.Registry.RequestModuleInterface<ILoginService>();
+                if (loginService.VerifyClient(UUID.Zero, username, "UserAccount", password, UUID.Zero))
+                {
+                    httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
+                    UUID sessionID = UUID.Random();
+                    Authenticator.AddAuthentication(sessionID, UUID.Zero);
+                    httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });
+
+                    httpResponse.AddHeader("Location", "/welcomescreen/index.html");
+                }
             }
 
             return vars;

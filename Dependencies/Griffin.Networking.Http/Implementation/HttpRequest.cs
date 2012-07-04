@@ -68,7 +68,20 @@ namespace Griffin.Networking.Http.Implementation
         /// </summary>
         public IHttpCookieCollection<IHttpCookie> Cookies
         {
-            get { return _cookies; }
+            get 
+            {
+                _cookies.Clear();
+                if (Headers["Cookie"] != null)
+                {
+                    string[] split = Headers["Cookie"].Value.Split(';');
+                    foreach (string cookie in split)
+                    {
+                        string[] keys = cookie.Split(new string[1] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+                        _cookies[keys[0]] = new HttpCookie() { Name = keys[0], Value = keys[1] };
+                    }
+                }
+                return _cookies; 
+            }
         }
 
         /// <summary>

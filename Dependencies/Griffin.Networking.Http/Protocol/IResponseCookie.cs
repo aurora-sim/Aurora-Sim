@@ -14,5 +14,10 @@ namespace Griffin.Networking.Http
         /// Gets path that the cookie is valid under.
         /// </summary>
         string Path { get; set; }
+
+        /// <summary>
+        /// Domain for the cookie
+        /// </summary>
+        string Domain { get; set; }
     }
 }

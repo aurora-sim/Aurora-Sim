@@ -34,6 +34,7 @@ namespace Griffin.Networking.Http.Implementation
         {
             _reader.Assign(slice);
 
+            string read = System.Text.Encoding.UTF8.GetString(_reader.Buffer);
             _logger.Trace("Parsing method: " + _parserMethod.Method.Name);
             while (_parserMethod())
             {

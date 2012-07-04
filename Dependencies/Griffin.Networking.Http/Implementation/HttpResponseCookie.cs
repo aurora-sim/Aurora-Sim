@@ -3,7 +3,7 @@ using Griffin.Networking.Http.Implementation;
 
 namespace Griffin.Networking.Http.Messages
 {
-    internal class HttpResponseCookie : HttpCookie, IResponseCookie
+    public class HttpResponseCookie : HttpCookie, IResponseCookie
     {
         /// <summary>
         /// Gets when the cookie expires.
@@ -15,5 +15,10 @@ namespace Griffin.Networking.Http.Messages
         /// Gets path that the cookie is valid under.
         /// </summary>
         public string Path { get; set; }
+
+        /// <summary>
+        /// Domain of the cookie
+        /// </summary>
+        public string Domain { get; set; }
     }
 }

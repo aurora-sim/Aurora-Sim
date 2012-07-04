@@ -7,7 +7,7 @@ using Griffin.Networking.Http.Specification;
 
 namespace Griffin.Networking.Http.Implementation
 {
-    class HttpCookieCollection<T> : IHttpCookieCollection<T> where T : IHttpCookie
+    public class HttpCookieCollection<T> : IHttpCookieCollection<T> where T : IHttpCookie
     {
         List<T> _items = new List<T>();
 
@@ -49,6 +49,7 @@ namespace Griffin.Networking.Http.Implementation
         public T this[string id]
         {
             get { return _items.FirstOrDefault(x => x.Name.Equals(id, StringComparison.OrdinalIgnoreCase)); }
+            set { _items.Add(value); }
         }
 
         /// <summary>
