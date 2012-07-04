@@ -5,52 +5,52 @@ using System.Text;
 
 namespace Aurora.Modules.Web.Translators
 {
-    public class GermanTranslation : ITranslator
+    public class SpanishTranslation : ITranslator
     {
-        public string LanguageName { get { return "de"; } }
+        public string LanguageName { get { return "es"; } }
 
         public string GetTranslatedString(string key)
         {
             switch (key)
             {
                 case "GridStatus":
-                    return "STATUS";
+                    return "ESTADO DE LA GRID";
                 case "Online":
-                    return "ONLINE";
+                    return "EN LINEA";
                 case "Offline":
                     return "OFFLINE";
                 case "TotalUserCount":
-                    return "Einwohner";
+                    return "total de Usuarios";
                 case "TotalRegionCount":
-                    return "Regionen";
+                    return "Cuenta Total Región";
                 case "UniqueVisitors":
-                    return "Aktive Nutzer letzten 30 Tage";
+                    return "Visitantes únicos últimos 30 días";
                 case "OnlineNow":
-                    return "Jetzt Online";
+                    return "En línea ahora";
                 case "HyperGrid":
                     return "HyperGrid (HG)";
                 case "Voice":
-                    return "Stimme";
+                    return "Voz";
                 case "Currency":
-                    return "Devisen";
+                    return "Moneda";
                 case "Disabled":
-                    return "Deaktiviert";
+                    return "Discapacitado";
                 case "Enabled":
-                    return "Aktiviert";
+                    return "Habilitado";
                 case "News":
-                    return "Nachrichten";
+                    return "Nuevas";
                 case "Region":
-                    return "Region";
+                    return "Región";
                 case "Login":
-                    return "Einloggen";
+                    return "Iniciar sesión";
                 case "UserName":
-                    return "Nutzername";
+                    return "Nombre de usuario";
                 case "Password":
-                    return "Passwort";
+                    return "Contraseña";
                 case "ForgotPassword":
-                    return "Passwort vergessen?";
+                    return "¿Olvidó su contraseña?";
                 case "Submit":
-                    return "Einreichen";
+                    return "Enviar";
             }
             return "UNKNOWN CHARACTER";
         }
