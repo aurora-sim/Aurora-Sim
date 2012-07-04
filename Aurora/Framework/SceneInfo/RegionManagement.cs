@@ -315,6 +315,7 @@ namespace Aurora.Framework
             return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public void CreateUser(string name, string password, string email, UUID userID, UUID scopeID)
         {
             InternalDoRemote(name);
