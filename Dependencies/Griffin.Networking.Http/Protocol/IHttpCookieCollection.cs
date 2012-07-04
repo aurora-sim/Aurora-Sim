@@ -6,11 +6,7 @@ namespace Griffin.Networking.Http.Specification
     /// Collection of cookies
     /// </summary>
     /// <typeparam name="T">Type of cookie</typeparam>
-#if NET_3_5
     public interface IHttpCookieCollection<T> : IEnumerable<T> where T : IHttpCookie
-#else
-    public interface IHttpCookieCollection<out T> : IEnumerable<T> where T : IHttpCookie
-#endif
     {
         /// <summary>
         /// Gets the count of cookies in the collection.

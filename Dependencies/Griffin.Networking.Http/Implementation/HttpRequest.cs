@@ -9,11 +9,7 @@ namespace Griffin.Networking.Http.Implementation
 {
     internal class HttpRequest : HttpMessage, IRequest
     {
-#if NET_3_5
         private readonly IHttpCookieCollection<IHttpCookie> _cookies;
-#else
-        private readonly IHttpCookieCollection<HttpCookie> _cookies;
-#endif
         private readonly IHttpFileCollection _files;
         private readonly ParameterCollection _queryString;
         private IParameterCollection _form;
@@ -21,11 +17,7 @@ namespace Griffin.Networking.Http.Implementation
 
         public HttpRequest()
         {
-#if NET_3_5
             _cookies = new HttpCookieCollection<IHttpCookie>();
-#else
-            _cookies = new HttpCookieCollection<HttpCookie>();
-#endif
             _files = new HttpFileCollection();
             _queryString = new ParameterCollection();
             _form = new ParameterCollection();
