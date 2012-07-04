@@ -372,7 +372,7 @@ namespace Aurora.Simulation.Base
                         MakeSureExists(folder + "Data/Data.ini");
                         IniConfigSource data_ini = new IniConfigSource(folder + "Data/Data.ini", Nini.Ini.IniFileType.AuroraStyle);
                         IConfig conf = data_ini.AddConfig("DataFile");
-                        if (mode == "1")
+                        if (dbType == "1")
                             conf.Set("Include-SQLite", folder + "Data/SQLite.ini");
                         else
                             conf.Set("Include-MySQL", folder + "Data/MySQL.ini");
