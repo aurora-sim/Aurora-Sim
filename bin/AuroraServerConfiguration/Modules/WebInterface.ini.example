@@ -1,0 +1,39 @@
+[WebInterface]
+
+	;; The web interface to use
+	;; BuiltIn gives you a loginscreen automatically
+	;; Default is BuiltIn
+	Module = BuiltIn
+	
+	;; 
+	;; All following options are for the built in web interface only
+	;;
+	
+	;; The port to run the web interface on
+	;; Recommended is 8002, but if you want it to look like a normal website, use 80
+	Port = 8002
+	
+	;;
+	;; Login screen items
+	;;
+	
+	;; Whether the grid is online or not
+	;; Default value is ONLINE (other default is OFFLINE)
+	GridIsOnline = "ONLINE"
+	
+	;; The title to give the special info box on the right side of the login screen
+	InfoMessageTitle = "Nothing to report at this time"
+	
+	;; The text below the InfoMessageTitle
+	InfoMessageText = "Grid is up and running."
+	
+	;; Which color the special info box should be
+	;; Valid colors are
+	;; red, yellow, white, green
+	InfoMessageColor = green
+	
+	;;
+	;; News items on the login screen
+	;; 
+	;; To add news to the login screen, type "web add news item" into the console
+	;; To remove news from the login screen, type "web remove news item" into the console

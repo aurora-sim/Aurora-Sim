@@ -108,5 +108,15 @@ namespace Aurora.Framework
         /// <param name="Value"></param>
         /// <returns></returns>
         List<UUID> GetOwnersByGeneric(string Type, string Key, OSDMap Value);
+
+        /// <summary>
+        ///   Gets the number of list of generic T's from the database
+        /// </summary>
+        /// <typeparam name = "T"></typeparam>
+        /// <param name = "OwnerID"></param>
+        /// <param name = "Type"></param>
+        /// <param name = "data">a default T</param>
+        /// <returns></returns>
+        int GetGenericCount(UUID OwnerID, string Type);
     }
 }

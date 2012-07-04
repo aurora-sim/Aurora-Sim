@@ -1,0 +1,52 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="{SystemURL}/welcomescreen/default_template.css" type="text/css" rel="stylesheet">
+<script src="{SystemURL}/welcomescreen/javascripts/resize.js" type="text/javascript"></script>
+<script src="{SystemURL}/welcomescreen/javascripts/randomimageswitch.js" type="text/javascript"></script>
+
+<title>{SystemName}: Welcome Screen</title>
+
+<SCRIPT>
+$(document).ready(function(){
+bgImgRotate();
+});
+</SCRIPT>
+
+</head>
+    
+<body class="webui">
+
+<div id=top_image>
+    <img src="{SystemURL}/welcomescreen/images/logo.png" alt="{SystemName}" title="{SystemName}" />
+</div>
+
+<div id=bottom_left>
+    <!--<? if($showSpecialReport) { ?>
+    <?
+      include("modules/special.php");
+    ?>
+    <? } ?>-->
+
+<!--#include file="/welcomescreen/region_box.html" -->
+<!--#include file="/welcomescreen/news.html" -->
+</div>
+
+<img id=mainImage src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt="" title="" />
+
+<div id=topright>
+    <br />
+    <br />
+    <br />
+<!--#include file="/welcomescreen/gridstatus.html" -->
+    <br />
+<!--#include file="/welcomescreen/info_box.html" -->
+</div>
+</body>
+</html>

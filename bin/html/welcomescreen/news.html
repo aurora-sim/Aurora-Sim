@@ -1,0 +1,53 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{News}     News
+{NewsList}      All the news
+	{NewsDate}  Date of the news item
+	{NewsTitle} Title of the news item
+	{NewsID}    ID of the news item
+-->
+
+<table cellSpacing=0 cellPadding=0 width="100%" border=0 valign="top">
+  <tbody>
+      <tr>
+          <td class=gridbox_tl><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
+          <td class=gridbox_t><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
+          <td class=gridbox_tr><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
+      </tr>
+      
+      <tr>
+          <td class=gridbox_l></td>
+          
+          <td class=black_content vAlign=top align=left>
+              <strong>{SystemName} {News}</strong>
+              <div id=GREX style="MARGIN: 5px 0px 0px">
+                  <img height=1 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" width=1>
+              </div>
+              
+{NewsListArrayBegin}
+              <table class=newslist cellSpacing=0 cellPadding=0>
+                  <tbody>
+                  <tr>
+                      <td class=boxtext vAlign=top>
+                          <a href="{SystemURL}/index.php?page=news&scr={NewsID}" target="_blank">{NewsTitle}</a>
+                      </td>
+                      
+                      <td class=boxtext vAlign=top noWrap width="1%">
+                          {NewsDate}
+                      </td>
+                  </tr>
+{NewsListArrayEnd}
+                  </tbody>
+              </table>
+          </td>
+          <td class=gridbox_r></td>
+      </tr>
+      
+      <tr>
+        <TD class=gridbox_bl></TD>
+        <TD class=gridbox_b></TD>
+        <TD class=gridbox_br></TD>
+      </tr>
+  </tbody>
+</table>

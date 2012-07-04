@@ -104,6 +104,19 @@ namespace Aurora.Services.DataService
         }
 
         /// <summary>
+        ///   Gets the number of list of generic T's from the database
+        /// </summary>
+        /// <typeparam name = "T"></typeparam>
+        /// <param name = "OwnerID"></param>
+        /// <param name = "Type"></param>
+        /// <param name = "data">a default T</param>
+        /// <returns></returns>
+        public int GetGenericCount(UUID OwnerID, string Type)
+        {
+            return GenericUtils.GetGenericCount(OwnerID, Type, GD);
+        }
+
+        /// <summary>
         ///   Adds a generic IDataTransferable into the database
         /// </summary>
         /// <param name = "AgentID"></param>
