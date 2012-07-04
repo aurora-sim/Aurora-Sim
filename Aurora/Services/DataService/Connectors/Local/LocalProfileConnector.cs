@@ -168,6 +168,9 @@ namespace Aurora.Services.DataService
 
             if (GetUserProfile(classified.CreatorUUID) == null)
                 return false;
+            string keywords = classified.Description;
+            if (keywords.Length > 512)
+                keywords = keywords.Substring(keywords.Length - 512, 512);
             //It might be updating, delete the old
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ClassifiedUUID"] = classified.ClassifiedUUID;
@@ -179,7 +182,9 @@ namespace Aurora.Services.DataService
                 classified.CreatorUUID,
                 classified.ClassifiedUUID,
                 OSDParser.SerializeJsonString(classified.ToOSD()),
-                classified.ScopeID
+                classified.ScopeID,
+                classified.PriceForListing,
+                keywords
             };
             return GD.Insert("userclassifieds", values.ToArray());
         }
@@ -197,7 +202,7 @@ namespace Aurora.Services.DataService
             List<string> query = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
 
             List<Classified> classifieds = new List<Classified>();
-            for (int i = 0; i < query.Count; i += 7)
+            for (int i = 0; i < query.Count; i += 9)
             {
                 Classified classified = new Classified();
                 classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 5]));
