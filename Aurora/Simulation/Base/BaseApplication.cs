@@ -87,6 +87,9 @@ namespace Aurora.Simulation.Base
             // Add the arguments supplied when running the application to the configuration
             ArgvConfigSource configSource = new ArgvConfigSource(args);
 
+            if (!args.Contains("-skipconfig"))
+                Configure(false);
+
             // Configure Log4Net
             configSource.AddSwitch("Startup", "logconfig");
             string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
@@ -137,8 +140,6 @@ namespace Aurora.Simulation.Base
 
             BinMigratorService service = new BinMigratorService();
             service.MigrateBin();
-            if (!args.Contains("-skipconfig"))
-                Configure(false);
             // Configure nIni aliases and localles
             Culture.SetCurrentCulture();
             configSource.Alias.AddAlias("On", true);
@@ -199,7 +200,7 @@ namespace Aurora.Simulation.Base
                 System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
             Stream log = null;
-            if (requested || !(isAuroraExe ?
+            if (requested || (isAuroraExe ?
                 (log = File.OpenRead("Aurora.log")).Length == 0 :
                 (log = File.OpenRead("AuroraServer.log")).Length == 0))
             {
