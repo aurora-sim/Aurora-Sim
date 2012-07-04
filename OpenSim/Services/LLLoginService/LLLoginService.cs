@@ -465,19 +465,12 @@ namespace OpenSim.Services.LLLoginService
                 //
                 GridRegion home = null;
                 if (guinfo != null && (guinfo.HomeRegionID != UUID.Zero) && m_GridService != null)
-                {
                     home = m_GridService.GetRegionByUUID(scopeID, guinfo.HomeRegionID);
-                }
-                bool GridUserInfoFound = true;
-                if (guinfo == null)
+
+                if (guinfo == null || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
-                    GridUserInfoFound = false;
-                    // something went wrong, make something up, so that we don't have to test this anywhere else
-                    guinfo = new UserInfo { UserID = account.PrincipalID.ToString() };
-                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 30);
-                }
-                if (!GridUserInfoFound || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
-                {
+                    if(guinfo == null)
+                        guinfo = new UserInfo { UserID = account.PrincipalID.ToString() };
                     GridRegion DefaultRegion = null;
                     if (m_GridService != null)
                     {
@@ -497,9 +490,7 @@ namespace OpenSim.Services.LLLoginService
                         }
                     }
 
-                    //Z = 0 so that it fixes it on the region server and puts it on the ground
                     guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
-
                     guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
 
                     m_agentInfoService.SetLastPosition(guinfo.UserID, guinfo.CurrentRegionID, guinfo.CurrentPosition, guinfo.CurrentLookAt);
@@ -546,7 +537,6 @@ namespace OpenSim.Services.LLLoginService
                             avappearance = new AvatarAppearance(account.PrincipalID);
                             m_AvatarService.SetAvatar(account.PrincipalID, new AvatarData(avappearance));
                         }
-                        //avappearance = m_AvatarService.GetAppearance(account.PrincipalID);
                     }
                     else
                     {
@@ -618,10 +608,7 @@ namespace OpenSim.Services.LLLoginService
                 // Get Friends list 
                 List<FriendInfo> friendsList = new List<FriendInfo>();
                 if (m_FriendsService != null)
-                {
                     friendsList = m_FriendsService.GetFriends(account.PrincipalID);
-                    //MainConsole.Instance.DebugFormat("[LLOGIN SERVICE]: Retrieved {0} friends", friendsList.Length);
-                }
 
                 //Set them as logged in now, they are ready, and fire the logged in event now, as we're all done
                 m_agentInfoService.SetLastPosition(account.PrincipalID.ToString(), destination.RegionID, position, lookAt);
@@ -635,19 +622,10 @@ namespace OpenSim.Services.LLLoginService
                 string MaxMaturity = "A";
                 if (agent != null)
                 {
-                    if (agent.MaturityRating == 0)
-                        MaturityRating = "P";
-                    else if (agent.MaturityRating == 1)
-                        MaturityRating = "M";
-                    else if (agent.MaturityRating == 2)
-                        MaturityRating = "A";
-
-                    if (agent.MaxMaturity == 0)
-                        MaxMaturity = "P";
-                    else if (agent.MaxMaturity == 1)
-                        MaxMaturity = "M";
-                    else if (agent.MaxMaturity == 2)
-                        MaxMaturity = "A";
+                    MaturityRating = agent.MaturityRating == 0 ? "P" :
+                        agent.MaturityRating == 1 ? "M" : "A";
+                    MaxMaturity = agent.MaxMaturity == 0 ? "P" :
+                        agent.MaxMaturity == 1 ? "M" : "A";
                 }
 
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
@@ -669,7 +647,6 @@ namespace OpenSim.Services.LLLoginService
                 }
                 return LLFailedLoginResponse.InternalError;
             }
-
         }
 
         private void AddLoginSuccessNotification(UserAccount account)

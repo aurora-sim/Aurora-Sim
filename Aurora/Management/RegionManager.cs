@@ -51,7 +51,7 @@ namespace Aurora.Management
         private UUID RegionCreatedID = UUID.Zero;
         private UUID CurrentRegionID = UUID.Zero;
         private UUID _CurrentEstateRegionSelectedID = UUID.Zero;
-
+        private RegionManagerPage _pageToStart = RegionManagerPage.ViewRegions;
         private IConfigSource _config;
         private bool _changingRegion = false;
         private bool _textHasChanged = false;
@@ -60,13 +60,13 @@ namespace Aurora.Management
         private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer();
         private readonly List<NoOp> _timerEvents = new List<NoOp>();
 
-        public static void StartAsynchronously(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
+        public static void StartAsynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
         {
             Thread t = new Thread(delegate()
             {
                 try
                 {
-                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, openCreatePageFirst, config, regionManagement);
+                    RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement);
                     Application.Run(manager);
                 }
                 catch { }
@@ -75,14 +75,14 @@ namespace Aurora.Management
             t.Start();
         }
 
-        public static void StartSynchronously(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
+        public static void StartSynchronously(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
         {
             bool done = false;
             Thread t = new Thread(delegate()
                 {
                     try
                     {
-                        RegionManager manager = new RegionManager(killWindowOnRegionCreation, openCreatePageFirst, config, regionManagement);
+                        RegionManager manager = new RegionManager(killWindowOnRegionCreation, page, config, regionManagement);
                         Application.Run(manager);
                         done = true;
                     }
@@ -94,14 +94,17 @@ namespace Aurora.Management
                 Thread.Sleep(100);
         }
 
-        public RegionManager(bool killWindowOnRegionCreation, bool openCreatePageFirst, IConfigSource config, IRegionManagement regionManagement)
+        public RegionManager(bool killWindowOnRegionCreation, RegionManagerPage page, IConfigSource config, IRegionManagement regionManagement)
         {
             _regionManager = regionManagement;
             _config = config;
             KillAfterRegionCreation = killWindowOnRegionCreation;
+            _pageToStart = page;
             InitializeComponent();
-            if (openCreatePageFirst)
+            if (page == RegionManagerPage.CreateRegion)
                 tabControl1.SelectedTab = tabPage2;
+            else if (page == RegionManagerPage.EstateSetup)
+                tabControl1.SelectedTab = tabPage3;
             changeEstateBox.Visible = false;
             CStartupType.SelectedIndex = 1;
             RefreshCurrentRegions();
@@ -733,6 +736,10 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
         private void estateOwnerLookupSearch_Click(object sender, EventArgs e)
         {
+            if (estateRegionSelection.SelectedItem == null && estateRegionSelection.Items.Count > 0)
+                estateRegionSelection.SelectedItem = estateRegionSelection.Items[0];
+            else if (estateRegionSelection.SelectedItem == null)
+                return;
             RegionInfo region = _regionManager.GetRegionInfo(estateRegionSelection.SelectedItem.ToString());
             if (region == null)
             {
@@ -767,7 +774,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
             _regionManager.ChangeEstate(ownerName, estateToJoin, _CurrentEstateRegionSelectedID);
             UpdateCurrentEstateText(estateToJoin);
-            if (RegionHasBeenCreated && RegionCreatedID == _CurrentEstateRegionSelectedID)
+            if ((RegionHasBeenCreated && RegionCreatedID == _CurrentEstateRegionSelectedID) ||
+                    _pageToStart == RegionManagerPage.EstateSetup)
                 StartRegionAfterEstateCreation();
         }
 
@@ -800,7 +808,8 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             {
                 UpdateCurrentEstateText(estateName);
 
-                if (RegionHasBeenCreated && RegionCreatedID == regionID)
+                if ((RegionHasBeenCreated && RegionCreatedID == regionID) ||
+                    _pageToStart == RegionManagerPage.EstateSetup)
                     StartRegionAfterEstateCreation();
             }
         }
@@ -813,5 +822,19 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
 
             estateOwnerName.Text = _regionManager.GetEstateOwnerName(region.RegionID);
         }
+
+        private void find_user_Click(object sender, EventArgs e)
+        {
+            UserChooser chooser = new UserChooser(estateOwnerName.Text, _regionManager);
+            chooser.ShowDialog();
+            estateOwnerName.Text = chooser.UserName;
+        }
+    }
+
+    public enum RegionManagerPage
+    {
+        CreateRegion,
+        ViewRegions,
+        EstateSetup
     }
 }

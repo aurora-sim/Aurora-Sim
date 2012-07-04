@@ -306,6 +306,26 @@ namespace Aurora.Framework
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public List<UserAccount> GetUserAccounts(string name)
+        {
+            object remoteValue = InternalDoRemote(name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (List<UserAccount>)remoteValue;
+
+            return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name);
+        }
+
+        public void CreateUser(string name, string password, string email, UUID userID, UUID scopeID)
+        {
+            InternalDoRemote(name);
+            if (m_doRemoteOnly)
+                return;
+
+            m_registry.RequestModuleInterface<IUserAccountService>().CreateUser(userID, 
+                scopeID, name, Util.Md5Hash(password), email);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
         public void ChangeEstate(string ownerName, string estateToJoin, UUID regionID)
         {
             InternalDoRemote(ownerName, estateToJoin, regionID);
@@ -350,7 +370,7 @@ namespace Aurora.Framework
             if (conn != null)
             {
                 EstateSettings es = conn.GetEstateSettings(regionID);
-                if (es == null)
+                if (es == null || es.EstateID == 0)
                     return "";
                 else
                     return es.EstateName;

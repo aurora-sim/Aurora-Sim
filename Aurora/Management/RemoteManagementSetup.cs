@@ -63,7 +63,7 @@ namespace Aurora.Management
             _historyLog.Add(_ipaddress.Text, _port.Text, _password.Text);
             UpdateHistoryGUI();
             RegionManager.StartAsynchronously(false,
-                false,
+                RegionManagerPage.ViewRegions,
                 _config,
                 management);
         }

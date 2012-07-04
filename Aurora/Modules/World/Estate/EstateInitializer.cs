@@ -206,7 +206,23 @@ namespace Aurora.Modules.Estate
                 {
                     //It found the estate service, but found no estates for this region, make a new one
                     MainConsole.Instance.Warn("Your region " + scene.RegionInfo.RegionName + " is not part of an estate.");
-                    ES = CreateEstateInfo(scene);
+
+                    bool noGui = false;
+
+                    IConfig startupconfig = source.Configs["Startup"];
+                    if (startupconfig != null)
+                        noGui = startupconfig.GetBoolean("NoGUI", false);
+
+                    if (noGui)
+                        ES = CreateEstateInfo(scene);
+                    else
+                    {
+                        Aurora.Management.RegionManager.StartSynchronously(true,
+                            Management.RegionManagerPage.EstateSetup, source,
+                            openSimBase.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                        FinishStartup(scene, source, openSimBase);
+                        return;
+                    }
                 }
                 scene.RegionInfo.EstateSettings = ES;
             }

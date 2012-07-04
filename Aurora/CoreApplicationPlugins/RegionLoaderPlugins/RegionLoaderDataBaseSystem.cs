@@ -122,7 +122,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    RegionManager.StartSynchronously(false, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                    RegionManager.StartSynchronously(false, RegionManagerPage.CreateRegion, 
+                        m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
                 }
             }
             catch
@@ -146,7 +147,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
                 }
                 else
                 {
-                    RegionManager.StartSynchronously(true, true, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                    RegionManager.StartSynchronously(true, RegionManagerPage.CreateRegion,
+                        m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
                 }
             }
             catch
@@ -160,7 +162,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
 
         protected void OpenRegionManager(string[] cmdparams)
         {
-            RegionManager.StartAsynchronously(false, false, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+            RegionManager.StartAsynchronously(false, RegionManagerPage.ViewRegions,
+                m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
         }
 
         private void FindOldRegionFiles()
@@ -249,7 +252,8 @@ namespace OpenSim.ApplicationPlugins.RegionLoaderPlugin
             {
                 //Open the region manager for them
                 MessageBox.Show (reason, "Startup failed, regions did not validate!");
-                RegionManager.StartSynchronously(false, false, m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
+                RegionManager.StartSynchronously(false, RegionManagerPage.ViewRegions,
+                    m_openSim.ConfigSource, m_openSim.ApplicationRegistry.RequestModuleInterface<IRegionManagement>());
             }
             catch
             {

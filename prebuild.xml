@@ -938,6 +938,7 @@
       <Reference name="System.Web"/>
 
       <Reference name="Aurora.DataManager"/>
+      <Reference name="Aurora.Management"/>
       <Reference name="Aurora.Simulation.Base"/>
 	  <Reference name="Aurora.Services.DataService"/>
       <Reference name="Aurora.Framework"/>

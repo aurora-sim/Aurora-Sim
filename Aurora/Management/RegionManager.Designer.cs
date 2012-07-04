@@ -173,6 +173,7 @@ namespace Aurora.Management
             this.estateOwnerName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.estateRegionSelection = new System.Windows.Forms.ListBox();
+            this.find_user = new System.Windows.Forms.Button();
             this.tabPage2.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RegionSelectionsPicture)).BeginInit();
@@ -1359,6 +1360,7 @@ namespace Aurora.Management
             // 
             // groupBox6
             // 
+            this.groupBox6.Controls.Add(this.find_user);
             this.groupBox6.Controls.Add(this.estateOwnerLookupSearch);
             this.groupBox6.Controls.Add(this.estateOwnerName);
             this.groupBox6.Controls.Add(this.label5);
@@ -1404,6 +1406,16 @@ namespace Aurora.Management
             this.estateRegionSelection.Size = new System.Drawing.Size(217, 108);
             this.estateRegionSelection.TabIndex = 34;
             this.estateRegionSelection.SelectedIndexChanged += new System.EventHandler(this.estateRegionSelection_SelectedIndexChanged);
+            // 
+            // find_user
+            // 
+            this.find_user.Location = new System.Drawing.Point(317, 58);
+            this.find_user.Name = "find_user";
+            this.find_user.Size = new System.Drawing.Size(99, 23);
+            this.find_user.TabIndex = 38;
+            this.find_user.Text = "Find user";
+            this.find_user.UseVisualStyleBackColor = true;
+            this.find_user.Click += new System.EventHandler(this.find_user_Click);
             // 
             // RegionManager
             // 
@@ -1564,5 +1576,6 @@ namespace Aurora.Management
         private System.Windows.Forms.Label currentEstateName;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.GroupBox groupBox9;
+        private System.Windows.Forms.Button find_user;
     }
 }

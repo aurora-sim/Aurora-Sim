@@ -145,5 +145,22 @@ namespace Aurora.Framework
         /// <param name="regionID"></param>
         /// <returns></returns>
         string GetEstateOwnerName(UUID regionID);
+
+        /// <summary>
+        /// Gets all users with the given name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        List<OpenSim.Services.Interfaces.UserAccount> GetUserAccounts(string name);
+
+        /// <summary>
+        /// Creates a user for the grid
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <param name="email"></param>
+        /// <param name="userID"></param>
+        /// <param name="scopeID"></param>
+        void CreateUser(string name, string password, string email, UUID userID, UUID scopeID);
     }
 }
