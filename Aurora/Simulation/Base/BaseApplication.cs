@@ -199,12 +199,9 @@ namespace Aurora.Simulation.Base
             bool isAuroraExe = System.AppDomain.CurrentDomain.FriendlyName == "Aurora.exe" ||
                 System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
-            Stream log = null;
             if (requested || (isAuroraExe ?
-                (log = File.OpenRead("Aurora.log")).Length == 0 :
-                (log = File.OpenRead("AuroraServer.log")).Length == 0))
+                Aurora_log : Aurora_Server_log))
             {
-                log.Close();
                 string resp = "no";
                 if (!requested)
                 {
@@ -536,8 +533,6 @@ namespace Aurora.Simulation.Base
                     Console.WriteLine("If you ever want to rerun this configurator, you can type \"run configurator\" into the console to bring this prompt back up.");
                 }
             }
-            else
-                log.Close();
         }
 
         private static void MakeSureExists(string file)
