@@ -266,7 +266,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
             else
             {
-                _target_velocity *= 0.95f;
+                _target_velocity *= _parent_scene.AvDecayTime;
                 d.BodyEnable(Body);
                 d.BodyAddForce(Body, vec.X, vec.Y, vec.Z);
             }

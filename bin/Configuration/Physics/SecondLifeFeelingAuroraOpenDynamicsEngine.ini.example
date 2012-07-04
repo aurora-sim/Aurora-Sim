@@ -9,15 +9,6 @@
     BasePhysicsFPS = 45
 
 [AuroraODEPhysicsSettings]
-    ;; ##
-    ;; ## Performance settings
-    ;; ##
-
-    ;; Enable auto disabling of prims after they almost stop moving. This may make things a bit less realistic, but will improve FPS in sims with many physical objects by approximately 100%.
-    DisableSlowPrims = true
-    
-    ;; Change Physics settings to increase FPS when the sim slows down.
-    EnableAutoConfig = true
 
     ;; ##
     ;; ## World Settings
@@ -29,10 +20,7 @@
 
     ;; The amount to decay the avatar's movement each step in the physics engine
     ;; Lower is faster
-    avDecayTime = 0.97
-    ;; The velocity at which to stop the avatar from decaying and stop their movement (in m/s2)
-    ;; Lower is slower
-    avStopDecaying = 0.5
+    avDecayTime = 0.95
     
     ;; ##
     ;; ## Jump Settings
@@ -52,7 +40,6 @@
     PreJumpMultiplierX = 6
     PreJumpMultiplierY = 6
     PreJumpMultiplierZ = 12.0
-
 
     ;; ##
     ;; ## Gravity Settings
@@ -141,14 +128,6 @@
     ;; This also uses up a large amount of CPU and will lower frame rates in sims with lots of physical objects
     filter_collisions = false
 
-    ;; Moving Avatar to object Contact
-    m_avatarobjectcontact_friction = 15.0
-    m_avatarobjectcontact_bounce = 0.1
-
-    ;; Object to Object Contact and Non-Moving Avatar to object
-    objectcontact_friction = 1000.0
-    objectcontact_bounce = 0.2
-
     ;; ##
     ;; ## Avatar Control
     ;; ##
@@ -157,11 +136,8 @@
     ;; desired velocity
     ;; See http://en.wikipedia.org/wiki/PID_controller
 
-    av_pid_derivative_linux = 2200.0
-    av_pid_proportional_linux = 900.0;
-
-    av_pid_derivative_win = 2200.0
-    av_pid_proportional_win = 900.0;
+    av_pid_derivative = 2200.0
+    av_pid_proportional = 900.0;
 
     ;; girth of the avatar.  Adds radius to the height also
     av_capsule_radius = 0.37
@@ -178,10 +154,6 @@
 
     ;; amount of ODE steps where object is non moving for ODE to automatically put it to sleep
     body_frames_auto_disable = 10
-
-    ;; used to control llMoveToTarget
-    body_pid_derivative = 35
-    body_pid_gain = 25
 
     ;; maximum number of contact points to generate per collision
     contacts_per_collision = 80

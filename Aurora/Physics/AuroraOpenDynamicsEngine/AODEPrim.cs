@@ -153,9 +153,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             m_vehicle = new AuroraODEDynamics();
             //gc = GCHandle.Alloc(prim_geom, GCHandleType.Pinned);
 
-            PID_D = parent_scene.bodyPIDD;
-            PID_G = parent_scene.bodyPIDG;
-
             // correct for changed timestep
             PID_D /= (parent_scene.ODE_STEPSIZE * 50f); // original ode fps of 50
             PID_G /= (parent_scene.ODE_STEPSIZE * 50f);

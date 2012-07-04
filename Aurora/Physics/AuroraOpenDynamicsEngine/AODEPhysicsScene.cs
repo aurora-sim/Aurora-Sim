@@ -60,7 +60,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected float contactsurfacelayer = 0.001f;
 
         public int geomContactPointsStartthrottle = 3;
-        public int geomUpdatesPerThrottledUpdate = 15;
 
         protected int contactsPerCollision = 80;
         protected IntPtr ContactgeomsArray = IntPtr.Zero;
@@ -101,9 +100,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         public bool forceSimplePrimMeshing = true;
         public float meshSculptLOD = 32;
         public float MeshSculptphysicalLOD = 16;
-        public float geomDefaultDensity = 10.000006836f;
-        public float bodyPIDD = 35f;
-        public float bodyPIDG = 25;
         public int geomCrossingFailuresBeforeOutofbounds = 1;
         public int bodyFramesAutoDisable = 10;
         protected bool m_filterCollisions;
@@ -139,7 +135,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected float[] ODETerrainHeightFieldHeights;
         protected ITerrainChannel m_channel;
         protected double WaterHeight = -1;
-        public bool m_EnableAutoConfig = true;
         public bool m_allowJump = true;
         public bool m_usepreJump = true;
         public int m_preJumpTime = 15;
@@ -200,8 +195,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected readonly HashSet<PhysicsActor> ActiveAddCollisionQueue = new HashSet<PhysicsActor>();
         protected readonly HashSet<PhysicsActor> ActiveRemoveCollisionQueue = new HashSet<PhysicsActor>();
 
-        public float m_avDecayTime = 0.985f;
-        public float m_avStopDecaying = 2.05f;
+        internal float AvDecayTime = 0.95f;
 
         public override bool UseUnderWaterPhysics
         {
@@ -323,9 +317,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     gravityVectorNormalized = gravityVector;
                     gravityVectorNormalized.Normalize();
 
-                    m_avDecayTime = physicsconfig.GetFloat("avDecayTime", m_avDecayTime);
-                    m_avStopDecaying = physicsconfig.GetFloat("avStopDecaying", m_avStopDecaying);
-
+                    AvDecayTime = physicsconfig.GetFloat("avDecayTime", AvDecayTime);
+                    
                     AllowUnderwaterPhysics = physicsconfig.GetBoolean("useUnderWaterPhysics", false);
                     AllowAvGravity = physicsconfig.GetBoolean("useAvGravity", true);
                     AvGravityHeight = physicsconfig.GetInt("avGravityHeight", 4096);
@@ -358,15 +351,10 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     contactsPerCollision = physicsconfig.GetInt("contacts_per_collision", 80);
 
                     geomContactPointsStartthrottle = physicsconfig.GetInt("geom_contactpoints_start_throttling", 3);
-                    geomUpdatesPerThrottledUpdate = physicsconfig.GetInt("geom_updates_before_throttled_update", 15);
                     geomCrossingFailuresBeforeOutofbounds =
                         physicsconfig.GetInt("geom_crossing_failures_before_outofbounds", 5);
 
-                    geomDefaultDensity = physicsconfig.GetFloat("geometry_default_density", 10.000006836f);
                     bodyFramesAutoDisable = physicsconfig.GetInt("body_frames_auto_disable", 10);
-
-                    bodyPIDD = physicsconfig.GetFloat("body_pid_derivative", 35f);
-                    bodyPIDG = physicsconfig.GetFloat("body_pid_gain", 25f);
 
                     forceSimplePrimMeshing = physicsconfig.GetBoolean("force_simple_prim_meshing",
                                                                       forceSimplePrimMeshing);
@@ -375,22 +363,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     MeshSculptphysicalLOD = physicsconfig.GetFloat("mesh_physical_lod", 16f);
                     m_filterCollisions = physicsconfig.GetBoolean("filter_collisions", false);
 
-                    if (Environment.OSVersion.Platform == PlatformID.Unix)
-                    {
-                        PID_D = physicsconfig.GetFloat("av_pid_derivative_linux", 2200.0f);
-                        PID_P = physicsconfig.GetFloat("av_pid_proportional_linux", 900.0f);
-                    }
-                    else
-                    {
-                        PID_D = physicsconfig.GetFloat("av_pid_derivative_win", 2200.0f);
-                        PID_P = physicsconfig.GetFloat("av_pid_proportional_win", 900.0f);
-                    }
+                    PID_D = physicsconfig.GetFloat("av_pid_derivative", PID_D);
+                    PID_P = physicsconfig.GetFloat("av_pid_proportional", PID_P);
+
                     m_useFlightCeilingHeight = physicsconfig.GetBoolean("Use_Flight_Ceiling_Height_Max",
                                                                         m_useFlightCeilingHeight);
                     m_flightCeilingHeight = physicsconfig.GetFloat("Flight_Ceiling_Height_Max", m_flightCeilingHeight);
                         //Rex
 
-                    minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 3f);
+                    minimumGroundFlightOffset = physicsconfig.GetFloat("minimum_ground_flight_offset", 6f);
                     maximumMassObject = physicsconfig.GetFloat("maximum_mass_object", 100000.01f);
                     DoPhyWind = physicsconfig.GetBoolean("do_physics_wind", false);
                 }
