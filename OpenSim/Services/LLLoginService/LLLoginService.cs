@@ -497,7 +497,7 @@ namespace OpenSim.Services.LLLoginService
                     m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition, guinfo.HomeLookAt);
 
                     MainConsole.Instance.Info("[LLLoginService]: User did not have a home, set to " +
-                        DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName);
+                        (DefaultRegion == null ? "(no region found)" : DefaultRegion.RegionName));
                 }
 
                 //
