@@ -199,7 +199,7 @@ namespace Aurora.Simulation.Base
             bool isAuroraExe = System.AppDomain.CurrentDomain.FriendlyName == "Aurora.exe" ||
                 System.AppDomain.CurrentDomain.FriendlyName == "Aurora.vshost.exe";
 
-            if (requested || (isAuroraExe ?
+            if (requested || !(isAuroraExe ?
                 Aurora_log : Aurora_Server_log))
             {
                 string resp = "no";
