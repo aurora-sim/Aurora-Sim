@@ -135,6 +135,7 @@ namespace OpenSim.CoreApplicationPlugins
                 {
                     if (loader.Default && loader.Enabled)
                     {
+                        MainConsole.Instance.Info("[LoadRegions]: Attempting to create new region with " + loader.Name);
                         loader.CreateRegion();
                         goto reload;
                     }
