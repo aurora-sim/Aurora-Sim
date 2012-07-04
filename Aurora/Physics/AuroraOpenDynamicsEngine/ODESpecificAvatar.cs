@@ -159,7 +159,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Gravity
 
-            if (IsTruelyColliding)
+            if (IsColliding)
                 _appliedFallingForce = 0;
             if (!flying)
                 vec.Z += -9.8f * 35 * Mass * (_appliedFallingForce > 100 ? 1 : _appliedFallingForce++ / 100f);
