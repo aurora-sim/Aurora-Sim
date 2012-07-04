@@ -18,7 +18,7 @@ rem ## Whether or not to add the .net3.5 flag
 set conditionals=
 
 rem ## Default "configuration" choice ((r)elease, (d)ebug)
-set configuration=r
+set configuration=d
 
 rem ## Default "run compile batch" choice (y(es),n(o))
 set compile_at_end=y
