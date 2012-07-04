@@ -452,7 +452,6 @@ namespace Aurora.Modules.Attachments
                                 MainConsole.Instance.Error("[AttachmentModule]: Failed to add attachment " + objatt.Name + " for user " + remoteClient.Name + "!");
                                 return null;
                             }
-                            forceUpdateOnNextDeattach = true;//If the user has information stored about this object, we need to force updating next time
                         }
                         else
                         {
