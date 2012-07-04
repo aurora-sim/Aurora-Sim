@@ -15,7 +15,8 @@ namespace Aurora.Modules.Web
     {
         public string FilePath { get { return "html/welcomescreen/info_box.html"; } }
 
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
+            Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
 

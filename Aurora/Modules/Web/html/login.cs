@@ -14,16 +14,17 @@ namespace Aurora.Modules.Web
     public class LoginPage : IWebInterfacePage
     {
         public string FilePath { get { return "html/login.html"; } }
-
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
+            Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
 
-            vars.Add("Login", "Login");
-            vars.Add("UserNameText", "User Name");
-            vars.Add("PasswordText", "Password");
-            vars.Add("ForgotPassword", "Forgot Password?");
-            vars.Add("Submit", "Submit");
+            vars.Add("Login", translator.GetTranslatedString("Login"));
+            vars.Add("UserNameText", translator.GetTranslatedString("UserName"));
+            vars.Add("PasswordText", translator.GetTranslatedString("Password"));
+            vars.Add("ForgotPassword", translator.GetTranslatedString("ForgotPassword"));
+            vars.Add("Submit", translator.GetTranslatedString("Submit"));
 
             return vars;
         }

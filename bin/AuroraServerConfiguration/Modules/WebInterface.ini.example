@@ -9,9 +9,14 @@
 	;; All following options are for the built in web interface only
 	;;
 	
+	;; The default langugae for the interface to be in
+	;; Valid options are
+	;; en, fr
+	DefaultLanguage = en
+	
 	;; The port to run the web interface on
-	;; Recommended is 8002, but if you want it to look like a normal website, use 80
-	Port = 8002
+	;; Recommended is 9000, but if you want it to look like a normal website, use 80
+	Port = 9000
 	
 	;;
 	;; Login screen items

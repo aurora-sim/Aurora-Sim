@@ -26,6 +26,8 @@ namespace Aurora.Modules.Web
         protected uint _port = 8002;
         protected bool _enabled = true;
         protected Dictionary<string, IWebInterfacePage> pages = new Dictionary<string, IWebInterfacePage>();
+        protected List<ITranslator> _translators = new List<ITranslator>();
+        protected ITranslator _defaultTranslator;
 
         #endregion
 
@@ -46,6 +48,9 @@ namespace Aurora.Modules.Web
             var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
             foreach(var page in webPages)
                 pages.Add(page.FilePath, page);
+
+            _translators = AuroraModuleLoader.PickupModules<ITranslator>();
+            _defaultTranslator = _translators[0];
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -59,6 +64,10 @@ namespace Aurora.Modules.Web
                 _infoMessageText = con.GetString("InfoMessageText", _infoMessageText);
                 _infoMessageColor = con.GetString("InfoMessageColor", _infoMessageColor);
                 _gridIsOnline = con.GetString("GridIsOnline", _gridIsOnline);
+                string defaultLanguage = con.GetString("DefaultLanguage", "en");
+                _defaultTranslator = _translators.FirstOrDefault(t => t.LanguageName == defaultLanguage);
+                if (_defaultTranslator == null)
+                    _defaultTranslator = _translators[0];
             }
             if (_enabled)
             {
@@ -146,7 +155,13 @@ namespace Aurora.Modules.Web
             Dictionary<string, object> vars = new Dictionary<string, object>();
             if (pages.ContainsKey(filename))
             {
-                vars = pages[filename].Fill(this, filename, query, httpResponse, requestParameters);
+                ITranslator translator = null;
+                if (query.ContainsKey("language"))
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == query["language"].ToString());
+                if (translator == null)
+                    translator = _defaultTranslator;
+
+                vars = pages[filename].Fill(this, filename, query, httpResponse, requestParameters, translator);
                 vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
                 vars.Add("SystemName", "Testing Grid!");
                 return vars;

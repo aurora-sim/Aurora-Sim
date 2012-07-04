@@ -13,11 +13,12 @@ namespace Aurora.Modules.Web
     {
         public string FilePath { get { return "html/welcomescreen/news.html"; } }
 
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
+            Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
 
-            vars.Add("News", "News");
+            vars.Add("News", translator.GetTranslatedString("News"));
 
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             var newsItems = connector.GetGenerics<GridNewsItem>(UUID.Zero, "WebGridNews");

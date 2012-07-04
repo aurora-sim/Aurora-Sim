@@ -12,7 +12,8 @@ namespace Aurora.Modules.Web
     {
         public string FilePath { get { return "html/welcomescreen/region_box.html"; } }
 
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
+            Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
 
@@ -28,7 +29,7 @@ namespace Aurora.Modules.Web
                     { "RegionLocY", region.RegionLocY / Constants.RegionSize }, { "RegionName", region.RegionName } });
 
             vars.Add("RegionList", RegionListVars);
-            vars.Add("RegionText", "Region");
+            vars.Add("RegionText", translator.GetTranslatedString("Region"));
 
             return vars;
         }

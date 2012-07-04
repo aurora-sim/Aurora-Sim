@@ -1,9 +1,9 @@
 ;;
-;; This is the main configuration file for standalone OpenSim instances
+;; This is the main configuration file for standalone Aurora-Sim instances
 ;;
 [Include]
-    ;; Just basic standalone mode, no HG, no IWC
     Include-Standalone = Configuration/Standalone/Standalone.ini
+    Include-WebInterface = Configuration/Standalone/WebInterface.ini
 
 [GridService]
     ;; Next, we can specify properties of regions, including default and fallback regions
