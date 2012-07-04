@@ -19,26 +19,18 @@
 	Port = 9000
 	
 	;;
-	;; Login screen items
+	;; Welcome Screen
+	;; You can access this at 
+	;; http://your server IP:port/welcomescreen/
 	;;
-	
-	;; Whether the grid is online or not
-	;; Default value is ONLINE (other default is OFFLINE)
-	GridIsOnline = "ONLINE"
-	
-	;; The title to give the special info box on the right side of the login screen
-	InfoMessageTitle = "Nothing to report at this time"
-	
-	;; The text below the InfoMessageTitle
-	InfoMessageText = "Grid is up and running."
-	
-	;; Which color the special info box should be
-	;; Valid colors are
-	;; red, yellow, white, green
-	InfoMessageColor = green
-	
-	;;
+
 	;; News items on the login screen
 	;; 
 	;; To add news to the login screen, type "web add news item" into the console
 	;; To remove news from the login screen, type "web remove news item" into the console
+	
+	;; Grid status/Special Info Window information
+	;; 
+	;; To change these items, point your browser to 
+	;; http://your server IP:port/welcomescreen/admin/
+	;; and login when prompted.

@@ -20,10 +20,15 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
-            vars.Add("Title", webInterface._infoMessageTitle);
-            vars.Add("Text", webInterface._infoMessageText);
-            vars.Add("Color", webInterface._infoMessageColor);
+            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen");
+            if (welcomeInfo == null)
+                welcomeInfo = GridWelcomeScreen.Default;
 
+            vars.Add("Title", welcomeInfo.SpecialWindowMessageTitle);
+            vars.Add("Text", welcomeInfo.SpecialWindowMessageText);
+            vars.Add("Color", welcomeInfo.SpecialWindowMessageColor);
+            vars.Add("Active", welcomeInfo.SpecialWindowActive);
             return vars;
         }
     }

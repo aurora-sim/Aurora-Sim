@@ -19,10 +19,6 @@ namespace Aurora.Modules.Web
     {
         #region Declares
 
-        internal string _infoMessageTitle = "Nothing to report at this time.";
-        internal string _infoMessageText = "Grid is up and running.";
-        internal string _infoMessageColor = "white";
-        internal string _gridIsOnline = "OFFLINE";
         protected uint _port = 8002;
         protected bool _enabled = true;
         protected Dictionary<string, IWebInterfacePage> pages = new Dictionary<string, IWebInterfacePage>();
@@ -60,10 +56,6 @@ namespace Aurora.Modules.Web
             {
                 _enabled = con.GetString("Module", "BuiltIn") == "BuiltIn";
                 _port = con.GetUInt("Port", _port);
-                _infoMessageTitle = con.GetString("InfoMessageTitle", _infoMessageTitle);
-                _infoMessageText = con.GetString("InfoMessageText", _infoMessageText);
-                _infoMessageColor = con.GetString("InfoMessageColor", _infoMessageColor);
-                _gridIsOnline = con.GetString("GridIsOnline", _gridIsOnline);
                 string defaultLanguage = con.GetString("DefaultLanguage", "en");
                 _defaultTranslator = _translators.FirstOrDefault(t => t.LanguageName == defaultLanguage);
                 if (_defaultTranslator == null)
@@ -229,7 +221,7 @@ namespace Aurora.Modules.Web
                     else if (line.Trim().StartsWith("{IsAuthenticatedEnd}") ||
                         line.Trim().StartsWith("{IsNotAuthenticatedEnd}"))
                     {
-                        newLines.RemoveAt(newLinesPos--);
+                        //newLines.RemoveAt(newLinesPos--);
                     }
                 }
                 newLinesPos++;
@@ -330,6 +322,44 @@ namespace Aurora.Modules.Web
             dictionary.Add("NewsID", ID);
 
             return dictionary;
+        }
+    }
+
+    internal class GridWelcomeScreen : IDataTransferable
+    {
+        public static readonly GridWelcomeScreen Default = new GridWelcomeScreen
+        {
+            SpecialWindowMessageTitle = "Nothing to report at this time.",
+            SpecialWindowMessageText = "Grid is up and running.",
+            SpecialWindowMessageColor = "white",
+            SpecialWindowActive = true,
+            GridStatus = true
+        };
+
+        public string SpecialWindowMessageTitle;
+        public string SpecialWindowMessageText;
+        public string SpecialWindowMessageColor;
+        public bool SpecialWindowActive;
+        public bool GridStatus;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["SpecialWindowMessageTitle"] = SpecialWindowMessageTitle;
+            map["SpecialWindowMessageText"] = SpecialWindowMessageText;
+            map["SpecialWindowMessageColor"] = SpecialWindowMessageColor;
+            map["SpecialWindowActive"] = SpecialWindowActive;
+            map["GridStatus"] = GridStatus;
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            SpecialWindowMessageTitle = map["SpecialWindowMessageTitle"];
+            SpecialWindowMessageText = map["SpecialWindowMessageText"];
+            SpecialWindowMessageColor = map["SpecialWindowMessageColor"];
+            SpecialWindowActive = map["SpecialWindowActive"];
+            GridStatus = map["GridStatus"];
         }
     }
 }

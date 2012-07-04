@@ -76,11 +76,9 @@ height: 76%;
   position: relative
 }
 
-.online {font-weight: bold; color: #00ff00; text-align:right;}
-.ONLINE {font-weight: bold; color: #00ff00; text-align:right;}
+.Online {font-weight: bold; color: #00ff00; text-align:right;}
 .Enabled {font-weight: bold; color: #00ff00; text-align:right;}
-.offline {font-weight: bold; color: #ff0000;}
-.OFFLINE {font-weight: bold; color: #ff0000;}
+.Offline {font-weight: bold; color: #ff0000;}
 .Disabled {font-weight: bold; color: #ff0000;}
 
 .gridtext {

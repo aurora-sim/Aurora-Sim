@@ -1,0 +1,83 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{SpecialWindowTitle}
+{SpecialWindowMessage}
+{SpecialWindowActive}
+{SpecialWindowInactive}
+{GridActive} 
+{GridInactive}
+{SpecialWindowColorRed} 
+{SpecialWindowColorYellow} 
+{SpecialWindowColorWhite} 
+{SpecialWindowColorGreen} 
+{SpecialWindowTitleText}        Special Info Window Title
+{SpecialWindowTextText}         Special Info Window Text
+{SpecialWindowColorText}        Special Info Window Color
+{SpecialWindowStatusText}       Special Info Window Status
+{GridStatus}                    Grid Status
+{WelcomeScreenManagerFor}       Welcome Screen Manager for
+{Online}                        Online
+{Offline}                       Offline
+{Enabled}                       Enabled
+{Disabled}                      Disabled
+{Submit}                        Submit
+{ChangesSavedSuccessfully}      Changes saved successfully
+
+-->
+{IsNotAuthenticatedBegin}
+<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
+{IsNotAuthenticatedEnd}
+{IsAuthenticatedBegin}
+<div id="content">
+	<div id="ContentHeaderCenter"><b>{WelcomeScreenManagerFor} {SystemName}</b></div>
+	<div id="loginscreen_manager">
+		<div><b>{ChangesSavedSuccessfully}</b></div>
+		<form action="index.html" method="post">
+			<table>
+				<tr>
+					<td><div align="right">{GridStatus} </div></td>
+					<td>
+						<select name="GridStatus" id="GridStatus">
+							<option value="1" style="background-color:#00FF00" {GridActive}>{Online}</option>
+							<option value="0" style="background-color:#FF0000" {GridInactive}>{Offline}</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td><div align="right">{SpecialWindowStatusText}</div></td>
+					<td>
+						<select name="SpecialWindowStatus" id="SpecialWindowStatus">
+							<option value="1" style="background-color:#00FF00" {SpecialWindowActive}>{Enabled}</option>
+							<option value="0" style="background-color:#FF0000" {SpecialWindowInactive}>{Disabled}</option>
+						</select>
+					</td>
+				</tr>
+				<tr><td colspan="6"></td></tr>
+				<tr>
+					<td>{SpecialWindowTitleText}</td>
+					<td colspan="5"><input name="SpecialWindowTitle" type="text" id="SpecialWindowTitle" size="119" value="{SpecialWindowTitle}" /></td>
+				</tr>
+				<tr>
+					<td>{SpecialWindowTextText}</td>
+					<td colspan="5"><textarea name="SpecialWindowText" cols="90" rows="10" id="SpecialWindowText">{SpecialWindowMessage}</textarea></td>
+				</tr>
+				<tr>
+					<td><div align="right">{SpecialWindowColorText}</div></td>
+					<td>
+						<select name="SpecialWindowColor" id="boxcolor">
+							<option value="white" style=" background-color:#FFFFFF" {SpecialWindowColorWhite}>white</option>
+							<option value="green" style="background-color:#00FF00"  {SpecialWindowColorGreen}>green</option>
+							<option value="yellow" style="background-color:#FFFF00" {SpecialWindowColorYellow}>yellow</option>
+							<option value="red" style="background-color:#FF0000" {SpecialWindowColorRed}>red</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="6"><div align="center"><button id="submit" type="submit" name="submit">{Submit}</button></div>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+{IsAuthenticatedEnd}

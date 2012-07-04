@@ -14,11 +14,11 @@ namespace Aurora.Modules.Web.Translators
             switch (key)
             {
                 case "GridStatus":
-                    return "GRID STATUS";
+                    return "Grid Status";
                 case "Online":
-                    return "ONLINE";
+                    return "Online";
                 case "Offline":
-                    return "OFFLINE";
+                    return "Offline";
                 case "TotalUserCount":
                     return "Total Users";
                 case "TotalRegionCount":
@@ -51,6 +51,21 @@ namespace Aurora.Modules.Web.Translators
                     return "Forgot Password?";
                 case "Submit":
                     return "Submit";
+
+                //English only so far
+                case "SpecialWindowTitleText":
+                    return "Special Info Window Title";
+                case "SpecialWindowTextText":
+                    return "Special Info Window Text";
+                case "SpecialWindowColorText":
+                    return "Special Info Window Color";
+                case "SpecialWindowStatusText":
+                    return "Special Info Window Status";
+                case "WelcomeScreenManagerFor":
+                    return "Welcome Screen Manager For";
+                case "ChangesSavedSuccessfully":
+                    return "Changes Saved Successfully";
+                    
             }
             return "UNKNOWN CHARACTER";
         }

@@ -20,9 +20,15 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
+            IAgentInfoConnector users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
+            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen");
+            if (welcomeInfo == null)
+                welcomeInfo = GridWelcomeScreen.Default;
+
             IConfigSource config = webInterface.Registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
             vars.Add("GridStatus", translator.GetTranslatedString("GridStatus"));
-            vars.Add("GridOnline", webInterface._gridIsOnline);
+            vars.Add("GridOnline", welcomeInfo.GridStatus ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
             vars.Add("TotalUserCount", translator.GetTranslatedString("TotalUserCount"));
             vars.Add("UserCount", webInterface.Registry.RequestModuleInterface<IUserAccountService>().
                 NumberOfUserAccounts(UUID.Zero, "").ToString());
@@ -30,7 +36,6 @@ namespace Aurora.Modules.Web
             vars.Add("RegionCount", DataManager.DataManager.RequestPlugin<IRegionData>().
                 Count((Framework.RegionFlags)0, (Framework.RegionFlags)0).ToString());
             vars.Add("UniqueVisitors", translator.GetTranslatedString("UniqueVisitors"));
-            IAgentInfoConnector users = DataManager.DataManager.RequestPlugin<IAgentInfoConnector>();
             vars.Add("UniqueVisitorCount", users.RecentlyOnline((uint)TimeSpan.FromDays(30).TotalSeconds, false).ToString());
             vars.Add("OnlineNow", translator.GetTranslatedString("OnlineNow"));
             vars.Add("OnlineNowCount", users.RecentlyOnline(5 * 60, true).ToString());
