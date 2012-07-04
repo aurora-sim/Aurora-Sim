@@ -11,7 +11,7 @@
 	
 	;; The default langugae for the interface to be in
 	;; Valid options are
-	;; en, fr
+	;; en, fr, de, es, it
 	DefaultLanguage = en
 	
 	;; The port to run the web interface on
