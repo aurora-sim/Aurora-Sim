@@ -47,6 +47,8 @@ namespace Aurora.Modules.Web.Translators
                     return "User Name";
                 case "Password":
                     return "Password";
+                case "PasswordConfirmation":
+                    return "Password Confirmation";
                 case "ForgotPassword":
                     return "Forgot Password?";
                 case "Submit":
@@ -69,8 +71,6 @@ namespace Aurora.Modules.Web.Translators
 
                 case "AvatarNameText":
                     return "Avatar Name";
-                case "AvatarPasswordText":
-                    return "Password";
                 case "AvatarScopeText":
                     return "Avatar Scope ID";
                 case "FirstNameText":
@@ -89,8 +89,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Your Date Of Birth (Month Day Year)";
                 case "UserEmailText":
                     return "Your Email";
-                case "RegistrationForText":
-                    return "Registration For";
+                case "RegistrationText":
+                    return "Avatar Registration";
                 case "RegistrationsDisabled":
                     return "Registrations are currently disabled, please try again soon.";
                 case "TermsOfServiceText":

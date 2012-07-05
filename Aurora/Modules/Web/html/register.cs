@@ -132,9 +132,10 @@ namespace Aurora.Modules.Web
             vars.Add("TermsOfServiceAccept", translator.GetTranslatedString("TermsOfServiceAccept"));
             vars.Add("TermsOfServiceText", translator.GetTranslatedString("TermsOfServiceText"));
             vars.Add("RegistrationsDisabled", translator.GetTranslatedString("RegistrationsDisabled"));
-            vars.Add("RegistrationForText", translator.GetTranslatedString("RegistrationForText"));
+            vars.Add("RegistrationText", translator.GetTranslatedString("RegistrationText"));
             vars.Add("AvatarNameText", translator.GetTranslatedString("AvatarNameText"));
-            vars.Add("AvatarPasswordText", translator.GetTranslatedString("AvatarPasswordText"));
+            vars.Add("AvatarPasswordText", translator.GetTranslatedString("Password"));
+            vars.Add("AvatarPasswordConfirmationText", translator.GetTranslatedString("PasswordConfirmation"));
             vars.Add("AvatarScopeText", translator.GetTranslatedString("AvatarScopeText"));
             vars.Add("FirstNameText", translator.GetTranslatedString("FirstNameText"));
             vars.Add("LastNameText", translator.GetTranslatedString("LastNameText"));
