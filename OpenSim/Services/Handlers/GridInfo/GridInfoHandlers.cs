@@ -89,12 +89,18 @@ namespace OpenSim.Services
                 }
                 if (!_info["login"].ToString().EndsWith("/"))
                     _info["login"] = _info["login"] + "/";
-
+                
                 if (!_info.ContainsKey("welcome"))
                 {
                     IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
                     if (webInterface != null)
                         _info["welcome"] = webInterface.LoginScreenURL;
+                }
+                if (!_info.ContainsKey("register"))
+                {
+                    IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
+                    if (webInterface != null)
+                        _info["register"] = webInterface.RegistrationScreenURL;
                 }
                 if (!_info.ContainsKey("helperuri"))
                 {

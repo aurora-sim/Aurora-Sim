@@ -30,8 +30,9 @@ namespace Aurora.Modules.Web
         #region Public Properties
 
         public IRegistryCore Registry { get; protected set; }
-
+        
         public string LoginScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; } }
+        public string RegistrationScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/register.html"; } }
 
         #endregion
 
