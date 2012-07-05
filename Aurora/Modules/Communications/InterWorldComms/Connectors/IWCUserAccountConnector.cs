@@ -157,9 +157,9 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public void CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
+        public string CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
         {
-            m_localService.CreateUser(userID, scopeID, name, md5password, email);
+            return m_localService.CreateUser(userID, scopeID, name, md5password, email);
         }
 
         public void CacheAccount(UserAccount account)

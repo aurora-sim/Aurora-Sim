@@ -297,8 +297,9 @@ namespace OpenSim.Services.Robust
         {
         }
 
-        public void CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
+        public string CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email)
         {
+            return "";
         }
 
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)

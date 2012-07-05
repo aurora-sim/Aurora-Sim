@@ -354,11 +354,11 @@ namespace OpenSim.Services.UserAccountService
         /// <param name = "password"></param>
         /// <param name = "email"></param>
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public void CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
+        public string CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
             object remoteValue = DoRemote(userID, scopeID, name, password, email);
             if (remoteValue != null || m_doRemoteOnly)
-                return;
+                return remoteValue == null ? "" : remoteValue.ToString();
 
             UserAccount account = GetUserAccount(UUID.Zero, userID);
             UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
@@ -372,23 +372,29 @@ namespace OpenSim.Services.UserAccountService
                     {
                         success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
                         if (!success)
+                        {
                             MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
                                              name);
+                            return "Unable to set password";
+                        }
                     }
 
                     MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
                     //Cache it as well
                     CacheAccount(account);
                     m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("CreateUserInformation", userID);
+                    return "";
                 }
                 else
                 {
                     MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
+                    return "Unable to save account";
                 }
             }
             else
             {
                 MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
+                return "A user with the same name already exists";
             }
         }
 

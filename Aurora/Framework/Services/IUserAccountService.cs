@@ -332,7 +332,8 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "name"></param>
         /// <param name = "md5password">MD5 hashed password</param>
         /// <param name = "email"></param>
-        void CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email);
+        /// <returns>The error message (if one exists)</returns>
+        string CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email);
 
         /// <summary>
         /// Delete a user from the database permanently

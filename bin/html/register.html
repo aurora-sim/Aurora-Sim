@@ -1,0 +1,218 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{Days}
+{Months}
+{Years}
+{AvatarArchives}
+{ErrorMessage}             Any errors that may have happened during creating the account
+{ToSMessage}               The Entire ToS
+{TermsOfServiceAccept}     Do you accept the Terms of Service as detailed above?
+{TermsOfServiceText}       Terms of Service
+{RegistrationsDisabled}    RegistrationsDisabled
+{RegistrationForText}      Registration For
+{AvatarNameText}           Avatar Name
+{AvatarPasswordText}       Password
+{AvatarScopeText}          Avatar ScopeID
+{FirstNameText}            Your First Name
+{LastNameText}             Your Last Name
+{UserAddressText}          Your Address
+{UserZipText}              Your Zip Code
+{UserCityText}             Your City
+{UserCountryText}          Your Country
+{UserDOBText}              Your Date Of Birth
+{UserEmailText}            Your Email
+{Submit}                   Submit
+
+-->
+
+<div id="content">
+    <div id="ContentHeaderCenter"><b>{RegistrationForText} {SystemName}</b></div>
+    <div id="register">
+        <form ACTION="register.html" METHOD="POST">
+            <table>
+                <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
+                <tr>
+                    <td class="even" width="52%">{AvatarNameText}*</td>
+                    <td class="even">
+                        <div class="roundedinput">
+							<input minlength="3" id="AvatarName" require="true" label="AvatarName" name="AvatarName" type="text" size="25" maxlength="30" value="">
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="even">{AvatarPasswordText}*</td>
+                    <td class="even">
+                        <div class="roundedinput">
+							<input minlength="6" compare="AvatarPassword2" require="true" label="AvatarPassword" id="AvatarPassword" name="AvatarPassword" type="password" size="30" maxlength="15">
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="odd">{AvatarPasswordText}*</span></td>
+                    <td class="odd">
+						<div class="roundedinput">
+							<input minlength="6" require="true" label="AvatarPassword2" id="AvatarPassword2" name="AvatarPassword2" type="password" size="30" maxlength="15">
+						</div>
+                    </td>
+                </tr>
+
+{IsAdminAuthenticatedBegin}
+<!-- Only admins can set scope IDs -->
+
+                <tr>
+                    <td class="odd">{AvatarScopeText}*</span></td>
+                    <td class="odd">
+						<div class="roundedinput">
+							<input minlength="6" require="true" label="AvatarScope" id="AvatarScope" name="AvatarScope" type="text" size="40" maxlength="15" value="00000000-0000-0000-0000-000000000000">
+						</div>
+                    </td>
+                </tr>
+				
+{IsAdminAuthenticatedEnd}
+
+                <tr>
+					<td class="odd">{FirstNameText}</td>
+					<td class="odd">
+						<div class="roundedinput">
+							<input label="FirstName" id="FirstName" name="FirstName" type="text" size="25" maxlength="15" value="">
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="even">{LastNameText}</td>
+					<td class="even">
+						<div class="roundedinput">
+							<input label="LastName" id="LastName" name="LastName" type="text" size="25" maxlength="15" value="">
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="odd">{UserAddressText}</td>
+					<td class="odd">
+						<div class="roundedinput">
+							<input label="UserAddress" id="UserAddress" name="UserAddress" type="text" size="50" maxlength="50" value="">
+						</div>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="even">{UserZipText}</span></td>
+					<td class="even">
+						<div class="roundedinput">
+							<input label="UserZip" id="UserZip" name="UserZip" type="text" size="25" maxlength="15" value="">
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="odd">{UserCityText}</span></td>
+					<td class="odd">
+						<div class="roundedinput">
+							<input label="UserCity" id="UserCity" name="UserCity" type="text" size="25" maxlength="15" value="">
+						</div>
+					</td>
+				</tr>
+                <tr>
+                    <td class="odd">{UserDOBText}</td>
+                    <td class="odd">
+                        <div id="birthday" class="roundedinput">
+							<table>
+								<tr>
+									<td>
+										<select id="UserDOBMonth" require="true" name='UserDOBMonth'>
+										
+{MonthsArrayBegin}
+											<option value="{Value}">{Value}</option>
+{MonthsArrayEnd}
+
+										</select>
+									</td>
+									<td>
+										<select id="UserDOBDay" require="true" name='UserDOBDay'>
+										
+{DaysArrayBegin}
+											<option value="{Value}">{Value}</option>
+{DaysArrayEnd}
+
+										</select>
+									</td>
+									<td>
+										<select id="UserDOBYear" require="true" name='UserDOBYear'>
+										
+{YearsArrayBegin}
+											<option value="{Value}">{Value}</option>
+{YearsArrayEnd}
+
+										</select>
+									</td>
+								</tr>
+							</table>
+						</div>
+                    </td>
+                </tr>
+				<tr>
+					<td class="odd">{UserEmailText}</td>
+					<td class="odd">
+						<div class="roundedinput">
+							<input label="UserEmail" id="UserEmail" name="UserEmail" type="text" size="40" maxlength="40" value="">
+						</div>
+					</td>
+				</tr>
+				
+				<tr>
+					<td colspan="2" valign="top">
+					
+{AvatarArchiveArrayBegin}
+
+						<div class="avatar_archive_screenshot">
+							<label for="{AvatarArchiveName}">{AvatarArchiveName}</label>
+							<input type="radio" id="{AvatarArchiveName}" name="AvatarArchive" value="{AvatarArchiveName}">
+							<br>
+								<!--<img src=\"".WIREDUX_TEXTURE_SERVICE."/index.php?method=GridTexture&uuid={AvatarArchiveSnapshotID}\" />-->
+							</br>
+						</div>
+						
+{AvatarArchiveArrayEnd}
+						
+					</td>
+				</tr>
+				
+				<tr>
+					<td class="odd">{TermsOfServiceText}</td>
+					<td colspan="2" valign="top">
+						<textarea name="TosText" cols="90" rows="10" id="TosText">{ToSMessage}</textarea>
+					</td>
+				</tr>
+				
+				<tr>
+					<td>{TermsOfServiceAccept}</td>
+					<td colspan="2" valign="top">
+						<input type="checkbox" name="ToSAccept" value="Accepted" />Accept<br />
+					</td>
+				</tr>
+				
+				<tr>
+					<td class="even">
+						<div class="center">
+							<input type="hidden" name="action" value="check">
+								<button id="Submit" name="Submit" type="Submit">{Submit}</button>
+							</input>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+<!--
+<div id="content">
+<div id="ContentHeaderCenter"><b>{RegistrationForText} {SystemName}</b></div>
+  <div id="alert">
+    <p>{RegistrationsDisabled}</p>
+  </div>
+</div>
+-->

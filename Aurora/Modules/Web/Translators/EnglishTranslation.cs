@@ -65,7 +65,38 @@ namespace Aurora.Modules.Web.Translators
                     return "Welcome Screen Manager For";
                 case "ChangesSavedSuccessfully":
                     return "Changes Saved Successfully";
-                    
+
+
+                case "AvatarNameText":
+                    return "Avatar Name";
+                case "AvatarPasswordText":
+                    return "Password";
+                case "AvatarScopeText":
+                    return "Avatar Scope ID";
+                case "FirstNameText":
+                    return "Your First Name";
+                case "LastNameText":
+                    return "Your Last Name";
+                case "UserAddressText":
+                    return "Your Address";
+                case "UserZipText":
+                    return "Your Zip Code";
+                case "UserCityText":
+                    return "Your City";
+                case "UserCountryText":
+                    return "Your Country";
+                case "UserDOBText":
+                    return "Your Date Of Birth (Month Day Year)";
+                case "UserEmailText":
+                    return "Your Email";
+                case "RegistrationForText":
+                    return "Registration For";
+                case "RegistrationsDisabled":
+                    return "Registrations are currently disabled, please try again soon.";
+                case "TermsOfServiceText":
+                    return "Terms of Service";
+                case "TermsOfServiceAccept":
+                    return "Do you accept the Terms of Service as detailed above?";
             }
             return "UNKNOWN CHARACTER";
         }
