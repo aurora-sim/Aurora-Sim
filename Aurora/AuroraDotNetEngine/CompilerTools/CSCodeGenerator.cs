@@ -2187,10 +2187,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     retstr += GenerateLine("yield break;", rs);
                 else
                 {
-                    retstr += Generate(string.Format("yield return ({0})", _currentFunctionDeclaration.ReturnType), rs);
+                    retstr += Generate(string.Format("yield return ({0})(", _currentFunctionDeclaration.ReturnType), rs);
                     foreach (SYMBOL kid in rs.kids)
                         retstr += GenerateNode(kid);
-                    retstr += GenerateLine(";", null);
+                    retstr += GenerateLine(");", null);
                     retstr += GenerateLine("yield break;", null);
                 }
                 retstr += GenerateLine("}");
