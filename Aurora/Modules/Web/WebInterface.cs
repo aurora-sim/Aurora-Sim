@@ -43,8 +43,13 @@ namespace Aurora.Modules.Web
             Registry = registry;
 
             var webPages = Aurora.Framework.AuroraModuleLoader.PickupModules<IWebInterfacePage>();
-            foreach(var page in webPages)
-                _pages.Add(page.FilePath, page);
+            foreach (var pages in webPages)
+            {
+                foreach (var page in pages.FilePath)
+                {
+                    _pages.Add(page, pages);
+                }
+            }
 
             _translators = AuroraModuleLoader.PickupModules<ITranslator>();
             _defaultTranslator = _translators[0];

@@ -9,7 +9,7 @@ namespace Aurora.Modules.Web
 {
     public interface IWebInterfacePage
     {
-        string FilePath { get; }
+        string[] FilePath { get; }
         bool RequiresAuthentication { get; }
         bool RequiresAdminAuthentication { get; }
 

@@ -14,7 +14,16 @@ namespace Aurora.Modules.Web
 {
     public class RegisterPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/register.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/register.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
