@@ -315,6 +315,12 @@ namespace Aurora.Modules.Web
         }
 
         #endregion
+
+        internal void Redirect(OSHttpResponse httpResponse, string url)
+        {
+            httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
+            httpResponse.AddHeader("Location", url);
+        }
     }
 
     internal class GridNewsItem : IDataTransferable
@@ -329,7 +335,7 @@ namespace Aurora.Modules.Web
         {
             OSDMap map = new OSDMap();
             map["Title"] = Title;
-            map["Text"] = Title;
+            map["Text"] = Text;
             map["Time"] = Time;
             map["ID"] = ID;
             return map;

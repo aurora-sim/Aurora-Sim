@@ -40,9 +40,7 @@ namespace Aurora.Modules.Web
                         Authenticator.AddAdminAuthentication(sessionID, account.PrincipalID);
                     httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });
 
-                    httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
-                    httpResponse.AddHeader("Location", "/welcomescreen/index.html");
-
+                    webInterface.Redirect(httpResponse, "/welcomescreen/index.html");
                     return vars;
                 }
                 else

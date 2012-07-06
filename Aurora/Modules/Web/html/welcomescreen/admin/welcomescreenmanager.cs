@@ -41,6 +41,7 @@ namespace Aurora.Modules.Web
             GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen");
             if (welcomeInfo == null)
                 welcomeInfo = GridWelcomeScreen.Default;
+            vars.Add("OpenNewsManager", translator.GetTranslatedString("OpenNewsManager"));
             vars.Add("SpecialWindowTitleText", translator.GetTranslatedString("SpecialWindowTitleText"));
             vars.Add("SpecialWindowTextText", translator.GetTranslatedString("SpecialWindowTextText"));
             vars.Add("SpecialWindowColorText", translator.GetTranslatedString("SpecialWindowColorText"));

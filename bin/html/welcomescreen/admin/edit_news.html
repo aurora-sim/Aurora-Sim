@@ -1,0 +1,56 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{EditNewsText}             Edit News
+{ErrorMessage}             Error Message Handling
+{NewsItemTitle}            News Item Title
+{NewsItemText}             News Item Text
+{NewsTitle}                
+{NewsText}             
+{NewsID}             
+{Submit}                   Submit
+
+-->
+
+{IsNotAdminAuthenticatedBegin}
+<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
+{IsNotAdminAuthenticatedEnd}
+{IsAdminAuthenticatedBegin}
+<div id="content">
+    <div id="ContentHeaderCenter"><b>{EditNewsText}: {SystemName}</b></div>
+    <div id="register">
+        <form ACTION="edit_news.html" METHOD="POST">
+            <table>
+                <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
+				
+				<tr><td colspan="6"></td></tr>
+				<tr>
+					<td>{NewsItemTitle}</td>
+					<td colspan="5">
+						<input name="NewsTitle" type="text" id="NewsTitle" size="119" value="{NewsTitle}"/>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="odd">{NewsItemText}</td>
+					<td colspan="2" valign="top">
+						<textarea name="NewsText" cols="90" rows="10" id="NewsText">{NewsText}</textarea>
+					</td>
+				</tr>
+				
+				<input type="hidden" name="NewsID" id="NewsID" value="{NewsID}" />
+				
+				<tr>
+					<td class="even">
+						<div class="center">
+							<input type="hidden" name="action" value="check">
+								<button id="Submit" name="Submit" type="Submit">{Submit}</button>
+							</input>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+{IsAdminAuthenticatedEnd}

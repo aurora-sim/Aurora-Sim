@@ -1,0 +1,46 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{NewsManager}
+{News}
+-->
+
+{IsNotAdminAuthenticatedBegin}
+<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
+{IsNotAdminAuthenticatedEnd}
+{IsAdminAuthenticatedBegin}
+<div id="content">
+	<div id="ContentHeaderCenter"><b>{NewsManager}: {SystemName}</div>
+	<div>
+		<tr>
+			<td>{Success}</td>
+		</tr>
+	</div>
+    <div>
+		<tr>
+			<td><a href="add_news.html">{AddNewsItem}</a></td>
+		</tr>
+	</div>
+	<div id="news_online">
+		<table>
+			<tr>
+				<td><b>{NewsTitleText}</b></td>
+				<td><b>{NewsDateText}</b></td>
+			</tr>
+			
+{NewsArrayBegin}
+
+			<tr>
+				<td><b>{NewsTitle}</b></td>
+				<td>{NewsDate}</td>
+				<td><a href="news_manager.html?edit={NewsID}">{EditNewsItem}</a></td>
+				<td><a href="news_manager.html?delete={NewsID}">{DeleteNewsItem}</a></td>
+			</tr>
+			<tr><td></td></tr>
+			
+{NewsArrayEnd}
+
+        </table>
+	</div>
+</div>
+{IsAdminAuthenticatedEnd}

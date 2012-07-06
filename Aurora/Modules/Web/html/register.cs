@@ -81,8 +81,7 @@ namespace Aurora.Modules.Web
                             profileData.UpdateUserProfile(profile);
                         }
 
-                        httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
-                        httpResponse.AddHeader("Location", "/welcomescreen/index.html");
+                        webInterface.Redirect(httpResponse, "/welcomescreen/index.html");
 
                         return vars;
                     }

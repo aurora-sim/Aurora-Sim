@@ -90,13 +90,27 @@ namespace Aurora.Modules.Web.Translators
                 case "UserEmailText":
                     return "Your Email";
                 case "RegistrationText":
-                    return "Avatar Registration";
+                    return "Avatar registration";
                 case "RegistrationsDisabled":
                     return "Registrations are currently disabled, please try again soon.";
                 case "TermsOfServiceText":
                     return "Terms of Service";
                 case "TermsOfServiceAccept":
                     return "Do you accept the Terms of Service as detailed above?";
+                case "OpenNewsManager":
+                    return "Open the news manager";
+                case "NewsManager":
+                    return "News Manager";
+                case "EditNewsItem":
+                    return "Edit news item";
+                case "AddNewsItem":
+                    return "Add new news item";
+                case "DeleteNewsItem":
+                    return "Delete news item";
+                case "NewsDateText":
+                    return "News Date";
+                case "NewsTitleText":
+                    return "News Title";
             }
             return "UNKNOWN CHARACTER";
         }
