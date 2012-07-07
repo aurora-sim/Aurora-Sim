@@ -11,7 +11,16 @@ namespace Aurora.Modules.Web
 {
     public class NewsPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/welcomescreen/news.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/welcomescreen/news.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }

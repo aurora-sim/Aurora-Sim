@@ -10,7 +10,16 @@ namespace Aurora.Modules.Web
 {
     public class RegionBoxPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/welcomescreen/region_box.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/welcomescreen/region_box.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }

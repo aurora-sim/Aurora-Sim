@@ -13,7 +13,16 @@ namespace Aurora.Modules.Web
 {
     public class InfoBoxPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/welcomescreen/info_box.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/welcomescreen/info_box.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }

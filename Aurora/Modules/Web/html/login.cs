@@ -14,7 +14,16 @@ namespace Aurora.Modules.Web
 {
     public class LoginPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/login.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/login.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }

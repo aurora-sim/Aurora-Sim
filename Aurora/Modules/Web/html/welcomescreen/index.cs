@@ -9,7 +9,16 @@ namespace Aurora.Modules.Web
 {
     public class WelcomeScreenMain : IWebInterfacePage
     {
-        public string FilePath { get { return "html/welcomescreen/index.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/welcomescreen/index.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }

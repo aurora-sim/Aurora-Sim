@@ -13,7 +13,16 @@ namespace Aurora.Modules.Web
 {
     public class GridStatusPage : IWebInterfacePage
     {
-        public string FilePath { get { return "html/welcomescreen/gridstatus.html"; } }
+        public string[] FilePath
+        {
+            get
+            {
+                return new[]
+                       {
+                           "html/welcomescreen/gridstatus.html"
+                       };
+            }
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
