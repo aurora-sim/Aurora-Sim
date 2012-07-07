@@ -3001,7 +3001,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Special mesh handling
                     if (this.Shape.SculptType == 5)
                     {
-                        ret = 7; // its a mesh then max 8 faces
+                        ret = 8; // its a mesh then max 8 faces
                     }
                     else
                     {
