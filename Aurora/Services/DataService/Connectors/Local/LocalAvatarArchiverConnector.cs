@@ -132,9 +132,5 @@ namespace Aurora.Services.DataService
         }
 
         #endregion
-
-        public void Dispose()
-        {
-        }
     }
 }

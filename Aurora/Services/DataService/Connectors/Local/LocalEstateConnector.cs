@@ -259,10 +259,6 @@ namespace Aurora.Services.DataService
 
         #endregion
 
-        public void Dispose()
-        {
-        }
-
         #region Helpers
 
         public int GetEstateID(UUID regionID)

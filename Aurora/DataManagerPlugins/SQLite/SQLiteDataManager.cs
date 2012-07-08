@@ -159,40 +159,6 @@ namespace Aurora.DataManager.SQLite
 
         #region Query
 
-        protected IDataReader ExecuteReader(SqliteCommand cmd)
-        {
-            int retries = 0;
-            restart:
-            try
-            {
-                PrepReader(ref cmd);
-                lock (GetLock())
-                    return cmd.ExecuteReader();
-            }
-            catch (SqliteBusyException ex)
-            {
-                if (retries++ > 5)
-                    MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
-                               ex);
-                else
-                    goto restart;
-                return null;
-            }
-            catch (SqliteException ex)
-            {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
-                           ex);
-                //throw ex;
-            }
-            catch (Exception ex)
-            {
-                MainConsole.Instance.Warn("[SqliteDataManager]: Exception processing command: " + cmd.CommandText + ", Exception: " +
-                           ex);
-                throw ex;
-            }
-            return null;
-        }
-
         protected void PrepReader(ref SqliteCommand cmd)
         {
             int retries = 0;
@@ -253,11 +219,14 @@ namespace Aurora.DataManager.SQLite
             restart:
             try
             {
-                PrepReader(ref cmd);
-                UnescapeSql(cmd);
-                var value = cmd.ExecuteNonQuery();
-                cmd.Connection.Close();
-                return value;
+                lock (GetLock())
+                {
+                    PrepReader(ref cmd);
+                    UnescapeSql(cmd);
+                    var value = cmd.ExecuteNonQuery();
+                    cmd.Connection.Close();
+                    return value;
+                }
             }
             catch (SqliteBusyException ex)
             {
@@ -280,11 +249,6 @@ namespace Aurora.DataManager.SQLite
                 throw ex;
             }
             return 0;
-        }
-
-        protected IDataReader GetReader(SqliteCommand cmd)
-        {
-            return ExecuteReader(cmd);
         }
 
         private static void UnescapeSql(SqliteCommand cmd)
