@@ -239,24 +239,29 @@ namespace Aurora.Modules.Startup
             {
                 LoadingPrims = true;
 
-                MainConsole.Instance.Info("[BackupModule]: Loading objects for " + m_scene.RegionInfo.RegionName);
+                MainConsole.Instance.Info("[BackupModule]: Loading objects for " + m_scene.RegionInfo.RegionName + " from " + m_scene.SimulationDataService.Name);
                 List<ISceneEntity> PrimsFromDB = m_scene.SimulationDataService.LoadObjects(m_scene);
                 foreach (ISceneEntity group in PrimsFromDB)
                 {
                     try
                     {
-                        if (group.IsAttachment || (group.RootChild.Shape != null && (group.RootChild.Shape.State != 0 &&
-                            (group.RootChild.Shape.PCode == (byte)PCode.None ||
-                            group.RootChild.Shape.PCode == (byte)PCode.Prim ||
-                            group.RootChild.Shape.PCode == (byte)PCode.Avatar))))
+                        if (group == null)
                         {
-                            MainConsole.Instance.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
-                            //WTF went wrong here? Remove by passing it by on loading
+                            MainConsole.Instance.Warn("[BackupModule]: Null object while loading objects, ignoring.");
                             continue;
                         }
                         if (group.RootChild.Shape == null)
                         {
                             MainConsole.Instance.Warn("[BackupModule]: Broken object (" + group.Name + ") found while loading objects, removing it from the database.");
+                            //WTF went wrong here? Remove by passing it by on loading
+                            continue;
+                        }
+                        if (group.IsAttachment || (group.RootChild.Shape.State != 0 &&
+                            (group.RootChild.Shape.PCode == (byte)PCode.None ||
+                            group.RootChild.Shape.PCode == (byte)PCode.Prim ||
+                            group.RootChild.Shape.PCode == (byte)PCode.Avatar)))
+                        {
+                            MainConsole.Instance.Warn("[BackupModule]: Broken state for object " + group.Name + " while loading objects, removing it from the database.");
                             //WTF went wrong here? Remove by passing it by on loading
                             continue;
                         }
