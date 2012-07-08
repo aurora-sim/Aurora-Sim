@@ -224,6 +224,15 @@ namespace OpenSim.Services.Interfaces
         /// <returns></returns>
         List<InventoryItemBase> GetActiveGestures(UUID userId);
 
+        /// <summary>
+        /// Gives an inventory item to another user (LOCAL ONLY)
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId"></param>
+        /// <param name="item"></param>
+        /// <param name="recipientFolderId"></param>
+        /// <param name="doOwnerCheck"></param>
+        /// <returns></returns>
         InventoryItemBase InnerGiveInventoryItem(UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck);
 
         #region OSD methods
@@ -247,10 +256,41 @@ namespace OpenSim.Services.Interfaces
 
         #region Async methods
 
+        /// <summary>
+        /// Adds a new item to the user's inventory asynchronously
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="success"></param>
         void AddItemAsync(InventoryItemBase item, NoParam success);
+
+        /// <summary>
+        /// Moves multiple items to a new folder in the user's inventory
+        /// </summary>
+        /// <param name="agentID"></param>
+        /// <param name="items"></param>
+        /// <param name="success"></param>
         void MoveItemsAsync(UUID agentID, List<InventoryItemBase> items, NoParam success);
+
+        /// <summary>
+        /// Gives an inventory item to another user asychronously
+        /// </summary>
+        /// <param name="recipient"></param>
+        /// <param name="senderId"></param>
+        /// <param name="itemId"></param>
+        /// <param name="recipientFolderId"></param>
+        /// <param name="doOwnerCheck"></param>
+        /// <param name="success"></param>
         void GiveInventoryItemAsync(UUID recipient, UUID senderId, UUID itemId,
             UUID recipientFolderId, bool doOwnerCheck, GiveItemParam success);
+
+        /// <summary>
+        /// Gives an entire inventory folder to another user asynchronously
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <param name="senderId"></param>
+        /// <param name="folderId"></param>
+        /// <param name="recipientParentFolderId"></param>
+        /// <param name="success"></param>
         void GiveInventoryFolderAsync(
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId, GiveFolderParam success);
 

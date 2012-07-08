@@ -977,7 +977,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (channelID == 0) //0 isn't normally allowed, so check against a higher threat level
                 if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Moderate, "LSL", m_host, "LSL", m_itemID)) return;
-
+            
+            IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+            if (chatModule != null)
+                chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
+                    m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+            
             if (m_comms != null)
                 m_comms.DeliverMessage(ChatTypeEnum.Region, channelID, m_host.Name, m_host.UUID, text);
         }

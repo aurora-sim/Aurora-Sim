@@ -1127,7 +1127,12 @@ namespace OpenSim.Services.InventoryService
         public InventoryItemBase InnerGiveInventoryItem(
             UUID recipient, UUID senderId, InventoryItemBase item, UUID recipientFolderId, bool doOwnerCheck)
         {
-            if (!doOwnerCheck || ((item != null) && (item.Owner == senderId)))
+            if (item == null)
+            {
+                MainConsole.Instance.Info("[InventoryService]: Could not find item to give to " + recipient);
+                return null;
+            }
+            if (!doOwnerCheck || item.Owner == senderId)
             {
                 if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
                     return null;
@@ -1283,7 +1288,7 @@ namespace OpenSim.Services.InventoryService
 
                 return itemCopy;
             }
-            MainConsole.Instance.WarnFormat("[InventoryService]: Failed to find item {0} or item does not belong to giver ", item == null ? "Unknown Item" : item.ID.ToString());
+            MainConsole.Instance.WarnFormat("[InventoryService]: Failed to give item {0} as item does not belong to giver", item.ID.ToString());
             return null;
         }
 

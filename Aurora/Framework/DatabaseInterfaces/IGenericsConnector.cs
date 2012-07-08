@@ -119,4 +119,22 @@ namespace Aurora.Framework
         /// <returns></returns>
         int GetGenericCount(UUID OwnerID, string Type);
     }
+
+    public class OSDWrapper : IDataTransferable
+    {
+        public OSD Info;
+
+        public override void FromOSD(OSDMap map)
+        {
+            if (map != null)
+                Info = map["Info"];
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+            map["Info"] = Info;
+            return map;
+        }
+    }
 }

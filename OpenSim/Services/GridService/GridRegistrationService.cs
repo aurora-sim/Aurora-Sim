@@ -272,6 +272,8 @@ namespace OpenSim.Services.GridService
         }
         public OSDMap GetUrlForRegisteringClient(string SessionID)
         {
+            if (!m_useRegistrationService)
+                return null;
             GridRegistrationURLs urls = m_genericsConnector.GetGeneric<GridRegistrationURLs>(UUID.Zero,
                 "GridRegistrationUrls", SessionID);
             OSDMap retVal = new OSDMap();
