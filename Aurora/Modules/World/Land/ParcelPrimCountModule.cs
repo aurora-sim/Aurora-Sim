@@ -96,10 +96,26 @@ namespace Aurora.Modules.Land
             m_Scene.EventManager.OnLandObjectRemoved += OnLandObjectRemoved;
             m_Scene.AuroraEventManager.RegisterEventHandler("ObjectChangedOwner", OnGenericEvent);
             m_Scene.AuroraEventManager.RegisterEventHandler("ObjectEnteringNewParcel", OnGenericEvent);
+            m_Scene.EventManager.OnSceneGroupMove += EventManager_OnSceneGroupMove;
+        }
+
+        bool EventManager_OnSceneGroupMove(UUID groupID, Vector3 pos)
+        {
+            Util.FireAndForget(delegate                   
+            {
+                IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
+                ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+                if (landObject == null) return;
+                ParcelCounts parcelCounts;
+                if ((m_ParcelCounts.TryGetValue(landObject.LandData.GlobalID, out parcelCounts)) && (!parcelCounts.Objects.ContainsKey(groupID)))
+                    m_Tainted = true;
+            });
+            return true;
         }
 
         public void RegionLoaded(IScene scene)
         {
+
         }
 
         public void RemoveRegion(IScene scene)
@@ -114,7 +130,7 @@ namespace Aurora.Modules.Land
             m_Scene.EventManager.OnLandObjectRemoved -= OnLandObjectRemoved;
             m_Scene.AuroraEventManager.UnregisterEventHandler("ObjectChangedOwner", OnGenericEvent);
             m_Scene.AuroraEventManager.UnregisterEventHandler("ObjectEnteringNewParcel", OnGenericEvent);
-
+            m_Scene.EventManager.OnSceneGroupMove -= EventManager_OnSceneGroupMove;
             m_Scene = null;
         }
 
@@ -282,17 +298,11 @@ namespace Aurora.Modules.Land
             if (((obj.RootChild.Flags & PrimFlags.TemporaryOnRez) != 0))
                 return;
 
+            IParcelManagementModule parcelManagment = m_Scene.RequestModuleInterface<IParcelManagementModule>();
             Vector3 pos = obj.AbsolutePosition;
-            ILandObject landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetLandObject(pos.X,
-                                                                                                             pos.Y);
-            if (landObject == null)
-                landObject = m_Scene.RequestModuleInterface<IParcelManagementModule>().GetNearestAllowedParcel(
-                    UUID.Zero, pos.X, pos.Y);
-
-            if (landObject == null)
-                return;
+            ILandObject landObject = parcelManagment.GetLandObject(pos.X,pos.Y) ?? parcelManagment.GetNearestAllowedParcel(UUID.Zero, pos.X, pos.Y);
+            if (landObject == null) return;
             LandData landData = landObject.LandData;
-
             ParcelCounts parcelCounts;
             if (m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts))
             {
@@ -300,36 +310,46 @@ namespace Aurora.Modules.Land
 
                 foreach (ISceneChildEntity child in obj.ChildrenEntities())
                 {
+                    bool foundit = false;
                     if (!parcelCounts.Objects.ContainsKey(child.UUID))
                     {
-                        //Well... now what?
+                        //was not found, lets look through all the parcels
+                        foreach (ILandObject parcel in parcelManagment.AllParcels())
+                        {
+                            landData = parcel.LandData;
+                            if (!m_ParcelCounts.TryGetValue(landData.GlobalID, out parcelCounts)) continue;
+                            landOwner = landData.OwnerID;
+                            if (!parcelCounts.Objects.ContainsKey(child.UUID)) continue;
+                            foundit = true;
+                            break;
+                        }
+                    }
+                    else
+                        foundit = true;
+                    if (!foundit) continue;
+                    parcelCounts.Objects.Remove(child.UUID);
+                    if (m_SimwideCounts.ContainsKey(landOwner))
+                        m_SimwideCounts[landOwner] -= 1;
+                    if (parcelCounts.Users.ContainsKey(obj.OwnerID))
+                        parcelCounts.Users[obj.OwnerID] -= 1;
+
+                    if (landData.IsGroupOwned)
+                    {
+                        if (obj.OwnerID == landData.GroupID)
+                            parcelCounts.Owner -= 1;
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group -= 1;
+                        else
+                            parcelCounts.Others -= 1;
                     }
                     else
                     {
-                        parcelCounts.Objects.Remove(child.UUID);
-                        if (m_SimwideCounts.ContainsKey(landOwner))
-                            m_SimwideCounts[landOwner] -= 1;
-                        if (parcelCounts.Users.ContainsKey(obj.OwnerID))
-                            parcelCounts.Users[obj.OwnerID] -= 1;
-
-                        if (landData.IsGroupOwned)
-                        {
-                            if (obj.OwnerID == landData.GroupID)
-                                parcelCounts.Owner -= 1;
-                            else if (obj.GroupID == landData.GroupID)
-                                parcelCounts.Group -= 1;
-                            else
-                                parcelCounts.Others -= 1;
-                        }
+                        if (obj.OwnerID == landData.OwnerID)
+                            parcelCounts.Owner -= 1;
+                        else if (obj.GroupID == landData.GroupID)
+                            parcelCounts.Group -= 1;
                         else
-                        {
-                            if (obj.OwnerID == landData.OwnerID)
-                                parcelCounts.Owner -= 1;
-                            else if (obj.GroupID == landData.GroupID)
-                                parcelCounts.Group -= 1;
-                            else
-                                parcelCounts.Others -= 1;
-                        }
+                            parcelCounts.Others -= 1;
                     }
                 }
             }
