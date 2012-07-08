@@ -69,9 +69,10 @@ namespace OpenSim.Services.Handlers.Map
             if (m_cacheEnabled)
                 CreateCacheDirectories ();
 
-            registry.RegisterModuleInterface<IMapService> (this);
             m_server = registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_port);
-            m_server.AddHTTPHandler ("/MapService/", MapRequest);
+            m_server.AddHTTPHandler("/MapService/", MapRequest);
+
+            registry.RegisterModuleInterface<IMapService>(this);
         }
 
         private void CreateCacheDirectories ()
