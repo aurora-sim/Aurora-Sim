@@ -104,7 +104,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Plugins
                 return r;
             }
 #endif
-            return new OSD();
+            return new OSDMap();
         }
 
         public void CreateFromData(UUID itemID, UUID hostID,
