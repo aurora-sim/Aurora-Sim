@@ -321,12 +321,11 @@ namespace Aurora.Modules.Land
                             landOwner = landData.OwnerID;
                             if (!parcelCounts.Objects.ContainsKey(child.UUID)) continue;
                             foundit = true;
-                            goto Found;
+                            break;
                         }
                     }
                     else
                         foundit = true;
-                Found:
                     if (!foundit) continue;
                     parcelCounts.Objects.Remove(child.UUID);
                     if (m_SimwideCounts.ContainsKey(landOwner))
