@@ -256,7 +256,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;
             }
 
-            if (_target_velocity == Vector3.Zero &&
+            if ((_target_velocity == Vector3.Zero || (Math.Abs(_target_velocity.X) < 0.01f && Math.Abs(_target_velocity.Y) < 0.01f && Math.Abs(_target_velocity.Z) < 0.01f)) && 
                 Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && Math.Abs(vel.Z) < 0.1)
             {
                 //Body isn't moving, disable it

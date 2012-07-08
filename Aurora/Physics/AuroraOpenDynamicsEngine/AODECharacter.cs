@@ -156,7 +156,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
 
             m_isPhysical = false; // current status: no ODE information exists
-            _parent_scene.AddSimulationChange(() => RebuildAvatar());
             m_name = avName;
         }
 
