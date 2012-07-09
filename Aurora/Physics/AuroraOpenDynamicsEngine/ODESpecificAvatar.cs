@@ -184,7 +184,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vel.Z /= Multiplier;
             }
             if (IsColliding)
-                _appliedFallingForce = 0;
+                _appliedFallingForce = 10;
 
             #endregion
 
@@ -238,6 +238,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Force application
 
+            #region Force push application
+
+            bool noDisable = false;
+            if (_target_force != Vector3.Zero)
+            {
+                _target_vel_force = _target_force / 2;
+                _target_force = Vector3.Zero;
+                noDisable = true;
+            }
+            if (_target_vel_force.X != 0)
+                vec.X += (_target_vel_force.X) * PID_D * 2;
+            if (_target_vel_force.Y != 0)
+                vec.Y += (_target_vel_force.Y) * PID_D * 2;
+            if (_target_vel_force.Z != 0)
+                vec.Z += (_target_vel_force.Z) * PID_D;
+
+            #endregion
+
             if (!flying && !IsTruelyColliding)
             {
                 //Falling, and haven't yet hit the ground
@@ -256,17 +274,24 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 vec.Z += (_target_velocity.Z * movementmult - vel.Z) * PID_D;
             }
 
-            if ((_target_velocity == Vector3.Zero || (Math.Abs(_target_velocity.X) < 0.01f && Math.Abs(_target_velocity.Y) < 0.01f && Math.Abs(_target_velocity.Z) < 0.01f)) && 
-                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && Math.Abs(vel.Z) < 0.1 && !(_appliedFallingForce > 0))
+            Vector3 combinedForceVelocity = _target_velocity + _target_vel_force;
+            if ((combinedForceVelocity == Vector3.Zero ||
+                (Math.Abs(combinedForceVelocity.X) < 0.01f &&
+                Math.Abs(combinedForceVelocity.Y) < 0.01f &&
+                Math.Abs(combinedForceVelocity.Z) < 0.01f)) &&
+                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && 
+                Math.Abs(vel.Z) < 0.1 && !(_appliedFallingForce > 0) && !noDisable)
             {
                 //Body isn't moving, disable it
                 _target_velocity = Vector3.Zero;
+                _target_vel_force = Vector3.Zero;
                 d.BodySetLinearVel(Body, 0, 0, 0);
                 d.BodyDisable(Body);
             }
             else
             {
                 _target_velocity *= _parent_scene.AvDecayTime;
+                _target_vel_force *= _parent_scene.AvDecayTime;
                 d.BodyEnable(Body);
                 d.BodyAddForce(Body, vec.X, vec.Y, vec.Z);
             }
@@ -447,12 +472,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             _position.X = taintPos.X;
             _position.Y = taintPos.Y;
             _position.Z = taintPos.Z;
-        }
-
-        public void SetForceLocked(Vector3 taintForce)
-        {
-            if (taintForce.X != 0f || taintForce.Y != 0f || taintForce.Z != 0)
-                d.BodyAddForce(Body, taintForce.X, taintForce.Y, taintForce.Z);
         }
 
         #endregion

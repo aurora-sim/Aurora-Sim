@@ -55,6 +55,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         protected Vector3 _position;
         protected Vector3 _target_velocity;
         protected Vector3 _velocity;
+        protected Vector3 _target_force = Vector3.Zero;
+        protected Vector3 _target_vel_force = Vector3.Zero;
         protected bool _wasZeroFlagFlying;
         protected bool _zeroFlag;
         protected bool flying;
@@ -217,6 +219,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             {
                 realFlying = value;
                 flying = value;
+
+                if (!m_isPhysical)
+                    _parent_scene.AddSimulationChange(() => { flying = value; realFlying = value; });
             }
         }
 
@@ -744,7 +749,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     _parent_scene.AddSimulationChange(() =>
                     {
                         if (Body != IntPtr.Zero)
-                            _parent_ref.SetForceLocked((Vector3)force);
+                            _target_force = force;
                     });
                 }
                 else

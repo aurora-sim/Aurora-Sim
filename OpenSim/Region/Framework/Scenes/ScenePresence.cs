@@ -2666,6 +2666,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_physicsActor.OnOutOfBounds += OutOfBoundsCall; // Called for PhysicsActors when there's something wrong
             m_physicsActor.Orientation = Rotation;
 
+            m_physicsActor.Flying = isFlying;
+
             //Tell any events about it
             if (OnAddPhysics != null)
                 OnAddPhysics();
