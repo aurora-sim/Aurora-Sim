@@ -309,7 +309,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public DetectParams[] llDetectParams;
         //Parameters to fire the function
         public object[] param;
-        //This is the current spot that the event is at in processing
+
+        public bool Done = false;
+        public bool InProgress = false;
+        public int EventNumber = 0;
     }
 
     public struct StateQueueItem

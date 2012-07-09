@@ -376,6 +376,10 @@ namespace Aurora.Simulation.Base
                             conf.Set("Include-SQLite", folder + "Data/SQLite.ini");
                         else
                             conf.Set("Include-MySQL", folder + "Data/MySQL.ini");
+
+                        if(isAuroraExe)
+                            conf.Set("Include-FileBased", "Configuration/Data/FileBased.ini");
+
                         conf = data_ini.AddConfig("AuroraConnectors");
                         conf.Set("ValidateTables", true);
 
