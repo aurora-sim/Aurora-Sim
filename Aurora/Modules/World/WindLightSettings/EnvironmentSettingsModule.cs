@@ -87,9 +87,8 @@ namespace Aurora.Modules.WindlightSettings
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                     gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
-                                  (new DatabaseWrapper { Info = m_info }).ToOSD());
+                                  (new OSDWrapper { Info = m_info }).ToOSD());
                 success = true;
-                SP.ControllingClient.SendAlertMessage("Windlight Settings saved successfully");
             }
             else
             {
@@ -119,7 +118,7 @@ namespace Aurora.Modules.WindlightSettings
                 IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
                 if (gc != null)
                 {
-                    DatabaseWrapper d = gc.GetGeneric<DatabaseWrapper>(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "");
+                    OSDWrapper d = gc.GetGeneric<OSDWrapper>(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "");
                     if (d != null)
                         m_info = d.Info;
                 }
@@ -131,23 +130,7 @@ namespace Aurora.Modules.WindlightSettings
 
         #region Nested type: DatabaseWrapper
 
-        private class DatabaseWrapper : IDataTransferable
-        {
-            public OSD Info;
-
-            public override void FromOSD(OSDMap map)
-            {
-                if(map != null)
-                    Info = map["Info"];
-            }
-
-            public override OSDMap ToOSD()
-            {
-                OSDMap map = new OSDMap();
-                map["Info"] = Info;
-                return map;
-            }
-        }
+        
 
         #endregion
     }

@@ -97,5 +97,20 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         void aaSetEnv(LSL_String name, LSL_List value);
 
         LSL_Integer aaGetIsInfiniteRegion();
+
+        void aaAllRegionInstanceSay(LSL_Integer channelID, string text);
+
+        LSL_Integer aaWindlightGetSceneIsStatic();
+
+        LSL_Integer aaWindlightGetSceneDayCycleKeyFrameCount();
+        LSL_List aaWindlightGetDayCycle();
+        LSL_Integer aaWindlightAddDayCycleFrame(LSL_Float dayCyclePosition, int dayCycleFrameToCopy);
+        LSL_Integer aaWindlightRemoveDayCycleFrame(int dayCycleFrame);
+
+        LSL_List aaWindlightGetScene(LSL_List rules);
+        LSL_List aaWindlightGetScene(int dayCycleKeyFrame, LSL_List rules);
+
+        LSL_Integer aaWindlightSetScene(LSL_List list);
+        LSL_Integer aaWindlightSetScene(int dayCycleIndex, LSL_List list);
     }
 }

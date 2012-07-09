@@ -447,6 +447,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 return new OpenMetaverse.Quaternion((float)x, (float)y, (float)z, (float)s);
             }
+
+            public OpenMetaverse.Vector4 ToVector4()
+            {
+                return new OpenMetaverse.Vector4((float)x, (float)y, (float)z, (float)s);
+            }
         }
 
         [Serializable]
@@ -1437,6 +1442,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             public LSLString(string s)
             {
                 m_string = s;
+            }
+
+            public LSLString(OpenMetaverse.UUID s)
+            {
+                m_string = s.ToString();
             }
 
             public LSLString(double d)

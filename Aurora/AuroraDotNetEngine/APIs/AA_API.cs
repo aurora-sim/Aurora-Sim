@@ -34,6 +34,7 @@ using Aurora.Framework;
 using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Services.Interfaces;
 using LSL_Float = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.LSLFloat;
@@ -865,5 +866,566 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return 0;
             return new LSL_Integer(World.RegionInfo.InfiniteRegion ? 1 : 0);
         }
+
+        public void aaAllRegionInstanceSay(LSL_Integer channelID, string text)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "AAAllRegionInstanceSay", m_host, "AA", m_itemID))
+                return;
+
+            foreach (IScene scene in m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes())
+            {
+                if (text.Length > 1023)
+                    text = text.Substring(0, 1023);
+
+                IChatModule chatModule = World.RequestModuleInterface<IChatModule>();
+                if (chatModule != null)
+                    chatModule.SimChat(text, ChatTypeEnum.Region, channelID,
+                        m_host.ParentEntity.RootChild.AbsolutePosition, m_host.Name, m_host.UUID, false, World);
+
+                var comms = scene.RequestModuleInterface<IWorldComm>();
+                comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
+            }
+        }
+
+        #region Get Windlight
+
+        public LSL_List aaWindlightGetScene(LSL_List rules)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+
+                if (!cycle.Cycle.IsStaticDayCycle)
+                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC });
+
+                LSL_List list = new LSL_List();
+                for (int i = 0; i < rules.Data.Length; i++)
+                {
+                    int rule = rules.GetLSLIntegerItem(i);
+
+                    ConvertWindlightDayCycle(cycle, 0, rule, ref list);
+                }
+                return list;
+            }
+
+            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+        }
+
+        public LSL_List aaWindlightGetScene(int dayCycleIndex, LSL_List rules)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+
+                if (cycle.Cycle.IsStaticDayCycle)
+                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_SCENE_MUST_NOT_BE_STATIC });
+
+                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                    return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_PRESET_FOUND });
+
+                LSL_List list = new LSL_List();
+                for (int i = 0; i < rules.Data.Length; i++)
+                {
+                    int rule = rules.GetLSLIntegerItem(i);
+
+                    ConvertWindlightDayCycle(cycle, dayCycleIndex, rule, ref list);
+                }
+                return list;
+            }
+
+            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+        }
+
+        public LSL_Integer aaWindlightGetSceneIsStatic()
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+                return new LSL_Integer(cycle.Cycle.IsStaticDayCycle ? 1 : 0);
+            }
+            return new LSL_Integer(-1);
+        }
+
+        #endregion
+
+        #region Day Cycle Changes
+
+        public LSL_Integer aaWindlightGetSceneDayCycleKeyFrameCount()
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+                return new LSL_Integer(cycle.Cycle.DataSettings.Count);
+            }
+            return new LSL_Integer(-1);
+        }
+
+        public LSL_List aaWindlightGetDayCycle()
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+                if (cycle.Cycle.IsStaticDayCycle)
+                    return new LSL_List(new object[3] { 0, -1, cycle.Cycle.DataSettings["-1"].preset_name });
+
+                LSL_List list = new LSL_List();
+
+                int i = 0;
+                foreach (var key in cycle.Cycle.DataSettings)
+                {
+                    list.Add(i++);
+                    list.Add(key.Key);
+                    list.Add(key.Value.preset_name);
+                }
+                return list;
+            }
+
+            return new LSL_List(new object[2] { ScriptBaseClass.WL_ERROR, ScriptBaseClass.WL_ERROR_NO_SCENE_SET });
+        }
+
+        public LSL_Integer aaWindlightRemoveDayCycleFrame(int dayCycleFrame)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+
+                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrame >= cycle.Cycle.DataSettings.Count)
+                    return LSL_Integer.FALSE;
+
+                var data = cycle.Cycle.DataSettings.Keys.ToList();
+                string keyToRemove = data[dayCycleFrame];
+                cycle.Cycle.DataSettings.Remove(keyToRemove);
+                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+                return LSL_Integer.TRUE;
+            }
+            return LSL_Integer.FALSE;
+        }
+
+        public LSL_Integer aaWindlightAddDayCycleFrame(LSL_Float dayCyclePosition, int dayCycleFrameToCopy)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            if (d != null)
+            {
+                WindlightDayCycle cycle = new WindlightDayCycle();
+                cycle.FromOSD(d.Info);
+
+                if (cycle.Cycle.IsStaticDayCycle || dayCycleFrameToCopy >= cycle.Cycle.DataSettings.Count)
+                    return LSL_Integer.FALSE;
+
+                var data = cycle.Cycle.DataSettings.Keys.ToList();
+                cycle.Cycle.DataSettings.Add(dayCyclePosition.ToString(), cycle.Cycle.DataSettings[data[dayCycleFrameToCopy]]);
+                gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+                return LSL_Integer.TRUE;
+            }
+            return LSL_Integer.FALSE;
+        }
+
+        #endregion
+
+        public LSL_Integer aaWindlightSetScene(LSL_List list)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            WindlightDayCycle cycle = new WindlightDayCycle();
+            if (d != null)
+            {
+                cycle.FromOSD(d.Info);
+                if (!cycle.Cycle.IsStaticDayCycle)
+                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
+            }
+            else
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+
+            ConvertLSLToWindlight(ref cycle, 0, list);
+            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+            return ScriptBaseClass.WL_OK;
+        }
+
+        public LSL_Integer aaWindlightSetScene(int dayCycleIndex, LSL_List list)
+        {
+            IGenericsConnector gc = DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            OSDWrapper d = gc.GetGeneric<OSDWrapper>(World.RegionInfo.RegionID, "EnvironmentSettings", "");
+            WindlightDayCycle cycle = new WindlightDayCycle();
+            if (d != null)
+            {
+                cycle.FromOSD(d.Info);
+                if (cycle.Cycle.IsStaticDayCycle)
+                    return ScriptBaseClass.WL_ERROR_SCENE_MUST_BE_STATIC;
+                if (dayCycleIndex >= cycle.Cycle.DataSettings.Count)
+                    return ScriptBaseClass.WL_ERROR_BAD_SETTING;
+            }
+            else
+                return ScriptBaseClass.WL_ERROR_NO_SCENE_SET;
+
+            ConvertLSLToWindlight(ref cycle, dayCycleIndex, list);
+            gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+            return ScriptBaseClass.WL_OK;
+        }
+
+        #region Helpers
+
+        private void ConvertWindlightDayCycle(WindlightDayCycle cycle, int preset, int rule, ref LSL_List list)
+        {
+            var skyDatas = cycle.Cycle.DataSettings.Values.ToList();
+            var skyData = skyDatas[preset];
+
+            switch (rule)
+            {
+                case (int)ScriptBaseClass.WL_AMBIENT:
+                    list.Add(new LSL_Rotation(skyData.ambient.X, skyData.ambient.Y,
+                        skyData.ambient.Z, skyData.ambient.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_BLUE_DENSITY:
+                    list.Add(new LSL_Rotation(skyData.blue_density.X, skyData.blue_density.Y,
+                        skyData.blue_density.Z, skyData.blue_density.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_BLUR_HORIZON:
+                    list.Add(new LSL_Rotation(skyData.blue_horizon.X, skyData.blue_horizon.Y,
+                        skyData.blue_horizon.Z, skyData.blue_horizon.W));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_COLOR:
+                    list.Add(new LSL_Rotation(skyData.cloud_color.X, skyData.cloud_color.Y,
+                        skyData.cloud_color.Z, skyData.cloud_color.W));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_POS_DENSITY1:
+                    list.Add(new LSL_Rotation(skyData.cloud_pos_density1.X, skyData.cloud_pos_density1.Y,
+                        skyData.cloud_pos_density1.Z, skyData.cloud_pos_density1.W));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_POS_DENSITY2:
+                    list.Add(new LSL_Rotation(skyData.cloud_pos_density2.X, skyData.cloud_pos_density2.Y,
+                        skyData.cloud_pos_density2.Z, skyData.cloud_pos_density2.W));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SCALE:
+                    list.Add(new LSL_Rotation(skyData.cloud_scale.X, skyData.cloud_scale.Y,
+                        skyData.cloud_scale.Z, skyData.cloud_scale.W));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_X:
+                    list.Add(new LSL_Float(skyData.cloud_scroll_rate.X));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_X_LOCK:
+                    list.Add(new LSL_Integer(skyData.enable_cloud_scroll.X));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_Y:
+                    list.Add(new LSL_Float(skyData.cloud_scroll_rate.Y));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SCROLL_Y_LOCK:
+                    list.Add(new LSL_Integer(skyData.enable_cloud_scroll.Y));
+                    break;
+                case (int)ScriptBaseClass.WL_CLOUD_SHADOW:
+                    list.Add(new LSL_Rotation(skyData.cloud_shadow.X, skyData.cloud_shadow.Y, skyData.cloud_shadow.Z, skyData.cloud_shadow.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_DENSITY_MULTIPLIER:
+                    list.Add(new LSL_Rotation(skyData.density_multiplier.X, skyData.density_multiplier.Y, skyData.density_multiplier.Z, skyData.density_multiplier.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_DISTANCE_MULTIPLIER:
+                    list.Add(new LSL_Rotation(skyData.distance_multiplier.X, skyData.distance_multiplier.Y, skyData.distance_multiplier.Z, skyData.distance_multiplier.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_GAMMA:
+                    list.Add(new LSL_Rotation(skyData.gamma.X, skyData.gamma.Y, skyData.gamma.Z, skyData.gamma.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_GLOW:
+                    list.Add(new LSL_Rotation(skyData.glow.X, skyData.glow.Y, skyData.glow.Z, skyData.glow.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_HAZE_DENSITY:
+                    list.Add(new LSL_Rotation(skyData.haze_density.X, skyData.haze_density.Y, skyData.haze_density.Z, skyData.haze_density.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_HAZE_HORIZON:
+                    list.Add(new LSL_Rotation(skyData.haze_horizon.X, skyData.haze_horizon.Y, skyData.haze_horizon.Z, skyData.haze_horizon.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_LIGHT_NORMALS:
+                    list.Add(new LSL_Rotation(skyData.lightnorm.X, skyData.lightnorm.Y, skyData.lightnorm.Z, skyData.lightnorm.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_MAX_ALTITUDE:
+                    list.Add(new LSL_Rotation(skyData.max_y.X, skyData.max_y.Y, skyData.max_y.Z, skyData.max_y.W));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_STAR_BRIGHTNESS:
+                    list.Add(new LSL_Float(skyData.star_brightness));
+                    break;
+                case (int)ScriptBaseClass.WL_SKY_SUNLIGHT_COLOR:
+                    list.Add(new LSL_Rotation(skyData.sunlight_color.X, skyData.sunlight_color.Y, skyData.sunlight_color.Z, skyData.sunlight_color.W));
+                    break;
+
+
+                case (int)ScriptBaseClass.WL_WATER_BLUR_MULTIPLIER:
+                    list.Add(new LSL_Float(cycle.Water.blurMultiplier));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_FRESNEL_OFFSET:
+                    list.Add(new LSL_Float(cycle.Water.fresnelOffset));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_FRESNEL_SCALE:
+                    list.Add(new LSL_Float(cycle.Water.fresnelScale));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_NORMAL_MAP:
+                    list.Add(new LSL_String(cycle.Water.normalMap));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_NORMAL_SCALE:
+                    list.Add(new LSL_Vector(cycle.Water.normScale.X, cycle.Water.normScale.Y,
+                        cycle.Water.normScale.Z));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_SCALE_ABOVE:
+                    list.Add(new LSL_Float(cycle.Water.scaleAbove));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_SCALE_BELOW:
+                    list.Add(new LSL_Float(cycle.Water.scaleBelow));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_UNDERWATER_FOG_MODIFIER:
+                    list.Add(new LSL_Float(cycle.Water.underWaterFogMod));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_FOG_COLOR:
+                    list.Add(new LSL_Rotation(cycle.Water.waterFogColor.X, cycle.Water.waterFogColor.Y, cycle.Water.waterFogColor.Z,
+                        cycle.Water.waterFogColor.W));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_FOG_DENSITY:
+                    list.Add(new LSL_Float(cycle.Water.waterFogDensity));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_BIG_WAVE_DIRECTION:
+                    list.Add(new LSL_Vector(cycle.Water.wave1Dir.X,
+                        cycle.Water.wave1Dir.Y, 0.0f));
+                    break;
+                case (int)ScriptBaseClass.WL_WATER_LITTLE_WAVE_DIRECTION:
+                    list.Add(new LSL_Vector(cycle.Water.wave2Dir.X,
+                        cycle.Water.wave2Dir.Y, 0.0f));
+                    break;
+            }
+        }
+
+        private void ConvertLSLToWindlight(ref WindlightDayCycle cycle, int preset, LSL_List list)
+        {
+            var skyDatas = cycle.Cycle.DataSettings.Values.ToList();
+            var skyData = skyDatas[preset];
+
+            for (int i = 0; i < list.Data.Length; i += 2)
+            {
+                int key = list.GetLSLIntegerItem(i);
+                switch (key)
+                {
+                    case ScriptBaseClass.WL_AMBIENT:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.ambient = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_COLOR:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.cloud_color = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_POS_DENSITY1:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.cloud_pos_density1 = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_POS_DENSITY2:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.cloud_pos_density2 = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SCALE:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.cloud_scale = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SCROLL_X:
+                        {
+                            LSL_Integer integer = list.GetLSLIntegerItem(i + 1);
+                            skyData.cloud_scroll_rate.X = integer;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SCROLL_Y:
+                        {
+                            LSL_Integer integer = list.GetLSLIntegerItem(i + 1);
+                            skyData.cloud_scroll_rate.Y = integer;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SCROLL_X_LOCK:
+                        {
+                            LSL_Integer integer = list.GetLSLIntegerItem(i + 1);
+                            skyData.enable_cloud_scroll.X = integer;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SCROLL_Y_LOCK:
+                        {
+                            LSL_Integer integer = list.GetLSLIntegerItem(i + 1);
+                            skyData.enable_cloud_scroll.Y = integer;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_CLOUD_SHADOW:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.cloud_shadow = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_BLUE_DENSITY:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.blue_density = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_BLUR_HORIZON:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.blue_horizon = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_DENSITY_MULTIPLIER:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.density_multiplier = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_DISTANCE_MULTIPLIER:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.distance_multiplier = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_GAMMA:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.gamma = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_GLOW:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.glow = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_HAZE_DENSITY:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.haze_density = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_HAZE_HORIZON:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.haze_horizon = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_LIGHT_NORMALS:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.lightnorm = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_MAX_ALTITUDE:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.max_y = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_STAR_BRIGHTNESS:
+                        {
+                            LSL_Float f = list.GetLSLFloatItem(i + 1);
+                            skyData.star_brightness = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_SKY_SUNLIGHT_COLOR:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            skyData.sunlight_color = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_BIG_WAVE_DIRECTION:
+                        {
+                            var rot = list.GetVector3Item(i + 1);
+                            cycle.Water.wave1Dir = new Vector2((float)rot.x.value, (float)rot.y.value);
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_BLUR_MULTIPLIER:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.blurMultiplier = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_FOG_COLOR:
+                        {
+                            LSL_Rotation rot = list.GetQuaternionItem(i + 1);
+                            cycle.Water.waterFogColor = rot.ToVector4();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_FOG_DENSITY:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.waterFogDensity = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_FRESNEL_OFFSET:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.fresnelOffset = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_FRESNEL_SCALE:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.fresnelScale = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_LITTLE_WAVE_DIRECTION:
+                        {
+                            var rot = list.GetVector3Item(i + 1);
+                            cycle.Water.wave2Dir = new Vector2((float)rot.x.value, (float)rot.y.value);
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_NORMAL_MAP:
+                        {
+                            var f = list.GetLSLStringItem(i + 1);
+                            cycle.Water.normalMap = UUID.Parse(f.m_string);
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_NORMAL_SCALE:
+                        {
+                            LSL_Vector rot = list.GetVector3Item(i + 1);
+                            cycle.Water.normScale = rot.ToVector3();
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_SCALE_ABOVE:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.scaleAbove = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_SCALE_BELOW:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.scaleBelow = (float)f.value;
+                            break;
+                        }
+                    case ScriptBaseClass.WL_WATER_UNDERWATER_FOG_MODIFIER:
+                        {
+                            var f = list.GetLSLFloatItem(i + 1);
+                            cycle.Water.underWaterFogMod = (float)f.value;
+                            break;
+                        }
+                }
+            }
+        }
+
+        #endregion
     }
 }
