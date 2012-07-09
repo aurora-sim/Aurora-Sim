@@ -157,6 +157,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             m_isPhysical = false; // current status: no ODE information exists
             m_name = avName;
+            _parent_scene.AddSimulationChange(() => RebuildAvatar());
         }
 
         public void RebuildAvatar()

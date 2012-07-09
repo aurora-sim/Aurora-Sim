@@ -111,7 +111,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (handlerConfig.GetString("SceneManager", "") != Name)
                 return;
 
-            string name = String.Empty;
+            string name = "FileBasedDatabase";
             // Try reading the [SimulationDataStore] section
             IConfig simConfig = simBase.ConfigSource.Configs["SimulationDataStore"];
             if (simConfig != null)

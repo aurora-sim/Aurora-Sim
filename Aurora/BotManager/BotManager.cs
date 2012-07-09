@@ -138,7 +138,7 @@ namespace Aurora.BotManager
                 return UUID.Zero; //Failed!
             Bot bot = new Bot();
             bot.Initialize(SP, creatorID);
-            SP.MakeRootAgent(m_character.StartPos, false, true);
+            SP.MakeRootAgent(startPos, false, true);
             //Move them
             SP.Teleport(startPos);
 
