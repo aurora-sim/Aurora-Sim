@@ -40,7 +40,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected readonly CollisionEventUpdate CollisionEventsThisFrame = new CollisionEventUpdate();
         protected AuroraODEPhysicsScene _parent_scene;
-        protected float AvatarHalfsize;
         public float CAPSULE_LENGTH = 2.140599f;
         public float CAPSULE_RADIUS = 0.37f;
         public float MinimumGroundFlightOffset = 3f;
@@ -151,13 +150,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
 
-            CAPSULE_RADIUS = _parent_scene.avCapRadius;
-            CAPSULE_LENGTH = (size.Z*1.1f) - CAPSULE_RADIUS*2.0f;
-            AvatarHalfsize = CAPSULE_LENGTH*0.5f + CAPSULE_RADIUS;
-
             m_isPhysical = false; // current status: no ODE information exists
+            Size = size;
             m_name = avName;
-            _parent_scene.AddSimulationChange(() => RebuildAvatar());
         }
 
         public void RebuildAvatar()
@@ -298,29 +293,30 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             set { m_rotationalVelocity = value; }
         }
 
+        private Vector3 _lastSetSize = Vector3.Zero;
         /// <summary>
         ///   This property sets the height of the avatar only.  We use the height to make sure the avatar stands up straight
         ///   and use it to offset landings properly
         /// </summary>
         public override Vector3 Size
         {
-            get { return new Vector3(CAPSULE_RADIUS * 2, CAPSULE_RADIUS * 2, CAPSULE_LENGTH); }
+            get { return _lastSetSize; }
             set
             {
                 if (value.IsFinite())
                 {
-                    Vector3 SetSize = value;
-
-                    if (((SetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f) == CAPSULE_LENGTH)
+                    if (_lastSetSize.Z == value.Z)
                     {
                         //It is the same, do not rebuild
                         MainConsole.Instance.Info(
                             "[Physics]: Not rebuilding the avatar capsule, as it is the same size as the previous capsule.");
                         return;
                     }
+                    _lastSetSize = value;
 
                     m_pidControllerActive = true;
-                    AvatarHalfsize = CAPSULE_LENGTH * 0.5f + CAPSULE_RADIUS;
+                    CAPSULE_RADIUS = _parent_scene.avCapRadius;
+                    CAPSULE_LENGTH = (_lastSetSize.Z * 1.1f) - CAPSULE_RADIUS * 2.0f;
                     Velocity = Vector3.Zero;
 
                     _parent_scene.AddSimulationChange(() => RebuildAvatar());

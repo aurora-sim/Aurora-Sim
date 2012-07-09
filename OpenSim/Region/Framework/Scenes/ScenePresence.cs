@@ -151,7 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected const int LAND_VELOCITYMAG_MAX = 20;
 
         // Default AV Height
-        protected float m_avHeight = 1.56f;
+        protected float m_defaultAvHeight = 1.56f;
 
         protected ulong crossingFromRegion;
 
@@ -2024,10 +2024,6 @@ namespace OpenSim.Region.Framework.Scenes
                                                      LeftAxis = CameraLeftAxis,
                                                      Position = m_lastChildAgentUpdatePosition,
                                                      RegionHandle = Scene.RegionInfo.RegionHandle,
-                                                     Size =
-                                                         PhysicsActor != null
-                                                             ? PhysicsActor.Size
-                                                             : new Vector3(0, 0, m_avHeight),
                                                      UpAxis = CameraUpAxis,
                                                      Velocity = Velocity
                                                  };
@@ -2438,8 +2434,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_CameraCenter = cAgentData.Center + offset;
 
-            m_avHeight = cAgentData.Size.Z;
-
             TriggerSignificantClientMovement();
 
             m_savedVelocity = cAgentData.Velocity;
@@ -2460,9 +2454,6 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.Position = AbsolutePosition + OffsetPosition;
             cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;
-            // Don't copy the size; it is inferred from appearance parameters
-            //But it seems we should use it since it doesn't get set right on child tps sometimes
-            cAgent.Size = new Vector3(0, 0, m_avHeight);
             cAgent.AtAxis = m_CameraAtAxis;
             cAgent.LeftAxis = m_CameraLeftAxis;
             cAgent.UpAxis = m_CameraUpAxis;
@@ -2652,25 +2643,19 @@ namespace OpenSim.Region.Framework.Scenes
             //Set this so we don't do it multiple times
             m_creatingPhysicalRepresentation = true;
 
+            Vector3 size = new Vector3(0, 0, m_defaultAvHeight);
             IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
             if (appearance != null)
-            {
-                if (appearance.Appearance.AvatarHeight == 0)
-                    appearance.Appearance.SetHeight ();
-
-                if (appearance.Appearance.AvatarHeight != 0)
-                    m_avHeight = appearance.Appearance.AvatarHeight;
-            }
+                size.Z = appearance.Appearance.AvatarHeight;
 
             PhysicsScene scene = m_scene.PhysicsScene;
 
             Vector3 pVec = AbsolutePosition;
 
             if(AddAvHeightToPosition) //This is here so that after teleports, you arrive just slightly higher so that you don't fall through the ground/objects
-                pVec.Z += m_avHeight;
+                pVec.Z += size.Z;
 
-            m_physicsActor = scene.AddAvatar(Name, pVec, Rotation,
-                                                 new Vector3 (0f, 0f, m_avHeight), isFlying, LocalId, UUID);
+            m_physicsActor = scene.AddAvatar(Name, pVec, Rotation, size, isFlying, LocalId, UUID);
 
             m_physicsActor.OnRequestTerseUpdate += SendPhysicsTerseUpdateToAllClients;
             m_physicsActor.OnSignificantMovement += CheckForSignificantMovement;
@@ -2697,13 +2682,12 @@ namespace OpenSim.Region.Framework.Scenes
             //If the av exists, set their new size, if not, add them to the region
             if (height != 0 && PhysicsActor != null && !IsChildAgent)
             {
-                if (height != m_avHeight)
+                if (Math.Abs(height - PhysicsActor.Size.Z) > 0.1)
                 {
                     Vector3 SetSize = new Vector3 (0.45f, 0.6f, height);
                     PhysicsActor.Size = SetSize;
                 }
             }
-            m_avHeight = height;
         }
 
         protected void OutOfBoundsCall(Vector3 pos)

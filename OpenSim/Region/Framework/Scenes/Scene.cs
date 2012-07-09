@@ -666,6 +666,7 @@ namespace OpenSim.Region.Framework.Scenes
                         MainConsole.Instance.Error("[Scene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
                         appearance.Appearance = new AvatarAppearance(sp.UUID);
                     }
+                    appearance.Appearance.SetHeight();
                 }
 
                 if (GetScenePresence(client.AgentId) != null)
