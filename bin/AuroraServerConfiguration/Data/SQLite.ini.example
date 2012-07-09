@@ -7,10 +7,6 @@
 [IScriptDataConnector]
     ConnectionString = "Data Source=file://ScriptData.db"
 
-[DatabaseService]
-    StorageProvider = Aurora.DataManager.SQLite.dll
-    ConnectionString = "UTF16;Data Source=file://OpenSim.db"
-
 [IAvatarData]
     ConnectionString = "UTF16;Data Source=file://avatars.db"
 

@@ -44,19 +44,6 @@ namespace Aurora.Services.DataService
 
         public void Initialise(IConfigSource source, IRegistryCore simBase)
         {
-            //
-            // Try reading the [DatabaseService] section, if it exists
-            //
-            IConfig dbConfig = source.Configs["DatabaseService"];
-            if (dbConfig != null)
-            {
-                StorageProvider = dbConfig.GetString("StorageProvider", String.Empty);
-                ConnectionString = dbConfig.GetString("ConnectionString", String.Empty);
-            }
-
-            //
-            // [AuroraData] section overrides [DatabaseService], if it exists
-            //
             IConfig m_config = source.Configs["AuroraData"];
             if (m_config != null)
             {
@@ -65,7 +52,7 @@ namespace Aurora.Services.DataService
             }
 
             IGenericData DataConnector = null;
-            if (StorageProvider == "MySQL" || StorageProvider == "Aurora.DataManager.MySQL.dll")
+            if (StorageProvider == "MySQL")
                 //Allow for fallback when AuroraData isn't set
             {
                 MySQLDataLoader GenericData = new MySQLDataLoader();
@@ -84,7 +71,7 @@ namespace Aurora.Services.DataService
 
                 DataConnector = GenericData;
             }*/
-            else if (StorageProvider == "SQLite" || StorageProvider == "Aurora.DataManager.SQLite.dll")
+            else if (StorageProvider == "SQLite")
                 //Allow for fallback when AuroraData isn't set
             {
                 SQLiteLoader GenericData = new SQLiteLoader();

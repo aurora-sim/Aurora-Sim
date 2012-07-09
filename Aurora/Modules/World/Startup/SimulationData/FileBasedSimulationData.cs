@@ -716,14 +716,11 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                                                       : Path.Combine(m_loadDirectory, m_fileName));
             if(stream == null)
             {
-                if (CheckForOldDataBase())
+                lock (m_saveLock)
                 {
-                    lock (m_saveLock)
+                    if (!m_shutdown)
                     {
-                        if (!m_shutdown)
-                        {
-                            SaveBackup(m_saveDirectory, false);
-                        }
+                        SaveBackup(m_saveDirectory, false);
                     }
                 }
                 return;
@@ -820,112 +817,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
 
             foundLocalIDs.Clear();
             GC.Collect();
-        }
-
-        /// <summary>
-        ///   Checks whether an older style database exists
-        /// </summary>
-        /// <returns>Whether an older style database exists</returns>
-        protected virtual bool CheckForOldDataBase()
-        {
-            string connString = "";
-            string name = "";
-            // Try reading the [DatabaseService] section, if it exists
-            IConfig dbConfig = m_scene.Config.Configs["DatabaseService"];
-            if (dbConfig != null)
-                connString = dbConfig.GetString("ConnectionString", String.Empty);
-
-            // Try reading the [SimulationDataStore] section
-            IConfig simConfig = m_scene.Config.Configs["SimulationDataStore"];
-            if (simConfig != null)
-            {
-                name = simConfig.GetString("LegacyDatabaseLoaderName", "FileBasedDatabase");
-                connString = simConfig.GetString("ConnectionString", connString);
-            }
-
-            ILegacySimulationDataStore[] stores =
-                AuroraModuleLoader.PickupModules<ILegacySimulationDataStore>().ToArray();
-#if (!ISWIN)
-            ILegacySimulationDataStore simStore = null;
-            foreach (ILegacySimulationDataStore store in stores)
-            {
-                if (store.Name == name)
-                {
-                    simStore = store;
-                    break;
-                }
-            }
-#else
-            ILegacySimulationDataStore simStore = stores.FirstOrDefault(store => store.Name == name);
-#endif
-            if (simStore == null)
-                return false;
-
-            try
-            {
-                if (!m_hasShownFileBasedWarning)
-                {
-                    m_hasShownFileBasedWarning = true;
-                    IConfig startupConfig = m_scene.Config.Configs["Startup"];
-                    if (startupConfig == null || startupConfig.GetBoolean("NoGUI", false))
-                        DoNoGUIWarning();
-                    else if(!m_scene.RegionInfo.NewRegion)
-                        MessageBox.Show(
-                            @"Your sim has been updated to use the FileBased Simulation Service.
-Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.
-More configuration options and info can be found in the Configuration/Data/FileBased.ini file.",
-                            "WARNING");
-                }
-            }
-            catch
-            {
-                DoNoGUIWarning();
-            }
-
-            if (!File.Exists(connString))
-                return false;
-            simStore.Initialise(connString);
-
-            IParcelServiceConnector conn = DataManager.DataManager.RequestPlugin<IParcelServiceConnector>();
-            m_parcels = simStore.LoadLandObjects(m_scene.RegionInfo.RegionID);
-            m_parcels.AddRange(conn.LoadLandObjects(m_scene.RegionInfo.RegionID));
-            m_groups = simStore.LoadObjects(m_scene.RegionInfo.RegionID, m_scene);
-            if (m_groups.Count != 0 || m_parcels.Count != 0)
-            {
-                try
-                {
-                    m_shortterrain = simStore.LoadTerrain(m_scene, false, m_scene.RegionInfo.RegionSizeX,
-                                                          m_scene.RegionInfo.RegionSizeY);
-                    m_shortrevertTerrain = simStore.LoadTerrain(m_scene, true, m_scene.RegionInfo.RegionSizeX,
-                                                                m_scene.RegionInfo.RegionSizeY);
-                    //Remove these so that we don't get stuck loading them later
-                    conn.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
-                    simStore.RemoveAllLandObjects(m_scene.RegionInfo.RegionID);
-                }
-                catch
-                { }
-                return true;
-            }
-            return false;
-        }
-
-        private void DoNoGUIWarning()
-        {
-            //Some people don't have winforms, which is fine
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("Your sim has been updated to use the FileBased Simulation Service.");
-            MainConsole.Instance.Error(
-                "Your sim is now saved in a .abackup file in the bin/ directory with the same name as your region.");
-            MainConsole.Instance.Error("More configuration options and info can be found in the Configuration/Data/FileBased.ini file.");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
-            MainConsole.Instance.Error("---------------------");
         }
 
         private ITerrainChannel ReadFromData(byte[] data, IScene scene)

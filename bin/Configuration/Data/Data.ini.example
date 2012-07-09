@@ -8,7 +8,8 @@
     ;Include-MySQL = Configuration/Data/MySQL.ini
 	
 	
-    ;; If you want to use the FileBased region database, select this file as well as the other choice of database that you are using
+    ;; If you remove this, you will have no way to save region information, including prims
+	;; Do not disable unless you know what you are doing
     Include-FileBased = Configuration/Data/FileBased.ini
 
 [AuroraConnectors]
