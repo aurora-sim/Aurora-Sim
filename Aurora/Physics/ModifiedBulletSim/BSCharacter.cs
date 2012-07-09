@@ -53,7 +53,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         private bool _isColliding;
         private bool _isPhysical;
         private bool _jumping;
-        private int _lastCollisionTime;
         private uint _localID;
         private Quaternion _orientation;
         private Vector3 _position;
@@ -65,7 +64,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
         private Vector3 _size;
 
         private float _speedModifier = 1;
-        private int _subscribedEventsMs;
         private Vector3 _targetVelocity;
         private bool _targetVelocityIsDecaying;
         private Vector3 _velocity;
@@ -456,12 +454,6 @@ namespace OpenSim.Region.Physics.BulletSPlugin
             {
                 _collidingGroundStep = _scene.SimulationStep;
             }
-
-            // throttle collisions to the rate specified in the subscription
-            if (_subscribedEventsMs == 0) return; // don't want collisions
-            int nowTime = _scene.SimulationNowTime;
-            if (nowTime < (_lastCollisionTime + _subscribedEventsMs)) return;
-            _lastCollisionTime = nowTime;
 
             Dictionary<uint, ContactPoint> contactPoints = new Dictionary<uint, ContactPoint>();
             AddCollisionEvent(collidingWith, new ContactPoint(contactPoint, contactNormal, pentrationDepth, type));

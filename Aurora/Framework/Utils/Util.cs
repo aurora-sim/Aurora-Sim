@@ -2145,7 +2145,7 @@ namespace Aurora.Framework
     {
         private static bool m_noInternetConnection;
         private static int m_nextInternetConnectionCheck;
-        private static bool useLocalhostLoopback=false;
+        //private static bool useLocalhostLoopback=false;
         private static readonly ExpiringCache<string, IPAddress> m_dnsCache = new ExpiringCache<string, IPAddress>();
 
         public static IPEndPoint ResolveEndPoint(string hostName, int port)
