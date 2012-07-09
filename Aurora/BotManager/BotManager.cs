@@ -142,6 +142,8 @@ namespace Aurora.BotManager
             //Move them
             SP.Teleport(startPos);
 
+            foreach(var presence in scene.GetScenePresences())
+                presence.SceneViewer.QueuePresenceForUpdate(SP, PrimUpdateFlags.ForcedFullUpdate);
             IAttachmentsModule attModule = SP.Scene.RequestModuleInterface<IAttachmentsModule>();
             if (attModule != null)
                 foreach (AvatarAttachment att in attachments)

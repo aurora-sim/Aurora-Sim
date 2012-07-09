@@ -28,7 +28,10 @@ default
         BOT_FOLLOW_WAIT];
         
         //Now give it a list of positions to go around, the last is the special Wait time function
-        list positions = [llGetPos(), llGetPos() + <0, 20, 20>, llGetPos() + <20, 0, 20>, botGetWaitingTime(3)];
+        list positions = [llGetPos() + <0, 0, 1>, //Don't put the bot in the ground
+						  llGetPos() + <0, 20, 20>, 
+						  llGetPos() + <20, 0, 20>, 
+						  botGetWaitingTime(3)];
         
         //Now tell the bot what to do
         //The last parameter is the Flags parameter
