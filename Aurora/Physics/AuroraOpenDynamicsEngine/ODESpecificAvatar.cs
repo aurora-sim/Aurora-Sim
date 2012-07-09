@@ -159,8 +159,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Gravity
 
-            if (IsColliding)
-                _appliedFallingForce = 0;
             if (!flying)
                 vec.Z += -9.8f * 35 * Mass * (_appliedFallingForce > 100 ? 1 : _appliedFallingForce++ / 100f);
             else if (_parent_scene.AllowAvGravity && _target_velocity.Z > 0 &&
@@ -185,6 +183,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 _target_velocity.Z /= Multiplier;
                 vel.Z /= Multiplier;
             }
+            if (IsColliding)
+                _appliedFallingForce = 0;
 
             #endregion
 
@@ -257,7 +257,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             if ((_target_velocity == Vector3.Zero || (Math.Abs(_target_velocity.X) < 0.01f && Math.Abs(_target_velocity.Y) < 0.01f && Math.Abs(_target_velocity.Z) < 0.01f)) && 
-                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && Math.Abs(vel.Z) < 0.1)
+                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && Math.Abs(vel.Z) < 0.1 && !(_appliedFallingForce > 0))
             {
                 //Body isn't moving, disable it
                 _target_velocity = Vector3.Zero;
