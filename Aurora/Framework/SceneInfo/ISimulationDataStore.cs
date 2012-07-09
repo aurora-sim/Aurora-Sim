@@ -105,6 +105,11 @@ namespace Aurora.Framework
         ISimulationDataStore Copy();
 
         /// <summary>
+        /// Clears out all references of the backup stream and dumps local caches
+        /// </summary>
+        void Dispose();
+
+        /// <summary>
         ///   Rename any backups that we might have to a new regionName
         /// </summary>
         /// <param name = "oldRegionName"></param>

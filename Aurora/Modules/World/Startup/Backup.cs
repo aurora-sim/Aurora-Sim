@@ -312,6 +312,8 @@ namespace Aurora.Modules.Startup
                 LoadAllLandObjectsFromStorage();
                 //Load the prims from the database now that we are done loading
                 CreateScriptInstances();
+                //Now destroy the local caches as we're all loaded
+                m_scene.SimulationDataService.Dispose();
             }
 
             /// <summary>

@@ -63,7 +63,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         protected bool m_oldSaveHasBeenSaved;
         protected byte[] m_oldstylerevertTerrain;
         protected byte[] m_oldstyleterrain;
-        //For backwards compat
         protected List<LandData> m_parcels = new List<LandData>();
         protected bool m_requiresSave = true;
         protected bool m_displayNotSavingNotice = true;
@@ -107,6 +106,20 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
         public virtual ISimulationDataStore Copy()
         {
             return new FileBasedSimulationData();
+        }
+
+        public virtual void Dispose()
+        {
+            m_groups.Clear();
+            m_oldstylerevertTerrain = null;
+            m_oldstyleterrain = null;
+            m_parcels.Clear();
+            m_revertTerrain = null;
+            m_revertWater = null;
+            m_shortrevertTerrain = null;
+            m_shortterrain = null;
+            m_terrain = null;
+            m_water = null;
         }
 
         public virtual void Initialise()
@@ -778,7 +791,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             }
             m_loadStream.Close();
             m_loadStream = null;
-            int threadCount = 16;
+
+            int threadCount = groups.Count > 16 ? 16 : groups.Count;
             System.Threading.Thread[] threads = new System.Threading.Thread[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
@@ -793,17 +807,20 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                             ms.Close();
                             ms = null;
                             data = null;
-                            foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
+                            if (sceneObject != null)
                             {
-                                lock (foundLocalIDs)
+                                foreach (ISceneChildEntity part in sceneObject.ChildrenEntities())
                                 {
-                                    if (!foundLocalIDs.Contains(part.LocalId))
-                                        foundLocalIDs.Add(part.LocalId);
-                                    else
-                                        part.LocalId = 0; //Reset it! Only use it once!
+                                    lock (foundLocalIDs)
+                                    {
+                                        if (!foundLocalIDs.Contains(part.LocalId))
+                                            foundLocalIDs.Add(part.LocalId);
+                                        else
+                                            part.LocalId = 0; //Reset it! Only use it once!
+                                    }
                                 }
+                                m_groups.Add(sceneObject);
                             }
-                            m_groups.Add(sceneObject);
                         }
                         else
                             return;

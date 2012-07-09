@@ -166,7 +166,6 @@ namespace Aurora.Framework
         IAvatarService AvatarService { get; }
         IGridService GridService { get; }
         IInventoryService InventoryService { get; }
-        ISimulationService SimulationService { get; }
         IUserAccountService UserAccountService { get; }
 
         #endregion

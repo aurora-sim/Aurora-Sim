@@ -789,8 +789,8 @@ namespace Aurora.Modules.EntityTransfer
 
                 SceneObjectGroup copiedGroup = (SceneObjectGroup)grp.Copy(false);
                 copiedGroup.SetAbsolutePosition(true, attemptedPos);
-                if (grp.Scene != null && grp.Scene.SimulationService != null)
-                    successYN = grp.Scene.SimulationService.CreateObject(destination, copiedGroup);
+                if (grp.Scene != null)
+                    successYN = grp.Scene.RequestModuleInterface<ISimulationService>().CreateObject(destination, copiedGroup);
 
                 if (successYN)
                 {

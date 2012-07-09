@@ -257,14 +257,6 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public ISimulationService SimulationService
-        {
-            get
-            {
-                return RequestModuleInterface<ISimulationService>();
-            }
-        }
-
         public IUserAccountService UserAccountService
         {
             get
