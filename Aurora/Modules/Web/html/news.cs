@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Nini.Config;
 using OpenMetaverse;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {
-    public class NewsWelcomeScreenPage : IWebInterfacePage
+    public class NewsPage : IWebInterfacePage
     {
         public string[] FilePath
         {
@@ -17,27 +19,28 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/welcomescreen/news.html"
+                           "html/news.html"
                        };
             }
         }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
-
+        
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
             Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
+            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            GridNewsItem news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", query["newsid"].ToString());
+            vars.Add("NewsTitle", news.Title);
+            vars.Add("NewsText", news.Text);
+            vars.Add("NewsID", news.ID.ToString());
 
             vars.Add("News", translator.GetTranslatedString("News"));
-
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            var newsItems = connector.GetGenerics<GridNewsItem>(UUID.Zero, "WebGridNews");
-            if (newsItems.Count == 0)
-                newsItems.Add(GridNewsItem.NoNewsItem);
-            vars.Add("NewsList", newsItems.ConvertAll<Dictionary<string, object>>(item => item.ToDictionary()));
-
+            vars.Add("NewsItemTitle", translator.GetTranslatedString("NewsItemTitle"));
+            vars.Add("NewsItemText", translator.GetTranslatedString("NewsItemText"));
+            vars.Add("EditNewsText", translator.GetTranslatedString("EditNewsText"));
             return vars;
         }
     }

@@ -46,10 +46,10 @@ namespace Aurora.Modules.Web
             else
                 vars["ErrorMessage"] = "";
 
-            vars.Add("NewsItemTitle", "News Item Title");
-            vars.Add("NewsItemText", "News Item Text");
-            vars.Add("AddNewsText", "Add News");
-            vars.Add("Submit", "Submit");
+            vars.Add("NewsItemTitle", translator.GetTranslatedString("NewsItemTitle"));
+            vars.Add("NewsItemText", translator.GetTranslatedString("NewsItemText"));
+            vars.Add("AddNewsText", translator.GetTranslatedString("AddNewsText"));
+            vars.Add("Submit", translator.GetTranslatedString("Submit"));
             return vars;
         }
     }

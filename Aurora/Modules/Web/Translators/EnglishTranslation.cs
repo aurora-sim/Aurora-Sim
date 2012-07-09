@@ -111,6 +111,14 @@ namespace Aurora.Modules.Web.Translators
                     return "News Date";
                 case "NewsTitleText":
                     return "News Title";
+                case "NewsItemTitle":
+                    return "News Item Title";
+                case "NewsItemText":
+                    return "News Item Text";
+                case "AddNewsText":
+                    return "Add News";
+                case "EditNewsText":
+                    return "Edit News";
             }
             return "UNKNOWN CHARACTER";
         }

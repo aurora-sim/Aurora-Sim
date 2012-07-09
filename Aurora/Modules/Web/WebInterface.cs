@@ -71,51 +71,12 @@ namespace Aurora.Modules.Web
             {
                 Registry.RegisterModuleInterface<IWebInterfaceModule>(this);
                 var server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(_port);
-                server.AddHTTPHandler("/welcomescreen/", new GenericStreamHandler("GET", "/welcomescreen/", FindAndSendPage));
                 server.AddHTTPHandler("/", new GenericStreamHandler("GET", "/", FindAndSendPage));
-
-                MainConsole.Instance.Commands.AddCommand("web add news item", "web add news item", "Adds a news item to the web interface", (s) => AddNewsItem());
-                MainConsole.Instance.Commands.AddCommand("web remove news item", "web remove news item", "Removes a news item to the web interface", (s) => RemoveNewsItem());
             }
         }
 
         public void FinishedStartup()
         {
-        }
-
-        #endregion
-
-        #region Console commands
-
-        private void AddNewsItem()
-        {
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            GridNewsItem item = new GridNewsItem();
-            item.Time = DateTime.Now;
-            item.Title = MainConsole.Instance.Prompt("News Item Title: ");
-            MainConsole.Instance.Info("News Item Text (will continue reading until a blank line is inputted): ");
-            string curText;
-            while ((curText = Console.ReadLine()) != "")
-                item.Text += "\n" + curText;
-            item.ID = connector.GetGenericCount(UUID.Zero, "WebGridNews");
-            connector.AddGeneric(UUID.Zero, "WebGridNews", item.ID.ToString(), item.ToOSD());
-            MainConsole.Instance.Info("News item was added");
-        }
-
-        private void RemoveNewsItem()
-        {
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            var items = connector.GetGenerics<GridNewsItem>(UUID.Zero, "WebGridNews");
-            string title = MainConsole.Instance.Prompt("News item title to remove: ");
-            var foundItems = from i in items where i.Title == title select i;
-            var item = foundItems.FirstOrDefault();
-            if (item == null)
-            {
-                MainConsole.Instance.Info("No item found");
-                return;
-            }
-            connector.RemoveGeneric(UUID.Zero, "WebGridNews", item.ID.ToString());
-            MainConsole.Instance.Info("News item was removed");
         }
 
         #endregion
