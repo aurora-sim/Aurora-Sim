@@ -803,9 +803,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             IsChildAgent = false;
             RootAgentHandle = Scene.RegionInfo.RegionHandle;
-            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule>();
-            if (appearance != null)
-                appearance.Appearance.SetHeight();
 
             //Do this and SendInitialData FIRST before MakeRootAgent to try to get the updates to the client out so that appearance loads better
             m_controllingClient.MoveAgentIntoRegion (Scene.RegionInfo, AbsolutePosition, look);
@@ -848,7 +845,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             AgentCircuitData agent = ControllingClient.RequestClientInfo ();
             agent.startpos = AbsolutePosition;
-            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule> ();
+            IAvatarAppearanceModule appearance = RequestModuleInterface<IAvatarAppearanceModule>();
             if (appearance != null)
             {
                 if(makePhysicalActor)//Someone else will deal with this

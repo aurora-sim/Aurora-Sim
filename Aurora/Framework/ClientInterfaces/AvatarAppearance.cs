@@ -77,7 +77,6 @@ namespace Aurora.Framework
 
             m_owner = avatarID;
             Unpack(map);
-            SetHeight();
         }
 
         public AvatarAppearance(UUID avatarID, AvatarWearable[] wearables, Primitive.TextureEntry textureEntry,
@@ -159,6 +158,7 @@ namespace Aurora.Framework
             m_attachments = new Dictionary<int, List<AvatarAttachment>>();
             foreach (AvatarAttachment attachment in appearance.GetAttachments())
                 AppendAttachment(new AvatarAttachment(attachment));
+            SetHeight();
         }
 
         public UUID Owner
@@ -704,6 +704,7 @@ namespace Aurora.Framework
                     foreach (OSD t in attachs)
                         AppendAttachment(new AvatarAttachment((OSDMap) t));
                 }
+                SetHeight();
             }
             catch (Exception e)
             {
