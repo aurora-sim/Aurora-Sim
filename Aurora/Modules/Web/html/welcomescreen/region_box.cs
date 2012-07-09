@@ -24,15 +24,15 @@ namespace Aurora.Modules.Web
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
 
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
-            Dictionary<string, object> requestParameters, ITranslator translator)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
 
             List<Dictionary<string, object>> RegionListVars = new List<Dictionary<string, object>>();
             var sortBy = new Dictionary<string, bool>();
-            if (query.ContainsKey("region"))
-                sortBy.Add(query["region"].ToString(), true);
+            if (httpRequest.Query.ContainsKey("region"))
+                sortBy.Add(httpRequest.Query["region"].ToString(), true);
             var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags)0,
                 Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden,
                 null, null, sortBy);

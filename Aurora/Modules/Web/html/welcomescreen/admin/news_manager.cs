@@ -26,21 +26,21 @@ namespace Aurora.Modules.Web
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
-        
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
-            Dictionary<string, object> requestParameters, ITranslator translator)
+
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-            if (query.Contains("delete"))
+            if (httpRequest.Query.Contains("delete"))
             {
-                string newsID = query["delete"].ToString();
+                string newsID = httpRequest.Query["delete"].ToString();
                 connector.RemoveGeneric(UUID.Zero, "WebGridNews", newsID);
                 vars["Success"] = "Successfully deleted the news item";
             }
-            else if (query.Contains("edit"))
+            else if (httpRequest.Query.Contains("edit"))
             {
-                string newsID = query["edit"].ToString();
+                string newsID = httpRequest.Query["edit"].ToString();
 
                 webInterface.Redirect(httpResponse, "edit_news.html?newsid=" + newsID);
                 return vars;

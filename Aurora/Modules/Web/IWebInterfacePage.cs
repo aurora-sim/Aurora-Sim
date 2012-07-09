@@ -13,6 +13,7 @@ namespace Aurora.Modules.Web
         bool RequiresAuthentication { get; }
         bool RequiresAdminAuthentication { get; }
 
-        Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translation);
+        Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest request,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translation);
     }
 }

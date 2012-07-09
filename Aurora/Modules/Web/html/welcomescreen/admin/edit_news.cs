@@ -26,9 +26,9 @@ namespace Aurora.Modules.Web
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
-        
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, Hashtable query, OSHttpResponse httpResponse,
-            Dictionary<string, object> requestParameters, ITranslator translator)
+
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
@@ -50,7 +50,7 @@ namespace Aurora.Modules.Web
                 vars["ErrorMessage"] = "";
 
 
-            news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", query["newsid"].ToString());
+            news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", httpRequest.Query["newsid"].ToString());
             vars.Add("NewsTitle", news.Title);
             vars.Add("NewsText", news.Text);
             vars.Add("NewsID", news.ID.ToString());

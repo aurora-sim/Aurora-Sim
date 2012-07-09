@@ -42,5 +42,30 @@ namespace Aurora.Modules.Web
         {
             _authenticatedAdminUsers.Add(sessionID, userID);
         }
+
+        public static void RemoveAuthentication(OSHttpRequest request)
+        {
+            UUID sessionID = GetAuthenticationSession(request);
+            _authenticatedUsers.Remove(sessionID);
+            _authenticatedAdminUsers.Remove(sessionID);
+        }
+
+        public static UUID GetAuthentication(OSHttpRequest request)
+        {
+            if (request.Cookies["SessionID"] != null)
+            {
+                UUID sessionID = UUID.Parse(request.Cookies["SessionID"].Value);
+                if (_authenticatedAdminUsers.ContainsKey(sessionID))
+                    return _authenticatedAdminUsers[sessionID];
+            }
+            return UUID.Zero;
+        }
+
+        public static UUID GetAuthenticationSession(OSHttpRequest request)
+        {
+            if (request.Cookies["SessionID"] != null)
+                return UUID.Parse(request.Cookies["SessionID"].Value);
+            return UUID.Zero;
+        }
     }
 }

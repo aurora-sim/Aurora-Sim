@@ -133,7 +133,7 @@ namespace Aurora.Modules.Web
                             return null;
                     }
                 }
-                vars = _pages[filename].Fill(this, filename, httpRequest.Query, httpResponse, requestParameters, translator);
+                vars = _pages[filename].Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
                 vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
                 vars.Add("SystemName", "Testing Grid!");
                 return vars;
