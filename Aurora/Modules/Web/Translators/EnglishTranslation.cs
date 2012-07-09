@@ -129,6 +129,18 @@ namespace Aurora.Modules.Web.Translators
                     return "Partner's Name";
                 case "AboutMe":
                     return "About Me";
+                case "RegionInformationText":
+                    return "Region Information";
+                case "OwnerNameText":
+                    return "Owner Name";
+                case "RegionLocationText":
+                    return "Region Location";
+                case "RegionSizeText":
+                    return "Region Size";
+                case "RegionNameText":
+                    return "Region Name";
+                case "RegionTypeText":
+                    return "Region Type";
             }
             return "UNKNOWN CHARACTER";
         }
