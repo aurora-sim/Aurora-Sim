@@ -105,7 +105,7 @@ namespace OpenSim.Services.CapsService.CAPModules
                 if (mem_use.Count > 0)
                     MainConsole.Instance.Info(string.Format("Average viewer memory use: {0} mb", mem_use.Average() / 1000));
 
-                List<int> ping = dc.Get("ping").ConvertAll<int>((s) => int.Parse(s));
+                List<float> ping = dc.Get("ping").ConvertAll<float>((s) => float.Parse(s));
                 if (ping.Count > 0)
                     MainConsole.Instance.Info(string.Format("Average ping: {0}", ping.Average()));
 

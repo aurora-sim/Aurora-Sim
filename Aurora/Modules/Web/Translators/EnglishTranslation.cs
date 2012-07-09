@@ -119,6 +119,16 @@ namespace Aurora.Modules.Web.Translators
                     return "Add News";
                 case "EditNewsText":
                     return "Edit News";
+                case "UserProfileFor":
+                    return "User Profile For";
+                case "ResidentSince":
+                    return "Resident Since";
+                case "AccountType":
+                    return "Account Type";
+                case "PartnersName":
+                    return "Partner's Name";
+                case "AboutMe":
+                    return "About Me";
             }
             return "UNKNOWN CHARACTER";
         }

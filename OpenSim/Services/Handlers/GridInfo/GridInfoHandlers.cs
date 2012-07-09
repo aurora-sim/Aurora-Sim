@@ -65,7 +65,8 @@ namespace OpenSim.Services
             {
                 IConfig gridCfg = configSource.Configs["GridInfoService"];
                 IConfig configCfg = configSource.Configs["Handlers"];
-
+                IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
+                    
                 if (gridCfg != null)
                 {
                     foreach (string k in gridCfg.GetKeys())
@@ -92,13 +93,11 @@ namespace OpenSim.Services
                 
                 if (!_info.ContainsKey("welcome"))
                 {
-                    IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
                     if (webInterface != null)
                         _info["welcome"] = webInterface.LoginScreenURL;
                 }
                 if (!_info.ContainsKey("register"))
                 {
-                    IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
                     if (webInterface != null)
                         _info["register"] = webInterface.RegistrationScreenURL;
                 }
