@@ -19,6 +19,7 @@ namespace Aurora.Modules.Web
     {
         #region Declares
 
+        protected const int CLIENT_CACHE_TIME = 86400;//1 day
         protected uint _port = 8002;
         protected bool _enabled = true;
         protected Dictionary<string, IWebInterfacePage> _pages = new Dictionary<string, IWebInterfacePage>();
@@ -87,7 +88,7 @@ namespace Aurora.Modules.Web
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
-            httpResponse.ContentType = GetContentType(filename);
+            httpResponse.ContentType = GetContentType(filename, httpResponse);
             if (httpResponse.ContentType == null)
                 return MainServer.BadRequest;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
@@ -248,7 +249,7 @@ namespace Aurora.Modules.Web
             return repeatedLines;
         }
 
-        protected string GetContentType(string filename)
+        protected string GetContentType(string filename, OSHttpResponse response)
         {
             if (!File.Exists(filename))
                 return null;
@@ -256,12 +257,16 @@ namespace Aurora.Modules.Web
             {
                 case ".jpeg":
                 case ".jpg":
+                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
                     return "image/jpeg";
                 case ".gif":
+                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
                     return "image/gif";
                 case ".png":
+                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
                     return "image/png";
                 case ".tiff":
+                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
                     return "image/tiff";
                 case ".html":
                 case ".htm":
