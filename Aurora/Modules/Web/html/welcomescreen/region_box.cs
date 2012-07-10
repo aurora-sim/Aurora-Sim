@@ -16,7 +16,8 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/welcomescreen/region_box.html"
+                           "html/welcomescreen/region_box.html",
+                           "html/region_list.html"
                        };
             }
         }
@@ -33,15 +34,47 @@ namespace Aurora.Modules.Web
             var sortBy = new Dictionary<string, bool>();
             if (httpRequest.Query.ContainsKey("region"))
                 sortBy.Add(httpRequest.Query["region"].ToString(), true);
+            else if (httpRequest.Query.ContainsKey("Order"))
+                sortBy.Add(httpRequest.Query["Order"].ToString(), true);
+
+            uint amountPerQuery = 1;
+            int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
+            uint count = DataManager.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags)0,
+                    Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden);
+            uint maxPages = (count / amountPerQuery) - 1;
+
+            if (start == -1)
+                start = (int)maxPages;
+
+            vars.Add("CurrentPage", start);
+            vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
+            vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
+
             var regions = DataManager.DataManager.RequestPlugin<IRegionData>().Get((Framework.RegionFlags)0,
                 Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden,
-                null, null, sortBy);
+                (uint)(start * amountPerQuery), amountPerQuery, sortBy);
             foreach (var region in regions)
                 RegionListVars.Add(new Dictionary<string, object> { { "RegionLocX", region.RegionLocX / Constants.RegionSize }, 
-                    { "RegionLocY", region.RegionLocY / Constants.RegionSize }, { "RegionName", region.RegionName } });
+                    { "RegionLocY", region.RegionLocY / Constants.RegionSize }, { "RegionName", region.RegionName },
+                    { "RegionID", region.RegionID } });
 
             vars.Add("RegionList", RegionListVars);
             vars.Add("RegionText", translator.GetTranslatedString("Region"));
+
+
+            vars.Add("RegionNameText", translator.GetTranslatedString("RegionNameText"));
+            vars.Add("RegionLocXText", translator.GetTranslatedString("RegionLocXText"));
+            vars.Add("RegionLocYText", translator.GetTranslatedString("RegionLocYText"));
+            vars.Add("SortByLocX", translator.GetTranslatedString("SortByLocX"));
+            vars.Add("SortByLocY", translator.GetTranslatedString("SortByLocY"));
+            vars.Add("SortByName", translator.GetTranslatedString("SortByName"));
+            vars.Add("RegionListText", translator.GetTranslatedString("RegionListText"));
+            vars.Add("FirstText", translator.GetTranslatedString("FirstText"));
+            vars.Add("BackText", translator.GetTranslatedString("BackText"));
+            vars.Add("NextText", translator.GetTranslatedString("NextText"));
+            vars.Add("LastText", translator.GetTranslatedString("LastText"));
+            vars.Add("CurrentPageText", translator.GetTranslatedString("CurrentPageText"));
+            vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
 
             return vars;
         }

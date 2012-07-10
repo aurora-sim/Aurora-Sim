@@ -141,6 +141,31 @@ namespace Aurora.Modules.Web.Translators
                     return "Region Name";
                 case "RegionTypeText":
                     return "Region Type";
+
+                case "RegionListText":
+                    return "Region List";
+                case "RegionLocXText":
+                    return "Region X";
+                case "RegionLocYText":
+                    return "Region Y";
+                case "SortByLocX":
+                    return "Sort By Region X";
+                case "SortByLocY":
+                    return "Sort By Region Y";
+                case "SortByName":
+                    return "Sort By Region Name";
+                case "FirstText":
+                    return "First";
+                case "BackText":
+                    return "Back";
+                case "NextText":
+                    return "Next";
+                case "LastText":
+                    return "Last";
+                case "CurrentPageText":
+                    return "Current Page";
+                case "MoreInfoText":
+                    return "More Info";
             }
             return "UNKNOWN CHARACTER";
         }

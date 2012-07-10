@@ -1,0 +1,110 @@
+<!--
+
+{BackOne}
+{CurrentPage}
+{NextOne}
+
+{RegionNameText}        Region Name
+{RegionLocXText}        Region X
+{RegionLocYText}        Region Y
+{SortByLocX}            Sort By Region X
+{SortByLocY}            Sort By Region Y
+{SortByName}            Sort By Name
+{RegionListText}        Region List
+{FirstText}             First
+{BackText}              Back
+{NextText}              Next
+{LastText}              Last
+{CurrentPageText}       Current Page
+{MoreInfoText}          More Info
+-->
+<div id="content">
+  <div id="ContentHeaderCenter"><b>{SystemName}: {RegionListText}</div>
+  <div id="regionlist">
+	<table>
+		<tr>
+			<td>
+				<p><?=$count?> <? echo $webui_regions_found; ?><p>
+			</td>
+			<td>
+			<div id="region_navigation">
+				<table>
+					<tr>
+						<td>
+							<a href="region_list.html?Start=0" target="_self" title="{FirstText}">
+								<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+							</a>
+						</td>
+						<td>
+							<a href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
+								<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+							</a>
+						</td>
+						<td>
+						  	<p>{CurrentPageText} {CurrentPage}</p>
+						</td>
+						<td>
+							<a href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
+								<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+							</a>
+						</td>
+						<td>
+							<a href="region_list.html?Start=-1" target="_self" title="{LastText}">
+								<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+							</a>
+						</td>
+					</tr>
+				</table>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<table>
+		<thead>
+			<tr>
+				<td width="55%">
+					<a href="region_list.html?Order=RegionName" title="{SortByName}"><p>{RegionText}</p></a>
+				</td>
+				<td width="15%">
+					<a href="region_list.html?Order=LocX" title="{SortByLocX}"><p>{RegionLocXText}</p></a>
+				</td>
+				<td width="15%">
+					<a href="region_list.html?Order=LocY" title="{SortByLocY}"><p>{RegionLocYText}</p></a>
+				</td>
+				<td width="15%">
+				</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td colspan="4">
+					<table>
+						<tbody>
+{RegionListArrayBegin}
+							<tr>
+								<td width="55%">
+									<div><p>{RegionName}</p></div>
+								</td>
+								<td width="15%">
+									<div><p>{RegionLocX}</p></div>
+								</td>
+								<td width="15%">
+									<div><p>{RegionLocY}</p></div>
+								</td>
+								<td width="15%">
+									<div>
+										<a href='' onClick="window.open('region_info.html?regionid={RegionID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=800,height=400')">
+											{MoreInfoText}
+										</a>
+									</div>
+								</td>
+							</tr>
+{RegionListArrayEnd}
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</div>
