@@ -37,11 +37,11 @@ namespace Aurora.Modules.Web
             else if (httpRequest.Query.ContainsKey("Order"))
                 sortBy.Add(httpRequest.Query["Order"].ToString(), true);
 
-            uint amountPerQuery = 1;
+            uint amountPerQuery = 50;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
             uint count = DataManager.DataManager.RequestPlugin<IRegionData>().Count((Framework.RegionFlags)0,
                     Framework.RegionFlags.Hyperlink | Framework.RegionFlags.Foreign | Framework.RegionFlags.Hidden);
-            uint maxPages = (count / amountPerQuery) - 1;
+            int maxPages = (int)(count / amountPerQuery) - 1;
 
             if (start == -1)
                 start = (int)maxPages;
