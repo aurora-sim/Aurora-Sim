@@ -93,7 +93,7 @@ namespace Aurora.Modules.Web
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
             httpResponse.KeepAlive = false;
 
-            if (httpResponse.ContentType == "text/html")
+            if (_pages.ContainsKey(filename))
             {
                 var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
                 Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
