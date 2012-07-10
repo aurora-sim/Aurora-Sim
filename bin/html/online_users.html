@@ -1,0 +1,81 @@
+<!--
+
+{UsersOnlineList}
+{UserName}
+{UserRegion}
+{UserID}
+
+{OnlineUsersText}  Online Users
+{RegionNameText}   Region Name
+{UserNameText}     User Name
+{MoreInfoText}     More Info
+-->
+
+<div id="content">
+	<div id="ContentHeaderCenter">{SystemName}: {OnlineUsersText}</div>
+	<div id="usersonline">
+		<table>
+			<tr>
+				<td>
+					<div id="region_navigation">
+						<table>
+							<tr>
+								<td>
+									<a href="online_users.html?Start=0" target="_self" title="{FirstText}">
+										<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+									</a>
+								</td>
+								<td>
+									<a href="online_users.html?Start={BackOne}" target="_self" title="{BackText}">
+										<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+									</a>
+								</td>
+								<td>
+									<p>{CurrentPageText} {CurrentPage}</p>
+								</td>
+								<td>
+									<a href="online_users.html?Start={NextOne}" target="_self" title="{NextText}">
+										<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+									</a>
+								</td>
+								<td>
+									<a href="online_users.html?Start=-1" target="_self" title="{LastText}">
+										<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+									</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<a href="online_users.html?Order=UserName" title="{UserNameText}"><p>{UserNameText}</p></a>
+					</td>
+					<td>
+						<a href="online_users.html?Order=RegionName" title="{RegionNameText}"><p>{RegionNameText}</p></a>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+{UsersOnlineListArrayBegin}
+				<tr>
+					<td>
+						<a href='' onClick="window.open('agent_info.html?userid={UserID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=500,height=550')">
+							<u>{UserName}</u>
+						</a>
+					</td>
+					<td>
+						<a href='' onClick="window.open('region_info.html?regionid={UserRegionID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=800,height=400')">
+							<u>{UserRegion}</u>
+						</a>
+					</td>
+				</tr>
+{UsersOnlineListArrayEnd}
+			</tbody>
+		</table>
+	</div>
+</div>

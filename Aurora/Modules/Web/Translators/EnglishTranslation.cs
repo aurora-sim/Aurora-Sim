@@ -44,6 +44,7 @@ namespace Aurora.Modules.Web.Translators
                 case "Login":
                     return "Login";
                 case "UserName":
+                case "UserNameText":
                     return "User Name";
                 case "Password":
                     return "Password";
@@ -166,6 +167,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Current Page";
                 case "MoreInfoText":
                     return "More Info";
+                case "OnlineUsersText":
+                    return "Online Users";
             }
             return "UNKNOWN CHARACTER";
         }
