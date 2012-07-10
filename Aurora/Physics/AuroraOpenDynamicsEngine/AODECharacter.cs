@@ -432,7 +432,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name = "force"></param>
         public override void SetMovementForce(Vector3 force)
         {
-            if (_parent_scene.m_allowJump && !Flying && m_iscolliding && force.Z >= 0.5f)
+            if (_parent_scene.m_allowJump && !Flying && IsColliding && force.Z >= 0.5f)
             {
                 if (_parent_scene.m_usepreJump)
                 {

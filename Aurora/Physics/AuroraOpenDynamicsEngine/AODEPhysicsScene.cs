@@ -639,7 +639,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             if (p2 is AuroraODECharacter && p1.PhysicsActorType == (int)ActorTypes.Prim)
             {
                 // Testing if the collision is at the feet of the avatar
-                if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z * 0.6f))
+                if ((p2.Position.Z - maxDepthContact.Position.Z) < (p2.Size.Z * 0.5f))
                     p2col = false;
             }
 
