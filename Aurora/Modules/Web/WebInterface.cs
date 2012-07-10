@@ -72,7 +72,7 @@ namespace Aurora.Modules.Web
             {
                 Registry.RegisterModuleInterface<IWebInterfaceModule>(this);
                 var server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(_port);
-                server.AddHTTPHandler("/", new GenericStreamHandler("GET", "/", FindAndSendPage));
+                server.AddHTTPHandler(new GenericStreamHandler("GET", "/", FindAndSendPage));
             }
         }
 

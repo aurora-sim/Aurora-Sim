@@ -57,33 +57,6 @@ namespace Aurora.Framework.Servers.HttpServer
             get { return m_path; }
         }
 
-        public string GetParam(string path)
-        {
-            if (CheckParam(path))
-            {
-                return path.Substring(m_path.Length);
-            }
-
-            return String.Empty;
-        }
-
-        protected bool CheckParam(string path)
-        {
-            if (String.IsNullOrEmpty(path))
-            {
-                return false;
-            }
-
-            return path.StartsWith(Path);
-        }
-
-        public string[] SplitParams(string path)
-        {
-            string param = GetParam(path);
-
-            return param.Split(new[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
-        }
-
         public string GetBodyAsString(Stream request)
         {
             StreamReader sr = new StreamReader(request);

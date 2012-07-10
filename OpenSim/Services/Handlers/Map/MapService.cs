@@ -69,8 +69,9 @@ namespace OpenSim.Services.Handlers.Map
             if (m_cacheEnabled)
                 CreateCacheDirectories ();
 
-            m_server = registry.RequestModuleInterface<ISimulationBase> ().GetHttpServer (m_port);
+            m_server = registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(m_port);
             m_server.AddHTTPHandler("/MapService/", MapRequest);
+            m_server.AddHTTPHandler(new GenericStreamHandler("GET", "/MapAPI/", MapAPIRequest));
 
             registry.RegisterModuleInterface<IMapService>(this);
         }
@@ -94,6 +95,41 @@ namespace OpenSim.Services.Handlers.Map
         public string GetURLOfMap ()
         {
             return m_server.ServerURI + "/MapService/";
+        }
+
+        public byte[] MapAPIRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        {
+            byte[] response = MainServer.BlankResponse;
+
+            string var = httpRequest.Query["var"].ToString();
+            if (path == "/MapAPI/get-region-coords-by-name")
+            {
+                string resp = "var {0} = {\"x\":{1},\"y\":{2}};";
+                string sim_name = httpRequest.Query["sim_name"].ToString();
+                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(UUID.Zero, sim_name);
+                if (region == null)
+                    resp = "var " + var + " = {error: true};";
+                else
+                    resp = "var " + var + " = {\"x\":" + region.RegionLocX + ",\"y\":" + region.RegionLocY + "};";
+                response = System.Text.Encoding.UTF8.GetBytes(resp);
+                httpResponse.ContentType = "text/javascript";
+            }
+            else if (path == "/MapAPI/get-region-name-by-coords")
+            {
+                string resp = "var {0} = \"{1}\";";
+                int grid_x = int.Parse(httpRequest.Query["grid_x"].ToString());
+                int grid_y = int.Parse(httpRequest.Query["grid_y"].ToString());
+                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
+                    grid_x * Constants.RegionSize, grid_y * Constants.RegionSize);
+                if (region == null)
+                    resp = "var " + var + " = {error: true};";
+                else
+                    resp = string.Format(resp, var, region.RegionName);
+                response = System.Text.Encoding.UTF8.GetBytes(resp);
+                httpResponse.ContentType = "text/javascript";
+            }
+
+            return response;
         }
 
         public Hashtable MapRequest (Hashtable request)

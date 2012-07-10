@@ -125,7 +125,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <returns>
         /// true if the handler was successfully registered, false if a handler with the same name already existed.
         /// </returns>
-        bool AddHTTPHandler(string methodName, IStreamedRequestHandler handler);
+        bool AddHTTPHandler( IStreamedRequestHandler handler);
 
         bool AddPollServiceHTTPHandler(string methodName, GenericHTTPMethod handler, PollServiceEventArgs args);
 

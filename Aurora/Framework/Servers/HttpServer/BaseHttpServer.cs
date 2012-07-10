@@ -209,15 +209,15 @@ namespace Aurora.Framework.Servers.HttpServer
             return false;
         }
 
-        public bool AddHTTPHandler(string methodName, IStreamedRequestHandler handler)
+        public bool AddHTTPHandler(IStreamedRequestHandler handler)
         {
             //MainConsole.Instance.DebugFormat("[BASE HTTP SERVER]: Registering {0}", methodName);
 
             lock (m_HTTPStreamHandlers)
             {
-                if (!m_HTTPStreamHandlers.ContainsKey(methodName))
+                if (!m_HTTPStreamHandlers.ContainsKey(handler.Path))
                 {
-                    m_HTTPStreamHandlers.Add(methodName, handler);
+                    m_HTTPStreamHandlers.Add(handler.Path, handler);
                     return true;
                 }
             }
