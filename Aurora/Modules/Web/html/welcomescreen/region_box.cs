@@ -44,7 +44,7 @@ namespace Aurora.Modules.Web
             int maxPages = (int)(count / amountPerQuery) - 1;
 
             if (start == -1)
-                start = (int)maxPages;
+                start = (int)(maxPages < 0 ? 0 : maxPages);
 
             vars.Add("CurrentPage", start);
             vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);

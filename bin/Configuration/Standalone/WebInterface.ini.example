@@ -18,6 +18,10 @@
 	;; Recommended is 9000, but if you want it to look like a normal website, use 80
 	Port = 9000
 	
+	;; The google maps v2 api key generated from 
+	;; https://developers.google.com/maps/documentation/javascript/v2/introduction#Obtaining_Key
+	GoogleMapsAPIKey = ""
+	
 	;;
 	;; Welcome Screen
 	;; You can access this at 

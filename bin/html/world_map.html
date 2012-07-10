@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>{SystemName}: {WorldMap}</title>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key={GoogleMapsAPIKey}"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="map/slmapapi.js"></script>
+<link rel="stylesheet" type="text/css" href="map/slmapapi.css" />
+<style>
+html, body{
+	width: 100% ;
+	height: 100% ;
+	margin: 0 ;
+	padding: 0 ;
+}
+#map-container{
+	width: 100% ;
+	height: 100% ;
+}
+</style>
+<script>
+function loadmap(){
+	var
+		coords = {'x' : 1000, 'y' : 1000},
+		mapInstance = new SLURL.Map(document.getElementById('map-container'), {'overviewMapControl':true})
+	;
+	mapInstance.centerAndZoomAtSLCoord(new SLURL.XYPoint(coords.x, coords.y), 4);
+}
+$(document).ready(loadmap);
+</script>
+</head>
+<body>
+<div id=map-container></div>
+</body>
+</html>

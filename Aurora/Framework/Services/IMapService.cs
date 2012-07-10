@@ -36,6 +36,12 @@ namespace OpenSim.Services.Interfaces
         ///   Get the URL to the HTTP based Map Service
         /// </summary>
         /// <returns></returns>
-        string GetURLOfMap();
+        string MapServiceURL { get; }
+
+        /// <summary>
+        ///   Get the URL to the HTTP based Map Service API
+        /// </summary>
+        /// <returns></returns>
+        string MapServiceAPIURL { get; }
     }
 }

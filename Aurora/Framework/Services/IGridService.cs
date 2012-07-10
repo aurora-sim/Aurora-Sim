@@ -478,6 +478,21 @@ namespace OpenSim.Services.Interfaces
             }
         }
 
+        /// <summary>
+        /// Returns whether the grid coordinate is inside of this region
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public bool PointIsInRegion(int x, int y)
+        {
+            if (x > RegionLocX && y > RegionLocY &&
+                x < RegionLocX + RegionSizeX &&
+                y < RegionLocY + RegionSizeY)
+                return true;
+            return false;
+        }
+
         #endregion
 
         #region IDataTransferable
@@ -620,7 +635,6 @@ namespace OpenSim.Services.Interfaces
 
 
         #endregion
-
     }
 
     /// <summary>

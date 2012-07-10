@@ -51,6 +51,8 @@ namespace OpenSim.Services.Handlers.Map
         private bool m_enabled = false;
         private bool m_cacheEnabled = true;
         private float m_cacheExpires = 24;
+        private IAssetService m_assetService;
+        private IGridService m_gridService;
 
         public void Initialize (IConfigSource config, IRegistryCore registry)
         {
@@ -86,15 +88,22 @@ namespace OpenSim.Services.Handlers.Map
 
         public void Start (IConfigSource config, IRegistryCore registry)
         {
+            m_assetService = m_registry.RequestModuleInterface<IAssetService>();
+            m_gridService = m_registry.RequestModuleInterface<IGridService>();
         }
 
         public void FinishedStartup ()
         {
         }
 
-        public string GetURLOfMap ()
+        public string MapServiceURL
         {
-            return m_server.ServerURI + "/MapService/";
+            get { return m_server.ServerURI + "/MapService/"; }
+        }
+
+        public string MapServiceAPIURL
+        {
+            get { return m_server.ServerURI + "/MapAPI/"; }
         }
 
         public byte[] MapAPIRequest(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
@@ -122,7 +131,25 @@ namespace OpenSim.Services.Handlers.Map
                 var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
                     grid_x * Constants.RegionSize, grid_y * Constants.RegionSize);
                 if (region == null)
-                    resp = "var " + var + " = {error: true};";
+                {
+                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                        (grid_x * Constants.RegionSize) - (m_gridService.GetMaxRegionSize()),
+                        (grid_x * Constants.RegionSize),
+                        (grid_y * Constants.RegionSize) - (m_gridService.GetMaxRegionSize()),
+                        (grid_y * Constants.RegionSize));
+                    bool found = false;
+                    foreach (var r in regions)
+                    {
+                        if (r.PointIsInRegion(grid_x * Constants.RegionSize, grid_y * Constants.RegionSize))
+                        {
+                            resp = string.Format(resp, var, r.RegionName);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        resp = "var " + var + " = {error: true};";
+                }
                 else
                     resp = string.Format(resp, var, region.RegionName);
                 response = System.Text.Encoding.UTF8.GetBytes(resp);
@@ -138,8 +165,34 @@ namespace OpenSim.Services.Handlers.Map
             string uri = request["uri"].ToString ();
             //Remove the /MapService/
             uri = uri.Remove (0, 12);
-            if (!uri.StartsWith ("map"))
+            if (!uri.StartsWith("map"))
+            {
+                if (uri == "")
+                {
+                    string resp = "<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">" +
+"<Name>map.secondlife.com</Name>" +
+"<Prefix/>" +
+"<Marker/>" +
+"<MaxKeys>1000</MaxKeys>" +
+"<IsTruncated>true</IsTruncated>";
+                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                        (1000 * Constants.RegionSize) - (8 * Constants.RegionSize),
+                        (1000 * Constants.RegionSize) + (8 * Constants.RegionSize),
+                        (1000 * Constants.RegionSize) - (8 * Constants.RegionSize),
+                        (1000 * Constants.RegionSize) + (8 * Constants.RegionSize));
+                    foreach (var region in regions)
+                    {
+                        resp += "<Contents><Key>map-1-" + region.RegionLocX/256 + "-" + region.RegionLocY/256 + "-objects.jpg</Key>" +
+                            "<LastModified>2012-07-09T21:26:32.000Z</LastModified></Contents>";
+                    }
+                    resp += "</ListBucketResult>";
+                    reply["str_response_string"] = resp;
+                    reply["int_response_code"] = 200;
+                    reply["content_type"] = "application/xml";
+                    return reply;
+                }
                 return null;
+            }
             string[] splitUri = uri.Split ('-');
             byte[] jpeg = FindCachedImage(uri);
             if (jpeg.Length != 0)
@@ -157,7 +210,7 @@ namespace OpenSim.Services.Handlers.Map
                 int regionX = int.Parse (splitUri[2]);
                 int regionY = int.Parse (splitUri[3]);
 
-                List<GridRegion> regions = m_registry.RequestModuleInterface<IGridService> ().GetRegionRange (UUID.Zero,
+                List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
                         (regionX * Constants.RegionSize) - (mapView * Constants.RegionSize),
                         (regionX * Constants.RegionSize) + (mapView * Constants.RegionSize),
                         (regionY * Constants.RegionSize) - (mapView * Constants.RegionSize),
@@ -167,7 +220,7 @@ namespace OpenSim.Services.Handlers.Map
                 List<GridRegion> badRegions = new List<GridRegion> ();
                 foreach (GridRegion r in regions)
                 {
-                    AssetBase texAsset = m_registry.RequestModuleInterface<IAssetService> ().Get (r.TerrainMapImage.ToString ());
+                    AssetBase texAsset = m_assetService.Get(r.TerrainMapImage.ToString());
 
                     if (texAsset != null)
                     {

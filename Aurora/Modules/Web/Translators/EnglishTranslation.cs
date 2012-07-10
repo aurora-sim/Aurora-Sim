@@ -169,6 +169,8 @@ namespace Aurora.Modules.Web.Translators
                     return "More Info";
                 case "OnlineUsersText":
                     return "Online Users";
+                case "WorldMap":
+                    return "World Map";
             }
             return "UNKNOWN CHARACTER";
         }

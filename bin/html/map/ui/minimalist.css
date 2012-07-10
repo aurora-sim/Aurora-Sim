@@ -1,0 +1,226 @@
+/**
+* License and Terms of Use
+*
+* Copyright (c) 2011 SignpostMarv
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+.mapapi-ui-sidebars {
+	z-index: 200 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .zoomcontrol, .mapapi-ui-minimalist .mapapi-ui-sidebars .menu{
+	position: absolute ;
+	top: 37px ;
+	height: 29px ;
+	vertical-align: top ;
+	background: #eee ;
+	font-size: 12px ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .zoomcontrol{
+	right: 8px ;
+	width: 16px ;
+	text-align: center ;
+	text-indent: -4px ;
+	border-radius: 0 8px 8px 0;
+	box-shadow: 0px 2px 4px #000 ;
+	clip:rect(0,20px,33px,0);
+	overflow: hidden ;
+	line-height: 14.5px ;
+	z-index: 400 ;
+}
+
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu{
+	right: 24px ;
+	line-height: 29px ;
+	width: auto ;
+	box-shadow: 0 2px 4px #000 ;
+	z-index: 300 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu.minimised{
+	width: 0 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul{
+	padding: 0 .25em ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu.minimised > ul{
+	display: none ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu .toggle-menu{
+	position: absolute ;
+	top: 0 ;
+	left: -1em ;
+	z-index: 200 ;
+	padding: 0 4px ;
+	background: #eee ;
+	border-radius: 8px 0 0 8px ;
+	height: 100% ;
+	box-shadow: 0px 2px 4px #000 ;
+	clip:rect(0,1em,33px,0);
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li{
+	display: inline-block ;
+	position: relative ;
+	margin-left: 1em ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li:first-child{
+	margin-left: 0 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > h1{
+	font-size: 1.2em ;
+	font-weight: bolder ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul, .mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li > ul{
+	display: none ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li > ul{
+	max-height: 400px ;
+	overflow: auto ;
+	padding-top: 1em ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li > ul > li{
+	padding: 0 0 0 .25em;
+	margin-right: 2em ;
+	line-height: 1.5em ;
+	width: 100% ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li > ul > li:nth-child(odd){
+	background: #ddd ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li.toggled > ul, .mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li:hover > ul{
+	display: block ;
+	position: absolute ;
+	top: 100% ;
+	right: 0 ;
+	background: #eee ;
+	border-radius: 8px 0 8px 8px ;
+	padding: .25em ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li:hover{
+	z-index: 300 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li:hover > h1{
+	background: #fff ;
+	border-radius: 8px 8px 0 0 ;
+	box-shadow: 4px 4px 4px #000 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li:hover ul{
+	background: #fff ;
+	box-shadow: 4px 4px 4px #000 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li:hover > ul{
+	display: block ;
+	position: absolute ;
+	top: 8px ;
+	right: 100% ;
+	margin-right: -8px ;
+	border-radius: 8px 0 8px 8px ;
+	padding: .25em ;
+	box-shadow: 8px 8px 4px #000 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li{
+	padding-left: 1em ;
+	white-space: pre ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li:hover, .mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li.toggled, .mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li.mapapijs > ul > li{
+	font-weight: bolder ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu > ul > li > ul > li.toggled{
+	font-weight: bolder ;
+}
+.mapapi-ui-minimalist .mapapi-ui-sidebars .menu li.childless:hover > ul {
+	display: none ;
+}
+
+.mapapi-ui-minimalist .mapapi-ui-marker{
+	display: block ;
+	position: absolute ;
+	top: 0 ;
+	left: 0 ;
+}
+
+.mapapi-ui-minimalist .mapapi-ui-infowindow{
+	display: block ;
+	position: absolute ;
+	top: 0 ;
+	left: 0 ;
+	padding: 0 0 40px 32px ;
+	max-width: 50% ;
+	background: transparent url('marker.png') bottom left no-repeat ;
+}
+.mapapi-ui-minimalist .mapapi-ui-infowindow .mapapi-ui-wrapper{
+	padding: 1px ;
+	border-radius: 16px ;
+	position: absolute ;
+	bottom: 32px ;
+	left: 0 ;
+	background: #fff url('marker-tail-top-slice.png') bottom left no-repeat ;
+}
+.mapapi-ui-minimalist .mapapi-ui-infowindow .mapapi-ui-item-contents{
+	background: #fff ;
+	padding: .25em 1em .25em 8px ;
+	border: 2px solid #5a749e ;
+	border-radius: 16px ;
+}
+.mapapi-ui-minimalist .mapapi-ui-infowindow .waiting .mapapi-ui-item-contents{
+	font-size: 0 ;
+	line-height: 28px ;
+}
+.mapapi-ui-minimalist .mapapi-ui-infowindow .waiting .mapapi-ui-infowindow-close{
+	display: none ;
+}
+
+
+.mapapi-ui-minimalist .mapapi-ui-infowindow .mapapi-ui-infowindow-close{
+	position: absolute ;
+	top: 1px ;
+	right: 1px ;
+	width: 1em ;
+	padding: 2px ;
+	text-align: center ;
+	border-radius: 0 16px 0 0 ;
+}
+.mapapi-ui-minimalist .mapapi-ui-infowindow .mapapi-ui-infowindow-close:hover{
+	background: #eee ;
+	box-shadow: 0px 2px 4px #000 ;
+}
+
+.mapapi-ui-minimalist .mapapi-ui-marker-numbered .mapapi-ui-marker-number, .mapapi-ui-minimalist .mapapi-ui-marker-numbered .mapapi-ui-marker-img{
+	position: absolute ;
+	top: 0 ;
+	left: 0 ;
+	width: 100% ;
+	height: 100% ;
+	text-align: center ;
+	overflow: hidden ;
+}
+
+.mapapi-net-modal{
+	position: absolute ;
+	top: 0 ;
+	left: 0 ;
+	width: 100% ;
+	height: 100% ;
+	background: #000 ;
+	background: rgba(0,0,0,.5) ;
+	z-index: 65536 ;
+}
+.mapapi-net-modal > div{
+	background: #eee ;
+	margin-top: 1em ;
+}

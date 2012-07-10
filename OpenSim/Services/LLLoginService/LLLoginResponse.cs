@@ -440,7 +440,7 @@ namespace OpenSim.Services.LLLoginService
 
                 IMapService mapService = m_registry.RequestModuleInterface<IMapService>();
                 if (mapService != null)
-                    responseData["map-server-url"] = mapService.GetURLOfMap();
+                    responseData["map-server-url"] = mapService.MapServiceURL;
                 else if (MapTileURL != String.Empty)
                     responseData["map-server-url"] = MapTileURL;
 

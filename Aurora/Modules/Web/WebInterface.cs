@@ -164,10 +164,10 @@ namespace Aurora.Modules.Web
                 }
                 else if (line.Trim().StartsWith("{"))
                 {
-                    newLines.RemoveAt(newLinesPos--);
                     int ind;
                     if ((ind = line.IndexOf("ArrayBegin}")) != -1)
                     {
+                        newLines.RemoveAt(newLinesPos--);
                         string keyToCheck = line.Substring(1, ind - 1);
                         int posToCheckFrom;
                         List<string> repeatedLines = FindLines(lines, newLines, pos, keyToCheck, "ArrayEnd", out posToCheckFrom);
@@ -179,6 +179,7 @@ namespace Aurora.Modules.Web
                     }
                     else if (line.Trim().StartsWith("{IsAuthenticatedBegin}"))
                     {
+                        newLines.RemoveAt(newLinesPos--);
                         int posToCheckFrom;
                         List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsAuthenticatedEnd", out posToCheckFrom);
                         if (!Authenticator.CheckAuthentication(request))
@@ -190,6 +191,7 @@ namespace Aurora.Modules.Web
                     }
                     else if (line.Trim().StartsWith("{IsNotAuthenticatedBegin}"))
                     {
+                        newLines.RemoveAt(newLinesPos--);
                         int posToCheckFrom;
                         List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsNotAuthenticatedEnd", out posToCheckFrom);
                         if (Authenticator.CheckAuthentication(request))
@@ -201,6 +203,7 @@ namespace Aurora.Modules.Web
                     }
                     else if (line.Trim().StartsWith("{IsAdminAuthenticatedBegin}"))
                     {
+                        newLines.RemoveAt(newLinesPos--);
                         int posToCheckFrom;
                         List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsAdminAuthenticatedEnd", out posToCheckFrom);
                         if (!Authenticator.CheckAdminAuthentication(request))
@@ -212,6 +215,7 @@ namespace Aurora.Modules.Web
                     }
                     else if (line.Trim().StartsWith("{IsNotAdminAuthenticatedBegin}"))
                     {
+                        newLines.RemoveAt(newLinesPos--);
                         int posToCheckFrom;
                         List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsNotAdminAuthenticatedEnd", out posToCheckFrom);
                         if (Authenticator.CheckAdminAuthentication(request))
@@ -273,6 +277,8 @@ namespace Aurora.Modules.Web
                     return "text/html";
                 case ".css":
                     return "text/css";
+                case ".js":
+                    return "application/javascript";
             }
             return "text/plain";
         }
