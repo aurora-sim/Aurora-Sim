@@ -1954,7 +1954,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Vector3 direc = (rotation == Quaternion.Identity ? vec : (vec * rotation));
                 Rotation = rotation;
                 direc.Normalize();
-                if (!actor.Flying && direc.Z < 0.2f)
+                if (!actor.Flying && direc.Z > 0f && direc.Z < 0.2f)
                     direc.Z = 0;//Disable walking up into the air unless we are attempting to jump
                 actor.SetMovementForce(direc * 1.2f);
             }

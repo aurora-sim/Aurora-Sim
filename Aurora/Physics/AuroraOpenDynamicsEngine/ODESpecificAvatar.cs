@@ -157,10 +157,76 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #endregion
 
+            #region Check for underground
+
+            d.AABB aabb;
+            d.GeomGetAABB(Shell, out aabb);
+            float chrminZ = aabb.MinZ;
+
+            Vector3 posch = localPos;
+
+            float ftmp;
+
+            if (flying)
+            {
+                ftmp = 0.75f * timeStep;
+                posch.X += vel.X * ftmp;
+                posch.Y += vel.Y * ftmp;
+            }
+
+            float groundHeight = _parent_scene.GetTerrainHeightAtXY(posch.X, posch.Y);
+
+            if (chrminZ < groundHeight)
+            {
+                float depth = groundHeight - chrminZ;
+
+                if (_target_velocity.Z < 0)
+                    _target_velocity.Z = 0;
+
+                if (!flying)
+                {
+                    if (vel.Z < -10f)
+                        vel.Z = -10f;
+                    vec.Z = -vel.Z * PID_D * 1.5f + depth * PID_P * 50.0f;
+                }
+                else
+                {
+                    vec.Z = depth * PID_P * 50.0f;
+                }
+
+                if (depth < 0.12f)
+                {
+                    if (!m_iscolliding)
+                    {
+                        m_iscolliding = true;
+                        m_colliderfilter = 15;
+
+                        ContactPoint point = new ContactPoint
+                        {
+                            Type = ActorTypes.Ground,
+                            PenetrationDepth = depth,
+                            Position = { X = localPos.X, Y = localPos.Y, Z = chrminZ },
+                            SurfaceNormal = new Vector3(0, 0, -1f)
+                        };
+
+                        //0 is the ground localID
+                        AddCollisionEvent(0, point);
+                    }
+                    vec.Z *= 0.5f;
+                }
+            }
+            /*
+                        if(Flying && _target_velocity == Vector3.Zero &&
+                            Math.Abs(vel.Z) < 0.1)
+                            notMoving = true;
+            */
+
+            #endregion
+
             #region Gravity
 
             if (!flying)
-                vec.Z += -9.8f * 35 * Mass * (_appliedFallingForce > 100 ? 1 : _appliedFallingForce++ / 100f);
+                vec.Z += -9.8f * 35 * Mass * (_appliedFallingForce > 100 ? 1 : _appliedFallingForce++ / 100f) * (this.IsTruelyColliding ? 0.5f : 1.0f);
             else if (_parent_scene.AllowAvGravity && _target_velocity.Z > 0 &&
                         tempPos.Z > _parent_scene.AvGravityHeight) //Should be stop avies from flying upwards
             {
@@ -279,7 +345,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 (Math.Abs(combinedForceVelocity.X) < 0.01f &&
                 Math.Abs(combinedForceVelocity.Y) < 0.01f &&
                 Math.Abs(combinedForceVelocity.Z) < 0.01f)) &&
-                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 && 
+                Math.Abs(vel.X) < 0.1 && Math.Abs(vel.Y) < 0.1 &&
                 Math.Abs(vel.Z) < 0.1 && !(_appliedFallingForce > 0) && !noDisable)
             {
                 //Body isn't moving, disable it
