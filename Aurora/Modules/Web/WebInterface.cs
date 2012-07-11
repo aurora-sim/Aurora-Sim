@@ -176,9 +176,12 @@ namespace Aurora.Modules.Web
                             foreach (string f in files)
                             {
                                 if (!f.EndsWith(".html")) continue;
-                                
+                                Dictionary<string, object> newVars2 = AddVarsForPage(f, request, httpResponse, requestParameters) ??
+                                                                      new Dictionary<string, object>();
+                                foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
+                                    newVars2.Add(pair.Key, pair.Value);
                                 newLines[newLinesPos] += ConvertHTML(File.ReadAllText(f), request, httpResponse,
-                                                                    requestParameters, newVars);
+                                                                    requestParameters, newVars2);
                             }
                         }
                     }
@@ -195,8 +198,15 @@ namespace Aurora.Modules.Web
                         for (int i = pos; i < posToCheckFrom; i++)
                             newLines.RemoveAt(newLinesPos + 1);
                         pos = posToCheckFrom;
-                        foreach (var dict in vars[keyToCheck] as List<Dictionary<string, object>>)
-                            newLines.Insert(newLinesPos++, ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request, httpResponse, requestParameters, dict));
+                        if (vars.ContainsKey(keyToCheck))
+                        {
+                            List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
+                            if (dicts != null)
+                                foreach (var dict in dicts)
+                                    newLines.Insert(newLinesPos++,
+                                                    ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request,
+                                                                httpResponse, requestParameters, dict));
+                        }
                     }
                     else if (line.Trim().StartsWith("{IsAuthenticatedBegin}"))
                     {
