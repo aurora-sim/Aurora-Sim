@@ -38,6 +38,8 @@ using Aurora.Framework;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Region.Framework.Scenes;
+using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
 
@@ -796,6 +798,8 @@ namespace Aurora.Modules.Inventory
             {
                 if (UUID.Zero == transactionID)
                 {
+                    uint oldnextperms = item.NextPermissions;
+                    bool hasPermissionsChanged = item.NextPermissions != (itemUpd.NextPermissions & item.BasePermissions);
                     item.Name = itemUpd.Name;
                     item.Description = itemUpd.Description;
                     item.NextPermissions = itemUpd.NextPermissions & item.BasePermissions;
@@ -815,6 +819,65 @@ namespace Aurora.Modules.Inventory
                     item.SaleType = itemUpd.SaleType;
                     item.Flags = itemUpd.Flags;
 
+                    if ((hasPermissionsChanged) && (item.AssetType == (int)InventoryType.Object))
+                    {
+						AssetBase asset = m_scene.AssetService.Get(item.AssetID.ToString());
+						if (asset != null)
+						{
+							SceneObjectGroup group =
+								SceneObjectSerializer.FromOriginalXmlFormat(Utils.BytesToString(asset.Data), m_scene);
+
+							bool didchange = false;
+							//copy
+							if ((((PermissionMask)oldnextperms & PermissionMask.Copy) == PermissionMask.Copy) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Copy) != PermissionMask.Copy))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Copy, 0);
+							}
+							else if ((((PermissionMask)oldnextperms & PermissionMask.Copy) != PermissionMask.Copy) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Copy) == PermissionMask.Copy))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Copy, 1);
+							}
+
+							//mod
+							if ((((PermissionMask)oldnextperms & PermissionMask.Modify) == PermissionMask.Modify) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Modify) != PermissionMask.Modify))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Modify, 0);
+							}
+							else if ((((PermissionMask)oldnextperms & PermissionMask.Modify) != PermissionMask.Modify) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Modify) == PermissionMask.Modify))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Modify, 1);
+							}
+
+							//trans
+							if ((((PermissionMask)oldnextperms & PermissionMask.Transfer) == PermissionMask.Transfer) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Transfer) != PermissionMask.Transfer))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Transfer, 0);
+							}
+							else if ((((PermissionMask)oldnextperms & PermissionMask.Transfer) != PermissionMask.Transfer) &&
+								(((PermissionMask)item.NextPermissions & PermissionMask.Transfer) == PermissionMask.Transfer))
+							{
+								didchange = true;
+								group.UpdatePermissions(remoteClient.AgentId, 16, 1, (uint)PermissionMask.Transfer, 1);
+							}
+
+							if (didchange)
+							{
+								asset.Data = Encoding.ASCII.GetBytes(group.ToXml2());
+								asset.ID = m_scene.AssetService.Store(asset);
+								item.AssetID = asset.ID;
+							}
+						}
+                    }
                     m_scene.InventoryService.UpdateItem(item);
                 }
                 else
