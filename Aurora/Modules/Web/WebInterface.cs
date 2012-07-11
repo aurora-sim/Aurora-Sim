@@ -162,6 +162,26 @@ namespace Aurora.Modules.Web
                         newLines[newLinesPos] = ConvertHTML(File.ReadAllText(filename), request, httpResponse, requestParameters, newVars);
                     }
                 }
+                else if (line.Contains("<!--#include folder="))
+                {
+                    string[] split = line.Split(new string[2] { "<!--#include folder=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
+                    {
+                        string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html","");
+                        if (Directory.Exists(filename))
+                        {
+                            string[] files = Directory.GetFiles(filename);
+                            foreach (string f in files)
+                            {
+                                if (!f.EndsWith(".html")) continue;
+                                Dictionary<string, object> newVars = AddVarsForPage(f, request, httpResponse,
+                                                                                requestParameters);
+                                newLines[newLinesPos] += ConvertHTML(File.ReadAllText(f), request, httpResponse,
+                                                                    requestParameters, newVars);
+                            }
+                        }
+                    }
+                }
                 else if (line.Trim().StartsWith("{"))
                 {
                     int ind;
