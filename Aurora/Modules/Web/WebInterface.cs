@@ -170,12 +170,13 @@ namespace Aurora.Modules.Web
                         string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html","");
                         if (Directory.Exists(filename))
                         {
+                            Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse,
+                                                                                requestParameters);
                             string[] files = Directory.GetFiles(filename);
                             foreach (string f in files)
                             {
                                 if (!f.EndsWith(".html")) continue;
-                                Dictionary<string, object> newVars = AddVarsForPage(f, request, httpResponse,
-                                                                                requestParameters);
+                                
                                 newLines[newLinesPos] += ConvertHTML(File.ReadAllText(f), request, httpResponse,
                                                                     requestParameters, newVars);
                             }
