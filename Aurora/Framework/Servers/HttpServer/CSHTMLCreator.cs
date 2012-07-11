@@ -69,6 +69,7 @@ namespace Aurora.Framework
 
         public static string BuildHTML(string html, Dictionary<string, object> vars)
         {
+            if (vars == null) return html;
             foreach (KeyValuePair<string, object> kvp in vars)
             {
                 if(!(kvp.Value is IList))
