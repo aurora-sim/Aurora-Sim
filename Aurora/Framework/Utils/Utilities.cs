@@ -576,6 +576,13 @@ namespace Aurora.Framework
             }
         }
 
+        /// <summary>
+        /// Downloads a file async
+        /// </summary>
+        /// <param name="downloadLink"></param>
+        /// <param name="filename"></param>
+        /// <param name="onProgress">can be null</param>
+        /// <param name="onComplete">can be null</param>
         public static void DownloadFileAsync(string downloadLink, string filename, DownloadProgressChangedEventHandler onProgress, AsyncCompletedEventHandler onComplete)
         {
             WebClient webClient = new WebClient();
@@ -591,11 +598,6 @@ namespace Aurora.Framework
             catch (Exception)
             {
             }
-        }
-
-        static void webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
