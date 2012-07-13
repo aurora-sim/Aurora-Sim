@@ -19,6 +19,7 @@ namespace Griffin.Networking.Http.Services.BodyDecoders
         public CompositeBodyDecoder()
         {
             _decoders.Add("application/x-www-form-urlencoded", new UrlFormattedDecoder());
+            _decoders.Add("application/x-www-form-urlencoded; charset=UTF-8", new UrlFormattedDecoder());
             _decoders.Add(MultipartDecoder.MimeType, new MultipartDecoder());
         }
 
