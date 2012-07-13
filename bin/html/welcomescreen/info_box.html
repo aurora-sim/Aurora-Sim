@@ -5,35 +5,25 @@
 {Text}
 {Color}   red green yellow white
 -->
-<table cellSpacing=0 cellPadding=0 width=300 border=0>
-  <tbody>
-  <tr>
-    <td vAlign=top align=right>
-      <table cellSpacing=0 cellPadding=0 width=300 border=0>
-        <tbody>
-        <tr>
-          <td class=box{Color}_tl><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-          <td class=box{Color}_t><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-          <td class=box{Color}_tr><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-        </tr>       
-        <tr>
-          <td class=box{Color}_l></td>
-          <td class=black_content><img src="{SystemURL}/welcomescreen/images/icons/alert.png" align=absMiddle>&nbsp;<strong>{Title}</strong> 
-            <div id=GREX style="MARGIN: 1px 0px 0px"><IMG height=1 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" width=1></div>
-            <div class=boxtext>
-              <p style="FONT-SIZE: 11px">{Text}</p>
-            </div>
-          </td>
-          <td class=box{Color}_r></td>
-        </tr>
-        <tr>
-          <td class=box{Color}_bl></td>
-          <td class=box{Color}_b></td>
-          <td class=box{Color}_br></td>
-        </tr>
-        </tbody>
-      </table>
-    </td>
-  </tr>
-  </tbody>
+
+<link href="{SystemURL}/welcomescreen/perso_template.css" type="text/css" rel="stylesheet">
+<div id=gridinfo>
+<table>
+
+	<thead>
+    <tr>
+		<th class=black_content align=left>
+			<div class=headerthread>
+				<img src="{SystemURL}/welcomescreen/images/alert.png" align=absMiddle>&nbsp;<strong>{Title}</strong>
+			</div>
+		</th>
+    </tr>
+	</thead>
+
+	<tbody>
+	<tr>
+		<td><p>{Text}</p></td>
+	</tr>
+	</tbody>
 </table>
+</div>

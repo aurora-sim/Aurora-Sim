@@ -14,13 +14,13 @@
 	addEvent(window, "load", function() { document.getElementById("login_input").focus(); } );
 </script>
 <div id="content">
-    <div id="ContentHeaderCenter"><b>{Login}: {SystemName}</b></div>
+    <div id="ContentHeaderCenter"><h2>{SystemName}: {Login}</h2></div>
     <div id="login">
 		<form action="login.html" method="POST">
 			<table>
                 <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
 				<tr>
-					<td class="odd" width="51%"><span id="logname_label">{UserNameText}*</span></td>
+					<td class="odd"><span id="logname_label">{UserNameText}*</span></td>
 					<td class="odd"><div class="roundedinput"><input require="true" label="username" id="login_input" name="username" type="text"/></div></td>
 				</tr>
 				<tr>

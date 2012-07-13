@@ -14,17 +14,27 @@
 {RegionSizeText}         Region Size
 {RegionNameText}         Region Name
 {RegionTypeText}         Region Type
+
+{RegionInfoText}
 -->
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!doctype html>
+<html lang="en">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>{SystemName}: {RegionInformationText}</title>
+	<meta charset="utf-8">
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link href="css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/styleswitch.js"></script>
+	<title>{SystemName}: {RegionInfoText}</title>
 </head>
 
 <body class="webui">
 	<div id="container_popup">
 		<div id="content_popup">
-			<h2>{SystemName}: {RegionInformationText}</h2>
+			<h2>{SystemName}: {RegionInfoText}</h2>
 		</div>
 		<div id="regioninfo">
 			<div id="regiondetails">
@@ -42,10 +52,10 @@
 					<td>{RegionTypeText}:</td><td>{RegionType}</td>
 				</tr>
 				<tr>
-					<td>{RegionLocationText}</td><td>X: {RegionLocX}</td><td>Y: {RegionLocY}</td>
+					<td>{RegionLocationText}:</td><td>X: {RegionLocX}</td><td>Y: {RegionLocY}</td>
 				</tr>
 				<tr>
-					<td>{RegionSizeText}</td><td>X: {RegionSizeX}</td><td>Y: {RegionSizeY}</td>
+					<td>{RegionSizeText}:</td><td>X: {RegionSizeX}</td><td>Y: {RegionSizeY}</td>
 				</tr>
 				<tr>
 					<td>{OwnerNameText}:</td><td><a href="agent_info.html?userid={OwnerUUID}">{OwnerName}</a></td>

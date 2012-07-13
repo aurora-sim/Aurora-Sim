@@ -27,7 +27,7 @@
 -->
 
 <div id="content">
-    <div id="ContentHeaderCenter"><b>{RegistrationText}: {SystemName}</b></div>
+    <div id="ContentHeaderCenter"><h2>{SystemName}: {RegistrationText}</h2></div>
     <div id="register">
         <form ACTION="register.html" METHOD="POST">
             <table>
@@ -149,6 +149,11 @@
 
 										</select>
 									</td>
+									
+									<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+									<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+									<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+									
 								</tr>
 							</table>
 						</div>
@@ -191,10 +196,10 @@
 				<tr>
 					<td>{TermsOfServiceAccept}</td>
 					<td colspan="2" valign="top">
-						<input type="checkbox" name="ToSAccept" value="Accepted" />Accept<br />
+						<input class="checkbox" id="checkbox" type="checkbox" name="ToSAccept" value="Accepted" /><label for="checkbox">Accept</label>
 					</td>
 				</tr>
-				
+
 				<tr>
 					<td class="even">
 						<div class="center">

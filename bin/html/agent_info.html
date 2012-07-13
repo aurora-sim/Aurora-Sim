@@ -14,11 +14,19 @@
 {AboutMe}          About Me
 
 -->
-<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<title>{SystemName}: {UserProfileFor}: {UserName}</title>
-	</head>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link href="css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/styleswitch.js"></script>
+	<title>{SystemName}: {UserProfileFor}: {UserName}</title>
+</head>
 
 	<body class="webui">
 		<div id="container_popup">
@@ -50,7 +58,7 @@
 							<td>{UserPartner}</td>
 						</tr>
 						<tr>
-							<td>{AboutMe}</td>
+							<td>{AboutMe}:</td>
 							<td>{UserAboutMe}</td>
 						</tr>       
 						<tr>

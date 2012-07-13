@@ -70,7 +70,6 @@ namespace Aurora.Modules.Web
                 vars.Add("AboutMe", translator.GetTranslatedString("AboutMe"));
             }
 
-
             return vars;
         }
     }

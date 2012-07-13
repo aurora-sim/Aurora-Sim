@@ -20,84 +20,61 @@
  CurrencyActive       Enabled or Disabled
  
  -->
-<table cellSpacing=0 cellPadding=0 border=0>
+<link href="{SystemURL}/welcomescreen/perso_template.css" type="text/css" rel="stylesheet">
+
+<div id=gridstatus>
+<div class=headerthread>
+<table>
+	
+	<thead>
+      <th class=gridtext align=left><img src="{SystemURL}/welcomescreen/images/status.png" align=absMiddle>&nbsp;<strong>{GridStatus}:</strong></th>
+      <th class=gridtext align=right><span class={GridOnline}>{GridOnline}</span></th>
+	</thead>
+</table>
+</div>
+
+<table>
+  <tfoot>
+    <tr>
+      <td></td>
+      <td></td>
+    </tr>
+  </tfoot>
   <tbody>
-  <tr>
-  <td vAlign=top align=right>
-    <table cellSpacing=0 cellPadding=0 width=300 border=0>
-      <tbody>
-      <tr>
-        <td class=gridbox_tl><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt="" /></td>
-        <td class=gridbox_t><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt="" /></td>
-        <td class=gridbox_tr><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt="" /></td>
-      </tr>
-      <tr>
-        <td class=gridbox_l></td>
-        <td class=black_content>
-          <table cellSpacing=0 cellPadding=1 width="100%" border=0>
-            <tbody>
-            <tr>
-              <td class=gridtext align=left><strong>{GridStatus}:</strong></td>
-              <td class=gridtext align=right>
-                <span class={GridOnline}>{GridOnline}</span>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-
-          <div id=grex style="margin: 1px 0px 0px">
-            <img height=1 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" width=1>
-          </div>
-
-          <table cellSpacing=0 cellPadding=0 width="100%" border=0>
-            <tbody>
-            <tr class=odd>
-              <td class=gridtext vAlign=top noWrap align=left>{TotalUserCount}:</td>
-              <td class=gridtext vAlign=top noWrap align=right width="1%">{UserCount}</td>
-            </tr>
+    <tr class=odd>
+	  <td class=gridtext vAlign=top noWrap align=left>{TotalUserCount}:</td>
+      <td class=gridtext vAlign=top noWrap align=right width="1%">{UserCount}</td>
+    </tr>
             
-            <tr class=even>
-              <td class=gridtext vAlign=top noWrap align=left>{TotalRegionCount}:</td>
-              <td class=gridtext vAlign=top noWrap align=right width="1%">{RegionCount}</td>
-            </tr>
+    <tr class=even>
+      <td class=gridtext vAlign=top noWrap align=left>{TotalRegionCount}:</td>
+      <td class=gridtext vAlign=top noWrap align=right width="1%">{RegionCount}</td>
+    </tr>
             
-            <tr class=odd>
-              <td class=gridtext vAlign=top noWrap align=left>{UniqueVisitors}:</td>
-              <td class=gridtext vAlign=top noWrap align=right width="1%">{UniqueVisitorCount}</td>
-            </tr>
+    <tr class=odd>
+      <td class=gridtext vAlign=top noWrap align=left>{UniqueVisitors}:</td>
+      <td class=gridtext vAlign=top noWrap align=right width="1%">{UniqueVisitorCount}</td>
+    </tr>
             
-            <tr class=even>
-              <td class=gridtext vAlign=top noWrap align=left><a href="{SystemURL}/welcomescreen/index.php?page=onlineusers" target="_blank">{OnlineNow}</a>:</td>
-              <td class=gridtext vAlign=top noWrap align=right width="1%"><strong>{OnlineNowCount}</strong></td>
-            </tr>                                          
+    <tr class=even>
+      <td class=gridtext vAlign=top noWrap align=left><a href="{SystemURL}/welcomescreen/" target="_blank">{OnlineNow}</a>:</td>
+      <td class=gridtext vAlign=top noWrap align=right width="1%"><strong class={GridOnline}>{OnlineNowCount}</strong></td>
+    </tr>                                          
 
-            <tr class=even>
-			  <td class=gridtext vAlign=top noWrap align=left>{HGActiveText}:</td>
-			  <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={HGActive}>{HGActive}</span></td>
-            </tr>
+    <tr class=even>
+	  <td class=gridtext vAlign=top noWrap align=left>{HGActiveText}:</td>
+	  <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={HGActive}>{HGActive}</span></td>
+    </tr>
                                             
-            <tr class=odd>
-              <td class=gridtext vAlign=top noWrap align=left>{VoiceActiveLabel}:</td>
-			  <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={VoiceActive}>{VoiceActive}</span></td>
-            </tr>
+    <tr class=odd>
+      <td class=gridtext vAlign=top noWrap align=left>{VoiceActiveLabel}:</td>
+	  <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={VoiceActive}>{VoiceActive}</span></td>
+    </tr>
 
-            <tr class=even>
-              <td class=gridtext vAlign=top noWrap align=left>{CurrencyActiveLabel}:</td>
-              <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={CurrencyActive}>{CurrencyActive}</span></td>
-            </tr>
-            </tbody>
-          </table>
-        </td>
-        <td class=gridbox_r></td>
-        </tr>
-        <tr>
-          <td class=gridbox_bl></td>
-          <td class=gridbox_b></td>
-          <td class=gridbox_br></td>
-        </tr>
-        </tbody>
-      </table>
-    </td>
+    <tr class=even>
+      <td class=gridtext vAlign=top noWrap align=left>{CurrencyActiveLabel}:</td>
+      <td class=gridtext vAlign=top noWrap align=right width="1%"><span class={CurrencyActive}>{CurrencyActive}</span></td>
     </tr>
   </tbody>
 </table>
+</div>

@@ -7,46 +7,34 @@
 	{NewsTitle} Title of the news item
 	{NewsID}    ID of the news item
 -->
-<table cellSpacing=0 cellPadding=0 width="100%" border=0 valign="top">
-  <tbody>
-      <tr>
-          <td class=gridbox_tl><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-          <td class=gridbox_t><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-          <td class=gridbox_tr><img height=5 width=5 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt=""></td>
-      </tr>
-      
-      <tr>
-          <td class=gridbox_l></td>
-          
-          <td class=black_content vAlign=top align=left>
-              <strong>{SystemName} {News}</strong>
-              <div id=GREX style="MARGIN: 5px 0px 0px">
-                  <img height=1 src="{SystemURL}/welcomescreen/images/icons/spacer.gif" width=1>
-              </div>
-              
-              <table class=newslist cellSpacing=0 cellPadding=0>
-                  <tbody>
+<link href="{SystemURL}/welcomescreen/perso_template.css" type="text/css" rel="stylesheet">
+
+<div id=gridnews>
+
+<table>
+
+	<thead>
+    <tr>
+		<th colspan="2" align=left>
+			<div class=headerthread>
+				<img src="{SystemURL}/welcomescreen/images/news.png" align=absMiddle>&nbsp;<strong>{SystemName} {News}</strong>
+			</div>
+		</th>
+    </tr>
+	</thead>
+
+
+	<tfoot><tr><td></td><td></td></tr></tfoot>
+	
+	<tbody>
 {NewsListArrayBegin}
-                  <tr>
-                      <td class=boxtext vAlign=top>
-                          <a href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
-                      </td>
-                      
-                      <td class=boxtext vAlign=top noWrap width="1%">
-                          {NewsDate}
-                      </td>
-                  </tr>
+	<tr>
+		<td class=boxtext vAlign=top>
+			<a href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
+		</td>
+		<td class=boxtext vAlign=top noWrap width="1%">{NewsDate}</td>
+	</tr>
 {NewsListArrayEnd}
-                  </tbody>
-              </table>
-          </td>
-          <td class=gridbox_r></td>
-      </tr>
-      
-      <tr>
-        <TD class=gridbox_bl></TD>
-        <TD class=gridbox_b></TD>
-        <TD class=gridbox_br></TD>
-      </tr>
-  </tbody>
+	</tbody>
 </table>
+</div>

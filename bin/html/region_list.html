@@ -19,11 +19,8 @@
 {MoreInfoText}          More Info
 -->
 <div id="content">
-	<div id="ContentHeaderCenter"><b>{SystemName}: {RegionListText}</div>
+	<div id="ContentHeaderCenter"><h2>{SystemName}: {RegionListText}</h2></div>
 	<div id="regionlist">
-		<table>
-			<tr>
-				<td>
 					<div id="region_navigation">
 						<table>
 							<tr>
@@ -52,23 +49,21 @@
 								</td>
 							</tr>
 						</table>
-					</div>
-				</td>
-			</tr>
-		</table>
+						</div>
 		<table>
 			<thead>
 				<tr>
-					<td width="55%">
+					<td>
 						<a href="region_list.html?Order=RegionName" title="{SortByName}"><p>{RegionText}</p></a>
 					</td>
-					<td width="15%">
+					<td>
 						<a href="region_list.html?Order=LocX" title="{SortByLocX}"><p>{RegionLocXText}</p></a>
 					</td>
-					<td width="15%">
+					<td>
 						<a href="region_list.html?Order=LocY" title="{SortByLocY}"><p>{RegionLocYText}</p></a>
 					</td>
-					<td width="15%">
+					<td>
+						<p>{RegionMoreInfo}</p>
 					</td>
 				</tr>
 			</thead>
@@ -79,16 +74,16 @@
 							<tbody>
 {RegionListArrayBegin}
 								<tr>
-									<td width="55%">
+									<td>
 										<div><p>{RegionName}</p></div>
 									</td>
-									<td width="15%">
+									<td>
 										<div><p>{RegionLocX}</p></div>
 									</td>
-									<td width="15%">
+									<td>
 										<div><p>{RegionLocY}</p></div>
 									</td>
-									<td width="15%">
+									<td>
 										<div>
 											<a href='' onClick="window.open('region_info.html?regionid={RegionID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=800,height=400')">
 												<u>{MoreInfoText}</u>

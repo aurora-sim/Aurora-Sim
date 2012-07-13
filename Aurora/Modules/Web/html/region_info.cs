@@ -55,7 +55,7 @@ namespace Aurora.Modules.Web
                 if (webTextureService != null && region.TerrainMapImage != UUID.Zero)
                     vars.Add("RegionImageURL", webTextureService.GetTextureURL(region.TerrainMapImage));
                 else
-                    vars.Add("RegionImageURL", "info.jpg");
+                    vars.Add("RegionImageURL", "images/info.jpg");
 
                 vars.Add("RegionInformationText", translator.GetTranslatedString("RegionInformationText"));
                 vars.Add("OwnerNameText", translator.GetTranslatedString("OwnerNameText"));
@@ -64,7 +64,6 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionNameText", translator.GetTranslatedString("RegionNameText"));
                 vars.Add("RegionTypeText", translator.GetTranslatedString("RegionTypeText"));
             }
-
 
             return vars;
         }

@@ -75,7 +75,8 @@ namespace Aurora.Modules.Web
             vars.Add("LastText", translator.GetTranslatedString("LastText"));
             vars.Add("CurrentPageText", translator.GetTranslatedString("CurrentPageText"));
             vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
-
+			vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
+			
             return vars;
         }
     }

@@ -1,0 +1,160 @@
+@CHARSET "UTF-8";
+* {margin:0px; padding:0px;}
+
+html, body {
+	height: 100%;
+	background: #555555;
+	/* old browsers */
+	background: -moz-linear-gradient(top, #555555 0%, #222222 100%);
+	/* firefox */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#555555), color-stop(100%,#222222)); 
+	/* webkit */ 
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#555555', endColorstr='#222222',GradientType=0 ); /* ie */
+}
+
+body  {
+	line-height: 14px;
+	font-size: 14px;
+	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
+	margin: 0pt;
+	cursor: default;
+}
+
+#st1 {display: none;}
+#st2 {display: none;}
+#st3 {display: none;}
+#st4 {color: #FF0000;}
+
+#login table {width: 50%;}
+#register table {width: 100%;}
+#regionlist table {width: 100%;}
+#usersonline table {width: 100%;}
+#region_navigation table {width: 20%;}
+#users_navigation table {width: 20%;}
+#regioninfo {color: #7E7E7E;}
+#useragentprofile {color: #7E7E7E;}
+
+table {border-collapse: separate; border-spacing: 0pt;}
+caption, th, td {font-weight: normal; text-align: left;}
+blockquote:before, blockquote:after, q:before, q:after {content: "";}
+blockquote, q {quotes: "" "";}
+strong{font-weight: 700;}
+ul {list-style: outside;}
+li {display: inline;}
+a {color: #6EA6FB; text-decoration: none;cursor: pointer;}
+a:active {color: #296BA5; text-decoration: none;}
+a:hover {color: #296BA5; text-decoration: none;}
+p {margin-bottom: 0.5em;}
+u {text-decoration: none;}
+.clear {clear: both; height: 0; visibility: hidden; display: block;}
+img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage
+{width: 120px; height: 100px;margin: 3px;}
+h1, h2, h3, h4, h5, h6 {font-weight: 700; color: #6EA6FB;	line-height: 1.8em;}
+h2 {font-size: 22px;}
+img.map_picture {width: 128px;}
+.jclock1 {color: #C2C2C2; text-align: left; font-size: 12px;}
+
+input, textarea, select, button {
+	padding: 5px;
+	margin: 5px;
+	height: 21px;
+	width: 300px;
+	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	background: #fcfcfc;
+	color: #7E7E7E;
+	border: 1px solid #eee;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
+
+input , textarea {
+	/* box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5), 0px 2px 2px 0px rgba(255, 255, 255, 0.5) inset; */
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
+}
+
+/* input:hover , textarea:hover {border: 1px solid #296BA5;} */
+input:focus, textarea:focus {outline:none;}
+
+textarea {padding: 15px;width: 400px;min-height:50px;}
+select {width: 70px;height:30px;}
+button {width: 70px;height:30px;border: 1px solid #ccc;}
+input.checkbox {width: 20px; margin-right: 5px;}
+label {display:inline-block;}
+
+/* Container */
+#container {
+	width: 960px;
+	margin: 0pt auto;
+}
+
+/* Top Container */
+#top {
+	margin: 0 auto;
+	padding: 20px 0 0 0;
+}
+
+#top h1 a {
+	background: transparent url(../images/logo.png) no-repeat scroll left top;
+	display: block;
+	float: left;
+	height: 50px;
+	text-indent: -999999px;
+	width: 250px;
+}
+
+/* Top Menu */
+#top #menu {
+	float: left;
+	list-style-type: none;
+	margin: 12px 0 0 26px;
+}
+
+#top #menu li {
+	float: left;
+	margin-right: 16px;
+	text-transform: uppercase;
+	color: #C2C2C2;
+}
+
+#top #menu li:hover {
+	color: #6FA5FD;
+	cursor: pointer;
+}
+
+/* Loading Menu */
+#loading {
+	text-align: center;
+	visibility: hidden;
+}
+
+/* loading */
+#content {
+	color: #7E7E7E;
+	line-height: 1.3em;
+	font-size: 14px;
+}
+
+/* footer */
+#footer {
+	background: #fcfcfc;
+	margin-bottom: 30px;
+	margin-top: 20px;
+	padding: 10px;
+	color: #7e7e7e;
+	font-size: 11px;
+	text-align: right;
+	border: 1px solid #CCCCCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em;
+	behavior: url(css/pie.htc);
+}

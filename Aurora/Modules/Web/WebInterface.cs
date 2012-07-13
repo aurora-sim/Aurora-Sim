@@ -162,6 +162,30 @@ namespace Aurora.Modules.Web
                         newLines[newLinesPos] = ConvertHTML(File.ReadAllText(filename), request, httpResponse, requestParameters, newVars);
                     }
                 }
+                else if (line.Contains("<!--#include folder="))
+                {
+                    string[] split = line.Split(new string[2] { "<!--#include folder=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
+                    {
+                        string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html","");
+                        if (Directory.Exists(filename))
+                        {
+                            Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse,
+                                                                                requestParameters);
+                            string[] files = Directory.GetFiles(filename);
+                            foreach (string f in files)
+                            {
+                                if (!f.EndsWith(".html")) continue;
+                                Dictionary<string, object> newVars2 = AddVarsForPage(f, request, httpResponse, requestParameters) ??
+                                                                      new Dictionary<string, object>();
+                                foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
+                                    newVars2.Add(pair.Key, pair.Value);
+                                newLines[newLinesPos] += ConvertHTML(File.ReadAllText(f), request, httpResponse,
+                                                                    requestParameters, newVars2);
+                            }
+                        }
+                    }
+                }
                 else if (line.Trim().StartsWith("{"))
                 {
                     int ind;
@@ -174,8 +198,15 @@ namespace Aurora.Modules.Web
                         for (int i = pos; i < posToCheckFrom; i++)
                             newLines.RemoveAt(newLinesPos + 1);
                         pos = posToCheckFrom;
-                        foreach (var dict in vars[keyToCheck] as List<Dictionary<string, object>>)
-                            newLines.Insert(newLinesPos++, ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request, httpResponse, requestParameters, dict));
+                        if (vars.ContainsKey(keyToCheck))
+                        {
+                            List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
+                            if (dicts != null)
+                                foreach (var dict in dicts)
+                                    newLines.Insert(newLinesPos++,
+                                                    ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request,
+                                                                httpResponse, requestParameters, dict));
+                        }
                     }
                     else if (line.Trim().StartsWith("{IsAuthenticatedBegin}"))
                     {
