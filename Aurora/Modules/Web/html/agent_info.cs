@@ -57,7 +57,7 @@ namespace Aurora.Modules.Web
                     else
                         vars.Add("UserPartner", "No partner");
                     vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
-                    string url = "info.jpg";
+                    string url = "images/info.jpg";
                     IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
                     if (webhttpService != null && profile.Image != UUID.Zero)
                         url = webhttpService.GetTextureURL(profile.Image);
