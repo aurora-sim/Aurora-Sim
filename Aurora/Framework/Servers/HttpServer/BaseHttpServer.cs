@@ -1341,6 +1341,7 @@ namespace Aurora.Framework.Servers.HttpServer
                     case null:
                     case "text/html":
                     case "application/x-www-form-urlencoded":
+                    case "application/x-www-form-urlencoded; charset=UTF-8":
                         HandleHTTPRequest(request, response);
                         return;
 

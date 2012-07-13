@@ -31,6 +31,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
@@ -569,6 +570,30 @@ namespace Aurora.Framework
             {
                 MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
                 webClient.DownloadFile(downloadLink, filename);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Downloads a file async
+        /// </summary>
+        /// <param name="downloadLink"></param>
+        /// <param name="filename"></param>
+        /// <param name="onProgress">can be null</param>
+        /// <param name="onComplete">can be null</param>
+        public static void DownloadFileAsync(string downloadLink, string filename, DownloadProgressChangedEventHandler onProgress, AsyncCompletedEventHandler onComplete)
+        {
+            WebClient webClient = new WebClient();
+            try
+            {
+                MainConsole.Instance.Warn("Downloading new file from " + downloadLink + " now into file " + filename + ".");
+                if (onProgress != null)
+                    webClient.DownloadProgressChanged += onProgress;
+                if (onComplete != null)
+                    webClient.DownloadFileCompleted += onComplete;
+                webClient.DownloadFileAsync(new Uri(downloadLink), filename);
             }
             catch (Exception)
             {
