@@ -206,6 +206,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Welcome Screen Manager";
                 case "MenuNewsManager":
                     return "News Manager";
+                case "MenuUserManager":
+                    return "User Manager";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -236,6 +238,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Welcome Screen Manager";
                 case "TooltipsMenuNewsManager":
                     return "News Manager";
+                case "TooltipsMenuUserManager":
+                    return "User Manager";
 
 				// Urls
                 case "WelcomeScreen":
@@ -308,6 +312,10 @@ namespace Aurora.Modules.Web.Translators
                     return "Delete";
                 case "DeleteUserInfoText":
                     return "This will remove all information about you in the grid and remove your access to this service. If you wish to continue, enter your name and password and click Delete.";
+                case "EditText":
+                    return "Edit";
+                case "EditUserAccountText":
+                    return "Edit User Account";
 
                 //Maintenance page
                 case "WebsiteDownInfoText":
@@ -329,6 +337,32 @@ namespace Aurora.Modules.Web.Translators
                     return "Search For A Region";
                 case "RegionSearchText":
                     return "Region Search";
+
+                //Edit user page
+                case "AdminDeleteUserText":
+                    return "Delete User: This deletes the account and destroys all information associated with it.";
+                case "BanText":
+                    return "Ban";
+                case "UnbanText":
+                    return "Unban";
+                case "AdminTempBanUserText":
+                    return "Temp Ban User: This blocks the user from logging in for the set amount of time.";
+                case "AdminBanUserText":
+                    return "Ban User: This blocks the user from logging in until the user is unbanned.";
+                case "AdminUnbanUserText":
+                    return "Unban User: Removes temporary and permanent bans on the user.";
+                case "AdminLoginInAsUserText":
+                    return "Login as User: You will be logged out of your admin account, and logged in as this user, and will see everything as they see it.";
+                case "TimeUntilUnbannedText":
+                    return "Time until user is unbanned";
+                case "DaysText":
+                    return "Days";
+                case "HoursText":
+                    return "Hours";
+                case "MinutesText":
+                    return "Minutes";
+                case "EdittingText":
+                    return "Editting";
             }
             return "UNKNOWN CHARACTER";
         }

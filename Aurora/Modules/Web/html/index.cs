@@ -136,11 +136,19 @@ namespace Aurora.Modules.Web
                     { "MenuItemLocation", "admin/welcomescreen_manager.html" }, 
                     { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuWelcomeScreenManager") },
                     { "MenuItemTitle", translator.GetTranslatedString("MenuWelcomeScreenManager") } });
+
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", "news_manager" }, 
                     { "ShowInMenu", true },
                     { "MenuItemLocation", "admin/news_manager.html" }, 
                     { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuNewsManager") },
                     { "MenuItemTitle", translator.GetTranslatedString("MenuNewsManager") } });
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "user_search" }, 
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "user_search.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuUserManager") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuUserManager") } });
+
+
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", "add_news" }, 
                     { "ShowInMenu", false },
                     { "MenuItemLocation", "admin/add_news.html" }, 

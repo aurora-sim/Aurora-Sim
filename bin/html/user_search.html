@@ -65,6 +65,11 @@
 					<td>
 						<p>{UserNameText}</p>
 					</td>
+{IfAdminAuthenticatedBegin}
+					<td>
+						<p>{EditUserAccountText}</p>
+					</td>
+{IfAdminAuthenticatedEnd}
 				</tr>
 			</thead>
 			<tbody>
@@ -75,6 +80,13 @@
 							<u>{UserName}</u>
 						</a>
 					</td>
+{IfAdminAuthenticatedBegin}
+					<td>
+						<a href="admin/edit_user.html?userid={UserID}">
+							<u>{EditText}</u>
+						</a>
+					</td>
+{IfAdminAuthenticatedEnd}
 				</tr>
 {UsersListArrayEnd}
 			</tbody>

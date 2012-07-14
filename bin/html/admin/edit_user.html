@@ -1,0 +1,142 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{ErrorMessage}                    Error message handling
+{Submit}                          Submit
+{EdittingUserText}                Editting 
+{AdminLoginInAsUserText}          
+{Login}
+{AdminDeleteUserText}             
+{DeleteText}               
+{UserID}               
+{UserName}
+{UserBanned}
+{NotUserBanned}
+{AdminUnbanUserText}
+{UnbanText}
+{BanText}
+{AdminTempBanUserText}
+{TimeUntilUnbannedText}
+{DaysText}
+{MinutesText}
+{HoursText}
+{AdminBanUserText}
+-->
+<div id="content">
+    <div id="ContentHeaderCenter"><h2>{SystemName}: {EdittingText} {UserName}</h2></div>
+    <div id="ContentHeaderCenter"><h2>{ErrorMessage}</h2></div>
+    <div id="login">
+		<form action="edit_user.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{AdminLoginInAsUserText}</td></tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitLoginAsUser">{Login}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+	<div id="login">
+		<form action="edit_user.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{AdminDeleteUserText}</td></tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+{IfUserBannedBegin}
+	<div id="login">
+		<form action="edit_user.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{AdminUnbanUserText}</td></tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+{IfUserBannedEnd}
+{IfNotUserBannedBegin}
+	<div id="login">
+		<form action="edit_user.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{AdminTempBanUserText}</td></tr>
+				<tr>
+                    <td class="odd">{TimeUntilUnbannedText}</td>
+                    <td class="odd">
+                        <div id="birthday" class="roundedinput">
+							<table>
+								<tr>
+									<td>
+										<select id="TimeDays" require="true" name='TimeDays'>									
+{DaysArrayBegin}
+											<option value="{Value}">{Value}</option>
+{DaysArrayEnd}
+										</select>
+									</td>
+									<td>{DaysText}</td>
+									<td>
+										<select id="TimeHours" require="true" name='TimeHours'>										
+{HoursArrayBegin}
+											<option value="{Value}">{Value}</option>
+{HoursArrayEnd}
+										</select>
+									</td>
+									<td>{HoursText}</td>
+									<td>
+										<select id="TimeMinutes" require="true" name='TimeMinutes'>										
+{MinutesArrayBegin}
+											<option value="{Value}">{Value}</option>
+{MinutesArrayEnd}
+										</select>
+									</td>
+									<td>{MinutesText}</td>
+								</tr>
+							</table>
+						</div>
+                    </td>
+                </tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitTempBanUser">{BanText}</button>
+						</div>
+                    </td>
+				</tr>
+            </table>
+        </form>
+    </div>
+	<div id="login">
+		<form action="edit_user.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{AdminBanUserText}</td></tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitBanUser">{BanText}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+{IfNotUserBannedEnd}
+</div>

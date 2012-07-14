@@ -67,5 +67,16 @@ namespace Aurora.Modules.Web
                 return UUID.Parse(request.Cookies["SessionID"].Value);
             return UUID.Zero;
         }
+
+        public static void ChangeAuthentication(OSHttpRequest request, UUID userID)
+        {
+            if (request.Cookies["SessionID"] != null)
+            {
+                UUID sessionID = UUID.Parse(request.Cookies["SessionID"].Value);
+                if (_authenticatedAdminUsers.ContainsKey(sessionID))
+                    _authenticatedAdminUsers[sessionID] = userID;
+            }
+
+        }
     }
 }
