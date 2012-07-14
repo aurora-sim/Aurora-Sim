@@ -46,15 +46,11 @@
 	<div id="top">
 		<h1><a class="logofade" href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a></h1>
 		<ul id="menu">
-			<li id="home" class="fade" alt="{TooltipsMenuHome}" title="{TooltipsMenuHome}">{MenuHome}</li>
-			<li id="login" class="fade" alt="{TooltipsMenuLogin}" title="{TooltipsMenuLogin}">{MenuLogin}</li>
-			<li id="register" class="fade" alt="{TooltipsMenuRegister}" title="{TooltipsMenuRegister}">{MenuRegister}</li>
-			<li id="news" alt="{TooltipsMenuNews}" title="{TooltipsMenuNews}">{MenuNews}</li>
-			<li id="world" class="fade" alt="{TooltipsMenuWorld}" title="{TooltipsMenuWorld}">World</li>
-			<li id="region_list" class="fade" alt="{TooltipsMenuRegion}" title="{TooltipsMenuRegion}">{MenuRegion}</li>
-			<li id="online_users" class="fade" alt="{TooltipsMenuUser}" title="{TooltipsMenuUser}">{MenuUser}</li>
-			<li id="chat" class="fade" alt="{TooltipsMenuChat}" title="{TooltipsMenuChat}">{MenuChat}</li>
-			<li id="help" class="fade" alt="{TooltipsMenuHelp}" title="{TooltipsMenuHelp}">{MenuHelp}</li>
+{MenuItemsArrayBegin}
+{IfShowInMenuBegin}
+			<li id="{MenuItemID}" class="fade" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}</li>
+{IfShowInMenuEnd}
+{MenuItemsArrayEnd}
 		</ul>
 		<span class="clear"></span>
 	</div>

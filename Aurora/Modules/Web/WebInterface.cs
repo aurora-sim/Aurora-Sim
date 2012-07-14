@@ -154,7 +154,8 @@ namespace Aurora.Modules.Web
             for (int pos = 0; pos < lines.Length; pos++)
             {
                 string line = lines[pos];
-                if (line.TrimStart().StartsWith("<!--#include file="))
+                string cleanLine = line.Trim();
+                if (cleanLine.StartsWith("<!--#include file="))
                 {
                     string[] split = line.Split(new string[2] { "<!--#include file=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
@@ -166,7 +167,7 @@ namespace Aurora.Modules.Web
                             request, httpResponse, requestParameters, newVars));
                     }
                 }
-                else if (line.TrimStart().StartsWith("<!--#include folder="))
+                else if (cleanLine.StartsWith("<!--#include folder="))
                 {
                     string[] split = line.Split(new string[2] { "<!--#include folder=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
@@ -190,12 +191,12 @@ namespace Aurora.Modules.Web
                         }
                     }
                 }
-                else if (line.TrimStart().StartsWith("{"))
+                else if (cleanLine.StartsWith("{"))
                 {
                     int indBegin, indEnd;
-                    if ((indEnd = line.IndexOf("ArrayBegin}")) != -1)
+                    if ((indEnd = cleanLine.IndexOf("ArrayBegin}")) != -1)
                     {
-                        string keyToCheck = line.Substring(1, indEnd - 1);
+                        string keyToCheck = cleanLine.Substring(1, indEnd - 1);
                         int posToCheckFrom;
                         List<string> repeatedLines = ExtractLines(lines, pos, keyToCheck, "ArrayEnd", out posToCheckFrom);
                         pos = posToCheckFrom;
@@ -204,24 +205,29 @@ namespace Aurora.Modules.Web
                             List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
                             if (dicts != null)
                                 foreach (var dict in dicts)
-                                    sb.AppendLine(ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request,
+                                    sb.AppendLine(ConvertHTML(string.Join("\n", repeatedLines.ToArray()), request,
                                                                 httpResponse, requestParameters, dict));
                         }
                     }
-                    else if ((indEnd = line.IndexOf("AuthenticatedBegin}")) != -1)
+                    else if ((indEnd = cleanLine.IndexOf("AuthenticatedBegin}")) != -1)
                     {
-                        string key = line.Substring(1, indEnd - 1) + "AuthenticatedEnd";
+                        string key = cleanLine.Substring(1, indEnd - 1) + "AuthenticatedEnd";
                         int posToCheckFrom = FindLines(lines, pos, "", key);
-                        if (!CheckAuth(line.Trim(), request))
+                        if (!CheckAuth(cleanLine, request))
                             pos = posToCheckFrom;
                     }
-                    else if ((indBegin = line.IndexOf("{If")) != -1 &&
-                        (indEnd = line.IndexOf("Begin}")) != -1)
+                    else if ((indBegin = cleanLine.IndexOf("{If")) != -1 &&
+                        (indEnd = cleanLine.IndexOf("Begin}")) != -1)
                     {
-                        string key = line.Substring(indBegin + 1, indEnd - indBegin - 1);
-                        int posToCheckFrom = FindLines(lines, pos, key, "End");
-                        if (!vars.ContainsKey(key) || ((bool)vars[key])== false)
+                        string key = cleanLine.Substring(indBegin + 3, indEnd - indBegin - 3);
+                        int posToCheckFrom = FindLines(lines, pos, "If" + key, "End");
+                        if (!vars.ContainsKey(key) || ((bool)vars[key]) == false)
                             pos = posToCheckFrom;
+                    }
+                    else if ((indBegin = cleanLine.IndexOf("{If")) != -1 &&
+                        (indEnd = cleanLine.IndexOf("End}")) != -1)
+                    {
+                        //end of an if statement, just ignore it
                     }
                     else
                         sb.AppendLine(line);
