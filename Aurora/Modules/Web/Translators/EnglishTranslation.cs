@@ -249,6 +249,8 @@ namespace Aurora.Modules.Web.Translators
                     return "This is our New Virtual World! Join us now, and make a difference!";
                 case "HomeTextTips":
                     return "New presentations";
+                case "WelcomeToText":
+                    return "Welcome to";
 
 				// World Map Page
                 case "WorldMap":

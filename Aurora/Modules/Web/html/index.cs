@@ -148,8 +148,9 @@ namespace Aurora.Modules.Web
 			// Index Page
 			vars.Add("HomeText", translator.GetTranslatedString("HomeText"));
 			vars.Add("HomeTextWelcome", translator.GetTranslatedString("HomeTextWelcome"));
-			vars.Add("HomeTextTips", translator.GetTranslatedString("HomeTextTips"));
-			vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
+            vars.Add("HomeTextTips", translator.GetTranslatedString("HomeTextTips"));
+            vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
+            vars.Add("WelcomeToText", translator.GetTranslatedString("WelcomeToText"));
 
 			return vars;			
         }
