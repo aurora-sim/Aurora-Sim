@@ -1,7 +1,7 @@
 [GridInfoService]
 
     ;; The port this service will run on
-    GridInfoInHandlerPort = 8002
+    GridInfoInHandlerPort = 0
     
     ;; These settings are used to return information on a get_grid_info call.
     ;; Client launcher scripts and third-party clients make use of this to

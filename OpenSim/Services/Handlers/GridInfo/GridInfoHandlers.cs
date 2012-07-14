@@ -88,7 +88,7 @@ namespace OpenSim.Services
                     else
                         _info["helperuri"] = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
                 }
-                if (!GridEconomyURI.EndsWith("/"))
+                if (GridEconomyURI != "" && !GridEconomyURI.EndsWith("/"))
                     GridEconomyURI += "/";
                 _info["economy"] = _info["helperuri"] = GridEconomyURI;
 
@@ -97,8 +97,11 @@ namespace OpenSim.Services
                 {
                     if (configCfg != null && configCfg.GetString("LLLoginHandlerPort", "") != "")
                     {
+                        var port = configCfg.GetString("LLLoginHandlerPort", "");
+                        if (port == "" || port == "0")
+                            port = MainServer.Instance.Port.ToString();
                         GridLoginURI = MainServer.Instance.FullHostName +
-                            ":" + configCfg.GetString("LLLoginHandlerPort", "") + "/";
+                            ":" + port + "/";
                     }
                     else
                     {
