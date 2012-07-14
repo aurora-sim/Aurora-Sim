@@ -113,7 +113,7 @@ namespace OpenSim.Services.LLLoginService
 
                 if (IsBanned)
                 {
-                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {0}.", until, account.Name);
+                    MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login failed for user {0}, reason: user is temporarily banned {1}.", account.Name, until);
                     return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, string.Format("You are blocked from connecting to this service{0}.", until), false);
                 }
             }

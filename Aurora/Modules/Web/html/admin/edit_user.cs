@@ -91,8 +91,8 @@ namespace Aurora.Modules.Web
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitUnbanUser")
             {
-                agent.Flags &= IAgentFlags.PermBan;
-                agent.Flags &= IAgentFlags.TempBan;
+                agent.Flags &= ~IAgentFlags.TempBan;
+                agent.Flags &= ~IAgentFlags.PermBan;
                 agent.OtherAgentInformation.Remove("TemperaryBanInfo");
                 agentService.UpdateAgent(agent);
             }
@@ -109,7 +109,8 @@ namespace Aurora.Modules.Web
                 if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan && agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now)
                 {
                     userBanned = false;
-                    agent.Flags &= IAgentFlags.TempBan;
+                    agent.Flags &= ~IAgentFlags.TempBan;
+                    agent.Flags &= ~IAgentFlags.PermBan;
                     agent.OtherAgentInformation.Remove("TemperaryBanInfo");
                     agentService.UpdateAgent(agent);
                 }

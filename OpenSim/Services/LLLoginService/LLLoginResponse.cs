@@ -450,9 +450,6 @@ namespace OpenSim.Services.LLLoginService
                 if (SnapshotConfigURL != String.Empty)
                     responseData["snapshot_config_url"] = SnapshotConfigURL;
 
-                if (HelpURL != String.Empty)
-                    responseData["help_url_format"] = HelpURL;
-
                 if (OpenIDURL != String.Empty)
                     responseData["openid_url"] = OpenIDURL;
 
