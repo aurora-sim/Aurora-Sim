@@ -42,6 +42,10 @@
 </head>
 
 <body>
+{IfMaintenanceBegin}
+<!--#include file="/maintenance.html" -->
+{IfMaintenanceEnd}
+{IfNoMaintenanceBegin}
 <div id="container">
 	<div id="top">
 		<h1><a class="logofade" href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a></h1>
@@ -84,6 +88,7 @@
 			</ul>
 		</p>
 	</div>
+{IfNoMaintenanceEnd}
 </div>
 
 <script type="text/javascript">

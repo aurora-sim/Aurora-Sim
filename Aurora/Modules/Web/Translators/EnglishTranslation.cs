@@ -300,6 +300,12 @@ namespace Aurora.Modules.Web.Translators
                     return "Delete";
                 case "DeleteUserInfoText":
                     return "This will remove all information about you in the grid and remove your access to this service. If you wish to continue, enter your name and password and click Delete.";
+
+                //Maintenance page
+                case "WebsiteDownInfoText":
+                    return "Website is currently down, please try again soon.";
+                case "WebsiteDownText":
+                    return "Website offline";
             }
             return "UNKNOWN CHARACTER";
         }

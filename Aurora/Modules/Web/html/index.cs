@@ -174,6 +174,8 @@ namespace Aurora.Modules.Web
             vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
             vars.Add("WelcomeToText", translator.GetTranslatedString("WelcomeToText"));
 
+            vars.Add("Maintenance", false);
+            vars.Add("NoMaintenance", true);
 			return vars;			
         }
     }
