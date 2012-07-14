@@ -47,6 +47,7 @@ namespace Aurora.Modules.Web.Translators
                 case "UserNameText":
                     return "User Name";
                 case "Password":
+                case "PasswordText":
                     return "Password";
                 case "PasswordConfirmation":
                     return "Password Confirmation";
@@ -199,6 +200,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Chat";
                 case "MenuHelp":
                     return "Help";
+                case "MenuChangeUserInformation":
+                    return "Change User Information";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -223,6 +226,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Chat";
                 case "TooltipsMenuHelp":
                     return "Help";
+                case "TooltipsMenuChangeUserInformation":
+                    return "Change User Information";
 
 				// Urls
                 case "WelcomeScreen":
@@ -275,6 +280,26 @@ namespace Aurora.Modules.Web.Translators
                 //Logout page
                 case "LoggedOutSuccessfullyText":
                     return "You have been logged out successfully.";
+
+                //Change user information page
+                case "ChangeUserInformationText":
+                    return "Change User Information";
+                case "ChangePasswordText":
+                    return "Change Password";
+                case "NewPasswordText":
+                    return "New Password";
+                case "NewPasswordConfirmationText":
+                    return "New Password (Confirmation)";
+                case "ChangeEmailText":
+                    return "Change Email Address";
+                case "NewEmailText":
+                    return "New Email Address";
+                case "DeleteUserText":
+                    return "Delete My Account";
+                case "DeleteText":
+                    return "Delete";
+                case "DeleteUserInfoText":
+                    return "This will remove all information about you in the grid and remove your access to this service. If you wish to continue, enter your name and password and click Delete.";
             }
             return "UNKNOWN CHARACTER";
         }

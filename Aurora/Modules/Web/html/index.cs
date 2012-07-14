@@ -105,21 +105,27 @@ namespace Aurora.Modules.Web
 
             if (Authenticator.CheckAuthentication(httpRequest))
             {
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "changeuserinfo" }, 
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "change_user_information.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuChangeUserInformation") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuChangeUserInformation") } });
+
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", "logout" }, 
-                { "ShowInMenu", true },
-                { "MenuItemLocation", "logout.html" }, 
-                { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogout") },
-                { "MenuItemTitle", translator.GetTranslatedString("MenuLogout") } });
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "logout.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogout") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuLogout") } });
             }
             #endregion
             #region Non Authenticated Pages
             else
             {
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", "login" }, 
-                { "ShowInMenu", true },
-                { "MenuItemLocation", "login.html" }, 
-                { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogin") },
-                { "MenuItemTitle", translator.GetTranslatedString("MenuLogin") } });
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "login.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogin") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuLogin") } });
             }
             #endregion
 

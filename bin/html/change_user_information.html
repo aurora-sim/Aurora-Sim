@@ -1,0 +1,83 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{ErrorMessage}                    Error message handling
+{ChangeUserInformationText}       Change User Information
+{ChangePasswordText}              Change Password
+{NewPasswordText}                 New Password
+{NewPasswordConfirmationText}     New Password (Confirmation)
+{ChangeEmailText}                 Change Email Address
+{NewEmailText}                    New Email Address
+{PasswordText}                    Password
+{UserNameText}                    User Name
+{DeleteUserText}                  Delete My Account
+{DeleteUserInfoText}              Long thing about how it removes stuff
+{Submit}                          Submit
+
+-->
+<div id="content">
+    <div id="ContentHeaderCenter"><h2>{SystemName}: {ChangeUserInformationText}</h2></div>
+    <div id="ContentHeaderCenter"><h2>{ErrorMessage}</h2></div>
+    <div id="login">
+		<form action="change_user_information.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{ChangePasswordText}</td></tr>
+				<tr>
+					<td class="even"><span id="password_label">{NewPasswordText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
+				</tr>
+				<tr>
+					<td class="even"><span id="password_label">{NewPasswordConfirmationText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="passwordconf" id="login_input" type="password" name="passwordconf" /></div></td>
+				</tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitPasswordChange">{Submit}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+	<div id="login">
+		<form action="change_user_information.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{ChangeEmailText}</td></tr>
+				<tr>
+					<td class="even"><span id="password_label">{NewEmailText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="email" id="email" name="email" /></div></td>
+				</tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitEmailChange">{Submit}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+	<div id="login">
+		<form action="change_user_information.html" method="POST">
+			<table>
+                <tr><td colspan="2" align="center">{DeleteUserText}: {DeleteUserInfoText}</td></tr>
+				<tr>
+					<td class="even"><span id="password_label">{UserNameText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="username" id="login_input" name="username" /></div></td>
+				</tr>
+				<tr>
+					<td class="even"><span id="password_label">{PasswordText}*</span></td>
+					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
+				</tr>
+				<tr>
+					<td class="odd">
+						<div class="center">
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
