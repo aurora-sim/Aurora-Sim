@@ -5,6 +5,9 @@ using System.IO;
 using System.Net;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Xsl;
 using Aurora.Framework;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Simulation.Base;
@@ -100,12 +103,28 @@ namespace Aurora.Modules.Web
             if (_pages.ContainsKey(filename))
             {
                 var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
-                Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
-                if (httpResponse.StatusCode != 200)
-                    return MainServer.NoResponse;
-                if (vars == null)
-                    return MainServer.BadRequest;
-                response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest, httpResponse, requestParameters, vars));
+                if (filename.EndsWith(".xsl"))
+                {
+                    AuroraXmlDocument vars = GetXML(filename, httpRequest, httpResponse, requestParameters);
+
+                    var xslt = new XslCompiledTransform();
+                    xslt.Load(GetFileNameFromHTMLPath(path));
+                    var stm = new MemoryStream();
+                    xslt.Transform(vars, null, stm);
+                    stm.Position = 1;
+                    var sr = new StreamReader(stm);
+                    string results = sr.ReadToEnd().Trim();
+                    return Encoding.UTF8.GetBytes(Regex.Replace(results, @"[^\u0000-\u007F]", string.Empty));
+                }
+                else
+                {
+					Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
+					if (httpResponse.StatusCode != 200)
+						return MainServer.NoResponse;
+					if (vars == null)
+						return MainServer.BadRequest;
+					response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest, httpResponse, requestParameters, vars));
+				}
             }
             else
                 response = File.ReadAllBytes(filename);
@@ -145,6 +164,31 @@ namespace Aurora.Modules.Web
             return null;
         }
 
+        private AuroraXmlDocument GetXML(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        {
+            
+            if (_pages.ContainsKey(filename))
+            {
+                ITranslator translator = null;
+                if (httpRequest.Query.ContainsKey("language"))
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
+                if (translator == null)
+                    translator = _defaultTranslator;
+
+                if (_pages[filename].RequiresAuthentication)
+                {
+                    if (!Authenticator.CheckAuthentication(httpRequest))
+                        return null;
+                    if (_pages[filename].RequiresAdminAuthentication)
+                    {
+                        if (!Authenticator.CheckAdminAuthentication(httpRequest))
+                            return null;
+                    }
+                }
+                return (AuroraXmlDocument)_pages[filename].Fill(this, filename, httpRequest, httpResponse, requestParameters, translator)["xml"];
+            }
+            return null;
+        }
         protected string ConvertHTML(string file, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
         {
             string html = CSHTMLCreator.BuildHTML(file, vars);
@@ -306,6 +350,7 @@ namespace Aurora.Modules.Web
                     return "image/tiff";
                 case ".html":
                 case ".htm":
+                case ".xsl":
                     return "text/html";
                 case ".css":
                     return "text/css";
