@@ -1,22 +1,25 @@
 <!-- params to replace
 {SystemURL}
 {SystemName}
-{AddNewsText}              Add News
+{EditNewsText}             Edit News
 {ErrorMessage}             Error Message Handling
 {NewsItemTitle}            News Item Title
 {NewsItemText}             News Item Text
+{NewsTitle}                
+{NewsText}             
+{NewsID}             
 {Submit}                   Submit
 
 -->
 
 {IsNotAdminAuthenticatedBegin}
-<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
+<meta http-equiv="REFRESH" content="0;url={SystemURL}">
 {IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
 <div id="content">
-    <div id="ContentHeaderCenter"><b>{AddNewsText}: {SystemName}</b></div>
+    <div id="ContentHeaderCenter"><b>{EditNewsText}: {SystemName}</b></div>
     <div id="register">
-        <form ACTION="add_news.html" METHOD="POST">
+        <form ACTION="admin/edit_news.html" METHOD="POST">
             <table>
                 <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
 				
@@ -24,16 +27,18 @@
 				<tr>
 					<td>{NewsItemTitle}</td>
 					<td colspan="5">
-						<input name="NewsTitle" type="text" id="NewsTitle" size="119"/>
+						<input name="NewsTitle" type="text" id="NewsTitle" size="119" value="{NewsTitle}"/>
 					</td>
 				</tr>
 
 				<tr>
 					<td class="odd">{NewsItemText}</td>
 					<td colspan="2" valign="top">
-						<textarea name="NewsText" cols="91" rows="10" id="NewsText"></textarea>
+						<textarea name="NewsText" cols="91" rows="10" id="NewsText">{NewsText}</textarea>
 					</td>
 				</tr>
+				
+				<input type="hidden" name="NewsID" id="NewsID" value="{NewsID}" />
 				
 				<tr>
 					<td class="even">

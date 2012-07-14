@@ -26,16 +26,12 @@
 {ChangesSavedSuccessfully}      Changes saved successfully
 
 -->
-{IsNotAdminAuthenticatedBegin}
-<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
-{IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
 <div id="content">
 	<div id="ContentHeaderCenter"><b>{WelcomeScreenManagerFor} {SystemName}</b></div>
 	<div id="loginscreen_manager">
 		<div><b>{ChangesSavedSuccessfully}</b></div>
-		<div><a href="news_manager.html">{OpenNewsManager}</a></div>
-		<form action="index.html" method="post">
+		<form action="admin/welcomescreen_manager.html" method="post">
 			<table>
 				<tr>
 					<td><div align="right">{GridStatus} </div></td>

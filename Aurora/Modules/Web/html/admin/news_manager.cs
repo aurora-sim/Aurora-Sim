@@ -19,7 +19,7 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/welcomescreen/admin/news_manager.html"
+                           "html/admin/news_manager.html"
                        };
             }
         }

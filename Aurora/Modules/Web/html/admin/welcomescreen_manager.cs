@@ -17,7 +17,7 @@ namespace Aurora.Modules.Web
         {
             return new[]
                        {
-                           "html/welcomescreen/admin/index.html"
+                           "html/admin/welcomescreen_manager.html"
                        };
         } }
 

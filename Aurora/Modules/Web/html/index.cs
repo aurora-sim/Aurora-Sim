@@ -128,6 +128,31 @@ namespace Aurora.Modules.Web
                     { "MenuItemTitle", translator.GetTranslatedString("MenuLogin") } });
             }
             #endregion
+            #region Admin Pages
+            if (Authenticator.CheckAdminAuthentication(httpRequest))
+            {
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "welcomescreen_manager" }, 
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "admin/welcomescreen_manager.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuWelcomeScreenManager") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuWelcomeScreenManager") } });
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "news_manager" }, 
+                    { "ShowInMenu", true },
+                    { "MenuItemLocation", "admin/news_manager.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuNewsManager") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuNewsManager") } });
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "add_news" }, 
+                    { "ShowInMenu", false },
+                    { "MenuItemLocation", "admin/add_news.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuNewsManager") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuNewsManager") } });
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "edit_news" }, 
+                    { "ShowInMenu", false },
+                    { "MenuItemLocation", "admin/edit_news.html" }, 
+                    { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuNewsManager") },
+                    { "MenuItemTitle", translator.GetTranslatedString("MenuNewsManager") } });
+            }
+            #endregion
 
             vars.Add("MenuItems", pages);
             #endregion

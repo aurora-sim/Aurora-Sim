@@ -273,6 +273,11 @@ namespace Aurora.Modules.Web
                     {
                         //end of an if statement, just ignore it
                     }
+                    else if ((indBegin = cleanLine.IndexOf("{Is")) != -1 &&
+                        (indEnd = cleanLine.IndexOf("End}")) != -1)
+                    {
+                        //end of an if statement, just ignore it
+                    }
                     else
                         sb.AppendLine(line);
                 }

@@ -202,6 +202,10 @@ namespace Aurora.Modules.Web.Translators
                     return "Help";
                 case "MenuChangeUserInformation":
                     return "Change User Information";
+                case "MenuWelcomeScreenManager":
+                    return "Welcome Screen Manager";
+                case "MenuNewsManager":
+                    return "News Manager";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -228,6 +232,10 @@ namespace Aurora.Modules.Web.Translators
                     return "Help";
                 case "TooltipsMenuChangeUserInformation":
                     return "Change User Information";
+                case "TooltipsMenuWelcomeScreenManager":
+                    return "Welcome Screen Manager";
+                case "TooltipsMenuNewsManager":
+                    return "News Manager";
 
 				// Urls
                 case "WelcomeScreen":

@@ -6,9 +6,10 @@
 -->
 
 {IsNotAdminAuthenticatedBegin}
-<meta http-equiv="REFRESH" content="0;url={SystemURL}/login.html">
+<meta http-equiv="REFRESH" content="0;url={SystemURL}">
 {IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
+<script type="text/javascript" language="javascript" src="javascripts/menu.js"></script>
 <div id="content">
 	<div id="ContentHeaderCenter"><b>{NewsManager}: {SystemName}</div>
 	<div>
@@ -18,7 +19,7 @@
 	</div>
     <div>
 		<tr>
-			<td><a href="add_news.html">{AddNewsItem}</a></td>
+			<td id="add_news"><a id="add_news">{AddNewsItem}</a></td>
 		</tr>
 	</div>
 	<div id="news_online">
@@ -33,8 +34,8 @@
 			<tr>
 				<td><b>{NewsTitle}</b></td>
 				<td>{NewsDate}</td>
-				<td><a href="news_manager.html?edit={NewsID}">{EditNewsItem}</a></td>
-				<td><a href="news_manager.html?delete={NewsID}">{DeleteNewsItem}</a></td>
+				<td><a href="admin/news_manager.html?edit={NewsID}">{EditNewsItem}</a></td>
+				<td><a href="admin/news_manager.html?delete={NewsID}">{DeleteNewsItem}</a></td>
 			</tr>
 			<tr><td></td></tr>
 			
