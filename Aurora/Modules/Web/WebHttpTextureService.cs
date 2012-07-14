@@ -28,11 +28,9 @@ namespace Aurora.Modules.Web
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            var conf = config.Configs["GridInfoService"];
-            if (conf != null)
-                _gridNick = conf.GetString("gridname", "No Grid Nick Available, please set this");
-            else
-                _gridNick = "No Grid Nick Available, please set this";
+            IGridInfo gridInfo = registry.RequestModuleInterface<IGridInfo>();
+            _gridNick = gridInfo != null ? gridInfo.GridName : 
+                "No Grid Name Available, please set this";
         }
 
         public void FinishedStartup()

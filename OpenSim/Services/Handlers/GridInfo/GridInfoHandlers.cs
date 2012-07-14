@@ -33,15 +33,33 @@ using System.Reflection;
 using System.Text;
 using Nini.Config;
 using Nwc.XmlRpc;
-using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework;
+using Aurora.Framework.Servers.HttpServer;
+using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services
 {
-    public class GridInfoHandlers
+    public class GridInfoHandlers : IGridInfo
     {
         private readonly Hashtable _info = new Hashtable();
 
+        public string GridName { get; protected set; }
+        public string GridNick { get; protected set; }
+        public string GridLoginURI { get; protected set; }
+        public string GridWelcomeURI { get; protected set; }
+        public string GridEconomyURI { get; protected set; }
+        public string GridAboutURI { get; protected set; }
+        public string GridHelpURI { get; protected set; }
+        public string GridRegisterURI { get; protected set; }
+        public string GridForgotPasswordURI { get; protected set; }
+        public string GridMapTileURI { get; protected set; }
+        public string GridWebProfileURI { get; protected set; }
+        public string GridSearchURI { get; protected set; }
+        public string GridDestinationURI { get; protected set; }
+        public string GridMarketplaceURI { get; protected set; }
+        public string GridTutorialURI { get; protected set; }
+        public string GridSnapshotConfigURI { get; protected set; }
+        
         /// <summary>
         ///   Instantiate a GridInfoService object.
         /// </summary>
@@ -55,62 +73,66 @@ namespace OpenSim.Services
         /// </remarks>
         public GridInfoHandlers(IConfigSource configSource, IRegistryCore registry)
         {
-            loadGridInfo(configSource, registry);
-        }
-
-        private void loadGridInfo(IConfigSource configSource, IRegistryCore registry)
-        {
             _info["platform"] = "Aurora";
             try
             {
-                IConfig gridCfg = configSource.Configs["GridInfoService"];
                 IConfig configCfg = configSource.Configs["Handlers"];
                 IWebInterfaceModule webInterface = registry.RequestModuleInterface<IWebInterfaceModule>();
-                    
-                if (gridCfg != null)
+                IMoneyModule moneyModule = registry.RequestModuleInterface<IMoneyModule>();
+
+                GridEconomyURI = GetConfig(configSource, "economy");
+                if (GridEconomyURI == "")
                 {
-                    foreach (string k in gridCfg.GetKeys())
-                    {
-                        if (k == "economy")
-                            _info["helperuri"] = gridCfg.GetString(k);
-                        else
-                            _info[k] = gridCfg.GetString(k);
-                    }
-                }
-                if (!_info.ContainsKey("login"))
-                {
-                    if (configCfg != null && configCfg.GetString("LLLoginHandlerPort", "") != "")
-                    {
-                        _info["login"] = MainServer.Instance.FullHostName + ":" + configCfg.GetString("LLLoginHandlerPort", "") + "/";
-                    }
-                    else
-                    {
-                        _info["login"] = MainServer.Instance.ServerURI + "/";
-                    }
-                }
-                if (!_info["login"].ToString().EndsWith("/"))
-                    _info["login"] = _info["login"] + "/";
-                
-                if (!_info.ContainsKey("welcome"))
-                {
-                    if (webInterface != null)
-                        _info["welcome"] = webInterface.LoginScreenURL;
-                }
-                if (!_info.ContainsKey("register"))
-                {
-                    if (webInterface != null)
-                        _info["register"] = webInterface.RegistrationScreenURL;
-                }
-                if (!_info.ContainsKey("helperuri"))
-                {
-                    IMoneyModule moneyModule = registry.RequestModuleInterface<IMoneyModule>();
                     if (moneyModule != null)
                         _info["helperuri"] = MainServer.Instance.FullHostName + ":" + moneyModule.ClientPort + "/";
                     else
                         _info["helperuri"] = MainServer.Instance.FullHostName + ":" + 9000 + "/";//Fallback... we dunno
                 }
-                if (!_info["helperuri"].ToString().EndsWith("/"))
-                    _info["helperuri"] = _info["helperuri"] + "/";
+                if (!GridEconomyURI.EndsWith("/"))
+                    GridEconomyURI += "/";
+                _info["economy"] = _info["helperuri"] = GridEconomyURI;
+
+                GridLoginURI = GetConfig(configSource, "login");
+                if (GridLoginURI == "")
+                {
+                    if (configCfg != null && configCfg.GetString("LLLoginHandlerPort", "") != "")
+                    {
+                        GridLoginURI = MainServer.Instance.FullHostName +
+                            ":" + configCfg.GetString("LLLoginHandlerPort", "") + "/";
+                    }
+                    else
+                    {
+                        GridLoginURI = MainServer.Instance.ServerURI + "/";
+                    }
+                }
+                else if (!GridLoginURI.EndsWith("/"))
+                    GridLoginURI += "/";
+                _info["login"] = GridLoginURI;
+
+                _info["welcome"] = GridWelcomeURI = GetConfig(configSource, "welcome");
+                if (GridWelcomeURI == "" && webInterface != null)
+                    _info["welcome"] = GridWelcomeURI = webInterface.LoginScreenURL;
+
+                _info["register"] = GridRegisterURI = GetConfig(configSource, "register");
+                if (GridRegisterURI == "" && webInterface != null)
+                    _info["register"] = GridRegisterURI = webInterface.RegistrationScreenURL;
+
+                _info["gridname"] = GridName = GetConfig(configSource, "gridname");
+                _info["gridnick"] = GridNick = GetConfig(configSource, "gridnick");
+
+                _info["about"] = GridAboutURI = GetConfig(configSource, "about");
+                _info["help"] = GridHelpURI = GetConfig(configSource, "help");
+                _info["password"] = GridForgotPasswordURI = GetConfig(configSource, "forgottenpassword");
+                GridMapTileURI = GetConfig(configSource, "map");
+                IMapService mapService = registry.RequestModuleInterface<IMapService>();
+                if (GridMapTileURI == "" && mapService != null)
+                    GridMapTileURI = mapService.MapServiceURL;
+                GridWebProfileURI = GetConfig(configSource, "webprofile");
+                GridSearchURI = GetConfig(configSource, "search");
+                GridDestinationURI = GetConfig(configSource, "destination");
+                GridMarketplaceURI = GetConfig(configSource, "marketplace");
+                GridTutorialURI = GetConfig(configSource, "tutorial");
+                GridSnapshotConfigURI = GetConfig(configSource, "snapshotconfig");
             }
             catch (Exception)
             {
@@ -118,6 +140,12 @@ namespace OpenSim.Services
             }
 
             MainConsole.Instance.DebugFormat("[GRID INFO SERVICE]: Grid info service initialized with {0} keys", _info.Count);
+        }
+
+        private string GetConfig(IConfigSource config, string p)
+        {
+            IConfig gridCfg = config.Configs["GridInfoService"];
+            return gridCfg.GetString(p, "");
         }
 
         private void IssueWarning()

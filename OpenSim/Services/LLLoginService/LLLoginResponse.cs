@@ -438,10 +438,7 @@ namespace OpenSim.Services.LLLoginService
                 if (SearchURL != String.Empty)
                     responseData["search"] = SearchURL;
 
-                IMapService mapService = m_registry.RequestModuleInterface<IMapService>();
-                if (mapService != null)
-                    responseData["map-server-url"] = mapService.MapServiceURL;
-                else if (MapTileURL != String.Empty)
+                if (MapTileURL != String.Empty)
                     responseData["map-server-url"] = MapTileURL;
 
                 if (WebProfileURL != String.Empty)

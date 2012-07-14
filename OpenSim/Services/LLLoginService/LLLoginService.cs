@@ -106,11 +106,7 @@ namespace OpenSim.Services.LLLoginService
             m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
             m_AllowDuplicateLogin = m_loginServerConfig.GetBoolean("AllowDuplicateLogin", false);
             LLLoginResponseRegister.RegisterValue("AllowFirstLife", m_loginServerConfig.GetBoolean("AllowFirstLifeInProfile", true) ? "Y" : "N");
-            LLLoginResponseRegister.RegisterValue("TutorialURL", m_loginServerConfig.GetString("TutorialURL", ""));
-            LLLoginResponseRegister.RegisterValue("OpenIDURL", m_loginServerConfig.GetString("OpenIDURL", ""));
-            LLLoginResponseRegister.RegisterValue("SnapshotConfigURL", m_loginServerConfig.GetString("SnapshotConfigURL", ""));
             LLLoginResponseRegister.RegisterValue("MaxAgentGroups", m_loginServerConfig.GetInt("MaxAgentGroups", 100));
-            LLLoginResponseRegister.RegisterValue("HelpURL", m_loginServerConfig.GetString("HelpURL", ""));
             LLLoginResponseRegister.RegisterValue("VoiceServerType", m_loginServerConfig.GetString("VoiceServerType", "vivox"));
             ReadEventValues(m_loginServerConfig);
             ReadClassifiedValues(m_loginServerConfig);
@@ -129,17 +125,6 @@ namespace OpenSim.Services.LLLoginService
             m_RequireInventory = m_loginServerConfig.GetBoolean("RequireInventory", true);
             m_AllowRemoteSetLoginLevel = m_loginServerConfig.GetBoolean("AllowRemoteSetLoginLevel", false);
             m_MinLoginLevel = m_loginServerConfig.GetInt("MinLoginLevel", 0);
-            LLLoginResponseRegister.RegisterValue("MapTileURL", m_loginServerConfig.GetString("MapTileURL", string.Empty));
-            LLLoginResponseRegister.RegisterValue("WebProfileURL", m_loginServerConfig.GetString("WebProfileURL", string.Empty));
-            LLLoginResponseRegister.RegisterValue("SearchURL", m_loginServerConfig.GetString("SearchURL", string.Empty));
-            // if [LoginService] doesn't have the Search URL, try to get it from [GridInfoService]
-            if (LLLoginResponseRegister.GetValue("SearchURL").ToString() == string.Empty)
-            {
-                IConfig gridInfo = config.Configs["GridInfoService"];
-                LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GetString("search", string.Empty));
-            }
-            LLLoginResponseRegister.RegisterValue("DestinationURL", m_loginServerConfig.GetString("DestinationURL", string.Empty));
-            LLLoginResponseRegister.RegisterValue("MarketPlaceURL", m_loginServerConfig.GetString("MarketPlaceURL", string.Empty));
             LLLoginResponseRegister.RegisterValue("SunTexture", m_loginServerConfig.GetString("SunTexture", sunTexture));
             LLLoginResponseRegister.RegisterValue("MoonTexture", m_loginServerConfig.GetString("MoonTexture", moonTexture));
             LLLoginResponseRegister.RegisterValue("CloudTexture", m_loginServerConfig.GetString("CloudTexture", cloudTexture));
@@ -179,6 +164,19 @@ namespace OpenSim.Services.LLLoginService
 
         public void FinishedStartup()
         {
+            IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
+            if (gridInfo != null)
+            {
+                LLLoginResponseRegister.RegisterValue("TutorialURL", gridInfo.GridTutorialURI);
+                //LLLoginResponseRegister.RegisterValue("OpenIDURL", gridInfo.GridOpenIDURI);
+                LLLoginResponseRegister.RegisterValue("SnapshotConfigURL", gridInfo.GridSnapshotConfigURI);
+                LLLoginResponseRegister.RegisterValue("HelpURL", gridInfo.GridHelpURI);
+                LLLoginResponseRegister.RegisterValue("MapTileURL", gridInfo.GridMapTileURI);
+                LLLoginResponseRegister.RegisterValue("WebProfileURL", gridInfo.GridWebProfileURI);
+                LLLoginResponseRegister.RegisterValue("SearchURL", gridInfo.GridSearchURI);
+                LLLoginResponseRegister.RegisterValue("DestinationURL", gridInfo.GridDestinationURI);
+                LLLoginResponseRegister.RegisterValue("MarketPlaceURL", gridInfo.GridMarketplaceURI);
+            }
         }
 
         public void ReadEventValues(IConfig config)

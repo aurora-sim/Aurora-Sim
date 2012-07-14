@@ -31,7 +31,8 @@ namespace Aurora.Modules.Web
         #region Public Properties
 
         public IRegistryCore Registry { get; protected set; }
-        
+
+        public string GridName { get; private set; }
         public string LoginScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; } }
         public string RegistrationScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/register.html"; } }
 
@@ -78,6 +79,8 @@ namespace Aurora.Modules.Web
 
         public void FinishedStartup()
         {
+            IGridInfo gridInfo = Registry.RequestModuleInterface<IGridInfo>();
+            GridName = gridInfo.GridName;
         }
 
         #endregion
@@ -136,7 +139,7 @@ namespace Aurora.Modules.Web
                 }
                 vars = _pages[filename].Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
                 vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
-                vars.Add("SystemName", "Testing Grid!");
+                vars.Add("SystemName", GridName);
                 return vars;
             }
             return null;

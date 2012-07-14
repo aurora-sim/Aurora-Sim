@@ -32,22 +32,8 @@
     ;; If a user does not have a home location set, what region should it be set to for them?
     DefaultHomeRegion = ""
 
-    ;; If you want to set up URLs for things like the map, profiles, and search, add them here
-    ;MapTileURL = ""
-    ;WebProfileURL = ""
-    ;SearchURL = ""
-    ;OpenIDURL = ""
-    ;SnapshotConfigURL = ""
-    ;DestinationURL = ""
-    ;MarketPlaceURL = ""
-    ;HelpURL = ""
     ;VoiceServerType = "vivox"
     ;MaxAgentGroups = 100
-
-    ;; Sets the tutorial URL for new users which will be displayed on first login.
-    ;; This is a website that appears in the client telling the user how to move, fly, etc.
-    ;; NOTE: the URL you provide will NOT be the URL the client goes to! The client automatically appends it's language specification to the end of this URL. Ex. http://localhost/tutorial/ becomes http://localhost/tutorial/en for English language.
-    TutorialURL = ""
     
     ;; If you want to change the default texture UUIDs, change them here
     SunTexture = "cce0f112-878f-4586-a2e2-a8f104bba271"
