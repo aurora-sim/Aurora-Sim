@@ -363,6 +363,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Minutes";
                 case "EdittingText":
                     return "Editting";
+                case "BannedUntilText":
+                    return "User banned until:";
             }
             return "UNKNOWN CHARACTER";
         }

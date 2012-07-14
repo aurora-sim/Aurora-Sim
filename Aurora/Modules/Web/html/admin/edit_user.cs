@@ -103,6 +103,7 @@ namespace Aurora.Modules.Web
                 webInterface.Redirect(httpResponse, "/");
                 return vars;
             }
+            string bannedUntil = "";
             bool userBanned = ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);
             if (userBanned)
             {
@@ -114,9 +115,15 @@ namespace Aurora.Modules.Web
                     agent.OtherAgentInformation.Remove("TemperaryBanInfo");
                     agentService.UpdateAgent(agent);
                 }
+                else
+                {
+                    DateTime bannedTime = agent.OtherAgentInformation["TemperaryBanInfo"].AsDate();
+                    bannedUntil = string.Format("{0} {1}", bannedTime.ToShortDateString(), bannedTime.ToLongTimeString());
+                }
             }
             vars.Add("NotUserBanned", !userBanned);
             vars.Add("UserBanned", userBanned);
+            vars.Add("BannedUntil", bannedUntil);
             vars.Add("EmailValue", account.Email);
             vars.Add("UserID", account.PrincipalID);
             vars.Add("UserName", account.Name);
@@ -144,6 +151,7 @@ namespace Aurora.Modules.Web
             vars.Add("UnbanText", translator.GetTranslatedString("UnbanText"));
             vars.Add("TimeUntilUnbannedText", translator.GetTranslatedString("TimeUntilUnbannedText"));
             vars.Add("EdittingText", translator.GetTranslatedString("EdittingText"));
+            vars.Add("BannedUntilText", translator.GetTranslatedString("BannedUntilText"));
             
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
