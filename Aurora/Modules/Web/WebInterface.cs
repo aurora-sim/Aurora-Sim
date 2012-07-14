@@ -150,27 +150,28 @@ namespace Aurora.Modules.Web
             string html = CSHTMLCreator.BuildHTML(file, vars);
 
             string[] lines = html.Split('\n');
-            List<string> newLines = new List<string>(lines);
-            int newLinesPos = 0;
-            for(int pos = 0; pos < lines.Length; pos++)
+            StringBuilder sb = new StringBuilder();
+            for (int pos = 0; pos < lines.Length; pos++)
             {
                 string line = lines[pos];
-                if (line.Contains("<!--#include file="))
+                if (line.TrimStart().StartsWith("<!--#include file="))
                 {
                     string[] split = line.Split(new string[2] { "<!--#include file=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
-                        Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse, requestParameters);
-                        newLines[newLinesPos] = ConvertHTML(File.ReadAllText(filename), request, httpResponse, requestParameters, newVars);
+                        Dictionary<string, object> newVars = AddVarsForPage(filename, 
+                            request, httpResponse, requestParameters);
+                        sb.AppendLine(ConvertHTML(File.ReadAllText(filename), 
+                            request, httpResponse, requestParameters, newVars));
                     }
                 }
-                else if (line.Contains("<!--#include folder="))
+                else if (line.TrimStart().StartsWith("<!--#include folder="))
                 {
                     string[] split = line.Split(new string[2] { "<!--#include folder=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
                     {
-                        string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html","");
+                        string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html", "");
                         if (Directory.Exists(filename))
                         {
                             Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse,
@@ -183,107 +184,98 @@ namespace Aurora.Modules.Web
                                                                       new Dictionary<string, object>();
                                 foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
                                     newVars2.Add(pair.Key, pair.Value);
-                                newLines[newLinesPos] += ConvertHTML(File.ReadAllText(f), request, httpResponse,
-                                                                    requestParameters, newVars2);
+                                sb.AppendLine(ConvertHTML(File.ReadAllText(f), request, httpResponse,
+                                                                    requestParameters, newVars2));
                             }
                         }
                     }
                 }
-                else if (line.Trim().StartsWith("{"))
+                else if (line.TrimStart().StartsWith("{"))
                 {
-                    int ind;
-                    if ((ind = line.IndexOf("ArrayBegin}")) != -1)
+                    int indBegin, indEnd;
+                    if ((indEnd = line.IndexOf("ArrayBegin}")) != -1)
                     {
-                        newLines.RemoveAt(newLinesPos--);
-                        string keyToCheck = line.Substring(1, ind - 1);
+                        string keyToCheck = line.Substring(1, indEnd - 1);
                         int posToCheckFrom;
-                        List<string> repeatedLines = FindLines(lines, newLines, pos, keyToCheck, "ArrayEnd", out posToCheckFrom);
-                        for (int i = pos; i < posToCheckFrom; i++)
-                            newLines.RemoveAt(newLinesPos + 1);
+                        List<string> repeatedLines = ExtractLines(lines, pos, keyToCheck, "ArrayEnd", out posToCheckFrom);
                         pos = posToCheckFrom;
                         if (vars.ContainsKey(keyToCheck))
                         {
                             List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
                             if (dicts != null)
                                 foreach (var dict in dicts)
-                                    newLines.Insert(newLinesPos++,
-                                                    ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request,
+                                    sb.AppendLine(ConvertHTML(string.Join(" ", repeatedLines.ToArray()), request,
                                                                 httpResponse, requestParameters, dict));
                         }
                     }
-                    else if (line.Trim().StartsWith("{IsAuthenticatedBegin}"))
+                    else if ((indEnd = line.IndexOf("AuthenticatedBegin}")) != -1)
                     {
-                        newLines.RemoveAt(newLinesPos--);
-                        int posToCheckFrom;
-                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsAuthenticatedEnd", out posToCheckFrom);
-                        if (!Authenticator.CheckAuthentication(request))
-                        {
-                            for (int i = pos; i < posToCheckFrom; i++)
-                                newLines.RemoveAt(newLinesPos + 1);
+                        string key = line.Substring(1, indEnd - 1) + "AuthenticatedEnd";
+                        int posToCheckFrom = FindLines(lines, pos, "", key);
+                        if (!CheckAuth(line.Trim(), request))
                             pos = posToCheckFrom;
-                        }
                     }
-                    else if (line.Trim().StartsWith("{IsNotAuthenticatedBegin}"))
+                    else if ((indBegin = line.IndexOf("{If")) != -1 &&
+                        (indEnd = line.IndexOf("Begin}")) != -1)
                     {
-                        newLines.RemoveAt(newLinesPos--);
-                        int posToCheckFrom;
-                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsNotAuthenticatedEnd", out posToCheckFrom);
-                        if (Authenticator.CheckAuthentication(request))
-                        {
-                            for (int i = pos; i < posToCheckFrom; i++)
-                                newLines.RemoveAt(newLinesPos + 1);
+                        string key = line.Substring(indBegin + 1, indEnd - indBegin - 1);
+                        int posToCheckFrom = FindLines(lines, pos, key, "End");
+                        if (!vars.ContainsKey(key) || ((bool)vars[key])== false)
                             pos = posToCheckFrom;
-                        }
                     }
-                    else if (line.Trim().StartsWith("{IsAdminAuthenticatedBegin}"))
-                    {
-                        newLines.RemoveAt(newLinesPos--);
-                        int posToCheckFrom;
-                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsAdminAuthenticatedEnd", out posToCheckFrom);
-                        if (!Authenticator.CheckAdminAuthentication(request))
-                        {
-                            for (int i = pos; i < posToCheckFrom; i++)
-                                newLines.RemoveAt(newLinesPos + 1);
-                            pos = posToCheckFrom;
-                        }
-                    }
-                    else if (line.Trim().StartsWith("{IsNotAdminAuthenticatedBegin}"))
-                    {
-                        newLines.RemoveAt(newLinesPos--);
-                        int posToCheckFrom;
-                        List<string> repeatedLines = FindLines(lines, newLines, pos, "", "IsNotAdminAuthenticatedEnd", out posToCheckFrom);
-                        if (Authenticator.CheckAdminAuthentication(request))
-                        {
-                            for (int i = pos; i < posToCheckFrom; i++)
-                                newLines.RemoveAt(newLinesPos + 1);
-                            pos = posToCheckFrom;
-                        }
-                    }
+                    else
+                        sb.AppendLine(line);
                 }
-                newLinesPos++;
+                else
+                    sb.AppendLine(line);
             }
-            return string.Join("\n", newLines.ToArray());
+
+            return sb.ToString();
         }
 
-        private static List<string> ExtractLines(string[] lines, List<string> newLines, int pos, string keyToCheck, string type, out int posToCheckFrom)
+        /// <summary>
+        /// Returns false if the authentication was wrong
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private bool CheckAuth(string p, OSHttpRequest request)
+        {
+            if (p.StartsWith("{IsAuthenticatedBegin}"))
+            {
+                return Authenticator.CheckAuthentication(request);
+            }
+            else if (p.StartsWith("{IsNotAuthenticatedBegin}"))
+            {
+                return !Authenticator.CheckAuthentication(request);
+            }
+            else if (p.StartsWith("{IsAdminAuthenticatedBegin}"))
+            {
+                return Authenticator.CheckAdminAuthentication(request);
+            }
+            else if (p.StartsWith("{IsNotAdminAuthenticatedBegin}"))
+            {
+                return !Authenticator.CheckAdminAuthentication(request);
+            }
+            return false;
+        }
+
+        private static int FindLines(string[] lines, int pos, string keyToCheck, string type)
+        {
+            int posToCheckFrom = pos + 1;
+            while (!lines[posToCheckFrom++].TrimStart().StartsWith("{" + keyToCheck + type + "}"))
+                continue;
+
+            return posToCheckFrom - 1;
+        }
+
+        private static List<string> ExtractLines(string[] lines, int pos, 
+            string keyToCheck, string type, out int posToCheckFrom)
         {
             posToCheckFrom = pos + 1;
             List<string> repeatedLines = new List<string>();
             while (!lines[posToCheckFrom].Trim().StartsWith("{" + keyToCheck + type + "}"))
                 repeatedLines.Add(lines[posToCheckFrom++]);
-
-            for (int i = pos; i < posToCheckFrom + 1; i++)
-                newLines.RemoveAt(pos);
-            return repeatedLines;
-        }
-
-        private static List<string> FindLines(string[] lines, List<string> newLines, int pos, string keyToCheck, string type, out int posToCheckFrom)
-        {
-            posToCheckFrom = pos + 1;
-            List<string> repeatedLines = new List<string>();
-            while (!lines[posToCheckFrom].Trim().StartsWith("{" + keyToCheck + type + "}"))
-                repeatedLines.Add(lines[posToCheckFrom++]);
-
             return repeatedLines;
         }
 
