@@ -33,8 +33,8 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
+            vars.Add("LoggedOutSuccessfullyText", translator.GetTranslatedString("LoggedOutSuccessfullyText"));
             Authenticator.RemoveAuthentication(httpRequest);
-            webInterface.Redirect(httpResponse, "/welcomescreen/");
             return vars;
         }
     }

@@ -49,7 +49,7 @@ namespace Aurora.Modules.Web
                         Authenticator.AddAdminAuthentication(sessionID, account.PrincipalID);
                     httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });
 
-                    webInterface.Redirect(httpResponse, "/welcomescreen/index.html");
+                    webInterface.Redirect(httpResponse, "/index.html");
                     return vars;
                 }
                 else

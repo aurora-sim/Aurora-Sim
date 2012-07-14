@@ -181,6 +181,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Home";
                 case "MenuLogin":
                     return "Login";
+                case "MenuLogout":
+                    return "Logout";
                 case "MenuRegister":
                     return "Register";
                 case "MenuForgotPass":
@@ -203,6 +205,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Home";
                 case "TooltipsMenuLogin":
                     return "Login";
+                case "TooltipsMenuLogout":
+                    return "Logout";
                 case "TooltipsMenuRegister":
                     return "Register";
                 case "TooltipsMenuForgotPass":
@@ -268,6 +272,9 @@ namespace Aurora.Modules.Web.Translators
                 case "HelpViewersConfigText":
                     return "Help Viewers Configuration";
 				
+                //Logout page
+                case "LoggedOutSuccessfullyText":
+                    return "You have been logged out successfully.";
             }
             return "UNKNOWN CHARACTER";
         }

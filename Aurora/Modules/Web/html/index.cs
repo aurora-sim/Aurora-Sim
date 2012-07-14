@@ -39,12 +39,6 @@ namespace Aurora.Modules.Web
                 { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuHome") },
                 { "MenuItemTitle", translator.GetTranslatedString("MenuHome") } });
 
-            pages.Add(new Dictionary<string, object> { { "MenuItemID", "login" }, 
-                { "ShowInMenu", true },
-                { "MenuItemLocation", "login.html" }, 
-                { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogin") },
-                { "MenuItemTitle", translator.GetTranslatedString("MenuLogin") } });
-
             pages.Add(new Dictionary<string, object> { { "MenuItemID", "register" }, 
                 { "ShowInMenu", true },
                 { "MenuItemLocation", "register.html" }, 
@@ -106,6 +100,28 @@ namespace Aurora.Modules.Web
                 { "MenuItemLocation", "region_info.html" }, 
                 { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuRegionInfo") },
                 { "MenuItemTitle", translator.GetTranslatedString("MenuRegionInfo") } });
+
+            #region Authenticated Pages
+
+            if (Authenticator.CheckAuthentication(httpRequest))
+            {
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "logout" }, 
+                { "ShowInMenu", true },
+                { "MenuItemLocation", "logout.html" }, 
+                { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogout") },
+                { "MenuItemTitle", translator.GetTranslatedString("MenuLogout") } });
+            }
+            #endregion
+            #region Non Authenticated Pages
+            else
+            {
+                pages.Add(new Dictionary<string, object> { { "MenuItemID", "login" }, 
+                { "ShowInMenu", true },
+                { "MenuItemLocation", "login.html" }, 
+                { "MenuItemTitleHelp", translator.GetTranslatedString("TooltipsMenuLogin") },
+                { "MenuItemTitle", translator.GetTranslatedString("MenuLogin") } });
+            }
+            #endregion
 
             vars.Add("MenuItems", pages);
             #endregion
