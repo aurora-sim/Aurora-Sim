@@ -1039,7 +1039,7 @@ namespace Aurora.Services.DataService
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero);
+                List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero, null, null);
                 if (regions.Count >= 1)
                 {
                     QueryFilter filter = new QueryFilter();

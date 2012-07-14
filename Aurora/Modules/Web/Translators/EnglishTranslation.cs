@@ -306,6 +306,21 @@ namespace Aurora.Modules.Web.Translators
                     return "Website is currently down, please try again soon.";
                 case "WebsiteDownText":
                     return "Website offline";
+
+                //user_search page
+                case "Search":
+                case "SearchText":
+                    return "Search";
+                case "SearchForUserText":
+                    return "Search For A User";
+                case "UserSearchText":
+                    return "User Search";
+
+                //region_search page
+                case "SearchForRegionText":
+                    return "Search For A Region";
+                case "RegionSearchText":
+                    return "Region Search";
             }
             return "UNKNOWN CHARACTER";
         }

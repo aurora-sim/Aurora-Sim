@@ -98,14 +98,24 @@ namespace OpenSim.Services.Interfaces
         /// <param name="name">
         /// The name to match against.
         /// </param>
-        /// <param name="maxNumber">
-        /// The maximum number of results to return.
-        /// </param>
         /// <returns>
         /// A list of <see cref="RegionInfo"/>s of regions with matching name. If the
         /// grid-server couldn't be contacted or returned an error, return null. 
         /// </returns>
-        List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber);
+        List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count);
+
+        /// <summary>
+        /// Get number of regions starting with the provided name. 
+        /// </summary>
+        /// <param name="scopeID"></param>
+        /// <param name="name">
+        /// The name to match against.
+        /// </param>
+        /// <returns>
+        /// A the count of <see cref="RegionInfo"/>s of regions with matching name. If the
+        /// grid-server couldn't be contacted or returned an error, returns 0. 
+        /// </returns>
+        uint GetRegionsByNameCount(UUID scopeID, string name);
 
         /// <summary>
         /// Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)

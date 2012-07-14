@@ -409,13 +409,18 @@ namespace OpenSim.Services.Robust
             return null;
         }
 
-        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
+        public uint GetRegionsByNameCount(UUID scopeID, string name)
+        {
+            return 0;
+        }
+
+        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
             sendData["SCOPEID"] = scopeID.ToString();
             sendData["NAME"] = name;
-            sendData["MAX"] = maxNumber.ToString();
+            sendData["MAX"] = count == null ? "0" : count.ToString();
 
             sendData["METHOD"] = "get_regions_by_name";
             List<GridRegion> rinfos = new List<GridRegion>();
@@ -454,8 +459,8 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1}, {2} received null response",
-                            scopeID, name, maxNumber);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1} received null response",
+                            scopeID, name);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");

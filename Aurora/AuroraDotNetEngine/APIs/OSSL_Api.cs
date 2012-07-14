@@ -702,7 +702,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID))
                 return DateTime.Now;
 
-            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
+            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 0, 1);
             // Try to link the region
             if (regions != null && regions.Count > 0)
             {
@@ -751,7 +751,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID;
             if (UUID.TryParse(agent, out AgentID))
             {
-                List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 1);
+                List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 0, 1);
                 // Try to link the region
                 if (regions != null && regions.Count > 0)
                 {

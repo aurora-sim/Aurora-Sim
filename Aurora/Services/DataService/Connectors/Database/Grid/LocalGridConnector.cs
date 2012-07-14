@@ -171,7 +171,7 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public List<GridRegion> Get(string regionName, UUID scopeID)
+        public uint GetCount(string regionName, UUID scopeID)
         {
             QueryFilter filter = new QueryFilter();
             if (scopeID != UUID.Zero)
@@ -180,7 +180,19 @@ namespace Aurora.Services.DataService
             }
             filter.andLikeFilters["RegionName"] = regionName;
 
-            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
+            return uint.Parse(GD.Query(new[] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
+        }
+
+        public List<GridRegion> Get(string regionName, UUID scopeID, uint? start, uint? count)
+        {
+            QueryFilter filter = new QueryFilter();
+            if (scopeID != UUID.Zero)
+            {
+                filter.andFilters["ScopeID"] = scopeID;
+            }
+            filter.andLikeFilters["RegionName"] = regionName;
+
+            List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, start, count);
 
             return (query.Count == 0) ? null : ParseQuery(query);
         }

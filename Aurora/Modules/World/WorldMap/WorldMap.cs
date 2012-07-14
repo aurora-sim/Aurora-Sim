@@ -521,7 +521,7 @@ namespace Aurora.Modules.WorldMap
 
             List<MapBlockData> blocks = new List<MapBlockData>();
 
-            List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 20);
+            List<GridRegion> regionInfos = m_scene.GridService.GetRegionsByName(UUID.Zero, mapName, 0, 20);
             if (TryCoordsSearch)
             {
                 GridRegion region = m_scene.GridService.GetRegionByPosition(m_scene.RegionInfo.ScopeID, XCoord * Constants.RegionSize, YCoord * Constants.RegionSize);

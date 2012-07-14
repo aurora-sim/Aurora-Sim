@@ -737,7 +737,7 @@ namespace OpenSim.Services.LLLoginService
                             {
                                 MainConsole.Instance.WarnFormat("[LLOGIN SERVICE]: User {0} {1} does not have a valid home and this grid does not have default locations. Attempting to find random region",
                                     account.FirstName, account.LastName);
-                                defaults = m_GridService.GetRegionsByName(scopeID, "", 1);
+                                defaults = m_GridService.GetRegionsByName(scopeID, "", 0, 1);
                                 if (defaults != null && defaults.Count > 0)
                                 {
                                     region = defaults[0];
@@ -824,7 +824,7 @@ namespace OpenSim.Services.LLLoginService
                 string regionName = uriMatch.Groups["region"].ToString();
                 if (!regionName.Contains("@"))
                 {
-                    List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 1);
+                    List<GridRegion> regions = m_GridService.GetRegionsByName(scopeID, regionName, 0, 1);
                     if ((regions == null) || (regions.Count == 0))
                     {
                         MainConsole.Instance.InfoFormat(

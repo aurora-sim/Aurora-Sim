@@ -1,0 +1,82 @@
+<!--
+
+{RegionsList}
+	{RegionName}
+	{RegionID}
+
+{RegionSearchText}    Region Search
+{RegionNameText}      Region Name
+{SearchForRegionText} Search for a region
+{Search}              Search
+-->
+
+<div id="content">
+	<div id="ContentHeaderCenter"><h2>{SystemName}: {RegionSearchText}</h2></div>
+	<div id="usersonline">
+		<div id="users_navigation">
+			<form action="region_search.html" method="POST">
+				<table>
+					<tr><td colspan="2" align="center">{SearchForRegionText}</td></tr>
+					<tr>
+						<td class="even"><span id="password_label">{RegionNameText}*</span></td>
+						<td class="even"><div class="roundedinput"><input require="true" label="regionname" name="regionname" /></div></td>
+					</tr>
+					<tr>
+						<td class="odd">
+							<div class="center">
+								<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</form>
+			<table>
+				<tr>
+					<td>
+						<a href="user_search.html?Start=0" target="_self" title="{FirstText}">
+							<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<a href="user_search.html?Start={BackOne}" target="_self" title="{BackText}">
+							<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<p>{CurrentPageText} {CurrentPage}</p>
+					</td>
+					<td>
+						<a href="user_search.html?Start={NextOne}" target="_self" title="{NextText}">
+							<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<a href="user_search.html?Start=-1" target="_self" title="{LastText}">
+							<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<p>{RegionNameText}</p>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+{RegionsListArrayBegin}
+				<tr>
+					<td>
+						<a target="_blank" class='region_info' href="region_info.html?regionid={RegionID}">
+							<u>{RegionName}</u>
+						</a>
+					</td>
+				</tr>
+{RegionsListArrayEnd}
+			</tbody>
+		</table>
+	</div>
+</div>

@@ -1,9 +1,9 @@
 <!--
 
 {UsersOnlineList}
-{UserName}
-{UserRegion}
-{UserID}
+	{UserName}
+	{UserRegion}
+	{UserID}
 
 {OnlineUsersText}  Online Users
 {RegionNameText}   Region Name
@@ -58,12 +58,12 @@
 {UsersOnlineListArrayBegin}
 				<tr>
 					<td>
-						<a href='' onClick="window.open('agent_info.html?userid={UserID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=500,height=550')">
+						<a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}">
 							<u>{UserName}</u>
 						</a>
 					</td>
 					<td>
-						<a href='' onClick="window.open('region_info.html?regionid={UserRegionID}','mywindow','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=800,height=400')">
+						<a target="_blank" class='region_info' href="region_info.html?regionid={UserRegionID}">
 							<u>{UserRegion}</u>
 						</a>
 					</td>

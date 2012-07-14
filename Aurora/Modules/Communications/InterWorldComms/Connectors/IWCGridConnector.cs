@@ -141,10 +141,10 @@ namespace Aurora.Modules
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
+        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count)
         {
-            List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, maxNumber);
-            List<GridRegion> remoteRegions = (List<GridRegion>)DoRemoteForced(scopeID, name, maxNumber);
+            List<GridRegion> r = m_localService.GetRegionsByName(scopeID, name, start, count);
+            List<GridRegion> remoteRegions = (List<GridRegion>)DoRemoteForced(scopeID, name, start, count);
             if (remoteRegions != null)
             {
                 UpdateGridRegionsForIWC(ref remoteRegions);
@@ -156,6 +156,13 @@ namespace Aurora.Modules
             r.Reverse();
             return r;
         }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public uint GetRegionsByNameCount(UUID scopeID, string name)
+        {
+            return 0;
+        }
+
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)

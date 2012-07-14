@@ -1,0 +1,83 @@
+<!--
+
+{UsersList}
+	{UserName}
+	{UserRegion}
+	{UserID}
+
+{UserSearchText}      User Search
+{UserNameText}        User Name
+{SearchForUserText}   Search for a user
+{Search}              Search
+-->
+
+<div id="content">
+	<div id="ContentHeaderCenter"><h2>{SystemName}: {UserSearchText}</h2></div>
+	<div id="usersonline">
+		<div id="users_navigation">
+			<form action="user_search.html" method="POST">
+				<table>
+					<tr><td colspan="2" align="center">{SearchForUserText}</td></tr>
+					<tr>
+						<td class="even"><span id="password_label">{UserNameText}*</span></td>
+						<td class="even"><div class="roundedinput"><input require="true" label="username" name="username" /></div></td>
+					</tr>
+					<tr>
+						<td class="odd">
+							<div class="center">
+								<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</form>
+			<table>
+				<tr>
+					<td>
+						<a href="user_search.html?Start=0" target="_self" title="{FirstText}">
+							<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<a href="user_search.html?Start={BackOne}" target="_self" title="{BackText}">
+							<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<p>{CurrentPageText} {CurrentPage}</p>
+					</td>
+					<td>
+						<a href="user_search.html?Start={NextOne}" target="_self" title="{NextText}">
+							<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+					<td>
+						<a href="user_search.html?Start=-1" target="_self" title="{LastText}">
+							<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+						</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<td>
+						<p>{UserNameText}</p>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+{UsersListArrayBegin}
+				<tr>
+					<td>
+						<a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}">
+							<u>{UserName}</u>
+						</a>
+					</td>
+				</tr>
+{UsersListArrayEnd}
+			</tbody>
+		</table>
+	</div>
+</div>

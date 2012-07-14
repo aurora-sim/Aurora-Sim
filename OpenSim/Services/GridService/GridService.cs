@@ -497,7 +497,7 @@ namespace OpenSim.Services.GridService
 
             if (!m_AllowDuplicateNames)
             {
-                List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, regionInfos.ScopeID);
+                List<GridRegion> dupe = m_Database.Get(regionInfos.RegionName, regionInfos.ScopeID, null, null);
                 if (dupe != null && dupe.Count > 0)
                 {
 #if (!ISWIN)
@@ -700,7 +700,7 @@ namespace OpenSim.Services.GridService
             if (remoteValue != null || m_doRemoteOnly)
                 return (GridRegion)remoteValue;
 
-            List<GridRegion> rdatas = m_Database.Get(regionName + "%", scopeID);
+            List<GridRegion> rdatas = m_Database.Get(regionName + "%", scopeID, 0, 1);
             if ((rdatas != null) && (rdatas.Count > 0))
             {
                 //Sort to find the region with the exact name that was given
@@ -714,15 +714,13 @@ namespace OpenSim.Services.GridService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual List<GridRegion> GetRegionsByName(UUID scopeID, string name, int maxNumber)
+        public virtual List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count)
         {
-            object remoteValue = DoRemote(scopeID, name, maxNumber);
+            object remoteValue = DoRemote(scopeID, name, start, count);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>)remoteValue;
 
-            int count = 0;
-            List<GridRegion> rinfos = new List<GridRegion>();
-            List<GridRegion> rdatas = m_Database.Get(name + "%", scopeID);
+            List<GridRegion> rdatas = m_Database.Get(name + "%", scopeID, start, count);
 
             if (rdatas != null)
             {
@@ -730,20 +728,19 @@ namespace OpenSim.Services.GridService
                 rdatas.Sort(new RegionDataComparison(name));
                 //Results are backwards... so it needs reversed
                 rdatas.Reverse();
-#if (!ISWIN)
-                foreach (GridRegion rdata in rdatas)
-                {
-                    if (count++ < maxNumber)
-                    {
-                        rinfos.Add(rdata);
-                    }
-                }
-#else
-                rinfos.AddRange(rdatas.Where(rdata => count++ < maxNumber));
-#endif
             }
 
-            return rinfos;
+            return rdatas;
+        }
+
+        [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
+        public virtual uint GetRegionsByNameCount(UUID scopeID, string name)
+        {
+            object remoteValue = DoRemote(scopeID, name);
+            if (remoteValue != null || m_doRemoteOnly)
+                return (uint)remoteValue;
+
+            return m_Database.GetCount(name + "%", scopeID);
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
@@ -831,7 +828,7 @@ namespace OpenSim.Services.GridService
                 MainConsole.Instance.Info("Syntax: show region <region name>");
                 return;
             }
-            List<GridRegion> regions = m_Database.Get(cmd[2], UUID.Zero);
+            List<GridRegion> regions = m_Database.Get(cmd[2], UUID.Zero, null, null);
             if (regions == null || regions.Count < 1)
             {
                 MainConsole.Instance.Info("Region not found");
@@ -905,7 +902,7 @@ namespace OpenSim.Services.GridService
                     regionname += " " + cmd[ii];
                 }
             }
-            List<GridRegion> regions = m_Database.Get(regionname, UUID.Zero);
+            List<GridRegion> regions = m_Database.Get(regionname, UUID.Zero, null, null);
             if (regions == null || regions.Count < 1)
             {
                 MainConsole.Instance.Info("Region not found");

@@ -170,7 +170,7 @@ namespace Aurora.Modules
                     IGridService service = m_registry.RequestModuleInterface<IGridService>();
                     if (service != null)
                     {
-                        List<GridRegion> regions = service.GetRegionsByName(UUID.Zero, regionName, 3);
+                        List<GridRegion> regions = service.GetRegionsByName(UUID.Zero, regionName, 0, 3);
 #if (!ISWIN)
                         foreach (GridRegion t in regions)
                         {
