@@ -27,7 +27,7 @@ $(document).ready(function(){
 				break;
 			case "news":
 				content.slideUp();
-				content.load("news.html", hideLoading);
+				content.load("news_list.html", hideLoading);
 				content.slideDown();
 				break;
 			case "world":

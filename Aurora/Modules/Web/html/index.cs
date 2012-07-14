@@ -33,6 +33,7 @@ namespace Aurora.Modules.Web
 			vars.Add("MenuLogin", translator.GetTranslatedString("MenuLogin"));
 			vars.Add("MenuRegister", translator.GetTranslatedString("MenuRegister"));
 			vars.Add("MenuForgotPass", translator.GetTranslatedString("MenuForgotPass"));
+			vars.Add("MenuNews", translator.GetTranslatedString("MenuNews"));
 			vars.Add("MenuWorld", translator.GetTranslatedString("MenuWorld"));
 			vars.Add("MenuRegion", translator.GetTranslatedString("MenuRegion"));
 			vars.Add("MenuUser", translator.GetTranslatedString("MenuUser"));
@@ -44,6 +45,7 @@ namespace Aurora.Modules.Web
 			vars.Add("TooltipsMenuLogin", translator.GetTranslatedString("TooltipsMenuLogin"));
 			vars.Add("TooltipsMenuRegister", translator.GetTranslatedString("TooltipsMenuRegister"));
 			vars.Add("TooltipsMenuForgotPass", translator.GetTranslatedString("TooltipsMenuForgotPass"));
+			vars.Add("TooltipsMenuNews", translator.GetTranslatedString("TooltipsMenuNews"));
 			vars.Add("TooltipsMenuWorld", translator.GetTranslatedString("TooltipsMenuWorld"));
 			vars.Add("TooltipsMenuRegion", translator.GetTranslatedString("TooltipsMenuRegion"));
 			vars.Add("TooltipsMenuUser", translator.GetTranslatedString("TooltipsMenuUser"));
@@ -53,7 +55,7 @@ namespace Aurora.Modules.Web
 			// Tooltips Urls
 			vars.Add("TooltipsWelcomeScreen", translator.GetTranslatedString("TooltipsWelcomeScreen"));
 			vars.Add("TooltipsWorldMap", translator.GetTranslatedString("TooltipsWorldMap"));
-			
+
 			// Style Switcher
 			vars.Add("styles1", translator.GetTranslatedString("styles1"));
 			vars.Add("styles2", translator.GetTranslatedString("styles2"));
@@ -65,6 +67,7 @@ namespace Aurora.Modules.Web
 			vars.Add("HomeText", translator.GetTranslatedString("HomeText"));
 			vars.Add("HomeTextWelcome", translator.GetTranslatedString("HomeTextWelcome"));
 			vars.Add("HomeTextTips", translator.GetTranslatedString("HomeTextTips"));
+			vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
 
 			return vars;			
         }

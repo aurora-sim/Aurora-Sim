@@ -11,12 +11,14 @@
 	<link href="css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
 	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
 	<link href="css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+	<link href="css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
 
 	<!-- Javascript -->
 	<script type="text/javascript" language="javascript" src="javascripts/jquery.min.js"></script>
 	
 	<script type="text/javascript" language="javascript" src="javascripts/menu.js"></script>
 	<script type="text/javascript" language="javascript" src="javascripts/styleswitch.js"></script>
+	<!-- <script type="text/javascript" language="javascript" src="javascripts/security.js"></script> -->
 	
 	<!-- date time -->
 	<script type="text/javascript" language="javascript" src="javascripts/jquery.jclock.js"></script>
@@ -47,7 +49,7 @@
 			<li id="home" class="fade" alt="{TooltipsMenuHome}" title="{TooltipsMenuHome}">{MenuHome}</li>
 			<li id="login" class="fade" alt="{TooltipsMenuLogin}" title="{TooltipsMenuLogin}">{MenuLogin}</li>
 			<li id="register" class="fade" alt="{TooltipsMenuRegister}" title="{TooltipsMenuRegister}">{MenuRegister}</li>
-			<!-- <li id="news" alt="{TooltipsMenuNews}" title="{TooltipsMenuNews}">{MenuNews}</li> -->
+			<li id="news" alt="{TooltipsMenuNews}" title="{TooltipsMenuNews}">{MenuNews}</li>
 			<li id="world" class="fade" alt="{TooltipsMenuWorld}" title="{TooltipsMenuWorld}">World</li>
 			<li id="region_list" class="fade" alt="{TooltipsMenuRegion}" title="{TooltipsMenuRegion}">{MenuRegion}</li>
 			<li id="online_users" class="fade" alt="{TooltipsMenuUser}" title="{TooltipsMenuUser}">{MenuUser}</li>
@@ -69,30 +71,31 @@
 		<p class=textsize>{HomeTextWelcome}</p>
 
 		<p>{HomeTextTips}:
-			<a target="_blank" class='welcomescreen' href="welcomescreen/" target="_blank" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{TooltipsWelcomeScreen}</a> |
+			<a target="_blank" class='welcomescreen' href="welcomescreen/" target="_blank" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
 			<a target="_blank" class='world_map' href="world_map.html" target="_blank" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
+			<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->		
 	</div>
 	
 	<div id="footer">	
 		<p class=textsize>
-			<ul>STYLE:
-				<li><a href="serversideSwitch.html?style=style1" rel="styles1" class="styleswitch" alt="{styles1}" title="{styles1}">[ 1 ]</a></li>
-				<li><a href="serversideSwitch.html?style=style2" rel="styles2" class="styleswitch" alt="{styles2}" title="{styles2}">[ 2 ]</a></li>
-				<li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">[ 3 ]</a></li>
-				<li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">[ 4 ]</a></li>
-				CHOIX: [&nbsp;<span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span>&nbsp;] | Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012
+			<ul>STYLES:
+				<li><a href="serversideSwitch.html?style=style1" rel="styles1" class="styleswitch" alt="{styles1}" title="{styles1}">1</a></li>
+				<li><a href="serversideSwitch.html?style=style2" rel="styles2" class="styleswitch" alt="{styles2}" title="{styles2}">2</a></li>
+				<li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">3</a></li>
+				<li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">4</a></li>
+				<li><a href="serversideSwitch.html?style=style5" rel="styles5" class="styleswitch" alt="{styles5}" title="{styles5}">5</a></li>
+				CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span> | Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012
 			</ul>
 		</p>
 	</div>
 </div>
 
-<!-- Fade Effect -->
 <script type="text/javascript">
 	// fade class
 	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.logofade").hover(function(){$(this).fadeOut(500);$(this).fadeIn(1250);});
+	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
 	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
-</script>
+ </script>
 
 </body>
 </html>

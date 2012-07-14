@@ -185,6 +185,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Register";
                 case "MenuForgotPass":
                     return "Forgot Password";
+                case "MenuNews":
+                    return "News";
                 case "MenuWorld":
                     return "World";
                 case "MenuRegion":
@@ -205,6 +207,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Register";
                 case "TooltipsMenuForgotPass":
                     return "Forgot Password";
+                case "TooltipsMenuNews":
+                    return "News";
                 case "TooltipsMenuWorld":
                     return "World";
                 case "TooltipsMenuRegion":
@@ -216,6 +220,10 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuHelp":
                     return "Help";
 
+				// Urls
+                case "WelcomeScreen":
+                    return "Welcome Screen";
+				
 				// Tooltips Urls
                 case "TooltipsWelcomeScreen":
                     return "Welcome Screen";
@@ -224,15 +232,15 @@ namespace Aurora.Modules.Web.Translators
 
 				// Style Switcher
                 case "styles1":
-                    return "Minimalist";
+                    return "Default Minimalist";
                 case "styles2":
-                    return "Degrade";
+                    return "Light Degarde";
                 case "styles3":
                     return "Blue Night";
                 case "styles4":
-                    return "Black";
+                    return "Dark Degrade";
                 case "styles5":
-                    return "Background Image";
+                    return "Luminus";
 
 				// Index Page
                 case "HomeText":

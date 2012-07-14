@@ -3,13 +3,13 @@
 
 html, body {
 	height: 100%;
-	background: #010843;
+	background: #333;
 	/* old browsers */
-	background: -moz-linear-gradient(top, #010843 0%, #6EA6FB 100%);
+	/* background: -moz-linear-gradient(top, #555555 0%, #222222 100%); */
 	/* firefox */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#010843), color-stop(100%,#6EA6FB)); 
-	/* webkit */
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#010843', endColorstr='#6EA6FB',GradientType=0 ); /* ie */ 
+	/* background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#555555), color-stop(100%,#222222)); */
+	/* webkit */ 
+	/* filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#555555', endColorstr='#222222',GradientType=0 ); /* ie */
 }
 
 body  {
@@ -18,30 +18,32 @@ body  {
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
 	margin: 0pt;
 	cursor: default;
+	background: transparent url(../images/bg_TransStripe1.gif);
 }
 
 #st1 {display: none;}
 #st2 {display: none;}
-#st3 {color: #FF0000;}
+#st3 {display: none;}
 #st4 {display: none;}
-#st5 {display: none;}
+#st5 {color: #FF0000;}
 
 #st1, #st2, #st3, #st4, #st5, a.styleswitch {
-	background: #FFF;
+	background: #333;
 	margin-right: 5px;
 	padding-left: 6px;
 	padding-right: 6px;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	border: 0px solid #CCC;
+	border: 0px solid #6FA5FD;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #CCC 0 0 .25em;
-    -moz-box-shadow: #CCC 0 0 .25em;
-    box-shadow: #CCC 0 0 .25em;
+	-webkit-box-shadow: #6FA5FD 0 0 .25em;
+    -moz-box-shadow: #6FA5FD 0 0 .25em;
+    box-shadow: #6FA5FD 0 0 .25em;
 	behavior: url(css/pie.htc);
 }
+
 
 #login table {width: 50%;}
 #register table {width: 100%;}
@@ -51,9 +53,6 @@ body  {
 #users_navigation table {width: 20%;}
 #regioninfo {color: #7E7E7E;}
 #useragentprofile {color: #7E7E7E;}
-#newslist  table {width: 100%;}
-#newslist_navigation table {width: 20%;}
-
 
 table {border-collapse: separate; border-spacing: 0pt;}
 caption, th, td {font-weight: normal; text-align: left;}
@@ -82,29 +81,42 @@ input, textarea, select, button {
 	width: 300px;
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
 	font-size: 14px;
+	background: #333;
 	color: #7E7E7E;
-	background: #fcfcfc;
-	border: 1px solid #eee;
+	border: 1px solid #333;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
-    -moz-box-shadow: #EEEEEE 0 0 .25em;
-    box-shadow: #EEEEEE 0 0 .25em;
+	-webkit-box-shadow: #6FA5FD 0 0 .25em;
+    -moz-box-shadow: #6FA5FD 0 0 .25em;
+    box-shadow: #6FA5FD 0 0 .25em;
 	behavior: url(css/pie.htc);
 }
 
-input , textarea {
-	/* box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5), 0px 2px 2px 0px rgba(255, 255, 255, 0.5) inset; */
-	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
-}
-
 /* input:hover , textarea:hover {border: 1px solid #296BA5;} */
-input:focus, textarea:focus {outline:none;}
+input:focus, textarea:focus {outline:none;
+	border: 1px solid #6FA5FD;
+	-webkit-box-shadow: #6FA5FD 0 0 .5em;
+    -moz-box-shadow: #6FA5FD 0 0 .5em;
+    box-shadow: #6FA5FD 0 0 .5em;
+	behavior: url(css/pie.htc);
+}
 
 textarea {padding: 15px;width: 400px;min-height:50px;}
 select {width: 70px;height:30px;}
-button {width: 70px;height:30px;border: 1px solid #ccc;}
+button {
+	width: 70px;
+	height:30px;
+	color: #6FA5FD;	
+	border: 0px solid #6FA5FD;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #6FA5FD 0 0 .5em;
+    -moz-box-shadow: #6FA5FD 0 0 .5em;
+    box-shadow: #6FA5FD 0 0 .5em;
+	behavior: url(css/pie.htc);
+}
 input.checkbox {width: 20px; margin-right: 5px;}
 label {display:inline-block;}
 
@@ -142,18 +154,39 @@ label {display:inline-block;}
 	text-transform: uppercase;
 	color: #C2C2C2;
 	padding: 3px;
-	border: 1px solid #07114f;
+	border: 1px solid #333;
 }
+
 
 #top #menu li:hover {
 	color: #6FA5FD;
 	cursor: pointer;
+	background-color: #333;
+		border: 1px solid #6FA5FD;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #6EA6FB 0 0 1em;
+    -moz-box-shadow: #6EA6FB 0 0 1em;
+    box-shadow: #6EA6FB 0 0 1em;
+	behavior: url(css/pie.htc);
 }
 
 /* Loading Menu */
 #loading {
+	width:21px;
+	height:15px;
+	margin: 0 auto;
 	text-align: center;
 	visibility: hidden;
+	border: 1px solid #6FA5FD;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #6FA5FD 0 0 1em;
+    -moz-box-shadow: #6FA5FD 0 0 1em;
+    box-shadow: #6FA5FD 0 0 1em;
+	behavior: url(css/pie.htc);
 }
 
 /* loading */
@@ -165,44 +198,44 @@ label {display:inline-block;}
 
 /* Chat */
 iframe.level1 {
-	border: 1px solid #EEEEEE;
+	border: 1px solid #6FA5FD;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
-    -moz-box-shadow: #EEEEEE 0 0 .25em;
-    box-shadow: #EEEEEE 0 0 .25em;
+	-webkit-box-shadow: #6FA5FD 0 0 1em;
+    -moz-box-shadow: #6FA5FD 0 0 1em;
+    box-shadow: #6FA5FD 0 0 1em;
 	behavior: url(css/pie.htc);
 }
 
 /* Help */
 .voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
 img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
-	border: 1px solid #EEEEEE;
+	border: 1px solid #6FA5FD;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
-    -moz-box-shadow: #EEEEEE 0 0 .25em;
-    box-shadow: #EEEEEE 0 0 .25em;
+	-webkit-box-shadow: #6FA5FD 0 0 1em;
+    -moz-box-shadow: #6FA5FD 0 0 1em;
+    box-shadow: #6FA5FD 0 0 1em;
 	behavior: url(css/pie.htc);
 }
 
 /* footer */
 #footer {
-	background: #fcfcfc;
+	background: #222;
 	margin-bottom: 30px;
 	margin-top: 20px;
 	padding: 10px;
 	color: #7e7e7e;
 	font-size: 11px;
 	text-align: right;
-	border: 1px solid #CCCCCC;
+	border: 0px solid #6FA5FD;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
-    -moz-box-shadow: #EEEEEE 0 0 .25em;
-    box-shadow: #EEEEEE 0 0 .25em;
+	-webkit-box-shadow: #6FA5FD 0 0 1em;
+    -moz-box-shadow: #6FA5FD 0 0 1em;
+    box-shadow: #6FA5FD 0 0 1em;
 	behavior: url(css/pie.htc);
 }

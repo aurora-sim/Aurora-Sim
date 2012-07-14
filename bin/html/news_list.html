@@ -10,64 +10,59 @@
 
 -->
 <div id="content">
-    <div id="ContentHeaderCenter"><b>{News}: {SystemName}</b></div>
-    <div id="regionlist">
-		<table>
+    <div id="ContentHeaderCenter"><h2>{News}: {SystemName}</h2></div>
+    <div id="newslist">
+		<div id="newslist_navigation">
+			<table>
 			<tr>
 				<td>
-					<div id="region_navigation">
-						<table>
-							<tr>
-								<td>
-									<a href="region_list.html?Start=0" target="_self" title="{FirstText}">
-										<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
-									</a>
-								</td>
-								<td>
-									<a href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
-										<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
-									</a>
-								</td>
-								<td>
-									<p>{CurrentPageText} {CurrentPage}</p>
-								</td>
-								<td>
-									<a href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
-										<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
-									</a>
-								</td>
-								<td>
-									<a href="region_list.html?Start=-1" target="_self" title="{LastText}">
-										<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
-									</a>
-								</td>
-							</tr>
-						</table>
-					</div>
+					<a href="region_list.html?Start=0" target="_self" title="{FirstText}">
+						<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+					</a>
+				</td>
+				<td>
+					<a href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
+						<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+					</a>
+				</td>
+				<td>
+					<p>{CurrentPageText} {CurrentPage}</p>
+				</td>
+				<td>
+					<a href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
+						<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+					</a>
+				</td>
+				<td>
+					<a href="region_list.html?Start=-1" target="_self" title="{LastText}">
+						<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+					</a>
 				</td>
 			</tr>
-		</table>
+			</table>
+		</div>
+	
 		<table>
 			<thead>
-				<tr>
-					<td vAlign=top width=30%>
-						<b>{NewsTitleText}</b>
-					</td>
-					<td vAlign=top width=10%>
-						<b>{NewsDateText}</b>
-					</td>
-				</tr>
+			<tr>
+				<td>
+					<b>{NewsTitleText}</b>
+				</td>
+				<td>
+					<b>{NewsDateText}</b>
+				</td>
+			</tr>
 			</thead>
 			<tbody>
 {NewsListArrayBegin}
-				<tr>
-					<td class=boxtext vAlign=top width="30%">
-						<a href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
-					</td>
-					<td class=boxtext vAlign=top noWrap width="10%">
-					  {NewsDate}
-					</td>
-				</tr>
+			<tr>
+				<td class=boxtext>
+					<a href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
+				</td>
+				<td class=boxtext vAlign=top noWrap width="10%">
+					{NewsDate}
+				</td>
+			</tr>
 {NewsListArrayEnd}
 			</tbody>
 		</table>

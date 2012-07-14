@@ -24,6 +24,24 @@ body  {
 #st2 {color: #FF0000;}
 #st3 {display: none;}
 #st4 {display: none;}
+#st5 {display: none;}
+
+#st1, #st2, #st3, #st4, #st5, a.styleswitch {
+	background: #FFF;
+	margin-right: 5px;
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border: 0px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #CCC 0 0 .25em;
+    -moz-box-shadow: #CCC 0 0 .25em;
+    box-shadow: #CCC 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
 
 #login table {width: 50%;}
 #register table {width: 100%;}
@@ -100,7 +118,7 @@ label {display:inline-block;}
 }
 
 #top h1 a {
-	background: transparent url(../images/logo.png) no-repeat scroll left top;
+	background: transparent url(../images/logo1.png) no-repeat scroll left top;
 	display: block;
 	float: left;
 	height: 50px;
@@ -120,6 +138,8 @@ label {display:inline-block;}
 	margin-right: 16px;
 	text-transform: uppercase;
 	color: #C2C2C2;
+	padding: 3px;
+	border: 1px solid #fcfcfc;
 }
 
 #top #menu li:hover {
@@ -138,6 +158,31 @@ label {display:inline-block;}
 	color: #7E7E7E;
 	line-height: 1.3em;
 	font-size: 14px;
+}
+
+/* Chat */
+iframe.level1 {
+	border: 1px solid #EEEEEE;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
+
+/* Help */
+.voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
+img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+	border: 1px solid #EEEEEE;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em;
+	behavior: url(css/pie.htc);
 }
 
 /* footer */
