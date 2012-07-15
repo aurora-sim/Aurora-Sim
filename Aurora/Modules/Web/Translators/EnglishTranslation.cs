@@ -212,6 +212,8 @@ namespace Aurora.Modules.Web.Translators
                     return "User Manager";
                 case "MenuFactoryReset":
                     return "Factory Reset";
+                case "MenuPageManager":
+                    return "Page Manager";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -246,6 +248,8 @@ namespace Aurora.Modules.Web.Translators
                     return "User Manager";
                 case "TooltipsMenuFactoryReset":
                     return "Factory Reset";
+                case "TooltipsMenuPageManager":
+                    return "Page Manager";
 
 				// Urls
                 case "WelcomeScreen":
@@ -379,6 +383,34 @@ namespace Aurora.Modules.Web.Translators
                     return "Reset Menu To Factory Defaults";
                 case "Reset":
                     return "Reset";
+
+                //page_manager
+                case "PageManager":
+                    return "Page Manager";
+                case "SaveMenuItemChanges":
+                    return "Save Menu Item";
+                case "SelectItem":
+                    return "Select Item";
+                case "PageLocationText":
+                    return "Page Location";
+                case "PageIDText":
+                    return "Page ID";
+                case "PagePositionText":
+                    return "Page Position";
+                case "PageTooltipText":
+                    return "Page Tooltip";
+                case "PageTitleText":
+                    return "Page Title";
+                case "No":
+                    return "No";
+                case "Yes":
+                    return "Yes";
+                case "RequiresLoginText":
+                    return "Requires Login To View";
+                case "RequiresLogoutText":
+                    return "Requires Logout To View";
+                case "RequiresAdminText":
+                    return "Requires Admin To View";
             }
             return "UNKNOWN CHARACTER";
         }

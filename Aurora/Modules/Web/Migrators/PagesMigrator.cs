@@ -57,18 +57,9 @@ namespace Aurora.Modules.Web
             _rootPage.Children.Add(new GridPage
             {
                 ShowInMenu = true,
-                MenuID = "region_list",
-                Location = "region_list.html",
-                MenuPosition = 3,
-                MenuTitle = "MenuRegion",
-                MenuToolTip = "TooltipsMenuRegion"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
                 MenuID = "online_users",
                 Location = "online_users.html",
-                MenuPosition = 4,
+                MenuPosition = 3,
                 MenuTitle = "MenuUser",
                 MenuToolTip = "TooltipsMenuUser"
             });
@@ -77,7 +68,7 @@ namespace Aurora.Modules.Web
                 ShowInMenu = true,
                 MenuID = "chat",
                 Location = "chat.html",
-                MenuPosition = 5,
+                MenuPosition = 4,
                 MenuTitle = "MenuChat",
                 MenuToolTip = "TooltipsMenuChat"
             });
@@ -86,16 +77,7 @@ namespace Aurora.Modules.Web
                 ShowInMenu = true,
                 MenuID = "help",
                 Location = "help.html",
-                MenuPosition = 6,
-                MenuTitle = "MenuHelp",
-                MenuToolTip = "TooltipsMenuHelp"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                MenuID = "help",
-                Location = "help.html",
-                MenuPosition = 6,
+                MenuPosition = 5,
                 MenuTitle = "MenuHelp",
                 MenuToolTip = "TooltipsMenuHelp"
             });
@@ -178,6 +160,16 @@ namespace Aurora.Modules.Web
                 MenuPosition = 8,
                 MenuTitle = "MenuFactoryReset",
                 MenuToolTip = "TooltipsMenuFactoryReset"
+            });
+            _rootPage.Children.Add(new GridPage
+            {
+                ShowInMenu = true,
+                AdminRequired = true,
+                MenuID = "page_manager",
+                Location = "admin/page_manager.html",
+                MenuPosition = 8,
+                MenuTitle = "MenuPageManager",
+                MenuToolTip = "TooltipsMenuPageManager"
             });
 
 
