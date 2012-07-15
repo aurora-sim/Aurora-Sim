@@ -146,6 +146,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Region Type";
 
 				// Region Page
+                case "RegionInfoText":
+                    return "Region Info";
                 case "RegionListText":
                     return "Region List";
                 case "RegionLocXText":

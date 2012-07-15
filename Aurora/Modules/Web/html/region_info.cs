@@ -63,6 +63,7 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionSizeText", translator.GetTranslatedString("RegionSizeText"));
                 vars.Add("RegionNameText", translator.GetTranslatedString("RegionNameText"));
                 vars.Add("RegionTypeText", translator.GetTranslatedString("RegionTypeText"));
+                vars.Add("RegionInfoText", translator.GetTranslatedString("RegionInfoText"));
             }
 
             return vars;

@@ -84,6 +84,10 @@ namespace Aurora.Modules.Web
         {
             IGridInfo gridInfo = Registry.RequestModuleInterface<IGridInfo>();
             GridName = gridInfo.GridName;
+
+            PagesMigrator pagesMigrator = new PagesMigrator();
+            if (pagesMigrator.RequiresUpdate())
+                pagesMigrator.ResetToDefaults();
         }
 
         #endregion
@@ -456,6 +460,54 @@ namespace Aurora.Modules.Web
             SpecialWindowMessageColor = map["SpecialWindowMessageColor"];
             SpecialWindowActive = map["SpecialWindowActive"];
             GridStatus = map["GridStatus"];
+        }
+    }
+
+    internal class GridPage : IDataTransferable
+    {
+        public List<GridPage> Children = new List<GridPage>();
+        public bool ShowInMenu = false;
+        public int MenuPosition = -1;
+        public string MenuID = "";
+        public string MenuTitle = "";
+        public string MenuToolTip = "";
+        public string Location = "";
+        public bool LoggedInRequired = false;
+        public bool LoggedOutRequired = false;
+        public bool AdminRequired = false;
+
+        public GridPage() { } 
+        public GridPage(OSD map) { FromOSD(map as OSDMap); }
+
+        public override void FromOSD(OSDMap map)
+        {
+            ShowInMenu = map["ShowInMenu"];
+            MenuPosition = map["MenuPosition"];
+            MenuID = map["MenuID"];
+            MenuTitle = map["MenuTitle"];
+            MenuToolTip = map["MenuToolTip"];
+            Location = map["Location"];
+            LoggedInRequired = map["LoggedInRequired"];
+            LoggedOutRequired = map["LoggedOutRequired"];
+            AdminRequired = map["AdminRequired"];
+            Children = ((OSDArray)map["Children"]).ConvertAll<GridPage>(o => new GridPage(o));
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["ShowInMenu"] = ShowInMenu;
+            map["MenuPosition"] = MenuPosition;
+            map["MenuID"] = MenuID;
+            map["MenuTitle"] = MenuTitle;
+            map["MenuToolTip"] = MenuToolTip;
+            map["Location"] = Location;
+            map["LoggedInRequired"] = LoggedInRequired;
+            map["LoggedOutRequired"] = LoggedOutRequired;
+            map["AdminRequired"] = AdminRequired;
+            map["Children"] = Children.ToOSDArray();
+            return map;
         }
     }
 }
