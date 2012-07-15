@@ -34,14 +34,12 @@ namespace Aurora.Modules.Web
             if (requestParameters.ContainsKey("ResetMenu"))
             {
                 changed = true;
-                PagesMigrator migrator = new PagesMigrator();
-                migrator.ResetToDefaults();
+                PagesMigrator.ResetToDefaults();
             }
             if (requestParameters.ContainsKey("ResetSettings"))
             {
                 changed = true;
-                SettingsMigrator migrator = new SettingsMigrator();
-                migrator.ResetToDefaults();
+                SettingsMigrator.ResetToDefaults();
             }
 
             vars.Add("FactoryReset", translator.GetTranslatedString("FactoryReset"));

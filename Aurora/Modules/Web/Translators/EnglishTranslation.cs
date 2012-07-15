@@ -389,6 +389,12 @@ namespace Aurora.Modules.Web.Translators
                     return "Reset Web Settings (Settings Manager page) To Factory Defaults";
                 case "Reset":
                     return "Reset";
+                case "Settings":
+                    return "Settings";
+                case "Pages":
+                    return "Pages";
+                case "DefaultsUpdated":
+                    return "defaults updated, go to Factory Reset to update or Settings Manager to disable this warning.";
 
                 //page_manager
                 case "PageManager":
@@ -431,6 +437,10 @@ namespace Aurora.Modules.Web.Translators
                     return "The google maps v2 api key generated here";
                 case "SettingsManager":
                     return "Settings Manager";
+                case "IgnorePagesUpdatesText":
+                    return "Ignore pages update warning until next update";
+                case "IgnoreSettingsUpdatesText":
+                    return "Ignore settings update warning until next update";
             }
             return "UNKNOWN CHARACTER";
         }

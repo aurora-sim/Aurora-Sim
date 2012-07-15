@@ -85,12 +85,10 @@ namespace Aurora.Modules.Web
             IGridInfo gridInfo = Registry.RequestModuleInterface<IGridInfo>();
             GridName = gridInfo.GridName;
 
-            PagesMigrator pagesMigrator = new PagesMigrator();
-            if (pagesMigrator.RequiresUpdate())
-                pagesMigrator.ResetToDefaults();
-            SettingsMigrator settingsMigrator = new SettingsMigrator();
-            if (settingsMigrator.RequiresUpdate())
-                settingsMigrator.ResetToDefaults();
+            if (PagesMigrator.RequiresInitialUpdate())
+                PagesMigrator.ResetToDefaults();
+            if (SettingsMigrator.RequiresInitialUpdate())
+                SettingsMigrator.ResetToDefaults();
         }
 
         #endregion
@@ -519,6 +517,8 @@ namespace Aurora.Modules.Web
     {
         public Vector2 MapCenter = Vector2.Zero;
         public string GoogleMapsAPIKey = "";
+        public uint LastPagesVersionUpdateIgnored = 0;
+        public uint LastSettingsVersionUpdateIgnored = 0;
 
         public GridSettings() { }
         public GridSettings(OSD map) { FromOSD(map as OSDMap); }
@@ -527,6 +527,8 @@ namespace Aurora.Modules.Web
         {
             MapCenter = map["MapCenter"];
             GoogleMapsAPIKey = map["GoogleMapsAPIKey"];
+            LastPagesVersionUpdateIgnored = map["LastPagesVersionUpdateIgnored"];
+            LastSettingsVersionUpdateIgnored = map["LastSettingsVersionUpdateIgnored"];
         }
 
         public override OSDMap ToOSD()
@@ -535,6 +537,8 @@ namespace Aurora.Modules.Web
 
             map["MapCenter"] = MapCenter;
             map["GoogleMapsAPIKey"] = GoogleMapsAPIKey;
+            map["LastPagesVersionUpdateIgnored"] = LastPagesVersionUpdateIgnored;
+            map["LastSettingsVersionUpdateIgnored"] = LastSettingsVersionUpdateIgnored;
             return map;
         }
     }

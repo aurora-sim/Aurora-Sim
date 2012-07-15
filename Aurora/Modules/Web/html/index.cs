@@ -38,6 +38,7 @@ namespace Aurora.Modules.Web
             IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
+            var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
             foreach (GridPage page in rootPage.Children)
             {
@@ -99,6 +100,15 @@ namespace Aurora.Modules.Web
             vars.Add("HomeTextTips", translator.GetTranslatedString("HomeTextTips"));
             vars.Add("WelcomeScreen", translator.GetTranslatedString("WelcomeScreen"));
             vars.Add("WelcomeToText", translator.GetTranslatedString("WelcomeToText"));
+
+            if (PagesMigrator.RequiresUpdate() && PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored))
+                vars.Add("PagesUpdateRequired", translator.GetTranslatedString("Pages") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            else
+                vars.Add("PagesUpdateRequired", "");
+            if (SettingsMigrator.RequiresUpdate() && SettingsMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastSettingsVersionUpdateIgnored))
+                vars.Add("SettingsUpdateRequired", translator.GetTranslatedString("Settings") + " " + translator.GetTranslatedString("DefaultsUpdated"));
+            else
+                vars.Add("SettingsUpdateRequired", "");
 
             vars.Add("Maintenance", false);
             vars.Add("NoMaintenance", true);

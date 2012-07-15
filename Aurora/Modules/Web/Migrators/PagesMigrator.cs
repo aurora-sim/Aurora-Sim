@@ -10,11 +10,11 @@ namespace Aurora.Modules.Web
 {
     internal class PagesMigrator
     {
-        public const string Schema = "WebPages";
-        public readonly GridPage _rootPage;
-        public const uint CurrentVersion = 1;
+        public static readonly string Schema = "WebPages";
+        private static GridPage _rootPage;
+        public static readonly uint CurrentVersion = 2;
 
-        public PagesMigrator()
+        private static void InitializeDefaults()
         {
             _rootPage = new GridPage();
 
@@ -213,7 +213,7 @@ namespace Aurora.Modules.Web
                 { "MenuItemTitle", translator.GetTranslatedString("MenuNewsManager") } });*/
         }
 
-        public bool RequiresUpdate()
+        public static bool RequiresUpdate()
         {
             IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
@@ -221,8 +221,25 @@ namespace Aurora.Modules.Web
             return version == null || version.Info.AsInteger() < CurrentVersion;
         }
 
-        public void ResetToDefaults()
+        public static uint GetVersion()
         {
+            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+
+            OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
+            return version == null ? 0 : (uint)version.Info.AsInteger();
+        }
+
+        public static bool RequiresInitialUpdate()
+        {
+            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+
+            OSDWrapper version = generics.GetGeneric<OSDWrapper>(UUID.Zero, Schema + "Version", "");
+            return version == null || version.Info.AsInteger() < 1;
+        }
+
+        public static void ResetToDefaults()
+        {
+            InitializeDefaults();
             IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             
             //Remove all pages
@@ -230,6 +247,11 @@ namespace Aurora.Modules.Web
 
             generics.AddGeneric(UUID.Zero, Schema, "Root", _rootPage.ToOSD());
             generics.AddGeneric(UUID.Zero, Schema + "Version", "", new OSDWrapper { Info = CurrentVersion }.ToOSD());
+        }
+
+        public static bool CheckWhetherIgnoredVersionUpdate(uint version)
+        {
+            return version != PagesMigrator.CurrentVersion;
         }
     }
 }
