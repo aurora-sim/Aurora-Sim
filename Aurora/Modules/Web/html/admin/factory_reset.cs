@@ -37,9 +37,16 @@ namespace Aurora.Modules.Web
                 PagesMigrator migrator = new PagesMigrator();
                 migrator.ResetToDefaults();
             }
+            if (requestParameters.ContainsKey("ResetSettings"))
+            {
+                changed = true;
+                SettingsMigrator migrator = new SettingsMigrator();
+                migrator.ResetToDefaults();
+            }
 
             vars.Add("FactoryReset", translator.GetTranslatedString("FactoryReset"));
             vars.Add("ResetMenuText", translator.GetTranslatedString("ResetMenuText"));
+            vars.Add("ResetSettingsText", translator.GetTranslatedString("ResetSettingsText"));
             vars.Add("Reset", translator.GetTranslatedString("Reset"));
             vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 

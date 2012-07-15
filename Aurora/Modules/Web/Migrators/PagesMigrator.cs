@@ -171,6 +171,16 @@ namespace Aurora.Modules.Web
                 MenuTitle = "MenuPageManager",
                 MenuToolTip = "TooltipsMenuPageManager"
             });
+            _rootPage.Children.Add(new GridPage
+            {
+                ShowInMenu = true,
+                AdminRequired = true,
+                MenuID = "settings_manager",
+                Location = "admin/settings_manager.html",
+                MenuPosition = 8,
+                MenuTitle = "MenuSettingsManager",
+                MenuToolTip = "TooltipsMenuSettingsManager"
+            });
 
 
             //Things added, but not used

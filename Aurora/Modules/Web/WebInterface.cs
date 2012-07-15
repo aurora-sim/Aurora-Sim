@@ -88,6 +88,9 @@ namespace Aurora.Modules.Web
             PagesMigrator pagesMigrator = new PagesMigrator();
             if (pagesMigrator.RequiresUpdate())
                 pagesMigrator.ResetToDefaults();
+            SettingsMigrator settingsMigrator = new SettingsMigrator();
+            if (settingsMigrator.RequiresUpdate())
+                settingsMigrator.ResetToDefaults();
         }
 
         #endregion
@@ -508,6 +511,30 @@ namespace Aurora.Modules.Web
             map["LoggedOutRequired"] = LoggedOutRequired;
             map["AdminRequired"] = AdminRequired;
             map["Children"] = Children.ToOSDArray();
+            return map;
+        }
+    }
+
+    internal class GridSettings : IDataTransferable
+    {
+        public Vector2 MapCenter = Vector2.Zero;
+        public string GoogleMapsAPIKey = "";
+
+        public GridSettings() { }
+        public GridSettings(OSD map) { FromOSD(map as OSDMap); }
+
+        public override void FromOSD(OSDMap map)
+        {
+            MapCenter = map["MapCenter"];
+            GoogleMapsAPIKey = map["GoogleMapsAPIKey"];
+        }
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["MapCenter"] = MapCenter;
+            map["GoogleMapsAPIKey"] = GoogleMapsAPIKey;
             return map;
         }
     }

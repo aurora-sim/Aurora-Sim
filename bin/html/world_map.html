@@ -16,7 +16,7 @@ html, body, {width: 100%; height: 100%; margin: 0px; padding: 0px;}
 
 <script type="text/javascript">
 function loadmap(){
-	var coords = {'x' : 1000.5, 'y' : 1000.5},
+	var coords = {'x' : {GridCenterX} + 0.5, 'y' : {GridCenterY} + 0.5},
 		mapInstance = new SLURL.Map(document.getElementById('map-container'), {'overviewMapControl':true});
 		mapInstance.centerAndZoomAtSLCoord(new SLURL.XYPoint(coords.x, coords.y), 3);}
 	$(document).ready(loadmap);

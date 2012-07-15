@@ -1,0 +1,39 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{GridCenterX}
+{GridCenterY}
+{SettingsManager}               Settings Manager
+{GridCenterXText}               Grid Center Location X
+{GridCenterYText}               Grid Center Location Y
+{GoogleMapAPIKeyText}           Google Maps API Key
+{GoogleMapAPIKeyHelpText}       Google Maps API Key
+{ChangesSavedSuccessfully}      Changes saved successfully
+{Save}                          Save
+
+-->
+<div id="content">
+	<div id="ContentHeaderCenter"><b>{SystemName}: {SettingsManager}</b></div>
+	<div id="loginscreen_manager">
+		<div><b>{ChangesSavedSuccessfully}</b></div>
+		<form action="admin/settings_manager.html" method="post">
+			<table>
+				<tr>
+					<td><div align="right">{GridCenterXText} </div></td>
+					<td><input name="GridCenterX" type="text" id="GridCenterX" size="119" value="{GridCenterX}" /></td>
+				</tr>
+				<tr>
+					<td><div align="right">{GridCenterYText} </div></td>
+					<td><input name="GridCenterY" type="text" id="GridCenterY" size="119" value="{GridCenterY}" /></td>
+				</tr>
+				<tr>
+					<td><div align="right">{GoogleMapAPIKeyText}: <a href="https://developers.google.com/maps/documentation/javascript/v2/introduction#Obtaining_Key">{GoogleMapAPIKeyHelpText}</a> </div></td>
+					<td><input name="GoogleMapAPIKey" type="text" id="GoogleMapAPIKey" size="119" value="{GoogleMapAPIKey}" /></td>
+				</tr>
+				<tr>
+					<td colspan="6"><div align="center"><button id="SetGridCenter" type="Submit" name="SetGridCenter">{Save}</button></div>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>

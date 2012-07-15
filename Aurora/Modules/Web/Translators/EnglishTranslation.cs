@@ -214,6 +214,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Factory Reset";
                 case "MenuPageManager":
                     return "Page Manager";
+                case "MenuSettingsManager":
+                    return "Settings Manager";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -250,6 +252,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Factory Reset";
                 case "TooltipsMenuPageManager":
                     return "Page Manager";
+                case "TooltipsMenuSettingsManager":
+                    return "Settings Manager";
 
 				// Urls
                 case "WelcomeScreen":
@@ -381,6 +385,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Factory Reset";
                 case "ResetMenuText":
                     return "Reset Menu To Factory Defaults";
+                case "ResetSettingsText":
+                    return "Reset Web Settings (Settings Manager page) To Factory Defaults";
                 case "Reset":
                     return "Reset";
 
@@ -411,6 +417,20 @@ namespace Aurora.Modules.Web.Translators
                     return "Requires Logout To View";
                 case "RequiresAdminText":
                     return "Requires Admin To View";
+
+                //settings manager page
+                case "Save":
+                    return "Save";
+                case "GridCenterXText":
+                    return "Grid Center Location X";
+                case "GridCenterYText":
+                    return "Grid Center Location Y";
+                case "GoogleMapAPIKeyText":
+                    return "Google Maps API Key";
+                case "GoogleMapAPIKeyHelpText":
+                    return "The google maps v2 api key generated here";
+                case "SettingsManager":
+                    return "Settings Manager";
             }
             return "UNKNOWN CHARACTER";
         }
