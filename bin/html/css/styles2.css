@@ -51,6 +51,8 @@ body  {
 #users_navigation table {width: 20%;}
 #regioninfo {color: #7E7E7E;}
 #useragentprofile {color: #7E7E7E;}
+#newslist  table {width: 100%;}
+#newslist_navigation table {width: 20%;}
 
 table {border-collapse: separate; border-spacing: 0pt;}
 caption, th, td {font-weight: normal; text-align: left;}
@@ -71,6 +73,26 @@ h1, h2, h3, h4, h5, h6 {font-weight: 700; color: #6EA6FB;	line-height: 1.8em;}
 h2 {font-size: 22px;}
 img.map_picture {width: 128px;}
 .jclock1 {color: #C2C2C2; text-align: left; font-size: 12px;}
+.footerleft {float: left;}
+
+/* Tooltips */
+#tooltip {
+	position: absolute;
+	z-index: 3000;
+	font-size: 10px;
+	padding: 3px;
+	opacity: 0.85;
+	background-color: #FCFCFC;
+	border: 0px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #CCC 0 0 .5em;
+    -moz-box-shadow: #CCC 0 0 .5em;
+    box-shadow: #CCC 0 0 .5em;
+	behavior: url(css/pie.htc);
+}
+#tooltip h3, #tooltip div {margin: 0px;}
 
 input, textarea, select, button {
 	padding: 5px;
@@ -160,8 +182,20 @@ label {display:inline-block;}
 	font-size: 14px;
 }
 
+/* World */
+#worldmap iframe.level1  {
+	border: 1px solid #1c475f;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	/* -webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em; */
+	behavior: url(css/pie.htc);
+}
+
 /* Chat */
-iframe.level1 {
+#chat iframe.level1 {
 	border: 1px solid #EEEEEE;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;

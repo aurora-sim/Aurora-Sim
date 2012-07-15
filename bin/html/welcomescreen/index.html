@@ -1,59 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{SystemName}</title>
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link rel="shortcut icon" href="images/favicon.ico" />
 
-<html dir="ltr" lang="en-US">
-<head profile="http://gmpg.org/xfn/11">
-<link rel="shortcut icon" href="images/favicon.ico" />
+	<!-- Css -->
+	<link href="{SystemURL}/welcomescreen/default_template.css" type="text/css" rel="stylesheet">
 
-<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-<link href="{SystemURL}/welcomescreen/default_template.css" type="text/css" rel="stylesheet">
-<script src="{SystemURL}/welcomescreen/javascripts/resize.js" type="text/javascript"></script>
-<script src="{SystemURL}/welcomescreen/javascripts/randomimageswitch.js" type="text/javascript"></script>
-
-<title>{SystemName}: Welcome Screen</title>
-
-<SCRIPT>
-$(document).ready(function(){
-bgImgRotate();
-});
-</SCRIPT>
-
-
-<!-- HIDE STATUS -->
-<script>
-function hidestatus(){
-window.status='Digital Concepts - Salles de Chat 3D - DigiGrids'
-return true
-}
-if (document.layers)
-document.captureEvents(Event.MOUSEOVER | Event.MOUSEOUT | Event.MOUSEDOWN)
-document.onmouseover=hidestatus
-document.onmouseout=hidestatus
-document.onmousedown=hidestatus
-</script>
-
-<!-- NO SELECT -->
-<script type="text/javascript">
-function selection(e) {return false;}
-function clic() {return true;}
-document.onselectstart=new Function ("return false");
-if (window.sidebar) {document.onmousedown=selection; document.onclick=clic;}
-</script>
-
-<!-- NO RIGHT CLIC -->
-<script language="JavaScript1.2">
-function djp_nodroit() {return(false);}
-document.oncontextmenu = djp_nodroit;
-</script>
-
+	<!-- Javascript -->
+	<script type="text/javascript" language="javascript" src="javascripts/jquery.min.js"></script>
+	<script src="{SystemURL}/welcomescreen/javascripts/resize.js" type="text/javascript"></script>
+	<script src="{SystemURL}/welcomescreen/javascripts/randomimageswitch.js" type="text/javascript"></script>
+	
+	<title>{SystemName}: Welcome Screen</title>
+	
+	<script>$(document).ready(function(){bgImgRotate();});</script>
+	
+	<!-- fade in -->
+	<style type="text/css">#container{display:none;}</style>
+	<script type="text/javascript">$(document).ready(function() {$( '#container' ).fadeIn("slow");});</script>
+	
 </head>
     
-<body class="webui">
+<body>
+<div id="container">
 
 <div id=top_image>
-    <img src="{SystemURL}/welcomescreen/images/logo1.png" alt="{SystemName}" title="{SystemName}" />
+    <a class="logofade" href="" alt="{SystemName}" title="{SystemName}">
+		<img src="{SystemURL}/welcomescreen/images/logo1.png" alt="{SystemName}" title="{SystemName}" />
+	</a>
 </div>
-
-
 
 <div id=bottom_left>
     <!--<? if($showSpecialReport) { ?>
@@ -81,7 +60,15 @@ document.oncontextmenu = djp_nodroit;
 <!--#include file="/welcomescreen/info_box.html" -->
 <iframe src="info_box.html" width="350" height="60" scrolling="no" style="overflow:hidden"></iframe>
 
-
 </div>
+</div>
+
+<script type="text/javascript">
+	// fade class
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
+	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
+	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
+</script>
+
 </body>
 </html>

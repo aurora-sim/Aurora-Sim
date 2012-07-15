@@ -5,6 +5,7 @@
 	<title>{SystemName}</title>
 	<meta name="keywords" content="{SystemName}" />
 	<meta name="description" content="{SystemName}"/>
+	<link rel="shortcut icon" href="images/favicon.ico" />
 
 	<!-- Css -->
 	<link href="css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
@@ -18,7 +19,7 @@
 	
 	<script type="text/javascript" language="javascript" src="javascripts/menu.js"></script>
 	<script type="text/javascript" language="javascript" src="javascripts/styleswitch.js"></script>
-	<!-- <script type="text/javascript" language="javascript" src="javascripts/security.js"></script> -->
+	<script type="text/javascript" language="javascript" src="javascripts/jquery.tooltip.js"></script>
 	
 	<!-- date time -->
 	<script type="text/javascript" language="javascript" src="javascripts/jquery.jclock.js"></script>
@@ -32,9 +33,13 @@
 		var options4 = {format: '%Y-%m-%d'}
 		$('#jclock4').jclock(options4);
 		var options5 = {format: '%m/%d/%y'}
-		$('#jclock5').jclock(options5);});  
+		$('#jclock5').jclock(options5);});
 	</script>
-
+	
+	<script type="text/javascript">
+		$(function() {$('#container *').tooltip({showURL: false});});
+	</script>
+	
 	<!-- fade in -->
 	<style type="text/css">#container{display:none;}</style>
 	<script type="text/javascript">$(document).ready(function() {$( '#container' ).fadeIn("slow");});</script>
@@ -84,7 +89,7 @@
 				<li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">3</a></li>
 				<li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">4</a></li>
 				<li><a href="serversideSwitch.html?style=style5" rel="styles5" class="styleswitch" alt="{styles5}" title="{styles5}">5</a></li>
-				CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span> | Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012
+				CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span>| Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012
 			</ul>
 		</p>
 	</div>
