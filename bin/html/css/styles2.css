@@ -98,7 +98,6 @@ input, textarea, select, button {
 	padding: 5px;
 	margin: 5px;
 	height: 21px;
-	width: 300px;
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
 	font-size: 14px;
 	color: #7E7E7E;
@@ -114,6 +113,7 @@ input, textarea, select, button {
 }
 
 input , textarea {
+	width: 300px;
 	/* box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5), 0px 2px 2px 0px rgba(255, 255, 255, 0.5) inset; */
 	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
 }
@@ -122,8 +122,8 @@ input , textarea {
 input:focus, textarea:focus {outline:none;}
 
 textarea {padding: 15px;width: 400px;min-height:50px;}
-select {width: 70px;height:30px;}
-button {width: 70px;height:30px;border: 1px solid #ccc;}
+select {height:30px;}
+button {height:30px;border: 1px solid #ccc;}
 input.checkbox {width: 20px; margin-right: 5px;}
 label {display:inline-block;}
 
@@ -236,4 +236,47 @@ img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.sing
     -moz-box-shadow: #EEEEEE 0 0 .25em;
     box-shadow: #EEEEEE 0 0 .25em;
 	behavior: url(css/pie.htc);
+}
+
+/* Pretty Message */
+.message, .info, .alert, .download {
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+    -moz-box-shadow: #EEEEEE 0 0 .25em;
+    box-shadow: #EEEEEE 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
+
+.message {
+  background-color: #e6eefe;
+  border: 1px solid #b5d1fd;
+  padding: 5px;
+  float: left;
+  width:98.75%;
+}
+
+.info {
+  background-color:#fffcd3;
+  border: 1px solid #fff173;
+  padding: 5px;
+  float: left;
+  width:98.75%;
+}
+
+.alert {
+  background-color: #ffdfdf;
+  border: 1px solid #ffbaba;
+  padding: 5px;
+  float: left;
+  width:98.75%;
+}
+
+.download {
+  background-color: #d3f2d9;
+  border: 1px solid #90de96;
+  padding: 5px;
+  float: left;
+  width:98.75%;
 }

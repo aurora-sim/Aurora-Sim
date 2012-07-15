@@ -8,7 +8,7 @@
 	<link rel="shortcut icon" href="images/favicon.ico" />
 
 	<!-- Css -->
-	<link href="{SystemURL}/welcomescreen/default_template.css" type="text/css" rel="stylesheet">
+	<link href="{SystemURL}/welcomescreen/css/default_template.css" type="text/css" rel="stylesheet">
 
 	<!-- Javascript -->
 	<script src="{SystemURL}/welcomescreen/javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
@@ -22,11 +22,24 @@
 	<!-- fade in -->
 	<style type="text/css">#container{display:none;} img#mainImage{display:none;}</style>
 	<script type="text/javascript">$(document).ready(function() {$( '#container, img#mainImage' ).fadeIn("slow");});</script>
-	
+
+	<!-- TODO
+	<script language="javascript">
+		$(document).ready(function() {
+			$('a.regionslurl').hover(function() { //mouse in
+					$(this).animate({ paddingLeft: '50px' }, 400);
+				}, function() { //mouse out
+				$(this).animate({ paddingLeft: 0 }, 400);
+			});
+		});
+	</script>
+	-->
+
 </head>
-    
+
 <body>
 <div id="container">
+
 
 <div id=top_image>
     <a class="logofade" href="" alt="{SystemName}" title="{SystemName}">
@@ -42,7 +55,7 @@
     <? } ?>-->
 
 <!--#include file="/welcomescreen/region_box.html" -->
-<iframe src="region_box.html" width="350" height="210" scrolling="no" style="overflow:hidden"></iframe>
+<iframe src="region_box.html" width="350" height="230" scrolling="no" style="overflow:hidden"></iframe>
 <br />
 
 <!--#include file="/welcomescreen/news.html" -->
@@ -61,6 +74,7 @@
 <iframe src="info_box.html" width="350" height="60" scrolling="no" style="overflow:hidden"></iframe>
 
 </div>
+
 </div>
 
 <script type="text/javascript">

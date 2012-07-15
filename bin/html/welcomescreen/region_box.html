@@ -7,7 +7,7 @@
 	{RegionLocY}
 	{RegionName}
 -->
-<link href="{SystemURL}/welcomescreen/perso_template.css" type="text/css" rel="stylesheet">
+<link href="{SystemURL}/welcomescreen/css/default_template.css" type="text/css" rel="stylesheet">
 
 <div id=regionbox>
 
@@ -40,14 +40,13 @@
 </table>
 </div>
 	
-<div style="overflow:auto;">
+<div style="overflow:auto">
 {RegionListArrayBegin}
 	<table>
     <tbody>
     <tr>
 		<td width="55%" align=left vAlign=top noWrap class=regiontext>
-			<a style="cursor:pointer" onclick="document.location.href='secondlife://{RegionName}/128/128/50'">
-  			<u>{RegionName}</u></font>
+			<a class="regionslurl" onclick="document.location.href='secondlife://{RegionName}/128/128/50'">{RegionName}</a>
 	   	</td>
         <td width="20%" align=left vAlign=top noWrap class=regiontext><div align="left">{RegionLocX}</div></td>
         <td width="20%" align=left vAlign=top noWrap class=regiontext><div align="left">{RegionLocY}</div></td>
