@@ -61,9 +61,7 @@ img#mainImage {
 }
 
 #top_image  img {border: none; outline: none;}
-a:active, a:focus{
-      outline:none;
-}
+a:active, a:focus{outline:none;}
 
 #topright {
 	position: absolute;
