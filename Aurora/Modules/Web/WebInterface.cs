@@ -368,6 +368,7 @@ namespace Aurora.Modules.Web
         protected string GetFileNameFromHTMLPath(string path)
         {
             string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
+			if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/"))) return "html/index.html";
             if (Path.GetFileName(file) == "")
                 file = Path.Combine(file, "index.html");
             return file;
