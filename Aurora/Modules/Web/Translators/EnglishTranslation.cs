@@ -210,6 +210,8 @@ namespace Aurora.Modules.Web.Translators
                     return "News Manager";
                 case "MenuUserManager":
                     return "User Manager";
+                case "MenuFactoryReset":
+                    return "Factory Reset";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -242,6 +244,8 @@ namespace Aurora.Modules.Web.Translators
                     return "News Manager";
                 case "TooltipsMenuUserManager":
                     return "User Manager";
+                case "TooltipsMenuFactoryReset":
+                    return "Factory Reset";
 
 				// Urls
                 case "WelcomeScreen":
@@ -367,6 +371,14 @@ namespace Aurora.Modules.Web.Translators
                     return "Editting";
                 case "BannedUntilText":
                     return "User banned until:";
+
+                //factory_reset
+                case "FactoryReset":
+                    return "Factory Reset";
+                case "ResetMenuText":
+                    return "Reset Menu To Factory Defaults";
+                case "Reset":
+                    return "Reset";
             }
             return "UNKNOWN CHARACTER";
         }

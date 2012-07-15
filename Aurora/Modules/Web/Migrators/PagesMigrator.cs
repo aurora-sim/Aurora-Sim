@@ -144,7 +144,7 @@ namespace Aurora.Modules.Web
                 ShowInMenu = true,
                 AdminRequired = true,
                 MenuID = "welcomescreen_manager",
-                Location = "welcomescreen_manager.html",
+                Location = "admin/welcomescreen_manager.html",
                 MenuPosition = 8,
                 MenuTitle = "MenuWelcomeScreenManager",
                 MenuToolTip = "TooltipsMenuWelcomeScreenManager"
@@ -154,7 +154,7 @@ namespace Aurora.Modules.Web
                 ShowInMenu = true,
                 AdminRequired = true,
                 MenuID = "news_manager",
-                Location = "news_manager.html",
+                Location = "admin/news_manager.html",
                 MenuPosition = 8,
                 MenuTitle = "MenuNewsManager",
                 MenuToolTip = "TooltipsMenuNewsManager"
@@ -173,11 +173,11 @@ namespace Aurora.Modules.Web
             {
                 ShowInMenu = true,
                 AdminRequired = true,
-                MenuID = "user_search",
-                Location = "user_search.html",
+                MenuID = "factory_reset",
+                Location = "admin/factory_reset.html",
                 MenuPosition = 8,
-                MenuTitle = "MenuUserManager",
-                MenuToolTip = "TooltipsMenuUserManager"
+                MenuTitle = "MenuFactoryReset",
+                MenuToolTip = "TooltipsMenuFactoryReset"
             });
 
 

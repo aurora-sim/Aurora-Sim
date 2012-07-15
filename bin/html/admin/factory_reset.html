@@ -1,0 +1,27 @@
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{FactoryReset}                  Factory Reset
+{ResetMenuText}                 Reset Menu To Factory Defaults
+{Reset}                         Reset
+{ChangesSavedSuccessfully}      Changes saved successfully
+
+-->
+{IsAdminAuthenticatedBegin}
+<div id="content">
+	<div id="ContentHeaderCenter"><b>{SystemName}: {FactoryReset}</b></div>
+	<div id="loginscreen_manager">
+		<div><b>{ChangesSavedSuccessfully}</b></div>
+		<form action="admin/factory_reset.html" method="post">
+			<table>
+				<tr>
+					<td><div align="right">{ResetMenuText} </div></td>
+				</tr>
+				<tr>
+					<td colspan="6"><div align="center"><button id="ResetMenu" type="Submit" name="ResetMenu">{Reset}</button></div>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+{IsAdminAuthenticatedEnd}
