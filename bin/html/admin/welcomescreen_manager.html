@@ -29,12 +29,12 @@
 {IsAdminAuthenticatedBegin}
 <div id="content">
 	<div id="ContentHeaderCenter"><h2>{WelcomeScreenManagerFor} {SystemName}</h2></div>
-	<div id="loginscreen_manager">
+	<div id="loginscreenmanager">
 		<div><h3>{ChangesSavedSuccessfully}</h3></div>
 		<form action="admin/welcomescreen_manager.html" method="post">
 			<table>
 				<tr>
-					<td><div align="right">{GridStatus} </div></td>
+					<td><p>{GridStatus}</p></td>
 					<td>
 						<select name="GridStatus" id="GridStatus">
 							<option value="1" style="background-color:#00FF00" {GridActive}>{Online}</option>
@@ -43,7 +43,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td><div align="right">{SpecialWindowStatusText}</div></td>
+					<td><p>{SpecialWindowStatusText}</p></td>
 					<td>
 						<select name="SpecialWindowStatus" id="SpecialWindowStatus">
 							<option value="1" style="background-color:#00FF00" {SpecialWindowActive}>{Enabled}</option>
@@ -53,19 +53,19 @@
 				</tr>
 				<tr><td colspan="6"></td></tr>
 				<tr>
-					<td>{SpecialWindowTitleText}</td>
+					<td><p>{SpecialWindowTitleText}</p></td>
 					<td colspan="5">
 						<input name="SpecialWindowTitle" type="text" id="SpecialWindowTitle" size="119" value="{SpecialWindowTitle}" />
 					</td>
 				</tr>
 				<tr>
-					<td>{SpecialWindowTextText}</td>
+					<td><p>{SpecialWindowTextText}</p></td>
 					<td colspan="5">
 						<textarea name="SpecialWindowText" cols="90" rows="10" id="SpecialWindowText">{SpecialWindowMessage}</textarea>
 					</td>
 				</tr>
 				<tr>
-					<td><div align="right">{SpecialWindowColorText}</div></td>
+					<td><p>{SpecialWindowColorText}</p></td>
 					<td>
 						<select name="SpecialWindowColor" id="boxcolor">
 							<option value="white" style=" background-color:#FFFFFF" {SpecialWindowColorWhite}>white</option>

@@ -44,21 +44,23 @@ body  {
 	behavior: url(css/pie.htc);
 }
 
-#login table {width: 50%;}
+#login table {width: 100%;}
 #register table {width: 100%;}
 #regionlist table {width: 100%;}
-#usersonline table {width: 100%;}
-#region_navigation table {width: 20%;}
+#regionlist_navigation table {width: 20%;}
+#onlineusers table {width: 100%;}
+#onlineusers_navigation table {width: 100%;}
 #users_navigation table {width: 20%;}
 #regioninfo {color: #7E7E7E;}
 #useragentprofile {color: #7E7E7E;}
 #newslist  table {width: 100%;}
 #newslist_navigation table {width: 20%;}
-
 #changeuserinformation table {width: 100%;}
 #edituser table {width: 100%;}
 #userssearch table {width: 100%;}
-#userssearch_navigation  {width: 20%;}
+#userssearch_navigation  table {width: 20%;}
+#loginscreenmanager table {width: 100%;}
+#pagemanager table {width: 100%;}
 
 table {border-collapse: separate; border-spacing: 0pt;}
 caption, th, td {font-weight: normal; text-align: left;}
@@ -225,7 +227,7 @@ button {
 
 /* World */
 #worldmap iframe.level1  {
-	border: 1px solid #1c475f;
+	border: 0px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
@@ -237,7 +239,7 @@ button {
 
 /* Chat */
 #chat iframe.level1 {
-	border: 1px solid #EEEEEE;
+	border: 0px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;

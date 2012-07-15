@@ -11,12 +11,14 @@
 <div id="content">
 	<div id="ContentHeaderCenter"><h2>{SystemName}: {FactoryReset}</h2></div>
 	<div id="loginscreen_manager">
-		<div><h3>{ChangesSavedSuccessfully}</h3></div>
-		<p class="alert">{ResetMenuText}</p>
+		<div><h4>{ChangesSavedSuccessfully}</h4></div>
+		<h3>{ResetMenuText}</h3>
+		<p class="info">{ResetMenuInfoText}</p>
 		<form action="admin/factory_reset.html" method="post">
 			<button id="ResetMenu" type="Submit" name="ResetMenu">{Reset}</button>
 		</form>
-		<p class="alert">{ResetSettingsText}</p>
+		<h3>{ResetSettingsText}</h3>
+		<p class="info">{ResetSettingsInfoText}</p>
 		<form action="admin/factory_reset.html" method="post">
 			<button id="ResetSettings" type="Submit" name="ResetSettings">{Reset}</button>
 		</form>

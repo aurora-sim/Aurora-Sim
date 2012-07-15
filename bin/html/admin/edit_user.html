@@ -24,14 +24,14 @@
 -->
 <div id="content">
     <div id="ContentHeaderCenter"><h2>{SystemName}: {EdittingText} {UserName}</h2></div>
-    <div id="ContentHeaderCenter"><h3>{ErrorMessage}</h3></div>
+    <div id="ContentHeaderCenter"><h4>{ErrorMessage}</h4></div>
     <div id="edituser">
 		<form action="edit_user.html" method="POST">
 			<table>
-                <tr><td colspan="2" align="center">{AdminLoginInAsUserText}</td></tr>
+                <tr><td colspan="2">{AdminLoginInAsUserText}</td></tr>
 				<tr>
 					<td class="odd">
-						<div class="center">
+						<div>
 						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
 							<button id="login_bouton" type="Submit" name="Submit" value="SubmitLoginAsUser">{Login}</button>
 						</div>
@@ -43,10 +43,10 @@
 	<div id="login">
 		<form action="edit_user.html" method="POST">
 			<table>
-                <tr><td colspan="2" align="center">{AdminDeleteUserText}</td></tr>
+                <tr><td colspan="2">{AdminDeleteUserText}</td></tr>
 				<tr>
 					<td class="odd">
-						<div class="center">
+						<div>
 						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
 							<button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
 						</div>
@@ -59,11 +59,11 @@
 	<div id="login">
 		<form action="edit_user.html" method="POST">
 			<table>
-                <tr><td colspan="2" align="center">{AdminUnbanUserText}</td></tr>
+                <tr><td colspan="2">{AdminUnbanUserText}</td></tr>
                 <tr><td colspan="2">{BannedUntilText} {BannedUntil}</td></tr>
 				<tr>
 					<td class="odd">
-						<div class="center">
+						<div>
 						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
 							<button id="login_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
 						</div>
@@ -77,7 +77,7 @@
 	<div id="login">
 		<form action="edit_user.html" method="POST">
 			<table>
-                <tr><td colspan="2" align="center">{AdminTempBanUserText}</td></tr>
+                <tr><td colspan="2">{AdminTempBanUserText}</td></tr>
 				<tr>
                     <td class="odd">{TimeUntilUnbannedText}</td>
                     <td class="odd">
@@ -115,7 +115,7 @@
                 </tr>
 				<tr>
 					<td class="odd">
-						<div class="center">
+						<div>
 						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
 							<button id="login_bouton" type="Submit" name="Submit" value="SubmitTempBanUser">{BanText}</button>
 						</div>
@@ -127,10 +127,10 @@
 	<div id="login">
 		<form action="edit_user.html" method="POST">
 			<table>
-                <tr><td colspan="2" align="center">{AdminBanUserText}</td></tr>
+                <tr><td colspan="2">{AdminBanUserText}</td></tr>
 				<tr>
 					<td class="odd">
-						<div class="center">
+						<div>
 						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
 							<button id="login_bouton" type="Submit" name="Submit" value="SubmitBanUser">{BanText}</button>
 						</div>
