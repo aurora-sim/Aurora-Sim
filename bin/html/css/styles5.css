@@ -55,6 +55,11 @@ body  {
 #newslist  table {width: 100%;}
 #newslist_navigation table {width: 20%;}
 
+#changeuserinformation table {width: 100%;}
+#edituser table {width: 100%;}
+#userssearch table {width: 100%;}
+#userssearch_navigation  {width: 20%;}
+
 table {border-collapse: separate; border-spacing: 0pt;}
 caption, th, td {font-weight: normal; text-align: left;}
 blockquote:before, blockquote:after, q:before, q:after {content: "";}

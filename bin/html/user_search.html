@@ -13,24 +13,22 @@
 
 <div id="content">
 	<div id="ContentHeaderCenter"><h2>{SystemName}: {UserSearchText}</h2></div>
-	<div id="usersonline">
-		<div id="users_navigation">
-			<form action="user_search.html" method="POST">
-				<table>
-					<tr><td colspan="2" align="center">{SearchForUserText}</td></tr>
-					<tr>
-						<td class="even"><span id="password_label">{UserNameText}*</span></td>
-						<td class="even"><div class="roundedinput"><input require="true" label="username" name="username" /></div></td>
-					</tr>
-					<tr>
-						<td class="odd">
-							<div class="center">
-								<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
-							</div>
-						</td>
-					</tr>
-				</table>
-			</form>
+	<div id="userssearch">
+		<form action="user_search.html" method="POST">
+			<table>
+				<tr><td colspan="2"><h3>{SearchForUserText}</h3></td></tr>
+				<tr>
+					<td class="even"><span id="password_label">{UserNameText}*</span></td>
+					<td class="even"><input require="true" label="username" name="username" /></td>
+				</tr>
+				<tr>
+					<td class="odd">
+						<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<div id="userssearch_navigation">
 			<table>
 				<tr>
 					<td>

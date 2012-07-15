@@ -12,25 +12,13 @@
 	<div id="ContentHeaderCenter"><h2>{SystemName}: {FactoryReset}</h2></div>
 	<div id="loginscreen_manager">
 		<div><h3>{ChangesSavedSuccessfully}</h3></div>
+		<p class="alert">{ResetMenuText}</p>
 		<form action="admin/factory_reset.html" method="post">
-			<table>
-				<tr>
-					<td><div align="right">{ResetMenuText} </div></td>
-				</tr>
-				<tr>
-					<td colspan="6"><div align="center"><button id="ResetMenu" type="Submit" name="ResetMenu">{Reset}</button></div>
-				</tr>
-			</table>
+			<button id="ResetMenu" type="Submit" name="ResetMenu">{Reset}</button>
 		</form>
+		<p class="alert">{ResetSettingsText}</p>
 		<form action="admin/factory_reset.html" method="post">
-			<table>
-				<tr>
-					<td><div align="right">{ResetSettingsText} </div></td>
-				</tr>
-				<tr>
-					<td colspan="6"><div align="center"><button id="ResetSettings" type="Submit" name="ResetSettings">{Reset}</button></div>
-				</tr>
-			</table>
+			<button id="ResetSettings" type="Submit" name="ResetSettings">{Reset}</button>
 		</form>
 	</div>
 </div>
