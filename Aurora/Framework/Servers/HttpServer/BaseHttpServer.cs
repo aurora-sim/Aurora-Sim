@@ -878,7 +878,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (IOException e)
                 {
-                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                    MainConsole.Instance.Debug("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                 }
             }
         }
@@ -1204,7 +1204,7 @@ namespace Aurora.Framework.Servers.HttpServer
                 }
                 catch (IOException e)
                 {
-                    MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                    MainConsole.Instance.Debug("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
                 }
                 return true;
             }
@@ -1457,7 +1457,7 @@ namespace Aurora.Framework.Servers.HttpServer
             }
             catch (IOException e)
             {
-                MainConsole.Instance.Warn("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
+                MainConsole.Instance.Debug("[BASE HTTP SERVER]: XmlRpcRequest issue: " + e);
             }
             finally
             {

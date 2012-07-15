@@ -798,9 +798,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             {
                 threads[i] = new System.Threading.Thread(() =>
                     {
-                        start:
                         byte[] groupData;
-                        if (groups.TryDequeue(out groupData))
+                        while(groups.TryDequeue(out groupData))
                         {
                             MemoryStream ms = new MemoryStream(groupData);
                             SceneObjectGroup sceneObject = SceneObjectSerializer.FromXml2Format(ref ms, scene);
@@ -822,9 +821,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                                 m_groups.Add(sceneObject);
                             }
                         }
-                        else
-                            return;
-                        goto start;
                     });
                 threads[i].Start();
             }
