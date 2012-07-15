@@ -60,6 +60,11 @@ img#mainImage {
 	z-index: 1;
 }
 
+#top_image  img {border: none; outline: none;}
+a:active, a:focus{
+      outline:none;
+}
+
 #topright {
 	position: absolute;
 	top: 10px;
