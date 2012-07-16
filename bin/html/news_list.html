@@ -9,39 +9,39 @@
 {NewsID}             
 
 -->
+
 <div id="content">
-    <div id="ContentHeaderCenter"><h2>{News}: {SystemName}</h2></div>
-    <div id="newslist">
+    <div id="ContentHeaderCenter"><h2>{SystemName}: {News}</h2></div>
+    <div id="newslist">		
 		<div id="newslist_navigation">
 			<table>
 			<tr>
 				<td>
-					<a href="region_list.html?Start=0" target="_self" title="{FirstText}">
-						<img src="images/icon_back_more_on.gif" width=15 height=15 border="0" />
+					<a class="fade" href="region_list.html?Start=0" target="_self" title="{FirstText}">
+						<p class="nav">|&nbsp;<</p>
 					</a>
 				</td>
 				<td>
-					<a href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
-						<img src="images/icon_back_one_on.gif" width=15 height=15 border="0" />
+					<a class="fade" href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
+						<p class="nav"><</p>
 					</a>
 				</td>
 				<td>
 					<p>{CurrentPageText} {CurrentPage}</p>
 				</td>
 				<td>
-					<a href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
-						<img src="images/icon_forward_one_on.gif" width=15 height=15 border="0" />
+					<a class="fade" href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
+						<p class="nav">></p>
 					</a>
 				</td>
 				<td>
-					<a href="region_list.html?Start=-1" target="_self" title="{LastText}">
-						<img src="images/icon_forward_more_on.gif" width=15 height=15 border="0" />
+					<a class="fade" href="region_list.html?Start=-1" target="_self" title="{LastText}">
+						<p class="nav">>&nbsp;|</p>
 					</a>
 				</td>
 			</tr>
 			</table>
 		</div>
-	
 		<table>
 			<thead>
 			<tr>
@@ -57,7 +57,7 @@
 {NewsListArrayBegin}
 			<tr>
 				<td class=boxtext>
-					<a href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
+					<a class="fade" href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
 				</td>
 				<td class=boxtext vAlign=top noWrap width="10%">
 					{NewsDate}

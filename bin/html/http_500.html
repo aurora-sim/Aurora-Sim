@@ -1,0 +1,17 @@
+<!-- params to replace
+
+{SystemURL}
+{SystemName}
+{Error505Text}        error code 
+{Error505InfoText}    505 Page Not Found
+{HomePage505Text}     home page
+-->
+
+<div id="content">
+	<div id="ContentHeaderCenter"><h2>{SystemName}</h2></div>
+	<div id="maintenance">
+		<p class="error505">505</p>
+		<h4>{Error505Text}: {Error505InfoText}</h4>
+		<a href="{SystemURL}">{SystemName} {HomePage505Text}</a>
+	</div>
+</div>

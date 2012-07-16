@@ -47,20 +47,38 @@ body  {
 #login table {width: 100%;}
 #register table {width: 100%;}
 #regionlist table {width: 100%;}
-#regionlist_navigation table {width: 20%;}
+#regionlist_navigation table {width: 24%;}
 #onlineusers table {width: 100%;}
-#onlineusers_navigation table {width: 100%;}
-#users_navigation table {width: 20%;}
+#onlineusers_navigation table {width: 24%;}
+#users_navigation table {width: 24%;}
 #regioninfo {color: #7E7E7E;}
 #useragentprofile {color: #7E7E7E;}
 #newslist  table {width: 100%;}
-#newslist_navigation table {width: 20%;}
+#newslist_navigation table {width: 24%;}
 #changeuserinformation table {width: 100%;}
 #edituser table {width: 100%;}
 #userssearch table {width: 100%;}
-#userssearch_navigation  table {width: 20%;}
+#userssearch_navigation  table {width: 24%;}
 #loginscreenmanager table {width: 100%;}
 #pagemanager table {width: 100%;}
+
+/* Navigation buttons */
+.nav {
+	background: #222;
+	margin-right: 5px;
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border: 0px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #6FA5FD 0 0 .25em;
+    -moz-box-shadow: #6FA5FD 0 0 .25em;
+    box-shadow: #6FA5FD 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
 
 table {border-collapse: separate; border-spacing: 0pt;}
 caption, th, td {font-weight: normal; text-align: left;}
@@ -123,7 +141,9 @@ input, textarea, select, button {
 input , textarea {width: 300px;}
 
 /* input:hover , textarea:hover {border: 1px solid #296BA5;} */
-input:focus, textarea:focus {outline:none;
+*:focus {outline: none;}
+
+input:focus, textarea:focus, select:focus {
 	border: 1px solid #6FA5FD;
 	-webkit-box-shadow: #6FA5FD 0 0 .5em;
     -moz-box-shadow: #6FA5FD 0 0 .5em;
@@ -302,7 +322,7 @@ img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.sing
 
 .info {
   background-color:#fffcd3;
-  border: 1px solid #fff173;
+  border: 1px solid #ffed8e;
   padding: 5px;
   float: left;
   width:98.75%;
@@ -322,4 +342,14 @@ img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.sing
   padding: 5px;
   float: left;
   width:98.75%;
+}
+
+/* Maintenance 404 505 */
+#maintenance {text-align: center;}
+
+.error404, .error505 {
+	margin-top: 200px;
+	color: #eee;
+	font-size: 256px;
+	text-shadow: 1px 1px #fff, -1px -1px #444;
 }

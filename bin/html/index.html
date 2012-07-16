@@ -36,9 +36,8 @@
 		$('#jclock5').jclock(options5);});
 	</script>
 	
-	<script type="text/javascript">
-		$(function() {$('#container *').tooltip({showURL: false});});
-	</script>
+	<!-- Tooltips -->
+	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
 	
 	<!-- fade in -->
 	<style type="text/css">#container{display:none;}</style>
@@ -48,7 +47,7 @@
 
 <body>
 {IfMaintenanceBegin}
-<!--#include file="/maintenance.html" -->
+<!-- #include file="/maintenance.html" -->
 {IfMaintenanceEnd}
 {IfNoMaintenanceBegin}
 <div id="container">
@@ -82,7 +81,7 @@
 		<p>{HomeTextTips}:
 			<a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
 			<a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
-			<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->		
+			<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->	
 	</div>
 	
 	<div id="footer">	

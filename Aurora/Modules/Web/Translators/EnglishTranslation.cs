@@ -336,6 +336,22 @@ namespace Aurora.Modules.Web.Translators
                     return "Website is currently down, please try again soon.";
                 case "WebsiteDownText":
                     return "Website offline";
+					
+                //http_404 page
+                case "Error404Text":
+                    return "Error code";
+                case "Error404InfoText":
+                    return "404 Page Not Found";
+                case "HomePage404Text":
+                    return "home page";
+					
+                //http_505 page
+                case "Error505Text":
+                    return "Error code";
+                case "Error505InfoText":
+                    return "505 Internal Server Error";
+                case "HomePage505Text":
+                    return "home page";
 
                 //user_search page
                 case "Search":
