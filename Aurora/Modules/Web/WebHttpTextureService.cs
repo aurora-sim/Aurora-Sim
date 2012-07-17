@@ -77,7 +77,7 @@ namespace Aurora.Modules.Web
                     {
                         // Save to bitmap
 
-                        texture = ResizeBitmap(image, 128, 128);
+                        texture = ResizeBitmap(image, 256, 256);
                         EncoderParameters myEncoderParameters = new EncoderParameters();
                         myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
 

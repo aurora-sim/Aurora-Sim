@@ -97,7 +97,7 @@ namespace OpenSim.Services.LLLoginService
             m_config = config;
             m_loginServerConfig = config.Configs["LoginService"];
             IConfig handlersConfig = config.Configs["Handlers"];
-            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginHandler")
+            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginService")
                 return;
 
             m_forceUserToWearFolderName = m_loginServerConfig.GetString("forceUserToWearFolderName", "");
