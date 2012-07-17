@@ -26,60 +26,74 @@
 {ChangesSavedSuccessfully}      Changes saved successfully
 
 -->
+
 {IsAdminAuthenticatedBegin}
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{WelcomeScreenManagerFor} {SystemName}</h2></div>
-	<div id="loginscreenmanager">
-		<div><h3>{ChangesSavedSuccessfully}</h3></div>
-		<form action="admin/welcomescreen_manager.html" method="post">
-			<table>
-				<tr>
-					<td><p>{GridStatus}</p></td>
-					<td>
-						<select name="GridStatus" id="GridStatus">
-							<option value="1" style="background-color:#00FF00" {GridActive}>{Online}</option>
-							<option value="0" style="background-color:#FF0000" {GridInactive}>{Offline}</option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td><p>{SpecialWindowStatusText}</p></td>
-					<td>
-						<select name="SpecialWindowStatus" id="SpecialWindowStatus">
-							<option value="1" style="background-color:#00FF00" {SpecialWindowActive}>{Enabled}</option>
-							<option value="0" style="background-color:#FF0000" {SpecialWindowInactive}>{Disabled}</option>
-						</select>
-					</td>
-				</tr>
-				<tr><td colspan="6"></td></tr>
-				<tr>
-					<td><p>{SpecialWindowTitleText}</p></td>
-					<td colspan="5">
-						<input name="SpecialWindowTitle" type="text" id="SpecialWindowTitle" size="119" value="{SpecialWindowTitle}" />
-					</td>
-				</tr>
-				<tr>
-					<td><p>{SpecialWindowTextText}</p></td>
-					<td colspan="5">
-						<textarea name="SpecialWindowText" cols="90" rows="10" id="SpecialWindowText">{SpecialWindowMessage}</textarea>
-					</td>
-				</tr>
-				<tr>
-					<td><p>{SpecialWindowColorText}</p></td>
-					<td>
-						<select name="SpecialWindowColor" id="boxcolor">
-							<option value="white" style=" background-color:#FFFFFF" {SpecialWindowColorWhite}>white</option>
-							<option value="green" style="background-color:#00FF00"  {SpecialWindowColorGreen}>green</option>
-							<option value="yellow" style="background-color:#FFFF00" {SpecialWindowColorYellow}>yellow</option>
-							<option value="red" style="background-color:#FF0000" {SpecialWindowColorRed}>red</option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="6"><button id="Submit" type="Submit" name="Submit">{Submit}</button>
-				</tr>
-			</table>
-		</form>
-	</div>
-</div>
+<h2>{SystemName}: {WelcomeScreenManagerFor}</h2>
+<form action="admin/welcomescreen_manager.html" method="post">
+<div id="info_message" class="info_message"><h3>{ChangesSavedSuccessfully}</h3></div>
+<table id="welcomescreen_manager">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="welcomescreen_managern_left"></th>
+      <th class="welcomescreen_manager_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="welcomescreen_managern_left"></th>
+      <th class="welcomescreen_manager_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="welcomescreen_managern_left"><p id="gridstatus_label"><p>{GridStatus}</p></p></td>
+      <td class="welcomescreen_manager_right">
+	    <select name="GridStatus" id="GridStatus">
+		  <option value="1" style="background-color:#00FF00" {GridActive}>{Online}</option>
+		  <option value="0" style="background-color:#FF0000" {GridInactive}>{Offline}</option>
+	    </select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="welcomescreen_managern_left"><p id="specialwinstatus_label">{SpecialWindowStatusText}</p></td>
+      <td class="welcomescreen_manager_right">
+	    <select name="SpecialWindowStatus" id="SpecialWindowStatus">
+		  <option value="1" style="background-color:#00FF00" {SpecialWindowActive}>{Enabled}</option>
+		  <option value="0" style="background-color:#FF0000" {SpecialWindowInactive}>{Disabled}</option>
+		</select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="welcomescreen_managern_left"><p>{SpecialWindowTitleText}</p></td>
+      <td class="welcomescreen_manager_right"><input name="SpecialWindowTitle" type="text" id="SpecialWindowTitle" size="119" value="{SpecialWindowTitle}" /></td>
+    </tr>
+	
+    <tr>
+      <td class="welcomescreen_managern_left"><p>{SpecialWindowTextText}</p></td>
+      <td class="welcomescreen_manager_right"><textarea name="SpecialWindowText" cols="90" rows="10" id="SpecialWindowText">{SpecialWindowMessage}</textarea></td>
+    </tr>
+	
+    <tr>
+      <td class="welcomescreen_managern_left"><p>{SpecialWindowColorText}</p></td>
+      <td class="welcomescreen_manager_right">
+	    <select name="SpecialWindowColor" id="boxcolor">
+		  <option value="white" style=" background-color:#FFFFFF" {SpecialWindowColorWhite}>white</option>
+		  <option value="green" style="background-color:#00FF00"  {SpecialWindowColorGreen}>green</option>
+		  <option value="yellow" style="background-color:#FFFF00" {SpecialWindowColorYellow}>yellow</option>
+		  <option value="red" style="background-color:#FF0000" {SpecialWindowColorRed}>red</option>
+		</select>
+	  </td>
+    </tr>
+	
+    <tr>
+      <td class="welcomescreen_managern_left"></td>
+      <td class="welcomescreen_manager_right"><button id="Submit" type="Submit" name="Submit">{Submit}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>
 {IsAdminAuthenticatedEnd}

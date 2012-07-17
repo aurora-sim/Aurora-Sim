@@ -99,6 +99,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Terms of Service";
                 case "TermsOfServiceAccept":
                     return "Do you accept the Terms of Service as detailed above?";
+					
+				// news
                 case "OpenNewsManager":
                     return "Open the news manager";
                 case "NewsManager":
@@ -119,6 +121,8 @@ namespace Aurora.Modules.Web.Translators
                     return "News Item Text";
                 case "AddNewsText":
                     return "Add News";
+                case "DeleteNewsText":
+                    return "Delete News";
                 case "EditNewsText":
                     return "Edit News";
                 case "UserProfileFor":
@@ -355,12 +359,15 @@ namespace Aurora.Modules.Web.Translators
 
                 //user_search page
                 case "Search":
+                    return "Search";
                 case "SearchText":
                     return "Search";
                 case "SearchForUserText":
                     return "Search For A User";
                 case "UserSearchText":
                     return "User Search";
+                case "SearchResultForUserText":
+                    return "Search Result For User";
 
                 //region_search page
                 case "SearchForRegionText":

@@ -1,93 +1,136 @@
 <!--
 
 {UsersList}
-	{UserName}
-	{UserRegion}
-	{UserID}
-
+{UserName}
+{UserRegion}
+{UserID}
 {UserSearchText}      User Search
 {UserNameText}        User Name
 {SearchForUserText}   Search for a user
 {Search}              Search
 -->
 
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{SystemName}: {UserSearchText}</h2></div>
-	<div id="userssearch">
-		<form action="user_search.html" method="POST">
-			<table>
-				<tr><td colspan="2"><h3>{SearchForUserText}</h3></td></tr>
-				<tr>
-					<td class="even"><span id="password_label">{UserNameText}*</span></td>
-					<td class="even"><input require="true" label="username" name="username" /></td>
-				</tr>
-				<tr>
-					<td class="odd">
-						<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
-					</td>
-				</tr>
-			</table>
-		</form>						
-		<div id="userssearch_navigation">
-			<table>
-				<tr>
-					<td>
-						<a href="user_search.html?Start=0" target="_self" title="{FirstText}">
-							<p class="nav">|&nbsp;<</p>
-						</a>
-					</td>
-					<td>
-						<a href="user_search.html?Start={BackOne}" target="_self" title="{BackText}">
-							<p class="nav"><</p>
-						</a>
-					</td>
-					<td>
-						<p>{CurrentPageText} {CurrentPage}</p>
-					</td>
-					<td>
-						<a href="user_search.html?Start={NextOne}" target="_self" title="{NextText}">
-							<p class="nav">></p>
-						</a>
-					</td>
-					<td>
-						<a href="user_search.html?Start=-1" target="_self" title="{LastText}">
-							<p class="nav">>&nbsp;|</p>
-						</a>
-					</td>
-				</tr>
-			</table>
-		</div>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<p>{UserNameText}</p>
-					</td>
-{IfAdminAuthenticatedBegin}
-					<td>
-						<p>{EditUserAccountText}</p>
-					</td>
-{IfAdminAuthenticatedEnd}
-				</tr>
-			</thead>
-			<tbody>
+<h2>{SystemName}: {UserSearchText}</h2>
+<h3>{SearchForUserText}</h3>
+<form action="user_search.html" method="post">
+<table id="user_search">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_search_left"></th>
+      <th class="user_search_right"></th>
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <th class="user_search_left"></th>
+      <th class="user_search_right"></th>
+    </tr>
+  </tfoot>
+  <tbody>
+    <tr>
+      <td class="user_search_left"><p>{UserNameText}*</p></td>
+      <td class="user_search_right">
+	    <input require="true" label="username" name="username" />
+		<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
+<h3>{SearchResultForUserText}</h3>
+<table id="user_search_result_navigation_top">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="news_list.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="news_list.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="news_list.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="news_list.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>
+<table id="user_search_result">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_search_result_left"><p>{UserNameText}</p></th>
+      <th class="user_search_result_right"><p>{EditUserAccountText}</p></th>
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <th class="user_search_result_left"></th>
+      <th class="user_search_result_right"></th>
+    </tr>
+  </tfoot>
+  <tbody>
 {UsersListArrayBegin}
-				<tr>
-					<td>
-						<a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}">
-							<u>{UserName}</u>
-						</a>
-					</td>
+    <tr>
+      <td class="user_search_result_left"><a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}"><p>{UserName}</p></a></td>
 {IfAdminAuthenticatedBegin}
-					<td>
-						<a href="admin/edit_user.html?userid={UserID}">
-							<u>{EditText}</u>
-						</a>
-					</td>
+      <td class="user_search_result_right"><a href="admin/edit_user.html?userid={UserID}"><p>{EditText}</p></a></td>
 {IfAdminAuthenticatedEnd}
-				</tr>
+    </tr>
 {UsersListArrayEnd}
-			</tbody>
-		</table>
-	</div>
-</div>
+  </tbody>
+</table>
+<table id="user_search_result_navigation_bottom">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="news_list.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="news_list.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="news_list.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="news_list.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>

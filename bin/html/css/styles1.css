@@ -78,6 +78,13 @@ table#news_list td {}
 .news_list_left {text-align: left;}
 .news_list_right {text-align: right;}
 
+/* add_news */
+table#add_news  {width: 100%;}
+table#add_news th {}
+table#add_news td {}
+.add_news_left {text-align: left;}
+.add_news_right {text-align: left;}
+
 /* online_users */
 table#online_users_navigation_top, table#online_users_navigation_bottom {width: 30%;}
 table#online_users_navigation_top th, table#online_users_navigation_bottom th {text-align: center;}
@@ -88,9 +95,33 @@ table#online_users td {}
 .online_users_left {text-align: left;}
 .online_users_right {text-align: right;}
 
-/* online_users */
-table#region_list_navigation_top, table#online_users_navigation_bottom {width: 30%;}
-table#region_lists_navigation_top th, table#online_users_navigation_bottom th {text-align: center;}
+/* user_search */
+table#user_search  {width: 100%;}
+table#user_search th {}
+table#user_search td {}
+.user_search_left {text-align: left;}
+.user_search_right {text-align: left;}
+
+/* user_search_result */
+table#user_search_result_navigation_top, table#user_search_result_navigation_bottom {width: 30%;}
+table#user_search_result_navigation_top th, table#user_search_result_navigation_bottom th {text-align: center;}
+
+table#user_search_result  {width: 100%;}
+table#user_search_result th {}
+table#user_search_result td {}
+.user_search_result_left {text-align: left;}
+.user_search_result_right {text-align: right;}
+
+/* user_search */
+table#news_manager  {width: 100%;}
+table#news_manager th {}
+table#news_manager td {}
+.news_managerh_left {text-align: left;}
+.news_manager_right {text-align: right;}
+
+/* region_list */
+table#region_list_navigation_top, table#region_list_navigation_bottom {width: 30%;}
+table#region_lists_navigation_top th, table#region_list_navigation_bottom th {text-align: center;}
 
 table#region_list  {width: 100%;}
 table#region_list th {}
@@ -112,6 +143,54 @@ table#register td {}
 .register_left {text-align: left;}
 .register_right {text-align: left;}
 
+/* welcomescreen_manager */
+table#welcomescreen_manager  {width: 100%;}
+table#welcomescreen_manager th {}
+table#welcomescreen_manager td {}
+.welcomescreen_manager_left {text-align: left;}
+.welcomescreen_manager_right {text-align: left;}
+
+/* settings_manager */
+table#settings_manager  {width: 100%;}
+table#settings_manager th {}
+table#settings_manager td {}
+.settings_manager_left {text-align: left;}
+.settings_manager_right {text-align: left;}
+
+/* page_manager_select */
+table#page_manager_select  {width: 100%;}
+table#page_manager_select th {}
+table#page_manager_select td {}
+.page_manager_select_left {text-align: left;}
+.page_manager_select_right {text-align: left;}
+
+/* page_manager */
+table#page_manager  {width: 100%;}
+table#page_manager th {}
+table#page_manager td {}
+.spage_manager_left {text-align: left;}
+.page_manager_right {text-align: left;}
+
+/* change_user_password */
+table#change_user_password  {width: 100%;}
+table#change_user_password th {}
+table#change_user_password td {}
+.change_user_password_left {text-align: left;}
+.change_user_password_right {text-align: left;}
+
+/* change_user_email_adress */
+table#change_user_email_adress  {width: 100%;}
+table#change_user_email_adress th {}
+table#change_user_email_adress td {}
+.change_user_email_adress_left {text-align: left;}
+.change_user_email_adress_right {text-align: left;}
+
+/* delete_my_account */
+table#delete_my_account  {width: 100%;}
+table#delete_my_account th {}
+table#delete_my_account td {}
+.delete_my_account_left {text-align: left;}
+.delete_my_account_right {text-align: left;}
 
 /* Navigation buttons */
 .nav {

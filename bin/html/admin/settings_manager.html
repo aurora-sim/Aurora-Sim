@@ -1,4 +1,5 @@
 <!-- params to replace
+
 {SystemURL}
 {SystemName}
 {GridCenterX}
@@ -10,44 +11,47 @@
 {GoogleMapAPIKeyHelpText}       Google Maps API Key
 {ChangesSavedSuccessfully}      Changes saved successfully
 {Save}                          Save
-
 -->
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{SystemName}: {SettingsManager}</h2></div>
-	<div id="loginscreen_manager">
-		<div><h3>{ChangesSavedSuccessfully}</h3></div>
-		<form action="admin/settings_manager.html" method="post">
-			<table>
-				<tr>
-					<td><div align="right">{GridCenterXText} </div></td>
-					<td><input name="GridCenterX" type="text" id="GridCenterX" size="119" value="{GridCenterX}" /></td>
-				</tr>
-				<tr>
-					<td><div align="right">{GridCenterYText} </div></td>
-					<td><input name="GridCenterY" type="text" id="GridCenterY" size="119" value="{GridCenterY}" /></td>
-				</tr>
-				<tr>
-					<td><div align="right">{GoogleMapAPIKeyText}: <a href="https://developers.google.com/maps/documentation/javascript/v2/introduction#Obtaining_Key">{GoogleMapAPIKeyHelpText}</a> </div></td>
-					<td><input name="GoogleMapAPIKey" type="text" id="GoogleMapAPIKey" size="119" value="{GoogleMapAPIKey}" /></td>
-				</tr>
-				<tr>
-					<td colspan="6"><div align="center"><button id="SetGridCenter" type="Submit" name="SetGridCenter">{Save}</button></div>
-				</tr>
-			</table>
-		</form>
-		<form action="admin/settings_manager.html" method="post">
-			<table>
-				<tr>
-					<td colspan="6"><div align="center"><button id="IgnorePagesUpdates" type="Submit" name="IgnorePagesUpdates">{IgnorePagesUpdatesText}</button></div>
-				</tr>
-			</table>
-		</form>
-		<form action="admin/settings_manager.html" method="post">
-			<table>
-				<tr>
-					<td colspan="6"><div align="center"><button id="IgnoreSettingsUpdates" type="Submit" name="IgnoreSettingsUpdates">{IgnoreSettingsUpdatesText}</button></div>
-				</tr>
-			</table>
-		</form>
-	</div>
-</div>
+
+<h2>{SystemName}: {SettingsManager}</h2>
+<form action="admin/settings_manager.html" method="post">
+<div id="error_message" class="error"><h3>{ChangesSavedSuccessfully}</h3></div>
+<table id="settings_manager">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="settings_manager_left"></th>
+      <th class="settings_manager_right"></th>
+    </tr>
+  </thead>
+
+  <tfoot>
+    <tr>
+      <th class="settings_manager_left"></th>
+      <th class="settings_manager_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="settings_manager_left"><p id="gridcenterx_label">{GridCenterXText}</p></td>
+      <td class="settings_manager_right"><input name="GridCenterX" type="text" id="GridCenterX" size="119" value="{GridCenterX}" /></td>
+    </tr>
+    <tr>
+      <td class="settings_manager_left"><p id="gridcentery_label">{GridCenterYText}</p></td>
+      <td class="settings_manager_right"><input name="GridCenterY" type="text" id="GridCenterY" size="119" value="{GridCenterY}" /></td>
+    </tr>
+    <tr>
+    <tr>
+      <td class="settings_manager_left"><p id="gridcentery_label">{GoogleMapAPIKeyText}</p></td>
+      <td class="settings_manager_right"><input name="GoogleMapAPIKey" type="text" id="GoogleMapAPIKey" size="119" value="{GoogleMapAPIKey}" /></td>
+    </tr>
+    <tr>
+    <tr>
+      <td class="settings_manager_left"><a href="https://developers.google.com/maps/documentation/javascript/v2/introduction#Obtaining_Key" target="_blank"><p>{GoogleMapAPIKeyHelpText}</p></a></td>
+      <td class="settings_manager_right"><button id="SetGridCenter" type="Submit" name="SetGridCenter">{Save}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>

@@ -1,4 +1,5 @@
 <!-- params to replace
+
 {SystemURL}
 {SystemName}
 {ErrorMessage}                    Error message handling
@@ -13,63 +14,113 @@
 {DeleteUserText}                  Delete My Account
 {DeleteUserInfoText}              Long thing about how it removes stuff
 {Submit}                          Submit
-
 -->
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{SystemName}: {ChangeUserInformationText}</h2></div>
-    <div id="ContentHeaderCenter"><h3>{ErrorMessage}</h3></div>
-    <div id="changeuserinformation">
-		<form action="change_user_information.html" method="POST">
-			<table>
-                <tr><td colspan="2"><h3>{ChangePasswordText}</h3></td></tr>
-				<tr>
-					<td class="even"><span id="password_label">{NewPasswordText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
-				</tr>
-				<tr>
-					<td class="even"><span id="password_label">{NewPasswordConfirmationText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="passwordconf" id="login_input" type="password" name="passwordconf" /></div></td>
-				</tr>
-				<tr>
-					<td class="odd">
-						<button id="login_bouton" type="Submit" name="Submit" value="SubmitPasswordChange">{Submit}</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
 
-		<form action="change_user_information.html" method="POST">
-			<table>
-                <tr><td colspan="2"><h3>{ChangeEmailText}</h3></td></tr>
-				<tr>
-					<td class="even"><span id="password_label">{NewEmailText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="email" id="email" name="email" /></div></td>
-				</tr>
-				<tr>
-					<td class="odd">
-						<button id="login_bouton" type="Submit" name="Submit" value="SubmitEmailChange">{Submit}</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
+<h2>{SystemName}: {ChangeUserInformationText}</h2>
+<h3>{ChangePasswordText}</h3>
+<form action="change_user_information.html" method="post">
+<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<table id="change_user_password">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="change_user_information_left"></th>
+      <th class="change_user_information_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="change_user_information_left"></th>
+      <th class="change_user_information_right"></th>
+    </tr>
+  </tfoot>
 
-		<form action="change_user_information.html" method="POST">
-			<table>
-                <tr><td colspan="2"><h3>{DeleteUserText}</h3><p class="alert">{DeleteUserInfoText}</p></td></tr>
-				<tr>
-					<td class="even"><span id="password_label">{UserNameText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="username" id="login_input" name="username" /></div></td>
-				</tr>
-				<tr>
-					<td class="even"><span id="password_label">{PasswordText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
-				</tr>
-				<tr>
-					<td class="odd">
-						<button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-</div>
+  <tbody>
+    <tr>
+      <td class="change_user_information_left"><p id="password_label">{NewPasswordText}*</p></td>
+      <td class="change_user_information_right"><input require="true" label="password" id="login_input" type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <td class="change_user_information_left"><p id="newpasswordconfirm_label">{NewPasswordConfirmationText}*</p></td>
+      <td class="change_user_information_right"><input require="true" label="passwordconf" id="login_input" type="password" name="passwordconf" /></td>
+    </tr>
+    <tr>
+      <td class="change_user_information_left"></td>
+      <td class="change_user_information_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitPasswordChange">{Submit}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>
+
+<h3>{ChangeEmailText}</h3>
+<form action="change_user_information.html" method="post">
+<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<table id="change_user_email_adress">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="change_user_email_adress_left"></th>
+      <th class="change_user_email_adress_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="change_user_email_adress_left"></th>
+      <th class="change_user_email_adress_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="change_user_email_adress_left"><p id="newemail_label">{NewEmailText}*</p></td>
+      <td class="change_user_email_adress_right"><input require="true" label="email" id="email" name="email" /></td>
+    </tr>
+    <tr>
+      <td class="change_user_email_adress_left"></td>
+      <td class="change_user_email_adress_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitEmailChange">{Submit}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>
+
+<h3>{DeleteUserText}</h3>
+<p class="alert">{DeleteUserInfoText}</p>
+<form action="change_user_information.html" method="post">
+<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<table id="delete_my_account">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="delete_my_account_left"></th>
+      <th class="delete_my_account_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="delete_my_account_left"></th>
+      <th class="delete_my_account_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="delete_my_account_left"><p id="username_label">{UserNameText}*</p></td>
+      <td class="delete_my_account_right"><input require="true" label="username" id="login_input" name="username" /></td>
+    </tr>
+    <tr>
+      <td class="delete_my_account_left"><p id="password_label">{PasswordText}*</p></td>
+      <td class="delete_my_account_right"><input require="true" label="password" id="login_input" type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <td class="delete_my_account_left"></td>
+      <td class="delete_my_account_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>

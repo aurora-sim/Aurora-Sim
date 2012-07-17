@@ -35,7 +35,12 @@ namespace Aurora.Modules.Web
             vars.Add("News", translator.GetTranslatedString("News"));
             vars.Add("NewsDateText", translator.GetTranslatedString("NewsDateText"));
             vars.Add("NewsTitleText", translator.GetTranslatedString("NewsTitleText"));
+
             vars.Add("CurrentPageText", translator.GetTranslatedString("CurrentPageText"));
+            vars.Add("FirstText", translator.GetTranslatedString("FirstText"));
+            vars.Add("BackText", translator.GetTranslatedString("BackText"));
+            vars.Add("NextText", translator.GetTranslatedString("NextText"));
+            vars.Add("LastText", translator.GetTranslatedString("LastText"));
 
             uint amountPerQuery = 10;
             int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;

@@ -10,38 +10,45 @@
 {IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
 <script type="text/javascript" language="javascript" src="javascripts/menu.js"></script>
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{NewsManager}: {SystemName}</h3></div>
-	<div>
-		<tr>
-			<td>{Success}</td>
-		</tr>
-	</div>
-    <div>
-		<tr>
-			<td id="add_news"><a id="add_news">{AddNewsItem}</a></td>
-		</tr>
-	</div>
-	<div id="news_online">
-		<table>
-			<tr>
-				<td><b>{NewsTitleText}</b></td>
-				<td><b>{NewsDateText}</b></td>
-			</tr>
-			
+<h2>{NewsManager}: {SystemName}</h3>
+<div id="info_message" class="info_message"><p>{Success}</p></div>
+<a href="admin/add_news.html" id="add_news"><p>{AddNewsItem}</p></a>
+<table id="news_manager">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="news_manager_left"></th>
+      <th class="news_manager_right"></th>
+      <th class="news_manager_right"></th>
+      <th class="news_manager_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="news_manager_left"></th>
+      <th class="news_manager_right"></th>
+      <th class="news_manager_right"></th>
+      <th class="news_manager_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="news_manager_left"><p>{NewsTitleText}</p></td>
+      <td class="news_manager_right"><p>{NewsDateText}</p></td>
+      <td class="news_manager_right"><p>{EditNewsText}</p></td>
+      <td class="news_manager_right"><p>{DeleteNewsText}</p></td>
+    </tr>
 {NewsArrayBegin}
-
-			<tr>
-				<td><b>{NewsTitle}</b></td>
-				<td>{NewsDate}</td>
-				<td><a href="admin/news_manager.html?edit={NewsID}">{EditNewsItem}</a></td>
-				<td><a href="admin/news_manager.html?delete={NewsID}">{DeleteNewsItem}</a></td>
-			</tr>
-			<tr><td></td></tr>
-			
+    <tr>
+      <td class="news_manager_left"><p>{NewsTitle}</p></td>
+      <td class="news_manager_right"><p>{NewsDate}</p></td>
+	  <td class="news_manager_right"><a href="admin/news_manager.html?edit={NewsID}"><p>{EditNewsItem}</p></a></td>
+	  <td class="news_manager_right"><a href="admin/news_manager.html?delete={NewsID}"><p>{DeleteNewsItem}</p></a></td>
+    </tr>
 {NewsArrayEnd}
-
-        </table>
-	</div>
-</div>
+  </tbody>
+</table>
 {IsAdminAuthenticatedEnd}

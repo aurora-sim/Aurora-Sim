@@ -57,6 +57,8 @@ namespace Aurora.Modules.Web
             vars.Add("DeleteNewsItem", translator.GetTranslatedString("DeleteNewsItem"));
             vars.Add("NewsTitleText", translator.GetTranslatedString("NewsTitleText"));
             vars.Add("NewsDateText", translator.GetTranslatedString("NewsDateText"));
+            vars.Add("EditNewsText", translator.GetTranslatedString("EditNewsText"));
+            vars.Add("DeleteNewsText", translator.GetTranslatedString("DeleteNewsText"));
             return vars;
         }
     }

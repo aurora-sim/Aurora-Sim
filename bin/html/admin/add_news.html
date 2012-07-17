@@ -13,35 +13,40 @@
 <meta http-equiv="REFRESH" content="0;url={SystemURL}">
 {IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{AddNewsText}: {SystemName}</h2></div>
-    <div id="register">
-        <form action="admin/add_news.html" METHOD="POST">
-            <table>
-                <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
-				
-				<tr><td colspan="6"></td></tr>
-				<tr>
-					<td>{NewsItemTitle}</td>
-					<td colspan="5">
-						<input name="NewsTitle" type="text" id="NewsTitle" size="119"/>
-					</td>
-				</tr>
+<h2>{AddNewsText}: {SystemName}</h2>
+<form action="admin/add_news.html" method="post">
+<div id="error_message" class="error_message">{ErrorMessage}</div>
+<table id="add_news">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="add_news_left"></th>
+      <th class="add_news_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="add_news_left"></th>
+      <th class="add_news_right"></th>
+    </tr>
+  </tfoot>
 
-				<tr>
-					<td class="odd">{NewsItemText}</td>
-					<td colspan="2" valign="top">
-						<textarea name="NewsText" cols="91" rows="10" id="NewsText"></textarea>
-					</td>
-				</tr>
-				
-				<tr>
-					<td class="even">
-							<input type="hidden" name="action" value="check"><button id="Submit" name="Submit" type="Submit">{Submit}</button></input>
-					</td>
-				</tr>
-			</table>
-		</form>
-	</div>
-</div>
+  <tbody>
+    <tr>
+      <td class="add_news_left"><p>{NewsItemTitle}</p></td>
+      <td class="add_news_right"><input name="NewsTitle" type="text" id="NewsTitle" size="119"/></td>
+    </tr>
+    <tr>
+      <td class="add_news_left"><p>{NewsItemText}</p></td>
+      <td class="add_news_right"><textarea name="NewsText" cols="91" rows="10" id="NewsText"></textarea></td>
+    </tr>
+    <tr>
+      <td class="add_news_left"></td>
+      <td class="add_news_right"><input type="hidden" name="action" value="check"><button id="Submit" name="Submit" type="Submit">{Submit}</button></input></td>
+    </tr>
+  </tbody>
+</table>
+</form>
 {IsAdminAuthenticatedEnd}

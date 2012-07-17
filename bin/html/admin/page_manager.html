@@ -1,4 +1,5 @@
 <!-- params to replace
+
 {SystemURL}
 {SystemName}
 {PagesList}
@@ -23,88 +24,111 @@
 {ChangesSavedSuccessfully}      Changes saved successfully
 {SelectItem}                    Select Item
 {EdittingPageID}
-
 -->
+
 {IsAdminAuthenticatedBegin}
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{SystemName}: {PageManager}</h2></div>
-	<div id="pagemanager">
-		<div><h3>{ChangesSavedSuccessfully}</h3></div>
-		<form action="admin/page_manager.html" method="post">
-			<table>
-				<tbody>
-					<tr>
-						<td>
-							<select id="MenuItem" require="true" name="MenuItem">									
+<h2>{SystemName}: {PageManager}</h2>
+<div id="error_message" class="error_message"><h3>{ChangesSavedSuccessfully}</h3></div>
+<form action="admin/page_manager.html" method="post">
+<table id="page_manager_select">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="page_manager_select_left"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="page_manager_select_left"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="page_manager_select_left">
+	    <select id="MenuItem" require="true" name="MenuItem">
 {PagesListArrayBegin}
-								<option value="{Value}">{Name}</option>
+		  <option value="{Value}">{Name}</option>
 {PagesListArrayEnd}
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td><button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button></td>
-					</tr>
-				</tbody>
-			</table>
-		</form>
-		<form action="page_manager.html" method="post">
-			<table>
-				<tbody>
-					<tr>
-						<td>{PageTitleText}</td>
-						<td><input name="PageTitle" type="text" id="PageTitle" size="119" value="{PageTitle}" /></td>
-					</tr>
-					<tr>
-						<td>{PageTooltipText}</td>
-						<td><input name="PageTooltip" type="text" id="PageTooltip" size="119" value="{PageTooltip}" /></td>
-					</tr>
-					<tr>
-						<td>{PagePositionText}</td>
-						<td><input name="PagePosition" type="text" id="PagePosition" size="119" value="{PagePosition}" /></td>
-					</tr>
-					<tr>
-						<td>{PageIDText}</td>
-						<td><input name="PageID" type="text" id="PageID" size="119" value="{PageID}" /></td>
-					</tr>
-					<tr>
-						<td>{PageLocationText}</td>
-						<td><input name="PageLocation" type="text" id="PageLocation" size="119" value="{PageLocation}" /></td>
-					</tr>
-					<tr>
-						<td>{RequiresLoginText}</td>
-						<td>
-							<select id="RequiresLogin" require="true" name="RequiresLogin">	
-								<option value="false" {RequiresLoginNo}>{No}</option>
-								<option value="true" {RequiresLoginYes}>{Yes}</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>{RequiresLogoutText}</td>
-						<td>
-							<select id="RequiresLogout" require="true" name="RequiresLogout">	
-								<option value="false" {RequiresLogoutNo}>{No}</option>
-								<option value="true" {RequiresLogoutYes}>{Yes}</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>{RequiresAdminText}</td>
-						<td>
-							<select id="RequiresAdmin" require="true" name="RequiresAdmin">	
-								<option value="false" {RequiresAdminNo}>{No}</option>
-								<option value="true" {RequiresAdminYes}>{Yes}</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<input name="EdittingPageID" type="text" id="EdittingPageID" hidden=true value="{EdittingPageID}" />
-						<td><button id="SaveMenuItem" type="Submit" name="SaveMenuItem">{SaveMenuItemChanges}</button></td>
-					</tr>
-				</tbody>
-			</table>
-		</form>
-	</div>
-</div>
+	    </select><button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
+
+<form action="page_manager.html" method="post">
+<table id="page_manager">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="page_manager_left"></th>
+      <th class="page_manager_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="page_manager_left"></th>
+      <th class="page_manager_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="page_manager_left"><p>{PageTitleText}</p></td>
+      <td class="page_manager_right"><input name="PageTitle" type="text" id="PageTitle" size="119" value="{PageTitle}" /></td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{PageTooltipText}</p></td>
+      <td class="page_manager_right"><input name="PageTooltip" type="text" id="PageTooltip" size="119" value="{PageTooltip}" /></td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{PagePositionText}</p></td>
+      <td class="page_manager_right"><input name="PagePosition" type="text" id="PagePosition" size="119" value="{PagePosition}" /></td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{PageIDText}</p></td>
+      <td class="page_manager_right"><input name="PageID" type="text" id="PageID" size="119" value="{PageID}" /></td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{PageLocationText}</p></td>
+      <td class="page_manager_right"><input name="PageLocation" type="text" id="PageLocation" size="119" value="{PageLocation}" /></td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{RequiresLoginText}</p></td>
+      <td class="page_manager_right">
+	    <select id="RequiresLogin" require="true" name="RequiresLogin">
+		  <option value="false" {RequiresLoginNo}>{No}</option>
+		  <option value="true" {RequiresLoginYes}>{Yes}</option>
+		</select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{RequiresLogoutText}</p></td>
+      <td class="page_manager_right">
+	    <select id="RequiresLogout" require="true" name="RequiresLogout">	
+		  <option value="false" {RequiresLogoutNo}>{No}</option>
+		  <option value="true" {RequiresLogoutYes}>{Yes}</option>
+		</select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{RequiresAdminText}</p></td>
+      <td class="page_manager_right">
+	    <select id="RequiresAdmin" require="true" name="RequiresAdmin">
+		  <option value="false" {RequiresAdminNo}>{No}</option>
+		  <option value="true" {RequiresAdminYes}>{Yes}</option>
+		</select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><input name="EdittingPageID" type="text" id="EdittingPageID" hidden=true value="{EdittingPageID}" /></td>
+      <td class="page_manager_right"><button id="SaveMenuItem" type="Submit" name="SaveMenuItem">{SaveMenuItemChanges}</button></td>
+    </tr>
+  </tbody>
+</table>
 {IsAdminAuthenticatedEnd}

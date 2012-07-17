@@ -65,15 +65,15 @@ namespace Aurora.Modules.Web
                 vars.Add("BackOne", 0);
             }
 
-
             vars.Add("UsersList", usersList);
             vars.Add("UserSearchText", translator.GetTranslatedString("UserSearchText"));
             vars.Add("SearchForUserText", translator.GetTranslatedString("SearchForUserText"));
             vars.Add("UserNameText", translator.GetTranslatedString("UserNameText"));
             vars.Add("Search", translator.GetTranslatedString("Search"));
+			vars.Add("SearchResultForUserText", translator.GetTranslatedString("SearchResultForUserText"));
             vars.Add("EditText", translator.GetTranslatedString("EditText"));
             vars.Add("EditUserAccountText", translator.GetTranslatedString("EditUserAccountText"));
-            
+
             vars.Add("FirstText", translator.GetTranslatedString("FirstText"));
             vars.Add("BackText", translator.GetTranslatedString("BackText"));
             vars.Add("NextText", translator.GetTranslatedString("NextText"));

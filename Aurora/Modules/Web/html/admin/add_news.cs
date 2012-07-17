@@ -50,6 +50,7 @@ namespace Aurora.Modules.Web
             vars.Add("NewsItemText", translator.GetTranslatedString("NewsItemText"));
             vars.Add("AddNewsText", translator.GetTranslatedString("AddNewsText"));
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
+
             return vars;
         }
     }
