@@ -164,6 +164,8 @@ namespace OpenSim.Services.LLLoginService
 
         public void FinishedStartup()
         {
+            if (m_loginServerConfig == null)
+                return;
             IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
             if (gridInfo != null)
             {

@@ -82,13 +82,16 @@ namespace Aurora.Modules.Web
 
         public void FinishedStartup()
         {
-            IGridInfo gridInfo = Registry.RequestModuleInterface<IGridInfo>();
-            GridName = gridInfo.GridName;
+            if (_enabled)
+            {
+                IGridInfo gridInfo = Registry.RequestModuleInterface<IGridInfo>();
+                GridName = gridInfo.GridName;
 
-            if (PagesMigrator.RequiresInitialUpdate())
-                PagesMigrator.ResetToDefaults();
-            if (SettingsMigrator.RequiresInitialUpdate())
-                SettingsMigrator.ResetToDefaults();
+                if (PagesMigrator.RequiresInitialUpdate())
+                    PagesMigrator.ResetToDefaults();
+                if (SettingsMigrator.RequiresInitialUpdate())
+                    SettingsMigrator.ResetToDefaults();
+            }
         }
 
         #endregion

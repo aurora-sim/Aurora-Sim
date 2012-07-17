@@ -34,6 +34,8 @@ namespace Aurora.Management
 
         private void select_user_Click(object sender, EventArgs e)
         {
+            if (listBox.SelectedItem == null)
+                return;
             UserName = listBox.SelectedItem.ToString();
             Close();
         }

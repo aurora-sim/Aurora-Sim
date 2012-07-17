@@ -1797,6 +1797,9 @@ namespace Aurora.Framework
                 var possArrayType = Activator.CreateInstance(PossibleArrayType);
                 IList list = (IList)possArrayType;
                 Type t = PossibleArrayType.GetGenericArguments()[0];
+                if (t == typeof(UInt32))
+                    return o.AsUInteger();
+
                 foreach (OSD oo in array)
                 {
                     list.Add(OSDToObject(oo, t));

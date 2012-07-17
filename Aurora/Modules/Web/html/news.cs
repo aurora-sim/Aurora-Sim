@@ -33,9 +33,26 @@ namespace Aurora.Modules.Web
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridNewsItem news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", httpRequest.Query["newsid"].ToString());
-            vars.Add("NewsTitle", news.Title);
-            vars.Add("NewsText", news.Text);
-            vars.Add("NewsID", news.ID.ToString());
+            if (news != null)
+            {
+                vars.Add("NewsTitle", news.Title);
+                vars.Add("NewsText", news.Text);
+                vars.Add("NewsID", news.ID.ToString());
+            }
+            else
+            {
+                if (httpRequest.Query["newsid"].ToString() == "-1")
+                {
+                    vars.Add("NewsTitle", "No news to report");
+                    vars.Add("NewsText", "");
+                }
+                else
+                {
+                    vars.Add("NewsTitle", "Invalid News Item");
+                    vars.Add("NewsText", "");
+                }
+                vars.Add("NewsID", "-1");
+            }
 
             vars.Add("News", translator.GetTranslatedString("News"));
             vars.Add("NewsItemTitle", translator.GetTranslatedString("NewsItemTitle"));

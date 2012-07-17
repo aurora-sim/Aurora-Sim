@@ -532,28 +532,31 @@ namespace Aurora.Modules.WorldMap
                 }
             }
             List<GridRegion> allRegions = new List<GridRegion> ();
-            foreach (GridRegion region in regionInfos)
+            if (regionInfos != null)
             {
-                //Add the found in search region first
-                if (!allRegions.Contains (region))
+                foreach (GridRegion region in regionInfos)
                 {
-                    allRegions.Add (region);
-                    blocks.Add (SearchMapBlockFromGridRegion (region));
-                }
-                //Then send surrounding regions
-                List<GridRegion> regions = m_scene.GridService.GetRegionRange (m_scene.RegionInfo.ScopeID,
-                    (region.RegionLocX - (4 * Constants.RegionSize)),
-                    (region.RegionLocX + (4 * Constants.RegionSize)),
-                    (region.RegionLocY - (4 * Constants.RegionSize)),
-                    (region.RegionLocY + (4 * Constants.RegionSize)));
-                if (regions != null)
-                {
-                    foreach (GridRegion r in regions)
+                    //Add the found in search region first
+                    if (!allRegions.Contains(region))
                     {
-                        if (!allRegions.Contains (region))
+                        allRegions.Add(region);
+                        blocks.Add(SearchMapBlockFromGridRegion(region));
+                    }
+                    //Then send surrounding regions
+                    List<GridRegion> regions = m_scene.GridService.GetRegionRange(m_scene.RegionInfo.ScopeID,
+                        (region.RegionLocX - (4 * Constants.RegionSize)),
+                        (region.RegionLocX + (4 * Constants.RegionSize)),
+                        (region.RegionLocY - (4 * Constants.RegionSize)),
+                        (region.RegionLocY + (4 * Constants.RegionSize)));
+                    if (regions != null)
+                    {
+                        foreach (GridRegion r in regions)
                         {
-                            allRegions.Add (region);
-                            blocks.Add (SearchMapBlockFromGridRegion (r));
+                            if (!allRegions.Contains(region))
+                            {
+                                allRegions.Add(region);
+                                blocks.Add(SearchMapBlockFromGridRegion(r));
+                            }
                         }
                     }
                 }
