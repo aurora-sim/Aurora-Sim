@@ -66,7 +66,10 @@ namespace Aurora.Framework
             UUID regionid = (UUID)Util.OSDToObject(map["regionID"], typeof(UUID));
 
             List<RegionRegistrationURLs> urls = m_genericsConnector.GetGenerics<RegionRegistrationURLs>(regionid, "RegionRegistrationUrls");
-            returnValue.AddRange(urls.Select(region => region.URLS["regionURI"]).Select(dummy => (string) dummy));
+            foreach (RegionRegistrationURLs regionRegistrationUrLse in urls)
+            {
+                returnValue.Add(regionRegistrationUrLse.URLS["regionURI"].AsString());
+            }
             return returnValue;
         }
     }
