@@ -11,65 +11,100 @@
 {MoreInfoText}     More Info
 -->
 
-<div id="content">
-	<div id="ContentHeaderCenter"><h2>{SystemName}: {OnlineUsersText}</h2></div>
-	<div id="onlineusers">
-		<div id="users_navigation">
-			<table>
-			<tr>
-				<td>
-					<a class="fade" href="online_users.html?Start=0" target="_self" title="{FirstText}">
-						<p class="nav">|&nbsp;<</p>
-					</a>
-				</td>
-				<td>
-					<a class="fade" href="online_users.html?Start={BackOne}" target="_self" title="{BackText}">
-						<p class="nav"><</p>
-					</a>
-				</td>
-				<td>
-					<p>{CurrentPageText} {CurrentPage}</p>
-				</td>
-				<td>
-					<a class="fade" href="online_users.html?Start={NextOne}" target="_self" title="{NextText}">
-						<p class="nav">></p>
-					</a>
-				</td>
-				<td>
-					<a class="fade" href="online_users.html?Start=-1" target="_self" title="{LastText}">
-						<p class="nav">>&nbsp;|</p>
-					</a>
-				</td>
-			</tr>
-			</table>
-		</div>
-		<table>
-			<thead>
-				<tr>
-					<td>
-						<a class="fade" href="online_users.html?Order=UserName" title="{UserNameText}"><p>{UserNameText}</p></a>
-					</td>
-					<td>
-						<a class="fade" href="online_users.html?Order=RegionName" title="{RegionNameText}"><p>{RegionNameText}</p></a>
-					</td>
-				</tr>
-			</thead>
-			<tbody>
+<h2>{SystemName}: {OnlineUsersText}</h2>
+<table id="online_users_navigation_top">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="online_users.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="online_users.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="online_users.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="online_users.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>
+
+<table id="online_users">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="online_users_left"><a class="fade" href="online_users.html?Order=UserName" title="{UserNameText}"><p>{UserNameText}</p></a></th>
+      <th class="online_users_right"><a class="fade" href="online_users.html?Order=RegionName" title="{RegionNameText}"><p>{RegionNameText}</p></a></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="online_users_left"><a class="fade" href="online_users.html?Order=UserName" title="{UserNameText}"><p>{UserNameText}</p></a></th>
+      <th class="online_users_right"><a class="fade" href="online_users.html?Order=RegionName" title="{RegionNameText}"><p>{RegionNameText}</p></a></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
 {UsersOnlineListArrayBegin}
-				<tr>
-					<td>
-						<a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}">
-							<u>{UserName}</u>
-						</a>
-					</td>
-					<td>
-						<a target="_blank" class='region_info' href="region_info.html?regionid={UserRegionID}">
-							<u>{UserRegion}</u>
-						</a>
-					</td>
-				</tr>
+    <tr>
+      <td class="online_users_left"><a target="_blank" class='agent_info' href="agent_info.html?userid={UserID}">{UserName}</a></td>
+      <td class="online_users_right"><a target="_blank" class='region_info' href="region_info.html?regionid={UserRegionID}">{UserRegion}</a></td>
+    </tr>
 {UsersOnlineListArrayEnd}
-			</tbody>
-		</table>
-	</div>
-</div>
+  </tbody>
+</table>
+
+<table id="online_users_navigation_bottom">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="online_users.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="online_users.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="online_users.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="online_users.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>

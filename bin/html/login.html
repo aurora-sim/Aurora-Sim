@@ -11,31 +11,41 @@
 -->
 
 <script language="javascript" type="text/javascript">
-	addEvent(window, "load", function() { document.getElementById("login_input").focus(); } );
+  addEvent(window, "load", function() { document.getElementById("login_input").focus(); } );
 </script>
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{SystemName}: {Login}</h2></div>
-    <div id="login">
-		<form action="login.html" method="POST">
-			<table>
-                <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
-				<tr>
-					<td class="odd"><span id="logname_label">{UserNameText}*</span></td>
-					<td class="odd"><div class="roundedinput"><input require="true" label="username" id="login_input" name="username" type="text"/></div></td>
-				</tr>
-				<tr>
-					<td class="even"><span id="password_label">{PasswordText}*</span></td>
-					<td class="even"><div class="roundedinput"><input require="true" label="password" id="login_input" type="password" name="password" /></div></td>
-				</tr>
-				<tr>
-					<td class="odd"><a href="forgotpass.html">{ForgotPassword}</a></td>                
-					<td class="odd">
-						<div class="center">
-							<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Submit}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-</div>
+
+<h2>{SystemName}: {Login}</h2>
+<form action="login.html" method="post">
+<div id="error_message" class="error">{ErrorMessage}</div>
+<table id="login">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="login_left"><p id="logname_label">{UserNameText}*</p></td>
+      <td class="login_right"><input require="true" label="username" id="login_input" name="username" type="text"/></td>
+    </tr>
+    <tr>
+      <td class="login_left"><p id="password_label">{PasswordText}*</p></td>
+      <td class="login_right"><input require="true" label="password" id="login_input" type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <td class="login_left"><a href="forgotpass.html"><p>{ForgotPassword}</p></a></td>
+      <td class="login_right"><button id="login_bouton" type="Submit" name="Submit" value="Submit">{Submit}</button></td>
+    </tr>
+  </tbody>
+</table>

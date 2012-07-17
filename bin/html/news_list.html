@@ -1,4 +1,5 @@
 <!-- params to replace
+
 {SystemURL}
 {SystemName}
 {News}                     News
@@ -7,64 +8,105 @@
 {NewsTitle}                
 {NewsText}             
 {NewsID}             
-
 -->
 
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{SystemName}: {News}</h2></div>
-    <div id="newslist">		
-		<div id="newslist_navigation">
-			<table>
-			<tr>
-				<td>
-					<a class="fade" href="region_list.html?Start=0" target="_self" title="{FirstText}">
-						<p class="nav">|&nbsp;<</p>
-					</a>
-				</td>
-				<td>
-					<a class="fade" href="region_list.html?Start={BackOne}" target="_self" title="{BackText}">
-						<p class="nav"><</p>
-					</a>
-				</td>
-				<td>
-					<p>{CurrentPageText} {CurrentPage}</p>
-				</td>
-				<td>
-					<a class="fade" href="region_list.html?Start={NextOne}" target="_self" title="{NextText}">
-						<p class="nav">></p>
-					</a>
-				</td>
-				<td>
-					<a class="fade" href="region_list.html?Start=-1" target="_self" title="{LastText}">
-						<p class="nav">>&nbsp;|</p>
-					</a>
-				</td>
-			</tr>
-			</table>
-		</div>
-		<table>
-			<thead>
-			<tr>
-				<td>
-					<b>{NewsTitleText}</b>
-				</td>
-				<td>
-					<b>{NewsDateText}</b>
-				</td>
-			</tr>
-			</thead>
-			<tbody>
+<h2>{SystemName}: {News}</h2>
+<table id="news_list_navigation_top">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="news_list.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="news_list.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="news_list.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="news_list.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>
+
+<table id="news_list">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="news_list_left">{NewsTitleText}</th>
+      <th class="news_list_right">{NewsDateText}</th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="news_list_left">{NewsTitleText}</th>
+      <th class="news_list_right">{NewsDateText}</th>
+    </tr>
+  </tfoot>
+
+  <tbody>
 {NewsListArrayBegin}
-			<tr>
-				<td class=boxtext>
-					<a class="fade" href="{SystemURL}/news.html?newsid={NewsID}" target="_blank">{NewsTitle}</a>
-				</td>
-				<td class=boxtext vAlign=top noWrap width="10%">
-					{NewsDate}
-				</td>
-			</tr>
+    <tr>
+      <td class="news_list_left">
+        <a class="fade" href="{SystemURL}/news.html?newsid={NewsID}" target="_blank"><p>{NewsTitle}</p></a>
+      </td>
+
+      <td class="news_list_right"><p>{NewsDate}</p></td>
+    </tr>
 {NewsListArrayEnd}
-			</tbody>
-		</table>
-	</div>
-</div>
+  </tbody>
+</table>
+
+<table id="news_list_navigation_bottom">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th><a class="fade" href="news_list.html?Start=0" target="_self" title="{FirstText}"><p class="nav">|&nbsp;<</p></a></th>
+	  <th><a class="fade" href="news_list.html?Start={BackOne}" target="_self" title="{BackText}"><p class="nav"><</p></a></th>
+	  <th><p>{CurrentPageText} {CurrentPage}</p></th>
+	  <th><a class="fade" href="news_list.html?Start={NextOne}" target="_self" title="{NextText}"><p class="nav">></p></a></th>
+	  <th><a class="fade" href="news_list.html?Start=-1" target="_self" title="{LastText}"><p class="nav">>&nbsp;|</p></a></th>
+    </tr>
+  </thead>
+<!--  
+  <tfoot>
+    <tr>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </tfoot>
+  
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+-->
+</table>

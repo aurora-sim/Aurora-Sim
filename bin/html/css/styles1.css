@@ -6,7 +6,7 @@ body {
 	font-size: 14px;
 	background: #fff;
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
-	margin: 0pt;
+	margin: 0px;
 	cursor: default;
 }
 
@@ -51,6 +51,68 @@ body {
 #loginscreenmanager table {width: 100%;}
 #pagemanager table {width: 100%;}
 
+/* New HTML 5 Tables */
+/* TO DO
+tr:nth-child(even) {background: #fcfcfc}
+tr:nth-child(odd) {background: #fafafa}
+tr:nth-child(even) td:nth-child(odd) { background: #fefefe; }
+tr:nth-child(odd) td:nth-child(even) { background: #fafafa; }
+table {border-collapse: separate; border-spacing: 0px;  color:#7E7E7E; width:100%;}
+caption{caption-side:bottom; font-weight:normal; font-style:normal; margin:4px; text-align: left;}
+table, th, td{border: 1px solid #ccc;}
+th{background-image:url();}
+*/
+
+/* New HTML5 Tables */
+/* General */
+table {border-collapse: collapse;}
+th, td{font-weight:normal;}
+
+/* news_list */
+table#news_list_navigation_top, table#news_list_navigation_bottom {width: 30%;}
+table#news_list_navigation_top th, table#news_list_navigation_bottom th {text-align: center;}
+
+table#news_list  {width: 100%;}
+table#news_list th {}
+table#news_list td {}
+.news_list_left {text-align: left;}
+.news_list_right {text-align: right;}
+
+/* online_users */
+table#online_users_navigation_top, table#online_users_navigation_bottom {width: 30%;}
+table#online_users_navigation_top th, table#online_users_navigation_bottom th {text-align: center;}
+
+table#online_users  {width: 100%;}
+table#online_users th {}
+table#online_users td {}
+.online_users_left {text-align: left;}
+.online_users_right {text-align: right;}
+
+/* online_users */
+table#region_list_navigation_top, table#online_users_navigation_bottom {width: 30%;}
+table#region_lists_navigation_top th, table#online_users_navigation_bottom th {text-align: center;}
+
+table#region_list  {width: 100%;}
+table#region_list th {}
+table#region_list td {}
+.region_list_left {text-align: left;}
+.region_list_right {text-align: right;}
+
+/* login */
+table#login  {width: 100%;}
+table#login th {}
+table#login td {}
+.login_left {text-align: left;}
+.login_right {text-align: left;}
+
+/* register */
+table#register  {width: 100%;}
+table#register th {}
+table#register td {}
+.register_left {text-align: left;}
+.register_right {text-align: left;}
+
+
 /* Navigation buttons */
 .nav {
 	background: #fcfcfc;
@@ -69,8 +131,7 @@ body {
 	behavior: url(css/pie.htc);
 }
 
-table {border-collapse: separate; border-spacing: 0pt;}
-caption, th, td {font-weight: normal; text-align: left;}
+
 blockquote:before, blockquote:after, q:before, q:after {content: "";}
 blockquote, q {quotes: "" "";}
 strong{font-weight: 700;}
