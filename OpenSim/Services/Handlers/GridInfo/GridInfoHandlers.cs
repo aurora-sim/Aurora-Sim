@@ -73,6 +73,9 @@ namespace OpenSim.Services
         /// </remarks>
         public GridInfoHandlers(IConfigSource configSource, IRegistryCore registry)
         {
+            IConfig gridCfg = configSource.Configs["GridInfoService"];
+            if (gridCfg == null)
+                return;
             _info["platform"] = "Aurora";
             try
             {

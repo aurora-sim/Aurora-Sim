@@ -20,6 +20,8 @@
 
 [Handlers]
     ;; Add any handlers here that you want to use
+    LLLoginHandler = LLLoginServiceInConnector
+    GridInfoInHandler = GridInfoServerInConnector
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
@@ -35,9 +37,9 @@
     GridWideMessage = GridWideMessageModule
     InventoryHandler = InventoryService
 	LoginHandler = LLLoginService
+    SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
 
-    RegistrationHandlerPort = 8003
     LLLoginHandlerPort = 80
 	
 [MapService]
@@ -52,3 +54,7 @@
     CacheEnabled = true
     ;; The time for cached images to expire (in hours)
     CacheExpires = 24
+	
+[GridInfoService]
+    ;; The port this service will run on
+    GridInfoInHandlerPort = 80

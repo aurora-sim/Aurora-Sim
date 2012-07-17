@@ -62,9 +62,8 @@
     AutoRestartOnCrash = false
     
 [Includes]
-    Include-Main = AuroraWebServerConfiguration/Main.ini
-	
-    ;;Other .ini files to add...
-    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
     Include-Data = AuroraServerConfiguration/Data/Data.ini
+    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
+    Include-Login = AuroraServerConfiguration/Login.ini
+    Include-Main = AuroraWebServerConfiguration/Main.ini
 	Include-WebInterface = AuroraWebServerConfiguration/WebInterface.ini

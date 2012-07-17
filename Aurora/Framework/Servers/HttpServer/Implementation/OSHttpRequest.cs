@@ -176,7 +176,12 @@ namespace Aurora.Framework.Servers.HttpServer
             get
             {
                 if (_remoteIPEndPoint == null)
-                    _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], int.Parse(_httpRequest.Headers["Host"].Value.Split(':')[1]));
+                {
+                    if (_httpRequest.Headers["Host"].Value.Split(':').Length == 1)
+                        _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], 80);
+                    else
+                        _remoteIPEndPoint = NetworkUtils.ResolveEndPoint(_httpRequest.Headers["Host"].Value.Split(':')[0], int.Parse(_httpRequest.Headers["Host"].Value.Split(':')[1]));
+                }
 
                 return _remoteIPEndPoint;
             }

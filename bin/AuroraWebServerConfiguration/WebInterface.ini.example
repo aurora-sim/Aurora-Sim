@@ -15,7 +15,7 @@
 	DefaultLanguage = en
 	
 	;; The port to run the web interface on
-	;; Recommended is 80, but if you want it to look like a normal website, use 80
+	;; Recommended is 80
 	Port = 80
 	
 	;;
