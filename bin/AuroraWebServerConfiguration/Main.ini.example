@@ -1,0 +1,54 @@
+[ApplicationPlugins]
+    ServicesLoader = ServicesLoader
+	
+[AuroraConnectors]
+    AbuseReportsConnector = LocalConnector
+    AssetConnector = LocalConnector
+    AvatarArchiverConnector = LocalConnector
+    SimMapDataConnector = LocalConnector
+    ScriptDataConnector = LocalConnector
+    RegionInfoConnector = LocalConnector
+    AgentConnector = LocalConnector
+    RegionConnector = LocalConnector
+    ProfileConnector = LocalConnector
+    EstateConnector = LocalConnector
+    OfflineMessagesConnector = LocalConnector
+    DirectoryServiceConnector = LocalConnector
+    MuteListConnector = LocalConnector
+    ParcelConnector = LocalConnector
+    EmailConnector = LocalConnector
+
+[Handlers]
+    ;; Add any handlers here that you want to use
+
+    AgentInfoHandler = AgentInfoService
+    AssetHandler = AssetService
+	AssetHandlerUseCache = false
+    AuthenticationHandler = PasswordAuthenticationService
+    AvatarHandler = AvatarService
+    CapsHandler = CapsService
+    ConfigurationHandler = ConfigurationService
+    EventQueueHandler = EventQueueMasterService
+    FreeSwitchHandler = FreeswitchService
+    FriendsHandler = FriendsService
+    GridHandler = GridService
+    GridWideMessage = GridWideMessageModule
+    InventoryHandler = InventoryService
+	LoginHandler = LLLoginService
+    UserAccountHandler = UserAccountService
+
+    RegistrationHandlerPort = 8003
+    LLLoginHandlerPort = 80
+	
+[MapService]
+    ;; This controls options about the v2 MapService, which allows v2 viewers to see the map
+    ;; Should we allow the use of this service?
+    Enabled = true
+    ;; The port to run the MapService on
+    ;; Default is 80
+    Port = 80
+    ;; Should we build up an expiring cache of the map tiles?
+    ;; Highly recommended, otherwise, many tiles will be generated more than once, which wastes CPU
+    CacheEnabled = true
+    ;; The time for cached images to expire (in hours)
+    CacheExpires = 24

@@ -22,6 +22,7 @@
     GridHandler = GridService
     GridWideMessage = GridWideMessageModule
     InventoryHandler = InventoryService
+	LoginHandler = LLLoginService
     SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
 

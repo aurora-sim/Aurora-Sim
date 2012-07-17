@@ -60,6 +60,7 @@
     FriendsHandler = FriendsService
     GridHandler = GridService
     InventoryHandler = InventoryService
+	LoginHandler = LLLoginService
     SimulationHandler = LocalSimulationServiceConnector
     SyncMessagePosterServiceHandler = LocalSyncMessagePosterService
     UserAccountHandler = UserAccountService

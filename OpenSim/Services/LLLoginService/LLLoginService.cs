@@ -96,7 +96,8 @@ namespace OpenSim.Services.LLLoginService
         {
             m_config = config;
             m_loginServerConfig = config.Configs["LoginService"];
-            if (m_loginServerConfig == null)
+            IConfig handlersConfig = config.Configs["Handlers"];
+            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginHandler")
                 return;
 
             m_forceUserToWearFolderName = m_loginServerConfig.GetString("forceUserToWearFolderName", "");
@@ -164,7 +165,8 @@ namespace OpenSim.Services.LLLoginService
 
         public void FinishedStartup()
         {
-            if (m_loginServerConfig == null)
+            IConfig handlersConfig = m_config.Configs["Handlers"];
+            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginHandler")
                 return;
             IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
             if (gridInfo != null)

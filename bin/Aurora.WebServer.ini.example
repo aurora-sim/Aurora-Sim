@@ -1,0 +1,70 @@
+[Network]
+    ;; Advanced configs
+    http_listener_port = 80
+	
+    ;; HTTPS configs
+    use_https = false
+    ;; Path to your HTTPS certificate
+    https_cert_path = ""
+    ;; Password to your HTTPS cert
+    https_cert_pass = ""
+    ;; The protocols that will be able to be used
+    ;; The valid values are
+    ;; Default - Specifies that either SSL 3.0 or TLS 1.0 are acceptable for secure communications
+    ;; Tls - Specifies that the TLS 1.0 security protocol is the only acceptable secure communications protocol
+    ;; Ssl3 - Specifies that the SSL 3.0 security protocol is the only acceptable secure communications protocol
+    ;; Ssl2 - Specifies that the SSL 2.0 security protocol is the only acceptable secure communications protocol
+    https_ssl_protocol = "Default"
+
+    ;; Only change this if you are having issues with connecting clients
+    ;; The default is your external IP
+    ;HostName = http://127.0.0.1
+
+
+[Console]
+    ;; Setting for which console log will be used
+    ;; Values are:
+    ;; LocalConsole = Color console that is enabled by default
+    ;; RemoteConsole = Remote access enabled console
+    ;; CommandConsole = Default black and white console
+    ;; GUIConsole = Special interface to allow i/o redirection to work for GUI applications.
+    Console = LocalConsole
+
+    ;; These are the settings for the remote console, unneeded if not using the remote console
+    ;RemoteConsoleUser =
+    ;RemoteConsolePass =
+    ;remote_console_port = 0
+
+[Startup]
+    ;; Set this to true if you want to log crashes to disk
+    ;; this can be useful when submitting bug reports.
+    save_crashes = false
+
+    ;; Directory to save crashes to if above is enabled
+    ;; (default is /bin/crashes/*.txt or C:\bin\crashes\*.txt)
+    crash_dir = ./crashes
+
+    ;; Place to create a PID file
+    ;PIDFile = /tmp/my.pid
+
+    ;; Commands to be run on startup are in the given file
+    startup_console_commands_file = startup_commands.txt
+
+    ;; Commands to be run on shutdown are in the given file
+    shutdown_console_commands_file = shutdown_commands.txt
+
+    ;; To run a script every X minutes, set the script filename here
+    ;timer_Script = filename
+    ;; Time between each timer to run (in minutes)
+    ;timer_time = 20
+
+    ;; Should we restart Aurora if the sim crashes?
+    AutoRestartOnCrash = false
+    
+[Includes]
+    Include-Main = AuroraWebServerConfiguration/Main.ini
+	
+    ;;Other .ini files to add...
+    Include-GridInfoService = AuroraServerConfiguration/GridInfoService.ini
+    Include-Data = AuroraServerConfiguration/Data/Data.ini
+	Include-WebInterface = AuroraWebServerConfiguration/WebInterface.ini

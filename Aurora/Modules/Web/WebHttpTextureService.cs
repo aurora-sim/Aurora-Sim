@@ -28,9 +28,6 @@ namespace Aurora.Modules.Web
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            IGridInfo gridInfo = registry.RequestModuleInterface<IGridInfo>();
-            _gridNick = gridInfo != null ? gridInfo.GridName : 
-                "No Grid Name Available, please set this";
         }
 
         public void FinishedStartup()
@@ -41,6 +38,9 @@ namespace Aurora.Modules.Web
                 _server.AddHTTPHandler("GridTexture", OnHTTPGetTextureImage);
                 _registry.RegisterModuleInterface<IWebHttpTextureService>(this);
             }
+            IGridInfo gridInfo = _registry.RequestModuleInterface<IGridInfo>();
+            _gridNick = gridInfo != null ? gridInfo.GridName :
+                "No Grid Name Available, please set this";
         }
 
         public string GetTextureURL(UUID textureID)

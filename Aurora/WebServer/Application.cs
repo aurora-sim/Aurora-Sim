@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Contributors, http://aurora-sim.org/, http://opensimulator.org/
+ * Copyright (c) Contributors, http://aurora-sim.org/
  * See CONTRIBUTORS.TXT for a full list of copyright holders.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,48 +26,17 @@
  */
 
 using Aurora.Simulation.Base;
-using Nini.Config;
-using Aurora.Framework;
-using Aurora.Framework.Servers.HttpServer;
 
-namespace OpenSim.Services
+namespace Aurora.Server
 {
-    public class GridInfoServerInConnector : IService
+    /// <summary>
+    ///   Starting class for the Aurora Server
+    /// </summary>
+    public class Application
     {
-        public string Name
+        public static void Main(string[] args)
         {
-            get { return GetType().Name; }
+            BaseApplication.BaseMain(args, "Aurora.WebServer.ini", new AuroraBase());
         }
-
-        #region IService Members
-
-        public void Initialize(IConfigSource config, IRegistryCore registry)
-        {
-        }
-
-        public void Start(IConfigSource config, IRegistryCore registry)
-        {
-            GridInfoHandlers handlers = new GridInfoHandlers(config, registry);
-            registry.RegisterModuleInterface<IGridInfo>(handlers);
-
-            IConfig handlerConfig = config.Configs["Handlers"];
-            if (handlerConfig.GetString("GridInfoInHandler", "") != Name)
-                return;
-
-            handlerConfig = config.Configs["GridInfoService"];
-            IHttpServer server =
-                registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint)handlerConfig.GetInt("GridInfoInHandlerPort", 0));
-
-            server.AddStreamHandler(new GenericStreamHandler("GET", "/get_grid_info",
-                                                          handlers.RestGetGridInfoMethod));
-            server.AddXmlRPCHandler("get_grid_info", handlers.XmlRpcGridInfoMethod);
-        }
-
-        public void FinishedStartup()
-        {
-        }
-
-        #endregion
     }
 }

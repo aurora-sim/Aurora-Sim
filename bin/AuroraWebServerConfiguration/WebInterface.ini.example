@@ -1,0 +1,29 @@
+[WebInterface]
+
+	;; The web interface to use
+	;; BuiltIn gives you a loginscreen automatically
+	;; Default is BuiltIn
+	Module = BuiltIn
+	
+	;; 
+	;; All following options are for the built in web interface only
+	;;
+	
+	;; The default langugae for the interface to be in
+	;; Valid options are
+	;; en, fr, de, es, it
+	DefaultLanguage = en
+	
+	;; The port to run the web interface on
+	;; Recommended is 80, but if you want it to look like a normal website, use 80
+	Port = 80
+	
+	;;
+	;; Main Web Interface
+	;; http://your server IP:port/
+	;; This includes registration pages, viewing the world map, logging in, and changing user information, and admin management.
+	;;
+	;; Welcome Screen
+	;; You can access this at 
+	;; http://your server IP:port/welcomescreen/
+	;;
