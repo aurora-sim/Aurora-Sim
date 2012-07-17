@@ -191,6 +191,22 @@ table#delete_my_account td {}
 .delete_my_account_left {text-align: left;}
 .delete_my_account_right {text-align: left;}
 
+/* user_agent_profile */
+table#user_agent_profile  {width: 100%;}
+table#user_agent_profile th {}
+table#user_agent_profile td {}
+.user_agent_profile_left {text-align: left;}
+.user_agent_profile_right {text-align: left;}
+.user_agent_profile_picture {text-align: left; width: 128px;}
+
+/* region_info */
+table#region_info  {width: 100%;}
+table#region_info th {}
+table#region_info td {}
+.region_info_left {text-align: left;}
+.region_info_right {text-align: left;}
+.region_info_picture {text-align: left; width: 128px;}
+
 /* Navigation buttons */
 .nav {
 	background: #222;

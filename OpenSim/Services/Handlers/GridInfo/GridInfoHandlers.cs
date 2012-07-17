@@ -131,6 +131,8 @@ namespace OpenSim.Services
                 if (GridMapTileURI == "" && mapService != null)
                     GridMapTileURI = mapService.MapServiceURL;
                 GridWebProfileURI = GetConfig(configSource, "webprofile");
+                if (GridWebProfileURI == "" && webInterface != null)
+                    GridWebProfileURI = webInterface.WebProfileURL;
                 GridSearchURI = GetConfig(configSource, "search");
                 GridDestinationURI = GetConfig(configSource, "destination");
                 GridMarketplaceURI = GetConfig(configSource, "marketplace");

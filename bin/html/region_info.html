@@ -1,4 +1,5 @@
-<!--
+<!-- params to replace
+
 {SystemName}
 {SystemURL}
 {RegionName}
@@ -14,9 +15,10 @@
 {RegionSizeText}         Region Size
 {RegionNameText}         Region Name
 {RegionTypeText}         Region Type
-
 {RegionInfoText}
 -->
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -31,37 +33,51 @@
 	<title>{SystemName}: {RegionInfoText}</title>
 </head>
 
-<body class="webui">
-	<div id="container_popup">
-		<div id="content_popup">
-			<h2>{SystemName}: {RegionInfoText}</h2>
-		</div>
-		<div id="regioninfo">
-			<div id="regiondetails">
-			<hr>
-			<tr>
-				<td>
-					<img src="{RegionImageURL}" alt="{RegionName}" title="{RegionName}" />
-				</td>
-			</tr>
-			<table>
-				<tr>
-					<td>{RegionNameText}:</td><td>{RegionName}</td>
-				</tr>
-				<tr>
-					<td>{RegionTypeText}:</td><td>{RegionType}</td>
-				</tr>
-				<tr>
-					<td>{RegionLocationText}:</td><td>X: {RegionLocX}</td><td>Y: {RegionLocY}</td>
-				</tr>
-				<tr>
-					<td>{RegionSizeText}:</td><td>X: {RegionSizeX}</td><td>Y: {RegionSizeY}</td>
-				</tr>
-				<tr>
-					<td>{OwnerNameText}:</td><td><a href="agent_info.html?userid={OwnerUUID}">{OwnerName}</a></td>
-				</tr>
-			</table>
-		</div>
-	</div>
+<body>
+<h2>{SystemName}: {RegionInfoText}</h2>
+<table id="region_info">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="region_info_left"></th>
+      <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="region_info_left"></th>
+      <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+	  <th class="region_info_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="region_info_picture" rowspan="4"><img src="{RegionImageURL}" alt="{RegionName}" title="{RegionName}" /></td>
+      <td class="region_info_left" colspan="2"><p>{RegionNameText}:</p></td>
+	  <td class="region_info_right" colspan="2"><p>{RegionName}</p></td>
+    </tr>
+    <tr>
+      <td class="region_info_left" colspan="2"><p>{RegionTypeText}:</p></td>
+      <td class="region_info_right" colspan="2"><p>{RegionType}</p></td>
+    </tr>
+    <tr>
+      <td class="region_info_left"><p>{RegionLocationText}:</p></td>
+      <td class="region_info_right" colspan="2"><p>X: {RegionLocX}</p></td>
+      <td class="region_info_right"><p>Y: {RegionLocY}</p></td>
+    </tr>
+    <tr>
+      <td class="region_info_left" colspan="2"><p>{OwnerNameText}:</p></td>
+      <td class="region_info_right" colspan="2"><a href="webprofile/?userid={OwnerUUID}"><p>{OwnerName}</p></a></td>
+    </tr>
+  </tbody>
+</table>
 </body>
 </html>

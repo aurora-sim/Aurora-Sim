@@ -9,6 +9,7 @@ namespace Aurora.Framework
     public interface IWebInterfaceModule
     {
         string LoginScreenURL { get; }
+        string WebProfileURL { get; }
         string RegistrationScreenURL { get; }
     }
 

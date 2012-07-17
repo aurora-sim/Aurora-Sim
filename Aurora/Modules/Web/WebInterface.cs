@@ -37,6 +37,7 @@ namespace Aurora.Modules.Web
 
         public string GridName { get; private set; }
         public string LoginScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/welcomescreen/"; } }
+        public string WebProfileURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/webprofile/"; } }
         public string RegistrationScreenURL { get { return MainServer.Instance.FullHostName + ":" + _port + "/register.html"; } }
 
         #endregion

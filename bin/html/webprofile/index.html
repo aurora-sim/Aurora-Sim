@@ -1,0 +1,78 @@
+<!-- params to replace
+
+{SystemURL}
+{SystemName}
+{UserName}         
+{UserBorn}       
+{UserType}       
+{UserPartner}     
+{UserAboutMe}     
+{UserPictureURL}       
+{UserProfileFor}   User Profile For
+{ResidentSince}    Resident Since
+{AccountType}      Account Type
+{PartnersName}     Partner's Name
+{AboutMe}          About Me
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link href="css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/styleswitch.js"></script>
+	<title>{SystemName}: {UserProfileFor}: {UserName}</title>
+</head>
+
+<body>
+<h2>{SystemName}: {UserName}</h2>
+<table id="user_agent_profile">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="5"><img src="{UserPictureURL}" title="{UserName}" /></td>
+      <td class="user_agent_profile_left"><p>{UserProfileFor}:</p></td>
+	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{ResidentSince}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserBorn}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{AccountType}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserType}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{PartnersName}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserPartner}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{AboutMe}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserAboutMe}</p></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

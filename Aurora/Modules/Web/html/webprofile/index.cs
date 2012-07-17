@@ -20,7 +20,7 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/agent_info.html"
+                           "html/webprofile/index.html"
                        };
             }
         }
@@ -33,19 +33,34 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
-            if (httpRequest.Query.ContainsKey("userid"))
+            if (httpRequest.Query.ContainsKey("userid") ||
+                httpRequest.Query.ContainsKey("name"))
             {
-                string userid = httpRequest.Query["userid"].ToString();
+                UserAccount account = null;
+                if (httpRequest.Query.ContainsKey("name"))
+                {
+                    string name = httpRequest.Query["name"].ToString();
+                    name = name.Replace('.', ' ');
+                    account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                        GetUserAccount(UUID.Zero, name);
+                }
+                else
+                {
+                    string userid = httpRequest.Query["userid"].ToString();
 
-                UserAccount account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, UUID.Parse(userid));
+                    account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                        GetUserAccount(UUID.Zero, UUID.Parse(userid));
+                }
+
+                if (account == null)
+                    return vars;
 
                 vars.Add("UserName", account.Name);
                 vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
                 vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
                 IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
-                    GetUserProfile(UUID.Parse(userid));
+                    GetUserProfile(account.PrincipalID);
                 if (profile != null)
                 {
                     if (profile.Partner != UUID.Zero)
@@ -57,7 +72,7 @@ namespace Aurora.Modules.Web
                     else
                         vars.Add("UserPartner", "No partner");
                     vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
-                    string url = "images/info.jpg";
+                    string url = "../images/info.jpg";
                     IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
                     if (webhttpService != null && profile.Image != UUID.Zero)
                         url = webhttpService.GetTextureURL(profile.Image);
