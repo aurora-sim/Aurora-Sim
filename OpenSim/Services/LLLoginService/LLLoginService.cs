@@ -472,7 +472,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     if(guinfo == null)
                         guinfo = new UserInfo { UserID = account.PrincipalID.ToString() };
-                    GridRegion DefaultRegion = null;
+                    GridRegion DefaultRegion = null, FallbackRegion = null, SafeRegion = null;
                     if (m_GridService != null)
                     {
                         if (m_DefaultHomeRegion != "")
@@ -488,6 +488,24 @@ namespace OpenSim.Services.LLLoginService
 
                             if (DefaultRegion != null)
                                 guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
+
+                            if (guinfo.HomeRegionID == UUID.Zero)
+                            {
+                                List<GridRegion> Fallback = m_GridService.GetFallbackRegions(account.ScopeID, 0, 0);
+                                FallbackRegion = Fallback.Count == 0 ? null : Fallback[0];
+
+                                if (FallbackRegion != null)
+                                    guinfo.HomeRegionID = guinfo.CurrentRegionID = FallbackRegion.RegionID;
+
+                                if (guinfo.HomeRegionID == UUID.Zero)
+                                {
+                                    List<GridRegion> Safe = m_GridService.GetSafeRegions(account.ScopeID, 0, 0);
+                                    SafeRegion = Safe.Count == 0 ? null : Safe[0];
+
+                                    if (SafeRegion != null)
+                                        guinfo.HomeRegionID = guinfo.CurrentRegionID = SafeRegion.RegionID;
+                                }
+                            }
                         }
                     }
 

@@ -352,10 +352,14 @@ namespace Aurora.Framework
             IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (conn != null)
             {
-                UUID userID = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName).PrincipalID;
-                conn.DelinkRegion(regionID);
+                var account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName);
+                if (account != null)
+                {
+                    UUID userID = account.PrincipalID;
+                    conn.DelinkRegion(regionID);
 
-                return conn.CreateNewEstate(new EstateSettings() { EstateName = estateName, EstateOwner = userID }, regionID) != 0;
+                    return conn.CreateNewEstate(new EstateSettings() { EstateName = estateName, EstateOwner = userID }, regionID) != 0;
+                }
             }
             return false;
         }
