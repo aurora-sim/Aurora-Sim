@@ -616,9 +616,9 @@ namespace OpenSim.Services.LLLoginService
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
-                string reason = string.Empty;
+                string reason = "", seedCap = "";
                 AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, avappearance, session, secureSession, position, where,
-                    clientIP, out where, out reason, out destination);
+                    clientIP, out where, out reason, out seedCap, out destination);
 
                 if (aCircuit == null)
                 {
@@ -651,7 +651,7 @@ namespace OpenSim.Services.LLLoginService
 
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, classifiedCategories, FillOutSeedCap(aCircuit, destination, clientIP, account.PrincipalID), m_config, DisplayName, m_registry);
+                    eventCategories, classifiedCategories, seedCap, m_config, DisplayName, m_registry);
 
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 AddLoginSuccessNotification(account);
@@ -679,17 +679,6 @@ namespace OpenSim.Services.LLLoginService
                 {
                     return messages.Count + " users have logged in successfully.";
                 });
-        }
-
-        protected string FillOutSeedCap(AgentCircuitData aCircuit, GridRegion destination, IPEndPoint ipepClient, UUID AgentID)
-        {
-            if (m_CapsService != null)
-            {
-                //Remove any previous users
-                string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                return m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit, 0);
-            }
-            return "";
         }
 
         protected GridRegion FindDestination(UserAccount account, UUID scopeID, UserInfo pinfo, UUID sessionID, string startLocation, GridRegion home, out TeleportFlags tpFlags, out string where, out Vector3 position, out Vector3 lookAt)
@@ -938,7 +927,7 @@ namespace OpenSim.Services.LLLoginService
 
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account, AvatarAppearance appearance,
             UUID session, UUID secureSession, Vector3 position, string currentWhere,
-            IPEndPoint clientIP, out string where, out string reason, out GridRegion dest)
+            IPEndPoint clientIP, out string where, out string reason, out string seedCap, out GridRegion dest)
         {
             where = currentWhere;
             reason = string.Empty;
@@ -946,14 +935,13 @@ namespace OpenSim.Services.LLLoginService
             AgentCircuitData aCircuit = null;
             dest = destination;
 
-            bool success = false;
-
             #region Launch Agent
 
             circuitCode = (uint)Util.RandomClass.Next();
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP);
             aCircuit.teleportFlags = (uint)tpFlags;
-            success = LaunchAgentDirectly(destination, ref aCircuit, out reason);
+            bool success = m_registry.RequestModuleInterface<IAgentProcessing>().
+                LoginAgent(destination, ref aCircuit, out seedCap, out reason);
             if (!success && m_GridService != null)
             {
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
@@ -969,7 +957,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     success = TryFindGridRegionForAgentLogin(defaultRegions, account,
                         appearance, session, secureSession, circuitCode, position,
-                        clientIP, aCircuit, out dest);
+                        clientIP, aCircuit, out seedCap, out dest);
                 }
                 if (!success)
                 {
@@ -979,7 +967,7 @@ namespace OpenSim.Services.LLLoginService
                     {
                         success = TryFindGridRegionForAgentLogin(fallbacks, account,
                             appearance, session, secureSession, circuitCode, position,
-                            clientIP, aCircuit, out dest);
+                            clientIP, aCircuit, out seedCap, out dest);
                     }
                     if (!success)
                     {
@@ -989,7 +977,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
                                 appearance, session, secureSession, circuitCode, position,
-                                clientIP, aCircuit, out dest);
+                                clientIP, aCircuit, out seedCap, out dest);
                             if (!success)
                                 reason = "No Region Found";
                         }
@@ -1010,12 +998,13 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuitCode, Vector3 position,
-            IPEndPoint clientIP, AgentCircuitData aCircuit, out GridRegion destination)
+            IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap, out GridRegion destination)
         {
             foreach (GridRegion r in regions)
             {
                 string reason;
-                bool success = LaunchAgentDirectly(r, ref aCircuit, out reason);
+                bool success = m_registry.RequestModuleInterface<IAgentProcessing>().
+                    LoginAgent(r, ref aCircuit, out seedCap, out reason);
                 if (success)
                 {
                     aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP);
@@ -1024,6 +1013,7 @@ namespace OpenSim.Services.LLLoginService
                 }
                 m_GridService.SetRegionUnsafe(r.RegionID);
             }
+            seedCap = "";
             destination = null;
             return false;
         }
@@ -1050,11 +1040,6 @@ namespace OpenSim.Services.LLLoginService
             // the first login agent is root
 
             return aCircuit;
-        }
-
-        protected bool LaunchAgentDirectly(GridRegion region, ref AgentCircuitData aCircuit, out string reason)
-        {
-            return m_registry.RequestModuleInterface<IAgentProcessing>().LoginAgent(region, ref aCircuit, out reason);
         }
 
         #region Console Commands

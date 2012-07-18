@@ -1198,9 +1198,10 @@ namespace OpenSim.Services.MessagingService
 
         #region Login initial agent
 
-        public virtual bool LoginAgent(GridRegion region, ref AgentCircuitData aCircuit, out string reason)
+        public virtual bool LoginAgent(GridRegion region, ref AgentCircuitData aCircuit, out string seedCap, out string reason)
         {
             bool success = false;
+            seedCap = "";
             reason = "Could not find the simulation service";
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
@@ -1214,9 +1215,9 @@ namespace OpenSim.Services.MessagingService
                 if (capsService != null)
                 {
                     //Remove any previous users
-                    string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
-                    capsService.CreateCAPS(aCircuit.AgentID, CapsUtil.GetCapsSeedPath(ServerCapsBase),
-                                           region.RegionHandle, true, aCircuit, 0);
+                    seedCap = capsService.CreateCAPS(aCircuit.AgentID,
+                        CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()),
+                        region.RegionHandle, true, aCircuit, 0);
 
                     clientCaps = capsService.GetClientCapsService(aCircuit.AgentID);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);
