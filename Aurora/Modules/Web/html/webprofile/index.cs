@@ -37,19 +37,19 @@ namespace Aurora.Modules.Web
 
             string username = filename.Split('/').LastOrDefault();
             UserAccount account = null;
-            if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
-            {
-                string name = username.Contains('.') ? username : httpRequest.Query["name"].ToString();
-                name = name.Replace('.', ' ');
-                account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, name);
-            }
-            else if (httpRequest.Query.ContainsKey("userid"))
+            if (httpRequest.Query.ContainsKey("userid"))
             {
                 string userid = httpRequest.Query["userid"].ToString();
 
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
                     GetUserAccount(UUID.Zero, UUID.Parse(userid));
+            }
+            else if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
+            {
+                string name = username.Contains('.') ? username : httpRequest.Query["name"].ToString();
+                name = name.Replace('.', ' ');
+                account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                    GetUserAccount(UUID.Zero, name);
             }
 
             if (account == null)
