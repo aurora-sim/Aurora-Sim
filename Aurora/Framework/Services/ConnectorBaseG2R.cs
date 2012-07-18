@@ -53,6 +53,9 @@ namespace Aurora.Framework
         {
             base.Init(registry, name);
             //flip it
+            IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
+            IConfig config;
+            m_doRemoteCalls = (config = source.Configs["AuroraConnectors"]) == null || config.GetBoolean("DoRemoteCalls", true);
             SetDoRemoteCalls(!m_doRemoteCalls);
             //this should be the grid server
             if (m_doRemoteCalls)
