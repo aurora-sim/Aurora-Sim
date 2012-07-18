@@ -106,12 +106,17 @@ namespace Aurora.Modules.Web
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
             httpResponse.KeepAlive = false;
             IWebInterfacePage page;
-            if (_pages.TryGetValue(filename, out page))
+            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) +  "/";
+            if (_pages.TryGetValue(filename, out page) ||
+                _pages.TryGetValue(directory, out page))
             {
                 httpResponse.ContentType = GetContentType(filename, httpResponse);
                 string text;
-                if (httpResponse.ContentType == null && !page.AttemptFindPage(filename, ref httpResponse, out text))
-                    return MainServer.BadRequest;
+                if (httpResponse.ContentType == null)
+                {
+                    if (!page.AttemptFindPage(filename, ref httpResponse, out text))
+                        return MainServer.BadRequest;
+                }
                 else
                     text = File.ReadAllText(filename);
 
@@ -156,7 +161,10 @@ namespace Aurora.Modules.Web
         protected Dictionary<string, object> AddVarsForPage(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
-            if (_pages.ContainsKey(filename))
+            IWebInterfacePage page;
+            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) + "/";
+            if (_pages.TryGetValue(filename, out page) ||
+                _pages.TryGetValue(directory, out page))
             {
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
@@ -164,17 +172,17 @@ namespace Aurora.Modules.Web
                 if (translator == null)
                     translator = _defaultTranslator;
 
-                if (_pages[filename].RequiresAuthentication)
+                if (page.RequiresAuthentication)
                 {
                     if (!Authenticator.CheckAuthentication(httpRequest))
                         return null;
-                    if (_pages[filename].RequiresAdminAuthentication)
+                    if (page.RequiresAdminAuthentication)
                     {
                         if (!Authenticator.CheckAdminAuthentication(httpRequest))
                             return null;
                     }
                 }
-                vars = _pages[filename].Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
+                vars = page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
                 vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
                 vars.Add("SystemName", GridName);
                 return vars;
@@ -184,8 +192,10 @@ namespace Aurora.Modules.Web
 
         private AuroraXmlDocument GetXML(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
-            
-            if (_pages.ContainsKey(filename))
+            IWebInterfacePage page;
+            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) + "/";
+            if (_pages.TryGetValue(filename, out page) ||
+                _pages.TryGetValue(directory, out page))
             {
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
@@ -193,17 +203,17 @@ namespace Aurora.Modules.Web
                 if (translator == null)
                     translator = _defaultTranslator;
 
-                if (_pages[filename].RequiresAuthentication)
+                if (page.RequiresAuthentication)
                 {
                     if (!Authenticator.CheckAuthentication(httpRequest))
                         return null;
-                    if (_pages[filename].RequiresAdminAuthentication)
+                    if (page.RequiresAdminAuthentication)
                     {
                         if (!Authenticator.CheckAdminAuthentication(httpRequest))
                             return null;
                     }
                 }
-                return (AuroraXmlDocument)_pages[filename].Fill(this, filename, httpRequest, httpResponse, requestParameters, translator)["xml"];
+                return (AuroraXmlDocument)page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator)["xml"];
             }
             return null;
         }

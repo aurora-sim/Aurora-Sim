@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -20,7 +21,8 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/webprofile/index.html"
+                           "html/webprofile/index.html",
+                           "html/webprofile/"
                        };
             }
         }
@@ -33,65 +35,63 @@ namespace Aurora.Modules.Web
         {
             var vars = new Dictionary<string, object>();
 
-            if (httpRequest.Query.ContainsKey("userid") ||
-                httpRequest.Query.ContainsKey("name"))
+            string username = filename.Split('/').LastOrDefault();
+            UserAccount account = null;
+            if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
             {
-                UserAccount account = null;
-                if (httpRequest.Query.ContainsKey("name"))
+                string name = username.Contains('.') ? username : httpRequest.Query["name"].ToString();
+                name = name.Replace('.', ' ');
+                account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                    GetUserAccount(UUID.Zero, name);
+            }
+            else if (httpRequest.Query.ContainsKey("userid"))
+            {
+                string userid = httpRequest.Query["userid"].ToString();
+
+                account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                    GetUserAccount(UUID.Zero, UUID.Parse(userid));
+            }
+
+            if (account == null)
+                return vars;
+
+            vars.Add("UserName", account.Name);
+            vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
+            vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
+
+            IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
+                GetUserProfile(account.PrincipalID);
+            if (profile != null)
+            {
+                if (profile.Partner != UUID.Zero)
                 {
-                    string name = httpRequest.Query["name"].ToString();
-                    name = name.Replace('.', ' ');
                     account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(UUID.Zero, name);
+                        GetUserAccount(UUID.Zero, profile.Partner);
+                    vars.Add("UserPartner", account.Name);
                 }
                 else
-                {
-                    string userid = httpRequest.Query["userid"].ToString();
-
-                    account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(UUID.Zero, UUID.Parse(userid));
-                }
-
-                if (account == null)
-                    return vars;
-
-                vars.Add("UserName", account.Name);
-                vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
-                vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
-
-                IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
-                    GetUserProfile(account.PrincipalID);
-                if (profile != null)
-                {
-                    if (profile.Partner != UUID.Zero)
-                    {
-                        account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                            GetUserAccount(UUID.Zero, profile.Partner);
-                        vars.Add("UserPartner", account.Name);
-                    }
-                    else
-                        vars.Add("UserPartner", "No partner");
-                    vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
-                    string url = "../images/info.jpg";
-                    IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
-                    if (webhttpService != null && profile.Image != UUID.Zero)
-                        url = webhttpService.GetTextureURL(profile.Image);
-                    vars.Add("UserPictureURL", url);
-                }
-                vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));
-                vars.Add("ResidentSince", translator.GetTranslatedString("ResidentSince"));
-                vars.Add("AccountType", translator.GetTranslatedString("AccountType"));
-                vars.Add("PartnersName", translator.GetTranslatedString("PartnersName"));
-                vars.Add("AboutMe", translator.GetTranslatedString("AboutMe"));
+                    vars.Add("UserPartner", "No partner");
+                vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
+                string url = "../images/info.jpg";
+                IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
+                if (webhttpService != null && profile.Image != UUID.Zero)
+                    url = webhttpService.GetTextureURL(profile.Image);
+                vars.Add("UserPictureURL", url);
             }
+            vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));
+            vars.Add("ResidentSince", translator.GetTranslatedString("ResidentSince"));
+            vars.Add("AccountType", translator.GetTranslatedString("AccountType"));
+            vars.Add("PartnersName", translator.GetTranslatedString("PartnersName"));
+            vars.Add("AboutMe", translator.GetTranslatedString("AboutMe"));
 
             return vars;
         }
 
         public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
         {
-            text = "";
-            return false;
+            httpResponse.ContentType = "text/html";
+            text = File.ReadAllText("html/webprofile/index.html");
+            return true;
         }
     }
 }
