@@ -1216,7 +1216,7 @@ namespace OpenSim.Services.MessagingService
                     //Remove any previous users
                     string ServerCapsBase = CapsUtil.GetRandomCapsObjectPath();
                     capsService.CreateCAPS(aCircuit.AgentID, CapsUtil.GetCapsSeedPath(ServerCapsBase),
-                                           region.RegionHandle, true, aCircuit);
+                                           region.RegionHandle, true, aCircuit, 0);
 
                     clientCaps = capsService.GetClientCapsService(aCircuit.AgentID);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionHandle);

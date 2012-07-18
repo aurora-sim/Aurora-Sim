@@ -30,5 +30,11 @@ namespace Aurora.Modules.Web
 			vars.Add("ChatText", translator.GetTranslatedString("ChatText"));
 			return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

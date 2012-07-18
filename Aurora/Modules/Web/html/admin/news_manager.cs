@@ -61,5 +61,11 @@ namespace Aurora.Modules.Web
             vars.Add("DeleteNewsText", translator.GetTranslatedString("DeleteNewsText"));
             return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

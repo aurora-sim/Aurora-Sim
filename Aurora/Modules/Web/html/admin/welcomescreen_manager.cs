@@ -74,5 +74,11 @@ namespace Aurora.Modules.Web
 
             return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

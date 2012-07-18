@@ -32,5 +32,11 @@ namespace Aurora.Modules.Web
             vars.Add("HomePage404Text", translator.GetTranslatedString("HomePage404Text"));
 			return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

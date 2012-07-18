@@ -31,5 +31,11 @@ namespace Aurora.Modules.Web
             vars.Add("WebsiteDownText", translator.GetTranslatedString("WebsiteDownText"));
 			return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

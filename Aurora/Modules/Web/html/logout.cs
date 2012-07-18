@@ -37,5 +37,11 @@ namespace Aurora.Modules.Web
             Authenticator.RemoveAuthentication(httpRequest);
             return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

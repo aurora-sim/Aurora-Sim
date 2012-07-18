@@ -130,6 +130,12 @@ namespace Aurora.Modules.Web
             return vars;
         }
 
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
+
         private GridPage GetPage(string MenuItem, GridPage rootPage)
         {
             foreach (var page in rootPage.Children)

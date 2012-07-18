@@ -32,5 +32,11 @@ namespace Aurora.Modules.Web
             vars.Add("HomePage505Text", translator.GetTranslatedString("HomePage505Text"));
 			return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

@@ -114,5 +114,11 @@ namespace Aurora.Modules.Web
             vars.Add("NoMaintenance", true);
             return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

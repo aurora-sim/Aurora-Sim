@@ -28,5 +28,11 @@ namespace Aurora.Modules.Web
         {
             return new Dictionary<string, object>();
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

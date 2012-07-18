@@ -687,7 +687,7 @@ namespace OpenSim.Services.LLLoginService
             {
                 //Remove any previous users
                 string CapsBase = CapsUtil.GetRandomCapsObjectPath();
-                return m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit);
+                return m_CapsService.CreateCAPS(AgentID, CapsUtil.GetCapsSeedPath(CapsBase), destination.RegionHandle, true, aCircuit, 0);
             }
             return "";
         }

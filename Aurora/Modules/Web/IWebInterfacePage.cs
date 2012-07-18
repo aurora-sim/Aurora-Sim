@@ -15,5 +15,7 @@ namespace Aurora.Modules.Web
 
         Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest request,
             OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translation);
+
+        bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text);
     }
 }

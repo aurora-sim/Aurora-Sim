@@ -69,19 +69,6 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "regionHandle">The region handle of the region the user is being added to</param>
         /// <param name = "IsRootAgent">Whether this new Caps agent is a root agent in the sim</param>
         /// <param name = "circuitData">The circuit data of the agent that is being created</param>
-        /// /param>
-        /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
-        string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent,
-                          AgentCircuitData circuitData);
-
-        /// <summary>
-        ///   Create the CAPS handler for the given user at the region given by the regionHandle
-        /// </summary>
-        /// <param name = "AgentID">The agents UUID</param>
-        /// <param name = "CAPSBase">The CAPS request, looks like '/CAPS/(UUID)0000/</param>
-        /// <param name = "regionHandle">The region handle of the region the user is being added to</param>
-        /// <param name = "IsRootAgent">Whether this new Caps agent is a root agent in the sim</param>
-        /// <param name = "circuitData">The circuit data of the agent that is being created</param>
         /// <param name = "port">The port to use for the CAPS service</param>
         /// <returns>Returns the CAPS URL that was created by the CAPS Service</returns>
         string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent,

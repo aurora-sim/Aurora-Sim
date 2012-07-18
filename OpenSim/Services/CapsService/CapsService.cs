@@ -162,12 +162,8 @@ namespace OpenSim.Services.CapsService
         /// <param name="regionHandle"></param>
         /// <param name="IsRootAgent">Will this child be a root agent</param>
         /// <param name="circuitData"></param>
+        /// <param name = "port">The port to use for the CAPS service</param>
         /// <returns></returns>
-        public string CreateCAPS(UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData)
-        {
-            return CreateCAPS (AgentID, CAPSBase, regionHandle, IsRootAgent, circuitData, 0);
-        }
-
         public string CreateCAPS (UUID AgentID, string CAPSBase, ulong regionHandle, bool IsRootAgent, AgentCircuitData circuitData, uint port)
         {
             //Now make sure we didn't use an old one or something

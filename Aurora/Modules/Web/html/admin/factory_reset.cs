@@ -13,13 +13,16 @@ namespace Aurora.Modules.Web
 {
     public class FactoryResetPage : IWebInterfacePage
     {
-        public string[] FilePath { get
-        {
-            return new[]
-                       {
-                           "html/admin/factory_reset.html"
-                       };
-        } }
+        public string[] FilePath 
+        { 
+            get
+            {
+                return new[]
+                           {
+                               "html/admin/factory_reset.html"
+                           };
+            } 
+        }
 
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
@@ -49,6 +52,12 @@ namespace Aurora.Modules.Web
             vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 
             return vars;
+        }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
         }
     }
 }

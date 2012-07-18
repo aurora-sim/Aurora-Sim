@@ -61,5 +61,11 @@ namespace Aurora.Modules.Web
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
             return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

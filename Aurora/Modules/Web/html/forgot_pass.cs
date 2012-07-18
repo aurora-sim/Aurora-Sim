@@ -30,5 +30,11 @@ namespace Aurora.Modules.Web
 			vars.Add("ForgotPassword", translator.GetTranslatedString("ForgotPassword"));
 			return vars;
         }
+
+        public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
+        {
+            text = "";
+            return false;
+        }
     }
 }

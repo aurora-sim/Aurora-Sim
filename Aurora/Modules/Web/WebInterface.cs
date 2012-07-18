@@ -103,14 +103,18 @@ namespace Aurora.Modules.Web
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
-            httpResponse.ContentType = GetContentType(filename, httpResponse);
-            if (httpResponse.ContentType == null)
-                return MainServer.BadRequest;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
             httpResponse.KeepAlive = false;
-
-            if (_pages.ContainsKey(filename))
+            IWebInterfacePage page;
+            if (_pages.TryGetValue(filename, out page))
             {
+                httpResponse.ContentType = GetContentType(filename, httpResponse);
+                string text;
+                if (httpResponse.ContentType == null && !page.AttemptFindPage(filename, ref httpResponse, out text))
+                    return MainServer.BadRequest;
+                else
+                    text = File.ReadAllText(filename);
+
                 var requestParameters = request != null ? WebUtils.ParseQueryString(request.ReadUntilEnd()) : new Dictionary<string, object>();
                 if (filename.EndsWith(".xsl"))
                 {
@@ -127,16 +131,21 @@ namespace Aurora.Modules.Web
                 }
                 else
                 {
-					Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
-					if (httpResponse.StatusCode != 200)
-						return MainServer.NoResponse;
-					if (vars == null)
-						return MainServer.BadRequest;
-					response = Encoding.UTF8.GetBytes(ConvertHTML(File.ReadAllText(filename), httpRequest, httpResponse, requestParameters, vars));
-				}
+                    Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
+                    if (httpResponse.StatusCode != 200)
+                        return MainServer.NoResponse;
+                    if (vars == null)
+                        return MainServer.BadRequest;
+                    response = Encoding.UTF8.GetBytes(ConvertHTML(text, httpRequest, httpResponse, requestParameters, vars));
+                }
             }
             else
+            {
+                httpResponse.ContentType = GetContentType(filename, httpResponse);
+                if (httpResponse.ContentType == null)
+                    return MainServer.BadRequest;
                 response = File.ReadAllBytes(filename);
+            }
             return response;
         }
 
