@@ -44,7 +44,7 @@
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
     ConfigurationHandler = ConfigurationService
-    EventQueueHandler = EventQueueServicesConnector
+    EventQueueHandler = EventQueueService
     FreeSwitchHandler = RemoteFreeswitchConnector
     FriendsHandler = FriendsService
     GridHandler = GridService

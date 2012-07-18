@@ -69,14 +69,6 @@ namespace Aurora.Modules
             return true;
         }
 
-        public override bool TryEnqueue(OSD ev, UUID avatarID, ulong RegionHandle)
-        {
-            if (!base.TryEnqueue(ev, avatarID, RegionHandle))
-                if (!m_remoteService.TryEnqueue(ev, avatarID, RegionHandle))
-                    return false;
-            return true;
-        }
-
         #endregion
 
         #region IService Members

@@ -85,7 +85,7 @@ namespace OpenSim.Services.MessagingService
         {
             OSDMap message = (OSDMap) map["Message"];
             if (m_ourRegionHandle != 0)
-                (message)["RegionHandle"] = m_ourRegionHandle;
+                message["RegionHandle"] = m_ourRegionHandle;
             OSDMap result = m_handler.FireMessageReceived(m_SessionID, message);
             if (result != null)
                 return ReturnResult(result);

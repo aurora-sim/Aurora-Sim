@@ -16,7 +16,7 @@
     AvatarHandler = AvatarService
     CapsHandler = CapsService
     ConfigurationHandler = ConfigurationService
-    EventQueueHandler = EventQueueMasterService
+    EventQueueHandler = EventQueueService
     FreeSwitchHandler = FreeswitchService
     FriendsHandler = FriendsService
     GridHandler = GridService

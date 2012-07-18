@@ -43,7 +43,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.CapsService
 {
-    public class EventQueueMasterService : IService, IEventQueueService
+    public class EventQueueService : ConnectorBase, IService, IEventQueueService
     {
         #region Declares
 
@@ -63,22 +63,23 @@ namespace OpenSim.Services.CapsService
             get { return this; }
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Enqueue(OSD o, UUID agentID, ulong regionHandle)
         {
+            object remoteValue = DoRemote(o, agentID, regionHandle);
+            if (remoteValue != null || m_doRemoteOnly)
+                return remoteValue == null ? false : (bool)remoteValue;
+
             //Find the CapsService for the user and enqueue the event
             IRegionClientCapsService service = GetRegionClientCapsService(agentID, regionHandle);
             if (service == null)
                 return false;
-            RegionClientEventQueueService eventQueueService = FindEventQueueConnector(service);
+            RegionClientEventQueueService eventQueueService = service.GetServiceConnectors().
+                OfType<RegionClientEventQueueService>().FirstOrDefault();
             if (eventQueueService == null)
                 return false;
 
             return eventQueueService.Enqueue(o);
-        }
-
-        public virtual bool TryEnqueue(OSD o, UUID agentID, ulong regionHandle)
-        {
-            return Enqueue(o, agentID, regionHandle);
         }
 
         #endregion
@@ -92,6 +93,7 @@ namespace OpenSim.Services.CapsService
                 return;
 
             registry.RegisterModuleInterface<IEventQueueService>(this);
+            Init(registry, Name);
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -113,20 +115,6 @@ namespace OpenSim.Services.CapsService
             IRegionClientCapsService regionCaps = clientCaps.GetCapsService(RegionHandle);
             //If it doesn't exist, it will be null anyway, so we don't need to check anything else
             return regionCaps;
-        }
-
-        private RegionClientEventQueueService FindEventQueueConnector(IRegionClientCapsService service)
-        {
-#if (!ISWIN)
-            foreach (ICapsServiceConnector connector in service.GetServiceConnectors())
-            {
-                RegionClientEventQueueService queueService = connector as RegionClientEventQueueService;
-                if (queueService != null) return queueService;
-            }
-            return null;
-#else
-            return service.GetServiceConnectors().OfType<RegionClientEventQueueService>().FirstOrDefault();
-#endif
         }
 
         #region EventQueue Message Enqueue

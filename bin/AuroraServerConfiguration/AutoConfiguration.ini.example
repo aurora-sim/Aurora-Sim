@@ -30,7 +30,6 @@
 	;;
 	
     AssetServerURIInternalPorts = "8003"
-    EventQueueServiceURIInternalPorts = "8007"
     FreeswitchServiceURLInternalPorts = "8002"
     MessagingServerURIInternalPorts = "8007"
     MurmurServiceURIInternalPorts = "8007"
