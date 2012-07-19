@@ -84,11 +84,20 @@ namespace Aurora.Modules.Web
                     url = webhttpService.GetTextureURL(profile.Image);
                 vars.Add("UserPictureURL", url);
             }
+            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
+            IClientCapsService clientCaps = capsService == null ? null : capsService.GetClientCapsService(account.PrincipalID);
+            if (clientCaps != null)
+                vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
+
+            vars.Add("UserIsOnline", clientCaps != null);
+            vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
             vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));
             vars.Add("ResidentSince", translator.GetTranslatedString("ResidentSince"));
             vars.Add("AccountType", translator.GetTranslatedString("AccountType"));
             vars.Add("PartnersName", translator.GetTranslatedString("PartnersName"));
             vars.Add("AboutMe", translator.GetTranslatedString("AboutMe"));
+            vars.Add("IsOnlineText", translator.GetTranslatedString("IsOnlineText"));
+            vars.Add("OnlineLocationText", translator.GetTranslatedString("OnlineLocationText"));
 
             return vars;
         }

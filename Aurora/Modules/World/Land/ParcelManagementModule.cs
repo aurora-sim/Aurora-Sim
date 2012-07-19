@@ -104,7 +104,7 @@ namespace Aurora.Modules.Land
         private int[,] m_landIDList;
 
         private int m_lastLandLocalID = START_LAND_LOCAL_ID;
-        private int m_minutesBeforeTimer = 60;
+        private int m_minutesBeforeTimer = 1;
 
         protected Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
         private IScene m_scene;

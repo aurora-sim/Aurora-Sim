@@ -135,6 +135,10 @@ namespace Aurora.Modules.Web.Translators
                     return "Partner's Name";
                 case "AboutMe":
                     return "About Me";
+                case "IsOnlineText":
+                    return "User Status";
+                case "OnlineLocationText":
+                    return "User Location";
 					
                 case "RegionInformationText":
                     return "Region Information";
