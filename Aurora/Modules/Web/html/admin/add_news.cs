@@ -40,7 +40,7 @@ namespace Aurora.Modules.Web
                 item.ID = connector.GetGenericCount(UUID.Zero, "WebGridNews") + 1;
                 connector.AddGeneric(UUID.Zero, "WebGridNews", item.ID.ToString(), item.ToOSD());
                 vars["ErrorMessage"] = "News item added successfully";
-                webInterface.Redirect(httpResponse, "news_manager.html");
+                webInterface.Redirect(httpResponse, "index.html?page=news_manager");
                 return vars;
             }
             else

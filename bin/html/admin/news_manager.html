@@ -10,9 +10,9 @@
 {IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
 <script type="text/javascript" language="javascript" src="javascripts/menu.js"></script>
-<h2>{NewsManager}: {SystemName}</h3>
+<h2>{SystemName}: {NewsManager}</h3>
 <div id="info_message" class="info_message"><p>{Success}</p></div>
-<a href="admin/add_news.html" id="add_news"><p>{AddNewsItem}</p></a>
+<a href="index.html?page=add_news" id="add_news"><p>{AddNewsItem}</p></a>
 <table id="news_manager">
   <caption></caption>
   
@@ -45,8 +45,8 @@
     <tr>
       <td class="news_manager_left"><p>{NewsTitle}</p></td>
       <td class="news_manager_right"><p>{NewsDate}</p></td>
-	  <td class="news_manager_right"><a href="admin/news_manager.html?edit={NewsID}"><p>{EditNewsItem}</p></a></td>
-	  <td class="news_manager_right"><a href="admin/news_manager.html?delete={NewsID}"><p>{DeleteNewsItem}</p></a></td>
+	  <td class="news_manager_right"><a href="index.html?page=edit_news&newsid={NewsID}"><p>{EditNewsItem}</p></a></td>
+	  <td class="news_manager_right"><a href="index.html?page=news_manager&delete={NewsID}"><p>{DeleteNewsItem}</p></a></td>
     </tr>
 {NewsArrayEnd}
   </tbody>

@@ -93,6 +93,7 @@ namespace Aurora.Modules.Web
                         parcels.Add(parcel);
                     }
                     vars.Add("ParcelInRegion", parcels);
+                    vars.Add("NumberOfParcelsInRegion", parcels.Count);
                 }
                 IWebHttpTextureService webTextureService = webInterface.Registry.
                     RequestModuleInterface<IWebHttpTextureService>();

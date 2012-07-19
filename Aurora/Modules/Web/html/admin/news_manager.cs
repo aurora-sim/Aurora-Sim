@@ -38,13 +38,6 @@ namespace Aurora.Modules.Web
                 connector.RemoveGeneric(UUID.Zero, "WebGridNews", newsID);
                 vars["Success"] = "Successfully deleted the news item";
             }
-            else if (httpRequest.Query.Contains("edit"))
-            {
-                string newsID = httpRequest.Query["edit"].ToString();
-
-                webInterface.Redirect(httpResponse, "edit_news.html?newsid=" + newsID);
-                return vars;
-            }
             else
                 vars["Success"] = "";
             var newsItems = connector.GetGenerics<GridNewsItem>(UUID.Zero, "WebGridNews");

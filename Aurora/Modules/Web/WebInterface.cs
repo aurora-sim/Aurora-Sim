@@ -99,16 +99,24 @@ namespace Aurora.Modules.Web
 
         #region Page Sending
 
-        public byte[] FindAndSendPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
+        public IWebInterfacePage GetPage(string path)
+        {
+            IWebInterfacePage page;
+            string directory = string.Join("/", path.Split('/'), 0, path.Split('/').Length - 1) + "/";
+            if (!_pages.TryGetValue(path, out page) &&
+                !_pages.TryGetValue(directory, out page))
+                page = null;
+            return page;
+        }
+
+        protected byte[] FindAndSendPage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
             httpResponse.KeepAlive = false;
-            IWebInterfacePage page;
-            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) +  "/";
-            if (_pages.TryGetValue(filename, out page) ||
-                _pages.TryGetValue(directory, out page))
+            IWebInterfacePage page = GetPage(filename);
+            if (page != null)
             {
                 httpResponse.ContentType = GetContentType(filename, httpResponse);
                 string text;
@@ -161,10 +169,8 @@ namespace Aurora.Modules.Web
         protected Dictionary<string, object> AddVarsForPage(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
-            IWebInterfacePage page;
-            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) + "/";
-            if (_pages.TryGetValue(filename, out page) ||
-                _pages.TryGetValue(directory, out page))
+            IWebInterfacePage page = GetPage(filename);
+            if (page != null)
             {
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
@@ -192,10 +198,8 @@ namespace Aurora.Modules.Web
 
         private AuroraXmlDocument GetXML(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
-            IWebInterfacePage page;
-            string directory = string.Join("/", filename.Split('/'), 0, filename.Split('/').Length - 1) + "/";
-            if (_pages.TryGetValue(filename, out page) ||
-                _pages.TryGetValue(directory, out page))
+            IWebInterfacePage page = GetPage(filename);
+            if (page != null)
             {
                 ITranslator translator = null;
                 if (httpRequest.Query.ContainsKey("language"))
@@ -533,6 +537,50 @@ namespace Aurora.Modules.Web
             map["AdminRequired"] = AdminRequired;
             map["Children"] = Children.ToOSDArray();
             return map;
+        }
+
+        public GridPage GetPage(string item)
+        {
+            return GetPage(item, null);
+        }
+
+        public GridPage GetPage(string item, GridPage rootPage)
+        {
+            if (rootPage == null)
+                rootPage = this;
+            foreach (var page in rootPage.Children)
+            {
+                if (page.MenuID == item)
+                    return page;
+                else if (page.Children.Count > 0)
+                {
+                    var p = GetPage(item, page);
+                    if (p != null)
+                        return p;
+                }
+            }
+            return null;
+        }
+
+        public void ReplacePage(string MenuItem, GridPage replacePage)
+        {
+            foreach (var page in this.Children)
+            {
+                if (page.MenuID == MenuItem)
+                {
+                    page.FromOSD(replacePage.ToOSD());
+                    return;
+                }
+                else if (page.Children.Count > 0)
+                {
+                    var p = GetPage(MenuItem, page);
+                    if (p != null)
+                    {
+                        p.FromOSD(replacePage.ToOSD());
+                        return;
+                    }
+                }
+            }
         }
     }
 

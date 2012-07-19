@@ -230,6 +230,10 @@ namespace Aurora.Modules.Web.Translators
                     return "User Manager";
                 case "MenuFactoryReset":
                     return "Factory Reset";
+                case "ResetMenuInfoText":
+                    return "Resets the menu items back to the most updated defaults";
+                case "ResetSettingsInfoText":
+                    return "Resets the Web Interface settings back to the most updated defaults";
                 case "MenuPageManager":
                     return "Page Manager";
                 case "MenuSettingsManager":

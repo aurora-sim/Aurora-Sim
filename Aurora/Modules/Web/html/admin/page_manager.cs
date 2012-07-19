@@ -52,7 +52,7 @@ namespace Aurora.Modules.Web
             {
                 string MenuItem = requestParameters["MenuItem"].ToString();
 
-                GridPage page = GetPage(MenuItem, rootPage);
+                GridPage page = rootPage.GetPage(MenuItem);
 
                 vars.Add("PageTitle", page.MenuTitle);
                 vars.Add("PageTooltip", page.MenuToolTip);
@@ -95,7 +95,7 @@ namespace Aurora.Modules.Web
                 bool RequiresLogout = bool.Parse(requestParameters["RequiresLogout"].ToString());
                 bool RequiresAdmin = bool.Parse(requestParameters["RequiresAdmin"].ToString());
 
-                GridPage page = GetPage(edittingPageID, rootPage);
+                GridPage page = rootPage.GetPage(edittingPageID);
 
                 page.Location = PageLocation;
                 page.MenuID = PageID;
@@ -106,7 +106,7 @@ namespace Aurora.Modules.Web
                 page.LoggedOutRequired = RequiresLogout;
                 page.AdminRequired = RequiresAdmin;
 
-                ReplacePage(edittingPageID, page, ref rootPage);
+                rootPage.ReplacePage(edittingPageID, page);
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
             }
@@ -134,43 +134,6 @@ namespace Aurora.Modules.Web
         {
             text = "";
             return false;
-        }
-
-        private GridPage GetPage(string MenuItem, GridPage rootPage)
-        {
-            foreach (var page in rootPage.Children)
-            {
-                if (page.MenuID == MenuItem)
-                    return page;
-                else if (page.Children.Count > 0)
-                {
-                    var p = GetPage(MenuItem, page);
-                    if (p != null)
-                        return p;
-                }
-            }
-            return null;
-        }
-
-        private void ReplacePage(string MenuItem, GridPage replacePage, ref GridPage rootPage)
-        {
-            foreach (var page in rootPage.Children)
-            {
-                if (page.MenuID == MenuItem)
-                {
-                    page.FromOSD(replacePage.ToOSD());
-                    return;
-                }
-                else if (page.Children.Count > 0)
-                {
-                    var p = GetPage(MenuItem, page);
-                    if (p != null)
-                    {
-                        p.FromOSD(replacePage.ToOSD());
-                        return;
-                    }
-                }
-            }
         }
     }
 }

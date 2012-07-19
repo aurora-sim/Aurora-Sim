@@ -14,7 +14,7 @@
 	<div id="ContentHeaderCenter"><h2>{SystemName}: {RegionSearchText}</h2></div>
 	<div id="usersonline">
 		<div id="users_navigation">
-			<form action="region_search.html" method="POST">
+			<form action="index.html?page=region_search" method="POST">
 				<table>
 					<tr><td colspan="2" align="center">{SearchForRegionText}</td></tr>
 					<tr>
@@ -33,12 +33,12 @@
 			<table>
 				<tr>
 					<td>
-						<a href="user_search.html?Start=0" target="_self" title="{FirstText}">
+						<a href="index.html?page=region_search&Start=0" target="_self" title="{FirstText}">
 							<p class="nav">|&nbsp;<</p>
 						</a>
 					</td>
 					<td>
-						<a href="user_search.html?Start={BackOne}" target="_self" title="{BackText}">
+						<a href="index.html?page=region_search&Start={BackOne}" target="_self" title="{BackText}">
 							<p class="nav"><</p>
 						</a>
 					</td>
@@ -46,12 +46,12 @@
 						<p>{CurrentPageText} {CurrentPage}</p>
 					</td>
 					<td>
-						<a href="user_search.html?Start={NextOne}" target="_self" title="{NextText}">
+						<a href="index.html?page=region_search&Start={NextOne}" target="_self" title="{NextText}">
 							<p class="nav">></p>	
 						</a>
 					</td>
 					<td>
-						<a href="user_search.html?Start=-1" target="_self" title="{LastText}">
+						<a href="index.html?page=region_search&Start=-1" target="_self" title="{LastText}">
 							<p class="nav">>&nbsp;|</p>
 						</a>
 					</td>

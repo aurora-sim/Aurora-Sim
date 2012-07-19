@@ -56,8 +56,8 @@ namespace Aurora.Modules.Web
                 IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                 if (userService != null)
                 {
-                    UserAccount account;
-                    (account = userService.GetUserAccount(UUID.Zero, user)).Email = email;
+                    UserAccount account = userService.GetUserAccount(UUID.Zero, user);
+                    account.Email = email;
                     userService.StoreUserAccount(account);
                 }
                 else

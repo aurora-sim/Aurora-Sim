@@ -43,7 +43,7 @@ namespace Aurora.Modules.Web
                 GridNewsItem item = new GridNewsItem { Text = text, Time = news.Time, Title = title, ID = int.Parse(id) };
                 connector.AddGeneric(UUID.Zero, "WebGridNews", id, item.ToOSD());
                 vars["ErrorMessage"] = "News item edit successfully";
-                webInterface.Redirect(httpResponse, "news_manager.html");
+                webInterface.Redirect(httpResponse, "index.html?page=news_manager");
                 return vars;
             }
             else

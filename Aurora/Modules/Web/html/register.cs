@@ -90,7 +90,7 @@ namespace Aurora.Modules.Web
                             profileData.UpdateUserProfile(profile);
                         }
 
-                        webInterface.Redirect(httpResponse, "/welcomescreen/index.html");
+                        webInterface.Redirect(httpResponse, "/");
 
                         return vars;
                     }
@@ -118,8 +118,14 @@ namespace Aurora.Modules.Web
             List<AvatarArchive> archives = Aurora.DataManager.DataManager.RequestPlugin<IAvatarArchiverConnector>().GetAvatarArchives(true);
 
             List<Dictionary<string, object>> avatarArchives = new List<Dictionary<string, object>>();
+            IWebHttpTextureService webTextureService = webInterface.Registry.
+                    RequestModuleInterface<IWebHttpTextureService>();
             foreach (var archive in archives)
-                avatarArchives.Add(new Dictionary<string, object> { { "AvatarArchiveName", archive.Name }, { "AvatarArchiveSnapshotID", archive.Snapshot } });
+                avatarArchives.Add(new Dictionary<string, object> { 
+                { "AvatarArchiveName", archive.Name },
+                { "AvatarArchiveSnapshotID", archive.Snapshot }, 
+                { "AvatarArchiveURL", webTextureService.GetTextureURL(UUID.Parse(archive.Snapshot)) } 
+                });
 
             vars.Add("AvatarArchive", avatarArchives);
 

@@ -14,7 +14,7 @@ $(document).ready(function(){
 			case "{MenuItemID}":
 				content.slideUp('swing',  function()
 				{ 
-				content.load("{MenuItemLocation}", hideLoading);
+				content.load("{MenuItemLocation}" + window.location.search, hideLoading);
 				content.slideDown();
 				});
 				

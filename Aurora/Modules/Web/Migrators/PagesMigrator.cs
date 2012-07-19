@@ -12,7 +12,7 @@ namespace Aurora.Modules.Web
     {
         public static readonly string Schema = "WebPages";
         private static GridPage _rootPage;
-        public static readonly uint CurrentVersion = 2;
+        public static readonly uint CurrentVersion = 3;
 
         private static void InitializeDefaults()
         {
@@ -182,6 +182,50 @@ namespace Aurora.Modules.Web
                 MenuToolTip = "TooltipsMenuSettingsManager"
             });
 
+
+            _rootPage.Children.Add(new GridPage 
+            {
+                MenuID = "add_news",
+                ShowInMenu = false,
+                AdminRequired = true,
+                MenuPosition = 8,
+                Location = "admin/add_news.html"
+            });
+            _rootPage.Children.Add(new GridPage
+            {
+                MenuID = "edit_news",
+                ShowInMenu = false,
+                AdminRequired = true,
+                MenuPosition = 8,
+                Location = "admin/edit_news.html"
+            });
+            _rootPage.Children.Add(new GridPage
+            {
+                MenuID = "edit_user",
+                ShowInMenu = false,
+                AdminRequired = true,
+                MenuPosition = 8,
+                Location = "admin/edit_user.html"
+            });
+
+            _rootPage.Children.Add(new GridPage
+            {
+                ShowInMenu = false,
+                MenuID = "news_info",
+                Location = "news.html"
+            });
+            _rootPage.Children.Add(new GridPage
+            {
+                ShowInMenu = false,
+                MenuID = "region_search",
+                Location = "region_search.html"
+            });
+            _rootPage.Children.Add(new GridPage
+            {
+                ShowInMenu = false,
+                MenuID = "region_search",
+                Location = "region_search.html"
+            });
 
             //Things added, but not used
             /*pages.Add(new Dictionary<string, object> { { "MenuItemID", "tweets" }, 

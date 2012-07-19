@@ -48,6 +48,8 @@ namespace Aurora.Modules.Web
             vars.Add("FactoryReset", translator.GetTranslatedString("FactoryReset"));
             vars.Add("ResetMenuText", translator.GetTranslatedString("ResetMenuText"));
             vars.Add("ResetSettingsText", translator.GetTranslatedString("ResetSettingsText"));
+            vars.Add("ResetMenuInfoText", translator.GetTranslatedString("ResetMenuText"));
+            vars.Add("ResetSettingsInfoText", translator.GetTranslatedString("ResetSettingsInfoText"));
             vars.Add("Reset", translator.GetTranslatedString("Reset"));
             vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 

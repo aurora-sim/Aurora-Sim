@@ -40,6 +40,25 @@ namespace Aurora.Modules.Web
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
+
+            #region Form submission hack
+
+            if (requestParameters.Count > 0 && httpRequest.Query.ContainsKey("page"))
+            {
+                string page = httpRequest.Query["page"].ToString();
+                GridPage submitPage = rootPage.GetPage(page);
+
+                var submitWebPage = webInterface.GetPage("html/" + submitPage.Location);
+                if (submitWebPage != null)
+                {
+                    submitWebPage.Fill(webInterface, submitPage.Location, httpRequest, httpResponse, requestParameters, translator);
+                    if (httpResponse.StatusCode != 200)
+                        return vars;//It redirected
+                }
+            }
+
+            #endregion
+
             foreach (GridPage page in rootPage.Children)
             {
                 if (page.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest))
@@ -61,7 +80,7 @@ namespace Aurora.Modules.Web
                         continue;
 
                     childPages.Add(new Dictionary<string, object> { { "MenuItemID", childPage.MenuID }, 
-                        { "ShowInMenu", childPage.ShowInMenu },
+                        { "ChildShowInMenu", childPage.ShowInMenu },
                         { "MenuItemLocation", childPage.Location }, 
                         { "MenuItemTitleHelp", translator.GetTranslatedString(childPage.MenuToolTip) },
                         { "MenuItemTitle", translator.GetTranslatedString(childPage.MenuTitle) } });

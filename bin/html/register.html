@@ -27,7 +27,7 @@
 -->
 
 <h2>{SystemName}: {RegistrationText}</h2>
-<form action="register.html" method="post">
+<form action="index.html?page=register" method="post">
 <div id="error_message" class="error">{ErrorMessage}</div>
 <table id="register">
   <caption></caption>
@@ -120,7 +120,7 @@
 	  <div class="avatar_archive_screenshot">
 	    <label for="{AvatarArchiveName}">{AvatarArchiveName}</label>
 		  <input type="radio" id="{AvatarArchiveName}" name="AvatarArchive" value="{AvatarArchiveName}">
-		  <!-- <br /><img src=\"".WIREDUX_TEXTURE_SERVICE."/index.php?method=GridTexture&uuid={AvatarArchiveSnapshotID}\" /><br /> -->
+		  <img src="{AvatarArchiveSnapshotURL}" width=256 height=256/>
 	  </div>				
 {AvatarArchiveArrayEnd}
 	  </td>

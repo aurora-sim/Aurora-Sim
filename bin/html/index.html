@@ -44,6 +44,7 @@
 	
 	<script type="text/javascript">$(document).ready(function() 
 	{
+		$( '#container' ).fadeIn("slow");
 		var result = {};
 		var sections = $("#menu li");
 		var loading = $("#loading");
@@ -64,8 +65,7 @@
 		switch(pageName){
 {MenuItemsArrayBegin}
 			case "{MenuItemID}":
-				$( '#container' ).fadeIn("slow");
-				content.load("{MenuItemLocation}", hideLoading);
+				content.load("{MenuItemLocation}" + window.location.search, hideLoading);
 				break;
 {MenuItemsArrayEnd}
 		}
@@ -102,9 +102,9 @@
 {IfHasChildrenBegin}
 				<ul>
 {ChildrenMenuItemsArrayBegin}
-{IfShowInMenuBegin}
+{IfChildShowInMenuBegin}
 					<li id="{MenuItemID}" class="fade" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}</li>
-{IfShowInMenuEnd}
+{IfChildShowInMenuEnd}
 {ChildrenMenuItemsArrayEnd}
 				</ul>
 {IfHasChildrenEnd}

@@ -26,7 +26,7 @@
     <div id="ContentHeaderCenter"><h2>{SystemName}: {EdittingText} {UserName}</h2></div>
     <div id="ContentHeaderCenter"><h4>{ErrorMessage}</h4></div>
     <div id="edituser">
-		<form action="edit_user.html" method="POST">
+		<form action="index.html?page=edit_user" method="POST">
 			<table>
                 <tr><td colspan="2">{AdminLoginInAsUserText}</td></tr>
 				<tr>
@@ -41,7 +41,7 @@
         </form>
     </div>
 	<div id="login">
-		<form action="edit_user.html" method="POST">
+		<form action="index.html?page=edit_user" method="POST">
 			<table>
                 <tr><td colspan="2">{AdminDeleteUserText}</td></tr>
 				<tr>
@@ -57,7 +57,7 @@
     </div>
 {IfUserBannedBegin}
 	<div id="login">
-		<form action="edit_user.html" method="POST">
+		<form action="index.html?page=edit_user" method="POST">
 			<table>
                 <tr><td colspan="2">{AdminUnbanUserText}</td></tr>
                 <tr><td colspan="2">{BannedUntilText} {BannedUntil}</td></tr>
@@ -75,7 +75,7 @@
 {IfUserBannedEnd}
 {IfNotUserBannedBegin}
 	<div id="login">
-		<form action="edit_user.html" method="POST">
+		<form action="index.html?page=edit_user" method="POST">
 			<table>
                 <tr><td colspan="2">{AdminTempBanUserText}</td></tr>
 				<tr>
@@ -125,7 +125,7 @@
         </form>
     </div>
 	<div id="login">
-		<form action="edit_user.html" method="POST">
+		<form action="index.html?page=edit_user" method="POST">
 			<table>
                 <tr><td colspan="2">{AdminBanUserText}</td></tr>
 				<tr>
