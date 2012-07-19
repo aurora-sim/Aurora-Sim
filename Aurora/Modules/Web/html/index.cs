@@ -49,7 +49,6 @@ namespace Aurora.Modules.Web
                 if (page.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
                     continue;
 
-                page.Children.Add(new GridPage { MenuID = "home", Location = "home.html", MenuPosition = 0, MenuTitle = page.MenuTitle, MenuToolTip = page.MenuToolTip, ShowInMenu = true });
                 List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
 
                 foreach (GridPage childPage in page.Children)
