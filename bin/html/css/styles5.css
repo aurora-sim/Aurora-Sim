@@ -22,13 +22,13 @@ body  {
 	background: transparent url(../images/bg_TransStripe1.gif);
 }
 
-#st1 {display: none;}
-#st2 {display: none;}
-#st3 {display: none;}
-#st4 {display: none;}
-#st5 {color: #FF0000;}
+#st1, #lg1 {display: none;}
+#st2, #lg2 {display: none;}
+#st3, #lg3 {display: none;}
+#st4, #lg4 {display: none;}
+#st5, #lg5 {color: #FF0000;}
 
-#st1, #st2, #st3, #st4, #st5, a.styleswitch {
+#st1, #st2, #st3, #st4, #st5, #lg1, #lg2, #lg3, #lg4, #lg5, a.styleswitch, a.languageswitch {
 	background: #333;
 	margin-right: 5px;
 	padding-left: 6px;
@@ -432,22 +432,72 @@ button {
 	text-transform: uppercase;
 	color: #C2C2C2;
 	padding: 3px;
-	border: 1px solid #333;
+	border: 1px solid transparent;
 }
-
 
 #top #menu li:hover {
 	color: #6FA5FD;
 	cursor: pointer;
-	background-color: #333;
-	border: 1px solid #6FA5FD;
+	background-color: #222;
+	border: 1px solid #6EA6FB;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	-webkit-box-shadow: #6EA6FB 0 0 1em;
     -moz-box-shadow: #6EA6FB 0 0 1em;
     box-shadow: #6EA6FB 0 0 1em;
 	behavior: url(css/pie.htc);
+}
+
+/* DropDown Menu */
+#top #menu ul {
+	list-style:none;
+	position:absolute;
+	display: none;
+}
+
+#top #menu li:hover ul {
+	display: block;
+	float: none;
+	max-width: 210px;
+	min-width: 20px;
+	margin-top: 4px;
+	margin-left: -4px;
+	z-index: 100;
+	background-color: #222;
+	border: 1px solid #6EA6FB;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #6EA6FB 0 0 1em;
+    -moz-box-shadow: #6EA6FB 0 0 1em;
+    box-shadow: #6EA6FB 0 0 1em;
+	behavior: url(css/pie.htc);
+}
+
+#top #menu li:hover li {
+	display: block;
+	float: left;
+	max-width: 210px;
+	min-width: 20px;
+
+	margin: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+	background-color: #222;
+
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	behavior: url(css/pie.htc);
+}
+
+#top #menu li:hover li:hover {
+    border: 1px solid #6EA6FB;
+    background-color: #333333;
 }
 
 /* Loading Menu */
@@ -532,6 +582,9 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
     box-shadow: #6FA5FD 0 0 1em;
 	behavior: url(css/pie.htc);
 }
+
+div.languageswitch {float:left; text-align: left;display: inline;}
+div.styleswitch {float:right; text-align: right;display: inline;}
 
 /* Pretty Message */
 .message, .info, .alert, .download {

@@ -21,13 +21,13 @@ body  {
 	cursor: default;
 }
 
-#st1 {display: none;}
-#st2 {display: none;}
-#st3 {color: #FF0000;}
-#st4 {display: none;}
-#st5 {display: none;}
+#st1, #lg1 {display: none;}
+#st2, #lg2 {display: none;}
+#st3, #lg3 {color: #FF0000;}
+#st4, #lg4 {display: none;}
+#st5, #lg5 {display: none;}
 
-#st1, #st2, #st3, #st4, #st5, a.styleswitch {
+#st1, #st2, #st3, #st4, #st5, #lg1, #lg2, #lg3, #lg4, #lg5, a.styleswitch, a.languageswitch {
 	background: #4164af;
 	margin-right: 5px;
 	padding-left: 6px;
@@ -419,12 +419,38 @@ label {display:inline-block;}
 	text-transform: uppercase;
 	color: #C2C2C2;
 	padding: 3px;
-	border: 1px solid #06104d;
+	border: 1px solid transparent;
 }
 
 #top #menu li:hover {
 	color: #6FA5FD;
 	cursor: pointer;
+}
+
+/* DropDown Menu */
+#top #menu ul {
+	list-style:none;
+	position:absolute;
+	display: none;
+}
+
+#top #menu li:hover ul {
+	display: block;
+	float: none;
+	width: 220px;
+	margin-top:3px;
+	padding-left:5px;
+	background: #263f83 url(../images/bg_TransStripe1.gif);
+	z-index: 100;
+	border: 1px solid #263f83;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #222 0 0 .25em;
+    -moz-box-shadow: #222 0 0 .25em;
+    box-shadow: #222 0 0 .25em;
+	behavior: url(css/pie.htc);
 }
 
 /* Loading Menu */
@@ -490,7 +516,6 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
 	padding: 10px;
 	color: #7e7e7e;
 	font-size: 11px;
-	text-align: right;
 	border: 1px solid #263f83;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
@@ -501,6 +526,9 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
     box-shadow: #222 0 0 .25em;
 	behavior: url(css/pie.htc);
 }
+
+div.languageswitch {float:left; text-align: left;display: inline;}
+div.styleswitch {float:right; text-align: right;display: inline;}
 
 /* Pretty Message */
 .message, .info, .alert, .download {
