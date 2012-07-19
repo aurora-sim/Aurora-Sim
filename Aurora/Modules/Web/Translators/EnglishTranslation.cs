@@ -478,6 +478,84 @@ namespace Aurora.Modules.Web.Translators
                     return "Ignore pages update warning until next update";
                 case "IgnoreSettingsUpdatesText":
                     return "Ignore settings update warning until next update";
+
+                //Times
+                case "Sun":
+                    return "Sun";
+                case "Mon":
+                    return "Mon";
+                case "Tue":
+                    return "Tue";
+                case "Wed":
+                    return "Wed";
+                case "Thu":
+                    return "Thu";
+                case "Fri":
+                    return "Fri";
+                case "Sat":
+                    return "Sat";
+                case "Sunday":
+                    return "Sunday";
+                case "Monday":
+                    return "Monday";
+                case "Tuesday":
+                    return "Tuesday";
+                case "Wednesday":
+                    return "Wednesday";
+                case "Thursday":
+                    return "Thursday";
+                case "Friday":
+                    return "Friday";
+                case "Saturday":
+                    return "Saturday";
+
+
+                case "Jan":
+                    return "Jan";
+                case "Feb":
+                    return "Feb";
+                case "Mar":
+                    return "Mar";
+                case "Apr":
+                    return "Apr";
+                case "May":
+                    return "May";
+                case "Jun":
+                    return "Jun";
+                case "Jul":
+                    return "Jul";
+                case "Aug":
+                    return "Aug";
+                case "Sep":
+                    return "Sep";
+                case "Oct":
+                    return "Oct";
+                case "Nov":
+                    return "Nov";
+                case "Dec":
+                    return "Dec";
+                case "January":
+                    return "January";
+                case "February":
+                    return "February";
+                case "March":
+                    return "March";
+                case "April":
+                    return "April";
+                case "June":
+                    return "June";
+                case "July":
+                    return "July";
+                case "August":
+                    return "August";
+                case "September":
+                    return "September";
+                case "October":
+                    return "October";
+                case "November":
+                    return "November";
+                case "December":
+                    return "December";
             }
             return "UNKNOWN CHARACTER";
         }

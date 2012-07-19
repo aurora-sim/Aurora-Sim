@@ -41,53 +41,53 @@
  
       // %a
       $this.daysAbbrvNames = new Array(7);
-      $this.daysAbbrvNames[0] = "Sun";
-      $this.daysAbbrvNames[1] = "Mon";
-      $this.daysAbbrvNames[2] = "Tue";
-      $this.daysAbbrvNames[3] = "Wed";
-      $this.daysAbbrvNames[4] = "Thu";
-      $this.daysAbbrvNames[5] = "Fri";
-      $this.daysAbbrvNames[6] = "Sat";
+      $this.daysAbbrvNames[0] = "{Sun"};
+      $this.daysAbbrvNames[1] = "{Mon}";
+      $this.daysAbbrvNames[2] = "{Tue}";
+      $this.daysAbbrvNames[3] = "{Wed}";
+      $this.daysAbbrvNames[4] = "{Thu}";
+      $this.daysAbbrvNames[5] = "{Fri}";
+      $this.daysAbbrvNames[6] = "{Sat}";
  
       // %A
       $this.daysFullNames = new Array(7);
-      $this.daysFullNames[0] = "Sunday";
-      $this.daysFullNames[1] = "Monday";
-      $this.daysFullNames[2] = "Tuesday";
-      $this.daysFullNames[3] = "Wednesday";
-      $this.daysFullNames[4] = "Thursday";
-      $this.daysFullNames[5] = "Friday";
-      $this.daysFullNames[6] = "Saturday";
+      $this.daysFullNames[0] = "{Sunday}";
+      $this.daysFullNames[1] = "{Monday}";
+      $this.daysFullNames[2] = "{Tuesday}";
+      $this.daysFullNames[3] = "{Wednesday}";
+      $this.daysFullNames[4] = "{Thursday}";
+      $this.daysFullNames[5] = "{Friday}";
+      $this.daysFullNames[6] = "{Saturday}";
  
       // %b
       $this.monthsAbbrvNames = new Array(12);
-      $this.monthsAbbrvNames[0] = "Jan";
-      $this.monthsAbbrvNames[1] = "Feb";
-      $this.monthsAbbrvNames[2] = "Mar";
-      $this.monthsAbbrvNames[3] = "Apr";
-      $this.monthsAbbrvNames[4] = "May";
-      $this.monthsAbbrvNames[5] = "Jun";
-      $this.monthsAbbrvNames[6] = "Jul";
-      $this.monthsAbbrvNames[7] = "Aug";
-      $this.monthsAbbrvNames[8] = "Sep";
-      $this.monthsAbbrvNames[9] = "Oct";
-      $this.monthsAbbrvNames[10] = "Nov";
-      $this.monthsAbbrvNames[11] = "Dec";
+      $this.monthsAbbrvNames[0] = "{Jan}";
+      $this.monthsAbbrvNames[1] = "{Feb}";
+      $this.monthsAbbrvNames[2] = "{Mar}";
+      $this.monthsAbbrvNames[3] = "{Apr}";
+      $this.monthsAbbrvNames[4] = "{May}";
+      $this.monthsAbbrvNames[5] = "{Jun}";
+      $this.monthsAbbrvNames[6] = "{Jul}";
+      $this.monthsAbbrvNames[7] = "{Aug}";
+      $this.monthsAbbrvNames[8] = "{Sep}";
+      $this.monthsAbbrvNames[9] = "{Oct}";
+      $this.monthsAbbrvNames[10] = "{Nov}";
+      $this.monthsAbbrvNames[11] = "{Dec}";
  
       // %B
       $this.monthsFullNames = new Array(12);
-      $this.monthsFullNames[0] = "January";
-      $this.monthsFullNames[1] = "February";
-      $this.monthsFullNames[2] = "March";
-      $this.monthsFullNames[3] = "April";
-      $this.monthsFullNames[4] = "May";
-      $this.monthsFullNames[5] = "June";
-      $this.monthsFullNames[6] = "July";
-      $this.monthsFullNames[7] = "August";
-      $this.monthsFullNames[8] = "September";
-      $this.monthsFullNames[9] = "October";
-      $this.monthsFullNames[10] = "November";
-      $this.monthsFullNames[11] = "December";
+      $this.monthsFullNames[0] = "{January}";
+      $this.monthsFullNames[1] = "{February}";
+      $this.monthsFullNames[2] = "{March}";
+      $this.monthsFullNames[3] = "{April}";
+      $this.monthsFullNames[4] = "{May}";
+      $this.monthsFullNames[5] = "{June}";
+      $this.monthsFullNames[6] = "{July}";
+      $this.monthsFullNames[7] = "{August}";
+      $this.monthsFullNames[8] = "{September}";
+      $this.monthsFullNames[9] = "{October}";
+      $this.monthsFullNames[10] = "{November}";
+      $this.monthsFullNames[11] = "{December}";
  
       $.fn.jclock.startClock($this);
  
