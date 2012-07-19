@@ -504,10 +504,6 @@ namespace Aurora.Modules.Web.Translators
                     return "Grid Center Location X";
                 case "GridCenterYText":
                     return "Grid Center Location Y";
-                case "GoogleMapAPIKeyText":
-                    return "Google Maps API Key";
-                case "GoogleMapAPIKeyHelpText":
-                    return "The google maps v2 api key generated here";
                 case "SettingsManager":
                     return "Settings Manager";
                 case "IgnorePagesUpdatesText":

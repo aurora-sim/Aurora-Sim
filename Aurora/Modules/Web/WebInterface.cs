@@ -587,7 +587,6 @@ namespace Aurora.Modules.Web
     internal class GridSettings : IDataTransferable
     {
         public Vector2 MapCenter = Vector2.Zero;
-        public string GoogleMapsAPIKey = "";
         public uint LastPagesVersionUpdateIgnored = 0;
         public uint LastSettingsVersionUpdateIgnored = 0;
 
@@ -597,7 +596,6 @@ namespace Aurora.Modules.Web
         public override void FromOSD(OSDMap map)
         {
             MapCenter = map["MapCenter"];
-            GoogleMapsAPIKey = map["GoogleMapsAPIKey"];
             LastPagesVersionUpdateIgnored = map["LastPagesVersionUpdateIgnored"];
             LastSettingsVersionUpdateIgnored = map["LastSettingsVersionUpdateIgnored"];
         }
@@ -607,7 +605,6 @@ namespace Aurora.Modules.Web
             OSDMap map = new OSDMap();
 
             map["MapCenter"] = MapCenter;
-            map["GoogleMapsAPIKey"] = GoogleMapsAPIKey;
             map["LastPagesVersionUpdateIgnored"] = LastPagesVersionUpdateIgnored;
             map["LastSettingsVersionUpdateIgnored"] = LastSettingsVersionUpdateIgnored;
             return map;

@@ -38,7 +38,6 @@ namespace Aurora.Modules.Web
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             var settings = connector.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
 
-            vars.Add("GoogleMapsAPIKey", settings.GoogleMapsAPIKey);
             vars.Add("GridCenterX", settings.MapCenter.X);
             vars.Add("GridCenterY", settings.MapCenter.Y);
 

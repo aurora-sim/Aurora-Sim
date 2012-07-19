@@ -37,7 +37,6 @@ namespace Aurora.Modules.Web
                 changed = true;
                 settings.MapCenter.X = int.Parse(requestParameters["GridCenterX"].ToString());
                 settings.MapCenter.Y = int.Parse(requestParameters["GridCenterY"].ToString());
-                settings.GoogleMapsAPIKey = requestParameters["GoogleMapAPIKey"].ToString();
                 connector.AddGeneric(UUID.Zero, "WebSettings", "Settings", settings.ToOSD());
             }
             else if (requestParameters.ContainsKey("IgnorePagesUpdates"))
@@ -52,7 +51,6 @@ namespace Aurora.Modules.Web
             }
             vars.Add("GridCenterX", settings.MapCenter.X);
             vars.Add("GridCenterY", settings.MapCenter.Y);
-            vars.Add("GoogleMapAPIKey", settings.GoogleMapsAPIKey);
             vars.Add("IgnorePagesUpdates", PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored) ? "" : "checked");
             vars.Add("IgnoreSettingsUpdates", settings.LastSettingsVersionUpdateIgnored != SettingsMigrator.CurrentVersion ? "" : "checked");
 
@@ -61,8 +59,6 @@ namespace Aurora.Modules.Web
             vars.Add("IgnoreSettingsUpdatesText", translator.GetTranslatedString("IgnoreSettingsUpdatesText"));
             vars.Add("GridCenterXText", translator.GetTranslatedString("GridCenterXText"));
             vars.Add("GridCenterYText", translator.GetTranslatedString("GridCenterYText"));
-            vars.Add("GoogleMapAPIKeyText", translator.GetTranslatedString("GoogleMapAPIKeyText"));
-            vars.Add("GoogleMapAPIKeyHelpText", translator.GetTranslatedString("GoogleMapAPIKeyHelpText"));
             vars.Add("Save", translator.GetTranslatedString("Save"));
             vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 
