@@ -341,7 +341,12 @@ namespace Aurora.Framework
                         object[] parameters = new object[paramInfo.Length];
                         int paramNum = 0;
                         foreach (ParameterInfo param in paramInfo)
-                            parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        {
+                            if(param.ParameterType == typeof(OSD))
+                                parameters[paramNum++] = args[param.Name];
+                            else
+                                parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
+                        }
 
                         object o = methodInfo.Method.FastInvoke(paramInfo, methodInfo.Reference, parameters);
                         OSDMap response = new OSDMap();
