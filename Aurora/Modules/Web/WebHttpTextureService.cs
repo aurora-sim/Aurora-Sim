@@ -123,8 +123,8 @@ namespace Aurora.Modules.Web
             Graphics temp = Graphics.FromImage(newsize);
             temp.DrawImage(b, 0, 0, nWidth, nHeight);
             temp.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            temp.DrawString(_gridNick, new Font("Arial", 8, FontStyle.Regular), 
-                new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, 115));
+            temp.DrawString(_gridNick, new Font("Arial", 8, FontStyle.Regular),
+                new SolidBrush(Color.FromArgb(90, 255, 255, 50)), new Point(2, nHeight - 13));
 
             return newsize;
         }
