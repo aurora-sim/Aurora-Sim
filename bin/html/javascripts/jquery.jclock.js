@@ -41,7 +41,7 @@
  
       // %a
       $this.daysAbbrvNames = new Array(7);
-      $this.daysAbbrvNames[0] = "{Sun"};
+      $this.daysAbbrvNames[0] = "{Sun}";
       $this.daysAbbrvNames[1] = "{Mon}";
       $this.daysAbbrvNames[2] = "{Tue}";
       $this.daysAbbrvNames[3] = "{Wed}";
