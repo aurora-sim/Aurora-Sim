@@ -46,10 +46,16 @@ namespace Aurora.Modules.Web
             }
             else if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
             {
-                string name = username.Contains('.') ? username : httpRequest.Query["name"].ToString();
+                string name = httpRequest.Query.ContainsKey("name") ? httpRequest.Query["name"].ToString() : username;
                 name = name.Replace('.', ' ');
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
                     GetUserAccount(UUID.Zero, name);
+            }
+            else
+            {
+                username = username.Replace("%20", " ");
+                account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                    GetUserAccount(UUID.Zero, username);
             }
 
             if (account == null)
