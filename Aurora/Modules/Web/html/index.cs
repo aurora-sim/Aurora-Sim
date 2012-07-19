@@ -79,11 +79,18 @@ namespace Aurora.Modules.Web
                     if (childPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
                         continue;
 
-                    childPages.Add(new Dictionary<string, object> { { "MenuItemID", childPage.MenuID }, 
+                    childPages.Add(new Dictionary<string, object> {
+                        { "ChildMenuItemID", childPage.MenuID },
                         { "ChildShowInMenu", childPage.ShowInMenu },
-                        { "MenuItemLocation", childPage.Location }, 
-                        { "MenuItemTitleHelp", translator.GetTranslatedString(childPage.MenuToolTip) },
-                        { "MenuItemTitle", translator.GetTranslatedString(childPage.MenuTitle) } });
+                        { "ChildMenuItemLocation", childPage.Location }, 
+                        { "ChildMenuItemTitleHelp", translator.GetTranslatedString(childPage.MenuToolTip) },
+                        { "ChildMenuItemTitle", translator.GetTranslatedString(childPage.MenuTitle) } });
+
+                    //Add one for menu.js
+                    pages.Add(new Dictionary<string, object> {
+                        { "MenuItemID", childPage.MenuID },
+                        { "ShowInMenu", false },
+                        { "MenuItemLocation", childPage.Location } });
                 }
 
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", page.MenuID }, 

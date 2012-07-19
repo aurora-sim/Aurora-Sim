@@ -12,7 +12,7 @@ namespace Aurora.Modules.Web
     {
         public static readonly string Schema = "WebPages";
         private static GridPage _rootPage;
-        public static readonly uint CurrentVersion = 3;
+        public static readonly uint CurrentVersion = 4;
 
         private static void InitializeDefaults()
         {
@@ -43,34 +43,75 @@ namespace Aurora.Modules.Web
                 Location = "world.html",
                 MenuPosition = 2,
                 MenuTitle = "MenuWorld",
-                MenuToolTip = "TooltipsMenuWorld"
+                MenuToolTip = "TooltipsMenuWorld",
+                Children = new List<GridPage>
+                {
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "world",
+                        Location = "world.html",
+                        MenuPosition = 2,
+                        MenuTitle = "MenuWorldMap",
+                        MenuToolTip = "TooltipsMenuWorldMap"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "region_search",
+                        Location = "region_search.html",
+                        MenuPosition = 2,
+                        MenuTitle = "MenuRegionSearch",
+                        MenuToolTip = "TooltipsMenuRegionSearch"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "region_list",
+                        Location = "region_list.html",
+                        MenuPosition = 2,
+                        MenuTitle = "MenuRegion",
+                        MenuToolTip = "TooltipsMenuRegion"
+                    }
+                }
             });
             _rootPage.Children.Add(new GridPage
             {
                 ShowInMenu = true,
-                MenuID = "region_list",
-                Location = "region_list.html",
-                MenuPosition = 2,
-                MenuTitle = "MenuRegion",
-                MenuToolTip = "TooltipsMenuRegion"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                MenuID = "online_users",
-                Location = "online_users.html",
+                MenuID = "users",
+                Location = "user_search.html",
                 MenuPosition = 3,
                 MenuTitle = "MenuUser",
-                MenuToolTip = "TooltipsMenuUser"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                MenuID = "chat",
-                Location = "chat.html",
-                MenuPosition = 4,
-                MenuTitle = "MenuChat",
-                MenuToolTip = "TooltipsMenuChat"
+                MenuToolTip = "TooltipsMenuUser",
+                Children = new List<GridPage> {
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        LoggedInRequired = true,
+                        MenuID = "change_user_information",
+                        Location = "change_user_information.html",
+                        MenuPosition = 1,
+                        MenuTitle = "MenuChangeUserInformation",
+                        MenuToolTip = "TooltipsMenuChangeUserInformation"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "online_users",
+                        Location = "online_users.html",
+                        MenuPosition = 2,
+                        MenuTitle = "MenuOnlineUsers",
+                        MenuToolTip = "TooltipsMenuOnlineUsers"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "user_search",
+                        Location = "user_search.html",
+                        MenuPosition = 3,
+                        MenuTitle = "MenuUserSearch",
+                        MenuToolTip = "TooltipsMenuUserSearch"
+                    } }
             });
             _rootPage.Children.Add(new GridPage
             {
@@ -79,17 +120,16 @@ namespace Aurora.Modules.Web
                 Location = "help.html",
                 MenuPosition = 5,
                 MenuTitle = "MenuHelp",
-                MenuToolTip = "TooltipsMenuHelp"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                LoggedInRequired = true,
-                MenuID = "change_user_information",
-                Location = "change_user_information.html",
-                MenuPosition = 1,
-                MenuTitle = "MenuChangeUserInformation",
-                MenuToolTip = "TooltipsMenuChangeUserInformation"
+                MenuToolTip = "TooltipsMenuHelp",
+                Children = new List<GridPage> { new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "chat",
+                        Location = "chat.html",
+                        MenuPosition = 4,
+                        MenuTitle = "MenuChat",
+                        MenuToolTip = "TooltipsMenuChat"
+                    } }
             });
             _rootPage.Children.Add(new GridPage
             {
@@ -117,9 +157,21 @@ namespace Aurora.Modules.Web
                 LoggedOutRequired = true,
                 MenuID = "login",
                 Location = "login.html",
-                MenuPosition = 7,
+                MenuPosition = 8,
                 MenuTitle = "MenuLogin",
-                MenuToolTip = "TooltipsMenuLogin"
+                MenuToolTip = "TooltipsMenuLogin",
+                Children = new List<GridPage>
+                {
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "forgot_pass",
+                        Location = "forgot_pass.html",
+                        MenuPosition = 1,
+                        MenuTitle = "MenuForgotPass",
+                        MenuToolTip = "TooltipsMenuForgotPass"
+                    }
+                }
             });
             _rootPage.Children.Add(new GridPage
             {
@@ -135,51 +187,64 @@ namespace Aurora.Modules.Web
             {
                 ShowInMenu = true,
                 AdminRequired = true,
-                MenuID = "news_manager",
-                Location = "admin/news_manager.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuNewsManager",
-                MenuToolTip = "TooltipsMenuNewsManager"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                AdminRequired = true,
-                MenuID = "user_search",
-                Location = "user_search.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuUserManager",
-                MenuToolTip = "TooltipsMenuUserManager"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                AdminRequired = true,
-                MenuID = "factory_reset",
-                Location = "admin/factory_reset.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuFactoryReset",
-                MenuToolTip = "TooltipsMenuFactoryReset"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                AdminRequired = true,
-                MenuID = "page_manager",
-                Location = "admin/page_manager.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuPageManager",
-                MenuToolTip = "TooltipsMenuPageManager"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                AdminRequired = true,
-                MenuID = "settings_manager",
-                Location = "admin/settings_manager.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuSettingsManager",
-                MenuToolTip = "TooltipsMenuSettingsManager"
+                MenuID = "manager",
+                Location = "admin/manager.html",
+                MenuPosition = 9,
+                MenuTitle = "MenuManager",
+                MenuToolTip = "TooltipsMenuManager",
+                Children = new List<GridPage>
+                {
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "news_manager",
+                        Location = "admin/news_manager.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuNewsManager",
+                        MenuToolTip = "TooltipsMenuNewsManager"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "user_search",
+                        Location = "user_search.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuUserManager",
+                        MenuToolTip = "TooltipsMenuUserManager"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "factory_reset",
+                        Location = "admin/factory_reset.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuFactoryReset",
+                        MenuToolTip = "TooltipsMenuFactoryReset"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "page_manager",
+                        Location = "admin/page_manager.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuPageManager",
+                        MenuToolTip = "TooltipsMenuPageManager"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "settings_manager",
+                        Location = "admin/settings_manager.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuSettingsManager",
+                        MenuToolTip = "TooltipsMenuSettingsManager"
+                    }
+                }
             });
 
 
@@ -213,18 +278,6 @@ namespace Aurora.Modules.Web
                 ShowInMenu = false,
                 MenuID = "news_info",
                 Location = "news.html"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = false,
-                MenuID = "region_search",
-                Location = "region_search.html"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = false,
-                MenuID = "region_search",
-                Location = "region_search.html"
             });
 
             //Things added, but not used

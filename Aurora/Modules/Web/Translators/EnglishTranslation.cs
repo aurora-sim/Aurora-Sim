@@ -212,10 +212,18 @@ namespace Aurora.Modules.Web.Translators
                     return "News";
                 case "MenuWorld":
                     return "World";
+                case "MenuWorldMap":
+                    return "World Map";
                 case "MenuRegion":
-                    return "Region";
+                    return "Region List";
                 case "MenuUser":
                     return "User";
+                case "MenuOnlineUsers":
+                    return "Online Users";
+                case "MenuUserSearch":
+                    return "User Search";
+                case "MenuRegionSearch":
+                    return "Region Search";
                 case "MenuChat":
                     return "Chat";
                 case "MenuHelp":
@@ -238,6 +246,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Page Manager";
                 case "MenuSettingsManager":
                     return "Settings Manager";
+                case "MenuManager":
+                    return "Admin Management";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -254,10 +264,18 @@ namespace Aurora.Modules.Web.Translators
                     return "News";
                 case "TooltipsMenuWorld":
                     return "World";
+                case "TooltipsMenuWorldMap":
+                    return "World Map";
                 case "TooltipsMenuRegion":
-                    return "Region";
+                    return "Region List";
                 case "TooltipsMenuUser":
                     return "User";
+                case "TooltipsMenuOnlineUsers":
+                    return "Online Users";
+                case "TooltipsMenuUserSearch":
+                    return "User Search";
+                case "TooltipsMenuRegionSearch":
+                    return "Region Search";
                 case "TooltipsMenuChat":
                     return "Chat";
                 case "TooltipsMenuHelp":
@@ -276,6 +294,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Page Manager";
                 case "TooltipsMenuSettingsManager":
                     return "Settings Manager";
+                case "TooltipsMenuManager":
+                    return "Admin Management";
 
 				// Urls
                 case "WelcomeScreen":

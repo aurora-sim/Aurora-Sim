@@ -70,7 +70,7 @@ namespace Aurora.Modules.Web
 
 
             vars.Add("RegionsList", regionslist);
-            vars.Add("RegionSearchText", translator.GetTranslatedString("UserSearchText"));
+            vars.Add("RegionSearchText", translator.GetTranslatedString("RegionSearchText"));
             vars.Add("SearchForRegionText", translator.GetTranslatedString("SearchForRegionText"));
             vars.Add("RegionNameText", translator.GetTranslatedString("RegionNameText"));
             vars.Add("Search", translator.GetTranslatedString("Search"));
