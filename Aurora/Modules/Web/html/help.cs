@@ -29,6 +29,12 @@ namespace Aurora.Modules.Web
 			var vars = new Dictionary<string, object>();
 			vars.Add("HelpText", translator.GetTranslatedString("HelpText"));
 			vars.Add("HelpViewersConfigText", translator.GetTranslatedString("HelpViewersConfigText"));
+			vars.Add("AngstormViewer", translator.GetTranslatedString("AngstormViewer"));
+			vars.Add("VoodooViewer", translator.GetTranslatedString("VoodooViewer"));
+			vars.Add("AstraViewer", translator.GetTranslatedString("AstraViewer"));
+			vars.Add("ImprudenceViewer", translator.GetTranslatedString("ImprudenceViewer"));
+			vars.Add("PhoenixViewer", translator.GetTranslatedString("PhoenixViewer"));
+			vars.Add("SingularityViewer", translator.GetTranslatedString("SingularityViewer"));
 			
 			return vars;			
         }

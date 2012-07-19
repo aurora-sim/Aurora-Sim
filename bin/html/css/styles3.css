@@ -15,8 +15,9 @@ html, body {
 body  {
 	line-height: 14px;
 	font-size: 14px;
+	color: #CCC;
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
-	margin: 0pt;
+	margin: 0px;
 	cursor: default;
 }
 
@@ -27,39 +28,35 @@ body  {
 #st5 {display: none;}
 
 #st1, #st2, #st3, #st4, #st5, a.styleswitch {
-	background: #FFF;
+	background: #4164af;
 	margin-right: 5px;
 	padding-left: 6px;
 	padding-right: 6px;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	border: 0px solid #CCC;
+	border: 0px solid #4266b2;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #CCC 0 0 .25em;
-    -moz-box-shadow: #CCC 0 0 .25em;
-    box-shadow: #CCC 0 0 .25em;
+	-webkit-box-shadow: #4266b2 0 0 .25em;
+    -moz-box-shadow: #4266b2 0 0 .25em;
+    box-shadow: #4266b2 0 0 .25em;
 	behavior: url(css/pie.htc);
 }
 
-#login table {width: 100%;}
-#register table {width: 100%;}
-#regionlist table {width: 100%;}
-#regionlist_navigation table {width: 24%;}
-#onlineusers table {width: 100%;}
-#onlineusers_navigation table {width: 24%;}
-#users_navigation table {width: 24%;}
-#regioninfo {color: #7E7E7E;}
-#useragentprofile {color: #7E7E7E;}
-#newslist  table {width: 100%;}
-#newslist_navigation table {width: 24%;}
-#changeuserinformation table {width: 100%;}
-#edituser table {width: 100%;}
-#userssearch table {width: 100%;}
-#userssearch_navigation  table {width: 24%;}
-#loginscreenmanager table {width: 100%;}
-#pagemanager table {width: 100%;}
+/* New HTML 5 Tables */
+/* For Sexy tables you can use these css
+table, th, td{border: 1px solid #000;}
+tr:nth-child(even) {background: #eee}
+tr:nth-child(odd) {background: #ddd}
+tr:nth-child(even) td:nth-child(odd) { background: #ccc; }
+tr:nth-child(odd) td:nth-child(even) { background: #bbb; }
+th{background-image:url();}
+*/
+
+/* Not used Actually
+caption{caption-side:bottom; font-weight:normal; font-style:normal; margin:4px; text-align: left;}
+*/
 
 /* New HTML5 Tables */
 /* General */
@@ -191,20 +188,111 @@ table#delete_my_account td {}
 .delete_my_account_right {text-align: left;}
 
 /* user_agent_profile */
+div#user_agent_profile_container {
+    margin-bottom: 15px;
+	background-color: #1B2F70;
+    border: 1px solid #1B2F70;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	behavior: url(css/pie.htc);
+}
+
+
 table#user_agent_profile  {width: 100%;}
 table#user_agent_profile th {}
-table#user_agent_profile td {}
+table#user_agent_profile td {padding: 5px;}
 .user_agent_profile_left {text-align: left;}
 .user_agent_profile_right {text-align: left;}
-.user_agent_profile_picture {text-align: left; width: 128px;}
+.user_agent_profile_picture {text-align: left; width: 256px; height:256px;}
+
+.user_agent_profile_picture img {
+	width:256px; height:256px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	behavior: url(css/pie.htc);
+}
+
+.user_agent_profile_picture div {
+    position: relative;
+    margin: 0px;
+    padding:5px;
+    overflow: hidden;
+    border: 1px solid #4164af;
+    border-radius: 5px;
+    -khtml-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
+    behavior: url(css/pie.htc);
+}
+
+.user_agent_profile_picture_text {
+    padding: 10px 10px;
+    background-color: #6EA6FB;
+    color: #FFF;
+	margin-top: 4px;
+    border: 1px solid #4266b2;
+    border-radius: 5px;
+    -khtml-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    behavior: url(css/pie.htc);
+}
 
 /* region_info */
+div#region_info_container {
+    margin-bottom: 15px;
+	background-color: #4164af;
+    border: 1px solid #4164af;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	behavior: url(css/pie.htc);
+}
+
 table#region_info  {width: 100%;}
 table#region_info th {}
-table#region_info td {}
+table#region_info td {padding: 5px;}
 .region_info_left {text-align: left;}
 .region_info_right {text-align: left;}
-.region_info_picture {text-align: left; width: 128px;}
+.region_info_picture {text-align: left; width: 256px; height:256px;}
+
+/* region_info Caption */
+.region_info_picture img {width:256px; height:256px;}
+.region_info_picture div {
+    position: relative;
+    margin: 0px;
+    padding:5px;
+    overflow: hidden;
+    border: 1px solid #4164af;
+    border-radius: 5px;
+    -khtml-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+	/* -webkit-box-shadow: #000 0 0 .5em;
+    -moz-box-shadow: #000 0 0 .5em;
+    box-shadow: #000 0 0 .5em; */
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
+    behavior: url(css/pie.htc);
+}
+
+.region_info_picture_text {
+    padding: 10px 10px;
+    background-color: #6EA6FB;
+    color: #FFF;
+	margin-top: 4px;
+    border: 1px solid #4164af;
+    border-radius: 5px;
+    -khtml-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    behavior: url(css/pie.htc);
+}
 
 /* Navigation buttons */
 .nav {
@@ -217,6 +305,7 @@ table#region_info td {}
 	border: 0px solid #CCC;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	-webkit-box-shadow: #CCC 0 0 .25em;
     -moz-box-shadow: #CCC 0 0 .25em;
@@ -235,8 +324,6 @@ a:hover {color: #296BA5; text-decoration: none;}
 p {margin-bottom: 0.5em;}
 u {text-decoration: none;}
 .clear {clear: both; height: 0; visibility: hidden; display: block;}
-img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage
-{width: 120px; height: 100px;margin: 3px;}
 h1, h2, h3, h4, h5, h6 {font-weight: 700; color: #6EA6FB;	line-height: 1.8em;}
 h2 {font-size: 22px;}
 img.map_picture {width: 128px;}
@@ -254,6 +341,7 @@ img.map_picture {width: 128px;}
 	border: 0px solid #CCC;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	-webkit-box-shadow: #CCC 0 0 .5em;
     -moz-box-shadow: #CCC 0 0 .5em;
@@ -273,6 +361,7 @@ input, textarea, select, button {
 	border: 1px solid #eee;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	-webkit-box-shadow: #EEEEEE 0 0 .25em;
     -moz-box-shadow: #EEEEEE 0 0 .25em;
@@ -284,6 +373,7 @@ input , textarea {
 	width: 300px;
 	/* box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5), 0px 2px 2px 0px rgba(255, 255, 255, 0.5) inset; */
 	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.8);
+	behavior: url(css/pie.htc);
 }
 
 /* input:hover , textarea:hover {border: 1px solid #296BA5;} */
@@ -329,7 +419,7 @@ label {display:inline-block;}
 	text-transform: uppercase;
 	color: #C2C2C2;
 	padding: 3px;
-	border: 1px solid #07114f;
+	border: 1px solid #06104d;
 }
 
 #top #menu li:hover {
@@ -343,11 +433,11 @@ label {display:inline-block;}
 	visibility: hidden;
 }
 
-/* loading */
+/* Content */
 #content {
-	color: #7E7E7E;
 	line-height: 1.3em;
 	font-size: 14px;
+	padding: 10px;
 }
 
 /* World */
@@ -355,6 +445,7 @@ label {display:inline-block;}
 	border: 0px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	/* -webkit-box-shadow: #EEEEEE 0 0 .25em;
     -moz-box-shadow: #EEEEEE 0 0 .25em;
@@ -376,33 +467,38 @@ label {display:inline-block;}
 
 /* Help */
 .voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
-img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
-	border: 1px solid #EEEEEE;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
+img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+    width: 120px;
+    height: 100px;
+    margin: 3px;
+    border: 1px solid #EEEEEE;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: #EEEEEE 0 0 .25em;
     -moz-box-shadow: #EEEEEE 0 0 .25em;
     box-shadow: #EEEEEE 0 0 .25em;
-	behavior: url(css/pie.htc);
+    behavior: url(css/pie.htc);
 }
 
 /* footer */
 #footer {
-	background: #fcfcfc;
+	/* background: #4164af; */
+	background: #263f83 url(../images/bg_TransStripe1.gif);
 	margin-bottom: 30px;
-	margin-top: 20px;
 	padding: 10px;
 	color: #7e7e7e;
 	font-size: 11px;
 	text-align: right;
-	border: 1px solid #CCCCCC;
+	border: 1px solid #263f83;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
-	-webkit-box-shadow: #EEEEEE 0 0 .25em;
-    -moz-box-shadow: #EEEEEE 0 0 .25em;
-    box-shadow: #EEEEEE 0 0 .25em;
+	-webkit-box-shadow: #222 0 0 .25em;
+    -moz-box-shadow: #222 0 0 .25em;
+    box-shadow: #222 0 0 .25em;
 	behavior: url(css/pie.htc);
 }
 
@@ -410,6 +506,7 @@ img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.sing
 .message, .info, .alert, .download {
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
 	border-radius: 5px;
 	-webkit-box-shadow: #EEEEEE 0 0 .25em;
     -moz-box-shadow: #EEEEEE 0 0 .25em;

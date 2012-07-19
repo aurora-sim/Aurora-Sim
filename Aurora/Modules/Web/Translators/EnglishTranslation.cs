@@ -319,11 +319,23 @@ namespace Aurora.Modules.Web.Translators
                 case "ChatText":
                     return "Chat Support";
 					
-				// Help Page
+                // Help Page
                 case "HelpText":
                     return "Help";
                 case "HelpViewersConfigText":
                     return "Help Viewers Configuration";
+                case "AngstormViewer":
+                    return "Angstorm Viewer";
+                case "VoodooViewer":
+                    return "Voodoo Viewer";
+                case "AstraViewer":
+                    return "Astra Viewer";
+                case "ImprudenceViewer":
+                    return "Imprudence Viewer";
+                case "PhoenixViewer":
+                    return "Phoenix Viewer";
+                case "SingularityViewer":
+                    return "Singularity Viewer";
 				
                 //Logout page
                 case "LoggedOutSuccessfullyText":
