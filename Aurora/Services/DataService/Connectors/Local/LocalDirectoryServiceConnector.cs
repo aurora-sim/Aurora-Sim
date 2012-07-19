@@ -97,43 +97,15 @@ namespace Aurora.Services.DataService
                 return;
 
             ClearRegion(parcels[0].RegionID);
-            
-#if (!ISWIN)
-            List<object[]> insertValues = new List<object[]>();
-            foreach (LandData args in parcels)
-            {
-                List<object> Values = new List<object>
-                                          {
-                                              args.RegionID,
-                                              args.GlobalID,
-                                              args.LocalID,
-                                              args.UserLocation.X,
-                                              args.UserLocation.Y,
-                                              args.UserLocation.Z,
-                                              args.Name,
-                                              args.Description,
-                                              args.Flags,
-                                              args.Dwell,
-                                              args.InfoUUID,
-                                              ((args.Flags & (uint) ParcelFlags.ForSale) == (uint) ParcelFlags.ForSale) ? 1 : 0,
-                                              args.SalePrice,
-                                              args.AuctionID,
-                                              args.Area,
-                                              0,
-                                              args.Maturity,
-                                              args.OwnerID,
-                                              args.GroupID,
-                                              ((args.Flags & (uint) ParcelFlags.ShowDirectory) == (uint) ParcelFlags.ShowDirectory) ? 1 : 0,
-                                              args.SnapshotID,
-                                              OSDParser.SerializeLLSDXmlString(args.Bitmap),
-                                              (int)args.Category,
-                                              args.ScopeID
-                                          };
-                //InfoUUID is the missing 'real' Gridwide ParcelID
 
-                insertValues.Add(Values.ToArray());
+            var OrFilters = new Dictionary<string, object>();
+            foreach (var parcel in parcels)
+            {
+                OrFilters.Add("ParcelID", parcel.GlobalID);
+                OrFilters.Add("InfoUUID", parcel.InfoUUID);
             }
-#else
+            GD.Delete("searchparcel", new QueryFilter { orFilters = OrFilters });
+            
             List<object[]> insertValues = parcels.Select(args => new List<object>
             {
                                                                          
@@ -143,8 +115,8 @@ namespace Aurora.Services.DataService
                     args.UserLocation.X, 
                     args.UserLocation.Y, 
                     args.UserLocation.Z, 
-                    args.Name.MySqlEscape(50), 
-                    args.Description.MySqlEscape(255), 
+                    args.Name, 
+                    args.Description, 
                     args.Flags, 
                     args.Dwell, 
                     args.InfoUUID, 
@@ -162,7 +134,7 @@ namespace Aurora.Services.DataService
                     (int) args.Category, 
                     args.ScopeID
              }).Select(Values => Values.ToArray()).ToList();
-#endif
+
             GD.InsertMultiple("searchparcel", insertValues);
         }
 

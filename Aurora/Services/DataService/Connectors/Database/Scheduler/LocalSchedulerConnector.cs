@@ -147,7 +147,7 @@ namespace Aurora.Services.DataService.Connectors.Database.Scheduler
             try
             {
                 dr =  m_Gd.QueryData("WHERE enabled = 1 AND runs_next < '" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + "' ORDER BY runs_next desc", "scheduler", string.Join(", ", theFields));
-                if (dr != null)
+                if (dr != null && dr.DataReader != null)
                 {
                     while (dr.DataReader.Read())
                     {

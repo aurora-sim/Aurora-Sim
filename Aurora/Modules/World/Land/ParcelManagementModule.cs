@@ -2192,6 +2192,7 @@ namespace Aurora.Modules.Land
                                                           {
                                                               LandData d = o.LandData.Copy();
                                                               d.UserLocation = GetParcelCenterAtGround(o);
+                                                              d.RegionID = o.RegionUUID;
                                                               return d;
                                                           }));
         }

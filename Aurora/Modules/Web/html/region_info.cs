@@ -50,6 +50,50 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionSizeX", region.RegionSizeX);
                 vars.Add("RegionSizeY", region.RegionSizeY);
                 vars.Add("RegionType", region.RegionType);
+                vars.Add("RegionOnline", (region.Flags & (int)Aurora.Framework.RegionFlags.RegionOnline) == (int)Aurora.Framework.RegionFlags.RegionOnline ?
+                    translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
+
+                ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
+                IRegionCapsService regionCaps = capsService != null ? capsService.GetCapsForRegion(region.RegionHandle) : null;
+                if (regionCaps != null)
+                {
+                    vars.Add("NumberOfUsersInRegion", regionCaps.GetClients().Count);
+                    List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
+                    foreach (var client in regionCaps.GetClients())
+                    {
+                        Dictionary<string, object> user = new Dictionary<string, object>();
+                        user.Add("UserNameText", translator.GetTranslatedString("UserNameText"));
+                        user.Add("UserUUID", client.AgentID);
+                        user.Add("UserName", client.ClientCaps.AccountInfo.Name);
+                        users.Add(user);
+                    }
+                    vars.Add("UsersInRegion", users);
+                }
+                else
+                {
+                    vars.Add("NumberOfUsersInRegion", 0);
+                    vars.Add("UsersInRegion", new List<Dictionary<string, object>>());
+                }
+                IDirectoryServiceConnector directoryConnector = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                if (directoryConnector != null)
+                {
+                    List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero, UUID.Zero, ParcelFlags.None, ParcelCategory.Any);
+                    List<Dictionary<string, object>> parcels = new List<Dictionary<string, object>>();
+                    foreach (var p in data)
+                    {
+                        Dictionary<string, object> parcel = new Dictionary<string, object>();
+                        parcel.Add("ParcelNameText", translator.GetTranslatedString("ParcelNameText"));
+                        parcel.Add("ParcelOwnerText", translator.GetTranslatedString("ParcelOwnerText"));
+                        parcel.Add("ParcelUUID", p.InfoUUID);
+                        parcel.Add("ParcelName", p.Name);
+                        parcel.Add("ParcelOwnerUUID", p.OwnerID);
+                        IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
+                        if(accountService != null)
+                            parcel.Add("ParcelOwnerName", accountService.GetUserAccount(UUID.Zero, p.OwnerID).Name);
+                        parcels.Add(parcel);
+                    }
+                    vars.Add("ParcelInRegion", parcels);
+                }
                 IWebHttpTextureService webTextureService = webInterface.Registry.
                     RequestModuleInterface<IWebHttpTextureService>();
                 if (webTextureService != null && region.TerrainMapImage != UUID.Zero)
@@ -64,6 +108,9 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionNameText", translator.GetTranslatedString("RegionNameText"));
                 vars.Add("RegionTypeText", translator.GetTranslatedString("RegionTypeText"));
                 vars.Add("RegionInfoText", translator.GetTranslatedString("RegionInfoText"));
+                vars.Add("RegionOnlineText", translator.GetTranslatedString("RegionOnlineText"));
+                vars.Add("NumberOfUsersInRegionText", translator.GetTranslatedString("NumberOfUsersInRegionText"));
+                vars.Add("ParcelsInRegionText", translator.GetTranslatedString("ParcelsInRegionText"));
             }
 
             return vars;

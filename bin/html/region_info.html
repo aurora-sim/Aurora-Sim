@@ -77,6 +77,37 @@
       <td class="region_info_left" colspan="2"><p>{OwnerNameText}:</p></td>
       <td class="region_info_right" colspan="2"><a href="webprofile/?userid={OwnerUUID}"><p>{OwnerName}</p></a></td>
     </tr>
+    <tr>
+      <td class="region_info_left" colspan="2"><p>{RegionOnlineText}:</p></td>
+      <td class="region_info_right" colspan="2"><a href="webprofile/?userid={OwnerUUID}"><p>{RegionOnline}</p></a></td>
+    </tr>
+    <tr>
+      <td class="region_info_left" colspan="2"><p>{NumberOfUsersInRegionText}:</p></td>
+      <td class="region_info_right" colspan="2"><a href="webprofile/?userid={OwnerUUID}"><p>{NumberOfUsersInRegion}</p></a></td>
+    </tr>
+	<table id="region_info">
+{UsersInRegionArrayBegin}
+      <tr>
+        <td class="region_info_left" colspan="2"><p>{UserNameText}:</p></td>
+        <td class="region_info_right" colspan="2"><a href="webprofile/?userid={UserUUID}"><p>{UserName}</p></a></td>
+      </tr>
+{UsersInRegionArrayEnd}
+    </table>
+    <tr>
+      <td class="region_info_left" colspan="2"><p>{ParcelsInRegionText}:</p></td>
+    </tr>
+	<table id="region_info">
+{ParcelInRegionArrayBegin}
+      <tr>
+        <td class="region_info_left" colspan="2"><p>{ParcelNameText}:</p></td>
+        <td class="region_info_right" colspan="2"><a href="parcel_info?infouuid={ParcelUUID}"><p>{ParcelName}</p></a></td>
+      </tr>
+      <tr>
+        <td class="region_info_left" colspan="2"><p>{ParcelOwnerText}:</p></td>
+        <td class="region_info_right" colspan="2"><a href="webprofile/?userid={ParcelOwnerUUID}"><p>{ParcelOwnerName}</p></a></td>
+      </tr>
+{ParcelInRegionArrayEnd}
+    </table>
   </tbody>
 </table>
 </body>

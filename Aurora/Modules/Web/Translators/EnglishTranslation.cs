@@ -148,6 +148,12 @@ namespace Aurora.Modules.Web.Translators
                     return "Region Name";
                 case "RegionTypeText":
                     return "Region Type";
+                case "ParcelsInRegionText":
+                    return "Parcels In Region";
+                case "ParcelNameText":
+                    return "Parcel Name";
+                case "ParcelOwnerText":
+                    return "Parcel Owner's Name";
 
 				// Region Page
                 case "RegionInfoText":
@@ -182,6 +188,10 @@ namespace Aurora.Modules.Web.Translators
                     return "More Info";
                 case "OnlineUsersText":
                     return "Online Users";
+                case "RegionOnlineText":
+                    return "Region Status";
+                case "NumberOfUsersInRegionText":
+                    return "Number of Users in region";
 
 				// Menu Buttons
                 case "MenuHome":

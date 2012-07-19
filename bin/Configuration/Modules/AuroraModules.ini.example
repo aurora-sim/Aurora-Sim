@@ -192,7 +192,7 @@
     UpdateOnTimer = true
 
     ;; Minutes before each check for updated parcels if the option above is selected
-    MinutesBeforeTimerUpdate = 60
+    MinutesBeforeTimerUpdate = 1
 
     ;; When parcels are updated, should search be immediately updated?
     ;; !! Note: this will not work in grid mode
