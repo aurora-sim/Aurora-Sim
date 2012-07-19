@@ -50,7 +50,7 @@ namespace Aurora.Modules.Web
                     continue;
 
                 List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
-
+                //page.Children.Add(page);
                 foreach (GridPage childPage in page.Children)
                 {
                     if (childPage.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest))
