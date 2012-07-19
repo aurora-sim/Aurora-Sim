@@ -70,7 +70,10 @@ namespace Griffin.Networking.Http.Implementation
                     {
                         string[] keys = cookie.Split(new string[1] { "=" }, StringSplitOptions.RemoveEmptyEntries);
                         keys[0] = keys[0].TrimStart();
-                        _cookies[keys[0]] = new HttpCookie() { Name = keys[0], Value = keys[1] };
+                        if (keys.Length == 1)
+                            _cookies[keys[0]] = new HttpCookie() { Name = keys[0] };
+                        else
+                            _cookies[keys[0]] = new HttpCookie() { Name = keys[0], Value = keys[1] };
                     }
                 }
                 return _cookies; 

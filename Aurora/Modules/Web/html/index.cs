@@ -51,7 +51,8 @@ namespace Aurora.Modules.Web
                 var submitWebPage = webInterface.GetPage("html/" + submitPage.Location);
                 if (submitWebPage != null)
                 {
-                    submitWebPage.Fill(webInterface, submitPage.Location, httpRequest, httpResponse, requestParameters, translator);
+                    var submitVars = submitWebPage.Fill(webInterface, "html/" + submitPage.Location, httpRequest, httpResponse, requestParameters, translator);
+                    webInterface.CookieLockPageVars("html/" + submitPage.Location, submitVars, httpResponse);
                     if (httpResponse.StatusCode != 200)
                         return vars;//It redirected
                 }

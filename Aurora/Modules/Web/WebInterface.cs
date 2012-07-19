@@ -99,6 +99,52 @@ namespace Aurora.Modules.Web
 
         #region Page Sending
 
+        protected class CookieLock
+        {
+            public UUID CookieUUID;
+            public Dictionary<string, object> Vars;
+        }
+
+        protected PreAddedDictionary<string, List<CookieLock>> _cookieLockedVars = new PreAddedDictionary<string, List<CookieLock>>(() => new List<CookieLock>());
+        public void CookieLockPageVars(string path, Dictionary<string, object> vars, OSHttpResponse response)
+        {
+            UUID random = UUID.Random();
+            response.AddCookie(new System.Web.HttpCookie(random.ToString()));
+            lock(_cookieLockedVars)
+                _cookieLockedVars[path].Add(new CookieLock { CookieUUID = random, Vars = vars });
+        }
+
+        protected bool CheckCookieLocked(string path, OSHttpRequest request, OSHttpResponse response, out Dictionary<string, object> vars)
+        {
+            vars = null;
+            List<CookieLock> locks = new List<CookieLock>();
+            lock(_cookieLockedVars)
+            {
+                if(!_cookieLockedVars.TryGetValue(path, out locks))
+                    return false;
+            }
+            foreach(var l in locks)
+            {
+                foreach(var c in request.Cookies.Keys)
+                {
+                    UUID cookieID;
+                    if(UUID.TryParse(c.ToString(), out cookieID))
+                    {
+                        if(l.CookieUUID == cookieID)
+                        {
+                            vars = l.Vars;
+                            lock(_cookieLockedVars)
+                                _cookieLockedVars[path].Remove(l);
+                            //Attempt to nuke the cookie now
+                            response.AddCookie(new System.Web.HttpCookie(c.ToString()) { Expires = Util.UnixEpoch });
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         public IWebInterfacePage GetPage(string path)
         {
             IWebInterfacePage page;
@@ -144,7 +190,12 @@ namespace Aurora.Modules.Web
                 }
                 else
                 {
-                    Dictionary<string, object> vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
+                    Dictionary<string, object> vars;
+                    if(!CheckCookieLocked(filename, httpRequest, httpResponse, out vars))
+                        vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
+
+                    AddDefaultVarsForPage(ref vars);
+
                     if (httpResponse.StatusCode != 200)
                         return MainServer.NoResponse;
                     if (vars == null)
@@ -165,6 +216,12 @@ namespace Aurora.Modules.Web
         #endregion
 
         #region Helpers
+
+        protected void AddDefaultVarsForPage(ref Dictionary<string, object> vars)
+        {
+            vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
+            vars.Add("SystemName", GridName);
+        }
 
         protected Dictionary<string, object> AddVarsForPage(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
@@ -189,8 +246,6 @@ namespace Aurora.Modules.Web
                     }
                 }
                 vars = page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
-                vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
-                vars.Add("SystemName", GridName);
                 return vars;
             }
             return null;

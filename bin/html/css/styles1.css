@@ -417,6 +417,19 @@ label {display:inline-block;}
 	cursor: pointer;
 }
 
+/* DropDown Menu */
+#top #menu ul {
+	list-style:none;
+	position:absolute;
+	display: none;
+}
+
+#top #menu li:hover ul {
+	display: block;
+	float: none;
+	width: 200px;
+}
+
 /* Loading Menu */
 #loading {
 	text-align: center;
