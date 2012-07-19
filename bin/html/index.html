@@ -41,7 +41,49 @@
 	
 	<!-- fade in -->
 	<style type="text/css">#container{display:none;}</style>
-	<script type="text/javascript">$(document).ready(function() {$( '#container' ).fadeIn("slow");});</script>
+	
+	<script type="text/javascript">$(document).ready(function() 
+	{
+		var result = {};
+		var sections = $("#menu li");
+		var loading = $("#loading");
+		var content = $("#content");
+
+		if (window.location.search)
+		{
+			// split up the query string and store in an associative array
+			var params = window.location.search.slice(1).split("&");
+			for (var i = 0; i < params.length; i++)
+			{
+				var tmp = params[i].split("=");
+				result[tmp[0]] = unescape(tmp[1]);
+			}
+		}
+		//load selected section
+		var pageName = result["page"];
+		switch(pageName){
+{MenuItemsArrayBegin}
+			case "{MenuItemID}":
+				$( '#container' ).fadeIn("slow");
+				content.load("{MenuItemLocation}", hideLoading);
+				break;
+{MenuItemsArrayEnd}
+		}
+
+		//show loading bar
+		function showLoading(){
+			loading
+				.css({visibility:"visible"})
+				.css({opacity:"1"})
+				.css({display:"block"})
+			;
+		}
+		//hide loading bar
+		function hideLoading(){
+			loading.fadeTo(1000, 0);
+		};
+	
+	});</script>
 
 </head>
 
