@@ -49,8 +49,29 @@ namespace Aurora.Modules.Web
                 if (page.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
                     continue;
 
+                page.Children.Add(new GridPage { MenuID = "home", Location = "home.html", MenuPosition = 0, MenuTitle = page.MenuTitle, MenuToolTip = page.MenuToolTip, ShowInMenu = true });
+                List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
+
+                foreach (GridPage childPage in page.Children)
+                {
+                    if (childPage.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest))
+                        continue;
+                    if (childPage.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest))
+                        continue;
+                    if (childPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
+                        continue;
+
+                    childPages.Add(new Dictionary<string, object> { { "MenuItemID", childPage.MenuID }, 
+                        { "ShowInMenu", childPage.ShowInMenu },
+                        { "MenuItemLocation", childPage.Location }, 
+                        { "MenuItemTitleHelp", translator.GetTranslatedString(childPage.MenuToolTip) },
+                        { "MenuItemTitle", translator.GetTranslatedString(childPage.MenuTitle) } });
+                }
+
                 pages.Add(new Dictionary<string, object> { { "MenuItemID", page.MenuID }, 
                     { "ShowInMenu", page.ShowInMenu },
+                    { "HasChildren", page.Children.Count > 0 },
+                    { "ChildrenMenuItems", childPages },
                     { "MenuItemLocation", page.Location }, 
                     { "MenuItemTitleHelp", translator.GetTranslatedString(page.MenuToolTip) },
                     { "MenuItemTitle", translator.GetTranslatedString(page.MenuTitle) } });

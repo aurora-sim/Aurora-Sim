@@ -57,6 +57,15 @@
 {MenuItemsArrayBegin}
 {IfShowInMenuBegin}
 			<li id="{MenuItemID}" class="fade" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}</li>
+{IfHasChildrenBegin}
+			<ul>
+{ChildrenMenuItemsArrayBegin}
+{IfShowInMenuBegin}
+				<li id="{MenuItemID}" class="fade" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}</li>
+{IfShowInMenuEnd}
+{ChildrenMenuItemsArrayEnd}
+			</ul>
+{IfHasChildrenEnd}
 {IfShowInMenuEnd}
 {MenuItemsArrayEnd}
 		</ul>
