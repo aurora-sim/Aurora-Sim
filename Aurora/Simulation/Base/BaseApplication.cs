@@ -399,7 +399,7 @@ namespace Aurora.Simulation.Base
                                 foreach (string key in config.GetKeys())
                                 {
                                     if (key == "ConnectionString")
-                                        newConfig.Set(key, string.Format("Data Source={0};Port=3306;Database={1};User ID={2};Password={3};",
+                                        newConfig.Set(key, string.Format("\"Data Source={0};Port=3306;Database={1};User ID={2};Password={3};\"",
                                             dbSource, dbSchema, dbUser, dbPasswd));
                                     else
                                         newConfig.Set(key, config.Get(key));
