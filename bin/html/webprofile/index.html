@@ -21,16 +21,19 @@
 	<meta charset="utf-8">
 	<meta name="keywords" content="{SystemName}" />
 	<meta name="description" content="{SystemName}"/>
-	<link href="../css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
-	<link href="../css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
-	<link href="../css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
-	<link href="../css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
-	<link href="../css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
-	<script type="text/javascript" src="../javascripts/jquery.min.js"></script>
-	<script type="text/javascript" src="../javascripts/styleswitch.js"></script>
+	
+	<script src="{SystemURL}/javascripts/jquery.min.js" type="text/javascript"></script>
+
+	<!-- StyleSwitch -->
+	<script src="{SystemURL}/javascripts/styleswitch.js" type="text/javascript"></script>
+	<link href="{SystemURL}/css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="{SystemURL}/css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="{SystemURL}/css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<link href="{SystemURL}/css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+	<link href="{SystemURL}/css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
 	
 	<!-- date time -->
-	<script type="text/javascript" language="javascript" src="../javascripts/jquery.jclock.js"></script>
+	<script src="{SystemURL}/javascripts/jquery.jclock.js" type="text/javascript" language="javascript"></script>
 	<script type="text/javascript">
 		$(function($) {var options1 = {format: '%A %B %d, %Y %I:%M:%S %p'} // 12-hour
 		$('#jclock1').jclock(options1);
@@ -45,7 +48,7 @@
 	</script>
 	
 	<!-- Tooltips -->
-	<script type="text/javascript" language="javascript" src="../javascripts/jquery.tooltip.js"></script>
+	<script src="{SystemURL}/javascripts/jquery.tooltip.js" type="text/javascript" language="javascript"></script>
 	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
 
 	<!-- fade in -->
@@ -99,7 +102,7 @@
 
   <tbody>
     <tr>
-      <td class="user_agent_profile_picture" rowspan="6">
+      <td class="user_agent_profile_picture" rowspan="7">
 	    <div class="user_agent_profile_picture">
 	    <a href="#">
 	    <img height="256"

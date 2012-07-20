@@ -436,7 +436,8 @@ label {display:inline-block;}
 #top #menu li:hover ul {
 	display: block;
 	float: none;
-	width: 220px;
+	max-width: 220px;
+	min-width: 20px;
 	margin-top:3px;
 	padding-left:5px;
 	background-color: #FCFCFC;
@@ -491,8 +492,11 @@ label {display:inline-block;}
 }
 
 /* Help */
-.voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
-img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+/* .angstormimage, .voodooimage, .astraimage, .imprudenceimage, 
+.phoeniximage, .singularityimage, .zenimage {;} */
+img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, 
+img.phoeniximage, img.singularityimage, img.zenimage {
+    cursor: pointer;
     width: 120px;
     height: 100px;
     margin: 3px;

@@ -430,9 +430,10 @@ label {display:inline-block;}
 
 #top #menu li:hover ul {
 	display: block;
-	background: #545454 url(../images/bg_TransStripe1.gif);
+	background: #545454 url(../images/icons/bg_TransStripe1.gif);
 	float: none;
-	width: 220px;
+	max-width: 220px;
+	min-width: 20px;
 	margin-top:3px;
 	padding-left:5px;
 	z-index: 100;
@@ -486,8 +487,11 @@ label {display:inline-block;}
 }
 
 /* Help */
-.voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
-img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+/* .angstormimage, .voodooimage, .astraimage, .imprudenceimage, 
+.phoeniximage, .singularityimage, .zenimage {;} */
+img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, 
+img.phoeniximage, img.singularityimage, img.zenimage {
+    cursor: pointer;
     width: 120px;
     height: 100px;
     margin: 3px;
@@ -505,7 +509,7 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
 /* footer */
 #footer {
 	/*background: #333; */
-	background: transparent url(../images/bg_TransStripe1.gif);
+	background: transparent url(../images/icons/bg_TransStripe1.gif);
 	margin-bottom: 30px;
 	padding: 10px;
 	color: #7e7e7e;

@@ -4,13 +4,37 @@
 {HelpViewersConfigText}  Help Viewers Configuration
 -->
 
+
+
+
 <h2>{SystemName}: {HelpText}</h2>
 <div id="help">
-  <img class="voodooimage" src="images/viewers/aurora_voodoo_thumb_01.jpg" alt="{Voodoo Viewer}" title="{Voodoo Viewer}">
-  <img class="astraimage" src="images/viewers/aurora_astra_thumb_01.jpg" alt="{Astra Viewer}" title="{Astra Viewer}">
-  <img class="imprudenceimage" src="images/viewers/aurora_imprudence_thumb_01.jpg" alt="{Imprudence Viewer}" title="{Imprudence Viewer}">
-  <img class="phoeniximage" src="images/viewers/aurora_phoenix_thumb_01.jpg" alt="{Phoenix Viewer}" title="{Phoenix Viewer}">
-  <img class="singularityimage" src="images/viewers/aurora_singularity_thumb_01.jpg" alt="{Singularity Viewer}" title="{Singularity Viewer}">
+  <img class="angstormimage" src="images/viewers/aurora_angstorm_thumb_01.jpg" alt="{AngstormViewer}" title="{AngstormViewer}">
+  <img class="voodooimage" src="images/viewers/aurora_voodoo_thumb_01.jpg" alt="{VoodooViewer}" title="{VoodooViewer}">
+  <img class="astraimage" src="images/viewers/aurora_astra_thumb_01.jpg" alt="{AstraViewer}" title="{AstraViewer}">
+  <img class="imprudenceimage" src="images/viewers/aurora_imprudence_thumb_01.jpg" alt="{ImprudenceViewer}" title="{ImprudenceViewer}">
+  <img class="phoeniximage" src="images/viewers/aurora_phoenix_thumb_01.jpg" alt="{PhoenixViewer}" title="{PhoenixViewer}">
+  <img class="singularityimage" src="images/viewers/aurora_singularity_thumb_01.jpg" alt="{SingularityViewer}" title="{SingularityViewer}">
+    <img class="zenimage" src="images/viewers/aurora_zen_thumb_01.jpg" alt="{ZenViewer}" title="{ZenViewer}">
   <h3>{SystemName}: {HelpViewersConfigText}</h3>
   <p>Login URI: {SystemURL}/</p>
 </div>
+
+<script type="text/javascript">
+  $('img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage, img.zenimage').css('opacity', 0.4);
+  $("img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage, img.zenimage").hover(
+    function() {
+      $(this).stop().animate({"opacity": "1.0"}, "0.5");},
+	function() {
+	  $(this).stop().animate({"opacity": "0.4"}, "0.5");
+  });
+  
+  /* $("img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage").hover(function(){
+    $(this).fadeIn(250);$(this).css('opacity', 1.0);}); */
+  /* $("img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage").mouseout(function(){
+    $(this).fadeOut(250);$(this).fadeIn(250);$(this).css('opacity', 0.3);}); */
+  /* $('img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage').fadeTo("slow",0.25);
+  $('img.phoeniximage, img.singularityimage, img.zenimage').fadeTo("slow",0.25); */
+  /* $("img.angstormimage").fadeTo("slow",0.25); */
+  /* $("img.angstormimage").animate({opactiy: 1.0 } fadeOut('slow', function() {$(this).remove() }); }}, 3000); */
+ </script>

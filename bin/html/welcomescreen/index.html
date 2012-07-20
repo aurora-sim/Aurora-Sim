@@ -2,21 +2,27 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>{SystemName}</title>
+	<title>{SystemName}: Welcome Screen</title>
 	<meta name="keywords" content="{SystemName}" />
 	<meta name="description" content="{SystemName}"/>
-	<link rel="shortcut icon" href="images/favicon.ico" />
-
-	<!-- Css -->
-	<link href="{SystemURL}/welcomescreen/css/default_template.css" type="text/css" rel="stylesheet">
+	<link rel="shortcut icon" href="../images/icons/favicon.ico" />
 
 	<!-- Javascript -->
-	<script src="{SystemURL}/welcomescreen/javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
-	<script src="{SystemURL}/welcomescreen/javascripts/resize.js" type="text/javascript" language="javascript"></script>
-	<script src="{SystemURL}/welcomescreen/javascripts/randomimageswitch.js" type="text/javascript" language="javascript"></script>
+	<script src="../javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
 	
-	<title>{SystemName}: Welcome Screen</title>
-	
+	<!-- StyleSwitch TODO
+	<script src="../javascripts/styleswitch.js" type="text/javascript" ></script>
+	<link href="../css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="../css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="../css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<link href="../css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+	<link href="../css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
+	-->
+	<link href="../css/welcome1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+
+	<script src="../javascripts/resize.js" type="text/javascript" language="javascript"></script>
+	<script src="../javascripts/randomimageswitch.js" type="text/javascript" language="javascript"></script>
+	<!-- <script src="../javascripts/timeimageswitch.js" type="text/javascript" language="javascript"></script> -->
 	<script>$(document).ready(function(){bgImgRotate();});</script>
 	
 	<!-- fade in -->
@@ -40,10 +46,9 @@
 <body>
 <div id="container">
 
-
 <div id=top_image>
     <a class="logofade" href="" alt="{SystemName}" title="{SystemName}">
-		<img src="{SystemURL}/welcomescreen/images/logo1.png" alt="{SystemName}" title="{SystemName}" />
+		<img src="../images/logo1.png" alt="{SystemName}" title="{SystemName}" />
 	</a>
 </div>
 
@@ -63,7 +68,7 @@
 
 </div>
 
-<img id=mainImage src="{SystemURL}/welcomescreen/images/icons/spacer.gif" alt="" title="" />
+<img id=mainImage src="../images/icons/spacer.gif" alt="" title="" />
 
 <div id=topright>
 

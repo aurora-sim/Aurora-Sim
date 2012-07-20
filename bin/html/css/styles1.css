@@ -440,7 +440,8 @@ label {display:inline-block;}
 #top #menu li:hover ul {
 	display: block;
 	float: none;
-	width: 220px;
+	max-width: 220px;
+	min-width: 20px;
 	margin-top:3px;
 	padding-left:5px;
 	background-color: #FCFCFC;
@@ -461,7 +462,6 @@ label {display:inline-block;}
 	text-align: center;
 	visibility: hidden;
 }
-
 
 /* Content */
 #content {
@@ -496,8 +496,11 @@ label {display:inline-block;}
 }
 
 /* Help */
-.voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
-img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+/* .angstormimage, .voodooimage, .astraimage, .imprudenceimage, 
+.phoeniximage, .singularityimage, .zenimage {;} */
+img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, 
+img.phoeniximage, img.singularityimage, img.zenimage {
+    cursor: pointer;
     width: 120px;
     height: 100px;
     margin: 3px;
@@ -511,8 +514,7 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
     box-shadow: #EEEEEE 0 0 .25em;
     behavior: url(css/pie.htc);
 }
-
-/* footer */
+/* Footer */
 #footer {
 	background: #fcfcfc;
 	margin-bottom: 30px;
@@ -527,7 +529,7 @@ img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.pho
 	-webkit-box-shadow: #EEEEEE 0 0 .25em;
     -moz-box-shadow: #EEEEEE 0 0 .25em;
     box-shadow: #EEEEEE 0 0 .25em;
-	behavior: url(css/pie.htc);;
+	behavior: url(css/pie.htc);
 }
 
 div.languageswitch {float:left; text-align: left;display: inline;}

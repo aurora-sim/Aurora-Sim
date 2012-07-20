@@ -19,7 +19,7 @@ body  {
 	font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
 	margin: 0px;
 	cursor: default;
-	background: transparent url(../images/bg_TransStripe1.gif);
+	background: transparent url(../images/icons/bg_TransStripe1.gif);
 }
 
 #st1, #lg1 {display: none;}
@@ -460,7 +460,7 @@ button {
 #top #menu li:hover ul {
 	display: block;
 	float: none;
-	max-width: 210px;
+	max-width: 220px;
 	min-width: 20px;
 	margin-top: 4px;
 	margin-left: -4px;
@@ -480,7 +480,7 @@ button {
 #top #menu li:hover li {
 	display: block;
 	float: left;
-	max-width: 210px;
+	max-width: 220px;
 	min-width: 20px;
 
 	margin: 5px;
@@ -549,8 +549,11 @@ button {
 }
 
 /* Help */
-.voodooimage, .astraimage, .imprudenceimage, .phoeniximage, .singularityimage {;}
-img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, img.phoeniximage, img.singularityimage {
+/* .angstormimage, .voodooimage, .astraimage, .imprudenceimage, 
+.phoeniximage, .singularityimage, .zenimage {;} */
+img.angstormimage, img.voodooimage, img.astraimage, img.imprudenceimage, 
+img.phoeniximage, img.singularityimage, img.zenimage {
+    cursor: pointer;
     width: 120px;
     height: 100px;
     margin: 3px;
