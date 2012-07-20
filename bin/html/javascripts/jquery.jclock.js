@@ -65,7 +65,7 @@
       $this.monthsAbbrvNames[1] = "{Feb}";
       $this.monthsAbbrvNames[2] = "{Mar}";
       $this.monthsAbbrvNames[3] = "{Apr}";
-      $this.monthsAbbrvNames[4] = "{May}";
+      $this.monthsAbbrvNames[4] = "{May_Short}";
       $this.monthsAbbrvNames[5] = "{Jun}";
       $this.monthsAbbrvNames[6] = "{Jul}";
       $this.monthsAbbrvNames[7] = "{Aug}";
