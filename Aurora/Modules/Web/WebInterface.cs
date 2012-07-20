@@ -637,6 +637,30 @@ namespace Aurora.Modules.Web
                 }
             }
         }
+
+        public void RemovePage(string MenuItem, GridPage replacePage)
+        {
+            GridPage foundPage = null;
+            foreach (var page in this.Children)
+            {
+                if (page.MenuID == MenuItem)
+                {
+                    foundPage = page;
+                    break;
+                }
+                else if (page.Children.Count > 0)
+                {
+                    var p = GetPage(MenuItem, page);
+                    if (p != null)
+                    {
+                        page.Children.Remove(p);
+                        return;
+                    }
+                }
+            }
+            if (foundPage != null)
+                this.Children.Remove(foundPage);
+        }
     }
 
     internal class GridSettings : IDataTransferable

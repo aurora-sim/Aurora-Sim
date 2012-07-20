@@ -47,18 +47,23 @@
 
   <tbody>
     <tr>
+      <th class="page_manager_select_left"></th>
+	    <button id="AddItem" type="Submit" name="AddItem">{AddItem}</button>
+    </tr>
+    <tr>
       <td class="page_manager_select_left">
 	    <select id="MenuItem" require="true" name="MenuItem">
 {PagesListArrayBegin}
 		  <option value="{Value}">{Name}</option>
 {PagesListArrayEnd}
 	    </select><button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button>
+	    <button id="DeleteItem" type="Submit" name="DeleteItem">{DeleteItem}</button>
 	  </td>
     </tr>
   </tbody>
 </table>
 </form>
-
+{IfDisplayEditBegin}
 <form action="index.html?page=page_manager" method="post">
 <table id="page_manager">
   <caption></caption>
@@ -131,4 +136,6 @@
     </tr>
   </tbody>
 </table>
+</form>
+{IfDisplayEditEnd}
 {IsAdminAuthenticatedEnd}

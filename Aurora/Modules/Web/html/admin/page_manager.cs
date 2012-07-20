@@ -48,6 +48,18 @@ namespace Aurora.Modules.Web
             #endregion
 
             bool changed = false;
+            if (requestParameters.ContainsKey("DeleteItem"))
+            {
+                string MenuItem = requestParameters["MenuItem"].ToString();
+                rootPage.RemovePage(MenuItem, null);
+                generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
+            }
+            if (requestParameters.ContainsKey("AddItem"))
+            {
+                //generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
+                vars.Add("EdittingPageID", -2);
+                vars.Add("DisplayEdit", true);
+            }
             if (requestParameters.ContainsKey("SelectItem"))
             {
                 string MenuItem = requestParameters["MenuItem"].ToString();
@@ -66,6 +78,7 @@ namespace Aurora.Modules.Web
                 vars.Add("RequiresLogoutNo", !page.LoggedOutRequired ? "selected=\"selected\"" : "");
                 vars.Add("RequiresAdminYes", page.AdminRequired ? "selected=\"selected\"" : "");
                 vars.Add("RequiresAdminNo", !page.AdminRequired ? "selected=\"selected\"" : "");
+                vars.Add("DisplayEdit", true);
             }
             else
             {
@@ -74,7 +87,8 @@ namespace Aurora.Modules.Web
                 vars.Add("PageID", "");
                 vars.Add("PagePosition", "");
                 vars.Add("PageLocation", "");
-                vars.Add("EdittingPageID", "");
+                if(!vars.ContainsKey("EdittingPageID"))
+                    vars.Add("EdittingPageID", "");
                 vars.Add("RequiresLoginYes", "");
                 vars.Add("RequiresLoginNo", "");
                 vars.Add("RequiresLogoutYes", "");
@@ -96,6 +110,9 @@ namespace Aurora.Modules.Web
                 bool RequiresAdmin = bool.Parse(requestParameters["RequiresAdmin"].ToString());
 
                 GridPage page = rootPage.GetPage(edittingPageID);
+                bool add = page == null;
+                if (page == null)
+                    page = new GridPage { MenuID = PageLocation, ShowInMenu = true };
 
                 page.Location = PageLocation;
                 page.MenuID = PageID;
@@ -106,7 +123,10 @@ namespace Aurora.Modules.Web
                 page.LoggedOutRequired = RequiresLogout;
                 page.AdminRequired = RequiresAdmin;
 
-                rootPage.ReplacePage(edittingPageID, page);
+                if (add)
+                    rootPage.Children.Add(page);
+                else
+                    rootPage.ReplacePage(edittingPageID, page);
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
             }
@@ -121,6 +141,8 @@ namespace Aurora.Modules.Web
             vars.Add("RequiresLogoutText", translator.GetTranslatedString("RequiresLogoutText"));
             vars.Add("RequiresAdminText", translator.GetTranslatedString("RequiresAdminText"));
             vars.Add("SelectItem", translator.GetTranslatedString("SelectItem"));
+            vars.Add("DeleteItem", translator.GetTranslatedString("DeleteItem"));
+            vars.Add("AddItem", translator.GetTranslatedString("AddItem"));
             vars.Add("PageManager", translator.GetTranslatedString("PageManager"));
             vars.Add("No", translator.GetTranslatedString("No"));
             vars.Add("Yes", translator.GetTranslatedString("Yes"));

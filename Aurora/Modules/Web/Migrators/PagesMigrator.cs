@@ -12,7 +12,7 @@ namespace Aurora.Modules.Web
     {
         public static readonly string Schema = "WebPages";
         private static GridPage _rootPage;
-        public static readonly uint CurrentVersion = 4;
+        public static readonly uint CurrentVersion = 5;
 
         private static void InitializeDefaults()
         {
@@ -177,16 +177,6 @@ namespace Aurora.Modules.Web
             {
                 ShowInMenu = true,
                 AdminRequired = true,
-                MenuID = "welcomescreen_manager",
-                Location = "admin/welcomescreen_manager.html",
-                MenuPosition = 8,
-                MenuTitle = "MenuWelcomeScreenManager",
-                MenuToolTip = "TooltipsMenuWelcomeScreenManager"
-            });
-            _rootPage.Children.Add(new GridPage
-            {
-                ShowInMenu = true,
-                AdminRequired = true,
                 MenuID = "manager",
                 Location = "admin/manager.html",
                 MenuPosition = 9,
@@ -243,6 +233,16 @@ namespace Aurora.Modules.Web
                         MenuPosition = 8,
                         MenuTitle = "MenuSettingsManager",
                         MenuToolTip = "TooltipsMenuSettingsManager"
+                    },
+                    new GridPage
+                    {
+                        ShowInMenu = true,
+                        AdminRequired = true,
+                        MenuID = "welcomescreen_manager",
+                        Location = "admin/welcomescreen_manager.html",
+                        MenuPosition = 8,
+                        MenuTitle = "MenuWelcomeScreenManager",
+                        MenuToolTip = "TooltipsMenuWelcomeScreenManager"
                     }
                 }
             });
