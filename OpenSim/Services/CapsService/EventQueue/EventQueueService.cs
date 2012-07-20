@@ -63,8 +63,13 @@ namespace OpenSim.Services.CapsService
             get { return this; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public virtual bool Enqueue(OSD o, UUID agentID, ulong regionHandle)
+        {
+            return Enqueue(OSDParser.SerializeLLSDXmlString(o), agentID, regionHandle);
+        }
+
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public virtual bool Enqueue(string o, UUID agentID, ulong regionHandle)
         {
             object remoteValue = DoRemote(o, agentID, regionHandle);
             if (remoteValue != null || m_doRemoteOnly)
@@ -79,7 +84,8 @@ namespace OpenSim.Services.CapsService
             if (eventQueueService == null)
                 return false;
 
-            return eventQueueService.Enqueue(o);
+            OSD ev = OSDParser.DeserializeLLSDXml(o);
+            return eventQueueService.Enqueue(ev);
         }
 
         #endregion
