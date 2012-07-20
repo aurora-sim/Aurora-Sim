@@ -112,7 +112,21 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionOnlineText", translator.GetTranslatedString("RegionOnlineText"));
                 vars.Add("NumberOfUsersInRegionText", translator.GetTranslatedString("NumberOfUsersInRegionText"));
                 vars.Add("ParcelsInRegionText", translator.GetTranslatedString("ParcelsInRegionText"));
-            }
+
+                // Style Switcher
+                vars.Add("styles1", translator.GetTranslatedString("styles1"));
+                vars.Add("styles2", translator.GetTranslatedString("styles2"));
+                vars.Add("styles3", translator.GetTranslatedString("styles3"));
+                vars.Add("styles4", translator.GetTranslatedString("styles4"));
+                vars.Add("styles5", translator.GetTranslatedString("styles5"));
+			
+                // Language Switcher
+                vars.Add("en", translator.GetTranslatedString("en"));
+                vars.Add("fr", translator.GetTranslatedString("fr"));
+                vars.Add("de", translator.GetTranslatedString("de"));
+                vars.Add("it", translator.GetTranslatedString("it"));
+                vars.Add("es", translator.GetTranslatedString("es"));
+                }
 
             return vars;
         }

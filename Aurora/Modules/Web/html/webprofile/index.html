@@ -1,0 +1,179 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{SystemName}: {UserProfileFor}: {UserName}</title>
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link rel="shortcut icon" href="images/icons/favicon.ico" />
+	
+	<script src="{SystemURL}/javascripts/jquery.min.js" type="text/javascript"></script>
+
+	<!-- StyleSwitch -->
+	<script src="{SystemURL}/javascripts/styleswitch.js" type="text/javascript"></script>
+	<link href="{SystemURL}/css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="{SystemURL}/css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="{SystemURL}/css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<link href="{SystemURL}/css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+	<link href="{SystemURL}/css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
+	
+	<!-- date time -->
+	<script src="{SystemURL}/javascripts/jquery.jclock.js" type="text/javascript" language="javascript"></script>
+	<script type="text/javascript">
+		$(function($) {var options1 = {format: '%A %B %d, %Y %I:%M:%S %p'} // 12-hour
+		$('#jclock1').jclock(options1);
+		var options2 = {format: '%a %b %d, %Y %H:%M:%S'} // 24-hour
+		$('#jclock2').jclock(options2);
+		var options3 = {format: '%Y-%m-%d %H:%M:%S'} // 24-hour
+		$('#jclock3').jclock(options3);
+		var options4 = {format: '%Y-%m-%d'}
+		$('#jclock4').jclock(options4);
+		var options5 = {format: '%m/%d/%y'}
+		$('#jclock5').jclock(options5);});
+	</script>
+	
+	<!-- Tooltips -->
+	<script src="{SystemURL}/javascripts/jquery.tooltip.js" type="text/javascript" language="javascript"></script>
+	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
+
+	<!-- fade in -->
+	<style type="text/css">#container{display:none;}</style>
+	<script type="text/javascript">$(document).ready(function() {$( '#container' ).fadeIn("slow");});</script>
+
+    <!-- Caption -->
+	<script type="text/javascript" rel="javasript">
+		/* <![CDATA[ */
+			jQuery(document).ready(function($) {
+				$('.user_agent_profile_picture').each(function(i) {
+					var img_ = $('img', this);			
+					var img_height = img_.attr('height');
+					var p_height = $('p', this).outerHeight();
+					$(this).height(img_height);
+					$(this).hover(function() {
+						img_.animate({marginTop : -p_height-5}, 500);
+					}, function() {
+						img_.animate({marginTop : '0'}, 500);
+					});
+				});		
+			});
+		/* ]]> */
+	</script>
+</head>
+
+<body>
+<div id="container">
+<h2>{SystemName}: {UserName}</h2>
+<p class=jclock1><span id=jclock1></span></p>
+<div id="user_agent_profile_container">
+<table id="user_agent_profile">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="7">
+	    <div class="user_agent_profile_picture">
+	    <a href="#">
+	    <img height="256"
+		     src="{UserPictureURL}" 
+		     alt="{UserProfileFor}: {UserName} ({UserType})"
+			 title="{UserProfileFor}: {UserName} ({UserType})" /></a>
+	    <p class="user_agent_profile_picture_text">{UserProfileFor}: {UserName} ({UserType})</p></div>
+	  </td>
+      <td class="user_agent_profile_left"><p>{UserProfileFor}:</p></td>
+	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{IsOnlineText}:</p></td>
+      <td class="user_agent_profile_right"><p>{IsOnline}</p></td>
+    </tr>
+{IfUserIsOnlineBegin}
+    <tr>
+      <td class="user_agent_profile_left"><p>{OnlineLocationText}:</p></td>
+      <td class="user_agent_profile_right"><p>{OnlineLocation}</p></td>
+    </tr>
+{IfUserIsOnlineEnd}
+    <tr>
+      <td class="user_agent_profile_left"><p>{ResidentSince}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserBorn}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{AccountType}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserType}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{PartnersName}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserPartner}</p></td>
+    </tr>
+    <tr>
+      <td class="user_agent_profile_left"><p>{AboutMe}:</p></td>
+      <td class="user_agent_profile_right"><p>{UserAboutMe}</p></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+	<div id="footer">
+	  <div class=languageswitch>
+	    <ul>
+		LANGUAGES:
+		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
+		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
+		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
+		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
+		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
+		CHOIX: <span id="lg1">en</span><span id="lg2">fr</span><span id="lg3">de</span><span id="lg4">it</span><span id="lg5">es</span>  
+		</ul>
+	  </div>
+	  <div class=styleswitch>
+	    <ul>
+		STYLES:
+		  <li><a href="serversideSwitch.html?style=style1" rel="styles1" class="styleswitch" alt="{styles1}" title="{styles1}">1</a></li>
+		  <li><a href="serversideSwitch.html?style=style2" rel="styles2" class="styleswitch" alt="{styles2}" title="{styles2}">2</a></li>
+		  <li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">3</a></li>
+		  <li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">4</a></li>
+		  <li><a href="serversideSwitch.html?style=style5" rel="styles5" class="styleswitch" alt="{styles5}" title="{styles5}">5</a></li>
+		CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span>| Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012  
+		</ul>
+	  </div>
+	  <span class="clear"></span>
+	</div>
+</div>
+<script type="text/javascript">
+	// fade class
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
+	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
+	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
+ </script>
+</body>
+</html>
+
+<!-- params to replace
+{SystemURL}
+{SystemName}
+{UserName}         
+{UserBorn}       
+{UserType}       
+{UserPartner}     
+{UserAboutMe}     
+{UserPictureURL}       
+{UserProfileFor}   User Profile For
+{ResidentSince}    Resident Since
+{AccountType}      Account Type
+{PartnersName}     Partner's Name
+{AboutMe}          About Me
+-->

@@ -1,0 +1,105 @@
+/* Welcome Screen CSS v0.1 */
+@CHARSET "UTF-8";
+* {margin:0px; padding:0px; border:none;}
+html, body {width:100%;}
+
+body {
+  font-family: verdana, helvetica, sans-serif; 
+  background-color: transparent; color:000;
+}
+
+a {color: #FFFFFF; text-decoration: none;}
+a:active {color: #FFFFFF; text-decoration: none;}
+a:active, a:focus{outline:none;}
+a:hover {color: #6EA6FB; text-decoration: underline;}
+
+/* thead {;} tbody {;} tfoot {;} */
+thead a {color: #6EA6FB; text-decoration: none;}
+thead th {color: #6EA6FB;}
+table {border-collapse:collapse; width: 100%;font-size: 0.8em;}
+td {padding-top: 5px;}
+
+#regionbox thead a {color: #color: #ff0000; text-decoration: none;cursor:pointer;}
+#regionbox tbody a.regionslurl{color: #FFFFFF; text-decoration: blink; cursor:pointer;}
+#regionbox tbody a.regionslurl:hover {color: #6EA6FB; text-decoration: underline;}
+
+.Online {font-weight: bold; color: #00ff00; text-align:right;}
+.Enabled {font-weight: bold; color: #00ff00; text-align:right;}
+.Offline {font-weight: bold; color: #ff0000;}
+.Disabled {font-weight: bold; color: #ff0000;}
+
+.headerthread {
+	height: 15px;
+	padding: 10px;
+	color: #6EA6FB;
+	background-image: url(../images/icons/bg_black_01.png);
+	border: 1px solid #222;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	/* box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.5); */
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5) inset, 0px 2px 2px 0px rgba(255, 255, 255, 0.5);
+	behavior: url(../css/pie.htc);
+}
+
+/* full bg image */
+img#mainImage {
+	left: 0px; 
+	width: 100%;
+	position: fixed;
+	top: 0px;
+	height: 100%;
+}
+
+/* Logo */
+#top_image  img {border: none; outline: none;}
+#top_image {
+	position: absolute; 
+	padding-right: 0px; 
+	padding-left: 0px;
+	top: 20px;
+	left: 10px; 
+	padding-bottom: 0px; 
+	margin: 0px; 
+	padding-top: 0px;
+	z-index: 1;
+}
+
+#topright {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+}
+
+#bottom_left {
+	position: absolute;
+	top: 80px;
+	left: 10px; 
+	z-index: 1;
+}
+
+#bottom {
+	position: absolute;
+	padding-right: 0px; 
+	padding-left: 0px; 
+	z-index: 101; 
+	left: 0px; 
+	padding-bottom: 0px; 
+	margin: 0px; 
+	width: 100%; 
+	bottom: 0px; 
+	padding-top: 0px; 
+}
+
+iframe {
+	margin-bottom: 5px;
+	margin-top: 10px;
+	padding: 10px;
+	background: url(../images/icons/bg_white_01.png);
+	border: 1px solid #222;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.5), 0px 2px 2px 0px rgba(255, 255, 255, 0.5) inset;
+	behavior: url(../css/pie.htc);
+}
