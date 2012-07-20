@@ -554,8 +554,6 @@ namespace Aurora.Modules.Web.Translators
                     return "Mar";
                 case "Apr":
                     return "Apr";
-                case "May":
-                    return "May";
                 case "Jun":
                     return "Jun";
                 case "Jul":
@@ -578,6 +576,8 @@ namespace Aurora.Modules.Web.Translators
                     return "March";
                 case "April":
                     return "April";
+                case "May":
+                    return "May";
                 case "June":
                     return "June";
                 case "July":

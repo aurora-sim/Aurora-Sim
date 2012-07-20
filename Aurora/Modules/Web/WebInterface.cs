@@ -166,7 +166,7 @@ namespace Aurora.Modules.Web
             {
                 httpResponse.ContentType = GetContentType(filename, httpResponse);
                 string text;
-                if (httpResponse.ContentType == null)
+                if (!File.Exists(filename))
                 {
                     if (!page.AttemptFindPage(filename, ref httpResponse, out text))
                         return MainServer.BadRequest;
@@ -180,7 +180,12 @@ namespace Aurora.Modules.Web
                     AuroraXmlDocument vars = GetXML(filename, httpRequest, httpResponse, requestParameters);
 
                     var xslt = new XslCompiledTransform();
-                    xslt.Load(GetFileNameFromHTMLPath(path));
+                    if (File.Exists(path)) xslt.Load(GetFileNameFromHTMLPath(path));
+                    else if (text != "")
+                    {
+                        XslCompiledTransform objXslTrans = new XslCompiledTransform();
+                        xslt.Load(new XmlTextReader(new StringReader(text)));
+                    }
                     var stm = new MemoryStream();
                     xslt.Transform(vars, null, stm);
                     stm.Position = 1;
@@ -423,8 +428,6 @@ namespace Aurora.Modules.Web
 
         protected string GetContentType(string filename, OSHttpResponse response)
         {
-            if (!File.Exists(filename))
-                return null;
             switch(Path.GetExtension(filename))
             {
                 case ".jpeg":
