@@ -8,7 +8,8 @@
 	<link rel="shortcut icon" href="images/icons/favicon.ico" />
 
 	<!-- Javascript -->
-	<script src="javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
+	<!-- <script src="http://code.jquery.com/jquery-1.7.2.min.js" type="text/javascript" language="javascript"></script> -->
+	 <script src="javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
 	<script src="javascripts/menu.js" type="text/javascript" language="javascript"></script>
 	<!-- StyleSwitch -->
 	<script src="javascripts/styleswitch.js" type="text/javascript" language="javascript"></script>
@@ -162,13 +163,12 @@
 	</div>
 {IfNoMaintenanceEnd}
 </div>
-
 <script type="text/javascript">
 	// fade class
-	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
- </script>
-
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+</script>
 </body>
 </html>

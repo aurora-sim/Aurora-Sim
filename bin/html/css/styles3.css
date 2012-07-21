@@ -204,6 +204,7 @@ table#user_agent_profile  {width: 100%;}
 table#user_agent_profile th {}
 table#user_agent_profile td {padding: 5px;}
 .user_agent_profile_left {text-align: left;}
+.user_agent_profile_left_size {text-align: left;width: 350px;}
 .user_agent_profile_right {text-align: left;}
 .user_agent_profile_picture {text-align: left; width: 256px; height:256px;}
 
@@ -259,6 +260,7 @@ table#region_info  {width: 100%;}
 table#region_info th {}
 table#region_info td {padding: 5px;}
 .region_info_left {text-align: left;}
+.region_info_left_size {text-align: left;width: 350px;}
 .region_info_right {text-align: left;}
 .region_info_picture {text-align: left; width: 256px; height:256px;}
 
@@ -464,7 +466,6 @@ label {display:inline-block;}
 #content {
 	line-height: 1.3em;
 	font-size: 14px;
-	padding: 10px;
 }
 
 /* World */

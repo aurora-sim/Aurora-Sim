@@ -95,7 +95,7 @@
 			 title="{UserProfileFor}: {UserName} ({UserType})" /></a>
 	    <p class="user_agent_profile_picture_text">{UserProfileFor}: {UserName} ({UserType})</p></div>
 	  </td>
-      <td class="user_agent_profile_left"><p>{UserProfileFor}:</p></td>
+      <td class="user_agent_profile_left_size"><p>{UserProfileFor}:</p></td>
 	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
     </tr>
     <tr>
@@ -155,10 +155,11 @@
 </div>
 <script type="text/javascript">
 	// fade class
-	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
- </script>
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+</script>
 </body>
 </html>
 

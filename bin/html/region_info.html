@@ -65,12 +65,11 @@
 <div id="region_info_container">
 <table id="region_info">
   <caption></caption>
-  
+
   <thead>
     <tr>
       <th class="region_info_left"></th>
       <th class="region_info_right"></th>
-	  <th class="region_info_right"></th>
 	  <th class="region_info_right"></th>
 	  <th class="region_info_right"></th>
     </tr>
@@ -80,7 +79,6 @@
     <tr>
       <th class="region_info_left"></th>
       <th class="region_info_right"></th>
-	  <th class="region_info_right"></th>
 	  <th class="region_info_right"></th>
 	  <th class="region_info_right"></th>
     </tr>
@@ -98,54 +96,54 @@
 	      <p class="region_info_picture_text">{RegionNameText}: {RegionName} ({RegionType})<br />{RegionLocationText}: X:&nbsp;{RegionLocX}  Y:&nbsp;{RegionLocY}<br />secondlife://{RegionName}/128/128/50</p>
 		</div>
 	  </td>
-      <td class="region_info_left" colspan="2"><p>{RegionNameText}:</p></td>
+      <td class="region_info_left_size"><p>{RegionNameText}:</p></td>
 	  <td class="region_info_right" colspan="2"><p>{RegionName}</p></td>
     </tr>
     <tr>
-      <td class="region_info_left" colspan="2"><p>{RegionTypeText}:</p></td>
+      <td class="region_info_left"><p>{RegionTypeText}:</p></td>
       <td class="region_info_right" colspan="2"><p>{RegionType}</p></td>
     </tr>
     <tr>
       <td class="region_info_left"><p>{RegionLocationText}:</p></td>
-      <td class="region_info_right" colspan="2"><p>X:&nbsp;{RegionLocX}</p></td>
+      <td class="region_info_right"><p>X:&nbsp;{RegionLocX}</p></td>
       <td class="region_info_right"><p>Y:&nbsp;{RegionLocY}</p></td>
     </tr>
     <tr>
-      <td class="region_info_left" colspan="2"><p>{OwnerNameText}:</p></td>
+      <td class="region_info_left"><p>{OwnerNameText}:</p></td>
       <td class="region_info_right" colspan="2">
 	  <a class="webprofile" href="webprofile/?userid={OwnerUUID}"  alt="{OwnerNameText}: {OwnerName}" title="{OwnerNameText}: {OwnerName}" >{OwnerName}</a></td>
     </tr>
 	
     <tr>
-      <td class="region_info_left" colspan="2"><p>{RegionOnlineText}:</p></td>
+      <td class="region_info_left"><p>{RegionOnlineText}:</p></td>
       <td class="region_info_right" colspan="2"><p>{RegionOnline}</p></td>
     </tr>
 	
     <tr>
-      <td class="region_info_left" colspan="2"><p>{NumberOfUsersInRegionText}:</p></td>
+      <td class="region_info_left"><p>{NumberOfUsersInRegionText}:</p></td>
       <td class="region_info_right" colspan="2"><p>{NumberOfUsersInRegion}</p></td>
     </tr>
 
 
 {UsersInRegionArrayBegin}
       <tr>
-        <td class="region_info_left" colspan="2"><p>{UserNameText}:</p></td>
-        <td class="region_info_right" colspan="2"><a href="webprofile/?userid={UserUUID}"><p>{UserName}</p></a></td>
+        <td class="region_info_left"><p>{UserNameText}:</p></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile"  href="webprofile/?userid={UserUUID}"><p>{UserName}</p></a></td>
       </tr>
 {UsersInRegionArrayEnd}
 
     <tr>
-      <td class="region_info_left" colspan="2"><p>{ParcelsInRegionText}:</p></td>
+      <td class="region_info_left"><p>{ParcelsInRegionText}:</p></td>
 	  <td class="region_info_left" colspan="2"></td>
     </tr>
 {ParcelInRegionArrayBegin}
       <tr>
-        <td class="region_info_left" colspan="2"><p>{ParcelNameText}:</p></td>
-        <td class="region_info_right" colspan="2"><a href="parcel_info?infouuid={ParcelUUID}"><p>{ParcelName}</p></a></td>
+        <td class="region_info_left"><p>{ParcelNameText}:</p></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile" href="parcel_info?infouuid={ParcelUUID}"><p>{ParcelName}</p></a></td>
       </tr>
       <tr>
-        <td class="region_info_left" colspan="2"><p>{ParcelOwnerText}:</p></td>
-        <td class="region_info_right" colspan="2"><a href="webprofile/?userid={ParcelOwnerUUID}"><p>{ParcelOwnerName}</p></a></td>
+        <td class="region_info_left"><p>{ParcelOwnerText}:</p></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile" href="webprofile/?userid={ParcelOwnerUUID}"><p>{ParcelOwnerName}</p></a></td>
       </tr>
 {ParcelInRegionArrayEnd}
   </tbody>
@@ -179,9 +177,10 @@
 </div>
 <script type="text/javascript">
 	// fade class
-	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
-	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright, a.webprofile").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
 </script>
 </body>
 </html>
