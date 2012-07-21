@@ -17,6 +17,8 @@
     MuteListConnector = LocalConnector
     ParcelConnector = LocalConnector
     EmailConnector = LocalConnector
+	
+	CapsServiceDoRemoteCalls = True
 
 [Handlers]
     ;; Add any handlers here that you want to use

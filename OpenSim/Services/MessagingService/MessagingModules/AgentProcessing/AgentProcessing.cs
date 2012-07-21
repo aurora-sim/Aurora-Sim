@@ -42,7 +42,7 @@ using GridRegion = OpenSim.Services.Interfaces.GridRegion;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class AgentProcessing : IService, IAgentProcessing
+    public class AgentProcessing : ConnectorBase, IService, IAgentProcessing
     {
         #region Declares
 
@@ -51,12 +51,16 @@ namespace OpenSim.Services.MessagingService
         protected bool m_enabled = true;
         protected IRegistryCore m_registry;
 
+        protected string _capsURL = "", _capsURLPassword = "";
+        protected IConfigSource _config;
+
         #endregion
 
         #region IService Members
 
         public virtual void Initialize(IConfigSource config, IRegistryCore registry)
         {
+            _config = config;
             m_registry = registry;
             IConfig agentConfig = config.Configs["AgentProcessing"];
             if (agentConfig != null)
@@ -67,7 +71,19 @@ namespace OpenSim.Services.MessagingService
                                                             MaxVariableRegionSight);
             }
             if (m_enabled)
+            {
                 m_registry.RegisterModuleInterface<IAgentProcessing>(this);
+
+                IConfig auroraConfig = _config.Configs["AuroraConnectors"];
+                IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                if (!auroraConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
+                {
+                    genericsConnector.AddGeneric(UUID.Zero, "CapsServiceURL", "CapsURL", new OSDWrapper { Info = MainServer.Instance.ServerURI }.ToOSD());
+                    genericsConnector.AddGeneric(UUID.Zero, "CapsServiceURL", "CapsPassword", new OSDWrapper { Info = new System.Random().NextDouble() * 1000 }.ToOSD());
+                }
+
+                Init(registry, "CapsService");
+            }
         }
 
         public virtual void Start(IConfigSource config, IRegistryCore registry)
@@ -78,7 +94,23 @@ namespace OpenSim.Services.MessagingService
         {
             //Also look for incoming messages to display
             if (m_enabled)
+            {
                 m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+
+                IConfig handlerConfig = _config.Configs["AuroraConnectors"];
+                IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+                if (handlerConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
+                {
+                    Thread.Sleep(4000);
+                    OSDWrapper wrapper = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsURL");
+                    if (wrapper != null)
+                    {
+                        _capsURL = wrapper.Info.AsString();
+                        OSDWrapper w = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsPassword");
+                        _capsURLPassword = w.Info.AsString();
+                    }
+                }
+            }
         }
 
         #endregion
@@ -1198,11 +1230,16 @@ namespace OpenSim.Services.MessagingService
 
         #region Login initial agent
 
-        public virtual bool LoginAgent(GridRegion region, ref AgentCircuitData aCircuit, out string seedCap, out string reason)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
+        public virtual LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit)
         {
+            object retVal = base.DoRemoteByHTTP(_capsURL, region, aCircuit);
+            if (retVal != null || m_doRemoteOnly)
+                return retVal == null ? null : (LoginAgentArgs)retVal;
+
             bool success = false;
-            seedCap = "";
-            reason = "Could not find the simulation service";
+            string seedCap = "";
+            string reason = "Could not find the simulation service";
             ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             if (SimulationService != null)
@@ -1257,7 +1294,7 @@ namespace OpenSim.Services.MessagingService
                         agentProcessor.LogoutAgent(regionClientCaps, true);
                     else if (capsService != null)
                         capsService.RemoveCAPS(aCircuit.AgentID);
-                    return success;
+                    return new LoginAgentArgs { Success = success, CircuitData = aCircuit, Reason = reason, SeedCap = seedCap };
                 }
 
                 IPAddress ipAddress = regionClientCaps.Region.ExternalEndPoint.Address;
@@ -1295,7 +1332,7 @@ namespace OpenSim.Services.MessagingService
                     }
                 }
             }
-            return success;
+            return new LoginAgentArgs { Success = success, CircuitData = aCircuit, Reason = reason, SeedCap = seedCap };
         }
 
         private bool CreateAgent(GridRegion region, IRegionClientCapsService regionCaps, ref AgentCircuitData aCircuit,
@@ -1314,7 +1351,7 @@ namespace OpenSim.Services.MessagingService
                 info.GroupMemberships = groupsConn.GetAgentGroupMemberships(aCircuit.AgentID, aCircuit.AgentID);
             }
             aCircuit.OtherInformation["CachedUserInfo"] = info.ToOSD();
-            return SimulationService.CreateAgent(region, ref aCircuit, aCircuit.teleportFlags, null,
+            return SimulationService.CreateAgent(region, aCircuit, aCircuit.teleportFlags, null,
                                                     out requestedUDPPort, out reason);
         }
 

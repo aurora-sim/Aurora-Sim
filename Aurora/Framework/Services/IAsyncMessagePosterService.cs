@@ -97,6 +97,35 @@ namespace OpenSim.Services.Interfaces
         void Post(ulong RegionHandle, OSDMap request);
     }
 
+    public class LoginAgentArgs : IDataTransferable
+    {
+        public bool Success = false;
+        public AgentCircuitData CircuitData;
+        public string SeedCap;
+        public string Reason;
+
+        public override OSDMap ToOSD()
+        {
+            OSDMap map = new OSDMap();
+
+            map["Success"] = Success;
+            map["CircuitData"] = CircuitData.ToOSD();
+            map["SeedCap"] = SeedCap;
+            map["Reason"] = Reason;
+
+            return map;
+        }
+
+        public override void FromOSD(OSDMap map)
+        {
+            Success = map["Success"];
+            CircuitData = new AgentCircuitData();
+            CircuitData.FromOSD((OSDMap)map["CircuitData"]);
+            SeedCap = map["SeedCap"];
+            Reason = map["Reason"];
+        }
+    }
+
     public interface IAgentProcessing
     {
         /// <summary>
@@ -111,7 +140,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "region"></param>
         /// <param name = "aCircuit"></param>
         /// <param name = "reason"></param>
-        bool LoginAgent(GridRegion region, ref AgentCircuitData aCircuit, out string seedCap, out string reason);
+        LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit);
 
         /// <summary>
         ///   Logout all agents in the given region

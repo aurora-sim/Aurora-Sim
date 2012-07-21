@@ -118,7 +118,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "data"></param>
         /// <param name = "reason"></param>
         /// <returns></returns>
-        bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags, AgentData data,
+        bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, AgentData data,
                          out int requestedUDPPort, out string reason);
 
         /// <summary>

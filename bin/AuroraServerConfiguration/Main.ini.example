@@ -56,7 +56,9 @@
     MaxGroupOfflineMessages = 50
 
     DoRemoteCalls = False
+	CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = True
+	
 [ApplicationPlugins]
     ServicesLoader = ServicesLoader
     StatsHandler = StatsHandler

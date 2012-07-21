@@ -98,7 +98,7 @@ namespace OpenSim.Services.Connectors.Simulation
          * Agent-related communications
          */
 
-        public bool CreateAgent(GridRegion destination, ref AgentCircuitData aCircuit, uint teleportFlags,
+        public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags,
                                 AgentData data, out int requestedUDPPort, out string reason)
         {
             requestedUDPPort = 0;

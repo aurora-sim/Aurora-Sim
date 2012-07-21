@@ -95,7 +95,12 @@ namespace Aurora.Framework
                 IConfigSource source = registry.RequestModuleInterface<ISimulationBase>().ConfigSource;
                 IConfig config;
                 if ((config = source.Configs["AuroraConnectors"]) != null)
-                    m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+                {
+                    if (config.Contains(name + "DoRemoteCalls"))
+                        m_doRemoteCalls = config.GetBoolean(name + "DoRemoteCalls", false);
+                    else
+                        m_doRemoteCalls = config.GetBoolean("DoRemoteCalls", false);
+                }
                 if ((config = source.Configs["Configuration"]) != null)
                 {
                     m_OSDRequestTimeout = config.GetInt("OSDRequestTimeout", m_OSDRequestTimeout);

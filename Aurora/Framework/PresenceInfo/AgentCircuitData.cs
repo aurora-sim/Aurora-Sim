@@ -191,6 +191,7 @@ namespace Aurora.Framework
             args["first_name"] = OSD.FromString(firstname);
             args["last_name"] = OSD.FromString(lastname);
             args["draw_distance"] = DrawDistance;
+            args["RegionUDPPort"] = RegionUDPPort;
 
             if (Appearance != null)
             {
@@ -273,6 +274,8 @@ namespace Aurora.Framework
                 firstname = args["first_name"].AsString();
             if (args["last_name"] != null)
                 lastname = args["last_name"].AsString();
+            if (args["RegionUDPPort"] != null)
+                RegionUDPPort = args["RegionUDPPort"];
 
             if (args["start_pos"] != null)
                 Vector3.TryParse(args["start_pos"].AsString(), out startpos);

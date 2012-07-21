@@ -940,8 +940,16 @@ namespace OpenSim.Services.LLLoginService
             circuitCode = (uint)Util.RandomClass.Next();
             aCircuit = MakeAgent(destination, account, appearance, session, secureSession, circuitCode, position, clientIP);
             aCircuit.teleportFlags = (uint)tpFlags;
-            bool success = m_registry.RequestModuleInterface<IAgentProcessing>().
-                LoginAgent(destination, ref aCircuit, out seedCap, out reason);
+            LoginAgentArgs args = m_registry.RequestModuleInterface<IAgentProcessing>().
+                LoginAgent(destination, aCircuit);
+            aCircuit.OtherInformation = args.CircuitData.OtherInformation;
+            aCircuit.CapsPath = args.CircuitData.CapsPath;
+            aCircuit.RegionUDPPort = args.CircuitData.RegionUDPPort;
+
+            reason = args.Reason;
+            reason = "";
+            seedCap = args.SeedCap;
+            bool success = args.Success;
             if (!success && m_GridService != null)
             {
                 //Remove the landmark flag (landmark is used for ignoring the landing points in the region)
@@ -957,7 +965,7 @@ namespace OpenSim.Services.LLLoginService
                 {
                     success = TryFindGridRegionForAgentLogin(defaultRegions, account,
                         appearance, session, secureSession, circuitCode, position,
-                        clientIP, aCircuit, out seedCap, out dest);
+                        clientIP, aCircuit, out seedCap, out reason, out dest);
                 }
                 if (!success)
                 {
@@ -967,7 +975,7 @@ namespace OpenSim.Services.LLLoginService
                     {
                         success = TryFindGridRegionForAgentLogin(fallbacks, account,
                             appearance, session, secureSession, circuitCode, position,
-                            clientIP, aCircuit, out seedCap, out dest);
+                            clientIP, aCircuit, out seedCap, out reason, out dest);
                     }
                     if (!success)
                     {
@@ -977,7 +985,7 @@ namespace OpenSim.Services.LLLoginService
                         {
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
                                 appearance, session, secureSession, circuitCode, position,
-                                clientIP, aCircuit, out seedCap, out dest);
+                                clientIP, aCircuit, out seedCap, out reason, out dest);
                             if (!success)
                                 reason = "No Region Found";
                         }
@@ -998,22 +1006,33 @@ namespace OpenSim.Services.LLLoginService
 
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
             AvatarAppearance appearance, UUID session, UUID secureSession, uint circuitCode, Vector3 position,
-            IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap, out GridRegion destination)
+            IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap, out string reason, out GridRegion destination)
         {
+            LoginAgentArgs args = null;
             foreach (GridRegion r in regions)
             {
-                string reason;
-                bool success = m_registry.RequestModuleInterface<IAgentProcessing>().
-                    LoginAgent(r, ref aCircuit, out seedCap, out reason);
-                if (success)
+                args = m_registry.RequestModuleInterface<IAgentProcessing>().
+                    LoginAgent(r, aCircuit);
+                if (args.Success)
                 {
                     aCircuit = MakeAgent(r, account, appearance, session, secureSession, circuitCode, position, clientIP);
                     destination = r;
+                    reason = args.Reason;
+                    seedCap = args.SeedCap;
                     return true;
                 }
                 m_GridService.SetRegionUnsafe(r.RegionID);
             }
-            seedCap = "";
+            if (args != null)
+            {
+                seedCap = args.SeedCap;
+                reason = args.Reason;
+            }
+            else
+            {
+                seedCap = "";
+                reason = "";
+            }
             destination = null;
             return false;
         }

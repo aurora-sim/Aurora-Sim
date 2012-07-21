@@ -27,14 +27,16 @@
     EmailConnector = LocalConnector
 
     DoRemoteCalls = True
+	CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = False
+	
 [Configuration]
     UseRegistrationService = false
 	OSDRequestTimeout = 10000
 	OSDRequestTryCount = 5
 	RegisterRegionPassword = 
+	
 [Handlers]
-
     AbuseReportHandler = AbuseReportsService
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
