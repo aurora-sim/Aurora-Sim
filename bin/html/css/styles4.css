@@ -1,5 +1,5 @@
 @CHARSET "UTF-8";
-* {margin:0px; padding:0px;}
+* {margin:0px; padding:0px; border:none;}
 
 html, body {
 	height: 100%;

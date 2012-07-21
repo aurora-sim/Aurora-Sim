@@ -1,5 +1,5 @@
 @CHARSET "UTF-8";
-* {margin:0px; padding:0px;}
+* {margin:0px; padding:0px; border:none;}
 
 body {
 	line-height: 14px;
@@ -378,12 +378,12 @@ label {display:inline-block;}
 /* Container */
 #container {
 	width: 960px;
-	margin: 0pt auto;
+	margin: 0px auto;
 }
 
 /* Top Container */
 #top {
-	margin: 0 auto;
+	margin: 0px auto;
 	padding: 20px 0 0 0;
 }
 

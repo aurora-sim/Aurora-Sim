@@ -594,6 +594,18 @@ namespace Aurora.Modules.Web.Translators
                     return "November";
                 case "December":
                     return "December";
+					
+                //Language Switcher Tooltips
+                case "en":
+                    return "English";
+                case "fr":
+                    return "French";
+                case "de":
+                    return "German";
+                case "it":
+                    return "Italian";
+                case "es":
+                    return "Spanish";
             }
             return "UNKNOWN CHARACTER";
         }

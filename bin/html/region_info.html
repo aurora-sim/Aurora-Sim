@@ -1,36 +1,19 @@
-<!-- params to replace
-
-{SystemName}
-{SystemURL}
-{RegionName}
-{OwnerUUID}
-{OwnerName}
-{RegionLocX}
-{RegionLocY}
-{RegionType}
-{RegionImageURL}
-{RegionInformationText}  Region Information
-{OwnerNameText}          Owner Name
-{RegionLocationText}     Region Location
-{RegionSizeText}         Region Size
-{RegionNameText}         Region Name
-{RegionTypeText}         Region Type
-{RegionInfoText}
--->
-
 <!doctype html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	<title>{SystemName}: {RegionInfoText}</title>
 	<meta name="keywords" content="{SystemName}" />
 	<meta name="description" content="{SystemName}"/>
-	<link href="css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
-	<link href="css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
-	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
-	<link href="css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
-	<link href="css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
-	<script type="text/javascript" src="javascripts/jquery.min.js" language="javascript"></script>
-	<script type="text/javascript" src="javascripts/styleswitch.js" language="javascript"></script>
+	<link rel="shortcut icon" href="images/icons/favicon.ico" />
+	
+	<link href="{SystemURL}/css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+	<link href="{SystemURL}/css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+	<link href="{SystemURL}/css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+	<link href="{SystemURL}/css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+	<link href="{SystemURL}/css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
+	<script src="javascripts/jquery.min.js" language="javascript" type="text/javascript"></script>
+	<script src="javascripts/styleswitch.js" language="javascript" type="text/javascript"></script>
 
 	<!-- date time -->
 	<script type="text/javascript" src="javascripts/jquery.jclock.js" language="javascript"></script>
@@ -73,15 +56,12 @@
 			});
 		/* ]]> */
 	</script>
-	
-	<title>{SystemName}: {RegionInfoText}</title>
-	
 </head>
 
 <body>
 <div id="container">
 <h2>{SystemName}: {RegionInfoText}</h2>
-<p class=jclock1><span id=jclock1></span></p>
+<p class="jclock1"><span id="jclock1"></span></p>
 <div id="region_info_container">
 <table id="region_info">
   <caption></caption>
@@ -110,12 +90,13 @@
     <tr>
       <td class="region_info_picture" rowspan="10">
 	    <div class="region_info_picture">
-	    <a class="regionslurl" 
-		   onclick="document.location.href='secondlife://{RegionName}/128/128/50'" 
-		   alt="{RegionNameText}: {RegionName}"
-		   title="{RegionNameText}: {RegionName}<br />secondlife://{RegionName}/128/128/50">
-	    <img height="256" src="{RegionImageURL}" alt="{RegionNameText}: {RegionName}" title="{RegionNameText}: {RegionName}" /></a>
-	    <p class="region_info_picture_text">{RegionNameText}: {RegionName} ({RegionType})<br />{RegionLocationText}: X:&nbsp;{RegionLocX}  Y:&nbsp;{RegionLocY}<br />secondlife://{RegionName}/128/128/50</p></div>
+	      <a class="regionslurl" 
+		     onclick="document.location.href='secondlife://{RegionName}/128/128/50'" 
+		     alt="{RegionNameText}: {RegionName}"
+		     title="{RegionNameText}: {RegionName}<br />secondlife://{RegionName}/128/128/50">
+	      <img height="256" src="{RegionImageURL}" alt="{RegionNameText}: {RegionName}" title="{RegionNameText}: {RegionName}" /></a>
+	      <p class="region_info_picture_text">{RegionNameText}: {RegionName} ({RegionType})<br />{RegionLocationText}: X:&nbsp;{RegionLocX}  Y:&nbsp;{RegionLocY}<br />secondlife://{RegionName}/128/128/50</p>
+		</div>
 	  </td>
       <td class="region_info_left" colspan="2"><p>{RegionNameText}:</p></td>
 	  <td class="region_info_right" colspan="2"><p>{RegionName}</p></td>
@@ -170,17 +151,30 @@
   </tbody>
 </table>
 </div>
-	<div id="footer">	
-		<p class=textsize>
-			<ul>STYLES:
-				<li><a href="serversideSwitch.html?style=style1" rel="styles1" class="styleswitch" alt="{styles1}" title="{styles1}">1</a></li>
-				<li><a href="serversideSwitch.html?style=style2" rel="styles2" class="styleswitch" alt="{styles2}" title="{styles2}">2</a></li>
-				<li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">3</a></li>
-				<li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">4</a></li>
-				<li><a href="serversideSwitch.html?style=style5" rel="styles5" class="styleswitch" alt="{styles5}" title="{styles5}">5</a></li>
-				CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span>| Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012
-			</ul>
-		</p>
+	<div id="footer">
+	  <div class=languageswitch>
+	    <ul>
+		LANGUAGES:
+		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
+		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
+		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
+		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
+		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
+		CHOIX: <span id="lg1">en</span><span id="lg2">fr</span><span id="lg3">de</span><span id="lg4">it</span><span id="lg5">es</span>  
+		</ul>
+	  </div>
+	  <div class=styleswitch>
+	    <ul>
+		STYLES:
+		  <li><a href="serversideSwitch.html?style=style1" rel="styles1" class="styleswitch" alt="{styles1}" title="{styles1}">1</a></li>
+		  <li><a href="serversideSwitch.html?style=style2" rel="styles2" class="styleswitch" alt="{styles2}" title="{styles2}">2</a></li>
+		  <li><a href="serversideSwitch.html?style=style3" rel="styles3" class="styleswitch" alt="{styles3}" title="{styles3}">3</a></li>
+		  <li><a href="serversideSwitch.html?style=style4" rel="styles4" class="styleswitch" alt="{styles4}" title="{styles4}">4</a></li>
+		  <li><a href="serversideSwitch.html?style=style5" rel="styles5" class="styleswitch" alt="{styles5}" title="{styles5}">5</a></li>
+		CHOIX: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span>| Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012  
+		</ul>
+	  </div>
+	  <span class="clear"></span>
 	</div>
 </div>
 <script type="text/javascript">
@@ -188,6 +182,25 @@
 	$("li.fade, a.fade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
 	$("a.logofade").hover(function(){$(this).fadeOut(200);$(this).fadeIn(200);});
 	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright, a.webprofile").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
- </script>
+</script>
 </body>
 </html>
+
+<!-- params to replace
+{SystemName}
+{SystemURL}
+{RegionName}
+{OwnerUUID}
+{OwnerName}
+{RegionLocX}
+{RegionLocY}
+{RegionType}
+{RegionImageURL}
+{RegionInformationText}  Region Information
+{OwnerNameText}          Owner Name
+{RegionLocationText}     Region Location
+{RegionSizeText}         Region Size
+{RegionNameText}         Region Name
+{RegionTypeText}         Region Type
+{RegionInfoText}
+-->

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -590,6 +590,18 @@ namespace Aurora.Modules.Web.Translators
                     return "Novembre";
                 case "December":
                     return "Dicembre";
+
+                //Language Switcher Tooltips
+                case "en":
+                    return "English";
+                case "fr":
+                    return "French";
+                case "de":
+                    return "German";
+                case "it":
+                    return "Italian";
+                case "es":
+                    return "Spanish";
             }
             return "UNKNOWN CHARACTER";
         }
