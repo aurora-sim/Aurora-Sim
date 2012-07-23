@@ -49,7 +49,6 @@ namespace OpenSim.Services.MessagingService
         protected int MaxVariableRegionSight = 512;
         protected bool VariableRegionSight;
         protected bool m_enabled = true;
-        protected IRegistryCore m_registry;
 
         protected string _capsURL = "", _capsURLPassword = "";
         protected IConfigSource _config;

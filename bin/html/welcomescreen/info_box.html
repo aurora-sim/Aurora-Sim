@@ -1,3 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{SystemName}: Welcome Screen</title>
+	<meta name="keywords" content="{SystemName}" />
+	<meta name="description" content="{SystemName}"/>
+	<link rel="shortcut icon" href="../images/icons/favicon.ico" />
+	
 <!-- params to replace
 {SystemURL}
 {SystemName}
@@ -6,33 +15,46 @@
 {Color}   red green yellow white
 -->
 
-<!-- StyleSwitch TODO
+<!-- StyleSwitch -->
 <script src="../javascripts/styleswitch.js" type="text/javascript"></script>
 <link href="../css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
 <link href="../css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
 <link href="../css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
 <link href="../css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
 <link href="../css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
--->
-<link href="../css/welcome1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+</head>
 
-<div id=gridinfo>
+<body class="infobox">
+<div id=infobox>
+<div class=headerthread>
 <table>
-
-	<thead>
+  <thead>
     <tr>
-		<th class=black_content align=left>
-			<div class=headerthread>
-				<img src="../images/icons/alert.png" align=absMiddle>&nbsp;<strong>{Title}</strong>
-			</div>
-		</th>
+	  <th class=gridtext align=left><img src="../images/icons/alert.png" align=absMiddle>&nbsp;<strong>{Title}:</strong></th>
     </tr>
-	</thead>
-
-	<tbody>
+  </thead>
+  <tfoot><tr><td></td><td></td></tr></tfoot>
+  <tbody><tr><td></td><td></td></tr></tbody>
+</table>
+  </div>
+  
+<table>
+  <thead><tr><th></th></tr></thead>
+  <tfoot><tr><td></td><td></td></tr></tfoot>
+  <tbody>
 	<tr>
-		<td><p>{Text}</p></td>
+	  <td><p>{Text}</p></td>
 	</tr>
-	</tbody>
+  </tbody>
 </table>
 </div>
+
+<script type="text/javascript">
+	// fade class
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.styleswitch, a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(250);$(this).fadeIn(250);});
+</script>
+
+</body>
+</html>

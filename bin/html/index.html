@@ -9,7 +9,7 @@
 
 	<!-- Javascript -->
 	<!-- <script src="http://code.jquery.com/jquery-1.7.2.min.js" type="text/javascript" language="javascript"></script> -->
-	 <script src="javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
+	<script src="javascripts/jquery.min.js" type="text/javascript" language="javascript"></script>
 	<script src="javascripts/menu.js" type="text/javascript" language="javascript"></script>
 	<!-- StyleSwitch -->
 	<script src="javascripts/styleswitch.js" type="text/javascript" language="javascript"></script>
@@ -18,7 +18,7 @@
 	<link href="css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
 	<link href="css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
 	<link href="css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
-	
+
 	<!-- date time -->
 	<script type="text/javascript" language="javascript" src="javascripts/jquery.jclock.js"></script>
 	<script type="text/javascript">
@@ -35,7 +35,7 @@
 	</script>
 	
 	<!-- Tooltips -->
-	<script type="text/javascript" language="javascript" src="javascripts/jquery.tooltip.js"></script>
+	<script src="javascripts/jquery.tooltip.js" type="text/javascript" language="javascript"></script>
 	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
 	
 	<!-- fade in -->
@@ -45,7 +45,7 @@
 	  {
 		$( '#container' ).fadeIn("slow");
 		var result = {};
-		var sections = $("#menu li");
+		// var sections = $("#menu li");
 		var loading = $("#loading");
 		var content = $("#content");
 
@@ -82,9 +82,51 @@
 			loading.fadeTo(1000, 0);
 		};
 	});
+    </script>
+	
+    <!-- Menu Effect Style show/hidden
+    <script language="javascript" type="text/javascript">
+    function mainmenu(){$('#menu ul').css({display: 'none'}); // Opera Fix
+    $('#menu li').hover(function(){$(this).find('ul:first').css({visibility: 'visible',display: 'none'}).show(400);},
+    function(){$(this).find('ul:first').css({visibility: 'hidden'}).show(400);;});}
+    $(document).ready(function(){mainmenu();});
+    </script>
+    -->
+
+    <!--  Menu Effect Style slide Toggle
+    <script language="javascript" type="text/javascript">
+    function mainmenu() {$('#menu ul').css({display: 'none'}); // Opera Fix
+    $('#menu li').hover(function (){$('ul:first', this).stop(true, true).slideToggle("200");},
+    function (){$('ul:first', this).stop(true, true).slideToggle("200");});}
+    $(document).ready(function(){mainmenu();});
+    </script>
+	-->
+
+    <!-- Menu Effect Style slide Up/slide Down -->
+    <script language="javascript" type="text/javascript">
+    function mainmenu() {$('#menu ul').css({display: 'none'}); // Opera Fix
+    $('#menu li').hover(function (){$('ul:first', this).stop(true, true).slideDown(200);},
+    function (){$('ul:first', this).stop(true, true).slideUp(200);});}
+    $(document).ready(function(){mainmenu();});
+    </script>
+
+	<!-- slide show -->
+	<script type="text/javascript" src="javascripts/jquery.cycle.lite.js"></script>
+	<script type="text/javascript" src="javascripts/jquery.easing.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$('.slideshow').cycle({
+			// Transitions Type:
+			// blindX, blindY, blindZ, cover, curtainX, curtainY, fade, fadeZoom, growX, growY,
+			// scrollUp, scrollDown, scrollLeft, scrollRight, scrollHorz, scrollVert, shuffle,
+			// slideX, slideY, toss, turnUp, turnDown, turnLeft, turnRight, uncover, wipe, zoom
+			// Simple usage: (Need jquery.cycle.lite.js and jquery.easing.js)
+			fx: 'fade', speed:  5000
+			// Advanced usage: (Need jquery.cycle.all.js and jquery.easing.js)
+			// fx: 'shuffle', shuffle: {top: -25, left:  -250}, easing: 'easeInOutBack', delay: -2000, speed: 1000
+		});
+	});
 	</script>
-
-
 </head>
 
 <body>
@@ -98,12 +140,12 @@
 		<ul id="menu">
 {MenuItemsArrayBegin}
 {IfShowInMenuBegin}
-			<li id="{MenuItemID}" class="fade" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}
+			<li id="{MenuItemID}" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}
 {IfHasChildrenBegin}
 				<ul>
 {ChildrenMenuItemsArrayBegin}
 {IfChildShowInMenuBegin}
-					<li id="{ChildMenuItemID}" class="fade" alt="{ChildMenuItemTitle}" title="{ChildMenuItemTitleHelp}">{ChildMenuItemTitle}</li>
+					<li id="{ChildMenuItemID}" alt="{ChildMenuItemTitle}" title="{ChildMenuItemTitleHelp}">{ChildMenuItemTitle}</li>
 {IfChildShowInMenuEnd}
 {ChildrenMenuItemsArrayEnd}
 				</ul>
@@ -118,23 +160,32 @@
 	<div id="loading">
 		<img src="../images/icons/loading.gif" alt="Loading..." />
 	</div>
+	
 	<p class=jclock1><span id=jclock1></span></p>
 	
 	<div id="content">
-		<h2>{SystemName}: {HomeText}</h2>
-		
-		<p class=textsize>{WelcomeToText} {SystemName}</p>
-{IsAdminAuthenticatedBegin}
-		<p class=textsize>{PagesUpdateRequired}</p>
-		<p class=textsize>{SettingsUpdateRequired}</p>
-{IsAdminAuthenticatedEnd}
-		<p class=textsize>{HomeTextWelcome}</p>
 
-		<p>{HomeTextTips}:
-			<a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
-			<a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
-			<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->	
+	<div class="slideshow">
+		<img src="images/screenshots/welcome1.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome1.jpg" />
+		<img src="images/screenshots/welcome2.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome2.jpg" />
+		<img src="images/screenshots/welcome3.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome3.jpg" />
+		<img src="images/screenshots/welcome4.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome4.jpg" />
 	</div>
+	
+	<h2>{SystemName} &rarr; {HomeText}</h2> <!-- &rArr; -->
+	<p class=textsize>{WelcomeToText} {SystemName}</p>
+{IsAdminAuthenticatedBegin}
+	<p class=textsize>{PagesUpdateRequired}</p>
+	<p class=textsize>{SettingsUpdateRequired}</p>
+{IsAdminAuthenticatedEnd}
+	<p class=textsize>{HomeTextWelcome}</p>
+	<p>{HomeTextTips}:
+		<a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
+		<a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
+		<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->	
+	</div>
+	
+	<span class="clear"></span>
 
 	<div id="footer">
 	  <div class=languageswitch>

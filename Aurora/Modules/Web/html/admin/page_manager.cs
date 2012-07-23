@@ -41,7 +41,7 @@ namespace Aurora.Modules.Web
             foreach (GridPage page in rootPage.Children)
             {
                 pages.Add(new Dictionary<string, object> { { "Value", page.MenuID }, 
-                    { "Name", translator.GetTranslatedString(page.MenuTitle) } });
+                    { "Name", translator.GetTranslatedString(page.Location) } });
             }
             vars.Add("PagesList", pages);
 
