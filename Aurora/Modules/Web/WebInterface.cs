@@ -235,8 +235,15 @@ namespace Aurora.Modules.Web
             if (page != null)
             {
                 ITranslator translator = null;
-                if (httpRequest.Query.ContainsKey("language"))
+                if (httpRequest.Cookies.Get("language") == null)
+                {
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Cookies.Get("language").Value);
+                }
+                else if (httpRequest.Query.ContainsKey("language"))
+                {
                     translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
+                    httpResponse.AddCookie(new System.Web.HttpCookie("language", httpRequest.Query["language"].ToString()));
+                }
                 if (translator == null)
                     translator = _defaultTranslator;
 
