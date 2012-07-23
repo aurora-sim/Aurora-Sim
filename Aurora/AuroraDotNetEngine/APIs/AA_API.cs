@@ -1057,6 +1057,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             ConvertLSLToWindlight(ref cycle, 0, list);
             gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings != null)
+                environmentSettings.TriggerWindlightUpdate(1);
+            
             return ScriptBaseClass.WL_OK;
         }
 
@@ -1078,6 +1083,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             ConvertLSLToWindlight(ref cycle, dayCycleIndex, list);
             gc.AddGeneric(World.RegionInfo.RegionID, "EnvironmentSettings", "", new OSDWrapper { Info = cycle.ToOSD() }.ToOSD());
+
+            IEnvironmentSettingsModule environmentSettings = World.RequestModuleInterface<IEnvironmentSettingsModule>();
+            if (environmentSettings != null)
+                environmentSettings.TriggerWindlightUpdate(1);
+            
             return ScriptBaseClass.WL_OK;
         }
 

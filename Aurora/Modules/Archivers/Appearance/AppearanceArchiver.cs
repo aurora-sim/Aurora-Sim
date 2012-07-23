@@ -396,13 +396,13 @@ namespace Aurora.Modules.Archivers
                     archive.Name = cmdparams[5].Substring(0, cmdparams[5].LastIndexOf(".database"));
                     if (cmdparams.Length > 7)
                     {
-                        if (cmdparams.Contains("--Snapshot"))
+                        if (cmdparams.Contains("--snapshot"))
                         {
                             UUID snapshot;
                             int index = 0;
                             for(; index < cmdparams.Length; index++)
                             {
-                                if(cmdparams[index] == "--Snapshot")
+                                if(cmdparams[index] == "--snapshot")
                                 {
                                     index++;
                                     break;
@@ -552,8 +552,8 @@ namespace Aurora.Modules.Archivers
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("save avatar archive",
-                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--Snapshot <UUID>) (--public)",
-                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both Snapshot UUID and \"--public\" are optional.",
+                                                         "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--snapshot <UUID>) (--public)",
+                                                         "Saves appearance to an avatar archive (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both --snapshot and --public are optional.",
                                                          HandleSaveAvatarArchive);
                 MainConsole.Instance.Commands.AddCommand("load avatar archive",
                                                          "load avatar archive <First> <Last> <Filename>",

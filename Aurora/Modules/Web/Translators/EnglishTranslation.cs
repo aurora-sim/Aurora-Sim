@@ -606,6 +606,9 @@ namespace Aurora.Modules.Web.Translators
                     return "Italian";
                 case "es":
                     return "Spanish";
+
+                case "NoAccountFound":
+                    return "No account found";
             }
             return "UNKNOWN CHARACTER";
         }

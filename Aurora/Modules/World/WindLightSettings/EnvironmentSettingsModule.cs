@@ -9,10 +9,11 @@ using OpenMetaverse.StructuredData;
 using Aurora.Framework.Capabilities;
 using Aurora.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
+using OpenSim.Services.Interfaces;
 
-namespace Aurora.Modules.WindlightSettings
+namespace Aurora.Modules
 {
-    public class EnvironmentSettingsModule : INonSharedRegionModule
+    public class EnvironmentSettingsModule : IEnvironmentSettingsModule, INonSharedRegionModule
     {
         private OSD m_info;
         private IScene m_scene;
@@ -25,6 +26,7 @@ namespace Aurora.Modules.WindlightSettings
 
         public void AddRegion(IScene scene)
         {
+            m_scene.RegisterModuleInterface<IEnvironmentSettingsModule>(this);
             m_scene = scene;
             scene.EventManager.OnRegisterCaps += EventManager_OnRegisterCaps;
         }
@@ -89,6 +91,9 @@ namespace Aurora.Modules.WindlightSettings
                     gc.AddGeneric(m_scene.RegionInfo.RegionID, "EnvironmentSettings", "",
                                   (new OSDWrapper { Info = m_info }).ToOSD());
                 success = true;
+
+                //Tell everyone about the changes
+                TriggerWindlightUpdate(1);
             }
             else
             {
@@ -128,10 +133,28 @@ namespace Aurora.Modules.WindlightSettings
             return new byte[0];
         }
 
-        #region Nested type: DatabaseWrapper
+        public void TriggerWindlightUpdate(int interpolate)
+        {
+            foreach (IScenePresence presence in m_scene.GetScenePresences())
+            {
+                OSD item = BuildEQM(interpolate);
+                IEventQueueService eq = presence.Scene.RequestModuleInterface<IEventQueueService>();
+                if (eq != null)
+                    eq.Enqueue(item, presence.UUID, presence.Scene.RegionInfo.RegionHandle);
+            }
+        }
 
-        
+        public OSD BuildEQM(int interpolate)
+        {
+            OSDMap map = new OSDMap();
 
-        #endregion
+            OSDMap body = new OSDMap();
+
+            body.Add("Interpolate", interpolate);
+
+            map.Add("body", body);
+            map.Add("message", OSD.FromString("WindLightRefresh"));
+            return map;
+        }
     }
 }
