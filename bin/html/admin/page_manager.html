@@ -104,6 +104,15 @@
       <td class="page_manager_right"><input name="PageLocation" type="text" id="PageLocation" size="119" value="{PageLocation}" /></td>
     </tr>
     <tr>
+      <td class="page_manager_left"><p>{DisplayInMenu}</p></td>
+      <td class="page_manager_right">
+	    <select id="RequiresAdmin" require="true" name="RequiresAdmin">
+		  <option value="false" {DisplayInMenuNo}>{No}</option>
+		  <option value="true" {DisplayInMenuYes}>{Yes}</option>
+		</select>
+	  </td>
+    </tr>
+    <tr>
       <td class="page_manager_left"><p>{RequiresLoginText}</p></td>
       <td class="page_manager_right">
 	    <select id="RequiresLogin" require="true" name="RequiresLogin">

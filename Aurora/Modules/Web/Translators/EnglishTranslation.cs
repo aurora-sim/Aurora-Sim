@@ -609,6 +609,8 @@ namespace Aurora.Modules.Web.Translators
 
                 case "NoAccountFound":
                     return "No account found";
+                case "DisplayInMenu":
+                    return "Display In Menu";
             }
             return "UNKNOWN CHARACTER";
         }

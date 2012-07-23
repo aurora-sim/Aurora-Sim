@@ -26,8 +26,8 @@ namespace Aurora.Modules
 
         public void AddRegion(IScene scene)
         {
-            m_scene.RegisterModuleInterface<IEnvironmentSettingsModule>(this);
             m_scene = scene;
+            m_scene.RegisterModuleInterface<IEnvironmentSettingsModule>(this);
             scene.EventManager.OnRegisterCaps += EventManager_OnRegisterCaps;
         }
 

@@ -78,6 +78,8 @@ namespace Aurora.Modules.Web
                 vars.Add("RequiresLogoutNo", !page.LoggedOutRequired ? "selected=\"selected\"" : "");
                 vars.Add("RequiresAdminYes", page.AdminRequired ? "selected=\"selected\"" : "");
                 vars.Add("RequiresAdminNo", !page.AdminRequired ? "selected=\"selected\"" : "");
+                vars.Add("DisplayInMenuYes", page.ShowInMenu ? "selected=\"selected\"" : "");
+                vars.Add("DisplayInMenuNo", !page.ShowInMenu ? "selected=\"selected\"" : "");
                 vars.Add("DisplayEdit", true);
             }
             else
@@ -108,7 +110,8 @@ namespace Aurora.Modules.Web
                 bool RequiresLogin = bool.Parse(requestParameters["RequiresLogin"].ToString());
                 bool RequiresLogout = bool.Parse(requestParameters["RequiresLogout"].ToString());
                 bool RequiresAdmin = bool.Parse(requestParameters["RequiresAdmin"].ToString());
-
+                bool DisplayInMenu = bool.Parse(requestParameters["DisplayInMenu"].ToString());
+                
                 GridPage page = rootPage.GetPage(edittingPageID);
                 bool add = page == null;
                 if (page == null)
@@ -122,6 +125,7 @@ namespace Aurora.Modules.Web
                 page.LoggedInRequired = RequiresLogin;
                 page.LoggedOutRequired = RequiresLogout;
                 page.AdminRequired = RequiresAdmin;
+                page.ShowInMenu = DisplayInMenu;
 
                 if (add)
                     rootPage.Children.Add(page);
@@ -140,6 +144,7 @@ namespace Aurora.Modules.Web
             vars.Add("RequiresLoginText", translator.GetTranslatedString("RequiresLoginText"));
             vars.Add("RequiresLogoutText", translator.GetTranslatedString("RequiresLogoutText"));
             vars.Add("RequiresAdminText", translator.GetTranslatedString("RequiresAdminText"));
+            vars.Add("DisplayInMenu", translator.GetTranslatedString("DisplayInMenu"));
             vars.Add("SelectItem", translator.GetTranslatedString("SelectItem"));
             vars.Add("DeleteItem", translator.GetTranslatedString("DeleteItem"));
             vars.Add("AddItem", translator.GetTranslatedString("AddItem"));
