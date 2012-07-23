@@ -235,14 +235,15 @@ namespace Aurora.Modules.Web
             if (page != null)
             {
                 ITranslator translator = null;
-                if (httpRequest.Cookies.Get("language") != null)
-                {
-                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Cookies.Get("language").Value);
-                }
-                else if (httpRequest.Query.ContainsKey("language"))
+                if (httpRequest.Query.ContainsKey("language"))
                 {
                     translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Query["language"].ToString());
                     httpResponse.AddCookie(new System.Web.HttpCookie("language", httpRequest.Query["language"].ToString()));
+                }
+                else if (httpRequest.Cookies.Get("language") != null)
+                {
+                    var cookie = httpRequest.Cookies.Get("language");
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Cookies.Get("language").Value);
                 }
                 if (translator == null)
                     translator = _defaultTranslator;
@@ -620,6 +621,29 @@ namespace Aurora.Modules.Web
                 else if (page.Children.Count > 0)
                 {
                     var p = GetPage(item, page);
+                    if (p != null)
+                        return p;
+                }
+            }
+            return null;
+        }
+
+        public GridPage GetPageByLocation(string item)
+        {
+            return GetPageByLocation(item, null);
+        }
+
+        public GridPage GetPageByLocation(string item, GridPage rootPage)
+        {
+            if (rootPage == null)
+                rootPage = this;
+            foreach (var page in rootPage.Children)
+            {
+                if (page.Location == item)
+                    return page;
+                else if (page.Children.Count > 0)
+                {
+                    var p = GetPageByLocation(item, page);
                     if (p != null)
                         return p;
                 }
