@@ -124,7 +124,7 @@ namespace Aurora.Modules.Web
                 avatarArchives.Add(new Dictionary<string, object> { 
                 { "AvatarArchiveName", archive.Name },
                 { "AvatarArchiveSnapshotID", archive.Snapshot }, 
-                { "AvatarArchiveURL", webTextureService.GetTextureURL(UUID.Parse(archive.Snapshot)) } 
+                { "AvatarArchiveSnapshotURL", webTextureService.GetTextureURL(UUID.Parse(archive.Snapshot)) } 
                 });
 
             vars.Add("AvatarArchive", avatarArchives);

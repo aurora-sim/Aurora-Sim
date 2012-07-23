@@ -88,8 +88,14 @@ namespace Aurora.Modules.Web
                         parcel.Add("ParcelName", p.Name);
                         parcel.Add("ParcelOwnerUUID", p.OwnerID);
                         IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
-                        if(accountService != null)
-                            parcel.Add("ParcelOwnerName", accountService.GetUserAccount(UUID.Zero, p.OwnerID).Name);
+                        if (accountService != null)
+                        {
+                            var account = accountService.GetUserAccount(UUID.Zero, p.OwnerID);
+                            if (account == null)
+                                parcel.Add("ParcelOwnerName", translator.GetTranslatedString("NoAccountFound"));
+                            else
+                                parcel.Add("ParcelOwnerName", account.Name);
+                        }
                         parcels.Add(parcel);
                     }
                     vars.Add("ParcelInRegion", parcels);
