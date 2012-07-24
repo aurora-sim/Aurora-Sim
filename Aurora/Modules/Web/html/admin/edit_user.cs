@@ -69,7 +69,7 @@ namespace Aurora.Modules.Web
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitDeleteUser")
             {
-                //userService.DeleteUser(user, password, true, false);
+                userService.DeleteUser(user, "", false, false);
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitTempBanUser")

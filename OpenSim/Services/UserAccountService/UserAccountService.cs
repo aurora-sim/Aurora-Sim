@@ -405,7 +405,7 @@ namespace OpenSim.Services.UserAccountService
             if (remoteValue != null || m_doRemoteOnly)
                 return;
 
-            if (m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
+            if (password != "" && m_AuthenticationService.Authenticate(userID, "UserAccount", password, 0) == "")
                 return;//Not authed
 
             if (!m_Database.DeleteAccount(userID, archiveInformation))

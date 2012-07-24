@@ -161,6 +161,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserEmailText", translator.GetTranslatedString("UserEmailText"));
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
             vars.Add("ErrorMessage", error);
+            vars.Add("SubmitURL", "index.html?page=register");
 
             return vars;
         }
