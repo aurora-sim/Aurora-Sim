@@ -93,9 +93,9 @@
 {UsersListArrayBegin}
     <tr>
       <td class="user_search_result_left"><a target="_blank" class='agent_info' href="webprofile/?userid={UserID}"><p>{UserName}</p></a></td>
-{IfAdminAuthenticatedBegin}
+{IsAdminAuthenticatedBegin}
       <td class="user_search_result_right"><a href="index.html?page=edit_user&userid={UserID}"><p>{EditText}</p></a></td>
-{IfAdminAuthenticatedEnd}
+{IsAdminAuthenticatedEnd}
     </tr>
 {UsersListArrayEnd}
   </tbody>
