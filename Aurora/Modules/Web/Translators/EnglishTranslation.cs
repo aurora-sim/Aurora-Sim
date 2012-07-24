@@ -611,6 +611,12 @@ namespace Aurora.Modules.Web.Translators
                     return "No account found";
                 case "DisplayInMenu":
                     return "Display In Menu";
+                case "ParentText":
+                    return "Menu Parent";
+                case "CannotSetParentToChild":
+                    return "Cannot set menu item as a child to itself.";
+                case "TopLevel":
+                    return "Top Level";
             }
             return "UNKNOWN CHARACTER";
         }

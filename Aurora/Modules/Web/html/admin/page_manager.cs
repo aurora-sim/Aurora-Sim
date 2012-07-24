@@ -37,20 +37,27 @@ namespace Aurora.Modules.Web
             IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
-
+            List<GridPage> allPages = new List<GridPage>(rootPage.Children);
             foreach (GridPage page in rootPage.Children)
+                allPages.AddRange(page.Children);
+            allPages.RemoveAll((a) => !a.ShowInMenu);
+
+            string MenuItem = requestParameters.ContainsKey("MenuItem") ? 
+                requestParameters["MenuItem"].ToString() : "";
+            foreach (GridPage page in allPages)
             {
                 pages.Add(new Dictionary<string, object> { { "Value", page.Location }, 
-                    { "Name", page.Location } });
+                    { "Name", page.Location }, { "PageSelected", MenuItem == page.Location ? 
+                                               "selected=\"selected\"" : "" } });
             }
             vars.Add("PagesList", pages);
 
             #endregion
 
             bool changed = false;
+            string error = translator.GetTranslatedString("ChangesSavedSuccessfully");
             if (requestParameters.ContainsKey("DeleteItem"))
             {
-                string MenuItem = requestParameters["MenuItem"].ToString();
                 rootPage.RemovePage(MenuItem, null);
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
             }
@@ -62,8 +69,6 @@ namespace Aurora.Modules.Web
             }
             if (requestParameters.ContainsKey("SelectItem"))
             {
-                string MenuItem = requestParameters["MenuItem"].ToString();
-
                 GridPage page = rootPage.GetPageByLocation(MenuItem);
 
                 vars.Add("PageTitle", page.MenuTitle);
@@ -81,6 +86,17 @@ namespace Aurora.Modules.Web
                 vars.Add("DisplayInMenuYes", page.ShowInMenu ? "selected=\"selected\"" : "");
                 vars.Add("DisplayInMenuNo", !page.ShowInMenu ? "selected=\"selected\"" : "");
                 vars.Add("DisplayEdit", true);
+
+                pages = new List<Dictionary<string, object>> { new Dictionary<string, object> { { "Value", "Top Level" }, 
+                    { "Name", translator.GetTranslatedString("TopLevel") }, { "PageSelected", "" } } };
+                GridPage parent = rootPage.GetParent(page);
+                foreach (GridPage p in allPages)
+                {
+                    pages.Add(new Dictionary<string, object> { { "Value", p.Location }, 
+                    { "Name", p.Location }, { "PageSelected", parent.Location == p.Location ? 
+                                               "selected=\"selected\"" : "" } });
+                }
+                vars.Add("ParentPagesList", pages);
             }
             else
             {
@@ -111,7 +127,7 @@ namespace Aurora.Modules.Web
                 bool RequiresLogout = bool.Parse(requestParameters["RequiresLogout"].ToString());
                 bool RequiresAdmin = bool.Parse(requestParameters["RequiresAdmin"].ToString());
                 bool DisplayInMenu = bool.Parse(requestParameters["DisplayInMenu"].ToString());
-                
+                string ParentMenuItem = requestParameters["ParentMenuItem"].ToString();
                 GridPage page = rootPage.GetPage(edittingPageID);
                 bool add = page == null;
                 if (page == null)
@@ -127,10 +143,20 @@ namespace Aurora.Modules.Web
                 page.AdminRequired = RequiresAdmin;
                 page.ShowInMenu = DisplayInMenu;
 
-                if (add)
-                    rootPage.Children.Add(page);
+                GridPage parent = rootPage.GetPageByLocation(ParentMenuItem);
+
+                if (parent != page)
+                {
+                    if (!add)
+                        rootPage.RemovePage(edittingPageID, page);
+
+                    if (parent != null)
+                        parent.Children.Add(page);
+                    else //Top Level
+                        rootPage.Children.Add(page);
+                }
                 else
-                    rootPage.ReplacePage(edittingPageID, page);
+                    error = translator.GetTranslatedString("CannotSetParentToChild");
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
             }
@@ -149,10 +175,11 @@ namespace Aurora.Modules.Web
             vars.Add("DeleteItem", translator.GetTranslatedString("DeleteItem"));
             vars.Add("AddItem", translator.GetTranslatedString("AddItem"));
             vars.Add("PageManager", translator.GetTranslatedString("PageManager"));
-            vars.Add("No", translator.GetTranslatedString("No"));
+            vars.Add("ParentText", translator.GetTranslatedString("ParentText"));
             vars.Add("Yes", translator.GetTranslatedString("Yes"));
+            vars.Add("No", translator.GetTranslatedString("No"));
             
-            vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
+            vars.Add("ChangesSavedSuccessfully", changed ? error : "");
 
             return vars;
         }

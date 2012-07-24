@@ -12,7 +12,7 @@ namespace Aurora.Modules.Web
     {
         public static readonly string Schema = "WebPages";
         private static GridPage _rootPage;
-        public static readonly uint CurrentVersion = 5;
+        public static readonly uint CurrentVersion = 6;
 
         private static void InitializeDefaults()
         {
@@ -79,7 +79,7 @@ namespace Aurora.Modules.Web
             {
                 ShowInMenu = true,
                 MenuID = "users",
-                Location = "user_search.html",
+                Location = "users.html",
                 MenuPosition = 3,
                 MenuTitle = "MenuUser",
                 MenuToolTip = "TooltipsMenuUser",

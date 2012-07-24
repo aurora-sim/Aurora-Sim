@@ -695,6 +695,29 @@ namespace Aurora.Modules.Web
             if (foundPage != null)
                 this.Children.Remove(foundPage);
         }
+
+        public GridPage GetParent(GridPage page)
+        {
+            return GetParent(page, null);
+        }
+
+        public GridPage GetParent(GridPage item, GridPage toCheck)
+        {
+            if (toCheck == null)
+                toCheck = this;
+            foreach (var p in toCheck.Children)
+            {
+                if (item.Location == p.Location)
+                    return toCheck;
+                else if (p.Children.Count > 0)
+                {
+                    var pp = GetParent(item, p);
+                    if (pp != null)
+                        return pp;
+                }
+            }
+            return null;
+        }
     }
 
     internal class GridSettings : IDataTransferable

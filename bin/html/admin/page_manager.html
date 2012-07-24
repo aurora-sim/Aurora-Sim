@@ -54,7 +54,7 @@
       <td class="page_manager_select_left">
 	    <select id="MenuItem" require="true" name="MenuItem">
 {PagesListArrayBegin}
-		  <option value="{Value}">{Name}</option>
+		  <option value="{Value}" {PageSelected}>{Name}</option>
 {PagesListArrayEnd}
 	    </select><button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button>
 	    <button id="DeleteItem" type="Submit" name="DeleteItem">{DeleteItem}</button>
@@ -106,7 +106,7 @@
     <tr>
       <td class="page_manager_left"><p>{DisplayInMenu}</p></td>
       <td class="page_manager_right">
-	    <select id="RequiresAdmin" require="true" name="RequiresAdmin">
+	    <select id="DisplayInMenu" require="true" name="DisplayInMenu">
 		  <option value="false" {DisplayInMenuNo}>{No}</option>
 		  <option value="true" {DisplayInMenuYes}>{Yes}</option>
 		</select>
@@ -137,6 +137,15 @@
 		  <option value="false" {RequiresAdminNo}>{No}</option>
 		  <option value="true" {RequiresAdminYes}>{Yes}</option>
 		</select>
+	  </td>
+    </tr>
+    <tr>
+      <td class="page_manager_left"><p>{ParentText}</p></td>
+      <td class="page_manager_select_right">
+	    <select id="ParentMenuItem" require="true" name="ParentMenuItem">
+{ParentPagesListArrayBegin}
+		  <option value="{Value}" {PageSelected}>{Name}</option>
+{ParentPagesListArrayEnd}
 	  </td>
     </tr>
     <tr>
