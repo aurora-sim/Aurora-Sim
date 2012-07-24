@@ -56,7 +56,7 @@ namespace Aurora.Modules.Web.Translators
                 case "Submit":
                     return "Submit";
 
-                // English only so far
+
                 case "SpecialWindowTitleText":
                     return "Special Info Window Title";
                 case "SpecialWindowTextText":
@@ -295,7 +295,7 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuSettingsManager":
                     return "Settings Manager";
                 case "TooltipsMenuManager":
-                    return "Admin Management";
+                    return "Admin";
 
 				// Urls
                 case "WelcomeScreen":
@@ -319,6 +319,25 @@ namespace Aurora.Modules.Web.Translators
                 case "styles5":
                     return "Luminus";
 
+                case "StyleSwitcherStylesText":
+                    return "Styles";
+                case "StyleSwitcherLanguagesText":
+                    return "Languages";
+                case "StyleSwitcherChoiceText":
+                    return "Choice";
+
+                // Language Switcher Tooltips
+                case "en":
+                    return "English";
+                case "fr":
+                    return "French";
+                case "de":
+                    return "German";
+                case "it":
+                    return "Italian";
+                case "es":
+                    return "Spanish";		
+			
 				// Index Page
                 case "HomeText":
                     return "Home";
@@ -424,6 +443,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Search For A Region";
                 case "RegionSearchText":
                     return "Region Search";
+                case "SearchResultForRegionText":
+                    return "Search Result For Region";
 
                 //Edit user page
                 case "AdminDeleteUserText":
@@ -545,31 +566,31 @@ namespace Aurora.Modules.Web.Translators
                 case "Saturday":
                     return "Saturday";
 
-
-                case "Jan":
+                case "Jan_Short":
                     return "Jan";
-                case "Feb":
+                case "Feb_Short":
                     return "Feb";
-                case "Mar":
+                case "Mar_Short":
                     return "Mar";
-                case "Apr":
+                case "Apr_Short":
                     return "Apr";
                 case "May_Short":
                     return "May";
-                case "Jun":
+                case "Jun_Short":
                     return "Jun";
-                case "Jul":
+                case "Jul_Short":
                     return "Jul";
-                case "Aug":
+                case "Aug_Short":
                     return "Aug";
-                case "Sep":
+                case "Sep_Short":
                     return "Sep";
-                case "Oct":
+                case "Oct_Short":
                     return "Oct";
-                case "Nov":
+                case "Nov_Short":
                     return "Nov";
-                case "Dec":
+                case "Dec_Short":
                     return "Dec";
+
                 case "January":
                     return "January";
                 case "February":
@@ -594,19 +615,9 @@ namespace Aurora.Modules.Web.Translators
                     return "November";
                 case "December":
                     return "December";
-					
-                //Language Switcher Tooltips
-                case "en":
-                    return "English";
-                case "fr":
-                    return "French";
-                case "de":
-                    return "German";
-                case "it":
-                    return "Italian";
-                case "es":
-                    return "Spanish";
+				
 
+                // English only so far
                 case "NoAccountFound":
                     return "No account found";
                 case "DisplayInMenu":

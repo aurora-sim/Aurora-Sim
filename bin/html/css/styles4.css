@@ -138,6 +138,49 @@ table#register td {}
 .register_left {text-align: left;}
 .register_right {text-align: left;}
 
+.avatar_archive_screenshot {
+    float: left;
+    height: 155px; 
+    width:140px;
+    text-align: center;
+    cursor: pointer;
+	margin-right: 10px;
+	margin-bottom: 5px;
+	margin-top: 5px;
+    padding: 3px;
+	background: #444444 url(../images/icons/bg_TransStripe1.gif);
+    border: 1px solid #444444;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: #222222 0 0 .25em;
+    -moz-box-shadow: #222222 0 0 .25em;
+    box-shadow: #222222 0 0 .25em;
+    behavior: url(css/pie.htc);
+}
+
+.avatar_archive_screenshot img {
+    border: 0px solid #111111; 
+    height: 128px; 
+    width:128px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -khtml-border-radius: 0px;
+    border-radius: 5px;
+    -webkit-box-shadow: #222 0 0 .25em;
+    -moz-box-shadow: #222 0 0 .25em;
+    box-shadow: #222 0 0 .25em;
+    behavior: url(css/pie.htc);
+}
+
+.avatar_archive_screenshot input {
+    width: 15px;
+	margin: 0px;
+	padding: 0px;
+	vertical-align: middle;
+}
+
 /* welcomescreen_manager */
 table#welcomescreen_manager  {width: 100%;}
 table#welcomescreen_manager th {}
@@ -478,9 +521,9 @@ label {display:inline-block;}
     width:260px;
     height: 140px;
     float:right;
+    margin-bottom: 5px;
 	background: #444444 url(../images/icons/bg_TransStripe1.gif);
     border: 1px solid #444444;
-    margin-bottom: 5px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     -khtml-border-radius: 5px;

@@ -61,18 +61,18 @@
  
       // %b
       $this.monthsAbbrvNames = new Array(12);
-      $this.monthsAbbrvNames[0] = "{Jan}";
-      $this.monthsAbbrvNames[1] = "{Feb}";
-      $this.monthsAbbrvNames[2] = "{Mar}";
-      $this.monthsAbbrvNames[3] = "{Apr}";
+      $this.monthsAbbrvNames[0] = "{Jan_Short}";
+      $this.monthsAbbrvNames[1] = "{Feb_Short}";
+      $this.monthsAbbrvNames[2] = "{Mar_Short}";
+      $this.monthsAbbrvNames[3] = "{Apr_Short}";
       $this.monthsAbbrvNames[4] = "{May_Short}";
-      $this.monthsAbbrvNames[5] = "{Jun}";
-      $this.monthsAbbrvNames[6] = "{Jul}";
-      $this.monthsAbbrvNames[7] = "{Aug}";
-      $this.monthsAbbrvNames[8] = "{Sep}";
-      $this.monthsAbbrvNames[9] = "{Oct}";
-      $this.monthsAbbrvNames[10] = "{Nov}";
-      $this.monthsAbbrvNames[11] = "{Dec}";
+      $this.monthsAbbrvNames[5] = "{Jun_Short}";
+      $this.monthsAbbrvNames[6] = "{Jul_Short}";
+      $this.monthsAbbrvNames[7] = "{Aug_Short}";
+      $this.monthsAbbrvNames[8] = "{Sep_Short}";
+      $this.monthsAbbrvNames[9] = "{Oct_Short}";
+      $this.monthsAbbrvNames[10] = "{Nov_Short}";
+      $this.monthsAbbrvNames[11] = "{Dec_Short}";
  
       // %B
       $this.monthsFullNames = new Array(12);

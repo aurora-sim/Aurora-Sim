@@ -67,8 +67,7 @@ namespace Aurora.Modules.Web
                 vars.Add("NextOne", 0);
                 vars.Add("BackOne", 0);
             }
-
-
+					
             vars.Add("RegionsList", regionslist);
             vars.Add("RegionSearchText", translator.GetTranslatedString("RegionSearchText"));
             vars.Add("SearchForRegionText", translator.GetTranslatedString("SearchForRegionText"));
@@ -80,6 +79,9 @@ namespace Aurora.Modules.Web
             vars.Add("NextText", translator.GetTranslatedString("NextText"));
             vars.Add("LastText", translator.GetTranslatedString("LastText"));
             vars.Add("CurrentPageText", translator.GetTranslatedString("CurrentPageText"));
+
+            vars.Add("SearchResultForRegionText", translator.GetTranslatedString("SearchResultForRegionText"));
+            vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
 
             return vars;
         }

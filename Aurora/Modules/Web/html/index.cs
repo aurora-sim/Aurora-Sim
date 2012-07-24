@@ -117,6 +117,10 @@ namespace Aurora.Modules.Web
             vars.Add("styles4", translator.GetTranslatedString("styles4"));
             vars.Add("styles5", translator.GetTranslatedString("styles5"));
 
+			vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
+			vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
+			vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
+
             // Language Switcher
             vars.Add("en", translator.GetTranslatedString("en"));
             vars.Add("fr", translator.GetTranslatedString("fr"));
