@@ -140,4 +140,23 @@
         </form>
     </div>
 {IfNotUserBannedEnd}
+	<div id="login">
+		<form action="index.html?page=edit_user" method="POST">
+			<table>
+                <tr><td colspan="2">{KickAUserText}</td></tr>
+				<tr>
+				  <td class="register_left"><p>{KickMessageText}</p></td>
+				  <td class="register_right" colspan="3"><input label="KickMessage" id="KickMessage" name="KickMessage" type="text" size="25" maxlength="15" value=""></td>
+				</tr>
+				<tr>
+					<td class="odd">
+						<div>
+						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+							<button id="login_bouton" type="Submit" name="Submit" value="SubmitKickUser">{KickUserText}</button>
+						</div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
 </div>

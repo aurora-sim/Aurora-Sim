@@ -632,6 +632,12 @@ namespace Aurora.Modules.Web.Translators
                     return "Hide Language Selection Bar";
                 case "HideStyleBarText":
                     return "Hide Style Selection Bar";
+                case "KickAUserText":
+                    return "Kick A User (Logs them out within 30 seconds)";
+                case "KickMessageText":
+                    return "Message To User";
+                case "KickUserText":
+                    return "Kick User";
             }
             return "UNKNOWN CHARACTER";
         }

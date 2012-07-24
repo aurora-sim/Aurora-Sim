@@ -103,6 +103,14 @@ namespace Aurora.Modules.Web
                 webInterface.Redirect(httpResponse, "/");
                 return vars;
             }
+            if (requestParameters.ContainsKey("Submit") &&
+                requestParameters["Submit"].ToString() == "SubmitKickUser")
+            {
+                string message = requestParameters["KickMessage"].ToString();
+                IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
+                if (messageModule != null)
+                    messageModule.KickUser(account.PrincipalID, message);
+            }
             string bannedUntil = "";
             bool userBanned = ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);
             if (userBanned)
@@ -152,7 +160,10 @@ namespace Aurora.Modules.Web
             vars.Add("TimeUntilUnbannedText", translator.GetTranslatedString("TimeUntilUnbannedText"));
             vars.Add("EdittingText", translator.GetTranslatedString("EdittingText"));
             vars.Add("BannedUntilText", translator.GetTranslatedString("BannedUntilText"));
-            
+
+            vars.Add("KickAUserText", translator.GetTranslatedString("KickAUserText"));
+            vars.Add("KickMessageText", translator.GetTranslatedString("KickMessageText"));
+            vars.Add("KickUserText", translator.GetTranslatedString("KickUserText"));
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
             for (int i = 0; i <= 100; i++)
