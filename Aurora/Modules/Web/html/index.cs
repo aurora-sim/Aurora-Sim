@@ -84,8 +84,8 @@ namespace Aurora.Modules.Web
                         { "ChildMenuItemID", childPage.MenuID },
                         { "ChildShowInMenu", childPage.ShowInMenu },
                         { "ChildMenuItemLocation", childPage.Location }, 
-                        { "ChildMenuItemTitleHelp", translator.GetTranslatedString(childPage.MenuToolTip) },
-                        { "ChildMenuItemTitle", translator.GetTranslatedString(childPage.MenuTitle) } });
+                        { "ChildMenuItemTitleHelp", GetTranslatedString(translator, childPage.MenuToolTip, childPage, true) },
+                        { "ChildMenuItemTitle", GetTranslatedString(translator, childPage.MenuTitle, childPage, false) } });
 
                     //Add one for menu.js
                     pages.Add(new Dictionary<string, object> {
@@ -99,36 +99,12 @@ namespace Aurora.Modules.Web
                     { "HasChildren", page.Children.Count > 0 },
                     { "ChildrenMenuItems", childPages },
                     { "MenuItemLocation", page.Location }, 
-                    { "MenuItemTitleHelp", translator.GetTranslatedString(page.MenuToolTip) },
-                    { "MenuItemTitle", translator.GetTranslatedString(page.MenuTitle) } });
+                    { "MenuItemTitleHelp", GetTranslatedString(translator, page.MenuToolTip, page, true) },
+                    { "MenuItemTitle", GetTranslatedString(translator, page.MenuTitle, page, false) } });
             }
             vars.Add("MenuItems", pages);
 
             #endregion
-
-            // Menu Buttons
-            vars.Add("MenuHome", translator.GetTranslatedString("MenuHome"));
-            vars.Add("MenuLogin", translator.GetTranslatedString("MenuLogin"));
-            vars.Add("MenuRegister", translator.GetTranslatedString("MenuRegister"));
-            vars.Add("MenuForgotPass", translator.GetTranslatedString("MenuForgotPass"));
-            vars.Add("MenuNews", translator.GetTranslatedString("MenuNews"));
-            vars.Add("MenuWorld", translator.GetTranslatedString("MenuWorld"));
-            vars.Add("MenuRegion", translator.GetTranslatedString("MenuRegion"));
-            vars.Add("MenuUser", translator.GetTranslatedString("MenuUser"));
-            vars.Add("MenuChat", translator.GetTranslatedString("MenuChat"));
-            vars.Add("MenuHelp", translator.GetTranslatedString("MenuHelp"));
-
-            // Tooltips Menu Buttons
-            vars.Add("TooltipsMenuHome", translator.GetTranslatedString("TooltipsMenuHome"));
-            vars.Add("TooltipsMenuLogin", translator.GetTranslatedString("TooltipsMenuLogin"));
-            vars.Add("TooltipsMenuRegister", translator.GetTranslatedString("TooltipsMenuRegister"));
-            vars.Add("TooltipsMenuForgotPass", translator.GetTranslatedString("TooltipsMenuForgotPass"));
-            vars.Add("TooltipsMenuNews", translator.GetTranslatedString("TooltipsMenuNews"));
-            vars.Add("TooltipsMenuWorld", translator.GetTranslatedString("TooltipsMenuWorld"));
-            vars.Add("TooltipsMenuRegion", translator.GetTranslatedString("TooltipsMenuRegion"));
-            vars.Add("TooltipsMenuUser", translator.GetTranslatedString("TooltipsMenuUser"));
-            vars.Add("TooltipsMenuChat", translator.GetTranslatedString("TooltipsMenuChat"));
-            vars.Add("TooltipsMenuHelp", translator.GetTranslatedString("TooltipsMenuHelp"));
 
             // Tooltips Urls
             vars.Add("TooltipsWelcomeScreen", translator.GetTranslatedString("TooltipsWelcomeScreen"));
@@ -170,6 +146,14 @@ namespace Aurora.Modules.Web
             vars.Add("Maintenance", false);
             vars.Add("NoMaintenance", true);
             return vars;
+        }
+
+        private string GetTranslatedString(ITranslator translator, string name, GridPage page, bool isTooltip)
+        {
+            string retVal = translator.GetTranslatedString(name);
+            if (retVal == "UNKNOWN CHARACTER")
+                return isTooltip ? page.MenuToolTip : page.MenuTitle;
+            return retVal;
         }
 
         public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)

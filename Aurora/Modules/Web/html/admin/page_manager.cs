@@ -113,6 +113,15 @@ namespace Aurora.Modules.Web
                 vars.Add("RequiresLogoutNo", "");
                 vars.Add("RequiresAdminYes", "");
                 vars.Add("RequiresAdminNo", "");
+
+                pages = new List<Dictionary<string, object>> { new Dictionary<string, object> { { "Value", "Top Level" }, 
+                    { "Name", translator.GetTranslatedString("TopLevel") }, { "PageSelected", "" } } };
+                foreach (GridPage p in allPages)
+                {
+                    pages.Add(new Dictionary<string, object> { { "Value", p.Location }, 
+                    { "Name", p.Location }, { "PageSelected", "" } });
+                }
+                vars.Add("ParentPagesList", pages);
             }
             if (requestParameters.ContainsKey("SaveMenuItem"))
             {
