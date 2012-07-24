@@ -61,13 +61,17 @@
 		}
 		//load selected section
 		var pageName = result["page"];
+		var found = new Boolean(0);
 		switch(pageName){
 {MenuItemsArrayBegin}
 			case "{MenuItemID}":
 				content.load("{MenuItemLocation}" + window.location.search, hideLoading);
+				found = new Boolean(1);
 				break;
 {MenuItemsArrayEnd}
 		}
+		if(found == 0)
+			content.load("home.html" + window.location.search, hideLoading);
 
 		//show loading bar
 		function showLoading(){
@@ -83,24 +87,6 @@
 		};
 	});
     </script>
-	
-    <!-- Menu Effect Style show/hidden
-    <script language="javascript" type="text/javascript">
-    function mainmenu(){$('#menu ul').css({display: 'none'}); // Opera Fix
-    $('#menu li').hover(function(){$(this).find('ul:first').css({visibility: 'visible',display: 'none'}).show(400);},
-    function(){$(this).find('ul:first').css({visibility: 'hidden'}).show(400);;});}
-    $(document).ready(function(){mainmenu();});
-    </script>
-    -->
-
-    <!--  Menu Effect Style slide Toggle
-    <script language="javascript" type="text/javascript">
-    function mainmenu() {$('#menu ul').css({display: 'none'}); // Opera Fix
-    $('#menu li').hover(function (){$('ul:first', this).stop(true, true).slideToggle("200");},
-    function (){$('ul:first', this).stop(true, true).slideToggle("200");});}
-    $(document).ready(function(){mainmenu();});
-    </script>
-	-->
 
     <!-- Menu Effect Style slide Up/slide Down -->
     <script language="javascript" type="text/javascript">
@@ -109,24 +95,6 @@
     function (){$('ul:first', this).stop(true, true).slideUp(200);});}
     $(document).ready(function(){mainmenu();});
     </script>
-
-	<!-- slide show -->
-	<script type="text/javascript" src="javascripts/jquery.cycle.lite.js"></script>
-	<script type="text/javascript" src="javascripts/jquery.easing.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function() {
-			$('.slideshow').cycle({
-			// Transitions Type:
-			// blindX, blindY, blindZ, cover, curtainX, curtainY, fade, fadeZoom, growX, growY,
-			// scrollUp, scrollDown, scrollLeft, scrollRight, scrollHorz, scrollVert, shuffle,
-			// slideX, slideY, toss, turnUp, turnDown, turnLeft, turnRight, uncover, wipe, zoom
-			// Simple usage: (Need jquery.cycle.lite.js and jquery.easing.js)
-			fx: 'fade', speed:  5000
-			// Advanced usage: (Need jquery.cycle.all.js and jquery.easing.js)
-			// fx: 'shuffle', shuffle: {top: -25, left:  -250}, easing: 'easeInOutBack', delay: -2000, speed: 1000
-		});
-	});
-	</script>
 </head>
 
 <body>
@@ -164,25 +132,6 @@
 	<p class=jclock1><span id=jclock1></span></p>
 	
 	<div id="content">
-
-	<div class="slideshow">
-		<img src="images/screenshots/welcome1.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome1.jpg" />
-		<img src="images/screenshots/welcome2.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome2.jpg" />
-		<img src="images/screenshots/welcome3.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome3.jpg" />
-		<img src="images/screenshots/welcome4.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome4.jpg" />
-	</div>
-	
-	<h2>{SystemName} &rarr; {HomeText}</h2> <!-- &rArr; -->
-	<p class=textsize>{WelcomeToText} {SystemName}</p>
-{IsAdminAuthenticatedBegin}
-	<p class=textsize>{PagesUpdateRequired}</p>
-	<p class=textsize>{SettingsUpdateRequired}</p>
-{IsAdminAuthenticatedEnd}
-	<p class=textsize>{HomeTextWelcome}</p>
-	<p>{HomeTextTips}:
-		<a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
-		<a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
-		<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->	
 	</div>
 	
 	<span class="clear"></span>
