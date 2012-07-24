@@ -1,4 +1,5 @@
 <!-- params to replace
+
 {SystemURL}
 {SystemName}
 {Days}
@@ -23,7 +24,6 @@
 {UserDOBText}              Your Date Of Birth
 {UserEmailText}            Your Email
 {Submit}                   Submit
-
 -->
 
 <h2>{SystemName}: {RegistrationText}</h2>
@@ -88,7 +88,7 @@
     </tr>
     <tr>
       <td class="register_left"><p>{UserDOBText}</p></td>
-      <td class="register_right" >
+      <td class="register_right">
 	    <select id="UserDOBMonth" require="true" name='UserDOBMonth'>			
 {MonthsArrayBegin}
 		  <option value="{Value}">{Value}</option>
@@ -115,7 +115,7 @@
       <td class="register_right" colspan="3"><input label="UserEmail" id="UserEmail" name="UserEmail" type="text" size="40" maxlength="40" value=""></td>
     </tr>
     <tr>
-      <td class="register_left" colspan="4" valign="top">
+      <td class="register_left" colspan="3" valign="top">
 {AvatarArchiveArrayBegin}
 	  <div class="avatar_archive_screenshot">
 	    <label for="{AvatarArchiveName}">{AvatarArchiveName}</label>
