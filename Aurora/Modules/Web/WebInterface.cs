@@ -726,6 +726,7 @@ namespace Aurora.Modules.Web
         public uint LastPagesVersionUpdateIgnored = 0;
         public uint LastSettingsVersionUpdateIgnored = 0;
         public bool HideLanguageTranslatorBar = false;
+        public bool HideStyleBar = false;
 
         public GridSettings() { }
         public GridSettings(OSD map) { FromOSD(map as OSDMap); }
@@ -736,6 +737,7 @@ namespace Aurora.Modules.Web
             LastPagesVersionUpdateIgnored = map["LastPagesVersionUpdateIgnored"];
             LastSettingsVersionUpdateIgnored = map["LastSettingsVersionUpdateIgnored"];
             HideLanguageTranslatorBar = map["HideLanguageTranslatorBar"];
+            HideStyleBar = map["HideStyleBar"];
         }
 
         public override OSDMap ToOSD()
@@ -746,6 +748,8 @@ namespace Aurora.Modules.Web
             map["LastPagesVersionUpdateIgnored"] = LastPagesVersionUpdateIgnored;
             map["LastSettingsVersionUpdateIgnored"] = LastSettingsVersionUpdateIgnored;
             map["HideLanguageTranslatorBar"] = HideLanguageTranslatorBar;
+            map["HideStyleBar"] = HideStyleBar;
+
             return map;
         }
     }

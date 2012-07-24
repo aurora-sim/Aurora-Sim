@@ -38,6 +38,7 @@ namespace Aurora.Modules.Web
                 settings.MapCenter.X = int.Parse(requestParameters["GridCenterX"].ToString());
                 settings.MapCenter.Y = int.Parse(requestParameters["GridCenterY"].ToString());
                 settings.HideLanguageTranslatorBar = requestParameters["HideLanguageBar"].ToString() == "1";
+                settings.HideStyleBar = requestParameters["HideStyleBar"].ToString() == "1";
                 connector.AddGeneric(UUID.Zero, "WebSettings", "Settings", settings.ToOSD());
             }
             else if (requestParameters.ContainsKey("IgnorePagesUpdates"))
@@ -54,6 +55,8 @@ namespace Aurora.Modules.Web
             vars.Add("GridCenterY", settings.MapCenter.Y);
             vars.Add("HideLanguageBarNo", !settings.HideLanguageTranslatorBar ? "selected=\"selected\"" : "");
             vars.Add("HideLanguageBarYes", settings.HideLanguageTranslatorBar ? "selected=\"selected\"" : "");
+            vars.Add("HideStyleBarNo", !settings.HideStyleBar ? "selected=\"selected\"" : "");
+            vars.Add("HideStyleBarYes", settings.HideStyleBar ? "selected=\"selected\"" : "");
             vars.Add("IgnorePagesUpdates", PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored) ? "" : "checked");
             vars.Add("IgnoreSettingsUpdates", settings.LastSettingsVersionUpdateIgnored != SettingsMigrator.CurrentVersion ? "" : "checked");
 
@@ -63,6 +66,7 @@ namespace Aurora.Modules.Web
             vars.Add("GridCenterXText", translator.GetTranslatedString("GridCenterXText"));
             vars.Add("GridCenterYText", translator.GetTranslatedString("GridCenterYText"));
             vars.Add("HideLanguageBarText", translator.GetTranslatedString("HideLanguageBarText"));
+            vars.Add("HideStyleBarText", translator.GetTranslatedString("HideStyleBarText"));
             vars.Add("Save", translator.GetTranslatedString("Save"));
             vars.Add("No", translator.GetTranslatedString("No"));
             vars.Add("Yes", translator.GetTranslatedString("Yes"));

@@ -619,6 +619,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Top Level";
                 case "HideLanguageBarText":
                     return "Hide Language Selection Bar";
+                case "HideStyleBarText":
+                    return "Hide Style Selection Bar";
             }
             return "UNKNOWN CHARACTER";
         }

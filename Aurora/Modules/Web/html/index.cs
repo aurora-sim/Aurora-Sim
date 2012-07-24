@@ -163,8 +163,9 @@ namespace Aurora.Modules.Web
                 vars.Add("SettingsUpdateRequired", translator.GetTranslatedString("Settings") + " " + translator.GetTranslatedString("DefaultsUpdated"));
             else
                 vars.Add("SettingsUpdateRequired", "");
-
-            vars.Add("ShowLanguageTranslatorBar", settings.HideLanguageTranslatorBar);
+            
+            vars.Add("ShowLanguageTranslatorBar", !settings.HideLanguageTranslatorBar);
+            vars.Add("ShowStyleBar", !settings.HideStyleBar);
 
             vars.Add("Maintenance", false);
             vars.Add("NoMaintenance", true);
