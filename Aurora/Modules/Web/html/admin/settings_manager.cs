@@ -37,6 +37,7 @@ namespace Aurora.Modules.Web
                 changed = true;
                 settings.MapCenter.X = int.Parse(requestParameters["GridCenterX"].ToString());
                 settings.MapCenter.Y = int.Parse(requestParameters["GridCenterY"].ToString());
+                settings.HideLanguageTranslatorBar = requestParameters["HideLanguageBar"].ToString() == "1";
                 connector.AddGeneric(UUID.Zero, "WebSettings", "Settings", settings.ToOSD());
             }
             else if (requestParameters.ContainsKey("IgnorePagesUpdates"))
@@ -51,6 +52,8 @@ namespace Aurora.Modules.Web
             }
             vars.Add("GridCenterX", settings.MapCenter.X);
             vars.Add("GridCenterY", settings.MapCenter.Y);
+            vars.Add("HideLanguageBarNo", !settings.HideLanguageTranslatorBar ? "selected=\"selected\"" : "");
+            vars.Add("HideLanguageBarYes", settings.HideLanguageTranslatorBar ? "selected=\"selected\"" : "");
             vars.Add("IgnorePagesUpdates", PagesMigrator.CheckWhetherIgnoredVersionUpdate(settings.LastPagesVersionUpdateIgnored) ? "" : "checked");
             vars.Add("IgnoreSettingsUpdates", settings.LastSettingsVersionUpdateIgnored != SettingsMigrator.CurrentVersion ? "" : "checked");
 
@@ -59,7 +62,10 @@ namespace Aurora.Modules.Web
             vars.Add("IgnoreSettingsUpdatesText", translator.GetTranslatedString("IgnoreSettingsUpdatesText"));
             vars.Add("GridCenterXText", translator.GetTranslatedString("GridCenterXText"));
             vars.Add("GridCenterYText", translator.GetTranslatedString("GridCenterYText"));
+            vars.Add("HideLanguageBarText", translator.GetTranslatedString("HideLanguageBarText"));
             vars.Add("Save", translator.GetTranslatedString("Save"));
+            vars.Add("No", translator.GetTranslatedString("No"));
+            vars.Add("Yes", translator.GetTranslatedString("Yes"));
             vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 
             return vars;

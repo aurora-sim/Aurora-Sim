@@ -617,6 +617,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Cannot set menu item as a child to itself.";
                 case "TopLevel":
                     return "Top Level";
+                case "HideLanguageBarText":
+                    return "Hide Language Selection Bar";
             }
             return "UNKNOWN CHARACTER";
         }
