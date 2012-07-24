@@ -78,17 +78,18 @@ namespace OpenSim.Services.Interfaces
 
         public string FirstName
         {
-            get { return Name.Split(' ')[0]; }
+            get {
+                int pos = Name.LastIndexOf(' ');
+                return pos > -1 ? Name.Substring(0, pos) : Name;
+            }
         }
 
         public string LastName
         {
             get
             {
-                string[] split = Name.Split(' ');
-                if (split.Length > 1)
-                    return Name.Split(' ')[1];
-                else return "";
+                int pos = Name.LastIndexOf(' ');
+                return pos > -1 ? Name.Substring(pos + 1) : "";
             }
         }
 
@@ -120,7 +121,7 @@ namespace OpenSim.Services.Interfaces
         public override void FromKVP(Dictionary<string, object> kvp)
         {
             if (kvp.ContainsKey("FirstName") && kvp.ContainsKey("LastName"))
-                Name = kvp["FirstName"] + " " + kvp["LastName"];
+                Name = (kvp["FirstName"] + " " + kvp["LastName"]).Trim();
             if (kvp.ContainsKey("Name"))
                 Name = kvp["Name"].ToString();
             if (kvp.ContainsKey("Email"))
@@ -196,7 +197,7 @@ namespace OpenSim.Services.Interfaces
         public override void FromOSD(OSDMap map)
         {
             if (map.ContainsKey("FirstName") && map.ContainsKey("LastName"))
-                Name = map["FirstName"] + " " + map["LastName"];
+                Name = (map["FirstName"] + " " + map["LastName"]).Trim();
             if (map.ContainsKey("Name"))
                 Name = map["Name"].ToString();
             if (map.ContainsKey("Email"))
@@ -351,7 +352,12 @@ namespace OpenSim.Services.Interfaces
     public interface IUserAccountData : IAuroraDataPlugin
     {
         string Realm { get; }
-        UserAccount[] Get(string[] fields, string[] values);
+        /// <summary>
+        /// returns a list of user account objects matching the values dictionary (which is generally passed onto QueryFilter)
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        List<UserAccount> Get(Dictionary<string, string> values);
         bool Store(UserAccount data);
         bool DeleteAccount(UUID userID, bool archiveInformation);
         UserAccount[] GetUsers(UUID scopeID, string query);

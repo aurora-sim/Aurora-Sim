@@ -128,46 +128,7 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
         {
-            UserAccount account;
-            if (m_cache.Get(firstName + " " + lastName, out account))
-                return account;
-
-            object remoteValue = DoRemote(scopeID, firstName, lastName);
-            if (remoteValue != null || m_doRemoteOnly)
-            {
-                UserAccount acc = (UserAccount)remoteValue;
-                if (remoteValue != null)
-                    m_cache.Cache(acc.PrincipalID, acc);
-
-                return acc;
-            }
-
-            UserAccount[] d;
-
-            if (scopeID != UUID.Zero)
-            {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "FirstName", "LastName"},
-                    new[] {scopeID.ToString(), firstName, lastName});
-                if (d.Length < 1)
-                {
-                    d = m_Database.Get(
-                        new[] {"ScopeID", "FirstName", "LastName"},
-                        new[] {UUID.Zero.ToString(), firstName, lastName});
-                }
-            }
-            else
-            {
-                d = m_Database.Get(
-                    new[] {"FirstName", "LastName"},
-                    new[] {firstName, lastName});
-            }
-
-            if (d.Length < 1)
-                return null;
-
-            CacheAccount(d[0]);
-            return d[0];
+            return GetUserAccount(scopeID, (firstName + " " + lastName).Trim());
         }
 
         public void CacheAccount(UserAccount account)
@@ -194,27 +155,27 @@ namespace OpenSim.Services.UserAccountService
                 return acc;
             }
 
-            UserAccount[] d;
+            List<UserAccount> d = new List<UserAccount>();
+            Dictionary<string, string> filter = new Dictionary<string, string>();
+            filter["Name"] = name;
 
             if (scopeID != UUID.Zero)
             {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "Name"},
-                    new[] {scopeID.ToString(), name});
+                filter["ScopeID"] = scopeID.ToString();
+                d = m_Database.Get(filter);
+                if (d.Count < 1)
+                {
+                    filter["ScopeID"] = UUID.Zero.ToString();
+                    d = m_Database.Get(filter);
+                }
             }
             else
             {
-                d = m_Database.Get(
-                    new[] {"Name"},
-                    new[] {name});
+                d = m_Database.Get(filter);
             }
 
-            if (d.Length < 1)
+            if (d.Count < 1)
             {
-                string[] split = name.Split(' ');
-                if (split.Length == 2)
-                    return GetUserAccount(scopeID, split[0], split[1]);
-
                 return null;
             }
 
@@ -239,28 +200,26 @@ namespace OpenSim.Services.UserAccountService
                 return acc;
             }
 
-            UserAccount[] d;
+            List<UserAccount> d = new List<UserAccount>();
+            Dictionary<string, string> filter = new Dictionary<string, string>();
+            filter["PrincipalID"] = principalID.ToString();
 
             if (scopeID != UUID.Zero)
             {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "PrincipalID"},
-                    new[] {scopeID.ToString(), principalID.ToString()});
-                if (d.Length < 1)
+                filter["ScopeID"] = scopeID.ToString();
+                d = m_Database.Get(filter);
+                if (d.Count < 1)
                 {
-                    d = m_Database.Get(
-                        new[] {"ScopeID", "PrincipalID"},
-                        new[] {UUID.Zero.ToString(), principalID.ToString()});
+                    filter["ScopeID"] = UUID.Zero.ToString();
+                    d = m_Database.Get(filter);
                 }
             }
             else
             {
-                d = m_Database.Get(
-                    new[] {"PrincipalID"},
-                    new[] {principalID.ToString()});
+                d = m_Database.Get(filter);
             }
 
-            if (d.Length < 1)
+            if (d.Count < 1)
             {
                 m_cache.Cache(principalID, null);
                 return null;
