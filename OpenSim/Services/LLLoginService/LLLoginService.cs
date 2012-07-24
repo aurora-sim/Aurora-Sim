@@ -278,7 +278,8 @@ namespace OpenSim.Services.LLLoginService
 
         public bool VerifyClient(UUID AgentID, string name, string authType, string passwd, UUID scopeID)
         {
-            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}", AgentID);
+            MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: Login verification request for {0}", AgentID == UUID.Zero ?
+                name : AgentID.ToString());
 
             //
             // Get the account and check that it exists
