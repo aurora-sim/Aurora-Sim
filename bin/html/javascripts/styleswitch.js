@@ -1,7 +1,7 @@
 (function($)
 {
 	$(document).ready(function() {
-		$('.styleswitch').click(function()
+		$('a.styleswitch').click(function()
 		{
 			switchStylestyle(this.getAttribute("rel"));
 			return false;
