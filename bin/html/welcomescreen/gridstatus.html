@@ -1,14 +1,5 @@
 <!doctype html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>{SystemName}: Welcome Screen</title>
-	<meta name="keywords" content="{SystemName}" />
-	<meta name="description" content="{SystemName}"/>
-	<link rel="shortcut icon" href="../images/icons/favicon.ico" />
-	
 <!---
-
  To replace:
  SystemURL
  SystemName
@@ -29,16 +20,23 @@
  CurrencyActiveLabel  Currency
  CurrencyActive       Enabled or Disabled
  -->
+ 
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{SystemName}: Welcome Screen</title>
+  <meta name="keywords" content="{SystemName}" />
+  <meta name="description" content="{SystemName}"/>
+  <link rel="shortcut icon" href="../images/icons/favicon.ico" />
 
-<!-- StyleSwitch -->
-<script src="../javascripts/styleswitch.js" type="text/javascript"></script>
-<link href="../css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
-<link href="../css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
-<link href="../css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
-<link href="../css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
-<link href="../css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
+  <!-- StyleSwitch -->
+  <script src="../javascripts/styleswitch.js" type="text/javascript"></script>
+  <link href="../css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
+  <link href="../css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
+  <link href="../css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
+  <link href="../css/styles4.css" rel="alternate stylesheet" type="text/css" title="styles4" media="screen" />
+  <link href="../css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
 </head>
-
 <body class="gridstatus">
 <div id=gridstatus>
 <div class=headerthread>
@@ -74,7 +72,7 @@
     </tr>
             
     <tr class=even>
-      <td class=gridtext vAlign=top noWrap align=left><a href="{SystemURL}/welcomescreen/" target="_blank">{OnlineNow}</a>:</td>
+      <td class=gridtext vAlign=top noWrap align=left><a href="{SystemURL}/index.html?page=online_users" target="_blank">{OnlineNow}</a>:</td>
       <td class=gridtext vAlign=top noWrap align=right width="1%"><strong class={GridOnline}>{OnlineNowCount}</strong></td>
     </tr>                                          
 
