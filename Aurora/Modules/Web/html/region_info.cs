@@ -106,7 +106,7 @@ namespace Aurora.Modules.Web
                 if (webTextureService != null && region.TerrainMapImage != UUID.Zero)
                     vars.Add("RegionImageURL", webTextureService.GetTextureURL(region.TerrainMapImage));
                 else
-                    vars.Add("RegionImageURL", "images/info.jpg");
+                    vars.Add("RegionImageURL", "images/icons/no_picture.jpg");
 
                 vars.Add("RegionInformationText", translator.GetTranslatedString("RegionInformationText"));
                 vars.Add("OwnerNameText", translator.GetTranslatedString("OwnerNameText"));
@@ -132,9 +132,10 @@ namespace Aurora.Modules.Web
                 vars.Add("de", translator.GetTranslatedString("de"));
                 vars.Add("it", translator.GetTranslatedString("it"));
                 vars.Add("es", translator.GetTranslatedString("es"));
-                }
 
-            return vars;
+            }
+
+			return vars;
         }
 
         public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)

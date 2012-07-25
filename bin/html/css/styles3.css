@@ -545,7 +545,7 @@ label {display:inline-block;}
 	margin: 10px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
-    -khtml-border-radius: 0px;
+    -khtml-border-radius: 5px;
     border-radius: 5px;
     -webkit-box-shadow: #222 0 0 .25em;
     -moz-box-shadow: #222 0 0 .25em;
@@ -794,3 +794,57 @@ div#regionbox:hover, div#infobox:hover, div#news:hover, div#gridstatus:hover {
 	border-radius: 5px;
 	behavior: url(../css/pie.htc);
 }
+
+/* ColorBox Core Style */
+#colorbox, #cboxOverlay, #cboxWrapper {position:absolute; top:0; left:0; z-index:9999; overflow:hidden;}
+#cboxOverlay{position:fixed; width:100%; height:100%;}
+#cboxMiddleLeft, #cboxBottomLeft{clear:left;}
+#cboxContent{position:relative;}
+#cboxLoadedContent{overflow:auto;}
+#cboxTitle{margin:0;}
+#cboxLoadingOverlay, #cboxLoadingGraphic{position:absolute; top:0; left:0; width:100%; height:100%;}
+#cboxPrevious, #cboxNext, #cboxClose, #cboxSlideshow{cursor:pointer;}
+.cboxPhoto{float:left; margin:auto; border:0; display:block; max-width:none;}
+.cboxIframe{width:100%; height:100%; display:block; border:0;}
+#colorbox, #cboxContent, #cboxLoadedContent{box-sizing:content-box;}
+
+/* ColorBox User Style */
+#cboxOverlay{background:#263f83;}
+#colorbox {
+	background: #263f83 url(../images/icons/bg_TransStripe1.gif);
+	border: 1px solid #263f83;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #222 0 0 .25em;
+    -moz-box-shadow: #222 0 0 .25em;
+    box-shadow: #222 0 0 .25em;
+	behavior: url(../css/pie.htc);
+}
+
+#colorbox img{
+	border: 1px solid #222;
+    border-radius: 7px;
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    -khtml-border-radius: 7px;
+    -webkit-box-shadow: #222 0 0 .25em;
+    -moz-box-shadow: #222 0 0 .25em;
+    box-shadow: #222 0 0 .25em;
+	behavior: url(../css/pie.htc);
+}
+
+#cboxContent{overflow:hidden; margin: 10px;}
+#colorbox {background:#263f83;}
+.cboxIframe{background:#263f83;}
+#cboxError{padding:10px; border:1px solid #ccc;}
+#cboxLoadedContent{margin-bottom:20px;}
+
+#cboxTitle{position:absolute; bottom:0px; left:0; text-align: center; width:100%; color:#7E7E7E;}
+#cboxCurrent{position:absolute; bottom:0px; left:100px; color:#7E7E7E;}
+#cboxSlideshow{position:absolute; bottom:0px; right:42px; color:#7E7E7E;}
+#cboxPrevious{position:absolute; bottom:0px; left:0; color:#7E7E7E;}
+#cboxNext{position:absolute; bottom:0px; left:63px; color:#7E7E7E;}
+#cboxLoadingOverlay{background:#263f83 url(../images/icons/loading.gif) no-repeat 5px 5px;}
+#cboxClose {position:absolute; bottom:0px; right:0px; display:block; color:#7E7E7E;}

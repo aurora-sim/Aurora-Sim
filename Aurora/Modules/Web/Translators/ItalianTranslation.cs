@@ -247,7 +247,7 @@ namespace Aurora.Modules.Web.Translators
                 case "MenuSettingsManager":
                     return "Modifica delle Impostazioni";
                 case "MenuManager":
-                    return "Impostaioni Amministratore";
+                    return "Ammin";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -295,7 +295,7 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuSettingsManager":
                     return "Manager delle impostazioni";
                 case "TooltipsMenuManager":
-                    return "Ammin";
+                    return "Impostaioni Amministratore";
 
 				// Urls
                 case "WelcomeScreen":
@@ -375,7 +375,9 @@ namespace Aurora.Modules.Web.Translators
                     return "Phoenix Viewer";
                 case "SingularityViewer":
                     return "Singularity Viewer";
-				
+                case "ZenViewer":
+                    return "Zen Viewer";
+					
                 //Logout page
                 case "LoggedOutSuccessfullyText":
                     return "Sei stato disconnesso.";
@@ -611,6 +613,22 @@ namespace Aurora.Modules.Web.Translators
                     return "Novembre";
                 case "December":
                     return "Dicembre";
+
+				// ColorBox
+                case "ColorBoxImageText":
+                    return "Image";
+                case "ColorBoxOfText":
+                    return "of";
+                case "ColorBoxPreviousText":
+                    return "Previous";
+                case "ColorBoxNextText":
+                    return "Next";
+                case "ColorBoxCloseText":
+                    return "Close";
+                case "ColorBoxStartSlideshowText":
+                    return "Start Slide Show";
+                case "ColorBoxStopSlideshowText":
+                    return "Stop Slide Show";
 
             }
             return "UNKNOWN CHARACTER";

@@ -12,10 +12,9 @@ $(document).ready(function(){
 		switch(this.id){
 {MenuItemsArrayBegin}
 			case "{MenuItemID}":
-				content.slideUp('swing',  function()
-				{ 
-				content.load("{MenuItemLocation}" + window.location.search, hideLoading);
-				content.slideDown();
+				content.slideUp('swing',  function() { 
+				    content.load("{MenuItemLocation}" + window.location.search, hideLoading);
+				    content.slideDown();
 				});
 				
 				break;

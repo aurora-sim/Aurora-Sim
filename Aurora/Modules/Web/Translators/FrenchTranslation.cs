@@ -14,11 +14,11 @@ namespace Aurora.Modules.Web.Translators
             switch (key)
             {
                 case "GridStatus":
-                    return "ETAT DE LA GRILLE";
+                    return "Etat de la Grille";
                 case "Online":
-                    return "EN LIGNE";
+                    return "En Ligne";
                 case "Offline":
-                    return "HORS LIGNE";
+                    return "Hors Ligne";
                 case "TotalUserCount":
                     return "Nombre total d'utilisateurs";
                 case "TotalRegionCount":
@@ -366,17 +366,19 @@ namespace Aurora.Modules.Web.Translators
                 case "HelpViewersConfigText":
                     return "Aide pour la configuration des Viewers (Clients)";
                 case "AngstormViewer":
-                    return "Angstorm Viewers (Clients)";
+                    return "Angstorm Viewer (Client)";
                 case "VoodooViewer":
-                    return "Voodoo Viewers (Clients)";
+                    return "Voodoo Viewer (Client)";
                 case "AstraViewer":
-                    return "Astra Viewers (Clients)";
+                    return "Astra Viewer (Client)";
                 case "ImprudenceViewer":
-                    return "Imprudence Viewers (Clients)";
+                    return "Imprudence Viewer (Client)";
                 case "PhoenixViewer":
-                    return "Phoenix Viewers (Clients)";
+                    return "Phoenix Viewer (Client)";
                 case "SingularityViewer":
-                    return "Singularity Viewers (Clients)";
+                    return "Singularity Viewer (Client)";
+                case "ZenViewer":
+                    return "Zen Viewer (Client)";
 				
                 //Logout page
                 case "LoggedOutSuccessfullyText":
@@ -617,6 +619,22 @@ namespace Aurora.Modules.Web.Translators
                     return "Novembre";
                 case "December":
                     return "Decembre";
+					
+				// ColorBox
+                case "ColorBoxImageText":
+                    return "Image";
+                case "ColorBoxOfText":
+                    return "sur";
+                case "ColorBoxPreviousText":
+                    return "Précédent";
+                case "ColorBoxNextText":
+                    return "Suivant";
+                case "ColorBoxCloseText":
+                    return "Fermer";
+                case "ColorBoxStartSlideshowText":
+                    return "Démarrer Slide Show";
+                case "ColorBoxStopSlideshowText":
+                    return "Arrêter Slide Show";
 	
             }
             return "UNKNOWN CHARACTER";

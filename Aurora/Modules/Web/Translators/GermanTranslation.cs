@@ -14,11 +14,11 @@ namespace Aurora.Modules.Web.Translators
             switch (key)
             {
                 case "GridStatus":
-                    return "STATUS";
+                    return "Grid Status";
                 case "Online":
-                    return "ONLINE";
+                    return "Online";
                 case "Offline":
-                    return "OFFLINE";
+                    return "Offline";
                 case "TotalUserCount":
                     return "Einwohner";
                 case "TotalRegionCount":
@@ -249,7 +249,7 @@ namespace Aurora.Modules.Web.Translators
                 case "MenuSettingsManager":
                     return "Settings Manager";
                 case "MenuManager":
-                    return "Admin Management";
+                    return "Admin";
 
 				// Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -297,7 +297,7 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuSettingsManager":
                     return "Settings Manager";
                 case "TooltipsMenuManager":
-                    return "Admin";
+                    return "Admin Management";
 
 				// Urls
                 case "WelcomeScreen":
@@ -377,7 +377,9 @@ namespace Aurora.Modules.Web.Translators
                     return "Phoenix Viewer";
                 case "SingularityViewer":
                     return "Singularity Viewer";
-				
+                case "ZenViewer":
+                    return "Zen Viewer";
+					
                 //Logout page
                 case "LoggedOutSuccessfullyText":
                     return "You have been logged out successfully.";
@@ -617,6 +619,22 @@ namespace Aurora.Modules.Web.Translators
                     return "November";
                 case "December":
                     return "December";
+
+				// ColorBox
+                case "ColorBoxImageText":
+                    return "Image";
+                case "ColorBoxOfText":
+                    return "of";
+                case "ColorBoxPreviousText":
+                    return "Previous";
+                case "ColorBoxNextText":
+                    return "Next";
+                case "ColorBoxCloseText":
+                    return "Close";
+                case "ColorBoxStartSlideshowText":
+                    return "Start Slide Show";
+                case "ColorBoxStopSlideshowText":
+                    return "Stop Slide Show";
 
             }
             return "UNKNOWN CHARACTER";

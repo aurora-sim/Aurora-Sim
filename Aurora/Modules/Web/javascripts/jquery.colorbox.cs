@@ -4,10 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {
-    public class HelpdMain : IWebInterfacePage
+    public class JQueryColorBoxPage : IWebInterfacePage
     {
         public string[] FilePath
         {
@@ -15,7 +19,7 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/help.html"
+                           "html/javascripts/jquery.colorbox.js"
                        };
             }
         }
@@ -26,18 +30,17 @@ namespace Aurora.Modules.Web
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
             OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
-			var vars = new Dictionary<string, object>();
-			vars.Add("HelpText", translator.GetTranslatedString("HelpText"));
-			vars.Add("HelpViewersConfigText", translator.GetTranslatedString("HelpViewersConfigText"));
-			vars.Add("AngstormViewer", translator.GetTranslatedString("AngstormViewer"));
-			vars.Add("VoodooViewer", translator.GetTranslatedString("VoodooViewer"));
-			vars.Add("AstraViewer", translator.GetTranslatedString("AstraViewer"));
-			vars.Add("ImprudenceViewer", translator.GetTranslatedString("ImprudenceViewer"));
-			vars.Add("PhoenixViewer", translator.GetTranslatedString("PhoenixViewer"));
-			vars.Add("SingularityViewer", translator.GetTranslatedString("SingularityViewer"));
-			vars.Add("ZenViewer", translator.GetTranslatedString("ZenViewer"));
+            var vars = new Dictionary<string, object>();
+			
+			vars.Add("ColorBoxImageText", translator.GetTranslatedString("ColorBoxImageText"));
+			vars.Add("ColorBoxOfText", translator.GetTranslatedString("ColorBoxOfText"));
+			vars.Add("ColorBoxPreviousText", translator.GetTranslatedString("ColorBoxPreviousText"));
+			vars.Add("ColorBoxNextText", translator.GetTranslatedString("ColorBoxNextText"));
+			vars.Add("ColorBoxCloseText", translator.GetTranslatedString("ColorBoxCloseText"));
+			vars.Add("ColorBoxStartSlideshowText", translator.GetTranslatedString("ColorBoxStartSlideshowText"));
+			vars.Add("ColorBoxStopSlideshowText", translator.GetTranslatedString("ColorBoxStopSlideshowText"));
 
-			return vars;			
+            return vars;
         }
 
         public bool AttemptFindPage(string filename, ref OSHttpResponse httpResponse, out string text)
