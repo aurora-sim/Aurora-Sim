@@ -299,7 +299,7 @@ namespace log4net.Appender
 		/// </remarks>
 		private static void CreateEventSource(string source, string logName, string machineName)
 		{
-#if NET_2_0
+#if NET_2_0 || NET_3_5 || NET_4_0
 			EventSourceCreationData eventSourceCreationData = new EventSourceCreationData(source, logName);
 			eventSourceCreationData.MachineName = machineName;
 			EventLog.CreateEventSource(eventSourceCreationData);

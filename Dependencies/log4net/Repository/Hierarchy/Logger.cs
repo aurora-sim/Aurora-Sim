@@ -432,10 +432,16 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+			// on .NET 2.0 (and higher) and Mono (all profiles), 
+			// exceptions that do not derive from System.Exception will be
+			// wrapped in a RuntimeWrappedException by the runtime, and as
+			// such will be catched by the catch clause above
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");
 			}
+#endif
 		}
 
 		/// <summary>
@@ -467,10 +473,16 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+			// on .NET 2.0 (and higher) and Mono (all profiles), 
+			// exceptions that do not derive from System.Exception will be
+			// wrapped in a RuntimeWrappedException by the runtime, and as
+			// such will be catched by the catch clause above
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");
 			}
+#endif
 		}
 
 		/// <summary>
@@ -505,10 +517,16 @@ namespace log4net.Repository.Hierarchy
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging", ex);
 			}
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+				// on .NET 2.0 (and higher) and Mono (all profiles), 
+				// exceptions that do not derive from System.Exception will be
+				// wrapped in a RuntimeWrappedException by the runtime, and as
+				// such will be catched by the catch clause above
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "Exception while logging");
 			}
+#endif
 			return false;
 		}
 

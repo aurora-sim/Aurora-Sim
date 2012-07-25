@@ -77,7 +77,7 @@ namespace log4net.Util.TypeConverters
 			{
 				try
 				{
-#if NET_2_0 || NETCF_2_0
+#if NET_2_0 || NETCF_2_0 || NET_4_0 || NET_3_5
 
 #if !NETCF_2_0
 					// Try an explicit parse of string representation of an IPAddress (v4 or v6)

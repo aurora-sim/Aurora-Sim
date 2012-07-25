@@ -320,8 +320,8 @@ namespace log4net.Appender
 				catch(Exception ex)
 				{
 					ErrorHandler.Error("Failed in DoAppend", ex);
-				}
-#if !MONO && !NET_2_0
+                }
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
 				// on .NET 2.0 (and higher) and Mono (all profiles), 
 				// exceptions that do not derive from System.Exception will be
 				// wrapped in a RuntimeWrappedException by the runtime, and as
@@ -332,7 +332,7 @@ namespace log4net.Appender
 					ErrorHandler.Error("Failed in DoAppend (unknown exception)");
 				}
 #endif
-				finally
+                finally
 				{
 					m_recursiveGuard = false;
 				}
@@ -428,7 +428,7 @@ namespace log4net.Appender
 				{
 					ErrorHandler.Error("Failed in Bulk DoAppend", ex);
 				}
-#if !MONO && !NET_2_0
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
 				// on .NET 2.0 (and higher) and Mono (all profiles), 
 				// exceptions that do not derive from System.Exception will be
 				// wrapped in a RuntimeWrappedException by the runtime, and as

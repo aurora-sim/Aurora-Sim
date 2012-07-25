@@ -24,7 +24,7 @@
 using System;
 using System.IO;
 
-#if NET_2_0
+#if NET_2_0 || NET_3_5 || NET_4_0
 using System.Net.Mail;
 #else
 using System.Web.Mail;
@@ -323,7 +323,7 @@ namespace log4net.Appender
 			set { m_mailPriority = value; }
 		}
 
-#if NET_2_0
+#if NET_2_0 || NET_3_5 || NET_4_0
         /// <summary>
         /// Enable or disable use of SSL when sending e-mail message
         /// </summary>
@@ -419,7 +419,7 @@ namespace log4net.Appender
 		/// <param name="messageBody">the body text to include in the mail</param>
 		virtual protected void SendEmail(string messageBody)
 		{
-#if NET_2_0
+#if NET_2_0 || NET_3_5 || NET_4_0
 			// .NET 2.0 has a new API for SMTP email System.Net.Mail
 			// This API supports credentials and multiple hosts correctly.
 			// The old API is deprecated.
@@ -571,7 +571,7 @@ namespace log4net.Appender
 
 		private MailPriority m_mailPriority = MailPriority.Normal;
 
-#if NET_2_0
+#if NET_2_0 || NET_3_5 || NET_4_0
         private bool m_enableSsl = false;
         private string m_replyTo;
 #endif

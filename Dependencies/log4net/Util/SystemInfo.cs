@@ -225,7 +225,7 @@ namespace log4net.Util
 			{
 #if NETCF_1_0
 				return System.Threading.Thread.CurrentThread.GetHashCode();
-#elif NET_2_0 || NETCF_2_0 || MONO_2_0
+#elif NET_2_0 || NETCF_2_0 || MONO_2_0 || NET_4_0 || NET_3_5
 				return System.Threading.Thread.CurrentThread.ManagedThreadId;
 #else
 				return AppDomain.GetCurrentThreadId();
@@ -851,7 +851,7 @@ namespace log4net.Util
 			{
 #if NETCF
 				// Configuration APIs are not suported under the Compact Framework
-#elif NET_2_0
+#elif NET_2_0 || NET_3_5 || NET_4_0
 				return ConfigurationManager.AppSettings[key];
 #else
 				return ConfigurationSettings.AppSettings[key];

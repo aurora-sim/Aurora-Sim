@@ -108,12 +108,18 @@ namespace log4net.Util
 			{
 				log4net.Util.LogLog.Warn(declaringType, "Exception while rendering format ["+format+"]", ex);
 				return StringFormatError(ex, format, args);
-			}
+            }
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+			// on .NET 2.0 (and higher) and Mono (all profiles), 
+			// exceptions that do not derive from System.Exception will be
+			// wrapped in a RuntimeWrappedException by the runtime, and as
+			// such will be catched by the catch clause above
 			catch
 			{
 				log4net.Util.LogLog.Warn(declaringType, "Exception while rendering format ["+format+"]");
 				return StringFormatError(null, format, args);
 			}
+#endif
 		}
 
 		/// <summary>
@@ -146,11 +152,17 @@ namespace log4net.Util
 				log4net.Util.LogLog.Error(declaringType, "INTERNAL ERROR during StringFormat error handling", ex);
 				return "<log4net.Error>Exception during StringFormat. See Internal Log.</log4net.Error>";
 			}
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+			// on .NET 2.0 (and higher) and Mono (all profiles), 
+			// exceptions that do not derive from System.Exception will be
+			// wrapped in a RuntimeWrappedException by the runtime, and as
+			// such will be catched by the catch clause above
 			catch
 			{
 				log4net.Util.LogLog.Error(declaringType, "INTERNAL ERROR during StringFormat error handling");
 				return "<log4net.Error>Exception during StringFormat. See Internal Log.</log4net.Error>";
 			}
+#endif
 		}
 
 		/// <summary>
@@ -206,10 +218,16 @@ namespace log4net.Util
 				{
 					buffer.Append("<Exception: ").Append(ex.Message).Append(">");
 				}
+#if !MONO && !NET_2_0 && !NET_3_5 && !NET_4_0
+				// on .NET 2.0 (and higher) and Mono (all profiles), 
+				// exceptions that do not derive from System.Exception will be
+				// wrapped in a RuntimeWrappedException by the runtime, and as
+				// such will be catched by the catch clause above
 				catch
 				{
 					buffer.Append("<Exception>");
 				}
+#endif
 			}
 		}
 
