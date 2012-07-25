@@ -475,15 +475,8 @@ namespace Aurora.Framework
 
         public static bool IsDate(string value)
         {
-            try
-            {
-                DateTime dt = DateTime.Parse(value);
-                return true;
-            }
-            catch (FormatException)
-            {
-                return false;
-            }
+            DateTime t;
+            return DateTime.TryParse(value, out t);
         }
 
         /// <summary>

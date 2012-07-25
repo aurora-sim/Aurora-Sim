@@ -124,7 +124,6 @@ namespace OpenSim.Services.MessagingService
                         //Register so that we have an internal message handler, but don't add the external handler
                 return;
             }
-            IConfig handlerConfig = config.Configs["Handlers"];
             m_registry.RequestModuleInterface<IGridRegistrationService>().RegisterModule(this);
         }
 

@@ -550,7 +550,7 @@ textures 1
 
         #region Wearables
 
-        private Dictionary<UUID, UUID> incomingLinks = new Dictionary<UUID, UUID>();
+        //private Dictionary<UUID, UUID> incomingLinks = new Dictionary<UUID, UUID>();
 
         public void NewAppearanceLink(InventoryItemBase item)
         {
@@ -719,24 +719,14 @@ textures 1
                 }
             }
 
-#if (!ISWIN)
-            foreach (AvatarWearingArgs.Wearable wear in e.NowWearing)
-            {
-                if (wear.Type < AvatarWearable.MAX_WEARABLES)
-                {
-                    /*if (incomingLinks.ContainsKey (wear.ItemID))
-                    {
-                        wear.ItemID = incomingLinks[wear.ItemID];
-                    }*/
-                    avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
-                }
-            }
-#else
             foreach (AvatarWearingArgs.Wearable wear in e.NowWearing.Where(wear => wear.Type < AvatarWearable.MAX_WEARABLES))
             {
+                /*if (incomingLinks.ContainsKey (wear.ItemID))
+                {
+                    wear.ItemID = incomingLinks[wear.ItemID];
+                }*/
                 avatAppearance.Wearables[wear.Type].Add(wear.ItemID, UUID.Zero);
             }
-#endif
 
             avatAppearance.GetAssetsFrom(appearance.Appearance);
 

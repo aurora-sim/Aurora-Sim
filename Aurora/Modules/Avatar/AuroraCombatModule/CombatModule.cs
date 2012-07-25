@@ -337,8 +337,8 @@ namespace Aurora.Modules.Combat
                 if (e == null)
                     return;
                 
-                CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
-                /*Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
+                /*CollisionEventUpdate collisionData = (CollisionEventUpdate) e;
+                Dictionary<uint, ContactPoint> coldata = collisionData.m_objCollisionList;
 
                 UUID killerObj = UUID.Zero;
                 foreach (uint localid in coldata.Keys)

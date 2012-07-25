@@ -629,7 +629,7 @@ namespace OpenSim.Services.CapsService
 
                     int physicsShapeType = inner_instance_list["physics_shape_type"].AsInteger();
                     int material = inner_instance_list["material"].AsInteger();
-                    int mesh = inner_instance_list["mesh"].AsInteger(); //?
+                    int mesh = inner_instance_list["mesh"].AsInteger();
 
                     UUID owner_id = m_service.AgentID;
 

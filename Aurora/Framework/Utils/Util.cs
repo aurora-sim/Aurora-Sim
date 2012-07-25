@@ -49,7 +49,6 @@ using System.Windows.Forms;
 using System.Xml;
 using Amib.Threading;
 using Nini.Config;
-using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using ReaderWriterLockSlim = System.Threading.ReaderWriterLockSlim;
@@ -934,32 +933,6 @@ namespace Aurora.Framework
                 Buffer.BlockCopy(readBuffer, 0, buffer, 0, totalBytesRead);
             }
             return buffer;
-        }
-
-        public static XmlRpcResponse XmlRpcCommand(string url, string methodName, params object[] args)
-        {
-            return SendXmlRpcCommand(url, methodName, args);
-        }
-
-        public static XmlRpcResponse SendXmlRpcCommand(string url, string methodName, object[] args)
-        {
-            XmlRpcRequest client = new XmlRpcRequest(methodName, args);
-            return client.Send(url, 6000);
-        }
-
-        /// <summary>
-        ///   Returns an error message that the user could not be found in the database
-        /// </summary>
-        /// <returns>XML string consisting of a error element containing individual error(s)</returns>
-        public static XmlRpcResponse CreateUnknownUserErrorResponse()
-        {
-            XmlRpcResponse response = new XmlRpcResponse();
-            Hashtable responseData = new Hashtable();
-            responseData["error_type"] = "unknown_user";
-            responseData["error_desc"] = "The user requested is not in the database";
-
-            response.Value = responseData;
-            return response;
         }
 
         /// <summary>

@@ -42,11 +42,16 @@ namespace Aurora.Modules.Web
                 string password = requestParameters["password"].ToString();
                 string passwordconf = requestParameters["passwordconf"].ToString();
 
-                IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
-                if (authService != null)
-                    error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                if (passwordconf != password)
+                    error = "Passwords do not match";
                 else
-                    error = "No authentication service was available to change your password";
+                {
+                    IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
+                    if (authService != null)
+                        error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                    else
+                        error = "No authentication service was available to change your password";
+                }
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitEmailChange")

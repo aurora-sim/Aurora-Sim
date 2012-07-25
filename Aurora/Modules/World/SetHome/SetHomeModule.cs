@@ -162,23 +162,10 @@ namespace Aurora.Modules.SetHome
                 {
                     UTF8Encoding enc =
                         new UTF8Encoding();
-                    List<string> notecardData = SLUtil.ParseNotecardToList(enc.GetString(asset.Data));
                     AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset.Data);
                     noteCardAsset.Decode();
                     bool found = false;
                     UUID lastOwnerID = UUID.Zero;
-#if (!ISWIN)
-                    foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems)
-                    {
-                        if (notecardObjectItem.UUID == ItemID)
-                        {
-                            //Make sure that it exists
-                            found = true;
-                            lastOwnerID = notecardObjectItem.OwnerID;
-                            break;
-                        }
-                    }
-#else
                     foreach (InventoryItem notecardObjectItem in noteCardAsset.EmbeddedItems.Where(notecardObjectItem => notecardObjectItem.UUID == ItemID))
                     {
                         //Make sure that it exists
@@ -186,7 +173,6 @@ namespace Aurora.Modules.SetHome
                         lastOwnerID = notecardObjectItem.OwnerID;
                         break;
                     }
-#endif
                     if (found)
                     {
                         m_scene.InventoryService.GiveInventoryItemAsync(agentID, lastOwnerID, ItemID, FolderID, false,

@@ -3383,10 +3383,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         Vector3 llpos = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
                         Vector3 llvel = new Vector3((float)vel.x, (float)vel.y, (float)vel.z);
 
-                        // need the magnitude later
-                        // this variable is not being used
-                        float velmag = (float)Util.GetMagnitude(llvel);
-
                         ISceneEntity new_group = RezObject(m_host, inv.Value, llpos, Rot2Quaternion(rot), llvel, param, m_host.UUID, isRezAtRoot);
                         new_group.OnFinishedPhysicalRepresentationBuilding += delegate()
                         {
@@ -4218,10 +4214,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     // if attachment we set it's asset id so object updates can reflect that
                     // if not, we set it's position in world.
                     group.AbsolutePosition = new Vector3((float)pos.x, (float)pos.y, (float)pos.z);
-
-                    // This variable is not being used.. just set
-                    ISceneChildEntity rootPart = null;
-                    rootPart = group.GetChildPart(group.UUID);
 
                     IScenePresence SP = World.GetScenePresence(m_host.OwnerID);
                     if (SP != null)
@@ -6479,7 +6471,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             }
 
-            List<UUID> presenceIds = new List<UUID>();
             World.ForEachScenePresence(delegate(IScenePresence ssp)
             {
                 // Gods are not listed in SL
@@ -6512,8 +6503,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     return;
                 }
-            }
-        );
+            });
             return result;
         }
 
@@ -11473,8 +11463,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             const string authregex = @"^(https?:\/\/)(\w+):(\w+)@(.*)$";
             Regex r = new Regex(authregex);
-            // this variable is not used
-            int[] gnums = r.GetGroupNumbers();
             Match m = r.Match(url);
             if (m.Success)
             {

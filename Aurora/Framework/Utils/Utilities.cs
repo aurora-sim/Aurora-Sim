@@ -42,7 +42,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
-using Nwc.XmlRpc;
 
 namespace Aurora.Framework
 {

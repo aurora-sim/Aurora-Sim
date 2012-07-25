@@ -115,7 +115,6 @@ namespace OpenSim.Services.GridService
             registry.RegisterModuleInterface<IGridRegistrationService>(this);
             m_registry = registry;
             m_simulationBase = registry.RequestModuleInterface<ISimulationBase>();
-            m_simulationBase.EventManager.RegisterEventHandler("GridRegionSuccessfullyRegistered", EventManager_OnGenericEvent);
 
             m_configurationConfig = config.Configs["Configuration"];
             m_loadBalancer.SetConfig(config, this);
@@ -127,24 +126,6 @@ namespace OpenSim.Services.GridService
             m_permissionConfig = config.Configs["RegionPermissions"];
             if (m_permissionConfig != null)
                 ReadConfiguration(m_permissionConfig);
-        }
-
-        object EventManager_OnGenericEvent (string FunctionName, object parameters)
-        {
-            if (FunctionName == "GridRegionSuccessfullyRegistered")
-            {
-                object[] param = (object[])parameters;
-                OSDMap resultMap = (OSDMap)param[0];
-                UUID SecureSessionID = (UUID)param[1];
-                GridRegion rinfo = (GridRegion)param[2];
-                OSDMap urls = GetUrlForRegisteringClient (rinfo.RegionHandle.ToString());
-                resultMap["URLs"] = urls;
-                resultMap["TimeBeforeReRegister"] = m_registry.RequestModuleInterface<IGridRegistrationService> ().ExpiresTime;
-                param[0] = resultMap;
-                parameters = param;
-            }
-
-            return null;
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)

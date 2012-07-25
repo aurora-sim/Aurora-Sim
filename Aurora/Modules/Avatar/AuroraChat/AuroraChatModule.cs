@@ -856,7 +856,6 @@ namespace Aurora.Modules.Chat
             else if (method == "mute update")
             {
                 //Check if the user is a moderator
-                Hashtable responsedata = new Hashtable();
                 if (!CheckModeratorPermission(Agent, sessionid))
                 {
                     return "";

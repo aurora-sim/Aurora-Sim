@@ -57,9 +57,9 @@ namespace OpenSim.Services.LLLoginService
             if (mac == "")
                 return new LLFailedLoginResponse(LoginResponseEnum.Indeterminant, "Bad Viewer Connection", false);
 
-            string channel = "Unknown";
+            /*string channel = "Unknown";
             if (request.Contains("channel") && request["channel"] != null)
-                channel = request["channel"].ToString();
+                channel = request["channel"].ToString();*/
 
             bool AcceptedNewTOS = false;
             //This gets if the viewer has accepted the new TOS

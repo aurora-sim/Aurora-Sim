@@ -143,7 +143,6 @@ namespace OpenSim.Services.LLLoginService
         private readonly ArrayList eventCategories;
         private readonly ArrayList initialOutfit;
         private readonly ArrayList loginFlags;
-        private readonly IRegistryCore m_registry;
         private readonly IConfigSource m_source;
         private readonly ArrayList tutorial = new ArrayList();
         private readonly ArrayList uiConfig;
@@ -196,10 +195,9 @@ namespace OpenSim.Services.LLLoginService
                                List<InventoryItemBase> gestures,
                                GridRegion home, IPEndPoint clientIP, string AdultMax, string AdultRating,
                                ArrayList eventValues, ArrayList classifiedValues, string seedCap, IConfigSource source,
-                               string DisplayName, IRegistryCore registry)
+                               string DisplayName)
             : this()
         {
-            m_registry = registry;
             m_source = source;
             SeedCapability = seedCap;
 

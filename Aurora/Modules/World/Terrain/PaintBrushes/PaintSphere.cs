@@ -123,16 +123,8 @@ namespace Aurora.Modules.Terrain.PaintBrushes
                         textureToAddTexture.GetPixel(
                             (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
                             (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
-                    Color cc =
-                        paintTexture.GetPixel(
-                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Width),
-                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
                     paintTexture.SetPixel((int) ((x/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Width),
                                           (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*paintiTexture.Height), c);
-                    cc =
-                        paintTexture.GetPixel(
-                            (int) ((x/(float) map.Scene.RegionInfo.RegionSizeX*textureToAddiTexture.Width)),
-                            (int) ((y/(float) map.Scene.RegionInfo.RegionSizeX)*textureToAddiTexture.Height));
                 }
             }
             map.Scene.AssetService.Delete(paintAsset.ID);

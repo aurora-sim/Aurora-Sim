@@ -112,7 +112,7 @@ namespace Aurora.Modules.Archivers
             OSDMap map = ((OSDMap)OSDParser.DeserializeLLSDXml(archiveXML));
 
             OSDMap assetsMap = ((OSDMap)map["Assets"]);
-            OSDMap itemsMap = ((OSDMap)map["Items"]);
+            //OSDMap itemsMap = ((OSDMap)map["Items"]);
             OSDMap bodyMap = ((OSDMap)map["Body"]);
 
             AvatarAppearance appearance = ConvertXMLToAvatarAppearance(bodyMap, out FolderNameToLoadInto);
@@ -156,8 +156,6 @@ namespace Aurora.Modules.Archivers
         {
             if (destinationFolder == null)
                 throw new Exception("Cannot locate folder(s)");
-            IAssetService m_AssetService;
-            m_AssetService = m_registry.RequestModuleInterface<IAssetService>().InnerService;
             items = new List<InventoryItemBase>();
 
             // Wearables

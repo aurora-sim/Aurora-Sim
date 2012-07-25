@@ -593,8 +593,6 @@ namespace Aurora.Modules.EntityTransfer
             
             MainConsole.Instance.DebugFormat("[EntityTransferModule]: Crossing agent {0} to region {1}", agent.Name, crossingRegion.RegionName);
 
-            IScene m_scene = agent.Scene;
-
             try
             {
                 agent.SetAgentLeaving(crossingRegion);

@@ -387,32 +387,6 @@ namespace OpenSim.Services.CapsService
             return chatterBoxSessionAgentListUpdates;
         }
 
-        internal static OSD ChatterBoxSessionStartReply(UUID sessionID, string SessionName)
-        {
-            OSDMap body = new OSDMap();
-            OSDMap sessionInfo = new OSDMap();
-            //OSDMap infoDetail = new OSDMap();
-            OSDMap moderatedMode = new OSDMap {{"voice", OSD.FromBoolean(true)}};
-
-            sessionInfo.Add("moderated_mode", sessionInfo);
-            sessionInfo.Add("session_name", OSD.FromString(SessionName));
-            sessionInfo.Add("type", OSD.FromInteger(0));
-            sessionInfo.Add("voice_enabled", OSD.FromBoolean(true));
-
-            body.Add("session_info", sessionInfo);
-            body.Add("temp_session_id", OSD.FromUUID(sessionID));
-            body.Add("success", OSD.FromBoolean(true));
-
-            OSDMap chatterBoxSessionAgentListUpdates = new OSDMap
-                                                           {
-                                                               {"message", OSD.FromString("ChatterBoxSessionStartReply")},
-                                                               {"body", body}
-                                                           };
-
-            return chatterBoxSessionAgentListUpdates;
-        }
-
-
         internal static OSD ChatterBoxSessionAgentListUpdates(UUID sessionID,
                                                               ChatterBoxSessionAgentListUpdatesMessage.AgentUpdatesBlock
                                                                   [] agentUpdatesBlock, string Transition)
@@ -507,8 +481,6 @@ namespace OpenSim.Services.CapsService
             message.QueryDataBlocks = new PlacesReplyMessage.QueryData[PlacesReply.QueryData.Length];
             OSDMap placesReply = new OSDMap {{"message", OSD.FromString("PlacesReplyMessage")}};
 
-            OSDArray QueryData = new OSDArray();
-#if(!ISWIN)
             int i = 0;
             foreach (PlacesReplyPacket.QueryDataBlock groupDataBlock in PlacesReply.QueryData)
             {
@@ -530,30 +502,6 @@ namespace OpenSim.Services.CapsService
 
                 i++;
             }
-#else
-            int[] i = {0};
-            foreach (OSDMap QueryDataMap in PlacesReply.QueryData.Select(groupDataBlock => new OSDMap
-                                                                                               {
-                                                                                                   {"ActualArea", OSD.FromInteger(groupDataBlock.ActualArea)},
-                                                                                                   {"BillableArea", OSD.FromInteger(groupDataBlock.BillableArea)},
-                                                                                                   {"Description", OSD.FromBinary(groupDataBlock.Desc)},
-                                                                                                   {"Dwell", OSD.FromInteger((int) groupDataBlock.Dwell)},
-                                                                                                   {"Flags", OSD.FromString(Convert.ToString(groupDataBlock.Flags))},
-                                                                                                   {"GlobalX", OSD.FromInteger((int) groupDataBlock.GlobalX)},
-                                                                                                   {"GlobalY", OSD.FromInteger((int) groupDataBlock.GlobalY)},
-                                                                                                   {"GlobalZ", OSD.FromInteger((int) groupDataBlock.GlobalZ)},
-                                                                                                   {"Name", OSD.FromBinary(groupDataBlock.Name)},
-                                                                                                   {"OwnerID", OSD.FromUUID(groupDataBlock.OwnerID)},
-                                                                                                   {"SimName", OSD.FromBinary(groupDataBlock.SimName)},
-                                                                                                   {"SnapShotID", OSD.FromUUID(groupDataBlock.SnapshotID)},
-                                                                                                   {"ProductSku", OSD.FromString(regionType[i[0]])},
-                                                                                                   {"Price", OSD.FromInteger(groupDataBlock.Price)}
-                                                                                               }))
-            {
-                QueryData.Add(QueryDataMap);
-                i[0]++;
-            }
-#endif
             OSDMap map = message.Serialize();
             placesReply["body"] = map;
             return placesReply;

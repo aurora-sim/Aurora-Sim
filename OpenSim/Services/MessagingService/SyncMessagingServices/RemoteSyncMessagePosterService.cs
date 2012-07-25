@@ -79,7 +79,6 @@ namespace OpenSim.Services.MessagingService
                 if (serverURIs.Count > 0)
                 {
                     OSDMap message = CreateWebRequest(request);
-                    string postInfo = OSDParser.SerializeJsonString(message);
                     foreach (string host in serverURIs)
                     {
                         //Send it async

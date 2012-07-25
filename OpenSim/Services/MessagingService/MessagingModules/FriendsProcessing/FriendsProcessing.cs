@@ -87,7 +87,6 @@ namespace OpenSim.Services.MessagingService
 
                     List<FriendInfo> friends = friendsService.GetFriends(us);
                     List<UUID> OnlineFriends = new List<UUID>();
-                    List<string> previouslyContactedURLs = new List<string>();
                     foreach (FriendInfo friend in friends)
                     {
                         if (friend.TheirFlags == -1 || friend.MyFlags == -1)
@@ -165,7 +164,6 @@ namespace OpenSim.Services.MessagingService
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
-            IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
             IAsyncMessagePostService asyncPost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
             //We need to check and see if this is an AgentStatusChange
             if (message.ContainsKey("Method") && message["Method"] == "AgentStatusChange")

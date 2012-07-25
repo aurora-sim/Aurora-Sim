@@ -148,7 +148,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
             ITerrainModule terrainModule = scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
-                ITerrainChannel channel = new TerrainChannel(false, scene);
                 if (m_revertTerrain == null)
                 {
                     if (m_shortrevertTerrain != null) //OpenSim style
@@ -181,7 +180,6 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                     else if (m_oldstyleterrain != null)
                     {
 //Old style
-                        ITerrainChannel channel = new TerrainChannel(false, scene);
                         MemoryStream ms = new MemoryStream(m_oldstyleterrain);
                         if (terrainModule != null)
                             terrainModule.LoadFromStream(".r32", ms, 0, 0);

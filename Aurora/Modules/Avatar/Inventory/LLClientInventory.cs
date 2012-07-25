@@ -559,8 +559,6 @@ namespace Aurora.Modules.Inventory
             if (!m_scene.Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
 
-            InventoryFolderBase f = new InventoryFolderBase(folderID, remoteClient.AgentId);
-            
             if (transactionID == UUID.Zero)
             {
                 IScenePresence presence;

@@ -41,7 +41,7 @@ namespace Aurora.Framework
         private double CACHE_EXPIRATION_SECONDS = 6*60*1000;
                              // 6 hour cache on useraccounts, since they should not change
 
-        private const bool m_allowNullCaching = true;
+        private bool m_allowNullCaching = true;
         private readonly ExpiringCache<string, UUID> m_NameCache;
         private readonly ExpiringCache<UUID, T> m_UUIDCache;
         private readonly Dictionary<UUID, int> m_nullCacheTimes = new Dictionary<UUID, int>();

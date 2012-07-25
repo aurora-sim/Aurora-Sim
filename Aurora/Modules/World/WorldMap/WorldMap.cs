@@ -46,12 +46,9 @@ namespace Aurora.Modules.WorldMap
     public class AuroraWorldMapModule : INonSharedRegionModule, IWorldMapModule
 	{
         private const string DEFAULT_WORLD_MAP_EXPORT_PATH = "exportmap.jpg";
-        //private static readonly UUID STOP_UUID = UUID.Random();
 
-        //private IConfig m_config;
         protected IScene m_scene;
         protected bool m_Enabled;
-        private IConfigSource m_config;
         private readonly ExpiringCache<ulong, List< mapItemReply>> m_mapItemCache = new ExpiringCache<ulong, List<mapItemReply>>();
 
         private readonly ConcurrentQueue<MapItemRequester> m_itemsToRequest = new ConcurrentQueue<MapItemRequester>();
@@ -71,8 +68,6 @@ namespace Aurora.Modules.WorldMap
                         "AuroraWorldMapModule")
                     return;
                 m_Enabled = true;
-                //MainConsole.Instance.Info("[AuroraWorldMap] Initializing");
-                m_config = source;
                 MapViewLength = source.Configs["MapModule"].GetInt("MapViewLength", MapViewLength);
             }
 		}

@@ -206,7 +206,6 @@ namespace Aurora.Modules.WorldMap
 
             RegionLightShareData rls = m_scene.RequestModuleInterface<IWindLightSettingsModule>().FindRegionWindLight();
 
-            AssetBase textureAsset = m_scene.AssetService.Get(rls.normalMapTexture.ToString());
             warp_Material waterColormaterial;
             if (rls != null)
                 waterColormaterial =
@@ -221,7 +220,9 @@ namespace Aurora.Modules.WorldMap
             renderer.Scene.addMaterial("WaterColor", waterColormaterial);
             renderer.SetObjectMaterial("Water", "WaterColor");
 
-            /*if (textureAsset != null)
+            /*
+            AssetBase textureAsset = m_scene.AssetService.Get(rls.normalMapTexture.ToString());
+            if (textureAsset != null)
             {
                 IJ2KDecoder decoder = m_scene.RequestModuleInterface<IJ2KDecoder> ();
                 Bitmap bitmap = (Bitmap)decoder.DecodeToImage (textureAsset.Data);

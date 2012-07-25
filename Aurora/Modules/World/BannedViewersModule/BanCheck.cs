@@ -47,8 +47,6 @@ namespace Aurora.Modules.Ban
     {
         #region Declares
 
-        ILoginService m_service;
-        IConfigSource m_source;
         BanCheck m_module;
 
         public string Name
@@ -62,8 +60,6 @@ namespace Aurora.Modules.Ban
 
         public void Initialize(ILoginService service, IConfigSource source, IRegistryCore registry)
         {
-            m_source = source;
-            m_service = service;
             m_module = new BanCheck(source, registry.RequestModuleInterface<IUserAccountService>());
         }
 
@@ -574,8 +570,6 @@ namespace Aurora.Modules.Ban
     {
         #region Declares
 
-        private ILoginService m_service;
-        private IConfigSource m_source;
         private List<IPAddress> IPBans = new List<IPAddress>();
         private List<string> IPRangeBans = new List<string>();
 
@@ -590,9 +584,6 @@ namespace Aurora.Modules.Ban
 
         public void Initialize(ILoginService service, IConfigSource source, IRegistryCore registry)
         {
-            m_source = source;
-            m_service = service;
-
             IConfig config = source.Configs["GrieferProtection"];
             if (config != null)
             {

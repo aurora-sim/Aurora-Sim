@@ -422,7 +422,6 @@ namespace OpenSim.Services.LLLoginService
                     {
                         AvatarAppearance appearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
-                        AvatarData adata = new AvatarData(appearance);
                         m_AvatarService.SetAppearance(account.PrincipalID, appearance);
                     }
                     if (UPI.IsNewUser)
@@ -652,7 +651,7 @@ namespace OpenSim.Services.LLLoginService
 
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel, friendsList.ToArray(), m_InventoryService, m_LibraryService,
                     where, startLocation, position, lookAt, gestures, home, clientIP, MaxMaturity, MaturityRating,
-                    eventCategories, classifiedCategories, seedCap, m_config, DisplayName, m_registry);
+                    eventCategories, classifiedCategories, seedCap, m_config, DisplayName);
 
                 MainConsole.Instance.InfoFormat("[LLOGIN SERVICE]: All clear. Sending login response to client to login to region " + destination.RegionName + ", tried to login to " + startLocation + " at " + position.ToString() + ".");
                 AddLoginSuccessNotification(account);
@@ -1286,7 +1285,6 @@ namespace OpenSim.Services.LLLoginService
                 }
             }
 
-            List<AvatarAttachment> attachments = avappearance.GetAttachments();
             List<UUID> items2UnAttach = new List<UUID>();
             foreach (KeyValuePair<int, List<AvatarAttachment>> attachmentSpot in avappearance.Attachments)
             {

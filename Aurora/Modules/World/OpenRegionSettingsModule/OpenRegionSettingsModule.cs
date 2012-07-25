@@ -230,9 +230,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
         private readonly Dictionary<string, string> additionalKVPs = new Dictionary<string, string>();
         private IScene m_scene;
         private OpenRegionSettings m_settings;
-        private IConfigSource m_source;
-
-        //Generic KVP's to send
 
         #endregion
 
@@ -240,7 +237,6 @@ namespace Aurora.Modules.OpenRegionSettingsModule
 
         public void Initialise(IConfigSource source)
         {
-            m_source = source;
         }
 
         public void Close()

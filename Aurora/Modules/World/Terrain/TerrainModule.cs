@@ -222,7 +222,6 @@ namespace Aurora.Modules.Terrain
 
         public void UpdateWaterHeight(double height)
         {
-            int regionSize = m_scene.RegionInfo.RegionSizeX;
             short[] waterMap = null;
             if (m_waterChannel != null)
                 waterMap = m_waterChannel.GetSerialised(m_scene);
@@ -952,8 +951,6 @@ namespace Aurora.Modules.Terrain
 
             List<int> xs = new List<int>();
             List<int> ys = new List<int>();
-            List<int> waterxs = new List<int>();
-            List<int> waterys = new List<int>();
             int startX = (((int) (presence.AbsolutePosition.X - presence.DrawDistance))/Constants.TerrainPatchSize) - 2;
             startX = Math.Max(startX, 0);
             startX = Math.Min(startX, m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize);

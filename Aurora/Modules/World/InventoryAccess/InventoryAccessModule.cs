@@ -701,8 +701,6 @@ namespace Aurora.Modules.InventoryAccess
 
             bRayEndIsIntersection = (byte) (RayEndIsIntersection ? 1 : 0);
 
-            Vector3 scale = new Vector3 (0.5f, 0.5f, 0.5f);
-
             XmlDocument doc;
             InventoryItemBase item = new InventoryItemBase (itemID, remoteClient.AgentId);
             item = m_scene.InventoryService.GetItem (item);

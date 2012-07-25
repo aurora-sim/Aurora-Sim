@@ -584,8 +584,7 @@ namespace OpenSim.Region.Framework.Scenes
                     bool needsRegistration = 
                         scene.RegionInfo.RegionName != region.RegionName || 
                         scene.RegionInfo.RegionLocX != region.RegionLocX ||
-                        scene.RegionInfo.RegionLocY != region.RegionLocY
-                    ;
+                        scene.RegionInfo.RegionLocY != region.RegionLocY;
 
                     region.RegionSettings = scene.RegionInfo.RegionSettings;
                     region.EstateSettings = scene.RegionInfo.EstateSettings;

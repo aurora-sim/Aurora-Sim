@@ -268,7 +268,7 @@ namespace Aurora.Modules.AbuseReports
 
         #region Disabled CAPS code
 
-        private void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
+        /*private void OnRegisterCaps(UUID agentID, IRegionClientCapsService caps)
         {
             caps.AddStreamHandler("SendUserReportWithScreenshot",
                                 new GenericStreamHandler("POST", CapsUtil.CreateCAPS("SendUserReportWithScreenshot", ""),
@@ -297,7 +297,7 @@ namespace Aurora.Modules.AbuseReports
             //           details, objectID, position, ReportType, ScreenShotID, summary, SP.UUID);
             //TODO: Figure this out later
             return new byte[0];
-        }
+        }*/
 
         #endregion
 

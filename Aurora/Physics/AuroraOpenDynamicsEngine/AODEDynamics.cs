@@ -588,8 +588,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private void MoveLinear(float pTimestep, AuroraODEPhysicsScene _pParentScene, AuroraODEPrim parent)
         {
-            d.Vector3 dvel_now = d.BodyGetLinearVel(Body);
-
             if (m_linearMotorDirection.LengthSquared() < 0.0001f)
             {
                 m_linearMotorDirection = Vector3.Zero;
@@ -605,7 +603,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 // convert requested object velocity to world-referenced vector
                 d.Quaternion rot = d.BodyGetQuaternion(Body);
                 Quaternion rotq = new Quaternion(rot.X, rot.Y, rot.Z, rot.W); // rotq = rotation of object
-                Vector3 oldVelocity = m_newVelocity;
+                //Vector3 oldVelocity = m_newVelocity;
                 m_newVelocity = m_lastLinearVelocityVector * rotq; // apply obj rotation to velocity vector
                 //if (oldVelocity.Z == 0 && (Type != Vehicle.TYPE_AIRPLANE && Type != Vehicle.TYPE_BALLOON))
                 //    m_newVelocity.Z += dvel_now.Z; // Preserve the accumulated falling velocity
@@ -628,8 +626,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             }
 
             #region Blocking Change
-
-            double Zchange = Math.Abs(m_lastposChange.Z);
 
             if (m_BlockingEndPoint != Vector3.Zero)
             {
@@ -667,7 +663,6 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             #region Terrain checks
 
-            Vector3 rotatedSize = parent.Size * parent.Orientation;
             float terrainHeight = _pParentScene.GetTerrainHeightAtXY(pos.X, pos.Y);
             if (pos.Z < terrainHeight - 5)
             {
@@ -717,7 +712,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                         if (groundHeight >= tempHoverHeight)
                             h = groundHeight;
 
-                        d.BodySetPosition(Body, pos.X, pos.Y, tempHoverHeight);
+                        d.BodySetPosition(Body, pos.X, pos.Y, h);
                     }
                 }
                 else

@@ -234,7 +234,6 @@ namespace Aurora.Modules.Chat
                     string message = "";
                     byte dialog = (byte) 0;
                     bool fromGroup = false;
-                    byte offline = 0;
                     uint ParentEstateID = 0;
                     Vector3 Position = Vector3.Zero;
                     UUID RegionID = UUID.Zero;
@@ -292,17 +291,6 @@ namespace Aurora.Modules.Chat
 
                         if ((string) requestData["from_group"] == "TRUE")
                             fromGroup = true;
-
-                        string requestData2 = (string) requestData["offline"];
-                        if (String.IsNullOrEmpty(requestData2))
-                        {
-                            offline = 0;
-                        }
-                        else
-                        {
-                            byte[] offlinedata = Convert.FromBase64String(requestData2);
-                            offline = offlinedata[0];
-                        }
 
                         try
                         {

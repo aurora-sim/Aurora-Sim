@@ -453,7 +453,6 @@ namespace OpenSim.Services.CapsService
                 UUID newAssetID;
                 handlerUpLoad(HttpServerHandlerHelpers.ReadFully(request), out newAssetID);
 
-                string res = String.Empty;
                 OSDMap map = new OSDMap();
                 map["new_asset"] = newAssetID.ToString();
                 map["item_id"] = UUID.Zero;

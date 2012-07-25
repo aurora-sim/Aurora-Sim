@@ -183,7 +183,6 @@ namespace Aurora.Modules.Web
                     if (File.Exists(path)) xslt.Load(GetFileNameFromHTMLPath(path));
                     else if (text != "")
                     {
-                        XslCompiledTransform objXslTrans = new XslCompiledTransform();
                         xslt.Load(new XmlTextReader(new StringReader(text)));
                     }
                     var stm = new MemoryStream();
@@ -243,7 +242,7 @@ namespace Aurora.Modules.Web
                 else if (httpRequest.Cookies.Get("language") != null)
                 {
                     var cookie = httpRequest.Cookies.Get("language");
-                    translator = _translators.FirstOrDefault(t => t.LanguageName == httpRequest.Cookies.Get("language").Value);
+                    translator = _translators.FirstOrDefault(t => t.LanguageName == cookie.Value);
                 }
                 if (translator == null)
                     translator = _defaultTranslator;
