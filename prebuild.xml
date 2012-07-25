@@ -406,7 +406,6 @@
       
       <Reference name="Aurora.Framework"/>
 
-      <Reference name="C5" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -460,7 +459,6 @@
 	  <Reference name="Aurora.Framework"/>
 	  <Reference name="OpenSim.Region.Framework"/>
 		
-      <Reference name="C5" path="../../../bin/"/>
       <Reference name="MySql.Data" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
@@ -516,7 +514,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
 
-      <Reference name="C5" path="../../../bin/"/>
       <Reference name="Community.CsharpSqlite.SQLiteClient" path="../../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../../bin/"/>
       <Reference name="Community.CsharpSqlite.SQLiteClient" path="../../../bin/"/>
@@ -578,7 +575,6 @@
       <Reference name="Aurora.Simulation.Base"/>
       <Reference name="Aurora.Framework"/>
 
-      <Reference name="C5" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -629,7 +625,6 @@
       <Reference name="Aurora.Framework"/>
       <Reference name="OpenSim.Region.Framework"/>
       
-      <Reference name="C5"  path="../../../../bin/"/>
       <Reference name="Nini"  path="../../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
@@ -993,7 +988,6 @@
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Services"/>
       
-      <Reference name="C5" path="../../bin/"/>
 	  <Reference name="CSJ2K" path="../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../bin/"/>
       <Reference name="GlynnTucker.Cache" path="../../bin/"/>

@@ -27,7 +27,6 @@
 
 using System;
 using System.Reflection;
-using C5;
 using OpenMetaverse;
 using OpenMetaverse.Imaging;
 using Aurora.Framework;
@@ -56,7 +55,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public uint LastSequence;
         public OpenJPEG.J2KLayerInfo[] Layers;
         public float Priority;
-        public IPriorityQueueHandle<J2KImage> PriorityQueueHandle;
         public uint StartPacket;
         public UUID TextureID;
         private byte[] m_asset;
@@ -75,7 +73,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void Dispose()
         {
             m_asset = null;
-            PriorityQueueHandle = null;
         }
 
         /// <summary>

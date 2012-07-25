@@ -278,8 +278,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private void AddImageToQueue(J2KImage image)
         {
-            image.PriorityQueueHandle = null;
-
             lock (m_syncRoot)
                 try
                 {

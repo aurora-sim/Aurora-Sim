@@ -28,7 +28,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using C5;
 using Aurora.Framework;
 
 namespace Aurora.DataManager.Migration
@@ -43,7 +42,6 @@ namespace Aurora.DataManager.Migration
         private readonly Dictionary<string, string> renameSchema = new Dictionary<string, string>();
         public Dictionary<string, string> renameColumns = new Dictionary<string, string>();
         public List<SchemaDefinition> schema;
-        public List<Rec<string, IndexDefinition[]>> dropIndices;
 
         public Version Version { get; protected set; }
 
@@ -279,11 +277,6 @@ namespace Aurora.DataManager.Migration
                     return true;
                 return false;
             });
-        }
-
-        protected void RemoveIndices(string table, IndexDefinition[] indexes)
-        {
-            dropIndices.Add(new Rec<string, IndexDefinition[]>(table, indexes));
         }
 
         protected void EnsureAllTablesInSchemaExist(IDataConnector genericData)
