@@ -36,6 +36,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private static Dictionary<string, string> m_datatypeLSL2OpenSim;
         private readonly SYMBOL m_astRoot;
         private readonly Dictionary<string, string> m_globalVariableValues = new Dictionary<string, string>();
+        private readonly Dictionary<string, SYMBOL> m_duplicatedGlobalVariableValues = new Dictionary<string, SYMBOL>();
+
+        public Dictionary<string, SYMBOL> DuplicatedGlobalVars
+        {
+            get { return m_duplicatedGlobalVariableValues; }
+        }
+        public Dictionary<string, string> GlobalVars
+        {
+            get { return m_globalVariableValues; }
+        }
 
         /// <summary>
         ///   Pass the new CodeTranformer an abstract syntax tree.
@@ -151,7 +161,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             {
                                 IdentExpression identEx = (IdentExpression)assignmentChild;
                                 if (isDeclaration)
+                                {
+                                    if (m_globalVariableValues.ContainsKey(decID))
+                                        m_duplicatedGlobalVariableValues[decID] = identEx;
                                     m_globalVariableValues[decID] = identEx.Name;
+                                }
                             }
                             else if (assignmentChild is ListConstant)
                             {
@@ -175,10 +189,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                                     changed = true;
                                                     p[i] = new IdentExpression(identEx.yyps,
                                                                                m_globalVariableValues[identEx.Name])
-                                                               {
-                                                                   pos = objChild.pos,
-                                                                   m_dollar = objChild.m_dollar
-                                                               };
+                                                    {
+                                                        pos = objChild.pos,
+                                                        m_dollar = objChild.m_dollar
+                                                    };
                                                 }
                                             }
                                             i++;
@@ -192,11 +206,47 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     }
                                 }
                             }
+                            else if (assignmentChild is VectorConstant || assignmentChild is RotationConstant)
+                            {
+                                Constant listConst = (Constant)assignmentChild;
+                                int i = 0;
+                                bool changed = false;
+                                object[] p = new object[listConst.kids.Count];
+                                foreach (SYMBOL objChild in listConst.kids)
+                                {
+                                    p[i] = objChild;
+                                    if (objChild is IdentExpression)
+                                    {
+                                        IdentExpression identEx = (IdentExpression)objChild;
+                                        if (m_globalVariableValues.ContainsKey(identEx.Name))
+                                        {
+                                            changed = true;
+                                            p[i] = new IdentExpression(identEx.yyps,
+                                                                       m_globalVariableValues[identEx.Name])
+                                            {
+                                                pos = objChild.pos,
+                                                m_dollar = objChild.m_dollar
+                                            };
+                                        }
+                                    }
+                                    i++;
+                                }
+                                if (changed)
+                                {
+                                    listConst.kids = new ObjectList();
+                                    foreach (object o in p)
+                                        listConst.kids.Add(o);
+                                }
+                            }
                             else if (assignmentChild is Constant)
                             {
                                 Constant identEx = (Constant)assignmentChild;
                                 if (isDeclaration)
+                                {
+                                    if (m_globalVariableValues.ContainsKey(decID))
+                                        m_duplicatedGlobalVariableValues[decID] = identEx;
                                     m_globalVariableValues[decID] = identEx.Value;
+                                }
                             }
                         }
                     }
