@@ -95,19 +95,23 @@ namespace OpenSim.Services.MessagingService
             if (m_enabled)
             {
                 m_registry.RequestModuleInterface<IAsyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
+                ReadRemoteCapsPassword();
+            }
+        }
 
-                IConfig handlerConfig = _config.Configs["AuroraConnectors"];
-                IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-                if (handlerConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
+        private void ReadRemoteCapsPassword()
+        {
+            IConfig handlerConfig = _config.Configs["AuroraConnectors"];
+            IGenericsConnector genericsConnector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            if (handlerConfig.GetBoolean("CapsServiceDoRemoteCalls", false))
+            {
+                OSDWrapper wrapper = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsURL");
+                if (wrapper != null)
                 {
-                    Thread.Sleep(4000);
-                    OSDWrapper wrapper = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsURL");
-                    if (wrapper != null)
-                    {
-                        _capsURL = wrapper.Info.AsString();
-                        OSDWrapper w = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsPassword");
-                        _capsURLPassword = w.Info.AsString();
-                    }
+                    _capsURL = wrapper.Info.AsString();
+                    OSDWrapper w = genericsConnector.GetGeneric<OSDWrapper>(UUID.Zero, "CapsServiceURL", "CapsPassword");
+                    _capsURLPassword = w.Info.AsString();
+                    base.SetPassword(_capsURLPassword);
                 }
             }
         }
@@ -1234,7 +1238,14 @@ namespace OpenSim.Services.MessagingService
         {
             object retVal = base.DoRemoteByHTTP(_capsURL, region, aCircuit);
             if (retVal != null || m_doRemoteOnly)
+            {
+                if (retVal == null)
+                {
+                    ReadRemoteCapsPassword();
+                    retVal = base.DoRemoteByHTTP(_capsURL, region, aCircuit);
+                }
                 return retVal == null ? null : (LoginAgentArgs)retVal;
+            }
 
             bool success = false;
             string seedCap = "";

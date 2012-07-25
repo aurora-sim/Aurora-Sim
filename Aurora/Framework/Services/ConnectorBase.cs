@@ -112,6 +112,11 @@ namespace Aurora.Framework
             ConnectorRegistry.RegisterConnector(this);
         }
 
+        public void SetPassword(string password)
+        {
+            m_password = password;
+        }
+
         public void SetDoRemoteCalls(bool doRemoteCalls)
         {
             m_doRemoteCalls = doRemoteCalls;
