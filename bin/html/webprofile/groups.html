@@ -1,0 +1,54 @@
+<div id="container">
+<h2>{SystemName}: {UserName}</h2>
+<p class=jclock1><span id=jclock1></span></p>
+<div id="user_agent_profile_container">
+<table id="user_agent_profile">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="7">
+	    <div class="user_agent_profile_picture">
+	    <a href="#">
+	    <img height="256"
+		     src="{UserPictureURL}" 
+		     alt="{UserProfileFor}: {UserName} ({UserType})"
+			 title="{UserProfileFor}: {UserName} ({UserType})" /></a>
+	    <p class="user_agent_profile_picture_text">{UsersGroupsText}: {GroupsJoined}</p></div>
+	  </td>
+      <td class="user_agent_profile_left_size"><p>{UsersGroupsText}:</p></td>
+	  <td class="user_agent_profile_right"><p>{GroupsJoined}</p></td>
+    </tr>
+{GroupsArrayBegin}
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="7">
+	    <div class="user_agent_profile_picture">
+	    <a href="#">
+	    <img height="256"
+		     src="{GroupPictureURL}" 
+		     alt="{GroupName}"
+			 title="{GroupName}" /></a>
+	    <p class="user_agent_profile_picture_text">{GroupName}</p></div>
+	  </td>
+      <td class="user_agent_profile_right"><p>{GroupName}</p></td>
+    </tr>
+{GroupsArrayEnd}
+  </tbody>
+</table>
+</div>

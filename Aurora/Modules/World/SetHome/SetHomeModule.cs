@@ -160,8 +160,6 @@ namespace Aurora.Modules.SetHome
                 AssetBase asset = m_scene.AssetService.Get(notecardItem.AssetID.ToString());
                 if (asset != null)
                 {
-                    UTF8Encoding enc =
-                        new UTF8Encoding();
                     AssetNotecard noteCardAsset = new AssetNotecard(UUID.Zero, asset.Data);
                     noteCardAsset.Decode();
                     bool found = false;

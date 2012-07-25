@@ -13,7 +13,7 @@ using OpenSim.Services.Interfaces;
 
 namespace Aurora.Modules.Web
 {
-    public class AgentInfoPage : IWebInterfacePage
+    public class AgentPicksPage : IWebInterfacePage
     {
         public string[] FilePath
         {
@@ -21,9 +21,7 @@ namespace Aurora.Modules.Web
             {
                 return new[]
                        {
-                           "html/webprofile/index.html",
-                           "html/webprofile/base.html",
-                           "html/webprofile/"
+                           "html/webprofile/picks.html"
                        };
             }
         }
@@ -63,11 +61,11 @@ namespace Aurora.Modules.Web
                 return vars;
 
             vars.Add("UserName", account.Name);
-            vars.Add("UserBorn", Util.ToDateTime(account.Created).ToShortDateString());
             vars.Add("UserType", account.UserTitle == "" ? "Resident" : account.UserTitle);
 
-            IUserProfileInfo profile = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>().
-                GetUserProfile(account.PrincipalID);
+            IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
+            IUserProfileInfo profile = profileConnector == null ? null : profileConnector.GetUserProfile(account.PrincipalID);
+            IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
             if (profile != null)
             {
                 if (profile.Partner != UUID.Zero)
@@ -80,43 +78,28 @@ namespace Aurora.Modules.Web
                     vars.Add("UserPartner", "No partner");
                 vars.Add("UserAboutMe", profile.AboutText == "" ? "Nothing here" : profile.AboutText);
                 string url = "../images/icons/no_picture.jpg";
-                IWebHttpTextureService webhttpService = webInterface.Registry.RequestModuleInterface<IWebHttpTextureService>();
                 if (webhttpService != null && profile.Image != UUID.Zero)
                     url = webhttpService.GetTextureURL(profile.Image);
                 vars.Add("UserPictureURL", url);
+
+                List<Dictionary<string, object>> picks = new List<Dictionary<string, object>>();
+                foreach (var pick in profileConnector.GetPicks(profile.PrincipalID))
+                {
+                    url = "../images/icons/no_picture.jpg";
+                    if (webhttpService != null && pick.SnapshotUUID != UUID.Zero)
+                        url = webhttpService.GetTextureURL(pick.SnapshotUUID);
+                    picks.Add(new Dictionary<string, object>
+                    {
+                        { "PickSnapshotURL", url },
+                        { "PickName", pick.OriginalName },
+                        { "PickSim", pick.SimName },
+                        { "PickLocation", pick.GlobalPos }
+                    });
+                }
+                vars.Add("Picks", picks);
             }
-            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-            IClientCapsService clientCaps = capsService == null ? null : capsService.GetClientCapsService(account.PrincipalID);
-            if (clientCaps != null)
-                vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
 
-            vars.Add("UserIsOnline", clientCaps != null);
-            vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
-            vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));
-            vars.Add("ResidentSince", translator.GetTranslatedString("ResidentSince"));
-            vars.Add("AccountType", translator.GetTranslatedString("AccountType"));
-            vars.Add("PartnersName", translator.GetTranslatedString("PartnersName"));
-            vars.Add("AboutMe", translator.GetTranslatedString("AboutMe"));
-            vars.Add("IsOnlineText", translator.GetTranslatedString("IsOnlineText"));
-            vars.Add("OnlineLocationText", translator.GetTranslatedString("OnlineLocationText"));
-
-            // Style Switcher
-            vars.Add("styles1", translator.GetTranslatedString("styles1"));
-            vars.Add("styles2", translator.GetTranslatedString("styles2"));
-            vars.Add("styles3", translator.GetTranslatedString("styles3"));
-            vars.Add("styles4", translator.GetTranslatedString("styles4"));
-            vars.Add("styles5", translator.GetTranslatedString("styles5"));
-
-			vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
-			vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
-			vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
-			
-            // Language Switcher
-            vars.Add("en", translator.GetTranslatedString("en"));
-            vars.Add("fr", translator.GetTranslatedString("fr"));
-            vars.Add("de", translator.GetTranslatedString("de"));
-            vars.Add("it", translator.GetTranslatedString("it"));
-            vars.Add("es", translator.GetTranslatedString("es"));
+            vars.Add("UsersPicksText", translator.GetTranslatedString("UsersPicksText"));
 
             return vars;
         }

@@ -127,6 +127,10 @@ namespace Aurora.Modules.Web.Translators
                     return "Edit News";
                 case "UserProfileFor":
                     return "User Profile For";
+                case "UsersGroupsText":
+                    return "Groups Joined";
+                case "UsersPicksText":
+                    return "Picks for";
                 case "ResidentSince":
                     return "Resident Since";
                 case "AccountType":

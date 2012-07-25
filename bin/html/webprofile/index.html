@@ -61,72 +61,11 @@
 </head>
 
 <body>
-<div id="container">
-<h2>{SystemName}: {UserName}</h2>
-<p class=jclock1><span id=jclock1></span></p>
-<div id="user_agent_profile_container">
-<table id="user_agent_profile">
-  <caption></caption>
-  
-  <thead>
-    <tr>
-      <th class="user_agent_profile_left"></th>
-      <th class="user_agent_profile_right"></th>
-	  <th class="user_agent_profile_right"></th>
-    </tr>
-  </thead>
-  
-  <tfoot>
-    <tr>
-      <th class="user_agent_profile_left"></th>
-      <th class="user_agent_profile_right"></th>
-	  <th class="user_agent_profile_right"></th>
-    </tr>
-  </tfoot>
-
-  <tbody>
-    <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
-	    <div class="user_agent_profile_picture">
-	    <a href="#">
-	    <img height="256"
-		     src="{UserPictureURL}" 
-		     alt="{UserProfileFor}: {UserName} ({UserType})"
-			 title="{UserProfileFor}: {UserName} ({UserType})" /></a>
-	    <p class="user_agent_profile_picture_text">{UserProfileFor}: {UserName} ({UserType})</p></div>
-	  </td>
-      <td class="user_agent_profile_left_size"><p>{UserProfileFor}:</p></td>
-	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
-    </tr>
-    <tr>
-      <td class="user_agent_profile_left"><p>{IsOnlineText}:</p></td>
-      <td class="user_agent_profile_right"><p>{IsOnline}</p></td>
-    </tr>
-{IfUserIsOnlineBegin}
-    <tr>
-      <td class="user_agent_profile_left"><p>{OnlineLocationText}:</p></td>
-      <td class="user_agent_profile_right"><p>{OnlineLocation}</p></td>
-    </tr>
-{IfUserIsOnlineEnd}
-    <tr>
-      <td class="user_agent_profile_left"><p>{ResidentSince}:</p></td>
-      <td class="user_agent_profile_right"><p>{UserBorn}</p></td>
-    </tr>
-    <tr>
-      <td class="user_agent_profile_left"><p>{AccountType}:</p></td>
-      <td class="user_agent_profile_right"><p>{UserType}</p></td>
-    </tr>
-    <tr>
-      <td class="user_agent_profile_left"><p>{PartnersName}:</p></td>
-      <td class="user_agent_profile_right"><p>{UserPartner}</p></td>
-    </tr>
-    <tr>
-      <td class="user_agent_profile_left"><p>{AboutMe}:</p></td>
-      <td class="user_agent_profile_right"><p>{UserAboutMe}</p></td>
-    </tr>
-  </tbody>
-</table>
-</div>
+<!--#include file="/webprofile/base.html" -->
+<!--These are the other two files that somehow ought to be linked together into base so that it can display that information as well, maybe via a tab set or something?
+     Remove the first <!-- to view them-->
+<!--<!--#include file="/webprofile/groups.html" -->
+<!--<!--#include file="/webprofile/picks.html" -->
 	<div id="footer">
 	  <div class=languageswitch>
 	    <ul>

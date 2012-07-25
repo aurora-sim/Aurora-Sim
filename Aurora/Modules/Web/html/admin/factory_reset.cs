@@ -31,8 +31,7 @@ namespace Aurora.Modules.Web
             OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
-            IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
-
+            
             bool changed = false;
             if (requestParameters.ContainsKey("ResetMenu"))
             {

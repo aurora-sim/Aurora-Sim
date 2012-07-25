@@ -1,0 +1,55 @@
+<div id="container">
+<h2>{SystemName}: {UserName}</h2>
+<p class=jclock1><span id=jclock1></span></p>
+<div id="user_agent_profile_container">
+<table id="user_agent_profile">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="user_agent_profile_left"></th>
+      <th class="user_agent_profile_right"></th>
+	  <th class="user_agent_profile_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="7">
+	    <div class="user_agent_profile_picture">
+	    <a href="#">
+	    <img height="256"
+		     src="{UserPictureURL}" 
+		     alt="{UserProfileFor}: {UserName}"
+			 title="{UserProfileFor}: {UserName}" /></a>
+	    <p class="user_agent_profile_picture_text">{UsersPicksText}: {UserName}</p></div>
+	  </td>
+      <td class="user_agent_profile_left_size"><p>{UsersPicksText}:</p></td>
+	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
+    </tr>
+{PicksArrayBegin}
+    <tr>
+      <td class="user_agent_profile_picture" rowspan="7">
+	    <div class="user_agent_profile_picture">
+	    <a href="#">
+	    <img height="256"
+		     src="{PickSnapshotURL}" 
+		     alt="{PickName}"
+			 title="{PickName}" /></a>
+	    <p class="user_agent_profile_picture_text">{PickName}</p></div>
+	  </td>
+      <td class="user_agent_profile_right"><p>{PickInfo}</p></td>
+      <td class="user_agent_profile_right"><p>{PickSim} @ {PickLocation}</p></td>
+    </tr>
+{PicksArrayEnd}
+  </tbody>
+</table>
+</div>

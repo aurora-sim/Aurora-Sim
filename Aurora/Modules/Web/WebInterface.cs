@@ -196,7 +196,7 @@ namespace Aurora.Modules.Web
                 {
                     Dictionary<string, object> vars;
                     if(!CheckCookieLocked(filename, httpRequest, httpResponse, out vars))
-                        vars = AddVarsForPage(filename, httpRequest, httpResponse, requestParameters);
+                        vars = AddVarsForPage(filename, filename, httpRequest, httpResponse, requestParameters);
 
                     AddDefaultVarsForPage(ref vars);
 
@@ -204,7 +204,7 @@ namespace Aurora.Modules.Web
                         return MainServer.NoResponse;
                     if (vars == null)
                         return MainServer.BadRequest;
-                    response = Encoding.UTF8.GetBytes(ConvertHTML(text, httpRequest, httpResponse, requestParameters, vars));
+                    response = Encoding.UTF8.GetBytes(ConvertHTML(filename, text, httpRequest, httpResponse, requestParameters, vars));
                 }
             }
             else
@@ -227,7 +227,7 @@ namespace Aurora.Modules.Web
             vars.Add("SystemName", GridName);
         }
 
-        protected Dictionary<string, object> AddVarsForPage(string filename, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        protected Dictionary<string, object> AddVarsForPage(string filename, string parentFileName, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
         {
             Dictionary<string, object> vars = new Dictionary<string, object>();
             IWebInterfacePage page = GetPage(filename);
@@ -257,7 +257,7 @@ namespace Aurora.Modules.Web
                             return null;
                     }
                 }
-                vars = page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator);
+                vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator);
                 return vars;
             }
             return null;
@@ -288,7 +288,7 @@ namespace Aurora.Modules.Web
             }
             return null;
         }
-        protected string ConvertHTML(string file, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
+        protected string ConvertHTML(string originalFileName, string file, OSHttpRequest request, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, Dictionary<string, object> vars)
         {
             string html = CSHTMLCreator.BuildHTML(file, vars);
 
@@ -301,12 +301,13 @@ namespace Aurora.Modules.Web
                 if (cleanLine.StartsWith("<!--#include file="))
                 {
                     string[] split = line.Split(new string[2] { "<!--#include file=\"", "\" -->" }, StringSplitOptions.RemoveEmptyEntries);
-                    for (int i = split.Length % 2 == 0 ? 0 : 1; i < split.Length; i += 2)
+                    for (int i = 0; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
-                        Dictionary<string, object> newVars = AddVarsForPage(filename, 
+                        Dictionary<string, object> newVars = AddVarsForPage(filename, originalFileName,
                             request, httpResponse, requestParameters);
-                        sb.AppendLine(ConvertHTML(File.ReadAllText(filename), 
+                        AddDefaultVarsForPage(ref newVars);
+                        sb.AppendLine(ConvertHTML(filename, File.ReadAllText(filename), 
                             request, httpResponse, requestParameters, newVars));
                     }
                 }
@@ -318,17 +319,18 @@ namespace Aurora.Modules.Web
                         string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html", "");
                         if (Directory.Exists(filename))
                         {
-                            Dictionary<string, object> newVars = AddVarsForPage(filename, request, httpResponse,
+                            Dictionary<string, object> newVars = AddVarsForPage(filename, filename, request, httpResponse,
                                                                                 requestParameters);
                             string[] files = Directory.GetFiles(filename);
                             foreach (string f in files)
                             {
                                 if (!f.EndsWith(".html")) continue;
-                                Dictionary<string, object> newVars2 = AddVarsForPage(f, request, httpResponse, requestParameters) ??
+                                Dictionary<string, object> newVars2 = AddVarsForPage(f, filename, request, httpResponse, requestParameters) ??
                                                                       new Dictionary<string, object>();
                                 foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
                                     newVars2.Add(pair.Key, pair.Value);
-                                sb.AppendLine(ConvertHTML(File.ReadAllText(f), request, httpResponse,
+                                AddDefaultVarsForPage(ref newVars2);
+                                sb.AppendLine(ConvertHTML(f, File.ReadAllText(f), request, httpResponse,
                                                                     requestParameters, newVars2));
                             }
                         }
@@ -348,7 +350,7 @@ namespace Aurora.Modules.Web
                             List<Dictionary<string, object>> dicts = vars[keyToCheck] as List<Dictionary<string, object>>;
                             if (dicts != null)
                                 foreach (var dict in dicts)
-                                    sb.AppendLine(ConvertHTML(string.Join("\n", repeatedLines.ToArray()), request,
+                                    sb.AppendLine(ConvertHTML(originalFileName, string.Join("\n", repeatedLines.ToArray()), request,
                                                                 httpResponse, requestParameters, dict));
                         }
                     }

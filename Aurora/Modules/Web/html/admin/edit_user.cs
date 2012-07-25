@@ -47,11 +47,16 @@ namespace Aurora.Modules.Web
                 string password = requestParameters["password"].ToString();
                 string passwordconf = requestParameters["passwordconf"].ToString();
 
-                IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
-                if (authService != null)
-                    error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                if (password != passwordconf)
+                    error = "Passwords do not match";
                 else
-                    error = "No authentication service was available to change your password";
+                {
+                    IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
+                    if (authService != null)
+                        error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                    else
+                        error = "No authentication service was available to change your password";
+                }
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitEmailChange")
@@ -78,7 +83,7 @@ namespace Aurora.Modules.Web
                 int timeHours = int.Parse(requestParameters["TimeHours"].ToString());
                 int timeMinutes = int.Parse(requestParameters["TimeMinutes"].ToString());
                 agent.Flags |= IAgentFlags.TempBan;
-                DateTime until = DateTime.Now.AddDays(timeDays).AddHours(timeDays).AddMinutes(timeMinutes);
+                DateTime until = DateTime.Now.AddDays(timeDays).AddHours(timeHours).AddMinutes(timeMinutes);
                 agent.OtherAgentInformation["TemperaryBanInfo"] = until;
                 agentService.UpdateAgent(agent);
             }
