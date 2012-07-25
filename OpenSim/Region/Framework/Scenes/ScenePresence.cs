@@ -1593,7 +1593,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Sit code
 
-        private ISceneChildEntity FindNextAvailableSitTarget (UUID targetID)
+        private ISceneChildEntity FindNextAvailableSitTarget(UUID targetID)
         {
             ISceneChildEntity targetPart = m_scene.GetSceneObjectPart(targetID);
             if (targetPart == null)
@@ -1603,14 +1603,14 @@ namespace OpenSim.Region.Framework.Scenes
             // If the primitive the player clicked on has no sit target, and one or more other linked objects have sit targets that are not full, the sit target of the object with the lowest link number will be used.
 
             // Get our own copy of the part array, and sort into the order we want to test
-            ISceneChildEntity[] partArray = targetPart.ParentEntity.ChildrenEntities ().ToArray ();
-            Array.Sort (partArray, delegate (ISceneChildEntity p1, ISceneChildEntity p2)
-                       {
-                           // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
-                           int linkNum1 = p1==targetPart ? -1 : p1.LinkNum;
-                           int linkNum2 = p2==targetPart ? -1 : p2.LinkNum;
-                           return linkNum1 - linkNum2;
-                       }
+            ISceneChildEntity[] partArray = targetPart.ParentEntity.ChildrenEntities().ToArray();
+            Array.Sort(partArray, delegate(ISceneChildEntity p1, ISceneChildEntity p2)
+            {
+                // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
+                int linkNum1 = p1 == targetPart ? -1 : p1.LinkNum;
+                int linkNum2 = p2 == targetPart ? -1 : p2.LinkNum;
+                return linkNum1 - linkNum2;
+            }
                 );
 
             //look for prims with explicit sit targets that are available
@@ -1625,6 +1625,48 @@ namespace OpenSim.Region.Framework.Scenes
                        avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f));
 
                 if (SitTargetisSet)
+                {
+                    //switch the target to this prim
+                    return part;
+                }
+            }
+
+            // no explicit sit target found - use original target
+            return targetPart;
+        }
+
+        private ISceneChildEntity FindNextAvailableSitTarget(UUID targetID, UUID notID)
+        {
+            ISceneChildEntity targetPart = m_scene.GetSceneObjectPart(targetID);
+            if (targetPart == null)
+                return null;
+
+            // If the primitive the player clicked on has a sit target and that sit target is not full, that sit target is used.
+            // If the primitive the player clicked on has no sit target, and one or more other linked objects have sit targets that are not full, the sit target of the object with the lowest link number will be used.
+
+            // Get our own copy of the part array, and sort into the order we want to test
+            ISceneChildEntity[] partArray = targetPart.ParentEntity.ChildrenEntities().ToArray();
+            Array.Sort(partArray, delegate(ISceneChildEntity p1, ISceneChildEntity p2)
+            {
+                // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
+                int linkNum1 = p1 == targetPart ? -1 : p1.LinkNum;
+                int linkNum2 = p2 == targetPart ? -1 : p2.LinkNum;
+                return linkNum1 - linkNum2;
+            }
+                );
+
+            //look for prims with explicit sit targets that are available
+            foreach (ISceneChildEntity part in partArray)
+            {
+                // Is a sit target available?
+                Vector3 avSitOffSet = part.SitTargetPosition;
+                Quaternion avSitOrientation = part.SitTargetOrientation;
+
+                bool SitTargetisSet =
+                    (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f && avSitOrientation.W == 1f &&
+                       avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f));
+
+                if (SitTargetisSet && part.UUID != notID)
                 {
                     //switch the target to this prim
                     return part;
@@ -1681,15 +1723,15 @@ namespace OpenSim.Region.Framework.Scenes
             Vector3 cameraAtOffset = Vector3.Zero;
 
             ISceneChildEntity part = FindNextAvailableSitTarget(targetID);
+            if (part.SitTargetAvatar.Count > 0)
+                part = FindNextAvailableSitTarget(targetID, part.UUID);
+
             m_requestedSitTargetUUID = part.UUID;
             m_sitting = true;
-            // UNTODO: determine position to sit at based on scene geometry; don't trust offset from client
-            // see http://wiki.secondlife.com/wiki/User:Andrew_Linden/Office_Hours/2007_11_06 for details on how LL does it
 
             // Is a sit target available?
             Vector3 avSitOffSet = part.SitTargetPosition;
             Quaternion avSitOrientation = part.SitTargetOrientation;
-            const bool SitTargetUnOccupied = true;
             bool UseSitTarget = false;
 
             bool SitTargetisSet =
@@ -1710,7 +1752,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sitting = true;
             part.SetAvatarOnSitTarget(UUID);
 
-            if (SitTargetisSet && SitTargetUnOccupied)
+            if (SitTargetisSet)
             {
                 offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);
                 sitOrientation = avSitOrientation;
