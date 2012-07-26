@@ -1,5 +1,4 @@
 <!--
-
 {UsersOnlineList}
 	{UserName}
 	{UserRegion}
@@ -10,6 +9,10 @@
 {UserNameText}     User Name
 {MoreInfoText}     More Info
 -->
+
+<script type="text/javascript">
+  $(document).ready(function(){$(".agentinfo, .regioninfo").colorbox({iframe:true, width:"990px", height:"440px"});});
+</script>
 
 <h2>{SystemName}: {OnlineUsersText}</h2>
 <table id="online_users_navigation_top">
@@ -67,8 +70,8 @@
   <tbody>
 {UsersOnlineListArrayBegin}
     <tr>
-      <td class="online_users_left"><a target="_blank" class='agent_info' href="webprofile/?userid={UserID}">{UserName}</a></td>
-      <td class="online_users_right"><a target="_blank" class='region_info' href="region_info.html?regionid={UserRegionID}">{UserRegion}</a></td>
+      <td class="online_users_left"><a target="_blank" class='agentinfo' href="webprofile/?userid={UserID}">{UserName}</a></td>
+      <td class="online_users_right"><a target="_blank" class='regioninfo' href="region_info.html?regionid={UserRegionID}">{UserRegion}</a></td>
     </tr>
 {UsersOnlineListArrayEnd}
   </tbody>

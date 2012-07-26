@@ -1,27 +1,26 @@
-<head>
-	<!-- slide show -->
-	<script type="text/javascript" src="javascripts/jquery.cycle.lite.js"></script>
-	<script type="text/javascript" src="javascripts/jquery.easing.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function() {
-			$('.slideshow').cycle({
-			// Transitions Type:
-			// blindX, blindY, blindZ, cover, curtainX, curtainY, fade, fadeZoom, growX, growY,
-			// scrollUp, scrollDown, scrollLeft, scrollRight, scrollHorz, scrollVert, shuffle,
-			// slideX, slideY, toss, turnUp, turnDown, turnLeft, turnRight, uncover, wipe, zoom
-			// Simple usage: (Need jquery.cycle.lite.js and jquery.easing.js)
-			fx: 'fade', speed:  5000
-			// Advanced usage: (Need jquery.cycle.all.js and jquery.easing.js)
-			// fx: 'shuffle', shuffle: {top: -25, left:  -250}, easing: 'easeInOutBack', delay: -2000, speed: 1000
-		});
+<!-- slide show -->
+<script type="text/javascript" src="javascripts/jquery.cycle.lite.js"></script>
+<script type="text/javascript" src="javascripts/jquery.easing.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('.slideshow').cycle({
+		// Transitions Type:
+		// blindX, blindY, blindZ, cover, curtainX, curtainY, fade, fadeZoom, growX, growY,
+		// scrollUp, scrollDown, scrollLeft, scrollRight, scrollHorz, scrollVert, shuffle,
+		// slideX, slideY, toss, turnUp, turnDown, turnLeft, turnRight, uncover, wipe, zoom
+		// Simple usage: (Need jquery.cycle.lite.js and jquery.easing.js)
+		fx: 'fade', speed:  5000
+		// Advanced usage: (Need jquery.cycle.all.js and jquery.easing.js)
+		// fx: 'shuffle', shuffle: {top: -25, left:  -250}, easing: 'easeInOutBack', delay: -2000, speed: 1000
 	});
-	</script>
-</head>
+});
+</script>
+
 <div class="slideshow">
 	<img src="images/screenshots/welcome1.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome1.jpg" />
-	<img src="images/screenshots/welcome2.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome2.jpg" />
-	<img src="images/screenshots/welcome3.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome3.jpg" />
-	<img src="images/screenshots/welcome4.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome4.jpg" />
+	<img src="images/screenshots/welcome2.jpg" alt="{SystemName}: welcome2.jpg" title="{SystemName}: welcome2.jpg" />
+	<img src="images/screenshots/welcome3.jpg" alt="{SystemName}: welcome3.jpg" title="{SystemName}: welcome3.jpg" />
+	<img src="images/screenshots/welcome4.jpg" alt="{SystemName}: welcome4.jpg" title="{SystemName}: welcome4.jpg" />
 </div>
 	
 <h2>{SystemName} &rarr; {HomeText}</h2> <!-- &rArr; -->

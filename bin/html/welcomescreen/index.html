@@ -31,18 +31,6 @@
 	<style type="text/css">#container{display:none;} img#mainImage{display:none;}</style>
 	<script type="text/javascript">$(document).ready(function() {$( '#container, img#mainImage, #footer' ).fadeIn("slow");});</script>
 
-	<!-- TODO
-	<script language="javascript">
-		$(document).ready(function() {
-			$('a.regionslurl').hover(function() { //mouse in
-					$(this).animate({ paddingLeft: '50px' }, 400);
-				}, function() { //mouse out
-				$(this).animate({ paddingLeft: 0 }, 400);
-			});
-		});
-	</script>
-	-->
-
 </head>
 
 <body class="welcomescreen">
@@ -107,11 +95,15 @@
 </div>
 
 <script type="text/javascript">
-// fade class
-$(".regionbox, .news, .gridstatus, .infobox, a.logofade img, a.languageswitch, a.styleswitch, a.welcomescreen, a.world_map, a.copyright, li.fade, a.fade").hover(function(){
-  $(this).fadeOut(250);$(this).fadeIn(50);
-});
-</script>
-
+  $('#bottomright, input.languageswitch, .regionbox, .news, .gridstatus, .infobox, a.languageswitch, a.styleswitch, a.welcomescreen, a.world_map, a.copyright, li.fade, a.fade').css('opacity', 0.3);
+  $("#bottomright, input.languageswitch, .regionbox, .news, .gridstatus, .infobox, a.languageswitch, a.styleswitch, a.welcomescreen, a.world_map, a.copyright, li.fade, a.fade").hover(
+    function() {
+      $(this).stop().animate({"opacity": "1.0"}, "3.0");},
+	function() {
+	  $(this).stop().animate({"opacity": "0.3"}, "3.0");
+  });
+  $("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+ </script>
+ 
 </body>
 </html>

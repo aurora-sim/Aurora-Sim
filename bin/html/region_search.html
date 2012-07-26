@@ -10,6 +10,10 @@
 {Search}              Search
 -->
 
+<script type="text/javascript">
+  $(document).ready(function(){$(".regioninfo").colorbox({iframe:true, width:"990px", height:"440px"});});
+</script>
+
 <h2>{SystemName}: {RegionSearchText}</h2>
 <h3>{SearchForRegionText}</h3>
 <form action="index.html?page=region_search" method="POST">
@@ -95,7 +99,7 @@
     <tr>
 {RegionsListArrayBegin}
       <td class="user_search_result_left"><p>{RegionName}</p></td>
-      <td class="user_search_result_right"><a target="_blank" class='region_info' href="region_info.html?regionid={RegionID}"><p>{MoreInfoText}</p></a></td>
+      <td class="user_search_result_right"><a target="_blank" class='regioninfo' href="region_info.html?regionid={RegionID}"><p>{MoreInfoText}</p></a></td>
 {RegionsListArrayEnd}
     </tr>
 

@@ -82,7 +82,8 @@ namespace Aurora.Modules.Web
 
             vars.Add("SearchResultForRegionText", translator.GetTranslatedString("SearchResultForRegionText"));
             vars.Add("RegionMoreInfo", translator.GetTranslatedString("RegionMoreInfo"));
-
+			vars.Add("MoreInfoText", translator.GetTranslatedString("MoreInfoText"));
+			
             return vars;
         }
 

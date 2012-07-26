@@ -7,24 +7,33 @@
 {NewsTitle}                
 {NewsText}             
 {NewsID}             
-
 -->
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{SystemName}: {News}</h2></div>
-    <div id="register">
-        <table>
-			<tr>
-				<td>{NewsItemTitle}: </td>
-				<td>
-					<b>{NewsTitle}</b>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					{NewsText}
-				</td>
-			</tr>
-		</table>
-	</div>
-</div>
+
+<h2>{SystemName}: {News}</h2>
+<table id="login">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+  <tr>       
+	<td>
+	  <h4>{NewsItemTitle}: {NewsTitle}</h4>
+	  <p>{NewsText}</p>
+	</td>
+  </tr>
+  </tbody>
+</table>
 {IsAdminAuthenticatedEnd}

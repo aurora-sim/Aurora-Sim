@@ -339,12 +339,12 @@ table#region_info td {padding: 5px;}
 
 /* Navigation buttons */
 .nav {
-	background: #fcfcfc;
 	margin-right: 5px;
 	padding-left: 6px;
 	padding-right: 6px;
 	padding-top: 2px;
 	padding-bottom: 2px;
+	background: #fcfcfc;
 	border: 0px solid #CCC;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
@@ -375,14 +375,14 @@ h1, h2, h3, h4, h5 {color: #6EA6FB; line-height: 1.8em;}
 h1 {font-size: 20px;}
 h2 {font-size: 18px;}
 h3 {font-size: 14px;}
-h3 {font-size: 12px;}
-h3 {font-size: 10px;}
+h4 {font-size: 12px;}
+h5 {font-size: 10px;}
 
 /* Tooltips */
+#tooltip h3, #tooltip div {margin: 0px; font-size: 12px;}
 #tooltip {
 	position: absolute;
 	z-index: 3000;
-	font-size: 10px;
 	padding: 3px;
 	opacity: 0.85;
 	background-color: #FCFCFC;
@@ -396,7 +396,6 @@ h3 {font-size: 10px;}
     box-shadow: #CCC 0 0 .5em;
 	behavior: url(../../css/pie.htc);
 }
-#tooltip h3, #tooltip div {margin: 0px;}
 
 input, textarea, select, button {
 	padding: 5px;
@@ -431,6 +430,8 @@ button {height:30px;border: 1px solid #ccc;}
 input.checkbox {width: 20px; margin-right: 5px;}
 label {display:inline-block;}
 
+.user_search_right input {background: #fcfcfc url(../images/icons/search-white.png) no-repeat 8px 8px;}
+
 /* Container */
 #container {
 	width: 960px;
@@ -463,6 +464,7 @@ label {display:inline-block;}
 	float: left;
 	margin-right: 16px;
 	text-transform: uppercase;
+	/* font-variant:small-caps; */
 	color: #C2C2C2;
 	padding: 3px;
 	border: 1px solid transparent;
@@ -472,6 +474,18 @@ label {display:inline-block;}
 	color: #6FA5FD;
 	cursor: pointer;
 }
+
+#top #menu ul li {
+	float: left;
+	margin-right: 16px;
+	text-transform: uppercase;
+	/* font-variant:small-caps; */
+	color: #C2C2C2;
+	padding: 3px;
+	border: 1px solid transparent;
+}
+
+#nav li:hover ul {left: 0px;}
 
 /* DropDown Menu */
 #top #menu ul {
@@ -500,7 +514,7 @@ label {display:inline-block;}
 #top #menu li:hover ul {
 	display: block;
 	float: none;
-	width: 220px;
+    width: 220px;
 }
 
 /* Loading Menu */
@@ -525,7 +539,7 @@ label {display:inline-block;}
 /* Slide Show */
 /* Slide Show */
 .slideshow {
-    width:260px;
+    width:360px;
     height: 140px;
     float:right;
     background: #fcfcfc;
@@ -542,7 +556,7 @@ label {display:inline-block;}
 }
 
 .slideshow img{
-    width: 240px;
+    width: 340px;
     height: 120px;
 	margin: 10px;
     -webkit-border-radius: 5px;
@@ -604,10 +618,11 @@ img.phoeniximage, img.singularityimage, img.zenimage {
 #footer {
 	background: #fcfcfc;
 	margin-top: 5px;
-	margin-bottom: 30px;
 	padding: 10px;
 	color: #7e7e7e;
-	font-size: 11px;
+	font-size: 10px;
+	text-transform: uppercase;
+	/* font-variant:small-caps; */
 	border: 1px solid #EEEEEE;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
@@ -704,7 +719,7 @@ img#mainImage {
 
 #topright {
 	position: absolute;
-	top: 10px;
+	top: 25px;
 	right: 10px;
 }
 
@@ -842,9 +857,95 @@ div#regionbox:hover, div#infobox:hover, div#news:hover, div#gridstatus:hover {
 #cboxLoadedContent{margin-bottom:20px;}
 
 #cboxTitle{position:absolute; bottom:0px; left:0; text-align: center; width:100%; color:#999;}
-#cboxCurrent{position:absolute; bottom:0px; left:100px; color:#999;}
-#cboxSlideshow{position:absolute; bottom:0px; right:42px; color:#444;}
+#cboxCurrent{position:absolute; bottom:0px; left:140px; color:#999;}
+#cboxSlideshow{position:absolute; bottom:0px; right:45px; color:#444;}
 #cboxPrevious{position:absolute; bottom:0px; left:0; color:#444;}
-#cboxNext{position:absolute; bottom:0px; left:63px; color:#444;}
+#cboxNext{position:absolute; bottom:0px; left:75px; color:#444;}
 #cboxLoadingOverlay{background:#ffffff url(../images/icons/loading.gif) no-repeat 5px 5px;}
 #cboxClose {position:absolute; bottom:0px; right:0px; display:block; color:#444;}
+
+/* Avatar Archive Carousel */
+.jcarousel-skin-aurora .jcarousel-container {
+    background: transparent;
+	width: 938px;
+	height: 170px;
+}
+
+.jcarousel-skin-aurora .jcarousel-clip {overflow: hidden;}
+.jcarousel-skin-aurora .jcarousel-clip-horizontal {width: 100%; height: 170px;}
+.jcarousel-skin-aurora .jcarousel-item-horizontal {margin-left: 0px; margin-right: 0px;}
+.jcarousel-skin-aurora .jcarousel-direction-rtl .jcarousel-item-horizontal {margin-left: 0px; margin-right: 0px;}
+.jcarousel-skin-aurora .jcarousel-item-placeholder {background: #ccc;  color: #aaa;}
+
+/* Avatar Archive Buttons */
+.jcarousel-skin-aurora .jcarousel-next-horizontal {
+    position: absolute;
+    top: 80px;
+    right: -13px;
+    width: 16px;
+    height: 18px;
+	padding: 2px;
+    cursor: pointer;
+	font-size: 10px;
+	color: #6EA6FB;
+	background: #fcfcfc;
+	border: 0px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #CCC 0 0 .25em;
+    -moz-box-shadow: #CCC 0 0 .25em;
+    box-shadow: #CCC 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
+
+.jcarousel-skin-aurora .jcarousel-direction-rtl .jcarousel-next-horizontal {
+	left: 5px; right: auto; color: #fcfcfc;
+}
+
+.jcarousel-skin-aurora .jcarousel-next-horizontal:hover,
+.jcarousel-skin-aurora .jcarousel-next-horizontal:focus {color: #296BA5;}
+
+.jcarousel-skin-aurora .jcarousel-next-horizontal:active {color: #6EA6FB;}
+
+.jcarousel-skin-aurora .jcarousel-next-disabled-horizontal,
+.jcarousel-skin-aurora .jcarousel-next-disabled-horizontal:hover,
+.jcarousel-skin-aurora .jcarousel-next-disabled-horizontal:focus,
+.jcarousel-skin-aurora .jcarousel-next-disabled-horizontal:active {cursor: default;}
+
+.jcarousel-skin-aurora .jcarousel-prev-horizontal {
+    position: absolute;
+    top: 80px;
+    left: -15px;
+    width: 16px;
+    height: 18px;
+	padding: 2px;
+    cursor: pointer;
+	font-size: 10px;
+	color: #6EA6FB;
+	background: #fcfcfc;
+	border: 0px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: #CCC 0 0 .25em;
+    -moz-box-shadow: #CCC 0 0 .25em;
+    box-shadow: #CCC 0 0 .25em;
+	behavior: url(css/pie.htc);
+}
+
+.jcarousel-skin-aurora .jcarousel-direction-rtl .jcarousel-prev-horizontal {
+    left: auto; right: 5px; color: #fcfcfc;
+}
+
+.jcarousel-skin-aurora .jcarousel-prev-horizontal:hover, 
+.jcarousel-skin-aurora .jcarousel-prev-horizontal:focus {color: #296BA5;}
+
+.jcarousel-skin-aurora .jcarousel-prev-horizontal:active {color: #6EA6FB;}
+.jcarousel-skin-aurora .jcarousel-prev-disabled-horizontal,
+.jcarousel-skin-aurora .jcarousel-prev-disabled-horizontal:hover,
+.jcarousel-skin-aurora .jcarousel-prev-disabled-horizontal:focus,
+.jcarousel-skin-aurora .jcarousel-prev-disabled-horizontal:active
+{cursor: default; background-position: -96px 0;}

@@ -10,6 +10,10 @@
 {Search}              Search
 -->
 
+<script type="text/javascript">
+  $(document).ready(function(){$(".agentinfo, .agentedit").colorbox({iframe:true, width:"990px", height:"440px"});});
+</script>
+
 <h2>{SystemName}: {UserSearchText}</h2>
 <h3>{SearchForUserText}</h3>
 <form action="index.html?page=user_search" method="post">
@@ -92,9 +96,9 @@
   <tbody>
 {UsersListArrayBegin}
     <tr>
-      <td class="user_search_result_left"><a target="_blank" class='agent_info' href="webprofile/?userid={UserID}"><p>{UserName}</p></a></td>
+      <td class="user_search_result_left"><a target="_blank" class='agentinfo' href="webprofile/?userid={UserID}"><p>{UserName}</p></a></td>
 {IsAdminAuthenticatedBegin}
-      <td class="user_search_result_right"><a href="index.html?page=edit_user&userid={UserID}"><p>{EditText}</p></a></td>
+      <td class="user_search_result_right"><a class='agentedit' href="index.html?page=edit_user&userid={UserID}"><p>{EditText}</p></a></td>
 {IsAdminAuthenticatedEnd}
     </tr>
 {UsersListArrayEnd}

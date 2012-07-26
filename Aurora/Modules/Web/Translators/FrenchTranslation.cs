@@ -383,7 +383,9 @@ namespace Aurora.Modules.Web.Translators
                 //Logout page
                 case "LoggedOutSuccessfullyText":
                     return "Vous avez été déconnecté avec succès.";
-
+                case "Logout":
+                    return "Déconnection";
+					
                 //Change user information page
                 case "ChangeUserInformationText":
                     return "Modifier les informations de l'utilisateur";
@@ -498,9 +500,13 @@ namespace Aurora.Modules.Web.Translators
                 case "PageManager":
                     return "Gestionnaire de Pages";
                 case "SaveMenuItemChanges":
-                    return "Enregistrer l'élément de menu";
+                    return "Enregistrer un élément de menu";
                 case "SelectItem":
-                    return "Selectionner l'élément";
+                    return "Selectionner un élément";
+                case "DeleteItem":
+                    return "Effacer un élément";
+                case "AddItem":
+                    return "Ajouter un élément";
                 case "PageLocationText":
                     return "Emplacement de la page";
                 case "PageIDText":

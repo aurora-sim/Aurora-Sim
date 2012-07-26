@@ -32,9 +32,12 @@ namespace Aurora.Modules.Web
             OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
         {
             var vars = new Dictionary<string, object>();
-
+			
+			vars.Add("Logout", translator.GetTranslatedString("Logout"));
             vars.Add("LoggedOutSuccessfullyText", translator.GetTranslatedString("LoggedOutSuccessfullyText"));
+			
             Authenticator.RemoveAuthentication(httpRequest);
+			
             return vars;
         }
 

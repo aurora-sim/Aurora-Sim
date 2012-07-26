@@ -1,31 +1,8 @@
-<!-- params to replace
-
-{SystemURL}
-{SystemName}
-{Days}
-{Months}
-{Years}
-{AvatarArchives}
-{ErrorMessage}             Any errors that may have happened during creating the account
-{ToSMessage}               The Entire ToS
-{TermsOfServiceAccept}     Do you accept the Terms of Service as detailed above?
-{TermsOfServiceText}       Terms of Service
-{RegistrationsDisabled}    RegistrationsDisabled
-{RegistrationText}         Avatar Registration
-{AvatarNameText}           Avatar Name
-{AvatarPasswordText}       Password
-{AvatarScopeText}          Avatar ScopeID
-{FirstNameText}            Your First Name
-{LastNameText}             Your Last Name
-{UserAddressText}          Your Address
-{UserZipText}              Your Zip Code
-{UserCityText}             Your City
-{UserCountryText}          Your Country
-{UserDOBText}              Your Date Of Birth
-{UserEmailText}            Your Email
-{Submit}                   Submit
--->
-
+<script type="text/javascript">
+// jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel();});
+jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel({wrap: 'circular'});});
+</script>
+  
 <h2>{SystemName}: {RegistrationText}</h2>
 <form action="{SubmitURL}" method="post">
 <div id="error_message" class="error">{ErrorMessage}</div>
@@ -116,13 +93,28 @@
     </tr>
     <tr>
       <td class="register_left" colspan="4" valign="top">
+      <!--
+      {AvatarArchiveArrayBegin}
+	      <div class="avatar_archive_screenshot">
+	        <label for="{AvatarArchiveName}">{AvatarArchiveName}</label>
+		    <input type="radio" id="{AvatarArchiveName}" name="AvatarArchive" value="{AvatarArchiveName}">
+		    <img src="{AvatarArchiveSnapshotURL}" />	  
+	      </div>		
+      {AvatarArchiveArrayEnd}
+      -->
+      <center>
+      <ul id="avatarcarousel" class="jcarousel-skin-aurora">
 {AvatarArchiveArrayBegin}
-	  <div class="avatar_archive_screenshot">
-	    <label for="{AvatarArchiveName}">{AvatarArchiveName}</label>
-		<input type="radio" id="{AvatarArchiveName}" name="AvatarArchive" value="{AvatarArchiveName}">
-		<img src="{AvatarArchiveSnapshotURL}" />	  
-	  </div>		
+	    <li>
+		  <div class="avatar_archive_screenshot">
+		    <label for="{AvatarArchiveName}" alt="{SystemName}: {AvatarArchiveName}" title="{SystemName}: {AvatarArchiveName}">{AvatarArchiveName}</label>
+			<input type="radio" id="{AvatarArchiveName}" name="AvatarArchive" value="{AvatarArchiveName}" alt="{SystemName}: {AvatarArchiveName}" title="{SystemName}: {AvatarArchiveName}">
+			<img src="{AvatarArchiveSnapshotURL}" alt="{SystemName}: {AvatarArchiveName}" title="{SystemName}: {AvatarArchiveName}" />
+		  </div>
+	    </li>
 {AvatarArchiveArrayEnd}
+      </ul>
+      </center>
 	  </td>
     </tr>
     <tr>

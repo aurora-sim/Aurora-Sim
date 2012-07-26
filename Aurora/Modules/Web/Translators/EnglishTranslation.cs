@@ -383,6 +383,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Zen Viewer";
 				
                 //Logout page
+                case "Logout":
+                    return "Logout";
                 case "LoggedOutSuccessfullyText":
                     return "You have been logged out successfully.";
 

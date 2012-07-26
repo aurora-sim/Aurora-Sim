@@ -19,7 +19,7 @@
 {MoreInfoText}          More Info
 -->
 
-<script>
+<script type="text/javascript">
   $(document).ready(function(){$(".regioninfo").colorbox({iframe:true, width:"990px", height:"440px"});});
 </script>
 
@@ -126,3 +126,11 @@
   </tbody>
 -->
 </table>
+
+<script type="text/javascript">
+	// fade class
+	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+</script>
