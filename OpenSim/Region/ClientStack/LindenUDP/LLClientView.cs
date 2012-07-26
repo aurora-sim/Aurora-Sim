@@ -6394,25 +6394,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                msgpack.MessageBlock.Offline != 0,
                                                                msgpack.MessageBlock.Position,
                                                                msgpack.MessageBlock.BinaryBucket);
+                UserAccount toAccount = Scene.UserAccountService.GetUserAccount(AllScopeIDs, msgpack.AgentData.AgentID);
+                if (!AllScopeIDs.Any(s => toAccount.AllScopeIDs.Contains(s)))
+                    return true;//No scope, no contact
 
                 PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
                 if (handlerPreSendInstantMessage != null)
                 {
-#if (!ISWIN)
-                    foreach (PreSendImprovedInstantMessage d in handlerPreSendInstantMessage.GetInvocationList())
-                    {
-                        if (d(this, im))
-                        {
-                            return true; //handled
-                        }
-                    }
-#else
                     if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
                             d => d(this, im)))
                     {
                         return true; //handled
                     }
-#endif
                 }
                 handlerInstantMessage(this, im);
             }

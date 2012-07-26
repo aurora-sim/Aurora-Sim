@@ -493,9 +493,9 @@ namespace Aurora.Services.DataService
 
         protected List<GridRegion> CheckScopeIDs(List<UUID> scopeIDs, List<GridRegion> regions)
         {
-            if(scopeIDs == null || scopeIDs.Count == 0 || (scopeIDs.Count == 1 && scopeIDs[0] == UUID.Zero))
+            if (scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
                 return regions;
-            return new List<GridRegion>(regions.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s))));
+            return new List<GridRegion>(regions.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
         }
 
         protected List<GridRegion> ParseQuery(List<UUID> scopeIDs, List<string> query)

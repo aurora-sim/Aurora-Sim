@@ -487,7 +487,9 @@ namespace Aurora.Modules.Profiles
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID target)
         {
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
-            if (UPI == null)
+            UserAccount TargetAccount =
+                remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, target);
+            if (UPI == null || TargetAccount == null)
             {
                 remoteClient.SendAvatarProperties(target, "",
                                                   Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
@@ -501,8 +503,6 @@ namespace Aurora.Modules.Profiles
             uint agentOnline = 0;
             if (TargetPI != null && TargetPI.IsOnline && UPI.Visible)
                 agentOnline = 16;
-            UserAccount TargetAccount =
-                remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, target);
 
             if (IsFriendOfUser(remoteClient.AgentId, target))
                 SendProfile(remoteClient, UPI, TargetAccount, agentOnline);
