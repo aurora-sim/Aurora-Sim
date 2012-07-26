@@ -95,7 +95,7 @@ namespace Aurora.Modules.Chat
             UUID avatarID, string objectName, UUID objectID, UUID ownerID,
             string message, UUID textureID, int ch, string[] buttonlabels)
         {
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, ownerID);
             string ownerFirstName, ownerLastName;
             if (account != null)
             {
@@ -170,7 +170,7 @@ namespace Aurora.Modules.Chat
 
             if (sp != null && !sp.IsChildAgent)
             {
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerID);
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, ownerID);
                 string ownerFirstName, ownerLastName;
                 if (account != null)
                 {

@@ -43,7 +43,7 @@ using RegionFlags = Aurora.Framework.RegionFlags;
 
 namespace Aurora.Modules
 {
-    public class InterWorldCommunications : IService, ICommunicationService
+    /*public class InterWorldCommunications : IService, ICommunicationService
     {
         #region Declares
 
@@ -437,5 +437,5 @@ namespace Aurora.Modules
             UTF8Encoding enc = new UTF8Encoding();
             return enc.GetBytes(json);
         }
-    }
+    }*/
 }

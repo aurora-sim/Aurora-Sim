@@ -35,7 +35,7 @@ namespace Aurora.Modules.Web
             var vars = new Dictionary<string, object>();
             if (httpRequest.Query.ContainsKey("regionid"))
             {
-                GridRegion region = webInterface.Registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero,
+                GridRegion region = webInterface.Registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null,
                     UUID.Parse(httpRequest.Query["regionid"].ToString()));
 
                 IEstateConnector estateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
@@ -44,7 +44,7 @@ namespace Aurora.Modules.Web
                 vars.Add("RegionName", region.RegionName);
                 vars.Add("OwnerUUID", estate.EstateOwner);
                 vars.Add("OwnerName", webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, estate.EstateOwner).Name);
+                    GetUserAccount(null, estate.EstateOwner).Name);
                 vars.Add("RegionLocX", region.RegionLocX / Constants.RegionSize);
                 vars.Add("RegionLocY", region.RegionLocY / Constants.RegionSize);
                 vars.Add("RegionSizeX", region.RegionSizeX);
@@ -77,7 +77,7 @@ namespace Aurora.Modules.Web
                 IDirectoryServiceConnector directoryConnector = Aurora.DataManager.DataManager.RequestPlugin<IDirectoryServiceConnector>();
                 if (directoryConnector != null)
                 {
-                    List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero, UUID.Zero, ParcelFlags.None, ParcelCategory.Any);
+                    List<LandData> data = directoryConnector.GetParcelsByRegion(0, 10, region.RegionID, UUID.Zero, ParcelFlags.None, ParcelCategory.Any);
                     List<Dictionary<string, object>> parcels = new List<Dictionary<string, object>>();
                     foreach (var p in data)
                     {
@@ -90,7 +90,7 @@ namespace Aurora.Modules.Web
                         IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                         if (accountService != null)
                         {
-                            var account = accountService.GetUserAccount(UUID.Zero, p.OwnerID);
+                            var account = accountService.GetUserAccount(null, p.OwnerID);
                             if (account == null)
                                 parcel.Add("ParcelOwnerName", translator.GetTranslatedString("NoAccountFound"));
                             else

@@ -294,7 +294,7 @@ namespace Aurora.Framework
             IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (conn != null)
             {
-                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
+                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, name);
                 if (account != null)
                 {
                     List<EstateSettings> estates = conn.GetEstates(account.PrincipalID);
@@ -312,7 +312,7 @@ namespace Aurora.Framework
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
-            return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name);
+            return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(null, name);
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
@@ -337,7 +337,7 @@ namespace Aurora.Framework
             if (conn != null)
             {
                 conn.DelinkRegion(regionID);
-                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName);
+                UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, ownerName);
                 conn.LinkRegion(regionID, conn.GetEstate(account.PrincipalID, estateToJoin));
             }
         }
@@ -352,7 +352,7 @@ namespace Aurora.Framework
             IEstateConnector conn = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
             if (conn != null)
             {
-                var account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, ownerName);
+                var account = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, ownerName);
                 if (account != null)
                 {
                     UUID userID = account.PrincipalID;
@@ -397,7 +397,7 @@ namespace Aurora.Framework
                 if (es == null || es.EstateID == 0)
                     return "";
                 else
-                    return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, es.EstateOwner).Name;
+                    return m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, es.EstateOwner).Name;
             }
             return "";
         }

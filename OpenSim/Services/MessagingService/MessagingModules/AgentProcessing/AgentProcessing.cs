@@ -150,7 +150,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     int x, y;
                     Util.UlongToInts(requestingRegion, out x, out y);
-                    GridRegion requestingGridRegion = GridService.GetRegionByPosition(UUID.Zero, x, y);
+                    GridRegion requestingGridRegion = GridService.GetRegionByPosition(null, x, y);
                     if (requestingGridRegion != null)
                         Util.FireAndForget((o) => EnableChildAgentsForRegion(requestingGridRegion));
                 }
@@ -457,10 +457,12 @@ namespace OpenSim.Services.MessagingService
                                    {
                                        int count = 0;
                                        int x, y;
+                                       ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
+                                       IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
                                        Util.UlongToInts(requestingRegion, out x, out y);
                                        GridRegion ourRegion =
                                            m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(
-                                               UUID.Zero, x, y);
+                                               clientCaps.AccountInfo.AllScopeIDs, x, y);
                                        if (ourRegion == null)
                                        {
                                            MainConsole.Instance.Info(
@@ -469,8 +471,6 @@ namespace OpenSim.Services.MessagingService
                                        }
                                        List<GridRegion> neighbors = GetNeighbors(ourRegion, DrawDistance);
 
-                                       ICapsService capsService = m_registry.RequestModuleInterface<ICapsService>();
-                                       IClientCapsService clientCaps = capsService.GetClientCapsService(AgentID);
                                        clientCaps.GetRootCapsService().CircuitData.DrawDistance = DrawDistance;
                                            //Fix the root agents dd
                                        foreach (GridRegion neighbor in neighbors)
@@ -510,7 +510,7 @@ namespace OpenSim.Services.MessagingService
 
                                        //Ask the grid service about the range
                                        List<GridRegion> neighbors =
-                                           m_registry.RequestModuleInterface<IGridService>().GetRegionRange(UUID.Zero,
+                                           m_registry.RequestModuleInterface<IGridService>().GetRegionRange(caps.ClientCaps.AccountInfo.AllScopeIDs,
                                                                                                             xMin, xMax,
                                                                                                             yMin, yMax);
 
@@ -751,7 +751,7 @@ namespace OpenSim.Services.MessagingService
                     IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
                     if (GridService != null)
                     {
-                        destination = GridService.GetRegionByUUID(UUID.Zero, destination.RegionID);
+                        destination = GridService.GetRegionByUUID(clientCaps.AccountInfo.AllScopeIDs, destination.RegionID);
                         if (destination == null) //If its not in this grid
                             destination = oldRegion;
                         //Inform the client of the neighbor if needed
@@ -1048,7 +1048,7 @@ namespace OpenSim.Services.MessagingService
                 int yMax = (region.RegionLocY) + (userDrawDistance);
 
                 //Ask the grid service about the range
-                neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(region.ScopeID,
+                neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(region.AllScopeIDs,
                                                                                              xMin, xMax, yMin, yMax);
             }
             else
@@ -1088,7 +1088,7 @@ namespace OpenSim.Services.MessagingService
 
                         //We need to get it from the grid service again so that we can get the simulation service urls correctly
                         // as regions don't get that info
-                        crossingRegion = GridService.GetRegionByUUID(UUID.Zero, crossingRegion.RegionID);
+                        crossingRegion = GridService.GetRegionByUUID(clientCaps.AccountInfo.AllScopeIDs, crossingRegion.RegionID);
                         cAgent.IsCrossing = true;
                         if (!SimulationService.UpdateAgent(crossingRegion, cAgent))
                         {

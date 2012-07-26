@@ -1069,7 +1069,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string resolveName(UUID objecUUID)
         {
             // try avatar username surname
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, objecUUID);
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, objecUUID);
             if (account != null)
                 return account.Name;
 
@@ -4870,7 +4870,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UserInfoCacheEntry ce;
             if (!m_userInfoCache.TryGetValue(uuid, out ce))
             {
-                account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, uuid);
+                account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, uuid);
                 if (account == null)
                 {
                     m_userInfoCache[uuid] = null; // Cache negative
@@ -10191,7 +10191,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                 GridRegion info = World.RegionInfo.RegionName == simulator
                                       ? new GridRegion(World.RegionInfo)
-                                      : World.GridService.GetRegionByName(World.RegionInfo.ScopeID, simulator);
+                                      : World.GridService.GetRegionByName(World.RegionInfo.AllScopeIDs, simulator);
 
 
                 switch (data)
@@ -12178,7 +12178,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             Util.FireAndForget(delegate
                                    {
                                        string name = "";
-                                       UserAccount info = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, userID);
+                                       UserAccount info = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, userID);
                                        if (info != null)
                                            name = info.Name;
                                        dataserverPlugin.AddReply(uuid.ToString(),
@@ -12433,7 +12433,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 data = llList2CSV(new LSL_Types.list("INVALID_AGENT"));
             else if (amt <= 0)
                 data = llList2CSV(new LSL_Types.list("INVALID_AMOUNT"));
-            else if (World.UserAccountService.GetUserAccount(UUID.Zero, destID) == null)
+            else if (World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, destID) == null)
                 data = llList2CSV(new LSL_Types.list("LINDENDOLLAR_ENTITYDOESNOTEXIST"));
             else if (m_host.ParentEntity.OwnerID == m_host.ParentEntity.GroupID)
                 data = llList2CSV(new LSL_Types.list("GROUP_OWNED"));

@@ -126,13 +126,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
+        public UserAccount GetUserAccount(List<UUID> scopeIDs, string firstName, string lastName)
         {
             UserAccount account;
             if (m_cache.Get(firstName + " " + lastName, out account))
                 return account;
 
-            object remoteValue = DoRemote(scopeID, firstName, lastName);
+            object remoteValue = DoRemote(scopeIDs, firstName, lastName);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -144,24 +144,9 @@ namespace OpenSim.Services.UserAccountService
 
             UserAccount[] d;
 
-            if (scopeID != UUID.Zero)
-            {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "FirstName", "LastName"},
-                    new[] {scopeID.ToString(), firstName, lastName});
-                if (d.Length < 1)
-                {
-                    d = m_Database.Get(
-                        new[] {"ScopeID", "FirstName", "LastName"},
-                        new[] {UUID.Zero.ToString(), firstName, lastName});
-                }
-            }
-            else
-            {
-                d = m_Database.Get(
+            d = m_Database.Get(scopeIDs,
                     new[] {"FirstName", "LastName"},
                     new[] {firstName, lastName});
-            }
 
             if (d.Length < 1)
                 return null;
@@ -178,13 +163,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public UserAccount GetUserAccount(UUID scopeID, string name)
+        public UserAccount GetUserAccount(List<UUID> scopeIDs, string name)
         {
             UserAccount account;
             if (m_cache.Get(name, out account))
                 return account;
 
-            object remoteValue = DoRemote(scopeID, name);
+            object remoteValue = DoRemote(scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -196,24 +181,15 @@ namespace OpenSim.Services.UserAccountService
 
             UserAccount[] d;
 
-            if (scopeID != UUID.Zero)
-            {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "Name"},
-                    new[] {scopeID.ToString(), name});
-            }
-            else
-            {
-                d = m_Database.Get(
+            d = m_Database.Get(scopeIDs,
                     new[] {"Name"},
                     new[] {name});
-            }
 
             if (d.Length < 1)
             {
                 string[] split = name.Split(' ');
                 if (split.Length == 2)
-                    return GetUserAccount(scopeID, split[0], split[1]);
+                    return GetUserAccount(scopeIDs, split[0], split[1]);
 
                 return null;
             }
@@ -223,13 +199,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low, RenamedMethod="GetUserAccountUUID")]
-        public UserAccount GetUserAccount(UUID scopeID, UUID principalID)
+        public UserAccount GetUserAccount(List<UUID> scopeIDs, UUID principalID)
         {
             UserAccount account;
             if (m_cache.Get(principalID, out account))
                 return account;
 
-            object remoteValue = DoRemote(scopeID, principalID);
+            object remoteValue = DoRemote(scopeIDs, principalID);
             if (remoteValue != null || m_doRemoteOnly)
             {
                 UserAccount acc = (UserAccount)remoteValue;
@@ -241,24 +217,9 @@ namespace OpenSim.Services.UserAccountService
 
             UserAccount[] d;
 
-            if (scopeID != UUID.Zero)
-            {
-                d = m_Database.Get(
-                    new[] {"ScopeID", "PrincipalID"},
-                    new[] {scopeID.ToString(), principalID.ToString()});
-                if (d.Length < 1)
-                {
-                    d = m_Database.Get(
-                        new[] {"ScopeID", "PrincipalID"},
-                        new[] {UUID.Zero.ToString(), principalID.ToString()});
-                }
-            }
-            else
-            {
-                d = m_Database.Get(
+            d = m_Database.Get(scopeIDs,
                     new[] {"PrincipalID"},
                     new[] {principalID.ToString()});
-            }
 
             if (d.Length < 1)
             {
@@ -284,13 +245,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query)
         {
-            object remoteValue = DoRemote(scopeID, query);
+            object remoteValue = DoRemote(scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
-            UserAccount[] d = m_Database.GetUsers(scopeID, query);
+            UserAccount[] d = m_Database.GetUsers(scopeIDs, query);
 
             if (d == null)
                 return new List<UserAccount>();
@@ -300,13 +261,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count)
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query, uint? start, uint? count)
         {
-            object remoteValue = DoRemote(scopeID, query);
+            object remoteValue = DoRemote(scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
-            UserAccount[] d = m_Database.GetUsers(scopeID, query, start, count);
+            UserAccount[] d = m_Database.GetUsers(scopeIDs, query, start, count);
 
             if (d == null)
                 return new List<UserAccount>();
@@ -316,13 +277,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags)
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, int level, int flags)
         {
             object remoteValue = DoRemote(level, flags);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<UserAccount>)remoteValue;
 
-            UserAccount[] d = m_Database.GetUsers(scopeID, level, flags);
+            UserAccount[] d = m_Database.GetUsers(scopeIDs, level, flags);
 
             if (d == null)
                 return new List<UserAccount>();
@@ -332,13 +293,13 @@ namespace OpenSim.Services.UserAccountService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public uint NumberOfUserAccounts(UUID scopeID, string query)
+        public uint NumberOfUserAccounts(List<UUID> scopeIDs, string query)
         {
-            object remoteValue = DoRemote(scopeID, query);
+            object remoteValue = DoRemote(scopeIDs, query);
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
-            return m_Database.NumberOfUsers(scopeID, query);
+            return m_Database.NumberOfUsers(scopeIDs, query);
         }
 
         public void CreateUser(string name, string password, string email)
@@ -360,8 +321,8 @@ namespace OpenSim.Services.UserAccountService
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? "" : remoteValue.ToString();
 
-            UserAccount account = GetUserAccount(UUID.Zero, userID);
-            UserAccount nameaccount = GetUserAccount(UUID.Zero, name);
+            UserAccount account = GetUserAccount(null, userID);
+            UserAccount nameaccount = GetUserAccount(null, name);
             if (null == account && nameaccount == null)
             {
                 account = new UserAccount(scopeID, userID, name, email);
@@ -430,8 +391,8 @@ namespace OpenSim.Services.UserAccountService
             IProfileConnector profileConnector = Aurora.DataManager.DataManager.RequestPlugin<IProfileConnector>();
             if (profileConnector != null)
             {
-                IUserProfileInfo firstProfile = profileConnector.GetUserProfile(GetUserAccount(UUID.Zero, first).PrincipalID);
-                IUserProfileInfo secondProfile = profileConnector.GetUserProfile(GetUserAccount(UUID.Zero, second).PrincipalID);
+                IUserProfileInfo firstProfile = profileConnector.GetUserProfile(GetUserAccount(null, first).PrincipalID);
+                IUserProfileInfo secondProfile = profileConnector.GetUserProfile(GetUserAccount(null, second).PrincipalID);
 
                 firstProfile.Partner = secondProfile.PrincipalID;
                 secondProfile.Partner = firstProfile.PrincipalID;
@@ -453,7 +414,7 @@ namespace OpenSim.Services.UserAccountService
 
             lastName = cmdparams.Length < 6 ? MainConsole.Instance.Prompt("Last name") : cmdparams[5];
 
-            UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount account = GetUserAccount(null, firstName, lastName);
             if (account == null)
             {
                 MainConsole.Instance.Info("No such user");
@@ -487,7 +448,7 @@ namespace OpenSim.Services.UserAccountService
 
             lastName = cmdparams.Length < 5 ? MainConsole.Instance.Prompt("Last name") : cmdparams[4];
 
-            UserAccount account = GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount account = GetUserAccount(null, firstName, lastName);
             if (account == null)
             {
                 MainConsole.Instance.Info("No such user");
@@ -522,7 +483,7 @@ namespace OpenSim.Services.UserAccountService
             string firstName = cmdparams[2];
             string lastName = cmdparams[3];
 
-            UserAccount ua = GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount ua = GetUserAccount(null, firstName, lastName);
 
             if (ua == null)
             {
@@ -569,7 +530,7 @@ namespace OpenSim.Services.UserAccountService
 
             newPassword = MainConsole.Instance.PasswordPrompt("New password");
 
-            UserAccount account = GetUserAccount(UUID.Zero, name);
+            UserAccount account = GetUserAccount(null, name);
             if (account == null)
                 MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: No such user");
 

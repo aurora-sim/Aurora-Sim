@@ -566,7 +566,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "aaAvatarFullName2Key", m_host, "AA", m_itemID))
                 return new LSL_String();
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, fullname);
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, fullname);
 
             if (null == account)
                 return UUID.Zero.ToString();
@@ -693,7 +693,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public string resolveName(UUID objecUUID)
         {
             // try avatar username surname
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, objecUUID);
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, objecUUID);
             if (account != null)
                 return account.Name;
 

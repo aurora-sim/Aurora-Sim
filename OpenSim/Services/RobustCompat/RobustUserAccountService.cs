@@ -20,7 +20,7 @@ namespace OpenSim.Services.Robust
             get { return this; }
         }
 
-        public virtual UserAccount GetUserAccount(UUID scopeID, string firstName, string lastName)
+        public virtual UserAccount GetUserAccount(List<UUID> scopeIDs, string firstName, string lastName)
         {
             UserAccount account;
 
@@ -30,7 +30,7 @@ namespace OpenSim.Services.Robust
             sendData["VERSIONMAX"] = 0.ToString();
             sendData["METHOD"] = "getaccount";
 
-            sendData["ScopeID"] = scopeID;
+            sendData["ScopeID"] = GetScopeID(scopeIDs);
             sendData["FirstName"] = firstName.ToString();
             sendData["LastName"] = lastName.ToString();
 
@@ -38,7 +38,7 @@ namespace OpenSim.Services.Robust
             return account;
         }
 
-        public virtual UserAccount GetUserAccount(UUID scopeID, string name)
+        public virtual UserAccount GetUserAccount(List<UUID> scopeIDs, string name)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -46,7 +46,7 @@ namespace OpenSim.Services.Robust
             sendData["VERSIONMAX"] = 0.ToString();
             sendData["METHOD"] = "getaccount";
 
-            sendData["ScopeID"] = scopeID;
+            sendData["ScopeID"] = GetScopeID(scopeIDs);
             sendData["Name"] = name;
 
             //Leave these for compatibility with OpenSim!!!
@@ -64,7 +64,7 @@ namespace OpenSim.Services.Robust
             return SendAndGetReply(UUID.Zero, sendData);
         }
 
-        public virtual UserAccount GetUserAccount(UUID scopeID, UUID userID)
+        public virtual UserAccount GetUserAccount(List<UUID> scopeIDs, UUID userID)
         {
             UserAccount account;
 
@@ -75,23 +75,30 @@ namespace OpenSim.Services.Robust
             sendData["VERSIONMAX"] = 0.ToString();
             sendData["METHOD"] = "getaccount";
 
-            sendData["ScopeID"] = scopeID;
+            sendData["ScopeID"] = GetScopeID(scopeIDs);
             sendData["UserID"] = userID.ToString();
 
             account = SendAndGetReply(userID, sendData);
             return account;
         }
-        public List<UserAccount> GetUserAccounts(UUID scopeID, string query, uint? start, uint? count)
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query, uint? start, uint? count)
         {
-            return GetUserAccounts(scopeID, query);
+            return GetUserAccounts(scopeIDs, query);
         }
 
-        public List<UserAccount> GetUserAccounts(UUID scopeID, int level, int flags)
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, int level, int flags)
         {
             return new List<UserAccount>();
         }
 
-        public List<UserAccount> GetUserAccounts(UUID scopeID, string query)
+        private string GetScopeID(List<UUID> scopeIDs)
+        {
+            if (scopeIDs == null || scopeIDs.Count == 0)
+                return UUID.Zero.ToString();
+            return scopeIDs[0].ToString();
+        }
+
+        public List<UserAccount> GetUserAccounts(List<UUID> scopeIDs, string query)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
             //sendData["SCOPEID"] = scopeID.ToString();
@@ -99,7 +106,7 @@ namespace OpenSim.Services.Robust
             sendData["VERSIONMAX"] = 0.ToString();
             sendData["METHOD"] = "getaccounts";
 
-            sendData["ScopeID"] = scopeID.ToString();
+            sendData["ScopeID"] = GetScopeID(scopeIDs);
             sendData["query"] = query;
 
             string reply = string.Empty;
@@ -288,7 +295,7 @@ namespace OpenSim.Services.Robust
 
         #endregion
 
-        public uint NumberOfUserAccounts(UUID scopeID, string query)
+        public uint NumberOfUserAccounts(List<UUID> scopeIDs, string query)
         {
             return 0;
         }

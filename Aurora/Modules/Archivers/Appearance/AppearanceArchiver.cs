@@ -62,7 +62,7 @@ namespace Aurora.Modules.Archivers
 
         public AvatarAppearance LoadAvatarArchive(string FileName, string Name)
         {
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, Name);
+            UserAccount account = UserAccountService.GetUserAccount(null, Name);
             MainConsole.Instance.Info("[AvatarArchive] Loading archive from " + FileName);
             if (account == null)
             {
@@ -314,7 +314,7 @@ namespace Aurora.Modules.Archivers
             {
                 MainConsole.Instance.Info("[AvatarArchive] Not enough parameters!");
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
+            UserAccount account = UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
                 MainConsole.Instance.Error("[AvatarArchive] User not found!");

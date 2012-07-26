@@ -51,9 +51,9 @@ namespace OpenSim.Services.Interfaces
     {
         int MinLoginLevel { get; }
 
-        bool VerifyClient(UUID AgentID, string name, string authType, string passwd, UUID scopeID);
+        bool VerifyClient(UUID AgentID, string name, string authType, string passwd);
 
-        LoginResponse Login(UUID AgentID, string Name, string authType, string passwd, string startLocation, UUID scopeID,
+        LoginResponse Login(UUID AgentID, string Name, string authType, string passwd, string startLocation,
                             string clientVersion, string channel, string mac, string id0, IPEndPoint clientIP,
                             Hashtable requestData);
 

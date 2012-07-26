@@ -55,24 +55,12 @@ namespace OpenSim.Services.Robust
             SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
             if (manager != null)
             {
-#if (!ISWIN)
-                foreach (IScene scene in manager.GetAllScenes())
-                {
-                    if (scene.RegionInfo.RegionID == gridRegion.RegionID)
-                    {
-                        gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
-                        gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
-                        return gridRegion;
-                    }
-                }
-#else
                 foreach (IScene scene in manager.GetAllScenes().Where(scene => scene.RegionInfo.RegionID == gridRegion.RegionID))
                 {
                     gridRegion.RegionSizeX = scene.RegionInfo.RegionSizeX;
                     gridRegion.RegionSizeY = scene.RegionInfo.RegionSizeY;
                     return gridRegion;
                 }
-#endif
             }
             return gridRegion;
         }
@@ -100,6 +88,13 @@ namespace OpenSim.Services.Robust
 
 
         #region IGridService
+
+        private string GetScopeID(List<UUID> scopeIds)
+        {
+            if (scopeIds == null || scopeIds.Count == 0)
+                return UUID.Zero.ToString();
+            return scopeIds[0].ToString();
+        }
 
         public RegisterRegion RegisterRegion(GridRegion regionInfo, UUID oldSessionID, string password)
         {
@@ -252,11 +247,11 @@ namespace OpenSim.Services.Robust
             return FixGridRegions(rinfos);
         }
 
-        public GridRegion GetRegionByUUID(UUID scopeID, UUID regionID)
+        public GridRegion GetRegionByUUID(List<UUID> scopeIDs, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["REGIONID"] = regionID.ToString();
 
             sendData["METHOD"] = "get_region_by_uuid";
@@ -295,8 +290,8 @@ namespace OpenSim.Services.Robust
                         //        scopeID, regionID);
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0}, {1} received null response",
-                            scopeID, regionID);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID {0} received null response",
+                            regionID);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByUUID received null reply");
@@ -305,11 +300,11 @@ namespace OpenSim.Services.Robust
             return null;
         }
 
-        public GridRegion GetRegionByPosition(UUID scopeID, int x, int y)
+        public GridRegion GetRegionByPosition(List<UUID> scopeIDs, int x, int y)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["X"] = x.ToString();
             sendData["Y"] = y.ToString();
 
@@ -349,8 +344,8 @@ namespace OpenSim.Services.Robust
                         //        scopeID, x, y);
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1}-{2} received null response",
-                            scopeID, x, y);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}-{1} received null response",
+                            x, y);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition received null reply");
@@ -359,11 +354,11 @@ namespace OpenSim.Services.Robust
             return null;
         }
 
-        public GridRegion GetRegionByName(UUID scopeID, string regionName)
+        public GridRegion GetRegionByName(List<UUID> scopeIDs, string regionName)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["NAME"] = regionName;
 
             sendData["METHOD"] = "get_region_by_name";
@@ -399,8 +394,8 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0}, {1} received null response",
-                            scopeID, regionName);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByPosition {0} received null response",
+                            regionName);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionByName received null reply");
@@ -409,16 +404,16 @@ namespace OpenSim.Services.Robust
             return null;
         }
 
-        public uint GetRegionsByNameCount(UUID scopeID, string name)
+        public uint GetRegionsByNameCount(List<UUID> scopeIDs, string name)
         {
             return 0;
         }
 
-        public List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count)
+        public List<GridRegion> GetRegionsByName(List<UUID> scopeIDs, string name, uint? start, uint? count)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["NAME"] = name;
             sendData["MAX"] = count == null ? "0" : count.ToString();
 
@@ -459,8 +454,8 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0}, {1} received null response",
-                            scopeID, name);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName {0} received null response",
+                            name);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionsByName received null reply");
@@ -469,16 +464,16 @@ namespace OpenSim.Services.Robust
             return FixGridRegions(rinfos);
         }
 
-        public List<GridRegion> GetRegionRange(UUID scopeID, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        public List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY, uint squareRangeFromCenterInMeters)
         {
             return new List<GridRegion>();
         }
 
-        public List<GridRegion> GetRegionRange(UUID scopeID, int xmin, int xmax, int ymin, int ymax)
+        public List<GridRegion> GetRegionRange(List<UUID> scopeIDs, int xmin, int xmax, int ymin, int ymax)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["XMIN"] = xmin.ToString();
             sendData["XMAX"] = xmax.ToString();
             sendData["YMIN"] = ymin.ToString();
@@ -524,8 +519,8 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionRange {0}, {1}-{2} {3}-{4} received null response",
-                            scopeID, xmin, xmax, ymin, ymax);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionRange {0}-{1} {2}-{3} received null response",
+                            xmin, xmax, ymin, ymax);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionRange received null reply");
@@ -534,12 +529,11 @@ namespace OpenSim.Services.Robust
             return FixGridRegions(rinfos);
         }
 
-        public List<GridRegion> GetDefaultRegions(UUID scopeID)
+        public List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
-
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["METHOD"] = "get_default_regions";
 
             List<GridRegion> rinfos = new List<GridRegion>();
@@ -580,8 +574,7 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions {0} received null response",
-                            scopeID);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions received null response");
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetDefaultRegions received null reply");
@@ -590,11 +583,11 @@ namespace OpenSim.Services.Robust
             return FixGridRegions(rinfos);
         }
 
-        public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
+        public List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["X"] = x.ToString();
             sendData["Y"] = y.ToString();
 
@@ -638,8 +631,8 @@ namespace OpenSim.Services.Robust
                         }
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}, {1}-{2} received null response",
-                            scopeID, x, y);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions {0}-{1} received null response",
+                            x, y);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetFallbackRegions received null reply");
@@ -648,67 +641,11 @@ namespace OpenSim.Services.Robust
             return FixGridRegions(rinfos);
         }
 
-        public List<GridRegion> GetHyperlinks(UUID scopeID)
+        public int GetRegionFlags(List<UUID> scopeIDs, UUID regionID)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 
-            sendData["SCOPEID"] = scopeID.ToString();
-
-            sendData["METHOD"] = "get_hyperlinks";
-
-            List<GridRegion> rinfos = new List<GridRegion>();
-            string reply = string.Empty;
-            List<string> serverURIs =
-                m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("GridServerURI");
-            foreach (string uri in serverURIs)
-            {
-                try
-                {
-                    reply = SynchronousRestFormsRequester.MakeRequest("POST",
-                            uri,
-                            WebUtils.BuildQueryString(sendData));
-
-                    //MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: reply was {0}", reply);
-                }
-                catch (Exception e)
-                {
-                    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: Exception when contacting grid server at {0}: {1}", uri, e.Message);
-                    return rinfos;
-                }
-
-                if (reply != string.Empty)
-                {
-                    Dictionary<string, object> replyData = WebUtils.ParseXmlResponse(reply);
-
-                    if (replyData != null)
-                    {
-                        Dictionary<string, object>.ValueCollection rinfosList = replyData.Values;
-                        foreach (object r in rinfosList)
-                        {
-                            if (r is Dictionary<string, object>)
-                            {
-                                GridRegion rinfo = new GridRegion();
-                                rinfo.FromKVP((Dictionary<string, object>)r);
-                                rinfos.Add(rinfo);
-                            }
-                        }
-                    }
-                    else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetHyperlinks {0} received null response",
-                            scopeID);
-                }
-                else
-                    MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetHyperlinks received null reply");
-            }
-
-            return FixGridRegions(rinfos);
-        }
-
-        public int GetRegionFlags(UUID scopeID, UUID regionID)
-        {
-            Dictionary<string, object> sendData = new Dictionary<string, object>();
-
-            sendData["SCOPEID"] = scopeID.ToString();
+            sendData["SCOPEID"] = GetScopeID(scopeIDs);
             sendData["REGIONID"] = regionID.ToString();
 
             sendData["METHOD"] = "get_region_flags";
@@ -745,8 +682,8 @@ namespace OpenSim.Services.Robust
                         //        scopeID, regionID, replyData["result"].GetType());
                     }
                     else
-                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0}, {1} received null response",
-                            scopeID, regionID);
+                        MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags {0} received null response",
+                            regionID);
                 }
                 else
                     MainConsole.Instance.DebugFormat("[GRID CONNECTOR]: GetRegionFlags received null reply");
@@ -772,7 +709,7 @@ namespace OpenSim.Services.Robust
             return 1;
         }
 
-        public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
+        public List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y)
         {
             return new List<GridRegion>();
         }
@@ -782,7 +719,7 @@ namespace OpenSim.Services.Robust
             return "";
         }
 
-        public multipleMapItemReply GetMapItems(ulong regionHandle, GridItemType gridItemType)
+        public multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType)
         {
             return null;
         }

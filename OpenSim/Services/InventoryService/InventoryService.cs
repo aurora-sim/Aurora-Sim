@@ -892,7 +892,7 @@ namespace OpenSim.Services.InventoryService
                         {
                             string FullName = xitem.CreatorId.Remove(0, 7);
                             string[] FirstLast = FullName.Split(' ');
-                            UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, FirstLast[0],
+                            UserAccount account = m_UserAccountService.GetUserAccount(null, FirstLast[0],
                                                                                       FirstLast[1]);
                             if (account == null)
                             {
@@ -1324,7 +1324,7 @@ namespace OpenSim.Services.InventoryService
         public virtual void FixInventory(string[] cmd)
         {
             string userName = MainConsole.Instance.Prompt("Name of user");
-            UserAccount account = m_UserAccountService.GetUserAccount(UUID.Zero, userName);
+            UserAccount account = m_UserAccountService.GetUserAccount(null, userName);
             if (account == null)
             {
                 MainConsole.Instance.Warn("Could not find user");

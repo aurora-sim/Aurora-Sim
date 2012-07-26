@@ -39,7 +39,7 @@ namespace Aurora.Modules.Web
 
             IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
             var agentService = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
-            UserAccount account = userService.GetUserAccount(UUID.Zero, user);
+            UserAccount account = userService.GetUserAccount(null, user);
             IAgentInfo agent = agentService.GetAgent(user);
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitPasswordChange")

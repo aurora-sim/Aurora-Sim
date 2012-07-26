@@ -70,18 +70,17 @@ namespace OpenSim.Services.CapsService
                                   OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             OSDMap data = new OSDMap();
-            UserAccount acct = m_userService.GetUserAccount(UUID.Zero, m_service.AgentID);
             IUserProfileInfo info = m_profileConnector.GetUserProfile(m_service.AgentID);
 
             data["id"] = m_service.AgentID;
-            data["username"] = acct.Name;
+            data["username"] = m_service.ClientCaps.AccountInfo.Name;
             data["display_name"] = info.DisplayName;
             data["display_name_next_update"] = Utils.UnixTimeToDateTime(0);
-            data["legacy_first_name"] = acct.FirstName;
-            data["legacy_last_name"] = acct.LastName;
+            data["legacy_first_name"] = m_service.ClientCaps.AccountInfo.FirstName;
+            data["legacy_last_name"] = m_service.ClientCaps.AccountInfo.LastName;
             data["mesh_upload_status"] = "valid"; // add if account has ability to upload mesh?
-            bool isDisplayNameNDefault = (info.DisplayName == acct.Name) ||
-                                         (info.DisplayName == acct.FirstName + "." + acct.LastName);
+            bool isDisplayNameNDefault = (info.DisplayName == m_service.ClientCaps.AccountInfo.Name) ||
+                                         (info.DisplayName == m_service.ClientCaps.AccountInfo.FirstName + "." + m_service.ClientCaps.AccountInfo.LastName);
             data["is_display_name_default"] = isDisplayNameNDefault;
 
             //Send back data

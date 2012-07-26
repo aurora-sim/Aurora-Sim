@@ -76,10 +76,8 @@ namespace OpenSim.Services
                         passwd = requestData["passwd"].ToString();
                     else
                         passwd = requestData["web_login_key"].ToString();
+
                     string startLocation = string.Empty;
-                    UUID scopeID = UUID.Zero;
-                    if (requestData["scope_id"] != null)
-                        scopeID = new UUID(requestData["scope_id"].ToString());
                     if (requestData.ContainsKey("start"))
                         startLocation = requestData["start"].ToString();
 
@@ -107,7 +105,7 @@ namespace OpenSim.Services
 
                     
                     string loginName = (name == "" || name == null) ? first + " " + last : name;
-                    reply = m_LocalService.Login(UUID.Zero, loginName, "UserAccount", passwd, startLocation, scopeID, clientVersion, channel,
+                    reply = m_LocalService.Login(UUID.Zero, loginName, "UserAccount", passwd, startLocation, clientVersion, channel,
                                                      mac, id0, remoteClient, requestData);
                     XmlRpcResponse response = new XmlRpcResponse {Value = reply.ToHashtable()};
                     return response;
@@ -164,11 +162,6 @@ namespace OpenSim.Services
                     if (map.ContainsKey("start"))
                         startLocation = map["start"].AsString();
 
-                    UUID scopeID = UUID.Zero;
-
-                    if (map.ContainsKey("scope_id"))
-                        scopeID = new UUID(map["scope_id"].AsString());
-
                     MainConsole.Instance.Info("[LOGIN]: LLSD Login Requested for: '" + map["first"].AsString() + "' '" +
                                map["last"].AsString() + "' / " + startLocation);
 
@@ -176,7 +169,7 @@ namespace OpenSim.Services
                     string loginName = map["name"].AsString() == ""
                                            ? map["first"].AsString() + " " + map["last"].AsString()
                                            : map["name"].AsString();
-                    reply = m_LocalService.Login(UUID.Zero, loginName, "UserAccount", map["passwd"].AsString(), startLocation, scopeID,
+                    reply = m_LocalService.Login(UUID.Zero, loginName, "UserAccount", map["passwd"].AsString(), startLocation,
                                                      "", "", "", "", remoteClient, new Hashtable());
                     return reply.ToOSDMap();
                 }

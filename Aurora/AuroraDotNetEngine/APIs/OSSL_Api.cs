@@ -702,7 +702,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID))
                 return DateTime.Now;
 
-            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 0, 1);
+            List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.AllScopeIDs, regionName, 0, 1);
             // Try to link the region
             if (regions != null && regions.Count > 0)
             {
@@ -726,7 +726,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "osTeleportOwner", m_host, "OSSL", m_itemID))
                 return DateTime.Now;
 
-            GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.ScopeID,
+            GridRegion regInfo = World.GridService.GetRegionByPosition(World.RegionInfo.AllScopeIDs,
                                                                        (regionX * Constants.RegionSize),
                                                                        (regionY * Constants.RegionSize));
             // Try to link the region
@@ -751,7 +751,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             UUID AgentID;
             if (UUID.TryParse(agent, out AgentID))
             {
-                List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.ScopeID, regionName, 0, 1);
+                List<GridRegion> regions = World.GridService.GetRegionsByName(World.RegionInfo.AllScopeIDs, regionName, 0, 1);
                 // Try to link the region
                 if (regions != null && regions.Count > 0)
                 {
@@ -2135,7 +2135,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.Low, "osAvatarName2Key", m_host, "OSSL", m_itemID))
                 return "";
 
-            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID,
+            UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs,
                                                                           firstname + " " + lastname);
             if (null == account)
             {
@@ -2154,7 +2154,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if (UUID.TryParse(id, out key))
             {
-                UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.ScopeID, key);
+                UserAccount account = World.UserAccountService.GetUserAccount(World.RegionInfo.AllScopeIDs, key);
                 if (null == account)
                 {
                     return "";
@@ -2338,8 +2338,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             //If string is a key, use it. Otherwise, try to locate region by name.
             GridRegion region = UUID.TryParse(regionName, out key)
-                                    ? scene.GridService.GetRegionByUUID(UUID.Zero, key)
-                                    : scene.GridService.GetRegionByName(UUID.Zero, regionName);
+                                    ? scene.GridService.GetRegionByUUID(scene.RegionInfo.AllScopeIDs, key)
+                                    : scene.GridService.GetRegionByName(scene.RegionInfo.AllScopeIDs, regionName);
 
             // If region was found, return the regions map texture key.
             if (region != null)

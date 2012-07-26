@@ -417,6 +417,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             set;
         }
 
+        public List<UUID> AllScopeIDs
+        {
+            get;
+            set;
+        }
+
         public UUID ActiveGroupId
         {
             get { return m_activeGroupID; }
@@ -516,7 +522,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             m_secureSessionId = sessionInfo.SecureSessionID;
             m_circuitCode = circuitCode;
             m_userEndPoint = remoteEP;
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, m_agentId);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, m_agentId);
             if (account != null)
             {
                 m_firstName = account.FirstName;

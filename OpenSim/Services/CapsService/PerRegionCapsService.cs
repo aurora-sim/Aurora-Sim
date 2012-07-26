@@ -86,7 +86,7 @@ namespace OpenSim.Services.CapsService
                     return m_cachedRegion;
                 else
                 {
-                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
+                    m_cachedRegion = Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null,
                                                                                                          RegionX,
                                                                                                          RegionY);
                     return m_cachedRegion;

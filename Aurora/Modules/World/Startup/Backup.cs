@@ -897,7 +897,7 @@ namespace Aurora.Modules.Startup
                 OpenSim.Services.Interfaces.UserAccount acc;
                 if (m_cache.Get(uuid, out acc))
                     return acc != null;
-                acc = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, uuid);
+                acc = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, uuid);
                 m_cache.Cache(uuid, acc);
                 return acc != null;
             }

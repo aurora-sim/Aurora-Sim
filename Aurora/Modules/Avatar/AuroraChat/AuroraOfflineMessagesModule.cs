@@ -226,7 +226,7 @@ namespace Aurora.Modules.Chat
                     IUserProfileInfo profile = DataManager.DataManager.RequestPlugin<IProfileConnector> ().GetUserProfile (im.toAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
-                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount (UUID.Zero, im.toAgentID.ToString ());
+                        UserAccount account = m_SceneList[0].UserAccountService.GetUserAccount(null, im.toAgentID.ToString());
                         if (account != null && !string.IsNullOrEmpty(account.Email))
                         {
                             emailModule.SendEmail (UUID.Zero, account.Email, string.Format ("Offline Message from {0}", im.fromAgentName),

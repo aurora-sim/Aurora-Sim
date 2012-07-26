@@ -500,7 +500,7 @@ namespace Aurora.Modules.Archivers
             UUID u;
             if (!m_validUserUuids.TryGetValue(uuid, out u))
             {
-                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
+                UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, uuid);
                 if (account != null)
                 {
                     m_validUserUuids.Add(uuid, uuid);
@@ -512,7 +512,7 @@ namespace Aurora.Modules.Archivers
                     string first, last, url, secret;
                     if (HGUtil.ParseUniversalUserIdentifier(creatorData, out hid, out url, out first, out last, out secret))
                     {
-                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, first, last);
+                        account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, first, last);
                         if (account != null)
                         {
                             m_validUserUuids.Add(uuid, account.PrincipalID);
@@ -532,7 +532,7 @@ namespace Aurora.Modules.Archivers
                 {
                 tryAgain:
                     string ownerName = MainConsole.Instance.Prompt(string.Format("User Name to use instead of UUID '{0}'", uuid), "");
-                    account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, ownerName);
+                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, ownerName);
                     if (account != null)
                         id = account.PrincipalID;
                     else if (ownerName != "")

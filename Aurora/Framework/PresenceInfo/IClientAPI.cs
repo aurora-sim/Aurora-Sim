@@ -1740,5 +1740,6 @@ namespace Aurora.Framework
         #endregion
 
         UUID ScopeID { get; set; }
+        List<UUID> AllScopeIDs { get; set; }
     }
 }

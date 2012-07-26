@@ -1089,7 +1089,7 @@ namespace Aurora.Modules.Estate
                                                               TimeModified = sog.RootChild.Rezzed
                                                           };
                             UserAccount account =
-                                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, sog.OwnerID);
+                                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, sog.OwnerID);
                             lsri.OwnerName = account != null ? account.Name : "Unknown";
 
                             if (filter.Length != 0)
@@ -1140,7 +1140,7 @@ namespace Aurora.Modules.Estate
 
             foreach (UUID t in uuidarr)
             {
-                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, t);
+                m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, t);
                 // we drop it.  It gets cached though...  so we're ready for the next request.
             }
         }

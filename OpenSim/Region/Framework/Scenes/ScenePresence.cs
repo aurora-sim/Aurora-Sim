@@ -702,12 +702,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_animator = new Animator(this);
 
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, m_uuid);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, m_uuid);
 
             if (account != null)
             {
                 m_userLevel = account.UserLevel;
                 client.ScopeID = account.ScopeID;
+                client.AllScopeIDs = account.AllScopeIDs;
             }
             else
                 client.ScopeID = m_scene.RegionInfo.ScopeID;
@@ -988,7 +989,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void HandleUUIDNameRequest(UUID uuid, IClientAPI remote_client)
         {
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, uuid);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, uuid);
             if (account != null)
             {
                 remote_client.SendNameReply (uuid, account.FirstName, account.LastName);
@@ -1010,7 +1011,7 @@ namespace OpenSim.Region.Framework.Scenes
                 handle = m_scene.RegionInfo.RegionHandle;
             else
             {
-                GridRegion r = m_scene.GridService.GetRegionByUUID(UUID.Zero, regionID);
+                GridRegion r = m_scene.GridService.GetRegionByUUID(client.AllScopeIDs, regionID);
                 if (r != null)
                     handle = r.RegionHandle;
             }
@@ -2264,7 +2265,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -128)
                         {
                             m_lastSigInfiniteRegionPos = AbsolutePosition;
-                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero,
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(ControllingClient.AllScopeIDs,
                                 (int)(TargetX - Scene.GridService.GetMaxRegionSize()),
                                 (int)(TargetX + 256),
                                 (int)(TargetY - Scene.GridService.GetMaxRegionSize()),

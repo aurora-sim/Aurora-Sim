@@ -574,7 +574,7 @@ namespace Aurora.Modules.Groups
                 {
 
                     regionInfo = m_sceneList[0].RegionInfo;
-                    UserAccount acc = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, agentID);
+                    UserAccount acc = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
 
                     if (acc != null)
                     {
@@ -592,7 +592,7 @@ namespace Aurora.Modules.Groups
 
             GroupRecord groupInfo = m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), groupID, null);
 
-            UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, ejecteeID);
+            UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, ejecteeID);
 
             if ((groupInfo == null) || (account == null))
                 return;
@@ -690,7 +690,7 @@ namespace Aurora.Modules.Groups
                 else
                 {
                     regionInfo = m_sceneList[0].RegionInfo;
-                    UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.ScopeID, agentID);
+                    UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(regionInfo.AllScopeIDs, agentID);
                     if (account != null)
                     {
                         agentName = account.FirstName + " " + account.LastName;
@@ -1527,7 +1527,7 @@ namespace Aurora.Modules.Groups
                         if (m_debugEnabled) MainConsole.Instance.DebugFormat("[GROUPS]: Received an accept invite notice.");
 
                         // and the sessionid is the role
-                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(UUID.Zero,
+                        UserAccount account = m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.AllScopeIDs,
                                                                                                inviteInfo.FromAgentName);
                         if (account != null)
                         {
@@ -1657,7 +1657,7 @@ namespace Aurora.Modules.Groups
                         if (m_debugEnabled)
                         {
                             UserAccount targetUser =
-                                m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.ScopeID,
+                                m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.AllScopeIDs,
                                                                                  member.AgentID);
                             if (targetUser != null)
                             {

@@ -54,7 +54,7 @@ namespace Aurora.Modules.Archivers
         /// <returns>The OSPA.  Null if a user with the given UUID could not be found.</returns>
         public static string MakeOspa(UUID userId, IUserAccountService userService)
         {
-            UserAccount account = userService.GetUserAccount(UUID.Zero, userId);
+            UserAccount account = userService.GetUserAccount(null, userId);
             if (account != null)
                 return MakeOspa(account.FirstName, account.LastName);
 
@@ -148,7 +148,7 @@ namespace Aurora.Modules.Archivers
             string firstName = name.Remove(nameSeparatorIndex).TrimEnd();
             string lastName = name.Substring(nameSeparatorIndex + 1).TrimStart();
 
-            UserAccount account = userService.GetUserAccount(UUID.Zero, firstName, lastName);
+            UserAccount account = userService.GetUserAccount(null, firstName, lastName);
             if (account != null)
                 return account.PrincipalID;
 

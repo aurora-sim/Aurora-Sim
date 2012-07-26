@@ -215,7 +215,7 @@ namespace Aurora.Services.DataService
 
             Util.UlongToInts(RegionHandle, out RegionX, out RegionY);
 
-            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero, RegionX,
+            GridRegion r = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null, RegionX,
                                                                                                  RegionY);
             if (r == null)
             {
@@ -267,16 +267,16 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName)
+        public LandData GetParcelInfo(UUID RegionID, string ParcelName)
         {
-            object remoteValue = DoRemote(RegionID, ScopeID, ParcelName);
+            object remoteValue = DoRemote(RegionID, ParcelName);
             if (remoteValue != null || m_doRemoteOnly)
                 return (LandData)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                GridRegion region = regiondata.Get(RegionID, null);
                 if (region != null)
                 {
                     UUID parcelInfoID = UUID.Zero;
@@ -318,7 +318,7 @@ namespace Aurora.Services.DataService
         public List<ExtendedLandData> LandDataToExtendedLandData(List<LandData> data)
         {
            return (from land in data
-                                              let region = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, land.RegionID)
+                                              let region = m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null, land.RegionID)
                                               where region != null
                                               select new ExtendedLandData
                                               {
@@ -330,7 +330,7 @@ namespace Aurora.Services.DataService
                                               }).ToList();
         }
 
-        private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        private static QueryFilter GetParcelsByRegionWhereClause(UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["RegionID"] = RegionID;
@@ -354,9 +354,9 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        public List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
-            object remoteValue = DoRemote(start, count, RegionID, scopeID, owner, flags, category);
+            object remoteValue = DoRemote(start, count, RegionID, owner, flags, category);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<LandData>)remoteValue;
 
@@ -369,10 +369,10 @@ namespace Aurora.Services.DataService
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                GridRegion region = regiondata.Get(RegionID, scopeID);
+                GridRegion region = regiondata.Get(RegionID, null);
                 if (region != null)
                 {
-                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
+                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, owner, flags, category);
                     Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
                     sort["OwnerID"] = false;
                     return Query2LandData(GD.Query(new[] { "*" }, "searchparcel", filter, sort, start, count));
@@ -382,19 +382,19 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category)
+        public uint GetNumberOfParcelsByRegion(UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category)
         {
-            object remoteValue = DoRemote(RegionID, scopeID, owner, flags, category);
+            object remoteValue = DoRemote(RegionID, owner, flags, category);
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                GridRegion region = regiondata.Get(RegionID, scopeID);
+                GridRegion region = regiondata.Get(RegionID, null);
                 if (region != null)
                 {
-                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, scopeID, owner, flags, category);
+                    QueryFilter filter = GetParcelsByRegionWhereClause(RegionID, owner, flags, category);
                     return uint.Parse(GD.Query(new[] { "COUNT(ParcelID)" }, "searchparcel", filter, null, null, null)[0]);
                 }
             }
@@ -402,9 +402,9 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name)
+        public List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, string name)
         {
-            object remoteValue = DoRemote(start, count, RegionID, ScopeID, name);
+            object remoteValue = DoRemote(start, count, RegionID, name);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<LandData>)remoteValue;
 
@@ -417,7 +417,7 @@ namespace Aurora.Services.DataService
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                GridRegion region = regiondata.Get(RegionID, null);
                 if (region != null)
                 {
                     QueryFilter filter = new QueryFilter();
@@ -435,16 +435,16 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name)
+        public uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, string name)
         {
-            object remoteValue = DoRemote(RegionID, ScopeID, name);
+            object remoteValue = DoRemote(RegionID, name);
             if (remoteValue != null || m_doRemoteOnly)
                 return (uint)remoteValue;
 
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                GridRegion region = regiondata.Get(RegionID, ScopeID);
+                GridRegion region = regiondata.Get(RegionID, null);
                 if (region != null)
                 {
                     QueryFilter filter = new QueryFilter();
@@ -1011,7 +1011,7 @@ namespace Aurora.Services.DataService
             IRegionData regiondata = DataManager.DataManager.RequestPlugin<IRegionData>();
             if (regiondata != null)
             {
-                List<GridRegion> regions = regiondata.Get(regionName, UUID.Zero, null, null);
+                List<GridRegion> regions = regiondata.Get(regionName, null, null, null);
                 if (regions.Count >= 1)
                 {
                     QueryFilter filter = new QueryFilter();
@@ -1063,7 +1063,7 @@ namespace Aurora.Services.DataService
             {
                 EventData data = new EventData();
 
-                GridRegion region = regiondata.Get(UUID.Parse(RetVal[2]), UUID.Zero);
+                GridRegion region = regiondata.Get(UUID.Parse(RetVal[2]), null);
                 if (region == null)
                 {
                     continue;
@@ -1130,7 +1130,7 @@ namespace Aurora.Services.DataService
                 return null;
             }
 
-            GridRegion region = regiondata.Get(regionID, UUID.Zero);
+            GridRegion region = regiondata.Get(regionID, null);
             if(region == null){
                 return null;
             }
@@ -1170,7 +1170,6 @@ namespace Aurora.Services.DataService
             row["EID"] = eventData.eventID;
             row["creator"] = creator.ToString();
             row["region"] = regionID.ToString();
-            row["region"] = region.ScopeID.ToString();
             row["parcel"] = parcelID.ToString();
             row["date"] = date.ToString("s");
             row["cover"] = eventData.cover;

@@ -341,7 +341,7 @@ namespace Aurora.Modules.Friends
                                                              out secret))
                         continue;
 
-                UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID,
+                UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs,
                                                                                     fromAgentID);
 
                 im.fromAgentID = fromAgentID;
@@ -411,9 +411,9 @@ namespace Aurora.Modules.Friends
                 UUID friendID = im.toAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
-                UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, principalID);
+                UserAccount sender = m_Scenes[0].UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, principalID);
                 im.fromAgentName = sender.Name;
-                UserAccount reciever = m_Scenes[0].UserAccountService.GetUserAccount(UUID.Zero, friendID);
+                UserAccount reciever = m_Scenes[0].UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, friendID);
 
                 MainConsole.Instance.DebugFormat("[FRIENDS]: {0} offered friendship to {1}", sender.Name, reciever.Name);
                 // This user wants to be friends with the other user.
@@ -432,7 +432,7 @@ namespace Aurora.Modules.Friends
             im.imSessionID = im.fromAgentID;
 
             // Try the local sim
-            UserAccount account = UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.ScopeID, agentID);
+            UserAccount account = UserAccountService.GetUserAccount(m_Scenes[0].RegionInfo.AllScopeIDs, agentID);
             im.fromAgentName = (account == null) ? "Unknown" : account.Name;
 
             if (LocalFriendshipOffered(friendID, im))
@@ -466,7 +466,7 @@ namespace Aurora.Modules.Friends
             ICallingCardModule ccmodule = client.Scene.RequestModuleInterface<ICallingCardModule>();
             if (ccmodule != null)
             {
-                UserAccount account = client.Scene.UserAccountService.GetUserAccount(UUID.Zero, friendID);
+                UserAccount account = client.Scene.UserAccountService.GetUserAccount(client.AllScopeIDs, friendID);
                 UUID folderID =
                     client.Scene.InventoryService.GetFolderForType(agentID, InventoryType.Unknown, AssetType.CallingCard)
                         .ID;
@@ -609,7 +609,7 @@ namespace Aurora.Modules.Friends
                             !HGUtil.ParseUniversalUserIdentifier(fi.Friend, out fromAgentID, out url, out first, out last, out secret))
                             continue;
 
-                    UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.ScopeID, fromAgentID);
+                    UserAccount account = m_Scenes[0].UserAccountService.GetUserAccount(client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
                     im.fromAgentID = fromAgentID;
                     if (account != null)
                         im.fromAgentName = account.Name;
@@ -677,7 +677,8 @@ namespace Aurora.Modules.Friends
                 ICallingCardModule ccmodule = friendClient.Scene.RequestModuleInterface<ICallingCardModule>();
                 if (ccmodule != null)
                 {
-                    UserAccount account = friendClient.Scene.UserAccountService.GetUserAccount(UUID.Zero, userID);
+                    UserAccount account = friendClient.Scene.UserAccountService.GetUserAccount(friendClient.AllScopeIDs, 
+                        userID);
                     UUID folderID =
                         friendClient.Scene.InventoryService.GetFolderForType(friendID, InventoryType.Unknown,
                                                                              AssetType.CallingCard).ID;

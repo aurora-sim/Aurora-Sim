@@ -41,7 +41,7 @@ namespace Aurora.Modules.Web
                 IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
                 string regionname = requestParameters["regionname"].ToString();
                 int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-                uint count = gridService.GetRegionsByNameCount(UUID.Zero, regionname);
+                uint count = gridService.GetRegionsByNameCount(null, regionname);
                 int maxPages = (int)(count / amountPerQuery) - 1;
 
                 if (start == -1)
@@ -51,7 +51,7 @@ namespace Aurora.Modules.Web
                 vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
                 vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-                var regions = gridService.GetRegionsByName(UUID.Zero, regionname, (uint)start, amountPerQuery);
+                var regions = gridService.GetRegionsByName(null, regionname, (uint)start, amountPerQuery);
                 if (regions != null)
                 {
                     foreach (var region in regions)

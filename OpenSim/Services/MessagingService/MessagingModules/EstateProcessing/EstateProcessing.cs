@@ -93,7 +93,7 @@ namespace OpenSim.Services.MessagingService
                             IGridService gridService = m_registry.RequestModuleInterface<IGridService>();
                             if (gridService != null && asyncPoster != null)
                             {
-                                GridRegion r = gridService.GetRegionByUUID(UUID.Zero, region);
+                                GridRegion r = gridService.GetRegionByUUID(null, region);
                                 if (r != null)
                                     asyncPoster.Post(r.RegionHandle,
                                                      SyncMessageHelper.UpdateEstateInfo(es.EstateID, region));

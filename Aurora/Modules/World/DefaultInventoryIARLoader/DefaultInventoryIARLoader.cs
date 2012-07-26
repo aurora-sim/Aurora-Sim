@@ -119,13 +119,13 @@ namespace Aurora.Modules.DefaultInventoryIARLoader
                 m_MockScene.AddModuleInterfaces(m_registry.GetInterfaces());
             }
 
-            UserAccount uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwner);
+            UserAccount uinfo = m_MockScene.UserAccountService.GetUserAccount(null, m_service.LibraryOwner);
             //Make the user account for the default IAR
             if (uinfo == null)
             {
                 MainConsole.Instance.Warn("Creating user " + m_service.LibraryOwnerName);
                 m_MockScene.UserAccountService.CreateUser(m_service.LibraryOwner, UUID.Zero, m_service.LibraryOwnerName, "", "");
-                uinfo = m_MockScene.UserAccountService.GetUserAccount(UUID.Zero, m_service.LibraryOwner);
+                uinfo = m_MockScene.UserAccountService.GetUserAccount(null, m_service.LibraryOwner);
                 m_MockScene.InventoryService.CreateUserInventory(uinfo.PrincipalID, false);
             }
             if (m_MockScene.InventoryService.GetRootFolder(m_service.LibraryOwner) == null)

@@ -186,7 +186,7 @@ namespace OpenSim.Services.Robust
             IGridService gs = m_registry.RequestModuleInterface<IGridService>();
             if (gs != null && regionID != UUID.Zero)
             {
-                GridRegion region = gs.GetRegionByUUID(UUID.Zero, regionID);
+                GridRegion region = gs.GetRegionByUUID(null, regionID);
                 if (region != null)
                     return region.ServerURI;
             }

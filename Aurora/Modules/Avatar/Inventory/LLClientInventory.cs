@@ -630,7 +630,7 @@ namespace Aurora.Modules.Inventory
             if (mainGridURLs.Count > 0)//Then check whether we were given one
                 gatekeeperURL = mainGridURLs[0];
             //We have one!
-            UserAccount account = m_scene.UserAccountService.GetUserAccount (m_scene.RegionInfo.ScopeID, presence.UUID);
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, presence.UUID);
             if (account == null)
                 name = "HG " + name;//We don't have an account for them, add the HG ref 
             name += " @ " + gatekeeperURL;

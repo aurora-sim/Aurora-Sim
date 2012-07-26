@@ -295,7 +295,7 @@ namespace OpenSim.Services.AvatarService
         {
             string name = "";
             name = cmd.Length == 3 ? MainConsole.Instance.Prompt("Avatar Name") : Util.CombineParams(cmd, 3);
-            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, name);
+            UserAccount acc = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, name);
             if (acc == null)
             {
                 MainConsole.Instance.Output("No known avatar with that name.");

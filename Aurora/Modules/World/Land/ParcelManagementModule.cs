@@ -162,7 +162,7 @@ namespace Aurora.Modules.Land
             UUID godParcelOwner = UUID.Zero;
             if (_godParcelOwner != "")
             {
-                UserAccount acc = m_scene.UserAccountService.GetUserAccount(UUID.Zero, _godParcelOwner);
+                UserAccount acc = m_scene.UserAccountService.GetUserAccount(null, _godParcelOwner);
                 if (acc != null)
                     godParcelOwner = acc.PrincipalID;
             }
@@ -504,7 +504,7 @@ namespace Aurora.Modules.Land
             if (fullSimParcel.LandData.OwnerID == UUID.Zero)
                 fullSimParcel.LandData.OwnerID = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID,
+            UserAccount account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
                                                                             fullSimParcel.LandData.OwnerID);
 
             while (fullSimParcel.LandData.OwnerID == UUID.Zero || account == null)
@@ -517,7 +517,7 @@ namespace Aurora.Modules.Land
                     MainConsole.Instance.Warn("Put in a valid username.");
                     continue;
                 }
-                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.ScopeID, userName);
+                account = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, userName);
                 if (account != null)
                     fullSimParcel.LandData.OwnerID = account.PrincipalID;
                 else
@@ -1939,7 +1939,7 @@ namespace Aurora.Modules.Land
                     else
                     {
                         // a parcel request for a parcel in another region. Ask the grid about the region
-                        GridRegion info = m_scene.GridService.GetRegionByUUID(UUID.Zero, regionID);
+                        GridRegion info = m_scene.GridService.GetRegionByUUID(null, regionID);
                         if (info != null)
                             parcelID = Util.BuildFakeParcelID(info.RegionHandle, x, y);
                     }
@@ -2335,7 +2335,7 @@ namespace Aurora.Modules.Land
                     else
                     {
                         // most likely still cached from building the extLandData entry
-                        info = m_scene.GridService.GetRegionByPosition(UUID.Zero, RegionX, RegionY);
+                        info = m_scene.GridService.GetRegionByPosition(null, RegionX, RegionY);
                     }
                     if (info == null)
                     {

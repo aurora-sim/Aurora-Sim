@@ -37,13 +37,13 @@ namespace Aurora.Framework
     /// </summary>
     public interface IRegionData : IAuroraDataPlugin
     {
-        GridRegion Get(UUID regionID, UUID ScopeID);
-        List<GridRegion> Get(string regionName, UUID ScopeID, uint? start, uint? count);
-        uint GetCount(string regionName, UUID ScopeID);
-        GridRegion GetZero(int x, int y, UUID ScopeID);
-        List<GridRegion> Get(int x, int y, UUID ScopeID);
+        GridRegion Get(UUID regionID, List<UUID> scopeIDs);
+        List<GridRegion> Get(string regionName, List<UUID> scopeIDs, uint? start, uint? count);
+        uint GetCount(string regionName, List<UUID> scopeIDs);
+        GridRegion GetZero(int x, int y, List<UUID> scopeIDs);
+        List<GridRegion> Get(int x, int y, List<UUID> scopeIDs);
         List<GridRegion> Get(RegionFlags regionFlags);
-        List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, UUID ScopeID);
+        List<GridRegion> Get(int xStart, int yStart, int xEnd, int yEnd, List<UUID> scopeIDs);
         List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(uint start, uint count, uint EstateID, RegionFlags flags, Dictionary<string, bool> sort);
         List<GridRegion> Get(RegionFlags includeFlags, RegionFlags excludeFlags, uint? start, uint? count, Dictionary<string, bool> sort);
@@ -63,7 +63,7 @@ namespace Aurora.Framework
         /// <param name="ScopeID"></param>
         /// <param name="squareRangeFromCenterInMeters">because calculating circular radii would be a complex.</param>
         /// <returns>If the return result is of zero length the region does not exist.</returns>
-        List<GridRegion> GetNeighbours(UUID regionID, UUID ScopeID, uint squareRangeFromCenterInMeters);
+        List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters);
 
         /// <summary>
         /// Gets all regions within squareRangeFromCenterInMeters meters of centerX and centerY
@@ -72,7 +72,7 @@ namespace Aurora.Framework
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
-        List<GridRegion> Get(UUID scopeID, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+        List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters);
 
         uint Count(uint EstateID, RegionFlags flags);
 
@@ -81,9 +81,9 @@ namespace Aurora.Framework
         bool Delete(UUID regionID);
         bool DeleteAll(string[] criteriaKey, object[] criteriaValue);
 
-        List<GridRegion> GetDefaultRegions(UUID scopeID);
-        List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
-        List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+        List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs);
+        List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y);
+        List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y);
     }
 
     [Flags]

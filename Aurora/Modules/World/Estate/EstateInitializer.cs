@@ -62,7 +62,7 @@ namespace Aurora.Modules.Estate
                 IEstateConnector EstateConnector = Aurora.DataManager.DataManager.RequestPlugin<IEstateConnector>();
 
                 string name = MainConsole.Instance.Prompt("Estate owner name", LastEstateOwner);
-                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
+                UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, name);
 
                 if (account == null)
                 {
@@ -75,7 +75,7 @@ namespace Aurora.Modules.Estate
                         string email = MainConsole.Instance.Prompt(name + "'s email", "");
 
                         scene.UserAccountService.CreateUser(name, Util.Md5Hash(password), email);
-                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, name);
+                        account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, name);
 
                         if (account == null)
                         {

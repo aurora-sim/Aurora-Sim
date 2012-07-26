@@ -157,7 +157,7 @@ namespace OpenSim.Services.GridService
                 int x;
                 int y;
                 Util.UlongToInts (handle, out x, out y);
-                GridRegion region = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (UUID.Zero, x, y);
+                GridRegion region = m_registry.RequestModuleInterface<IGridService> ().GetRegionByPosition (null, x, y);
                 if (region == null)
                     regionThreatLevel = ThreatLevel.None;
                 else

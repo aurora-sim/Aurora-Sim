@@ -458,7 +458,7 @@ namespace Aurora.Modules.Archivers
         protected UserAccount GetUserInfo(string firstName, string lastName, string pass)
         {
             UserAccount account
-                = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, firstName, lastName);
+                = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, firstName, lastName);
 
             if (null == account)
             {

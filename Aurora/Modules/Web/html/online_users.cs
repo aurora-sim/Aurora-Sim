@@ -51,8 +51,8 @@ namespace Aurora.Modules.Web
             IGridService gridService = webInterface.Registry.RequestModuleInterface<IGridService>();
             foreach (var user in users)
             {
-                var region = gridService.GetRegionByUUID(UUID.Zero, user.CurrentRegionID);
-                var account = accountService.GetUserAccount(UUID.Zero, UUID.Parse(user.UserID));
+                var region = gridService.GetRegionByUUID(null, user.CurrentRegionID);
+                var account = accountService.GetUserAccount(region.AllScopeIDs, UUID.Parse(user.UserID));
                 if (account != null && region != null)
                     usersList.Add(new Dictionary<string, object> { { "UserName", account.Name }, 
                         { "UserRegion", region.RegionName }, { "UserID", user.UserID }, { "UserRegionID", region.RegionID } });

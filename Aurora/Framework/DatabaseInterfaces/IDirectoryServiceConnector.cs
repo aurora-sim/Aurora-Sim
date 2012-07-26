@@ -67,10 +67,9 @@ namespace Aurora.Framework
         /// Gets the first parcel from the search database in the specified region with the specified name
         /// </summary>
         /// <param name="RegionID"></param>
-        /// <param name="ScopeID"></param>
         /// <param name="ParcelName"></param>
         /// <returns></returns>
-        LandData GetParcelInfo(UUID RegionID, UUID ScopeID, string ParcelName);
+        LandData GetParcelInfo(UUID RegionID, string ParcelName);
 
         /// <summary>
         ///   Gets all parcels owned by the given user
@@ -90,7 +89,7 @@ namespace Aurora.Framework
         /// <param name="flags"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category);
+        List<LandData> GetParcelsByRegion(uint start, uint count, UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category);
 
         /// <summary>
         /// Get the number of parcels in the specified region that match the specified filters.
@@ -101,7 +100,7 @@ namespace Aurora.Framework
         /// <param name="flags"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        uint GetNumberOfParcelsByRegion(UUID RegionID, UUID scopeID, UUID owner, ParcelFlags flags, ParcelCategory category);
+        uint GetNumberOfParcelsByRegion(UUID RegionID, UUID owner, ParcelFlags flags, ParcelCategory category);
 
         /// <summary>
         /// Get a list of parcels in a region with the specified name.
@@ -114,7 +113,7 @@ namespace Aurora.Framework
         /// <param name="flags"></param>
         /// <param name="category"></param>
         /// <returns></returns>
-        List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, UUID ScopeID, string name);
+        List<LandData> GetParcelsWithNameByRegion(uint start, uint count, UUID RegionID, string name);
 
         /// <summary>
         /// Get the number of parcels in the specified region with the specified name
@@ -123,7 +122,7 @@ namespace Aurora.Framework
         /// <param name="ScopeID"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, UUID ScopeID, string name);
+        uint GetNumberOfParcelsWithNameByRegion(UUID RegionID, string name);
 
         /// <summary>
         ///   Searches for parcels around the grid

@@ -150,7 +150,7 @@ namespace Aurora.Modules.Estate
                 MainConsole.Instance.Warn("Not enough parameters!");
                 return;
             }
-            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(UUID.Zero,
+            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(null,
                                                                                                       Util.CombineParams
                                                                                                           (cmdparams, 2));
             if (account == null)
@@ -216,7 +216,7 @@ namespace Aurora.Modules.Estate
                 EstateBan EB = new EstateBan
                                    {
                                        BannedUserID =
-                                           m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3],
+                                           m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3],
                                                                                          cmdparams[4]).PrincipalID
                                    };
                 scene.RegionInfo.EstateSettings.AddBan(EB);
@@ -224,27 +224,27 @@ namespace Aurora.Modules.Estate
             if (cmdparams[2] == "AddEstateManager".ToLower())
             {
                 scene.RegionInfo.EstateSettings.AddEstateManager(
-                    m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "AddEstateAccess".ToLower())
             {
                 scene.RegionInfo.EstateSettings.AddEstateUser(
-                    m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateBan".ToLower())
             {
                 scene.RegionInfo.EstateSettings.RemoveBan(
-                    m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateManager".ToLower())
             {
                 scene.RegionInfo.EstateSettings.RemoveEstateManager(
-                    m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
             if (cmdparams[2] == "RemoveEstateAccess".ToLower())
             {
                 scene.RegionInfo.EstateSettings.RemoveEstateUser(
-                    m_scenes[0].UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3], cmdparams[4]).PrincipalID);
+                    m_scenes[0].UserAccountService.GetUserAccount(null, cmdparams[3], cmdparams[4]).PrincipalID);
             }
 
             #endregion
@@ -376,7 +376,7 @@ namespace Aurora.Modules.Estate
                                                out Vector3 newPosition, out string reason)
         {
             newPosition = Position;
-            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, userID);
+            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, userID);
 
             IScenePresence Sp = scene.GetScenePresence(userID);
             if (account == null)
@@ -702,7 +702,7 @@ namespace Aurora.Modules.Estate
         {
             #region Incoming Agent Checks
 
-            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.ScopeID, agent.AgentID);
+            UserAccount account = scene.UserAccountService.GetUserAccount(scene.RegionInfo.AllScopeIDs, agent.AgentID);
             bool foreign = false;
             IScenePresence Sp = scene.GetScenePresence(agent.AgentID);
             if (account == null)

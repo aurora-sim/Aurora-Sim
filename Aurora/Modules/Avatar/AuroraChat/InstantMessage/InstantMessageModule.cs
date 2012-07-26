@@ -155,7 +155,7 @@ namespace Aurora.Modules.Chat
             {
                 if (client == null)
                 {
-                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID,
+                    UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.AllScopeIDs,
                                                                                         im.fromAgentID);
                     if (account != null)
                         im.fromAgentName = account.Name;
@@ -186,7 +186,7 @@ namespace Aurora.Modules.Chat
 
             if (m_TransferModule != null)
             {
-                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.ScopeID,
+                UserAccount account = m_scenes[0].UserAccountService.GetUserAccount(m_scenes[0].RegionInfo.AllScopeIDs,
                                                                                     msg.fromAgentID);
                 if (account != null)
                     msg.fromAgentName = account.Name;

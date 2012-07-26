@@ -41,20 +41,20 @@ namespace Aurora.Modules.Web
                 string userid = httpRequest.Query["userid"].ToString();
 
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, UUID.Parse(userid));
+                    GetUserAccount(null, UUID.Parse(userid));
             }
             else if (httpRequest.Query.ContainsKey("name") || username.Contains('.'))
             {
                 string name = httpRequest.Query.ContainsKey("name") ? httpRequest.Query["name"].ToString() : username;
                 name = name.Replace('.', ' ');
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, name);
+                    GetUserAccount(null, name);
             }
             else
             {
                 username = username.Replace("%20", " ");
                 account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(UUID.Zero, username);
+                    GetUserAccount(null, username);
             }
 
             if (account == null)
@@ -71,7 +71,7 @@ namespace Aurora.Modules.Web
                 if (profile.Partner != UUID.Zero)
                 {
                     account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                        GetUserAccount(UUID.Zero, profile.Partner);
+                        GetUserAccount(null, profile.Partner);
                     vars.Add("UserPartner", account.Name);
                 }
                 else

@@ -165,7 +165,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
             string message = CombineParams(cmd, 5);
 
             IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount account = userService.GetUserAccount(UUID.Zero, user.Split(' ')[0], user.Split(' ')[1]);
+            UserAccount account = userService.GetUserAccount(null, user.Split(' ')[0], user.Split(' ')[1]);
             if (account == null)
             {
                 MainConsole.Instance.Info("User does not exist.");
@@ -182,7 +182,7 @@ namespace OpenSim.Services.MessagingService.MessagingModules.GridWideMessage
                 user = user.Remove(user.Length - 1);
             string message = CombineParams(cmd, 5);
             IUserAccountService userService = m_registry.RequestModuleInterface<IUserAccountService>();
-            UserAccount account = userService.GetUserAccount(UUID.Zero, user);
+            UserAccount account = userService.GetUserAccount(null, user);
             if (account == null)
             {
                 MainConsole.Instance.Info("User does not exist.");

@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
@@ -72,7 +73,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = UUID.Zero;
 
-            List<GridRegion> borked = ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            List<GridRegion> borked = ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
 
             if(borked.Count < 1){
                 MainConsole.Instance.Debug("[LocalGridConnector] No regions found with missing owners.");
@@ -172,78 +173,59 @@ namespace Aurora.Services.DataService
             }
         }
 
-        public uint GetCount(string regionName, UUID scopeID)
+        public uint GetCount(string regionName, List<UUID> scopeIDs)
         {
             QueryFilter filter = new QueryFilter();
-            if (scopeID != UUID.Zero)
-            {
-                filter.andFilters["ScopeID"] = scopeID;
-            }
             filter.andLikeFilters["RegionName"] = regionName;
 
             return uint.Parse(GD.Query(new[] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
         }
 
-        public List<GridRegion> Get(string regionName, UUID scopeID, uint? start, uint? count)
+        public List<GridRegion> Get(string regionName, List<UUID> scopeIDs, uint? start, uint? count)
         {
             QueryFilter filter = new QueryFilter();
-            if (scopeID != UUID.Zero)
-            {
-                filter.andFilters["ScopeID"] = scopeID;
-            }
             filter.andLikeFilters["RegionName"] = regionName;
 
             List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, start, count);
 
-            return (query.Count == 0) ? null : ParseQuery(query);
+            return (query.Count == 0) ? null : ParseQuery(scopeIDs, query);
         }
 
         public List<GridRegion> Get(RegionFlags flags)
         {
             QueryFilter filter = new QueryFilter();
             filter.andBitfieldAndFilters["Flags"] = (uint)flags;
-            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            return ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
-        public GridRegion GetZero(int posX, int posY, UUID scopeID)
+        public GridRegion GetZero(int posX, int posY, List<UUID> scopeIDs)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["LocX"] = posX;
             filter.andFilters["LocY"] = posY;
-            if (scopeID != UUID.Zero){
-                filter.andFilters["ScopeID"] = scopeID;
-            }
 
             List<string> query = GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null);
 
-            return (query.Count == 0) ? null : ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(scopeIDs, query)[0];
         }
 
-        public List<GridRegion> Get(int posX, int posY, UUID scopeID)
+        public List<GridRegion> Get(int posX, int posY, List<UUID> scopeIDs)
         {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["LocX"] = posX;
             filter.andFilters["LocY"] = posY;
-            if (scopeID != UUID.Zero)
-            {
-                filter.andFilters["ScopeID"] = scopeID;
-            }
 
             Dictionary<string, bool> sort = new Dictionary<string, bool>(1);
             sort["LocZ"] = true;
 
-            return ParseQuery(GD.Query(new string[1]{ "*" }, m_realm, filter, sort, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, sort, null, null));
         }
 
-        public GridRegion Get(UUID regionID, UUID scopeID)
+        public GridRegion Get(UUID regionID, List<UUID> scopeIDs)
         {
             List<string> query;
             Dictionary<string, object> where = new Dictionary<string, object>();
 
-            if (scopeID != UUID.Zero)
-            {
-                where["ScopeID"] = scopeID;
-            }
             where["RegionUUID"] = regionID;
 
             query = GD.Query(new string[1] { "*" }, m_realm, new QueryFilter
@@ -251,10 +233,10 @@ namespace Aurora.Services.DataService
                 andFilters = where
             }, null, null, null);
 
-            return (query.Count == 0) ? null : ParseQuery(query)[0];
+            return (query.Count == 0) ? null : ParseQuery(scopeIDs, query)[0];
         }
 
-        public List<GridRegion> Get(int startX, int startY, int endX, int endY, UUID scopeID)
+        public List<GridRegion> Get(int startX, int startY, int endX, int endY, List<UUID> scopeIDs)
         {
             int foo;
             if (startX > endX)
@@ -275,12 +257,7 @@ namespace Aurora.Services.DataService
             filter.andGreaterThanEqFilters["LocY"] = startY;
             filter.andLessThanEqFilters["LocY"] = endY;
 
-            if (scopeID != UUID.Zero)
-            {
-                filter.andFilters["ScopeID"] = scopeID;
-            }
-
-            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
         public List<GridRegion> Get(RegionFlags flags, Dictionary<string, bool> sort)
@@ -306,7 +283,7 @@ namespace Aurora.Services.DataService
             while (resp.Count < count)
             {
                 uint limit = count - (uint)resp.Count;
-                List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count));
+                List<GridRegion> query = ParseQuery(null, GD.Query(new string[] { "*" }, m_realm, filter, sort, start, count));
 
                 if (query.Count == 0)
                 {
@@ -339,7 +316,7 @@ namespace Aurora.Services.DataService
                 filter.andBitfieldNandFilters["Flags"] = (uint)excludeFlags;
             }
 
-            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, sort, start, count));
+            return ParseQuery(null, GD.Query(new string[1] { "*" }, m_realm, filter, sort, start, count));
         }
 
         public uint Count(RegionFlags includeFlags, RegionFlags excludeFlags)
@@ -357,23 +334,23 @@ namespace Aurora.Services.DataService
             return uint.Parse(GD.Query(new string[1] { "COUNT(*)" }, m_realm, filter, null, null, null)[0]);
         }
 
-        public List<GridRegion> GetNeighbours(UUID regionID, UUID scopeID, uint squareRangeFromCenterInMeters)
+        public List<GridRegion> GetNeighbours(UUID regionID, List<UUID> scopeIDs, uint squareRangeFromCenterInMeters)
         {
             List<GridRegion> regions = new List<GridRegion>(0);
-            GridRegion region = Get(regionID, scopeID);
+            GridRegion region = Get(regionID, scopeIDs);
 
             if (region != null)
             {
                 int centerX = region.RegionLocX + (region.RegionSizeX / 2); // calculate center of region
                 int centerY = region.RegionLocY + (region.RegionSizeY / 2); // calculate center of region
 
-                regions = Get(scopeID, region.RegionID, centerX, centerY, squareRangeFromCenterInMeters);
+                regions = Get(scopeIDs, region.RegionID, centerX, centerY, squareRangeFromCenterInMeters);
             }
 
             return regions;
         }
 
-        public List<GridRegion> Get(UUID scopeID, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters)
+        public List<GridRegion> Get(List<UUID> scopeIDs, UUID excludeRegion, float centerX, float centerY, uint squareRangeFromCenterInMeters)
         {
             QueryFilter filter = new QueryFilter();
 
@@ -381,7 +358,6 @@ namespace Aurora.Services.DataService
             {
                 filter.andNotFilters["RegionUUID"] = excludeRegion;
             }
-            filter.andFilters["ScopeID"] = scopeID;
             filter.andGreaterThanEqFilters["(LocX + SizeX)"] = centerX - squareRangeFromCenterInMeters;
             filter.andGreaterThanEqFilters["(LocY + SizeY)"] = centerY - squareRangeFromCenterInMeters;
             filter.andLessThanEqFilters["(LocX - SizeX)"] = centerX + squareRangeFromCenterInMeters;
@@ -392,7 +368,7 @@ namespace Aurora.Services.DataService
             sort["LocX"] = true;
             sort["LocY"] = true;
 
-            return ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[] { "*" }, m_realm, filter, sort, null, null));
         }
 
         public uint Count(uint estateID, RegionFlags flags)
@@ -409,7 +385,7 @@ namespace Aurora.Services.DataService
             QueryFilter filter = new QueryFilter();
             filter.andBitfieldAndFilters["Flags"] = (uint)flags;
 
-            List<GridRegion> query = ParseQuery(GD.Query(new string[] { "*" }, m_realm, filter, null, null, null));
+            List<GridRegion> query = ParseQuery(null, GD.Query(new string[] { "*" }, m_realm, filter, null, null, null));
 
             uint count = 0;
             query.ForEach(delegate(GridRegion region)
@@ -478,23 +454,23 @@ namespace Aurora.Services.DataService
             return GD.Delete(m_realm, filter);
         }
 
-        public List<GridRegion> GetDefaultRegions(UUID scopeID)
+        public List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs)
         {
-            return Get((int) RegionFlags.DefaultRegion, scopeID);
+            return Get((int) RegionFlags.DefaultRegion, scopeIDs);
         }
 
-        public List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y)
+        public List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y)
         {
-            List<GridRegion> regions = Get((int) RegionFlags.FallbackRegion, scopeID);
+            List<GridRegion> regions = Get((int) RegionFlags.FallbackRegion, scopeIDs);
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             regions.Sort(distanceComparer);
             return regions;
         }
 
-        public List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y)
+        public List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y)
         {
-            List<GridRegion> Regions = Get((int) RegionFlags.Safe, scopeID);
-            Regions.AddRange(Get((int) RegionFlags.RegionOnline, scopeID));
+            List<GridRegion> Regions = Get((int) RegionFlags.Safe, scopeIDs);
+            Regions.AddRange(Get((int) RegionFlags.RegionOnline, scopeIDs));
 
             RegionDataDistanceCompare distanceComparer = new RegionDataDistanceCompare(x, y);
             Regions.Sort(distanceComparer);
@@ -507,19 +483,22 @@ namespace Aurora.Services.DataService
         {
         }
 
-        private List<GridRegion> Get(int regionFlags, UUID scopeID)
+        private List<GridRegion> Get(int regionFlags, List<UUID> scopeIDs)
         {
             QueryFilter filter = new QueryFilter();
             filter.andBitfieldAndFilters["Flags"] = (uint)regionFlags;
-            if (scopeID != UUID.Zero)
-            {
-                filter.andFilters["ScopeID"] = scopeID;
-            }
 
-            return ParseQuery(GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
+            return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
-        protected List<GridRegion> ParseQuery(List<string> query)
+        protected List<GridRegion> CheckScopeIDs(List<UUID> scopeIDs, List<GridRegion> regions)
+        {
+            if(scopeIDs == null || scopeIDs.Count == 0 || (scopeIDs.Count == 1 && scopeIDs[0] == UUID.Zero))
+                return regions;
+            return new List<GridRegion>(regions.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s))));
+        }
+
+        protected List<GridRegion> ParseQuery(List<UUID> scopeIDs, List<string> query)
         {
             List<GridRegion> regionData = new List<GridRegion>();
 
@@ -542,7 +521,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return regionData;
+            return CheckScopeIDs(scopeIDs, regionData);
         }
 
         #region Nested type: RegionDataDistanceCompare

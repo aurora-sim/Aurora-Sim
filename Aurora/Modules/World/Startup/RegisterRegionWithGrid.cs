@@ -383,7 +383,7 @@ namespace Aurora.Modules.Startup
                                                                               return true;
                                                                           return false;
                                                                       }) == null)
-                            m_knownNeighbors[targetregionID].Add(m_scenes[0].GridService.GetRegionByUUID(UUID.Zero,
+                            m_knownNeighbors[targetregionID].Add(m_scenes[0].GridService.GetRegionByUUID(null,
                                                                                                          regionID));
                     }
                 }

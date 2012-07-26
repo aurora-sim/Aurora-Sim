@@ -4037,7 +4037,7 @@ namespace OpenSim.Region.Framework.Scenes
                             m_lastSigInfiniteRegionPos.Y - AbsolutePosition.Y < -256)
                         {
                             m_lastSigInfiniteRegionPos = AbsolutePosition;
-                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(UUID.Zero,
+                            m_nearbyInfiniteRegions = Scene.GridService.GetRegionRange(null,
                                 (int)(TargetX - Scene.GridService.GetMaxRegionSize()),
                                 (int)(TargetX + 256),
                                 (int)(TargetY - Scene.GridService.GetMaxRegionSize()),

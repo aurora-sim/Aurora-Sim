@@ -160,7 +160,7 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.Info("[AvatarProfileArchiver] Not enough parameters!");
                 return;
             }
-            UserAccount account = UserAccountService.GetUserAccount(UUID.Zero, cmdparams[3] + " " + cmdparams[4]);
+            UserAccount account = UserAccountService.GetUserAccount(null, cmdparams[3] + " " + cmdparams[4]);
             if (account == null)
             {
                 MainConsole.Instance.Info("Account could not be found, stopping now.");

@@ -119,7 +119,7 @@ namespace OpenSim.Services
                 if (user != null && user.IsOnline)
                 {
                     Interfaces.GridRegion gr =
-                        m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero,
+                        m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null,
                                                                                           user.CurrentRegionID);
                     if (gr != null)
                         infos[i] = gr.ServerURI;

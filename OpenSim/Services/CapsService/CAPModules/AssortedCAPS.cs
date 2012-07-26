@@ -155,7 +155,7 @@ namespace OpenSim.Services.CapsService
             NameValueCollection query = HttpUtility.ParseQueryString(httpRequest.Url.Query);
             string amt = query.GetOne("page-size");
             string name = query.GetOne("names");
-            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(UUID.Zero, name, 0, uint.Parse(amt)) ??
+            List<UserAccount> accounts = m_service.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccounts(m_service.ClientCaps.AccountInfo.AllScopeIDs, name, 0, uint.Parse(amt)) ??
                                          new List<UserAccount>(0);
 
             OSDMap body = new OSDMap();
@@ -231,8 +231,8 @@ namespace OpenSim.Services.CapsService
             string reason = "";
             int x, y;
             Util.UlongToInts(RegionHandle, out x, out y);
-            GridRegion destination = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
-                x, y);
+            GridRegion destination = m_service.Registry.RequestModuleInterface<IGridService>().GetRegionByPosition(
+                m_service.ClientCaps.AccountInfo.AllScopeIDs, x, y);
             ISimulationService simService = m_service.Registry.RequestModuleInterface<ISimulationService>();
             AgentData ad = new AgentData();
             AgentCircuitData circuitData = null;

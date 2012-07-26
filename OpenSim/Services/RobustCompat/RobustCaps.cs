@@ -180,7 +180,7 @@ namespace OpenSim.Services.Robust
             sendData["ToID"] = u.UserID;
             sendData["Online"] = u.IsOnline.ToString();
             
-            Call(m_scene.GridService.GetRegionByUUID(UUID.Zero, u.CurrentRegionID), sendData);
+            Call(m_scene.GridService.GetRegionByUUID(null, u.CurrentRegionID), sendData);
         }
 
         private void Call(OpenSim.Services.Interfaces.GridRegion region, Dictionary<string, object> sendData)

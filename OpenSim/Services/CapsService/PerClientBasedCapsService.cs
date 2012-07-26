@@ -104,7 +104,7 @@ namespace OpenSim.Services.CapsService
         {
             m_CapsService = server;
             m_agentID = agentID;
-            m_account = Registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(UUID.Zero, agentID);
+            m_account = Registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, agentID);
         }
 
         /// <summary>

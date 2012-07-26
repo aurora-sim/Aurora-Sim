@@ -125,7 +125,7 @@ namespace OpenSim.Services.MessagingService
                                 {
                                     OnlineFriends.Add(FriendToInform);
                                     //Post!
-                                    GridRegion r = gridService.GetRegionByUUID(UUID.Zero, friendinfo.CurrentRegionID);
+                                    GridRegion r = gridService.GetRegionByUUID(null, friendinfo.CurrentRegionID);
                                     if (r != null)
                                         asyncPoster.Post(r.RegionHandle,
                                                          SyncMessageHelper.AgentStatusChange(us, FriendToInform,
@@ -147,7 +147,7 @@ namespace OpenSim.Services.MessagingService
                     //If the user is coming online, send all their friends online statuses to them
                     if (isOnline)
                     {
-                        GridRegion ourRegion = gridService.GetRegionByUUID(UUID.Zero, UUID.Parse(info[2].ToString()));
+                        GridRegion ourRegion = gridService.GetRegionByUUID(null, UUID.Parse(info[2].ToString()));
                         if (ourRegion != null)
                         {
                             foreach (UUID onlineFriend in OnlineFriends)

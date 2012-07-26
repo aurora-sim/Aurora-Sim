@@ -180,7 +180,7 @@ namespace OpenSim.Services.Connectors.Simulation
                 return true;
 
             // Eventually, we want to use a caps url instead of the agentID
-            string uri = MakeUri(m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(UUID.Zero, RegionID),
+            string uri = MakeUri(m_registry.RequestModuleInterface<IGridService>().GetRegionByUUID(null, RegionID),
                                  true) + AgentID + "/" + RegionID.ToString() + "/";
 
             OSDMap data = new OSDMap();

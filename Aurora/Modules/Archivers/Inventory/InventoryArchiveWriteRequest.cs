@@ -327,8 +327,7 @@ namespace Aurora.Modules.Archivers
             foreach (UUID creatorId in m_userUuids.Keys)
             {
                 // Record the creator of this item
-                UserAccount creator = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(
-                    UUID.Zero, creatorId);
+                UserAccount creator = m_registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, creatorId);
 
                 if (creator != null)
                 {

@@ -113,27 +113,12 @@ namespace OpenSim.Services.CapsService
                 OSDArray display_name = (OSDArray) rm["display_name"];
                 string oldDisplayName = display_name[0].AsString();
                 string newDisplayName = display_name[1].AsString();
-                UserAccount account = m_userService.GetUserAccount(UUID.Zero, m_service.AgentID);
 
                 //Check to see if their name contains a banned character
-#if (!ISWIN)
-                foreach (string bannedUserName in bannedNames)
-                {
-                    string BannedUserName = bannedUserName.Replace(" ", "");
-                    if (newDisplayName.ToLower().Contains(BannedUserName.ToLower()))
-                    {
-                        //Revert the name to the original and send them a warning
-                        newDisplayName = account.Name;
-                        //m_avatar.ControllingClient.SendAlertMessage ("You cannot update your display name to the name chosen, your name has been reverted. This request has been logged.");
-                        break; //No more checking
-                    }
-                }
-#else
                 if (bannedNames.Select(bannedUserName => bannedUserName.Replace(" ", "")).Any(BannedUserName => newDisplayName.ToLower().Contains(BannedUserName.ToLower())))
                 {
-                    newDisplayName = account.Name;
+                    newDisplayName = m_service.ClientCaps.AccountInfo.Name;
                 }
-#endif
 
                 IUserProfileInfo info = m_profileConnector.GetUserProfile(m_service.AgentID);
                 if (info == null)
@@ -147,26 +132,15 @@ namespace OpenSim.Services.CapsService
                     m_profileConnector.UpdateUserProfile(info);
 
                     //One for us
-                    DisplayNameUpdate(newDisplayName, oldDisplayName, account, m_service.AgentID);
+                    DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo, m_service.AgentID);
 
-#if (!ISWIN)
-                    foreach (IRegionClientCapsService avatar in m_service.RegionCaps.GetClients())
-                    {
-                        if (avatar.AgentID != m_service.AgentID)
-                        {
-                            //Update all others
-                            DisplayNameUpdate(newDisplayName, oldDisplayName, account, avatar.AgentID);
-                        }
-                    }
-#else
                     foreach (IRegionClientCapsService avatar in m_service.RegionCaps.GetClients().Where(avatar => avatar.AgentID != m_service.AgentID))
                     {
                         //Update all others
-                        DisplayNameUpdate(newDisplayName, oldDisplayName, account, avatar.AgentID);
+                        DisplayNameUpdate(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo, avatar.AgentID);
                     }
-#endif
                     //The reply
-                    SetDisplayNameReply(newDisplayName, oldDisplayName, account);
+                    SetDisplayNameReply(newDisplayName, oldDisplayName, m_service.ClientCaps.AccountInfo);
                 }
             }
             catch
@@ -199,7 +173,7 @@ namespace OpenSim.Services.CapsService
             {
                 foreach (string id in ids)
                 {
-                    UserAccount account = m_userService.GetUserAccount(UUID.Zero, UUID.Parse(id));
+                    UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs, UUID.Parse(id));
                     if (account != null)
                     {
                         IUserProfileInfo info =
@@ -215,7 +189,7 @@ namespace OpenSim.Services.CapsService
             }
             else if (username != null)
             {
-                UserAccount account = m_userService.GetUserAccount(UUID.Zero, username.Replace('.', ' '));
+                UserAccount account = m_userService.GetUserAccount(m_service.ClientCaps.AccountInfo.AllScopeIDs, username.Replace('.', ' '));
                 if (account != null)
                 {
                     IUserProfileInfo info =

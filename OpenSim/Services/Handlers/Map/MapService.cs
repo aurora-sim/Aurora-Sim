@@ -115,7 +115,7 @@ namespace OpenSim.Services.Handlers.Map
             {
                 string resp = "var {0} = {\"x\":{1},\"y\":{2}};";
                 string sim_name = httpRequest.Query["sim_name"].ToString();
-                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(UUID.Zero, sim_name);
+                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(null, sim_name);
                 if (region == null)
                     resp = "var " + var + " = {error: true};";
                 else
@@ -128,11 +128,11 @@ namespace OpenSim.Services.Handlers.Map
                 string resp = "var {0} = \"{1}\";";
                 int grid_x = int.Parse(httpRequest.Query["grid_x"].ToString());
                 int grid_y = int.Parse(httpRequest.Query["grid_y"].ToString());
-                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(UUID.Zero,
+                var region = m_registry.RequestModuleInterface<IGridService>().GetRegionByPosition(null,
                     grid_x * Constants.RegionSize, grid_y * Constants.RegionSize);
                 if (region == null)
                 {
-                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                    List<GridRegion> regions = m_gridService.GetRegionRange(null,
                         (grid_x * Constants.RegionSize) - (m_gridService.GetMaxRegionSize()),
                         (grid_x * Constants.RegionSize),
                         (grid_y * Constants.RegionSize) - (m_gridService.GetMaxRegionSize()),
@@ -175,7 +175,7 @@ namespace OpenSim.Services.Handlers.Map
 "<Marker/>" +
 "<MaxKeys>1000</MaxKeys>" +
 "<IsTruncated>true</IsTruncated>";
-                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                    List<GridRegion> regions = m_gridService.GetRegionRange(null,
                         (1000 * Constants.RegionSize) - (8 * Constants.RegionSize),
                         (1000 * Constants.RegionSize) + (8 * Constants.RegionSize),
                         (1000 * Constants.RegionSize) - (8 * Constants.RegionSize),
@@ -210,7 +210,7 @@ namespace OpenSim.Services.Handlers.Map
                 int regionX = int.Parse (splitUri[2]);
                 int regionY = int.Parse (splitUri[3]);
 
-                List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                List<GridRegion> regions = m_gridService.GetRegionRange(null,
                         (regionX * Constants.RegionSize) - (mapView * Constants.RegionSize),
                         (regionX * Constants.RegionSize) + (mapView * Constants.RegionSize),
                         (regionY * Constants.RegionSize) - (mapView * Constants.RegionSize),
@@ -274,7 +274,7 @@ namespace OpenSim.Services.Handlers.Map
             if (jpeg.Length == 0 && splitUri.Length > 1 && splitUri[1].Length > 1)
             {
                 MemoryStream imgstream = new MemoryStream();
-                GridRegion region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(UUID.Zero,
+                GridRegion region = m_registry.RequestModuleInterface<IGridService>().GetRegionByName(null,
                                                                                                       splitUri[1].Remove
                                                                                                           (4));
                 if (region == null)

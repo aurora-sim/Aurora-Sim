@@ -43,7 +43,7 @@ namespace Aurora.Modules.Web
             vars.Add("GridOnline", welcomeInfo.GridStatus ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
             vars.Add("TotalUserCount", translator.GetTranslatedString("TotalUserCount"));
             vars.Add("UserCount", webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                NumberOfUserAccounts(UUID.Zero, "").ToString());
+                NumberOfUserAccounts(null, "").ToString());
             vars.Add("TotalRegionCount", translator.GetTranslatedString("TotalRegionCount"));
             vars.Add("RegionCount", DataManager.DataManager.RequestPlugin<IRegionData>().
                 Count((Framework.RegionFlags)0, (Framework.RegionFlags)0).ToString());

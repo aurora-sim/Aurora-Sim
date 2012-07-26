@@ -72,7 +72,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="scopeID"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        GridRegion GetRegionByUUID(UUID scopeID, UUID regionID);
+        GridRegion GetRegionByUUID(List<UUID> scopeIDs, UUID regionID);
 
         /// <summary>
         /// Get the region at the given position (in meters)
@@ -81,7 +81,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        GridRegion GetRegionByPosition(UUID scopeID, int x, int y);
+        GridRegion GetRegionByPosition(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
         /// Get the first returning region by name in the given scope
@@ -89,7 +89,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="scopeID"></param>
         /// <param name="regionName"></param>
         /// <returns></returns>
-        GridRegion GetRegionByName(UUID scopeID, string regionName);
+        GridRegion GetRegionByName(List<UUID> scopeIDs, string regionName);
 
         /// <summary>
         /// Get information about regions starting with the provided name. 
@@ -102,7 +102,7 @@ namespace OpenSim.Services.Interfaces
         /// A list of <see cref="RegionInfo"/>s of regions with matching name. If the
         /// grid-server couldn't be contacted or returned an error, return null. 
         /// </returns>
-        List<GridRegion> GetRegionsByName(UUID scopeID, string name, uint? start, uint? count);
+        List<GridRegion> GetRegionsByName(List<UUID> scopeIDs, string name, uint? start, uint? count);
 
         /// <summary>
         /// Get number of regions starting with the provided name. 
@@ -115,7 +115,7 @@ namespace OpenSim.Services.Interfaces
         /// A the count of <see cref="RegionInfo"/>s of regions with matching name. If the
         /// grid-server couldn't be contacted or returned an error, returns 0. 
         /// </returns>
-        uint GetRegionsByNameCount(UUID scopeID, string name);
+        uint GetRegionsByNameCount(List<UUID> scopeIDs, string name);
 
         /// <summary>
         /// Get all regions within the range of (xmin - xmax, ymin - ymax) (in meters)
@@ -126,7 +126,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="ymin"></param>
         /// <param name="ymax"></param>
         /// <returns></returns>
-        List<GridRegion> GetRegionRange (UUID scopeID, int xmin, int xmax, int ymin, int ymax);
+        List<GridRegion> GetRegionRange(List<UUID> scopeIDs, int xmin, int xmax, int ymin, int ymax);
 
         /// <summary>
         /// Get all regions within the range of specified center.
@@ -136,7 +136,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="centerY"></param>
         /// <param name="squareRangeFromCenterInMeters"></param>
         /// <returns></returns>
-        List<GridRegion> GetRegionRange(UUID scopeID, float centerX, float centerY, uint squareRangeFromCenterInMeters);
+        List<GridRegion> GetRegionRange(List<UUID> scopeIDs, float centerX, float centerY, uint squareRangeFromCenterInMeters);
 
         /// <summary>
         /// Get the neighbors of the given region
@@ -150,7 +150,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="scopeID"></param>
         /// <returns></returns>
-        List<GridRegion> GetDefaultRegions(UUID scopeID);
+        List<GridRegion> GetDefaultRegions(List<UUID> scopeIDs);
 
         /// <summary>
         /// If all the default regions are down, find any fallback regions that have been set near x,y
@@ -159,7 +159,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        List<GridRegion> GetFallbackRegions(UUID scopeID, int x, int y);
+        List<GridRegion> GetFallbackRegions(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
         /// If there still are no regions after fallbacks have been checked, find any region near x,y
@@ -168,7 +168,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-		List<GridRegion> GetSafeRegions(UUID scopeID, int x, int y);
+        List<GridRegion> GetSafeRegions(List<UUID> scopeIDs, int x, int y);
 
         /// <summary>
         /// Get the current flags of the given region
@@ -176,7 +176,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="scopeID"></param>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        int GetRegionFlags(UUID scopeID, UUID regionID);
+        int GetRegionFlags(List<UUID> scopeIDs, UUID regionID);
 
         /// <summary>
         /// Update the map of the given region if the sessionID is correct
@@ -191,7 +191,7 @@ namespace OpenSim.Services.Interfaces
         /// <param name="regionHandle"></param>
         /// <param name="gridItemType"></param>
         /// <returns></returns>
-        multipleMapItemReply GetMapItems (ulong regionHandle, GridItemType gridItemType);
+        multipleMapItemReply GetMapItems (List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType);
 
         /// <summary>
         /// The region (RegionID) has been determined to be unsafe, don't let agents log into it if no other region is found
@@ -359,6 +359,18 @@ namespace OpenSim.Services.Interfaces
         private int m_RegionSizeZ = 256;
         public UUID RegionID = UUID.Zero;
         public UUID ScopeID = UUID.Zero;
+        public List<UUID> AllScopeIDs
+        {
+            get
+            {
+                List<UUID> ids = new List<UUID>();
+                ids.Add(ScopeID);
+                return ids;
+            }
+            set
+            {
+            }
+        }
         private UUID m_SessionID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
@@ -420,6 +432,7 @@ namespace OpenSim.Services.Interfaces
             m_RegionSizeY = ConvertFrom.RegionSizeY;
             m_RegionSizeZ = ConvertFrom.RegionSizeZ;
             ScopeID = ConvertFrom.ScopeID;
+            AllScopeIDs = ConvertFrom.AllScopeIDs;
             SessionID = ConvertFrom.GridSecureSessionID;
             Flags |= (int)Aurora.Framework.RegionFlags.RegionOnline;
         }

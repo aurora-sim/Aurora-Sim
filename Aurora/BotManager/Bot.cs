@@ -1467,6 +1467,12 @@ namespace Aurora.BotManager
             set;
         }
 
+        public List<UUID> AllScopeIDs
+        {
+            get;
+            set;
+        }
+
         // creates new bot on the default location
         public BotClientAPI(IScene scene, AgentCircuitData data)
         {
@@ -1474,6 +1480,7 @@ namespace Aurora.BotManager
 
             m_circuitData = data;
             m_scene = scene;
+            AllScopeIDs = new List<UUID>();
 
             m_circuitCode = UniqueId;
 

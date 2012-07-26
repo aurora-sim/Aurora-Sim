@@ -114,7 +114,7 @@ namespace OpenSim.Services.CapsService
             {
                 if (m_mapLayer == null || m_mapLayer.Count == 0)
                 {
-                    List<GridRegion> regions = m_gridService.GetRegionRange(UUID.Zero,
+                    List<GridRegion> regions = m_gridService.GetRegionRange(m_service.ClientCaps.AccountInfo.AllScopeIDs,
                                                                             left*Constants.RegionSize,
                                                                             right*Constants.RegionSize,
                                                                             bottom*Constants.RegionSize,

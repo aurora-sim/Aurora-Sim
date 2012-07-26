@@ -41,7 +41,7 @@ namespace Aurora.Modules.Web
                 IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                 string username = requestParameters["username"].ToString();
                 int start = httpRequest.Query.ContainsKey("Start") ? int.Parse(httpRequest.Query["Start"].ToString()) : 0;
-                uint count = accountService.NumberOfUserAccounts(UUID.Zero, username);
+                uint count = accountService.NumberOfUserAccounts(null, username);
                 int maxPages = (int)(count / amountPerQuery) - 1;
 
                 if (start == -1)
@@ -51,7 +51,7 @@ namespace Aurora.Modules.Web
                 vars.Add("NextOne", start + 1 > maxPages ? start : start + 1);
                 vars.Add("BackOne", start - 1 < 0 ? 0 : start - 1);
 
-                var users = accountService.GetUserAccounts(UUID.Zero, username, (uint)start, amountPerQuery);
+                var users = accountService.GetUserAccounts(null, username, (uint)start, amountPerQuery);
                 foreach (var user in users)
                 {
                     usersList.Add(new Dictionary<string, object> { { "UserName", user.Name }, 
