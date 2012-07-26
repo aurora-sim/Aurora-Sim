@@ -67,7 +67,8 @@ namespace Aurora.Services.DataService
             get { return "IRegionData"; }
         }
 
-        private void FixMissingRegionOwners(){
+        private void FixMissingRegionOwners()
+        {
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = UUID.Zero;
 
