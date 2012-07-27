@@ -70,6 +70,7 @@ namespace Aurora.Modules.Web
                     continue;
 
                 List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
+                page.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
                 //page.Children.Add(page);
                 foreach (GridPage childPage in page.Children)
                 {
