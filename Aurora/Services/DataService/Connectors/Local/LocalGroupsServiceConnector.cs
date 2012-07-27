@@ -397,7 +397,7 @@ namespace Aurora.Services.DataService
                 row["Name"] = NameOf;
                 row["Description"] = Description;
                 row["Title"] = Title;
-                row["Powers"] = Powers;
+                row["Powers"] = (long)Powers;
                 data.Insert("osrole", row);
             }
         }
