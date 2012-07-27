@@ -23,6 +23,13 @@ namespace Griffin.Networking.Http.Implementation
                 _items.Add(name, new HttpHeaderItem(name, value));
         }
 
+        public void Remove(string name)
+        {
+            if (name == null) throw new ArgumentNullException("name");
+
+            _items.Remove(name);
+        }
+
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>

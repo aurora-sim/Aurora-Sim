@@ -173,7 +173,7 @@ namespace Griffin.Networking.Channels
 
         public void CopyTo (Stream readFrom, Stream destination)
 		{
-			CopyTo (readFrom, destination, 16*1024);
+			CopyTo (readFrom, destination, (int)readFrom.Length);
 		}
 
 		public void CopyTo (Stream readFrom, Stream destination, int bufferSize)

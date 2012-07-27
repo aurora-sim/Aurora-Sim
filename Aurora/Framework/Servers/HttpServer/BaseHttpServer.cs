@@ -1320,6 +1320,8 @@ namespace Aurora.Framework.Servers.HttpServer
                 //Fix the current Culture
                 Culture.SetCurrentCulture();
 
+                response.KeepAlive = request.KeepAlive;
+
                 IStreamedRequestHandler requestHandler;
                 if (_server.TryGetStreamHandler(BaseHttpServer.GetHandlerKey(request.HttpMethod, path), out requestHandler))
                 {

@@ -160,7 +160,6 @@ namespace Aurora.Modules.Web
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
-            httpResponse.KeepAlive = false;
             IWebInterfacePage page = GetPage(filename);
             if (page != null)
             {
@@ -441,24 +440,26 @@ namespace Aurora.Modules.Web
             {
                 case ".jpeg":
                 case ".jpg":
-                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "image/jpeg";
                 case ".gif":
-                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "image/gif";
                 case ".png":
-                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "image/png";
                 case ".tiff":
-                    response.AddHeader("Cache-Control", CLIENT_CACHE_TIME.ToString());
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "image/tiff";
                 case ".html":
                 case ".htm":
                 case ".xsl":
                     return "text/html";
                 case ".css":
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "text/css";
                 case ".js":
+                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
                     return "application/javascript";
             }
             return "text/plain";

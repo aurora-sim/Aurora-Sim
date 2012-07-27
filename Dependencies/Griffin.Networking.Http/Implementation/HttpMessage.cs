@@ -53,5 +53,10 @@ namespace Griffin.Networking.Http.Implementation
         {
             _headers.Add(name, value);
         }
+
+        public virtual void RemoveHeader(string name)
+        {
+            _headers.Remove(name);
+        }
     }
 }
