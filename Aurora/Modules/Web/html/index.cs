@@ -66,7 +66,7 @@ namespace Aurora.Modules.Web
                     continue;
                 if (page.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest))
                     continue;
-                if (page.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
+                if (page.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest, page.AdminLevelRequired))
                     continue;
 
                 List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
@@ -77,7 +77,7 @@ namespace Aurora.Modules.Web
                         continue;
                     if (childPage.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest))
                         continue;
-                    if (childPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest))
+                    if (childPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest, childPage.AdminLevelRequired))
                         continue;
 
                     childPages.Add(new Dictionary<string, object> {

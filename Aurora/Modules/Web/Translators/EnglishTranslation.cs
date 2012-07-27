@@ -529,6 +529,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Requires Logout To View";
                 case "RequiresAdminText":
                     return "Requires Admin To View";
+                case "RequiresAdminLevelText":
+                    return "Required Admin Level To View";
 
                 //settings manager page
                 case "Save":

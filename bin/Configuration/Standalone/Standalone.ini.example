@@ -38,7 +38,7 @@
     MaxGroupOfflineMessages = 50
 
     DoRemoteCalls = False
-	CapsServiceDoRemoteCalls = False
+    CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = False
 [Handlers]
     ;;Add any handlers here that you do not want to use
@@ -50,7 +50,7 @@
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
-	AssetHandlerUseCache = true
+    AssetHandlerUseCache = true
     AsyncMessagePostServiceHandler = LocalAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
@@ -61,7 +61,7 @@
     FriendsHandler = FriendsService
     GridHandler = GridService
     InventoryHandler = InventoryService
-	LoginHandler = LLLoginService
+    LoginHandler = LLLoginService
     SimulationHandler = LocalSimulationServiceConnector
     SyncMessagePosterServiceHandler = LocalSyncMessagePosterService
     UserAccountHandler = UserAccountService

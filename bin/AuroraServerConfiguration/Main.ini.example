@@ -10,7 +10,7 @@
 
     AgentInfoHandler = AgentInfoService
     AssetHandler = AssetService
-	AssetHandlerUseCache = false
+    AssetHandlerUseCache = false
     AsyncMessagePostServiceHandler = RemoteAsyncMessagePostService
     AuthenticationHandler = PasswordAuthenticationService
     AvatarHandler = AvatarService
@@ -22,7 +22,7 @@
     GridHandler = GridService
     GridWideMessage = GridWideMessageModule
     InventoryHandler = InventoryService
-	LoginHandler = LLLoginService
+    LoginHandler = LLLoginService
     SimulationHandler = SimulationServiceConnector
     UserAccountHandler = UserAccountService
 
@@ -56,9 +56,9 @@
     MaxGroupOfflineMessages = 50
 
     DoRemoteCalls = False
-	CapsServiceDoRemoteCalls = False
+    CapsServiceDoRemoteCalls = False
     AllowRemoteCalls = True
-	
+
 [ApplicationPlugins]
     ServicesLoader = ServicesLoader
     StatsHandler = StatsHandler

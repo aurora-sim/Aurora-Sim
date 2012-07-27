@@ -571,6 +571,7 @@ namespace Aurora.Modules.Web
         public bool LoggedInRequired = false;
         public bool LoggedOutRequired = false;
         public bool AdminRequired = false;
+        public int AdminLevelRequired = 1;
 
         public GridPage() { } 
         public GridPage(OSD map) { FromOSD(map as OSDMap); }
@@ -586,6 +587,7 @@ namespace Aurora.Modules.Web
             LoggedInRequired = map["LoggedInRequired"];
             LoggedOutRequired = map["LoggedOutRequired"];
             AdminRequired = map["AdminRequired"];
+            AdminLevelRequired = map["AdminLevelRequired"];
             Children = ((OSDArray)map["Children"]).ConvertAll<GridPage>(o => new GridPage(o));
         }
 
@@ -602,6 +604,7 @@ namespace Aurora.Modules.Web
             map["LoggedInRequired"] = LoggedInRequired;
             map["LoggedOutRequired"] = LoggedOutRequired;
             map["AdminRequired"] = AdminRequired;
+            map["AdminLevelRequired"] = AdminLevelRequired;
             map["Children"] = Children.ToOSDArray();
             return map;
         }
