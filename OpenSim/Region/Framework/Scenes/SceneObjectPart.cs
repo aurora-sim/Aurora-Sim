@@ -1856,7 +1856,6 @@ namespace OpenSim.Region.Framework.Scenes
         public List<UUID> SitTargetAvatar
         {
             get { return m_sitTargetAvatar; }
-            set { m_sitTargetAvatar = value; }
         }
 
         [XmlIgnore]
@@ -2298,11 +2297,6 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_parentGroup.setAngularImpulse(impulse);
             }
-        }
-
-        public List<UUID> GetAvatarOnSitTarget()
-        {
-            return m_sitTargetAvatar;
         }
 
         public bool GetDieAtEdge()
@@ -2769,10 +2763,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (SitTargetAvatar)
             {
                 if (!SitTargetAvatar.Contains(avatarID))
-                {
                     SitTargetAvatar.Add(avatarID);
-                    ParentEntity.SitTargetAvatar.Add(avatarID);
-                }
             }
             TriggerScriptChangedEvent(Changed.LINK);
         }
@@ -2782,10 +2773,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (SitTargetAvatar)
             {
                 if (SitTargetAvatar.Contains(avatarID))
-                {
                     SitTargetAvatar.Remove(avatarID);
-                    ParentEntity.SitTargetAvatar.Remove(avatarID);
-                }
             }
             TriggerScriptChangedEvent(Changed.LINK);
         }
@@ -4122,19 +4110,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_sitTargetAvatar.Count != 0)
             {
-#if (!ISWIN)
-                foreach (UUID avID in m_sitTargetAvatar)
-                {
-                    if (m_parentGroup != null)
-                    {
-                        IScenePresence avatar;
-                        if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
-                        {
-                            avatar.ParentPosition = GetWorldPosition();
-                        }
-                    }
-                }
-#else
                 foreach (UUID avID in m_sitTargetAvatar.Where(avID => m_parentGroup != null))
                 {
                     IScenePresence avatar;
@@ -4143,7 +4118,6 @@ namespace OpenSim.Region.Framework.Scenes
                         avatar.ParentPosition = GetWorldPosition();
                     }
                 }
-#endif
             }
             if (TriggerMoving_End)
                 TriggerScriptMovingEndEvent();

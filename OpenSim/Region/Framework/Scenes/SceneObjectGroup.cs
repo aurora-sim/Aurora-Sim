@@ -129,7 +129,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Properties
 
-        private readonly List<UUID> m_sitTargetAvatars = new List<UUID>();
         private List<ISceneChildEntity> m_LoopSoundSlavePrims = new List<ISceneChildEntity>();
         private List<ISceneChildEntity> m_PlaySoundSlavePrims = new List<ISceneChildEntity>();
 
@@ -287,7 +286,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public List<UUID> SitTargetAvatar
         {
-            get { return m_sitTargetAvatars; }
+            get
+            {
+                List<UUID> sittingAvatars = new List<UUID>();
+                foreach (var prim in ChildrenEntities())
+                    sittingAvatars.AddRange(prim.SitTargetAvatar);
+                return sittingAvatars;
+            }
         }
 
         /// <summary>
@@ -3199,17 +3204,14 @@ namespace OpenSim.Region.Framework.Scenes
 #endif
             }
             //Check sitting avatars
-            lock (SitTargetAvatar)
+            int count = m_parts.Count + 1;
+            foreach (UUID agentID in SitTargetAvatar)
             {
-                int count = m_parts.Count + 1;
-                foreach (UUID agentID in SitTargetAvatar)
+                if (count == linknum)
                 {
-                    if (count == linknum)
-                    {
-                        return m_scene.GetScenePresence(agentID);
-                    }
-                    count++;
+                    return m_scene.GetScenePresence(agentID);
                 }
+                count++;
             }
 
             return null;

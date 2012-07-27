@@ -480,19 +480,14 @@ namespace Aurora.Modules.Startup
             {
                 //MainConsole.Instance.DebugFormat("[Backup]: Deleting scene object {0} {1}", group.Name, group.UUID);
 
-                lock (group.SitTargetAvatar)
+                if (group.SitTargetAvatar.Count != 0)
                 {
-                    if (group.SitTargetAvatar.Count != 0)
+                    foreach (UUID avID in group.SitTargetAvatar)
                     {
-                        UUID[] ids = new UUID[group.SitTargetAvatar.Count];
-                        group.SitTargetAvatar.CopyTo(ids);
-                        foreach (UUID avID in ids)
-                        {
-                            //Don't screw up avatar's that are sitting on us!
-                            IScenePresence SP = m_scene.GetScenePresence(avID);
-                            if (SP != null)
-                                SP.StandUp();
-                        }
+                        //Don't screw up avatar's that are sitting on us!
+                        IScenePresence SP = m_scene.GetScenePresence(avID);
+                        if (SP != null)
+                            SP.StandUp();
                     }
                 }
 

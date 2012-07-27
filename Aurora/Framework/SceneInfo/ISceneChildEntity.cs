@@ -137,8 +137,6 @@ namespace Aurora.Framework
 
         void RemoveAvatarOnSitTarget(UUID UUID);
 
-        List<UUID> GetAvatarOnSitTarget();
-
         UUID ParentUUID { get; set; }
 
         float GetMass();

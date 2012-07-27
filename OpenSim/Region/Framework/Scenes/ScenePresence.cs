@@ -1559,7 +1559,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m.RemoveAllScriptControllers (part);
                     
                     // Reset sit target.
-                    if (part.GetAvatarOnSitTarget().Contains(UUID))
+                    if (part.SitTargetAvatar.Contains(UUID))
                         part.RemoveAvatarOnSitTarget(UUID);
 
                     m_parentPosition = part.GetWorldPosition();
@@ -1703,7 +1703,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_parentID = m_requestedSitTargetUUID;
 
             part.SitTargetAvatar.Add(UUID);
-            part.ParentEntity.SitTargetAvatar.Add(UUID);
             Velocity = Vector3.Zero;
             RemoveFromPhysicalScene();
 
@@ -1752,7 +1751,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_requestedSitTargetUUID = part.UUID;
             m_sitting = true;
             part.SetAvatarOnSitTarget(UUID);
-
+            var root = part.ParentEntity.RootChild;
             if (SitTargetisSet)
             {
                 offset = new Vector3(avSitOffSet.X, avSitOffSet.Y, avSitOffSet.Z);

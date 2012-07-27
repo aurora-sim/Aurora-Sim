@@ -761,21 +761,17 @@ namespace Aurora.Modules.EntityTransfer
                 if(grp.SitTargetAvatar.Count != 0)
                 {
                     bool success = false;
-                    lock(grp.SitTargetAvatar)
+                    foreach (UUID avID in grp.SitTargetAvatar)
                     {
-                        foreach(UUID avID in grp.SitTargetAvatar)
-                        {
-                            IScenePresence SP = grp.Scene.GetScenePresence(avID);
-                            SP.Velocity = grp.RootChild.PhysActor.Velocity;
-                            InternalCross(SP, attemptedPos, false, destination);
-                            success = grp.Scene.GetScenePresence(avID).IsChildAgent;
-                        }
+                        IScenePresence SP = grp.Scene.GetScenePresence(avID);
+                        SP.Velocity = grp.RootChild.PhysActor.Velocity;
+                        InternalCross(SP, attemptedPos, false, destination);
+                        success = grp.Scene.GetScenePresence(avID).IsChildAgent;
                     }
                     if(success)
                     {
                         foreach(ISceneChildEntity part in grp.ChildrenEntities())
                             part.SitTargetAvatar.Clear();
-                        grp.SitTargetAvatar.Clear();
 
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if(backup != null)
@@ -797,7 +793,6 @@ namespace Aurora.Modules.EntityTransfer
                     {
                         foreach (ISceneChildEntity part in grp.ChildrenEntities())
                             part.SitTargetAvatar.Clear();
-                        grp.SitTargetAvatar.Clear();
 
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)
