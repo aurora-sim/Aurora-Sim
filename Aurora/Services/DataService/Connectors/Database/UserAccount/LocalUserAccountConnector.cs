@@ -32,6 +32,7 @@ using System.Web;
 using Aurora.Framework;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Services.Interfaces;
 
 namespace Aurora.Services.DataService
@@ -91,7 +92,7 @@ namespace Aurora.Services.DataService
             if (data.UserTitle == null)
                 data.UserTitle = "";
 
-            Dictionary<string, object> row = new Dictionary<string, object>(11);
+            Dictionary<string, object> row = new Dictionary<string, object>(12);
             row["PrincipalID"] = data.PrincipalID;
             row["ScopeID"] = data.ScopeID;
             row["FirstName"] = data.FirstName;
@@ -103,6 +104,7 @@ namespace Aurora.Services.DataService
             row["UserFlags"] = data.UserFlags;
             row["UserTitle"] = data.UserTitle;
             row["Name"] = data.Name;
+            row["OSD"] = OSDParser.SerializeJsonString(data.ToOSD());
 
             return GD.Replace(m_realm, row);
         }
@@ -177,7 +179,8 @@ namespace Aurora.Services.DataService
                                                    "UserLevel",
                                                    "UserFlags",
                                                    "UserTitle",
-                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name",
+                                                   "OSD"
                                                }, m_realm, filter, sort, start, count);
 
             return ParseQuery(scopeIDs, retVal).ToArray();
@@ -205,7 +208,8 @@ namespace Aurora.Services.DataService
                                                    "UserLevel",
                                                    "UserFlags",
                                                    "UserTitle",
-                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name"
+                                                   "IFNULL(Name, " + GD.ConCat(new[] {"FirstName", "' '", "LastName"}) + ") as Name",
+                                                   "OSD"
                                                }, m_realm, filter, sort, null, null);
 
             return ParseQuery(scopeIDs, retVal).ToArray();
@@ -225,10 +229,11 @@ namespace Aurora.Services.DataService
         private List<UserAccount> ParseQuery(List<UUID> scopeIDs, List<string> query)
         {
             List<UserAccount> list = new List<UserAccount>();
-            for (int i = 0; i < query.Count; i += 11)
+            for (int i = 0; i < query.Count; i += 12)
             {
-                UserAccount data = new UserAccount
-                                       {PrincipalID = UUID.Parse(query[i + 0]), ScopeID = UUID.Parse(query[i + 1])};
+                UserAccount data = new UserAccount { PrincipalID = UUID.Parse(query[i + 0]), ScopeID = UUID.Parse(query[i + 1]) };
+                if(query[i + 11] != "")
+                    data.FromOSD((OSDMap)OSDParser.DeserializeJson(query[i + 11]));
 
                 //We keep these even though we don't always use them because we might need to create the "Name" from them
                 string FirstName = query[i + 2];

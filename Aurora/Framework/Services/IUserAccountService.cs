@@ -155,6 +155,7 @@ namespace OpenSim.Services.Interfaces
             OSDMap result = new OSDMap();
             result["FirstName"] = FirstName;
             result["LastName"] = LastName;
+            result["Name"] = Name;
             result["Email"] = Email;
             result["PrincipalID"] = PrincipalID;
             result["ScopeID"] = ScopeID;
@@ -172,12 +173,10 @@ namespace OpenSim.Services.Interfaces
 
         public override void FromOSD(OSDMap map)
         {
-            if (map.ContainsKey("FirstName") && map.ContainsKey("LastName"))
-                Name = map["FirstName"] + " " + map["LastName"];
+            Name = map["FirstName"] + " " + map["LastName"];
             if (map.ContainsKey("Name"))
-                Name = map["Name"].ToString();
-            if (map.ContainsKey("Email"))
-                Email = map["Email"].ToString();
+                Name = map["Name"].AsString();
+            Email = map["Email"].AsString();
             if (map.ContainsKey("PrincipalID"))
                 PrincipalID = map["PrincipalID"];
             if (map.ContainsKey("ScopeID"))
@@ -193,9 +192,9 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("Created"))
                 Created = map["Created"];
+            ServiceURLs = new Dictionary<string, object>();
             if (map.ContainsKey("ServiceURLs") && map["ServiceURLs"] != null)
             {
-                ServiceURLs = new Dictionary<string, object>();
                 string str = map["ServiceURLs"].ToString();
                 if (str != string.Empty)
                 {
