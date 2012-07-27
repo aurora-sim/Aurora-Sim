@@ -57,7 +57,7 @@ namespace Aurora.Modules.Web
             string error = translator.GetTranslatedString("ChangesSavedSuccessfully");
             if (requestParameters.ContainsKey("DeleteItem"))
             {
-                rootPage.RemovePage(MenuItem, null);
+                rootPage.RemovePageByLocation(MenuItem, null);
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
             }
             if (requestParameters.ContainsKey("AddItem"))
