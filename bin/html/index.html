@@ -66,26 +66,13 @@
 		switch(pageName){
 {MenuItemsArrayBegin}
 			case "{MenuItemID}":
-				content.load("{MenuItemLocation}" + window.location.search, hideLoading);
+				content.load("{MenuItemLocation}" + window.location.search);
 				found = new Boolean(1);
 				break;
 {MenuItemsArrayEnd}
 		}
 		if(found == 0)
-			content.load("home.html" + window.location.search, hideLoading);
-
-		//show loading bar
-		function showLoading(){
-			loading
-				.css({visibility:"visible"})
-				.css({opacity:"1"})
-				.css({display:"block"})
-			;
-		}
-		//hide loading bar
-		function hideLoading(){
-			loading.fadeTo(1000, 0);
-		};
+			content.load("home.html" + window.location.search);
 	});
     </script>
 

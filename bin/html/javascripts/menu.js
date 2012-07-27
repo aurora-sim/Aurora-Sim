@@ -5,7 +5,7 @@ $(document).ready(function(){
 	var content = $("#content");
 	
 	//Manage click events
-	sections.click(function(){
+	sections.click(function(event){
 		//show the loading bar
 		showLoading();
 		//load selected section
@@ -24,6 +24,7 @@ $(document).ready(function(){
 				hideLoading();
 				break;
 		}
+		event.stopPropagation();
 	});
 
 	//show loading bar
