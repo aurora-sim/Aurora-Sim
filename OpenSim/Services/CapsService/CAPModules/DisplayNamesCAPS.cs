@@ -90,6 +90,8 @@ namespace OpenSim.Services.CapsService
 
         public void DeregisterCaps()
         {
+            if (m_service == null)
+                return;//If display names aren't enabled
             m_service.RemoveStreamHandler("SetDisplayName", "POST");
             m_service.RemoveStreamHandler("GetDisplayNames", "GET");
         }
