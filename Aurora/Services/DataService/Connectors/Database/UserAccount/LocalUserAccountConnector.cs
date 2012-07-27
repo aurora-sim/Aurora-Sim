@@ -256,14 +256,7 @@ namespace Aurora.Services.DataService
                 list.Add(data);
             }
 
-            return CheckScopeIDs(scopeIDs, list);
-        }
-
-        protected List<UserAccount> CheckScopeIDs(List<UUID> scopeIDs, List<UserAccount> list)
-        {
-            if (scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
-                return list;
-            return new List<UserAccount>(list.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
+            return AllScopeIDImpl.CheckScopeIDs(scopeIDs, list);
         }
     }
 }

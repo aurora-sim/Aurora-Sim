@@ -491,13 +491,6 @@ namespace Aurora.Services.DataService
             return ParseQuery(scopeIDs, GD.Query(new string[1] { "*" }, m_realm, filter, null, null, null));
         }
 
-        protected List<GridRegion> CheckScopeIDs(List<UUID> scopeIDs, List<GridRegion> regions)
-        {
-            if (scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
-                return regions;
-            return new List<GridRegion>(regions.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
-        }
-
         protected List<GridRegion> ParseQuery(List<UUID> scopeIDs, List<string> query)
         {
             List<GridRegion> regionData = new List<GridRegion>();
@@ -521,7 +514,7 @@ namespace Aurora.Services.DataService
                 }
             }
 
-            return CheckScopeIDs(scopeIDs, regionData);
+            return AllScopeIDImpl.CheckScopeIDs(scopeIDs, regionData);
         }
 
         #region Nested type: RegionDataDistanceCompare

@@ -34,26 +34,13 @@ using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Services.Interfaces
 {
-    public class UserAccount : IDataTransferable, BaseCacheAccount
+    public class UserAccount : AllScopeIDImpl, BaseCacheAccount
     {
         public int Created;
         public string Email;
         public string Name { get; set;}
         public OSDMap GenericData = new OSDMap();
         public UUID PrincipalID { get; set; }
-        public UUID ScopeID;
-        public List<UUID> AllScopeIDs
-        {
-            get
-            {
-                List<UUID> ids = new List<UUID>();
-                ids.Add(ScopeID);
-                return ids;
-            }
-            set 
-            {
-            }
-        }
         public Dictionary<string, object> ServiceURLs;
         public int UserFlags;
         public int UserLevel;
@@ -171,6 +158,7 @@ namespace OpenSim.Services.Interfaces
             result["Email"] = Email;
             result["PrincipalID"] = PrincipalID;
             result["ScopeID"] = ScopeID;
+            result["AllScopeIDs"] = AllScopeIDs.ToOSDArray();
             result["Created"] = Created;
             result["UserLevel"] = UserLevel;
             result["UserFlags"] = UserFlags;
@@ -194,6 +182,8 @@ namespace OpenSim.Services.Interfaces
                 PrincipalID = map["PrincipalID"];
             if (map.ContainsKey("ScopeID"))
                 ScopeID = map["ScopeID"];
+            if (map.ContainsKey("AllScopeIDs"))
+                AllScopeIDs = ((OSDArray)map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
             if (map.ContainsKey("UserLevel"))
                 UserLevel = map["UserLevel"];
             if (map.ContainsKey("UserFlags"))

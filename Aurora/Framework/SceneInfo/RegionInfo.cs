@@ -41,7 +41,7 @@ namespace Aurora.Framework
         Normal = 3
     }
 
-    public class RegionInfo : IDataTransferable
+    public class RegionInfo : AllScopeIDImpl
     {
         public string RegionFile = String.Empty;
         public bool Disabled = false;
@@ -59,20 +59,6 @@ namespace Aurora.Framework
         protected int m_regionLocZ;
         public UUID RegionID = UUID.Zero;
         public UUID Password = UUID.Random();
-        public UUID ScopeID = UUID.Zero;
-        public List<UUID> AllScopeIDs
-        {
-            get
-            {
-                List<UUID> ids = new List<UUID>();
-                if (ScopeID != UUID.Zero && !ids.Contains(ScopeID))
-                    ids.Add(ScopeID);
-                return ids;
-            }
-            set
-            {
-            }
-        }
         private UUID m_GridSecureSessionID = UUID.Zero;
         public int NumberStartup = 0;
         public StartupType Startup = StartupType.Normal;

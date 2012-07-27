@@ -196,7 +196,7 @@ namespace OpenSim.Services.Robust
             return false;
         }
 
-        public List<GridRegion> GetNeighbors(GridRegion region)
+        public List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region)
         {
             Dictionary<string, object> sendData = new Dictionary<string, object>();
 

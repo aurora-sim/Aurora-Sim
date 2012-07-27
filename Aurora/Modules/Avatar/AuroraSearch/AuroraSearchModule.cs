@@ -207,20 +207,10 @@ namespace Aurora.Modules.Search
                     {
                         person.group = "";
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
-#if (!ISWIN)
-                        foreach (GroupMembershipData membership in memberships)
-                        {
-                            if (membership.Active)
-                            {
-                                person.group = membership.GroupName;
-                            }
-                        }
-#else
                         foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
                             person.group = membership.GroupName;
                         }
-#endif
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =
@@ -245,20 +235,10 @@ namespace Aurora.Modules.Search
                         person.group = "";
                         //Check what group they have set
                         GroupMembershipData[] memberships = GroupsModule.GetMembershipData(item.PrincipalID);
-#if (!ISWIN)
-                        foreach (GroupMembershipData membership in memberships)
-                        {
-                            if (membership.Active)
-                            {
-                                person.group = membership.GroupName;
-                            }
-                        }
-#else
                         foreach (GroupMembershipData membership in memberships.Where(membership => membership.Active))
                         {
                             person.group = membership.GroupName;
                         }
-#endif
                     }
                     //Then we have to pull the GUI to see if the user is online or not
                     UserInfo Pinfo =

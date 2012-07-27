@@ -2685,4 +2685,36 @@ namespace Aurora.Framework
             }
         }
     }
+
+    public class AllScopeIDImpl : IDataTransferable
+    {
+        public UUID ScopeID = UUID.Zero;
+        public List<UUID> AllScopeIDs
+        {
+            get
+            {
+                List<UUID> ids = new List<UUID>();
+                if (!ids.Contains(ScopeID))
+                    ids.Add(ScopeID);
+                return ids;
+            }
+            set
+            {
+            }
+        }
+
+        public static List<T> CheckScopeIDs<T>(List<UUID> scopeIDs, List<T> list) where T : AllScopeIDImpl
+        {
+            if (scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
+                return list;
+            return new List<T>(list.Where(r => scopeIDs.Any(s => r.AllScopeIDs.Contains(s)) || r.AllScopeIDs.Contains(UUID.Zero)));
+        }
+
+        public static T CheckScopeIDs<T>(List<UUID> scopeIDs, T l) where T : AllScopeIDImpl
+        {
+            if (l == null || scopeIDs == null || scopeIDs.Count == 0 || scopeIDs.Contains(UUID.Zero))
+                return l;
+            return (scopeIDs.Any(s => l.AllScopeIDs.Contains(s)) || l.AllScopeIDs.Contains(UUID.Zero)) ? l : null;
+        }
+    }
 }

@@ -143,7 +143,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name="region"></param>
         /// <returns></returns>
-        List<GridRegion> GetNeighbors (GridRegion region);
+        List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region);
 
         /// <summary>
         /// Get any default regions that have been set for users that are logging in that don't have a region to log into
@@ -257,7 +257,7 @@ namespace OpenSim.Services.Interfaces
         }
     }
 
-    public class GridRegion : IDataTransferable
+    public class GridRegion : AllScopeIDImpl
     {
         #region GridRegion
 
@@ -358,19 +358,6 @@ namespace OpenSim.Services.Interfaces
         private int m_RegionSizeY = 256;
         private int m_RegionSizeZ = 256;
         public UUID RegionID = UUID.Zero;
-        public UUID ScopeID = UUID.Zero;
-        public List<UUID> AllScopeIDs
-        {
-            get
-            {
-                List<UUID> ids = new List<UUID>();
-                ids.Add(ScopeID);
-                return ids;
-            }
-            set
-            {
-            }
-        }
         private UUID m_SessionID = UUID.Zero;
 
         public UUID TerrainImage = UUID.Zero;
@@ -545,6 +532,8 @@ namespace OpenSim.Services.Interfaces
             map["sizeZ"] = RegionSizeZ;
             map["LastSeen"] = LastSeen;
             map["SessionID"] = SessionID;
+            map["ScopeID"] = ScopeID;
+            map["AllScopeIDs"] = AllScopeIDs.ToOSDArray();
             map["Flags"] = Flags;
             map["GenericMap"] = GenericMap;
             map["EstateOwner"] = EstateOwner;
@@ -634,6 +623,12 @@ namespace OpenSim.Services.Interfaces
 
             if (map.ContainsKey("Flags"))
                 Flags = map["Flags"].AsInteger();
+
+            if (map.ContainsKey("ScopeID"))
+                ScopeID = map["ScopeID"].AsUUID();
+
+            if (map.ContainsKey("AllScopeIDs"))
+                AllScopeIDs = ((OSDArray)map["AllScopeIDs"]).ConvertAll<UUID>(o => o);
 
             if (map.ContainsKey("GenericMap"))
                 GenericMap = (OSDMap)map["GenericMap"];

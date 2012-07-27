@@ -415,7 +415,7 @@ namespace OpenSim.Services.MessagingService
         {
             int count = 0;
             bool informed = true;
-            List<GridRegion> neighbors = GetNeighbors(requestingRegion, 0);
+            List<GridRegion> neighbors = GetNeighbors(null, requestingRegion, 0);
 
             foreach (GridRegion neighbor in neighbors)
             {
@@ -428,7 +428,8 @@ namespace OpenSim.Services.MessagingService
                 List<UUID> usersInformed = new List<UUID>();
                 foreach (IRegionClientCapsService regionClientCaps in regionCaps.GetClients())
                 {
-                    if (usersInformed.Contains(regionClientCaps.AgentID) || !regionClientCaps.RootAgent)
+                    if (usersInformed.Contains(regionClientCaps.AgentID) || !regionClientCaps.RootAgent || 
+                        AllScopeIDImpl.CheckScopeIDs(regionClientCaps.ClientCaps.AccountInfo.AllScopeIDs, neighbor) == null)
                         //Only inform agents once
                         continue;
 
@@ -469,7 +470,7 @@ namespace OpenSim.Services.MessagingService
                                                "[AgentProcessing]: Failed to inform neighbors about new agent, could not find our region.");
                                            return;
                                        }
-                                       List<GridRegion> neighbors = GetNeighbors(ourRegion, DrawDistance);
+                                       List<GridRegion> neighbors = GetNeighbors(clientCaps.AccountInfo.AllScopeIDs, ourRegion, DrawDistance);
 
                                        clientCaps.GetRootCapsService().CircuitData.DrawDistance = DrawDistance;
                                            //Fix the root agents dd
@@ -870,9 +871,9 @@ namespace OpenSim.Services.MessagingService
                                        IGridService service = m_registry.RequestModuleInterface<IGridService>();
                                        if (service != null)
                                        {
-                                           List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors(oldRegion);
+                                           List<GridRegion> NeighborsOfOldRegion = service.GetNeighbors(clientCaps.AccountInfo.AllScopeIDs, oldRegion);
                                            List<GridRegion> NeighborsOfDestinationRegion =
-                                               service.GetNeighbors(destination);
+                                               service.GetNeighbors(clientCaps.AccountInfo.AllScopeIDs, destination);
 
                                            List<GridRegion> byebyeRegions = new List<GridRegion>(NeighborsOfOldRegion)
                                                                                 {oldRegion};
@@ -1032,7 +1033,7 @@ namespace OpenSim.Services.MessagingService
             return true;
         }
 
-        public virtual List<GridRegion> GetNeighbors(GridRegion region, int userDrawDistance)
+        public virtual List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region, int userDrawDistance)
         {
             List<GridRegion> neighbors = new List<GridRegion>();
             if (VariableRegionSight && userDrawDistance != 0)
@@ -1048,11 +1049,11 @@ namespace OpenSim.Services.MessagingService
                 int yMax = (region.RegionLocY) + (userDrawDistance);
 
                 //Ask the grid service about the range
-                neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(region.AllScopeIDs,
+                neighbors = m_registry.RequestModuleInterface<IGridService>().GetRegionRange(scopeIDs,
                                                                                              xMin, xMax, yMin, yMax);
             }
             else
-                neighbors = m_registry.RequestModuleInterface<IGridService>().GetNeighbors(region);
+                neighbors = m_registry.RequestModuleInterface<IGridService>().GetNeighbors(scopeIDs, region);
 
             return neighbors;
         }

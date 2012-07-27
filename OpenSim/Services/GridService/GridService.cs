@@ -551,7 +551,7 @@ namespace OpenSim.Services.GridService
                     m_simulationBase.EventManager.FireGenericEventHandler("RegionRegistered", regionInfos);
 
                     //Get the neighbors for them
-                    List<GridRegion> neighbors = GetNeighbors(regionInfos);
+                    List<GridRegion> neighbors = GetNeighbors(null, regionInfos);
                     FixNeighbors(regionInfos, neighbors, false);
 
                     MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} registered successfully at {1}-{2}",
@@ -617,7 +617,7 @@ namespace OpenSim.Services.GridService
                 {
                     region.LastSeen = Util.UnixTimeSinceEpoch();
                     m_Database.Store(region);
-                    FixNeighbors(region, GetNeighbors(region), false);
+                    FixNeighbors(region, GetNeighbors(null, region), false);
                 }
                 catch (Exception e)
                 {
@@ -652,7 +652,7 @@ namespace OpenSim.Services.GridService
 
             MainConsole.Instance.DebugFormat("[GRID SERVICE]: Region {0} deregistered", region.RegionID);
 
-            FixNeighbors(region, GetNeighbors(region), true);
+            FixNeighbors(region, GetNeighbors(null, region), true);
 
             return m_Database.Delete(region.RegionID);
         }
@@ -751,7 +751,7 @@ namespace OpenSim.Services.GridService
         /// <param name = "region"></param>
         /// <returns></returns>
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
-        public virtual List<GridRegion> GetNeighbors(GridRegion region)
+        public virtual List<GridRegion> GetNeighbors(List<UUID> scopeIDs, GridRegion region)
         {
             object remoteValue = DoRemote(region);
             if (remoteValue != null || m_doRemoteOnly)
@@ -765,7 +765,7 @@ namespace OpenSim.Services.GridService
             }
             GridRegion[] regions = new GridRegion[neighbors.Count];
             neighbors.CopyTo(regions);
-            return new List<GridRegion>(regions);
+            return AllScopeIDImpl.CheckScopeIDs(scopeIDs, new List<GridRegion>(regions));
         }
 
         #endregion
@@ -825,6 +825,7 @@ namespace OpenSim.Services.GridService
                 RegionFlags flags = (RegionFlags) Convert.ToInt32(r.Flags);
                 MainConsole.Instance.Info("Region Name: " + r.RegionName);
                 MainConsole.Instance.Info("Region UUID: " + r.RegionID);
+                MainConsole.Instance.Info("Region ScopeID: " + r.ScopeID);
                 MainConsole.Instance.Info("Region Location: " + String.Format("{0},{1}", r.RegionLocX, r.RegionLocY));
                 MainConsole.Instance.Info("Region URI: " + r.ServerURI);
                 MainConsole.Instance.Info("Region Owner: " + r.EstateOwner);

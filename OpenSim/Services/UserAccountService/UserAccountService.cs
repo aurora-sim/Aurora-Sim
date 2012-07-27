@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Aurora.DataManager;
 using Aurora.Simulation.Base;
@@ -130,7 +131,7 @@ namespace OpenSim.Services.UserAccountService
         {
             UserAccount account;
             if (m_cache.Get(firstName + " " + lastName, out account))
-                return account;
+                return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
             object remoteValue = DoRemote(scopeIDs, firstName, lastName);
             if (remoteValue != null || m_doRemoteOnly)
@@ -167,7 +168,7 @@ namespace OpenSim.Services.UserAccountService
         {
             UserAccount account;
             if (m_cache.Get(name, out account))
-                return account;
+                return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
             object remoteValue = DoRemote(scopeIDs, name);
             if (remoteValue != null || m_doRemoteOnly)
@@ -203,7 +204,7 @@ namespace OpenSim.Services.UserAccountService
         {
             UserAccount account;
             if (m_cache.Get(principalID, out account))
-                return account;
+                return AllScopeIDImpl.CheckScopeIDs(scopeIDs, account);
 
             object remoteValue = DoRemote(scopeIDs, principalID);
             if (remoteValue != null || m_doRemoteOnly)
