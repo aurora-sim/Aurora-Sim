@@ -43,7 +43,7 @@ namespace Griffin.Networking.Http.Implementation
         /// </summary>
         public bool KeepAlive
         {
-            get { return Headers["Connection"].Value.Equals("Keep-Alive", StringComparison.OrdinalIgnoreCase); }
+            get { return Headers["Connection"] == null ? false : Headers["Connection"].Value.Equals("Keep-Alive", StringComparison.OrdinalIgnoreCase); }
         }
 
         /// <summary>
