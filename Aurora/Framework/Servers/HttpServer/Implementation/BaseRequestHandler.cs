@@ -32,9 +32,9 @@ namespace Aurora.Framework.Servers.HttpServer
 {
     public abstract class BaseRequestHandler : IStreamedRequestHandler
     {
-        private readonly string m_httpMethod;
+        protected readonly string m_httpMethod;
 
-        private readonly string m_path;
+        protected readonly string m_path;
 
         protected BaseRequestHandler(string httpMethod, string path)
         {
@@ -64,6 +64,33 @@ namespace Aurora.Framework.Servers.HttpServer
             sr.Close();
             body = body.Trim();
             return body;
+        }
+
+        protected string GetParam(string path)
+        {
+            if (CheckParam(path))
+            {
+                return path.Substring(m_path.Length);
+            }
+
+            return String.Empty;
+        }
+
+        protected bool CheckParam(string path)
+        {
+            if (String.IsNullOrEmpty(path))
+            {
+                return false;
+            }
+
+            return path.StartsWith(Path);
+        }
+
+        protected string[] SplitParams(string path)
+        {
+            string param = GetParam(path);
+
+            return param.Split(new char[] { '/', '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         public abstract byte[] Handle(string path, Stream request,

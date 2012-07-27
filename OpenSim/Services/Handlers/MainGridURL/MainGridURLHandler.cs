@@ -3,7 +3,7 @@ using Aurora.Simulation.Base;
 using OpenSim.Services.Interfaces;
 using Nini.Config;
 
-namespace Aurora.Addon.Hypergrid
+namespace Aurora.Addon.HyperGrid
 {
     public class MainGridURLModule : IService, IGridRegistrationUrlModule
     {

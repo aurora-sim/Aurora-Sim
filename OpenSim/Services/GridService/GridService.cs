@@ -317,7 +317,7 @@ namespace OpenSim.Services.GridService
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public virtual multipleMapItemReply GetMapItems(List<UUID> scopeIDs, ulong regionHandle, GridItemType gridItemType)
         {
-            object remoteValue = DoRemote(regionHandle, gridItemType);
+            object remoteValue = DoRemote(scopeIDs, regionHandle, gridItemType);
             if (remoteValue != null || m_doRemoteOnly)
                 return (multipleMapItemReply)remoteValue;
 
