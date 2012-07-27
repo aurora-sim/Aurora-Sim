@@ -470,6 +470,7 @@ namespace Aurora.Simulation.Base
 
                             conf = grid_ini.AddConfig("Includes");
                             conf.Set("Include-Grid", "Configuration/Grid/Grid.ini");
+                            conf = grid_ini.AddConfig("Configuration");
                             conf.Set("RegistrationURI", "http://" + gridIPAddress + ":8003");
 
                             grid_ini.Save();

@@ -227,7 +227,8 @@ namespace OpenSim.Services.Interfaces
         public UUID SessionID;
         public int RegionFlags = 0;
         public OSDMap Urls = new OSDMap();
-		public OSDMap RegionRemote;
+        public OSDMap RegionRemote;
+        public GridRegion Region;
 
         public override OSDMap ToOSD()
         {
@@ -238,8 +239,10 @@ namespace OpenSim.Services.Interfaces
             map["RegionFlags"] = RegionFlags;
             if (Urls != null)
                 map["Urls"] = Urls;
-            if(RegionRemote != null)
-			    map["RegionRemote"] = RegionRemote;
+            if (RegionRemote != null)
+                map["RegionRemote"] = RegionRemote;
+            if (Region != null)
+                map["Region"] = Region.ToOSD();
             return map;
         }
 
@@ -252,8 +255,13 @@ namespace OpenSim.Services.Interfaces
             RegionFlags = map["RegionFlags"];
             if (map.ContainsKey("Urls"))
                 Urls = (OSDMap)map["Urls"];
-            if(map.ContainsKey("RegionRemote"))
-			    RegionRemote = (OSDMap)map["RegionRemote"];
+            if (map.ContainsKey("RegionRemote"))
+                RegionRemote = (OSDMap)map["RegionRemote"];
+            if (map.ContainsKey("Region"))
+            {
+                Region = new GridRegion();
+                Region.FromOSD((OSDMap)map["Region"]);
+            }
         }
     }
 
