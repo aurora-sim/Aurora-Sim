@@ -209,7 +209,7 @@ namespace Aurora.Modules.Web
             else
             {
                 httpResponse.ContentType = GetContentType(filename, httpResponse);
-                if (httpResponse.ContentType == null)
+                if (httpResponse.ContentType == null || !File.Exists(filename))
                     return MainServer.BadRequest;
                 response = File.ReadAllBytes(filename);
             }
