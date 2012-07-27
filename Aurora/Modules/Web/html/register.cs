@@ -92,7 +92,7 @@ namespace Aurora.Modules.Web
                             profileData.UpdateUserProfile(profile);
                         }
 
-                        webInterface.Redirect(httpResponse, "/");
+                        webInterface.Redirect(httpResponse, "/", filename);
 
                         return vars;
                     }

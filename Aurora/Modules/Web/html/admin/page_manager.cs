@@ -59,7 +59,7 @@ namespace Aurora.Modules.Web
             {
                 rootPage.RemovePageByLocation(MenuItem, null);
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
-                webInterface.Redirect(httpResponse, "index.html?page=page_manager");
+                webInterface.Redirect(httpResponse, "index.html?page=page_manager", filename);
             }
             if (requestParameters.ContainsKey("AddItem"))
             {
@@ -172,7 +172,7 @@ namespace Aurora.Modules.Web
                     error = translator.GetTranslatedString("CannotSetParentToChild");
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
-                webInterface.Redirect(httpResponse, "index.html?page=page_manager");
+                webInterface.Redirect(httpResponse, "index.html?page=page_manager", filename);
             }
 
             vars.Add("PageTitleText", translator.GetTranslatedString("PageTitleText"));

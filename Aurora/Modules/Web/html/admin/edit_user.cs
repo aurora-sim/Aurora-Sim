@@ -105,7 +105,7 @@ namespace Aurora.Modules.Web
                 requestParameters["Submit"].ToString() == "SubmitLoginAsUser")
             {
                 Authenticator.ChangeAuthentication(httpRequest, account);
-                webInterface.Redirect(httpResponse, "/");
+                webInterface.Redirect(httpResponse, "/", filename);
                 return vars;
             }
             if (requestParameters.ContainsKey("Submit") &&

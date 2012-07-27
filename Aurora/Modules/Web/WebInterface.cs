@@ -476,11 +476,32 @@ namespace Aurora.Modules.Web
 
         #endregion
 
-        internal void Redirect(OSHttpResponse httpResponse, string url)
+        internal void Redirect(OSHttpResponse httpResponse, string url, string pathToFile)
         {
             httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
             httpResponse.AddHeader("Location", url);
             httpResponse.KeepAlive = false;
+            List<CookieLock> locks = new List<CookieLock>();
+            lock (_cookieLockedVars)
+            {
+                if (!_cookieLockedVars.TryGetValue(pathToFile, out locks))
+                    return;
+            }
+            foreach (var l in locks)
+            {
+                foreach (var c in httpResponse.Cookies.Keys)
+                {
+                    UUID cookieID;
+                    if (UUID.TryParse(c.ToString(), out cookieID))
+                    {
+                        if (l.CookieUUID == cookieID)
+                        {
+                            lock (_cookieLockedVars)
+                                _cookieLockedVars[pathToFile].Remove(l);
+                        }
+                    }
+                }
+            }
         }
     }
 
