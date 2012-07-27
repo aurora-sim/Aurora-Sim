@@ -731,6 +731,7 @@ namespace Aurora.Modules.Web
         public uint LastSettingsVersionUpdateIgnored = 0;
         public bool HideLanguageTranslatorBar = false;
         public bool HideStyleBar = false;
+        public UUID DefaultScopeID = UUID.Zero;
 
         public GridSettings() { }
         public GridSettings(OSD map) { FromOSD(map as OSDMap); }
@@ -742,6 +743,7 @@ namespace Aurora.Modules.Web
             LastSettingsVersionUpdateIgnored = map["LastSettingsVersionUpdateIgnored"];
             HideLanguageTranslatorBar = map["HideLanguageTranslatorBar"];
             HideStyleBar = map["HideStyleBar"];
+            DefaultScopeID = map["DefaultScopeID"];
         }
 
         public override OSDMap ToOSD()
@@ -753,6 +755,7 @@ namespace Aurora.Modules.Web
             map["LastSettingsVersionUpdateIgnored"] = LastSettingsVersionUpdateIgnored;
             map["HideLanguageTranslatorBar"] = HideLanguageTranslatorBar;
             map["HideStyleBar"] = HideStyleBar;
+            map["DefaultScopeID"] = DefaultScopeID;
 
             return map;
         }
