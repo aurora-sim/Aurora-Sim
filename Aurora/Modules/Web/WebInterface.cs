@@ -480,6 +480,7 @@ namespace Aurora.Modules.Web
         {
             httpResponse.StatusCode = (int)HttpStatusCode.Redirect;
             httpResponse.AddHeader("Location", url);
+            httpResponse.KeepAlive = false;
         }
     }
 
@@ -677,19 +678,43 @@ namespace Aurora.Modules.Web
             }
         }
 
-        public void RemovePage(string MenuItem, GridPage replacePage)
+        public void RemovePage(string MenuID, GridPage replacePage)
         {
             GridPage foundPage = null;
             foreach (var page in this.Children)
             {
-                if (page.MenuID == MenuItem)
+                if (page.MenuID == MenuID)
                 {
                     foundPage = page;
                     break;
                 }
                 else if (page.Children.Count > 0)
                 {
-                    var p = GetPage(MenuItem, page);
+                    var p = GetPage(MenuID, page);
+                    if (p != null)
+                    {
+                        page.Children.Remove(p);
+                        return;
+                    }
+                }
+            }
+            if (foundPage != null)
+                this.Children.Remove(foundPage);
+        }
+
+        public void RemovePageByLocation(string MenuLocation, GridPage replacePage)
+        {
+            GridPage foundPage = null;
+            foreach (var page in this.Children)
+            {
+                if (page.Location == MenuLocation)
+                {
+                    foundPage = page;
+                    break;
+                }
+                else if (page.Children.Count > 0)
+                {
+                    var p = GetPageByLocation(MenuLocation, page);
                     if (p != null)
                     {
                         page.Children.Remove(p);

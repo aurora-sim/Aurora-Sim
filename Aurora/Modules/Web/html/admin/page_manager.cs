@@ -171,6 +171,7 @@ namespace Aurora.Modules.Web
                     error = translator.GetTranslatedString("CannotSetParentToChild");
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
+                webInterface.Redirect(httpResponse, "index.html");
             }
 
             vars.Add("PageTitleText", translator.GetTranslatedString("PageTitleText"));
