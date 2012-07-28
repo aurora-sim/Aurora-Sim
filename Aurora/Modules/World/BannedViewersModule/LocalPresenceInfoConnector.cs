@@ -177,7 +177,7 @@ namespace Aurora.Modules.Ban
             foreach (string ID in query)
             {
                 PresenceInfo suspectedInfo = GetPresenceInfo(UUID.Parse(ID));
-                if (suspectedInfo.AgentID == info.AgentID)
+                if (suspectedInfo == null || suspectedInfo.AgentID == info.AgentID)
                     continue;
                 foreach (string ID0 in suspectedInfo.KnownID0s)
                 {

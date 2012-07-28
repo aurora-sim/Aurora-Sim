@@ -1594,6 +1594,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private GlobalFunctionDefinition _currentGlobalFunctionDeclaration = null;
         private StateEvent _currentLocalFunctionDeclaration = null;
+        private State _currentLocalStateDeclaration = null;
         /// <summary>
         ///   Generates the code for a GlobalFunctionDefinition node.
         /// </summary>
@@ -1900,6 +1901,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         {
             string retstr = "";
 
+            _currentLocalStateDeclaration = s;
+
             foreach (SYMBOL kid in s.kids)
                 if (kid is StateEvent)
                     retstr += GenerateStateEvent((StateEvent)kid, s.Name);
@@ -2112,8 +2115,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                             SYMBOL firstChild = (SYMBOL)a.kids[0];
                             bool retStrChanged = false;
-                            if (firstChild is Declaration &&
-                                        DuplicatedLocalVariables[this._currentLocalFunctionDeclaration.Name].ContainsKey(((Declaration)firstChild).Id))
+                            if (firstChild is Declaration && _currentLocalFunctionDeclaration != null &&
+                                        DuplicatedLocalVariables[_currentLocalStateDeclaration.Name + "_" + _currentLocalFunctionDeclaration.Name].ContainsKey(((Declaration)firstChild).Id))
                             {
                                 Declaration dec = ((Declaration)firstChild);
                                 if (a.kids.Count == 2)
@@ -2156,7 +2159,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     {
                                         Constant identEx = (Constant)assignmentChild;
                                         string value = GetValue(identEx);
-                                        Constant dupConstant = (Constant)DuplicatedLocalVariables[_currentLocalFunctionDeclaration.Name][dec.Id];
+                                        Constant dupConstant = (Constant)DuplicatedLocalVariables[_currentLocalStateDeclaration.Name + "_" + 
+                                            _currentLocalFunctionDeclaration.Name][dec.Id];
                                         dupConstant.Value = dupConstant.Value == null ? GetValue(dupConstant) : dupConstant.Value;
                                         if (value != dupConstant.Value)
                                         {

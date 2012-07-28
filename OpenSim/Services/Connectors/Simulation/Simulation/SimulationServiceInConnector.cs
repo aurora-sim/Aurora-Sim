@@ -79,7 +79,7 @@ namespace OpenSim.Services
             bool secure = handlerConfig.GetBoolean("SecureSimulation", true);
             IHttpServer server =
                 m_registry.RequestModuleInterface<ISimulationBase>().GetHttpServer(
-                    (uint) handlerConfig.GetInt("SimulationInHandlerPort"));
+                    (uint) handlerConfig.GetInt("SimulationInHandlerPort", 0));
 
             m_LocalSimulationService = m_registry.RequestModuleInterface<ISimulationService>();
 
