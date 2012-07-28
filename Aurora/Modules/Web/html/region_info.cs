@@ -108,6 +108,11 @@ namespace Aurora.Modules.Web
                 else
                     vars.Add("RegionImageURL", "images/icons/no_picture.jpg");
 
+                // Menu Region
+                vars.Add("MenuRegionTitle", translator.GetTranslatedString("MenuRegionTitle"));
+                vars.Add("MenuParcelTitle", translator.GetTranslatedString("MenuParcelTitle"));
+                vars.Add("MenuOwnerTitle", translator.GetTranslatedString("MenuOwnerTitle"));				
+				
                 vars.Add("RegionInformationText", translator.GetTranslatedString("RegionInformationText"));
                 vars.Add("OwnerNameText", translator.GetTranslatedString("OwnerNameText"));
                 vars.Add("RegionLocationText", translator.GetTranslatedString("RegionLocationText"));
@@ -125,6 +130,10 @@ namespace Aurora.Modules.Web
                 vars.Add("styles3", translator.GetTranslatedString("styles3"));
                 vars.Add("styles4", translator.GetTranslatedString("styles4"));
                 vars.Add("styles5", translator.GetTranslatedString("styles5"));
+
+                vars.Add("StyleSwitcherStylesText", translator.GetTranslatedString("StyleSwitcherStylesText"));
+                vars.Add("StyleSwitcherLanguagesText", translator.GetTranslatedString("StyleSwitcherLanguagesText"));
+                vars.Add("StyleSwitcherChoiceText", translator.GetTranslatedString("StyleSwitcherChoiceText"));
 			
                 // Language Switcher
                 vars.Add("en", translator.GetTranslatedString("en"));

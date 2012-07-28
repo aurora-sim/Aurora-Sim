@@ -297,6 +297,22 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuManager":
                     return "Impostaioni Amministratore";
 
+				// Menu Region
+                case "MenuRegionTitle":
+                    return "Region";
+                case "MenuParcelTitle":
+                    return "Parcel";
+                case "MenuOwnerTitle":
+                    return "Owner";
+				
+				// Menu Profile
+                case "MenuProfileTitle":
+                    return "Profil";
+                case "MenuGroupTitle":
+                    return "Group";
+                case "MenuPicksTitle":
+                    return "Picks";
+
 				// Urls
                 case "WelcomeScreen":
                     return "Pagina di Benvenuto";
@@ -452,19 +468,29 @@ namespace Aurora.Modules.Web.Translators
 
                 //Edit user page
                 case "AdminDeleteUserText":
-                    return "Elimina Utente: questa operazione cancellera l Accaount ed eliminera tutti i dati associati ad esso.";
+                    return "Elimina Utente";
+                case "AdminDeleteUserInfoText":
+                    return "Questa operazione cancellera l Accaount ed eliminera tutti i dati associati ad esso.";
                 case "BanText":
                     return "Vieta Accesso";
                 case "UnbanText":
                     return "Consenti Accesso";
                 case "AdminTempBanUserText":
-                    return "Vieta temporaneamente Accesso: Questo blocca  un utente per il periodo di tempo desiderato.";
+                    return "Vieta temporaneamente Accesso";
+                case "AdminTempBanUserInfoText":
+                    return "Questo blocca  un utente per il periodo di tempo desiderato.";
                 case "AdminBanUserText":
-                    return "Sblocca Utente: Questo Sblocca u utente finche non e sbloccato.";
+                    return "Sblocca Utente";
+                case "AdminBanUserInfoText":
+                    return "Questo Sblocca u utente finche non e sbloccato.";
                 case "AdminUnbanUserText":
-                    return "Sblocca Utente: Rimuove tutti i blocchi temporanei e definitivi su un utente.";
+                    return "Sblocca Utente";
+                case "AdminUnbanUserInfoText":
+                    return "Rimuove tutti i blocchi temporanei e definitivi su un utente.";
                 case "AdminLoginInAsUserText":
-                    return "Accedi come utente: Verrai disconnesso dal tuo Account amministratore e ti connetterai come Utente e vedrai ogni cosa come la vedono gli Utenti normali.";
+                    return "Accedi come utente";
+	            case "AdminLoginInAsUserInfoText":
+                    return "Verrai disconnesso dal tuo Account amministratore e ti connetterai come Utente e vedrai ogni cosa come la vedono gli Utenti normali.";
                 case "TimeUntilUnbannedText":
                     return "Tempo mancante allo sblocco utente";
                 case "DaysText":
@@ -476,7 +502,13 @@ namespace Aurora.Modules.Web.Translators
                 case "EdittingText":
                     return "Modifica";
                 case "BannedUntilText":
-                    return "Utente bloccato fino a:";
+                    return "Utente bloccato fino a";
+                case "KickAUserText":
+                    return "Kick A User (Logs them out within 30 seconds)";
+                case "KickMessageText":
+                    return "Message To User";
+                case "KickUserText":
+                    return "Kick User";
 
                 //factory_reset
                 case "FactoryReset":

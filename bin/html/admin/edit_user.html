@@ -24,139 +24,161 @@
 -->
 <div id="content">
     <div id="ContentHeaderCenter"><h2>{SystemName}: {EdittingText} {UserName}</h2></div>
-    <div id="ContentHeaderCenter"><h4>{ErrorMessage}</h4></div>
-    <div id="edituser">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{AdminLoginInAsUserText}</td></tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitLoginAsUser">{Login}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-	<div id="login">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{AdminDeleteUserText}</td></tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
+	<div><h4>{ErrorMessage}</h4></div>
+	<h3>{AdminLoginInAsUserText}</h3>
+	<p class="info">{AdminLoginInAsUserInfoText}</p>
+	<form action="index.html?page=edit_user" method="post">
+		<input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="login_bouton" type="Submit" name="Submit" value="SubmitLoginAsUser">{Login}</button>
+	</form>
+	
+	<h3>{AdminDeleteUserText}</h3>
+	<p class="info">{AdminDeleteUserInfoText}</p>
+	<form action="index.html?page=edit_user" method="post">
+		<input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="delete_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
+	</form>
+
 {IfUserBannedBegin}
-	<div id="login">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{AdminUnbanUserText}</td></tr>
-                <tr><td colspan="2">{BannedUntilText} {BannedUntil}</td></tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
+<form action="index.html?page=edit_user" method="post">
+<table id="login">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="login_left"><p id="logname_label">{AdminUnbanUserText}</p></td>
+      <td class="login_right">{BannedUntilText} {BannedUntil}</td>
+    </tr>
+
+    <tr>
+      <td class="login_left"></td>
+      <td class="login_right">
+	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="login_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
 {IfUserBannedEnd}
+
+
 {IfNotUserBannedBegin}
-	<div id="login">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{AdminTempBanUserText}</td></tr>
-				<tr>
-                    <td class="odd">{TimeUntilUnbannedText}</td>
-                    <td class="odd">
-                        <div id="birthday" class="roundedinput">
-							<table>
-								<tr>
-									<td>
-										<select id="TimeDays" require="true" name='TimeDays'>									
+<h3>{AdminTempBanUserText}</h3>
+<p class="info">{AdminTempBanUserInfoText}</p>
+<form action="index.html?page=edit_user" method="post">
+<table id="login">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+      <th class="login_right"></th>
+      <th class="login_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+      <th class="login_right"></th>
+      <th class="login_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="login_left"><p id="logname_label">{TimeUntilUnbannedText}</p></td>
+      <td class="login_right">
+        <select id="TimeDays" require="true" name='TimeDays'>									
 {DaysArrayBegin}
-											<option value="{Value}">{Value}</option>
+          <option value="{Value}">{Value}</option>
 {DaysArrayEnd}
-										</select>
-									</td>
-									<td>{DaysText}</td>
-									<td>
-										<select id="TimeHours" require="true" name='TimeHours'>										
+        </select> {DaysText}
+	  </td>
+      <td class="login_right">
+        <select id="TimeHours" require="true" name='TimeHours'>										
 {HoursArrayBegin}
-											<option value="{Value}">{Value}</option>
+          <option value="{Value}">{Value}</option>
 {HoursArrayEnd}
-										</select>
-									</td>
-									<td>{HoursText}</td>
-									<td>
-										<select id="TimeMinutes" require="true" name='TimeMinutes'>										
+        </select> {HoursText}
+	  </td>
+      <td class="login_right">
+        <select id="TimeMinutes" require="true" name='TimeMinutes'>										
 {MinutesArrayBegin}
-											<option value="{Value}">{Value}</option>
+          <option value="{Value}">{Value}</option>
 {MinutesArrayEnd}
-										</select>
-									</td>
-									<td>{MinutesText}</td>
-								</tr>
-							</table>
-						</div>
-                    </td>
-                </tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitTempBanUser">{BanText}</button>
-						</div>
-                    </td>
-				</tr>
-            </table>
-        </form>
-    </div>
-	<div id="login">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{AdminBanUserText}</td></tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitBanUser">{BanText}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
+        </select> {MinutesText}
+	  </td>
+    </tr>
+
+    <tr>
+      <td class="login_left"></td>
+      <td class="login_right" colspan="3">
+	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+	    <button id="login_bouton" type="Submit" name="Submit" value="SubmitTempBanUser">{BanText}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
+<h3>{AdminBanUserText}</h3>
+<p class="info">{AdminBanUserInfoText}</p>
+<form action="index.html?page=edit_user" method="post">
+  <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+  <button id="login_bouton" type="Submit" name="Submit" value="SubmitBanUser">{BanText}</button>
+</form>
 {IfNotUserBannedEnd}
-	<div id="login">
-		<form action="index.html?page=edit_user" method="POST">
-			<table>
-                <tr><td colspan="2">{KickAUserText}</td></tr>
-				<tr>
-				  <td class="register_left"><p>{KickMessageText}</p></td>
-				  <td class="register_right" colspan="3"><input label="KickMessage" id="KickMessage" name="KickMessage" type="text" size="25" maxlength="15" value=""></td>
-				</tr>
-				<tr>
-					<td class="odd">
-						<div>
-						    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-							<button id="login_bouton" type="Submit" name="Submit" value="SubmitKickUser">{KickUserText}</button>
-						</div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
+
+
+<p class="info">{KickAUserText}</p>
+<form action="index.html?page=edit_user" method="post">
+<table id="login">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="login_left"></th>
+      <th class="login_right"></th>
+    </tr>
+  </tfoot>
+
+  <tbody>
+    <tr>
+      <td class="login_left"><p id="logname_label">{KickMessageText}</p></td>
+      <td class="login_right"><input label="KickMessage" id="KickMessage" name="KickMessage" type="text" size="25" maxlength="15" value=""></td>
+    </tr>
+    <tr>
+      <td class="login_left"></td>
+      <td class="login_right">
+	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="login_bouton" type="Submit" name="Submit" value="SubmitKickUser">{KickUserText}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
 </div>

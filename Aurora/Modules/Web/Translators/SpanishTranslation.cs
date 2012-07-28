@@ -301,6 +301,22 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuManager":
                     return "Admin Management";
 
+				// Menu Region
+                case "MenuRegionTitle":
+                    return "Region";
+                case "MenuParcelTitle":
+                    return "Parcel";
+                case "MenuOwnerTitle":
+                    return "Owner";
+				
+				// Menu Profile
+                case "MenuProfileTitle":
+                    return "Profil";
+                case "MenuGroupTitle":
+                    return "Group";
+                case "MenuPicksTitle":
+                    return "Picks";
+
 				// Urls
                 case "WelcomeScreen":
                     return "Welcome Screen";
@@ -456,19 +472,29 @@ namespace Aurora.Modules.Web.Translators
 
                 //Edit user page
                 case "AdminDeleteUserText":
-                    return "Delete User: This deletes the account and destroys all information associated with it.";
+                    return "Delete User";
+                case "AdminDeleteUserInfoText":
+                    return "This deletes the account and destroys all information associated with it.";
                 case "BanText":
                     return "Ban";
                 case "UnbanText":
                     return "Unban";
                 case "AdminTempBanUserText":
-                    return "Temp Ban User: This blocks the user from logging in for the set amount of time.";
+                    return "Temp Ban User";
+                case "AdminTempBanUserInfoText":
+                    return "This blocks the user from logging in for the set amount of time.";
                 case "AdminBanUserText":
-                    return "Ban User: This blocks the user from logging in until the user is unbanned.";
+                    return "Ban User";
+                case "AdminBanUserInfoText":
+                    return "This blocks the user from logging in until the user is unbanned.";
                 case "AdminUnbanUserText":
-                    return "Unban User: Removes temporary and permanent bans on the user.";
+                    return "Unban User";
+                case "AdminUnbanUserInfoText":
+                    return "Removes temporary and permanent bans on the user.";
                 case "AdminLoginInAsUserText":
-                    return "Login as User: You will be logged out of your admin account, and logged in as this user, and will see everything as they see it.";
+                    return "Login as User";
+	            case "AdminLoginInAsUserInfoText":
+                    return "You will be logged out of your admin account, and logged in as this user, and will see everything as they see it.";
                 case "TimeUntilUnbannedText":
                     return "Time until user is unbanned";
                 case "DaysText":
@@ -481,6 +507,12 @@ namespace Aurora.Modules.Web.Translators
                     return "Editting";
                 case "BannedUntilText":
                     return "User banned until:";
+                case "KickAUserText":
+                    return "Kick A User (Logs them out within 30 seconds)";
+                case "KickMessageText":
+                    return "Message To User";
+                case "KickUserText":
+                    return "Kick User";
 
                 //factory_reset
                 case "FactoryReset":

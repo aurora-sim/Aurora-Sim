@@ -1,29 +1,24 @@
 <!-- slide show -->
-<script type="text/javascript" src="javascripts/jquery.cycle.lite.js"></script>
+<script type="text/javascript" src="javascripts/jquery.cycle.all.js"></script>
 <script type="text/javascript" src="javascripts/jquery.easing.js"></script>
 <script type="text/javascript">
-	$(document).ready(function() {
-		$('.slideshow').cycle({
-		// Transitions Type:
-		// blindX, blindY, blindZ, cover, curtainX, curtainY, fade, fadeZoom, growX, growY,
-		// scrollUp, scrollDown, scrollLeft, scrollRight, scrollHorz, scrollVert, shuffle,
-		// slideX, slideY, toss, turnUp, turnDown, turnLeft, turnRight, uncover, wipe, zoom
-		// Simple usage: (Need jquery.cycle.lite.js and jquery.easing.js)
-		fx: 'fade', speed:  5000
-		// Advanced usage: (Need jquery.cycle.all.js and jquery.easing.js)
-		// fx: 'shuffle', shuffle: {top: -25, left:  -250}, easing: 'easeInOutBack', delay: -2000, speed: 1000
+$(function() {
+    $('.slideshow1').cycle({
+	cleartype: false,
+    fx: 'scrollLeft', 
+    random: 1
 	});
 });
 </script>
 
+<!--
 <div class="slideshow">
 	<img src="images/screenshots/welcome1.jpg" alt="{SystemName}: welcome1.jpg" title="{SystemName}: welcome1.jpg" />
 	<img src="images/screenshots/welcome2.jpg" alt="{SystemName}: welcome2.jpg" title="{SystemName}: welcome2.jpg" />
 	<img src="images/screenshots/welcome3.jpg" alt="{SystemName}: welcome3.jpg" title="{SystemName}: welcome3.jpg" />
 	<img src="images/screenshots/welcome4.jpg" alt="{SystemName}: welcome4.jpg" title="{SystemName}: welcome4.jpg" />
 </div>
-	
-<h2>{SystemName} &rarr; {HomeText}</h2> <!-- &rArr; -->
+<h2>{SystemName} &rarr; {HomeText}</h2>
 <p class=textsize>{WelcomeToText} {SystemName}</p>
 {IsAdminAuthenticatedBegin}
 <p class=textsize>{PagesUpdateRequired}</p>
@@ -33,4 +28,46 @@
 <p>{HomeTextTips}:
 <a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a> |
 <a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
-<!-- <iframe src="region_cycle.html" width="145" height="145" scrolling="no" style="overflow:hidden"></iframe> -->	
+-->
+<h2>{SystemName} &rarr; {HomeText}</h2> <!-- &rArr; -->
+<div class="slideshow1">
+<div id="slide01" class="slide">
+	<img src="images/screenshots/welcome1.jpg" alt="test" />
+	<div class="text">
+	<p class=minitext>{WelcomeToText} {SystemName}</p>
+		<h1>Aurora-Sim<br />Web Interface</h1>
+		<p>driven by Aurora</p>
+	</div>
+</div>
+
+<div id="slide01" class="slide">
+	<img src="images/screenshots/welcome2.jpg" alt="test" />
+	<div class="text">
+	<p class=minitext>{WelcomeToText} {SystemName}</p>
+
+		<h1>Aurora-Sim<br />Web Interface</h1>
+	
+<p class="minitext">{HomeTextWelcome}</p>
+	</div>
+</div>
+
+<div id="slide01" class="slide">
+	<img src="images/screenshots/welcome3.jpg" alt="test" />
+	<div class="text">
+	<p class=minitext>{WelcomeToText} {SystemName}</p>
+
+		<h1>Aurora-Sim<br />Web Interface</h1>
+	<p>{HomeTextTips}: <a target="_blank" class='welcomescreen' href="welcomescreen/" alt="{TooltipsWelcomeScreen}" title="{TooltipsWelcomeScreen}">{WelcomeScreen}</a></p>
+	</div>
+</div>
+
+<div id="slide01" class="slide">
+	<img src="images/screenshots/welcome4.jpg" alt="test" />
+	<div class="text">
+	<p class=minitext>{WelcomeToText} {SystemName}</p>
+
+		<h1>Aurora-Sim<br />Web Interface</h1>
+	<p>{HomeTextTips}: <a target="_blank" class='world_map' href="world_map.html" alt="{TooltipsWorldMap}" title="{TooltipsWorldMap}">{TooltipsWorldMap}</a></p>
+	</div>
+</div>
+</div>

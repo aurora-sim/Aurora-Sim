@@ -299,6 +299,22 @@ namespace Aurora.Modules.Web.Translators
                 case "TooltipsMenuManager":
                     return "Gestion Administrative";
 
+				// Menu Region
+                case "MenuRegionTitle":
+                    return "Region";
+                case "MenuParcelTitle":
+                    return "Parcel";
+                case "MenuOwnerTitle":
+                    return "Owner";
+				
+				// Menu Profile
+                case "MenuProfileTitle":
+                    return "Profil";
+                case "MenuGroupTitle":
+                    return "Group";
+                case "MenuPicksTitle":
+                    return "Picks";
+
 				// Urls
                 case "WelcomeScreen":
                     return "Ecran de Bienvenue";
@@ -454,19 +470,29 @@ namespace Aurora.Modules.Web.Translators
 
                 //Edit user page
                 case "AdminDeleteUserText":
-                    return "Supprimer l'utilisateur: Cette commande supprime le compte et détruit toutes les informations qui lui sont associés.";
+                    return "Supprimer l'utilisateur";
+                case "AdminDeleteUserInfoText":
+                    return "Cette commande supprime le compte et détruit toutes les informations qui lui sont associés.";
                 case "BanText":
                     return "Bannir";
                 case "UnbanText":
                     return "Débannir";
                 case "AdminTempBanUserText":
-                    return "Temps de Bannissement: Cela empêche l'utilisateur de se connecter pour un laps de temps.";
+                    return "Temps de Bannissement";
+                case "AdminTempBanUserInfoText":
+                    return "Cela empêche l'utilisateur de se connecter pour un laps de temps.";
                 case "AdminBanUserText":
-                    return "Bannir un Utilisateur: Cela empêche l'utilisateur de se connecter tant que l'interdiction n'est pas supprimée.";
+                    return "Bannir l'utilisateur";
+                case "AdminBanUserInfoText":
+                    return "Cela empêche l'utilisateur de se connecter tant que l'interdiction n'est pas supprimée.";
                 case "AdminUnbanUserText":
-                    return "Débannir un Utilisateur: Supprime les interdictions temporaires et permanentes sur l'utilisateur.";
+                    return "Débannir un Utilisateur";
+                case "AdminUnbanUserInfoText":
+                    return "Supprime les interdictions temporaires et permanentes sur l'utilisateur.";
                 case "AdminLoginInAsUserText":
-                    return "Connectez-vous en tant qu'Utilisateur: Vous serez déconnecté de votre compte admin, et connecté en tant que cet utilisateur, et vous verrez tout comme ils le voient.";
+                    return "Connectez-vous en tant qu'utilisateur";
+	            case "AdminLoginInAsUserInfoText":
+                    return "Vous serez déconnecté de votre compte admin, et connecté en tant que cet utilisateur, et vous verrez tout comme ils le voient.";
                 case "TimeUntilUnbannedText":
                     return "Temps jusqu'à la levée du Bannissement de l'utilisateur";
                 case "DaysText":
@@ -478,7 +504,13 @@ namespace Aurora.Modules.Web.Translators
                 case "EdittingText":
                     return "Edition";
                 case "BannedUntilText":
-                    return "L'utilisateur est interdit jusqu'à ce que:";
+                    return "L'utilisateur est interdit jusqu'à ce que";
+                case "KickAUserText":
+                    return "Kicker l'utilisateur (L'utilisateur sera déconnecté dans les 30 secondes)";
+                case "KickMessageText":
+                    return "Message à l'utilisateur";
+                case "KickUserText":
+                    return "Kicker l'utilisateur";
 
                 //factory_reset
                 case "FactoryReset":

@@ -90,6 +90,11 @@ namespace Aurora.Modules.Web
             if (clientCaps != null)
                 vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
 
+            // Menu Profile
+            vars.Add("MenuProfileTitle", translator.GetTranslatedString("MenuProfileTitle"));
+            vars.Add("MenuGroupTitle", translator.GetTranslatedString("MenuGroupTitle"));
+            vars.Add("MenuPicksTitle", translator.GetTranslatedString("MenuPicksTitle"));
+
             vars.Add("UserIsOnline", clientCaps != null);
             vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
             vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));

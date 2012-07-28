@@ -156,10 +156,14 @@ namespace Aurora.Modules.Web
             vars.Add("Login", translator.GetTranslatedString("Login"));
 
             vars.Add("AdminLoginInAsUserText", translator.GetTranslatedString("AdminLoginInAsUserText"));
-            vars.Add("AdminUnbanUserText", translator.GetTranslatedString("AdminUnbanUserText"));
+			vars.Add("AdminLoginInAsUserInfoText", translator.GetTranslatedString("AdminLoginInAsUserInfoText"));
             vars.Add("AdminDeleteUserText", translator.GetTranslatedString("AdminDeleteUserText"));
+            vars.Add("AdminDeleteUserInfoText", translator.GetTranslatedString("AdminDeleteUserInfoText"));
+            vars.Add("AdminUnbanUserText", translator.GetTranslatedString("AdminUnbanUserText"));
             vars.Add("AdminTempBanUserText", translator.GetTranslatedString("AdminTempBanUserText"));
+            vars.Add("AdminTempBanUserInfoText", translator.GetTranslatedString("AdminTempBanUserInfoText"));
             vars.Add("AdminBanUserText", translator.GetTranslatedString("AdminBanUserText"));
+            vars.Add("AdminBanUserInfoText", translator.GetTranslatedString("AdminBanUserInfoText"));
             vars.Add("BanText", translator.GetTranslatedString("BanText"));
             vars.Add("UnbanText", translator.GetTranslatedString("UnbanText"));
             vars.Add("TimeUntilUnbannedText", translator.GetTranslatedString("TimeUntilUnbannedText"));

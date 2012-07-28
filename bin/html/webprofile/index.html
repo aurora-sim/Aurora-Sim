@@ -7,10 +7,10 @@
 	<meta name="description" content="{SystemName}"/>
 	<link rel="shortcut icon" href="../images/icons/favicon.ico" />
 	
-	<script src="{SystemURL}/javascripts/jquery.min.js" type="text/javascript"></script>
+	<script src="{SystemURL}/javascripts/jquery.min.js"></script>
 
 	<!-- StyleSwitch -->
-	<script src="{SystemURL}/javascripts/styleswitch.js" type="text/javascript"></script>
+	<script src="{SystemURL}/javascripts/styleswitch.js"></script>
 	<link href="{SystemURL}/css/styles1.css" rel="stylesheet" type="text/css" media="screen" title="styles1" />
 	<link href="{SystemURL}/css/styles2.css" rel="alternate stylesheet" type="text/css" title="styles2" media="screen" />
 	<link href="{SystemURL}/css/styles3.css" rel="alternate stylesheet" type="text/css" title="styles3" media="screen" />
@@ -61,23 +61,30 @@
 </head>
 
 <body>
+<div id="container">
+<div id="content">
 <!--#include file="/webprofile/base.html" -->
 <!--These are the other two files that somehow ought to be linked together into base so that it can display that information as well, maybe via a tab set or something?
      Remove the first <!-- to view them-->
 <!--<!--#include file="/webprofile/groups.html" -->
 <!--<!--#include file="/webprofile/picks.html" -->
+</div>
 	<div id="footer">
+<!-- {IfShowLanguageTranslatorBarBegin} -->
 	  <div class=languageswitch>
 	    <ul>
 		{StyleSwitcherLanguagesText}:
-		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='../images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
-		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='../images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
-		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='../images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
-		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='../images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
-		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='../images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
+		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
+		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
+		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
+		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
+		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
 		{StyleSwitcherChoiceText}: <span id="lg1">en</span><span id="lg2">fr</span><span id="lg3">de</span><span id="lg4">it</span><span id="lg5">es</span>  
 		</ul>
 	  </div>
+<!-- {IfShowLanguageTranslatorBarEnd} -->
+
+<!-- {IfShowStyleBarBegin} -->
 	  <div class=styleswitch>
 	    <ul>
 		{StyleSwitcherStylesText}:
@@ -89,6 +96,7 @@
 		{StyleSwitcherChoiceText}: <span id="st1">1</span><span id="st2">2</span><span id="st3">3</span><span id="st4">4</span><span id="st5">5</span>| Copyright&nbsp;<a class='copyright' href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a>&nbsp;2011&nbsp;&copy;&nbsp;2012  
 		</ul>
 	  </div>
+<!-- {IfShowStyleBarEnd} -->
 	  <span class="clear"></span>
 	</div>
 </div>
