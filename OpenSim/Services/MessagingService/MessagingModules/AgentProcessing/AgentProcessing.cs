@@ -1197,21 +1197,11 @@ namespace OpenSim.Services.MessagingService
 
                     //Tell all neighbor regions about the new position as well
                     List<GridRegion> ourNeighbors = GetRegions(regionCaps.ClientCaps);
-#if (!ISWIN)
-                    foreach (GridRegion region in ourNeighbors)
-                    {
-                        if (!SimulationService.UpdateAgent(region, agentpos))
-                        {
-                            MainConsole.Instance.Info("[AgentProcessing]: Failed to inform " + region.RegionName + " about updating agent. ");
-                        }
-                    }
-#else
-                    foreach (GridRegion region in ourNeighbors.Where(region => !SimulationService.UpdateAgent(region, agentpos)))
+                    foreach (GridRegion region in ourNeighbors.Where(region => region != null && !SimulationService.UpdateAgent(region, agentpos)))
                     {
                         MainConsole.Instance.Info("[AgentProcessing]: Failed to inform " + region.RegionName +
                                    " about updating agent. ");
                     }
-#endif
 
                     EnableChildAgentsForPosition(regionCaps, agentpos.Position);
                 }
@@ -1264,7 +1254,7 @@ namespace OpenSim.Services.MessagingService
                 {
                     //Remove any previous users
                     seedCap = capsService.CreateCAPS(aCircuit.AgentID,
-                        CapsUtil.GetCapsSeedPath(CapsUtil.GetRandomCapsObjectPath()),
+                        CapsUtil.GetCapsSeedPath(aCircuit.CapsPath),
                         region.RegionHandle, true, aCircuit, 0);
 
                     clientCaps = capsService.GetClientCapsService(aCircuit.AgentID);

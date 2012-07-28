@@ -2239,6 +2239,8 @@ namespace Aurora.Framework
                     Hashtable headers = (Hashtable)req["headers"];
                     if (headers.ContainsKey("remote_addr") && headers["remote_addr"] != null)
                         return headers["remote_addr"].ToString();
+                    if (headers.ContainsKey("Host") && headers["Host"] != null)
+                        return headers["Host"].ToString().Split(':')[0];
                 }
                 catch (Exception e)
                 {

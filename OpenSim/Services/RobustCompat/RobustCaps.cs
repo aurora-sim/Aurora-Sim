@@ -127,14 +127,7 @@ namespace OpenSim.Services.Robust
                 WebUtils.ServiceOSDRequest (presence.CallbackURI, null, "DELETE", 10000);
                 presence.CallbackURI = null;
             }
-#if (!ISWIN)
-            Util.FireAndForget(delegate(object o)
-            {
-                DoPresenceUpdate(presence);
-            });
-#else
             Util.FireAndForget(o => DoPresenceUpdate(presence));
-#endif
         }
 
         private void DoPresenceUpdate(IScenePresence presence)
@@ -207,15 +200,7 @@ namespace OpenSim.Services.Robust
 
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
-#if (!ISWIN)
-            foreach (IScene scene in presence.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes())
-            {
-                if (scene.GetScenePresence(UUID.Parse(u.UserID)) != null) return true;
-            }
-            return false;
-#else
             return presence.Scene.RequestModuleInterface<SceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
-#endif
         }
 
         private void ReportAgent(IScenePresence presence)
@@ -313,7 +298,7 @@ namespace OpenSim.Services.Robust
                     {
                         IClientCapsService clientService = service.GetOrCreateClientCapsService (circuit.AgentID);
                         clientService.RemoveCAPS (m_scene.RegionInfo.RegionHandle);
-                        service.CreateCAPS (circuit.AgentID, CapsUtil.GetCapsSeedPath (circuit.CapsPath),
+                        string caps = service.CreateCAPS (circuit.AgentID, CapsUtil.GetCapsSeedPath (circuit.CapsPath),
                             m_scene.RegionInfo.RegionHandle, true, circuit, MainServer.Instance.Port); //We ONLY use root agents because of OpenSim's inability to send the correct data
                         MainConsole.Instance.Output ("setting up on " + clientService.HostUri + CapsUtil.GetCapsSeedPath (circuit.CapsPath));
                         IClientCapsService clientCaps = service.GetClientCapsService (circuit.AgentID);

@@ -57,6 +57,9 @@ namespace Aurora.Framework.Servers.HttpServer
             _httpContext = context;
             _httpRequest = request;
             _httpResponse = response;
+
+            _httpResponse.AddHeader("remote_addr", MainServer.Instance.HostName);
+            _httpResponse.AddHeader("remote_port", MainServer.Instance.Port.ToString());
         }
 
         public System.Web.HttpCookieCollection Cookies
