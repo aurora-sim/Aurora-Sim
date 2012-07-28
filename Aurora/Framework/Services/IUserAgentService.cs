@@ -32,6 +32,7 @@ namespace OpenSim.Services.Interfaces
         List<UUID> StatusNotification(List<string> friends, UUID userID, bool online);
         bool RemoteStatusNotification(FriendInfo friend, UUID userID, bool online);
         //List<UUID> GetOnlineFriends(UUID userID, List<string> friends);
+        Dictionary<string, object> GetUserInfo(UUID userID);
 
         bool AgentIsComingHome(UUID sessionID, string thisGridExternalName);
         bool VerifyAgent(UUID sessionID, string token);

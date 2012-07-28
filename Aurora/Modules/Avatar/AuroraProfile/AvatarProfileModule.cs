@@ -484,7 +484,7 @@ namespace Aurora.Modules.Profiles
             UserAccount TargetAccount =
                 remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, target);
             IUserFinder userFinder = remoteClient.Scene.RequestModuleInterface<IUserFinder>();
-            if (UPI == null || (TargetAccount == null)
+            if (UPI == null || TargetAccount == null)
             {
                 if(userFinder == null || userFinder.IsLocalGridUser(target))
                 {
