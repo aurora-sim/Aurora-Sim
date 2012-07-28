@@ -52,7 +52,7 @@ namespace OpenSim.Services.Robust
         {
             if (gridRegion == null)
                 return null;
-            SceneManager manager = m_registry.RequestModuleInterface<SceneManager>();
+            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
                 foreach (IScene scene in manager.GetAllScenes().Where(scene => scene.RegionInfo.RegionID == gridRegion.RegionID))

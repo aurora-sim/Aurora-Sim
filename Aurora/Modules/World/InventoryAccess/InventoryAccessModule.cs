@@ -1122,7 +1122,7 @@ namespace Aurora.Modules.InventoryAccess
                 assetRequestItem.CreatorData != null && 
                 assetRequestItem.CreatorData != string.Empty)
             {
-                IUserManagement userManagement = m_scene.RequestModuleInterface<IUserManagement> ();
+                IUserFinder userManagement = m_scene.RequestModuleInterface<IUserFinder>();
                 if (userManagement != null)
                     userManagement.AddUser (assetRequestItem.CreatorIdAsUuid, assetRequestItem.CreatorData);
             }

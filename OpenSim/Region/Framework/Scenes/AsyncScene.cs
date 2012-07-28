@@ -287,7 +287,7 @@ namespace OpenSim.Region.Framework.Scenes
                 clientServer.AddScene (this);
             }
 
-            m_sceneManager = RequestModuleInterface<SceneManager> ();
+            m_sceneManager = RequestModuleInterface<ISceneManager> ();
             m_simDataStore = m_sceneManager.GetNewSimulationDataStore ();
 
             m_config = m_sceneManager.ConfigSource;

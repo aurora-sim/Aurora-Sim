@@ -7,8 +7,6 @@ namespace Aurora.Framework
     {
         #region Universal User Identifiers
 
-        public static IRegistryCore Registry;
-
         /// <summary>
         /// </summary>
         /// <param name = "value">uuid[;endpoint[;name]]</param>
@@ -45,12 +43,6 @@ namespace Aurora.Framework
             if (parts.Length >= 4)
                 secret = parts[3];
 
-            if (Registry != null && url != "")
-            {
-                IUserFinder uf = Registry.RequestModuleInterface<IUserFinder>();
-                if (uf != null)
-                    uf.AddUser(uuid, firstname, lastname, url); //Add to the cache
-            }
             return url != "";
         }
 

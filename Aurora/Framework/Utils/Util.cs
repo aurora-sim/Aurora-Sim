@@ -2558,6 +2558,16 @@ namespace Aurora.Framework
             return list.ConvertAll<T>(converter);
         }
 
+        public static Dictionary<string, T> ConvertMap<T>(this OSDMap array, Converter<OSD, T> converter)
+        {
+            Dictionary<string, T> map = new Dictionary<string, T>();
+            foreach (KeyValuePair<string, OSD> o in array)
+            {
+                map.Add(o.Key, converter(o.Value));
+            }
+            return map;
+        }
+
         public static OSDArray ToOSDArray<T>(this List<T> array)
         {
             OSDArray list = new OSDArray();
@@ -2566,6 +2576,18 @@ namespace Aurora.Framework
                 OSD osd = Util.MakeOSD(o, o.GetType());
                 if (osd != null)
                     list.Add(osd);
+            }
+            return list;
+        }
+
+        public static OSDMap ToOSDMap<A,B>(this Dictionary<A, B> array)
+        {
+            OSDMap list = new OSDMap();
+            foreach (KeyValuePair<A, B> o in array)
+            {
+                OSD osd = Util.MakeOSD(o.Value, o.Value.GetType());
+                if (osd != null)
+                    list.Add(o.Key.ToString(), osd);
             }
             return list;
         }

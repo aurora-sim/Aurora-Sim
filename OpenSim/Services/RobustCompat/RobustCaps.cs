@@ -200,7 +200,7 @@ namespace OpenSim.Services.Robust
 
         private bool IsLocal(UserInfo u, IScenePresence presence)
         {
-            return presence.Scene.RequestModuleInterface<SceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
+            return presence.Scene.RequestModuleInterface<ISceneManager>().GetAllScenes().Any(scene => scene.GetScenePresence(UUID.Parse(u.UserID)) != null);
         }
 
         private void ReportAgent(IScenePresence presence)

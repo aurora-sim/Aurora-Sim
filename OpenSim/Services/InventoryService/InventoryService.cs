@@ -1136,7 +1136,7 @@ namespace OpenSim.Services.InventoryService
                 if ((item.CurrentPermissions & (uint)PermissionMask.Transfer) == 0)
                     return null;
 
-                IUserManagement uman = m_registry.RequestModuleInterface<IUserManagement>();
+                IUserFinder uman = m_registry.RequestModuleInterface<IUserFinder>();
                 if (uman != null)
                     uman.AddUser(item.CreatorIdAsUuid, item.CreatorData);
 

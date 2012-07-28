@@ -564,7 +564,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                 writer.WriteElementString("CreatorData", sop.CreatorData);
             else if (options.ContainsKey("profile"))
             {
-                IUserManagement m_UserManagement = sop.ParentEntity.Scene.RequestModuleInterface<IUserManagement>();
+                IUserFinder m_UserManagement = sop.ParentEntity.Scene.RequestModuleInterface<IUserFinder>();
                 string name = m_UserManagement.GetUserName(sop.CreatorID);
                 writer.WriteElementString("CreatorData", (string) options["profile"] + "/" + sop.CreatorID + ";" + name);
             }
@@ -705,7 +705,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
                         writer.WriteElementString("CreatorData", item.CreatorData);
                     else if (options.ContainsKey("profile"))
                     {
-                        IUserManagement m_UserManagement = scene.RequestModuleInterface<IUserManagement>();
+                        IUserFinder m_UserManagement = scene.RequestModuleInterface<IUserFinder>();
                         string name = m_UserManagement.GetUserName(item.CreatorID);
                         writer.WriteElementString("CreatorData",
                                                   (string) options["profile"] + "/" + item.CreatorID + ";" + name);

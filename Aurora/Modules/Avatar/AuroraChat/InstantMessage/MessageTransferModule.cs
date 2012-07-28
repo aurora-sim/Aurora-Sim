@@ -622,7 +622,7 @@ namespace Aurora.Modules.Chat
                 }
             }
 
-            var userManagement = m_Scenes[0].RequestModuleInterface<IUserManagement>();
+            var userManagement = m_Scenes[0].RequestModuleInterface<IUserFinder>();
             if (userManagement != null && !userManagement.IsLocalGridUser(toAgentID)) // foreign user
                 HTTPPath = userManagement.GetUserServerURL(toAgentID, "IMServerURI");
 

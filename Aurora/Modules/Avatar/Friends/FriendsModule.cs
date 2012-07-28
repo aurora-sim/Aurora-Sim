@@ -314,16 +314,14 @@ namespace Aurora.Modules.Friends
             FriendInfo[] friends = GetFriends(agentID);
             foreach (FriendInfo fi in friends)
             {
-                if (fi.TheirFlags == -1)
-                    outstanding.Add(fi.Friend);
                 UUID friendID;
                 string url = "", first = "", last = "", secret = "";
-                if (HGUtil.ParseUniversalUserIdentifier(fi.Friend, out friendID, out url, out first, out last,
-                                                        out secret))
+                HGUtil.ParseUniversalUserIdentifier(fi.Friend, out friendID, out url, out first, out last,
+                                                        out secret);
+                if (friendID != UUID.Zero)
                 {
-                    IUserManagement userManagement = m_Scenes[0].RequestModuleInterface<IUserManagement>();
-                    if (userManagement != null)
-                        userManagement.AddUser(friendID, fi.Friend);
+                    if (fi.TheirFlags == -1)
+                        outstanding.Add(fi.Friend);
                 }
             }
 

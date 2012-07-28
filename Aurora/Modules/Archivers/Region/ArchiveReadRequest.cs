@@ -181,7 +181,7 @@ namespace Aurora.Modules.Archivers
             //We save the groups so that we can back them up later
             List<SceneObjectGroup> groupsToBackup = new List<SceneObjectGroup>();
             List<LandData> landData = new List<LandData>();
-            IUserManagement UserManager = m_scene.RequestModuleInterface<IUserManagement>();
+            IUserFinder UserManager = m_scene.RequestModuleInterface<IUserFinder>();
 
             // must save off some stuff until after assets have been saved and recieved new uuids
             // keeping these collection local because I am sure they will get large and garbage collection is better that way
@@ -520,9 +520,9 @@ namespace Aurora.Modules.Archivers
                         }
                     }
                 }
-                IUserManagement uf = m_scene.RequestModuleInterface<IUserManagement>();
+                IUserFinder uf = m_scene.RequestModuleInterface<IUserFinder>();
                 if (uf != null)
-                    if (uf.GetUserExists(uuid))//Foreign user, don't remove their info
+                    if (!uf.IsLocalGridUser(uuid))//Foreign user, don't remove their info
                     {
                         m_validUserUuids.Add(uuid, uuid);
                         return uuid;
