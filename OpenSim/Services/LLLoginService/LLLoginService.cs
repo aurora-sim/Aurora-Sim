@@ -166,7 +166,7 @@ namespace OpenSim.Services.LLLoginService
         public void FinishedStartup()
         {
             IConfig handlersConfig = m_config.Configs["Handlers"];
-            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginHandler")
+            if (handlersConfig == null || handlersConfig.GetString("LoginHandler", "") != "LLLoginService")
                 return;
             IGridInfo gridInfo = m_registry.RequestModuleInterface<IGridInfo>();
             if (gridInfo != null)
