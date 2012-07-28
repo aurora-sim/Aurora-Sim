@@ -308,7 +308,7 @@ namespace Aurora.Modules.Chat
 
                         try
                         {
-                            pos_x = (uint) Convert.ToInt32((string) requestData["position_x"]);
+                            pos_x = float.Parse((string) requestData["position_x"]);
                         }
                         catch (ArgumentException)
                         {
@@ -321,7 +321,7 @@ namespace Aurora.Modules.Chat
                         }
                         try
                         {
-                            pos_y = (uint) Convert.ToInt32((string) requestData["position_y"]);
+                            pos_y = float.Parse((string)requestData["position_y"]);
                         }
                         catch (ArgumentException)
                         {
@@ -334,7 +334,7 @@ namespace Aurora.Modules.Chat
                         }
                         try
                         {
-                            pos_z = (uint) Convert.ToInt32((string) requestData["position_z"]);
+                            pos_z = float.Parse((string)requestData["position_z"]);
                         }
                         catch (ArgumentException)
                         {
@@ -609,9 +609,55 @@ namespace Aurora.Modules.Chat
                         //Clear the path and let it continue trying again.
                         HTTPPath = "";
                     }
+                    else
+                    {
+                        //Send the IM, and it made it to the user, return true
+                        return;
+                    }
                 }
                 else
                 {
+                    //Send the IM, and it made it to the user, return true
+                    return;
+                }
+            }
+
+            var userManagement = m_Scenes[0].RequestModuleInterface<IUserManagement>();
+            if (userManagement != null && !userManagement.IsLocalGridUser(toAgentID)) // foreign user
+                HTTPPath = userManagement.GetUserServerURL(toAgentID, "IMServerURI");
+
+            if (HTTPPath != "")
+            {
+                //We've tried to send an IM to them before, pull out their info
+                //Send the IM to their last location
+                if (!doIMSending(HTTPPath, msgdata))
+                {
+                    msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
+                    if (!doIMSending(HTTPPath, msgdata))
+                    {
+                        //If this fails, the user has either moved from their stored location or logged out
+                        //Since it failed, let it look them up again and rerun
+                        lock (IMUsersCache)
+                        {
+                            IMUsersCache.Remove(toAgentID);
+                        }
+                        //Clear the path and let it continue trying again.
+                        HTTPPath = "";
+                    }
+                    else
+                    {
+                        //Add to the cache
+                        if (!IMUsersCache.ContainsKey(toAgentID))
+                            IMUsersCache.Add(toAgentID, HTTPPath);
+                        //Send the IM, and it made it to the user, return true
+                        return;
+                    }
+                }
+                else
+                {
+                    //Add to the cache
+                    if (!IMUsersCache.ContainsKey(toAgentID))
+                        IMUsersCache.Add(toAgentID, HTTPPath);
                     //Send the IM, and it made it to the user, return true
                     return;
                 }
@@ -662,6 +708,14 @@ namespace Aurora.Modules.Chat
                         MainConsole.Instance.Info(
                             "[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
                         HandleUndeliveredMessage(im, "Failed to send IM to destination.");
+                        return;
+                    }
+                    else
+                    {
+                        //Add to the cache
+                        if (!IMUsersCache.ContainsKey(toAgentID))
+                            IMUsersCache.Add(toAgentID, HTTPPath);
+                        //Send the IM, and it made it to the user, return true
                         return;
                     }
                 }

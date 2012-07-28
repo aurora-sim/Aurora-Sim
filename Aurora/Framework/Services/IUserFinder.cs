@@ -21,5 +21,6 @@ namespace OpenSim.Services.Interfaces
         string GetUserServerURL(UUID uuid, string serverType);
         void AddUser(UUID uuid, string userData);
         void AddUser(UUID uuid, string firstName, string lastName, string profileURL);
+        bool IsLocalGridUser(UUID uuid);
     }
 }
