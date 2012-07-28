@@ -79,7 +79,7 @@ namespace Aurora.Services.DataService
             return ParseInventoryFolders(ref retVal);
         }
 
-        public virtual List<InventoryItemBase> GetItems(string[] fields, string[] vals)
+        public virtual List<InventoryItemBase> GetItems(UUID avatarID, string[] fields, string[] vals)
         {
             string query = "";
             for (int i = 0; i < fields.Length; i++)

@@ -250,7 +250,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "itemID"></param>
         /// <returns></returns>
-        OSDArray GetItem(UUID itemID);
+        OSDArray GetItem(UUID avatarID, UUID itemID);
 
         #endregion
 
@@ -303,7 +303,7 @@ namespace OpenSim.Services.Interfaces
     public interface IInventoryData : IAuroraDataPlugin
     {
         List<InventoryFolderBase> GetFolders(string[] fields, string[] vals);
-        List<InventoryItemBase> GetItems(string[] fields, string[] vals);
+        List<InventoryItemBase> GetItems(UUID avatarID, string[] fields, string[] vals);
         OSDArray GetLLSDItems(string[] fields, string[] vals);
 
         bool HasAssetForUser(UUID userID, UUID assetID);

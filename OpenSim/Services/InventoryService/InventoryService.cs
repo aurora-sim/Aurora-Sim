@@ -562,7 +562,7 @@ namespace OpenSim.Services.InventoryService
                 Folders = m_Database.GetFolders(
                     new[] { "parentFolderID" },
                     new[] { folderID.ToString() }),
-                Items = m_Database.GetItems(
+                Items = m_Database.GetItems(UserID,
                     new[] { "parentFolderID" },
                     new[] { folderID.ToString() })
             };
@@ -580,10 +580,10 @@ namespace OpenSim.Services.InventoryService
                 return (List<InventoryItemBase>)remoteValue;
 
             if (principalID != UUID.Zero)
-                return m_Database.GetItems(
+                return m_Database.GetItems(principalID,
                     new[] { "parentFolderID", "avatarID" },
                     new[] { folderID.ToString(), principalID.ToString() });
-            return m_Database.GetItems(
+            return m_Database.GetItems(principalID,
                 new[] { "parentFolderID" },
                 new[] { folderID.ToString() });
         }
@@ -877,7 +877,7 @@ namespace OpenSim.Services.InventoryService
             if (remoteValue != null || m_doRemoteOnly)
                 return (InventoryItemBase)remoteValue;
 
-            List<InventoryItemBase> items = m_Database.GetItems(
+            List<InventoryItemBase> items = m_Database.GetItems(item.Owner,
                 new[] { "inventoryID" },
                 new[] { item.ID.ToString() });
 
@@ -925,12 +925,17 @@ namespace OpenSim.Services.InventoryService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
-        public virtual OSDArray GetItem(UUID itemID)
+        public virtual OSDArray GetItem(UUID avatarID, UUID itemID)
         {
-            object remoteValue = DoRemote(itemID);
+            object remoteValue = DoRemote(avatarID, itemID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (OSDArray)remoteValue;
-
+            if (avatarID != UUID.Zero)
+            {
+                return m_Database.GetLLSDItems(
+                    new string[2] { "inventoryID", "avatarID" },
+                    new string[2] { itemID.ToString(), avatarID.ToString() });
+            }
             return m_Database.GetLLSDItems(
                 new string[1] { "inventoryID" },
                 new string[1] { itemID.ToString() });

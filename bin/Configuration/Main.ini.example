@@ -1,7 +1,4 @@
 [Architecture]
-    ;; Don't touch this, look down below
-    Include-Includes = Configuration/Includes.ini
-	
     ;;
     ;; Note: you may ONLY select one of these!
     ;; Then Open that selection and edit according to your Requirements
@@ -15,3 +12,6 @@
     ;;If you plan on connecting to a Robust based grid, select this file
     ;; Note: This defaults to OSGrid
     ;Include-RobustGrid = Configuration/RobustGrid/RobustGrid.ini
+	
+    ;; Don't touch this, look above
+    Include-Includes = Configuration/Includes.ini

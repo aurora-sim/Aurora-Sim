@@ -76,12 +76,44 @@ namespace OpenSim.Services.Robust
                 IInventoryService invService = m_registry.RequestModuleInterface<IInventoryService>();
                 if (invService != null)
                 {
+                    UUID inventoryID = UUID.Parse(vals[0]);
                     InventoryItemBase baseItem = new InventoryItemBase(UUID.Parse(vals[0]));
+                    if (vals.Count() > 1)
+                    {
+                        UUID avatarID = UUID.Parse(vals[1]);
+                        IUserFinder userFinder = m_registry.RequestModuleInterface<IUserFinder>();
+                        if (userFinder != null && !userFinder.IsLocalGridUser(avatarID))
+                        {
+                            string serverURL = userFinder.GetUserServerURL(avatarID, "InventoryServerURI") + "xinventory";
+                            XInventoryServicesConnector xinv = new XInventoryServicesConnector(serverURL);
+                            return BuildLLSDInventoryItems(xinv.GetItem(baseItem));
+                        }
+                    }
                     return BuildLLSDInventoryItems(invService.GetItem(baseItem));
                 }
             }
 
             return null;
+        }
+
+        public override List<InventoryItemBase> GetItems(UUID avatarID, string[] fields, string[] vals)
+        {
+            IUserFinder userFinder = m_registry.RequestModuleInterface<IUserFinder>();
+            if (userFinder != null && !userFinder.IsLocalGridUser(avatarID))
+            {
+                string serverURL = userFinder.GetUserServerURL(avatarID, "InventoryServerURI") + "xinventory";
+                UUID id = UUID.Parse(vals[0]);
+                XInventoryServicesConnector xinv = new XInventoryServicesConnector(serverURL);
+                if(fields[0] == "parentFolderID")
+                {
+                    return xinv.GetFolderContent(avatarID, id).Items;
+                }
+                else
+                {
+                    return new List<InventoryItemBase> { xinv.GetItem(new InventoryItemBase(id)) };
+                }
+            }
+            return base.GetItems(avatarID, fields, vals);
         }
 
         private OSDArray BuildLLSDInventoryItems(InventoryItemBase retVal)

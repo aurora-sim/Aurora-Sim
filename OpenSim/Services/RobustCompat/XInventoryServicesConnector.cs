@@ -536,7 +536,7 @@ namespace OpenSim.Services.Robust
             return item;
         }
 
-        public OSDArray GetItem(UUID ItemID)
+        public OSDArray GetItem(UUID avatarID, UUID ItemID)
         {
             IInventoryData database = DataManager.RequestPlugin<IInventoryData>();
             return database.GetLLSDItems(

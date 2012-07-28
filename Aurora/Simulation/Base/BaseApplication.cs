@@ -418,11 +418,11 @@ namespace Aurora.Simulation.Base
                         IniConfigSource main_ini = new IniConfigSource("Configuration/Main.ini", Nini.Ini.IniFileType.AuroraStyle);
 
                         IConfig conf = main_ini.AddConfig("Architecture");
-                        conf.Set("Include-Includes", "Configuration/Includes.ini");
                         if (mode == "1")
                             conf.Set("Include-Standalone", "Configuration/Standalone/StandaloneCommon.ini");
                         else
                             conf.Set("Include-Grid", "Configuration/Grid/AuroraGridCommon.ini");
+                        conf.Set("Include-Includes", "Configuration/Includes.ini");
 
                         main_ini.Save();
                         Console.ForegroundColor = ConsoleColor.Green;

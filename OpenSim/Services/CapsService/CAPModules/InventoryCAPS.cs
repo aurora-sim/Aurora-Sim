@@ -223,22 +223,10 @@ namespace OpenSim.Services.CapsService
                 //We have to send the agent_id in the main map as well as all the items
 
                 OSDArray items = new OSDArray();
-#if (!ISWIN)
-                foreach (OSDMap requestedFolders in foldersrequested)
-                {
-                    UUID itemId = requestedFolders["item_id"].AsUUID();
-                    OSDArray item = m_inventoryService.GetItem(itemId);
-                    if (item != null && item.Count > 0)
-                    {
-                        items.Add(item[0]);
-                    }
-                }
-#else
-                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
+                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(m_service.AgentID, item_id)).Where(item => item != null && item.Count > 0))
                 {
                     items.Add(item[0]);
                 }
-#endif
                 map.Add("items", items);
 
                 byte[] response = OSDParser.SerializeLLSDXmlBytes(map);
@@ -266,22 +254,11 @@ namespace OpenSim.Services.CapsService
 
                 OSDMap map = new OSDMap {{"agent_id", OSD.FromUUID(AgentID)}};
                 OSDArray items = new OSDArray();
-#if (!ISWIN)
-                foreach (OSDMap requestedFolders in foldersrequested)
-                {
-                    UUID itemId = requestedFolders["item_id"].AsUUID();
-                    OSDArray item = m_inventoryService.GetItem(itemId);
-                    if (item != null && item.Count > 0)
-                    {
-                        items.Add(item[0]);
-                    }
-                }
-#else
-                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(item_id)).Where(item => item != null && item.Count > 0))
+
+                foreach (OSDArray item in foldersrequested.Cast<OSDMap>().Select(requestedFolders => requestedFolders["item_id"].AsUUID()).Select(item_id => m_inventoryService.GetItem(UUID.Zero, item_id)).Where(item => item != null && item.Count > 0))
                 {
                     items.Add(item[0]);
                 }
-#endif
                 map.Add("items", items);
 
                 byte[] response = OSDParser.SerializeLLSDXmlBytes(map);

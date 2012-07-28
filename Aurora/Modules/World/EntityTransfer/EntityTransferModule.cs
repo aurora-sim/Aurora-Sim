@@ -912,7 +912,7 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
-            if (!sceneObject.IsAttachmentCheckFull()) // Not Attachment
+            //if (!sceneObject.IsAttachmentCheckFull()) // Not Attachment
             {
                 if (!scene.Permissions.CanObjectEntry(sceneObject.UUID,
                         true, sceneObject.AbsolutePosition, sceneObject.OwnerID))
