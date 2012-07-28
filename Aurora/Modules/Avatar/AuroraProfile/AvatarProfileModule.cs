@@ -325,13 +325,7 @@ namespace Aurora.Modules.Profiles
             IClientAPI remoteClient = (IClientAPI) sender;
             UUID requestedUUID = new UUID(args[0]);
 
-#if (!ISWIN)
-            Dictionary<UUID, string> picks = new Dictionary<UUID, string>();
-            foreach (ProfilePickInfo pick in ProfileFrontend.GetPicks(requestedUUID))
-                picks.Add(pick.PickUUID, pick.Name);
-#else
             Dictionary<UUID, string> picks = ProfileFrontend.GetPicks(requestedUUID).ToDictionary(Pick => Pick.PickUUID, Pick => Pick.Name);
-#endif
             remoteClient.SendAvatarPicksReply(requestedUUID, picks);
         }
 
@@ -489,7 +483,8 @@ namespace Aurora.Modules.Profiles
             IUserProfileInfo UPI = ProfileFrontend.GetUserProfile(target);
             UserAccount TargetAccount =
                 remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, target);
-            if (UPI == null || TargetAccount == null)
+            IUserFinder userFinder = remoteClient.Scene.RequestModuleInterface<IUserFinder>();
+            if (UPI == null || (TargetAccount == null || userFinder == null || userFinder.IsLocalGridUser(target))
             {
                 remoteClient.SendAvatarProperties(target, "",
                                                   Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
@@ -563,7 +558,8 @@ namespace Aurora.Modules.Profiles
             if (Profile.MembershipGroup == "")
             {
                 charterMember = new Byte[1];
-                charterMember[0] = (Byte) ((account.UserFlags & 0xf00) >> 8);
+                if (account != null)
+                    charterMember[0] = (Byte)((account.UserFlags & 0xf00) >> 8);
             }
             else
                 charterMember = Utils.StringToBytes(Profile.MembershipGroup);
@@ -573,13 +569,13 @@ namespace Aurora.Modules.Profiles
                 membershipGroupINT = 4;
 
             uint flags = Convert.ToUInt32(Profile.AllowPublish) + Convert.ToUInt32(Profile.MaturePublish) +
-                         membershipGroupINT + agentOnline + (uint) account.UserFlags;
-            remoteClient.SendAvatarInterestsReply(account.PrincipalID, Convert.ToUInt32(Profile.Interests.WantToMask),
+                membershipGroupINT + agentOnline + (uint) (account != null ? account.UserFlags : 0);
+            remoteClient.SendAvatarInterestsReply(Profile.PrincipalID, Convert.ToUInt32(Profile.Interests.WantToMask),
                                                   Profile.Interests.WantToText,
                                                   Convert.ToUInt32(Profile.Interests.CanDoMask),
                                                   Profile.Interests.CanDoText, Profile.Interests.Languages);
-            remoteClient.SendAvatarProperties(account.PrincipalID, Profile.AboutText,
-                                              Util.ToDateTime(account.Created).ToString("M/d/yyyy",
+            remoteClient.SendAvatarProperties(Profile.PrincipalID, Profile.AboutText,
+                                              Util.ToDateTime(Profile.Created).ToString("M/d/yyyy",
                                                                                         CultureInfo.InvariantCulture),
                                               charterMember, Profile.FirstLifeAboutText, flags,
                                               Profile.FirstLifeImage, Profile.Image, Profile.WebURL,

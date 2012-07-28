@@ -30,6 +30,11 @@ using OpenMetaverse;
 
 namespace Aurora.Framework
 {
+    public interface IRemoteProfileConnector : IProfileConnector
+    {
+        void Init(string remoteURL, IRegistryCore registry);
+    }
+
     public interface IProfileConnector : IAuroraDataPlugin
     {
         /// <summary>

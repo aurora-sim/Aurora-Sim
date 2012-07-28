@@ -82,6 +82,11 @@ namespace Aurora.Services.DataService
             //Try from the user profile first before getting from the DB
             if (UserProfilesCache.TryGetValue(agentID, out UserProfile))
                 return UserProfile;
+
+            var connector = GetWhetherUserIsForeign(agentID);
+            if (connector != null)
+                return connector.GetUserProfile(agentID);
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["ID"] = agentID;
             filter.andFilters["`Key`"] = "LLProfile";
@@ -101,6 +106,21 @@ namespace Aurora.Services.DataService
             UserProfilesCache[agentID] = UserProfile;
 
             return UserProfile;
+        }
+
+        private IRemoteProfileConnector GetWhetherUserIsForeign(UUID agentID)
+        {
+            OpenSim.Services.Interfaces.IUserFinder userFinder = m_registry.RequestModuleInterface<OpenSim.Services.Interfaces.IUserFinder>();
+            if (userFinder != null && !userFinder.IsLocalGridUser(agentID))
+            {
+                string url = userFinder.GetUserServerURL(agentID, "ProfileServerURI");
+
+                IRemoteProfileConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IRemoteProfileConnector>();
+                if (connector != null)
+                    connector.Init(url, m_registry);
+                return connector;
+            }
+            return null;
         }
 
         /// <summary>
@@ -195,7 +215,11 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<Classified>)remoteValue;
-            
+
+            var connector = GetWhetherUserIsForeign(ownerID);
+            if (connector != null)
+                return connector.GetClassifieds(ownerID);
+
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
 
@@ -294,6 +318,10 @@ namespace Aurora.Services.DataService
             object remoteValue = DoRemote(ownerID);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<ProfilePickInfo>)remoteValue;
+
+            var connector = GetWhetherUserIsForeign(ownerID);
+            if (connector != null)
+                return connector.GetPicks(ownerID);
             
             QueryFilter filter = new QueryFilter();
             filter.andFilters["OwnerUUID"] = ownerID;
