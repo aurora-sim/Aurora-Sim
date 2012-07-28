@@ -441,7 +441,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 string consoletext = IsError ? "Error " : "Warning ";
                 consoletext += stage + " script:\n" + message + " prim name: " + Part.Name + "@ " +
-                               Part.AbsolutePosition + " itemID: " + ItemID + ", CompiledFile: " + AssemblyName;
+                    Part.AbsolutePosition + (InventoryItem != null ? ("item name: " + InventoryItem.Name) : (" itemID: " + ItemID)) + ", CompiledFile: " + AssemblyName;
                 MainConsole.Instance.Error(consoletext);
             }
 

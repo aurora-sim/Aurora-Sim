@@ -2251,7 +2251,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 if (_currentGlobalFunctionDeclaration == null)
                     return null;
                 else
-                    return _currentGlobalFunctionDeclaration.Name;
+                    return "global_function_" + _currentGlobalFunctionDeclaration.Name;
             }
             return _currentLocalStateDeclaration.Name + "_" + _currentLocalFunctionDeclaration.Name;
         }
