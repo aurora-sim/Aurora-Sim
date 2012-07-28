@@ -47,8 +47,17 @@ namespace OpenSim.Services.Robust
             get { return GetType().Name; }
         }
 
+        private string m_serverURL = "";
         private IRegistryCore m_registry;
         private IImprovedAssetCache m_Cache;
+
+        public RobustAssetServicesConnector() { }
+
+        public RobustAssetServicesConnector(IRegistryCore registry, string URL)
+        {
+            m_registry = registry;
+            m_serverURL = URL;
+        }
 
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
@@ -92,8 +101,8 @@ namespace OpenSim.Services.Robust
                                           ? null
                                           : m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf(
                                               "AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] {m_serverURL});
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
             if (serverURIs != null)
                 foreach (string mServerUri in serverURIs)
                 {
@@ -112,8 +121,8 @@ namespace OpenSim.Services.Robust
         {
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] {m_serverURL});
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -164,8 +173,8 @@ namespace OpenSim.Services.Robust
             UUID newID = UUID.Zero;
             List<string> serverURIs =
                 m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] {m_serverURL});
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] {m_serverURL});
             foreach (string mServerUri in serverURIs)
             {
                 string uri = mServerUri + "/";
@@ -562,8 +571,8 @@ namespace OpenSim.Services.Robust
                 return true;
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id + "/exists";
@@ -588,8 +597,8 @@ namespace OpenSim.Services.Robust
             }
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 RestClient rc = new RestClient(m_ServerURI);
@@ -627,8 +636,8 @@ namespace OpenSim.Services.Robust
         void IAssetService.Get(string id, object sender, AssetRetrieved handler)
         {
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
@@ -669,8 +678,8 @@ namespace OpenSim.Services.Robust
             asset.Data = data;
 
             List<string> serverURIs = m_registry.RequestModuleInterface<IConfigurationService>().FindValueOf("AssetServerURI");
-            //if (m_serverURL != string.Empty)
-            //    serverURIs = new List<string>(new string[1] { m_serverURL });
+            if (m_serverURL != string.Empty)
+                serverURIs = new List<string>(new string[1] { m_serverURL });
             foreach (string m_ServerURI in serverURIs)
             {
                 string uri = m_ServerURI + "/" + id;
