@@ -301,9 +301,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         IdentExpression identEx = (IdentExpression)assignmentChild;
                         if (isDeclaration)
                         {
-                            if (!m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(decID))
-                                m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][decID] = identEx;
-                            m_localVariableValues[m_currentState + "_" + m_currentEvent][decID] = identEx.Name;
+                            if (!m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
+                            m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx.Name;
                         }
                     }
                     else if (assignmentChild is ListConstant)
@@ -323,11 +323,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     if (objChild is IdentExpression)
                                     {
                                         IdentExpression identEx = (IdentExpression)objChild;
-                                        if (m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(identEx.Name))
+                                        if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(identEx.Name))
                                         {
                                             changed = true;
                                             p[i] = new IdentExpression(identEx.yyps,
-                                                                        m_localVariableValues[m_currentState + "_" + m_currentEvent][identEx.Name])
+                                                                        m_localVariableValues[GetLocalVariableDictionaryKey()][identEx.Name])
                                             {
                                                 pos = objChild.pos,
                                                 m_dollar = objChild.m_dollar
@@ -344,9 +344,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 }
                                 if (isDeclaration)
                                 {
-                                    if (!m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(decID))
-                                        m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][decID] = listConst;
-                                    m_localVariableValues[m_currentState + "_" + m_currentEvent][decID] = listConst.Value;
+                                    if (!m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                        m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
+                                    m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
                                 }
                             }
                         }
@@ -363,11 +363,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                             if (objChild is IdentExpression)
                             {
                                 IdentExpression identEx = (IdentExpression)objChild;
-                                if (m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(identEx.Name))
+                                if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(identEx.Name))
                                 {
                                     changed = true;
                                     p[i] = new IdentExpression(identEx.yyps,
-                                                                m_localVariableValues[m_currentState + "_" + m_currentEvent][identEx.Name])
+                                                                m_localVariableValues[GetLocalVariableDictionaryKey()][identEx.Name])
                                     {
                                         pos = objChild.pos,
                                         m_dollar = objChild.m_dollar
@@ -384,9 +384,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         }
                         if (isDeclaration)
                         {
-                            if (!m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(decID))
-                                m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][decID] = listConst;
-                            m_localVariableValues[m_currentState + "_" + m_currentEvent][decID] = listConst.Value;
+                            if (!m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
+                            m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
                         }
                     }
                     else if (assignmentChild is Constant)
@@ -394,9 +394,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         Constant identEx = (Constant)assignmentChild;
                         if (isDeclaration)
                         {
-                            if (!m_localVariableValues[m_currentState + "_" + m_currentEvent].ContainsKey(decID))
-                                m_duplicatedLocalVariableValues[m_currentState + "_" + m_currentEvent][decID] = identEx;
-                            m_localVariableValues[m_currentState + "_" + m_currentEvent][decID] = identEx.Value;
+                            if (!m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
+                            m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx.Value;
                         }
                     }
                 }
@@ -467,6 +467,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                     TransformNode((SYMBOL)s.kids[i], null, null);
                 }
             }
+        }
+
+        private string GetLocalVariableDictionaryKey()
+        {
+            if (m_currentState == "")
+                return m_currentEvent;
+            return m_currentState + "_" + m_currentEvent;
         }
 
         /// <summary>

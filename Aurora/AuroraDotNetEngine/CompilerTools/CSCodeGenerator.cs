@@ -2115,8 +2115,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
                             SYMBOL firstChild = (SYMBOL)a.kids[0];
                             bool retStrChanged = false;
-                            if (firstChild is Declaration && _currentLocalFunctionDeclaration != null &&
-                                        DuplicatedLocalVariables[_currentLocalStateDeclaration.Name + "_" + _currentLocalFunctionDeclaration.Name].ContainsKey(((Declaration)firstChild).Id))
+                            if (firstChild is Declaration &&
+                                        DuplicatedLocalVariables[GetLocalDeclarationKey()].ContainsKey(((Declaration)firstChild).Id))
                             {
                                 Declaration dec = ((Declaration)firstChild);
                                 if (a.kids.Count == 2)
@@ -2159,8 +2159,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                     {
                                         Constant identEx = (Constant)assignmentChild;
                                         string value = GetValue(identEx);
-                                        Constant dupConstant = (Constant)DuplicatedLocalVariables[_currentLocalStateDeclaration.Name + "_" + 
-                                            _currentLocalFunctionDeclaration.Name][dec.Id];
+                                        Constant dupConstant = (Constant)DuplicatedLocalVariables[GetLocalDeclarationKey()][dec.Id];
                                         dupConstant.Value = dupConstant.Value == null ? GetValue(dupConstant) : dupConstant.Value;
                                         if (value != dupConstant.Value)
                                         {
@@ -2243,6 +2242,18 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 retstr += GenerateLine(";");
 
             return DumpFunc(marc) + retstr + DumpAfterFunc(marc);
+        }
+
+        private string GetLocalDeclarationKey()
+        {
+            if (_currentLocalStateDeclaration == null)
+            {
+                if (_currentGlobalFunctionDeclaration == null)
+                    return null;
+                else
+                    return _currentGlobalFunctionDeclaration.Name;
+            }
+            return _currentLocalStateDeclaration.Name + "_" + _currentLocalFunctionDeclaration.Name;
         }
 
         /// <summary>
