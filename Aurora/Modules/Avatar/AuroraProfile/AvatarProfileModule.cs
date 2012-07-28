@@ -484,13 +484,16 @@ namespace Aurora.Modules.Profiles
             UserAccount TargetAccount =
                 remoteClient.Scene.UserAccountService.GetUserAccount(remoteClient.AllScopeIDs, target);
             IUserFinder userFinder = remoteClient.Scene.RequestModuleInterface<IUserFinder>();
-            if (UPI == null || (TargetAccount == null && userFinder == null && userFinder.IsLocalGridUser(target)))
+            if (UPI == null || (TargetAccount == null)
             {
-                remoteClient.SendAvatarProperties(target, "",
-                                                  Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                                                  new Byte[1], "", 0,
-                                                  UUID.Zero, UUID.Zero, "", UUID.Zero);
-                return;
+                if(userFinder == null || userFinder.IsLocalGridUser(target))
+                {
+                    remoteClient.SendAvatarProperties(target, "",
+                                                      Util.ToDateTime(0).ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                                                      new Byte[1], "", 0,
+                                                      UUID.Zero, UUID.Zero, "", UUID.Zero);
+                    return;
+                }
             }
             UserInfo TargetPI =
                 remoteClient.Scene.RequestModuleInterface<IAgentInfoService>().GetUserInfo(target.ToString());
