@@ -512,7 +512,8 @@ namespace Aurora.Modules.Profiles
                 if (UPI.MembershipGroup == "")
                 {
                     charterMember = new Byte[1];
-                    charterMember[0] = (Byte) ((TargetAccount.UserFlags & 0xf00) >> 8);
+                    if(TargetAccount != null)
+                        charterMember[0] = (Byte) ((TargetAccount.UserFlags & 0xf00) >> 8);
                 }
                 else
                 {
@@ -522,7 +523,7 @@ namespace Aurora.Modules.Profiles
                                                   Util.ToDateTime(UPI.Created).ToString("M/d/yyyy",
                                                                                         CultureInfo.InvariantCulture),
                                                   charterMember, UPI.FirstLifeAboutText,
-                                                  (uint) (TargetAccount.UserFlags & agentOnline),
+                                                  (uint)(TargetAccount == null ? 0 : TargetAccount.UserFlags & agentOnline),
                                                   UPI.FirstLifeImage, UPI.Image, UPI.WebURL, UPI.Partner);
             }
         }
