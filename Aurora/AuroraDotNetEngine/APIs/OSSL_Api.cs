@@ -759,8 +759,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
                     ulong regionHandle = regInfo.RegionHandle;
                     return TeleportAgent(AgentID, regionHandle,
-                                         new Vector3((float)position.x, (float)position.y, (float)position.z),
-                                         new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
+                                         position.ToVector3(),
+                                         lookat.ToVector3());
                 }
             }
             return DateTime.Now;
@@ -782,8 +782,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (UUID.TryParse(agent, out agentId))
             {
                 return TeleportAgent(agentId, regionHandle,
-                                     new Vector3((float)position.x, (float)position.y, (float)position.z),
-                                     new Vector3((float)lookat.x, (float)lookat.y, (float)lookat.z));
+                                         position.ToVector3(),
+                                         lookat.ToVector3());
             }
             return DateTime.Now;
         }

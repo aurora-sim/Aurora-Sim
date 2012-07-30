@@ -98,13 +98,13 @@ namespace Aurora.Services.DataService
 
             ClearRegion(parcels[0].RegionID);
 
-            var OrFilters = new Dictionary<string, object>();
             foreach (var parcel in parcels)
             {
+                var OrFilters = new Dictionary<string, object>();
                 OrFilters.Add("ParcelID", parcel.GlobalID);
                 OrFilters.Add("InfoUUID", parcel.InfoUUID);
+                GD.Delete("searchparcel", new QueryFilter { orFilters = OrFilters });
             }
-            GD.Delete("searchparcel", new QueryFilter { orFilters = OrFilters });
             
             List<object[]> insertValues = parcels.Select(args => new List<object>
             {

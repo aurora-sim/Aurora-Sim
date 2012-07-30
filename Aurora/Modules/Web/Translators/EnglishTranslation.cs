@@ -99,6 +99,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Terms of Service";
                 case "TermsOfServiceAccept":
                     return "Do you accept the Terms of Service as detailed above?";
+                case "Accept":
+                    return "Accept";
 					
 				// news
                 case "OpenNewsManager":
