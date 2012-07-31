@@ -52,6 +52,7 @@ namespace OpenSim.Services.MessagingService
         public void Initialize(IConfigSource config, IRegistryCore registry)
         {
             m_registry = registry;
+            m_registry.RegisterModuleInterface<IGroupNotificationService>(this);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
