@@ -7,11 +7,15 @@ namespace Aurora.Framework
 {
     public class FileSaving
     {
+        private string fileName;
+        public FileSaving()
+        {
+        }
+
         public FileSaving(string file)
         {
             fileName = file;
         }
-        private string fileName;
 
         public static T LoadFromFile<T>(string file) where T : FileSaving
         {
