@@ -12,7 +12,7 @@ namespace Aurora.Modules.Web
     {
         public static readonly string Schema = "WebPages";
         private static GridPage _rootPage;
-        public static readonly uint CurrentVersion = 7;
+        public static readonly uint CurrentVersion = 8;
 
         private static void InitializeDefaults()
         {
@@ -121,15 +121,23 @@ namespace Aurora.Modules.Web
                 MenuPosition = 5,
                 MenuTitle = "MenuHelp",
                 MenuToolTip = "TooltipsMenuHelp",
-                Children = new List<GridPage> { new GridPage
+                Children = new List<GridPage> {  new GridPage
+                    {
+                        ShowInMenu = true,
+                        MenuID = "help",
+                        Location = "help.html",
+                        MenuPosition = 1,
+                        MenuTitle = "MenuViewerHelp",
+                        MenuToolTip = "TooltipsMenuViewerHelp"
+                    }, new GridPage
                     {
                         ShowInMenu = true,
                         MenuID = "chat",
                         Location = "chat.html",
-                        MenuPosition = 4,
+                        MenuPosition = 2,
                         MenuTitle = "MenuChat",
                         MenuToolTip = "TooltipsMenuChat"
-                    } }
+                    }}
             });
             _rootPage.Children.Add(new GridPage
             {

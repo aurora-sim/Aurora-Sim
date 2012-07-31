@@ -235,6 +235,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Chat";
                 case "MenuHelp":
                     return "Help";
+                case "MenuViewerHelp":
+                    return "Viewer Help";
                 case "MenuChangeUserInformation":
                     return "Change User Information";
                 case "MenuWelcomeScreenManager":
@@ -285,6 +287,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Region Search";
                 case "TooltipsMenuChat":
                     return "Chat";
+                case "TooltipsMenuViewerHelp":
+                    return "Viewer Help";
                 case "TooltipsMenuHelp":
                     return "Help";
                 case "TooltipsMenuChangeUserInformation":

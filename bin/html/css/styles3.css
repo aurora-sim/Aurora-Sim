@@ -21,11 +21,11 @@ body  {
 	cursor: default;
 }
 
-#st1, #lg1 {display: none;}
-#st2, #lg2 {display: none;}
-#st3, #lg3 {color: #FF0000;}
-#st4, #lg4 {display: none;}
-#st5, #lg5 {display: none;}
+#st1 {display: none;}
+#st2 {display: none;}
+#st3 {color: #FF0000;}
+#st4 {display: none;}
+#st5 {display: none;}
 
 #st1, #st2, #st3, #st4, #st5, #lg1, #lg2, #lg3, #lg4, #lg5, a.styleswitch, a.languageswitch {
 	background: #4164AF;
