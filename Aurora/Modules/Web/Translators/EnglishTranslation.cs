@@ -314,7 +314,7 @@ namespace Aurora.Modules.Web.Translators
 				
 				// Menu Profile
                 case "MenuProfileTitle":
-                    return "Profil";
+                    return "Profile";
                 case "MenuGroupTitle":
                     return "Group";
                 case "MenuPicksTitle":

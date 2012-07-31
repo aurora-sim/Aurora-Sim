@@ -62,12 +62,21 @@
 
 <body>
 <div id="container">
+<script src="{SystemURL}/javascripts/menu.profile.js"></script>
+<div id="topprofile">
+	<ul id="menuprofile">
+		<li id="base" class="fade active" alt="{TooltipsMenuHome}" title="{TooltipsMenuHome}">{MenuProfileTitle}</li>
+		<li id="groups" class="fade" alt="{TooltipsMenuLogin}" title="{TooltipsMenuLogin}">{MenuGroupTitle}</li>
+		<li id="picks" class="fade" alt="{TooltipsMenuRegister}" title="{TooltipsMenuRegister}">{MenuPicksTitle}</li>
+	</ul>
+	<span class="clear"></span>
+</div>
+
+<h2>{SystemName}: {UserName}</h2>
+<!-- <p class=jclock1><span id=jclock1></span></p> -->
+<!-- <div id="loading"><img src="../images/icons/loading.gif" alt="Loading..." /></div> -->
 <div id="content">
 <!--#include file="/webprofile/base.html" -->
-<!--These are the other two files that somehow ought to be linked together into base so that it can display that information as well, maybe via a tab set or something?
-     Remove the first <!-- to view them-->
-<!--<!--#include file="/webprofile/groups.html" -->
-<!--<!--#include file="/webprofile/picks.html" -->
 </div>
 	<div id="footer">
 <!-- {IfShowLanguageTranslatorBarBegin} -->

@@ -12,17 +12,17 @@ $(document).ready(function(){
 		switch(this.id){
 			case "base":
 				content.slideUp();
-				content.load("base.html", hideLoading);
+				content.load("base.html" + window.location.search, hideLoading);
 				content.slideDown();
 				break;
 			case "groups":
 				content.slideUp();
-				content.load("groups.html", hideLoading);
+				content.load("groups.html" + window.location.search, hideLoading);
 				content.slideDown();
 				break;
 			case "picks":
 				content.slideUp();
-				content.load("picks.html", hideLoading);
+				content.load("picks.html" + window.location.search, hideLoading);
 				content.slideDown();
 				break;
 			default:
