@@ -44,7 +44,7 @@ namespace Aurora.Modules.Web
                 {
                     UUID sessionID = UUID.Random();
                     UserAccount account = webInterface.Registry.RequestModuleInterface<IUserAccountService>().GetUserAccount(null, username);
-                    Authenticator.AddAuthentication(sessionID, account.PrincipalID);
+                    Authenticator.AddAuthentication(sessionID, account);
                     if (account.UserLevel > 0)
                         Authenticator.AddAdminAuthentication(sessionID, account);
                     httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });

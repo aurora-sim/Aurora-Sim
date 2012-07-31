@@ -11,7 +11,7 @@ namespace Aurora.Modules.Web
 {
     public class Authenticator
     {
-        private static Dictionary<UUID, UUID> _authenticatedUsers = new Dictionary<UUID, UUID>();
+        private static Dictionary<UUID, UserAccount> _authenticatedUsers = new Dictionary<UUID, UserAccount>();
         private static Dictionary<UUID, UserAccount> _authenticatedAdminUsers = new Dictionary<UUID, UserAccount>();
 
         public static bool CheckAuthentication(OSHttpRequest request)
@@ -45,9 +45,9 @@ namespace Aurora.Modules.Web
             return false;
         }
 
-        public static void AddAuthentication(UUID sessionID, UUID userID)
+        public static void AddAuthentication(UUID sessionID, UserAccount account)
         {
-            _authenticatedUsers.Add(sessionID, userID);
+            _authenticatedUsers.Add(sessionID, account);
         }
 
         public static void AddAdminAuthentication(UUID sessionID, UserAccount account)
@@ -62,7 +62,7 @@ namespace Aurora.Modules.Web
             _authenticatedAdminUsers.Remove(sessionID);
         }
 
-        public static UUID GetAuthentication(OSHttpRequest request)
+        public static UserAccount GetAuthentication(OSHttpRequest request)
         {
             if (request.Cookies["SessionID"] != null)
             {
@@ -70,7 +70,7 @@ namespace Aurora.Modules.Web
                 if (_authenticatedUsers.ContainsKey(sessionID))
                     return _authenticatedUsers[sessionID];
             }
-            return UUID.Zero;
+            return null;
         }
 
         public static UUID GetAuthenticationSession(OSHttpRequest request)
@@ -86,11 +86,10 @@ namespace Aurora.Modules.Web
             {
                 UUID sessionID = UUID.Parse(request.Cookies["SessionID"].Value);
                 if (_authenticatedUsers.ContainsKey(sessionID))
-                    _authenticatedUsers[sessionID] = account.PrincipalID;
+                    _authenticatedUsers[sessionID] = account;
                 if (_authenticatedAdminUsers.ContainsKey(sessionID))
                     _authenticatedAdminUsers[sessionID] = account;
             }
-
         }
     }
 }

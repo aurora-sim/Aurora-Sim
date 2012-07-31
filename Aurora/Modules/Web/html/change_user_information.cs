@@ -34,7 +34,7 @@ namespace Aurora.Modules.Web
             var vars = new Dictionary<string, object>();
 
             string error = "";
-            UUID user = Authenticator.GetAuthentication(httpRequest);
+            UserAccount user = Authenticator.GetAuthentication(httpRequest);
 
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitPasswordChange")
@@ -48,7 +48,7 @@ namespace Aurora.Modules.Web
                 {
                     IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
                     if (authService != null)
-                        error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                        error = authService.SetPassword(user.PrincipalID, "UserAccount", password) ? "" : "Failed to set your password, try again later";
                     else
                         error = "No authentication service was available to change your password";
                 }
@@ -61,9 +61,8 @@ namespace Aurora.Modules.Web
                 IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                 if (userService != null)
                 {
-                    UserAccount account = userService.GetUserAccount(null, user);
-                    account.Email = email;
-                    userService.StoreUserAccount(account);
+                    user.Email = email;
+                    userService.StoreUserAccount(user);
                 }
                 else
                     error = "No authentication service was available to change your password";
@@ -80,7 +79,7 @@ namespace Aurora.Modules.Web
                     IUserAccountService userService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                     if (userService != null)
                     {
-                        userService.DeleteUser(user, password, true, false);
+                        userService.DeleteUser(user.PrincipalID, password, true, false);
                         error = "Successfully deleted account.";
                     }
                     else
