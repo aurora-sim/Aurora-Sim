@@ -85,18 +85,40 @@ namespace Aurora.Modules.Web
                     url = webhttpService.GetTextureURL(profile.Image);
                 vars.Add("UserPictureURL", url);
             }
-            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
-            IClientCapsService clientCaps = capsService == null ? null : capsService.GetClientCapsService(account.PrincipalID);
-            if (clientCaps != null)
-                vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
+            UserAccount ourAccount = Authenticator.GetAuthentication(httpRequest);
+            if (ourAccount != null)
+            {
+                IFriendsService friendsService = webInterface.Registry.RequestModuleInterface<IFriendsService>();
+                var friends = friendsService.GetFriends(account.PrincipalID);
+                UUID friendID = UUID.Zero;
+                if (friends.Any(f => UUID.TryParse(f.Friend, out friendID) && friendID == ourAccount.PrincipalID))
+                {
+                    ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
+                    IClientCapsService clientCaps = capsService == null ? null : capsService.GetClientCapsService(account.PrincipalID);
+                    if (clientCaps != null)
+                        vars.Add("OnlineLocation", clientCaps.GetRootCapsService().Region.RegionName);
+                    vars.Add("UserIsOnline", clientCaps != null);
+                    vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
+                }
+                else
+                {
+                    vars.Add("OnlineLocation", "");
+                    vars.Add("UserIsOnline", false);
+                    vars.Add("IsOnline", translator.GetTranslatedString("Offline"));
+                }
+            }
+            else
+            {
+                vars.Add("OnlineLocation", "");
+                vars.Add("UserIsOnline", false);
+                vars.Add("IsOnline", translator.GetTranslatedString("Offline"));
+            }
 
             // Menu Profile
             vars.Add("MenuProfileTitle", translator.GetTranslatedString("MenuProfileTitle"));
             vars.Add("MenuGroupTitle", translator.GetTranslatedString("MenuGroupTitle"));
             vars.Add("MenuPicksTitle", translator.GetTranslatedString("MenuPicksTitle"));
 
-            vars.Add("UserIsOnline", clientCaps != null);
-            vars.Add("IsOnline", clientCaps != null ? translator.GetTranslatedString("Online") : translator.GetTranslatedString("Offline"));
             vars.Add("UserProfileFor", translator.GetTranslatedString("UserProfileFor"));
             vars.Add("ResidentSince", translator.GetTranslatedString("ResidentSince"));
             vars.Add("AccountType", translator.GetTranslatedString("AccountType"));
@@ -122,6 +144,12 @@ namespace Aurora.Modules.Web
             vars.Add("de", translator.GetTranslatedString("de"));
             vars.Add("it", translator.GetTranslatedString("it"));
             vars.Add("es", translator.GetTranslatedString("es"));
+
+            IGenericsConnector generics = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
+            var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
+
+            vars.Add("ShowLanguageTranslatorBar", !settings.HideLanguageTranslatorBar);
+            vars.Add("ShowStyleBar", !settings.HideStyleBar);
 
             return vars;
         }
