@@ -11,19 +11,22 @@ $(document).ready(function(){
 		//load selected section
 		switch(this.id){
 			case "base":
-				content.slideUp();
+				content.slideUp(  function() {
 				content.load("base.html" + window.location.search, hideLoading);
 				content.slideDown();
+				});
 				break;
 			case "groups":
-				content.slideUp();
+				content.slideUp(  function() {
 				content.load("groups.html" + window.location.search, hideLoading);
 				content.slideDown();
+				});
 				break;
 			case "picks":
-				content.slideUp();
+				content.slideUp(  function() {
 				content.load("picks.html" + window.location.search, hideLoading);
 				content.slideDown();
+				});
 				break;
 			default:
 				//hide loading bar if there is no selected section

@@ -36,10 +36,6 @@
 	<script src="{SystemURL}/javascripts/jquery.tooltip.js" type="text/javascript" language="javascript"></script>
 	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
 
-	<!-- fade in -->
-	<style type="text/css">#container{display:none;}</style>
-	<script type="text/javascript">$(document).ready(function() {$( '#container' ).fadeIn("slow");});</script>
-
     <!-- Caption -->
 	<script type="text/javascript" rel="javasript">
 		/* <![CDATA[ */
@@ -58,6 +54,46 @@
 			});
 		/* ]]> */
 	</script>
+	<script type="text/javascript">
+	  $(document).ready(function() 
+	  {
+		$( '#container' ).fadeIn("slow");
+		var result = {};
+		// var sections = $("#menu li");
+		var loading = $("#loading");
+		var content = $("#content");
+
+		if (window.location.search)
+		{
+			// split up the query string and store in an associative array
+			var params = window.location.search.slice(1).split("&");
+			for (var i = 0; i < params.length; i++)
+			{
+				var tmp = params[i].split("=");
+				result[tmp[0]] = unescape(tmp[1]);
+			}
+		}
+		//load selected section
+		var pageName = result["page"];
+		var found = new Boolean(0);
+		switch(pageName){
+			case "base":
+				content.load("base.html" + window.location.search);
+				found = new Boolean(1);
+				break;
+			case "groups":
+				content.load("groups.html" + window.location.search);
+				found = new Boolean(1);
+				break;
+			case "picks":
+				content.load("picks.html" + window.location.search);
+				found = new Boolean(1);
+				break;
+		}
+		if(found == 0)
+			content.load("base.html" + window.location.search);
+	});
+    </script>
 </head>
 
 <body>
@@ -76,7 +112,6 @@
 <!-- <p class=jclock1><span id=jclock1></span></p> -->
 <!-- <div id="loading"><img src="../images/icons/loading.gif" alt="Loading..." /></div> -->
 <div id="content">
-<!--#include file="/webprofile/base.html" -->
 </div>
 	<div id="footer">
 <!-- {IfShowLanguageTranslatorBarBegin} -->
