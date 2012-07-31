@@ -81,11 +81,66 @@ namespace Aurora.Services.DataService
         #region IGroupsServiceConnector Members
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, ulong EveryonePowers, UUID OwnerRoleID, ulong OwnerPowers)
+        public void CreateGroup(UUID groupID, string name, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish, UUID founderID, UUID OwnerRoleID)
         {
-            object remoteValue = DoRemote(groupID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, EveryonePowers, OwnerRoleID, OwnerPowers);
+            object remoteValue = DoRemote(groupID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, founderID, OwnerRoleID);
             if (remoteValue != null || m_doRemoteOnly)
                 return;
+
+            // Would this be cleaner as (GroupPowers)ulong.MaxValue;
+            ulong OwnerPowers = (ulong)(GroupPowers.Accountable
+                                      | GroupPowers.AllowEditLand
+                                      | GroupPowers.AllowFly
+                                      | GroupPowers.AllowLandmark
+                                      | GroupPowers.AllowRez
+                                      | GroupPowers.AllowSetHome
+                                      | GroupPowers.AllowVoiceChat
+                                      | GroupPowers.AssignMember
+                                      | GroupPowers.AssignMemberLimited
+                                      | GroupPowers.ChangeActions
+                                      | GroupPowers.ChangeIdentity
+                                      | GroupPowers.ChangeMedia
+                                      | GroupPowers.ChangeOptions
+                                      | GroupPowers.CreateRole
+                                      | GroupPowers.DeedObject
+                                      | GroupPowers.DeleteRole
+                                      | GroupPowers.Eject
+                                      | GroupPowers.FindPlaces
+                                      | GroupPowers.Invite
+                                      | GroupPowers.JoinChat
+                                      | GroupPowers.LandChangeIdentity
+                                      | GroupPowers.LandDeed
+                                      | GroupPowers.LandDivideJoin
+                                      | GroupPowers.LandEdit
+                                      | GroupPowers.LandEjectAndFreeze
+                                      | GroupPowers.LandGardening
+                                      | GroupPowers.LandManageAllowed
+                                      | GroupPowers.LandManageBanned
+                                      | GroupPowers.LandManagePasses
+                                      | GroupPowers.LandOptions
+                                      | GroupPowers.LandRelease
+                                      | GroupPowers.LandSetSale
+                                      | GroupPowers.ModerateChat
+                                      | GroupPowers.ObjectManipulate
+                                      | GroupPowers.ObjectSetForSale
+                                      | GroupPowers.ReceiveNotices
+                                      | GroupPowers.RemoveMember
+                                      | GroupPowers.ReturnGroupOwned
+                                      | GroupPowers.ReturnGroupSet
+                                      | GroupPowers.ReturnNonGroup
+                                      | GroupPowers.RoleProperties
+                                      | GroupPowers.SendNotices
+                                      | GroupPowers.SetLandingPoint
+                                      | GroupPowers.StartProposal
+                                      | GroupPowers.VoteOnProposal);
+
+            ulong EveryonePowers = (ulong)(GroupPowers.AllowSetHome |
+                                                           GroupPowers.Accountable |
+                                                           GroupPowers.JoinChat |
+                                                           GroupPowers.AllowVoiceChat |
+                                                           GroupPowers.ReceiveNotices |
+                                                           GroupPowers.StartProposal |
+                                                           GroupPowers.VoteOnProposal);
 
             Dictionary<string, object> row = new Dictionary<string, object>(11);
             row["GroupID"] = groupID;

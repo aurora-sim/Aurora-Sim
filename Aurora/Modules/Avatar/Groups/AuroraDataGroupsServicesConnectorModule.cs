@@ -41,14 +41,6 @@ namespace Aurora.Modules.Groups
 {
     public class AuroraDataGroupsServicesConnectorModule : ISharedRegionModule, IGroupsServicesConnector
     {
-        public const GroupPowers m_DefaultEveryonePowers = GroupPowers.AllowSetHome |
-                                                           GroupPowers.Accountable |
-                                                           GroupPowers.JoinChat |
-                                                           GroupPowers.AllowVoiceChat |
-                                                           GroupPowers.ReceiveNotices |
-                                                           GroupPowers.StartProposal |
-                                                           GroupPowers.VoteOnProposal;
-
         private readonly Dictionary<UUID, ChatSession> ChatSessions = new Dictionary<UUID, ChatSession>();
         private IGroupsServiceConnector GroupsConnector;
         private IUserAccountService m_accountService;
@@ -67,56 +59,9 @@ namespace Aurora.Modules.Groups
             UUID GroupID = UUID.Random();
             UUID OwnerRoleID = UUID.Random();
 
-            // Would this be cleaner as (GroupPowers)ulong.MaxValue;
-            GroupPowers OwnerPowers = GroupPowers.Accountable
-                                      | GroupPowers.AllowEditLand
-                                      | GroupPowers.AllowFly
-                                      | GroupPowers.AllowLandmark
-                                      | GroupPowers.AllowRez
-                                      | GroupPowers.AllowSetHome
-                                      | GroupPowers.AllowVoiceChat
-                                      | GroupPowers.AssignMember
-                                      | GroupPowers.AssignMemberLimited
-                                      | GroupPowers.ChangeActions
-                                      | GroupPowers.ChangeIdentity
-                                      | GroupPowers.ChangeMedia
-                                      | GroupPowers.ChangeOptions
-                                      | GroupPowers.CreateRole
-                                      | GroupPowers.DeedObject
-                                      | GroupPowers.DeleteRole
-                                      | GroupPowers.Eject
-                                      | GroupPowers.FindPlaces
-                                      | GroupPowers.Invite
-                                      | GroupPowers.JoinChat
-                                      | GroupPowers.LandChangeIdentity
-                                      | GroupPowers.LandDeed
-                                      | GroupPowers.LandDivideJoin
-                                      | GroupPowers.LandEdit
-                                      | GroupPowers.LandEjectAndFreeze
-                                      | GroupPowers.LandGardening
-                                      | GroupPowers.LandManageAllowed
-                                      | GroupPowers.LandManageBanned
-                                      | GroupPowers.LandManagePasses
-                                      | GroupPowers.LandOptions
-                                      | GroupPowers.LandRelease
-                                      | GroupPowers.LandSetSale
-                                      | GroupPowers.ModerateChat
-                                      | GroupPowers.ObjectManipulate
-                                      | GroupPowers.ObjectSetForSale
-                                      | GroupPowers.ReceiveNotices
-                                      | GroupPowers.RemoveMember
-                                      | GroupPowers.ReturnGroupOwned
-                                      | GroupPowers.ReturnGroupSet
-                                      | GroupPowers.ReturnNonGroup
-                                      | GroupPowers.RoleProperties
-                                      | GroupPowers.SendNotices
-                                      | GroupPowers.SetLandingPoint
-                                      | GroupPowers.StartProposal
-                                      | GroupPowers.VoteOnProposal;
-
             GroupsConnector.CreateGroup(GroupID, name, charter, showInList,
-                                        insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID,
-                                        ((ulong) m_DefaultEveryonePowers), OwnerRoleID, ((ulong) OwnerPowers));
+                                        insigniaID, 0, openEnrollment, allowPublish, maturePublish, founderID, 
+                                        OwnerRoleID);
 
             return GroupID;
         }
