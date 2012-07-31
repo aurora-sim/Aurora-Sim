@@ -217,15 +217,15 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool MakeChildAgent(UUID AgentID, GridRegion destination)
+        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool markAgentAsLeaving)
         {
             foreach (IScene s in m_sceneList)
             {
-                if (s.RegionInfo.RegionID != destination.RegionID) continue;
+                if (s.RegionInfo.RegionID != leavingRegion) continue;
                 //MainConsole.Instance.Debug("[LOCAL COMMS]: Found region to send ChildAgentUpdate");
                 IEntityTransferModule transferModule = s.RequestModuleInterface<IEntityTransferModule>();
                 if (transferModule == null) continue;
-                transferModule.MakeChildAgent(s.GetScenePresence(AgentID), new GridRegion(s.RegionInfo), true);
+                transferModule.MakeChildAgent(s.GetScenePresence(AgentID), destination, markAgentAsLeaving);
                 return true;
             }
             return false;

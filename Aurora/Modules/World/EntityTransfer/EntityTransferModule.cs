@@ -347,9 +347,10 @@ namespace Aurora.Modules.EntityTransfer
             if(sp == null)
                 return;
 
-            if(markAgentAsLeaving)
-                sp.SetAgentLeaving(null);
-            sp.Scene.AuroraEventManager.FireGenericEventHandler("SendingAttachments", new object[] { finalDestination, sp });
+            if(!markAgentAsLeaving)
+                sp.SetAgentLeaving(finalDestination);
+            else
+                sp.Scene.AuroraEventManager.FireGenericEventHandler("SendingAttachments", new object[] { finalDestination, sp });
 
             //Kill the groups here, otherwise they will become ghost attachments 
             //  and stay in the sim, they'll get readded below into the new sim
@@ -881,13 +882,18 @@ namespace Aurora.Modules.EntityTransfer
                 return false;
             }
 
+            IAttachmentsModule attachmentsModule = scene.RequestModuleInterface<IAttachmentsModule>();
+            attachmentsModule.AttachObjectFromInworldObject(sog.LocalId, scene.GetScenePresence(sog.OwnerID).ControllingClient, newObject, 0);
+            /*newObject.RootPart.IsAttachment = true;
+            newObject.RootPart.AttachedAvatar = sog.OwnerID;
+            newObject.RootPart.AttachmentPoint = 0;
             if (!AddSceneObject(scene, newObject))
             {
                 MainConsole.Instance.WarnFormat("[EntityTransferModule]: Problem adding scene object {0} in {1} ", sog.UUID, scene.RegionInfo.RegionName);
                 return false;
             }
 
-            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero, false);
+            newObject.RootPart.ParentGroup.CreateScriptInstances(0, false, StateSource.PrimCrossing, UUID.Zero, false);*/
 
             return true;
         }
@@ -928,7 +934,7 @@ namespace Aurora.Modules.EntityTransfer
 
                     return false;
                 }
-                if (scene.SceneGraph.AddPrimToScene(sceneObject))
+                if (scene.SceneGraph.RestorePrimToScene(sceneObject, true))
                 {
                     if(sceneObject.RootPart.IsSelected)
                         sceneObject.RootPart.CreateSelected = true;

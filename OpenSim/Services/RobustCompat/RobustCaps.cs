@@ -83,8 +83,13 @@ namespace OpenSim.Services.Robust
             object[] parameters = (object[])param;
             IScenePresence sp = (IScenePresence)parameters[1];
             Interfaces.GridRegion dest = (Interfaces.GridRegion)parameters[0];
-            // this is never used.. 
-            IAttachmentsModule att = sp.Scene.RequestModuleInterface<IAttachmentsModule> ();
+            ISceneManager manager = sp.Scene.RequestModuleInterface<ISceneManager>();
+            if (manager != null)
+            {
+                foreach (var scene in manager.GetAllScenes())
+                    if (dest.RegionID == scene.RegionInfo.RegionID)
+                        return null;
+            }
             if (m_userAttachments.ContainsKey(sp.UUID))
             {
                 Util.FireAndForget (delegate
@@ -94,6 +99,7 @@ namespace OpenSim.Services.Robust
                         Connectors.Simulation.SimulationServiceConnector ssc = new Connectors.Simulation.SimulationServiceConnector ();
                         attachment.IsDeleted = false;//Fix this, we 'did' get removed from the sim already
                         //Now send it to them
+
                         ssc.CreateObject (dest, (ISceneObject)attachment);
                         attachment.IsDeleted = true;
                     }

@@ -166,7 +166,7 @@ namespace OpenSim.Services.Interfaces
         /// </summary>
         /// <param name = "AgentID"></param>
         /// <param name = "Region"></param>
-        bool MakeChildAgent(UUID AgentID, GridRegion Region);
+        bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion Region, bool markAgentAsLeaving);
 
         /// <summary>
         ///   Tells the region that the agent was not able to leave the region and needs to be resumed

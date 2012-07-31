@@ -118,7 +118,7 @@ namespace OpenSim.Services
                 if (map != null)
                 {
                     if (map["Method"] == "MakeChildAgent")
-                        DoMakeChildAgent(agentID, regionID);
+                        DoMakeChildAgent(agentID, map["LeavingRegion"].AsUUID(), regionID, map["MarkAgentAsLeaving"].AsBoolean());
                     else if (map["Method"] == "FailedToMoveAgentIntoNewRegion")
                         FailedToMoveAgentIntoNewRegion(agentID, regionID);
                     else
@@ -159,9 +159,9 @@ namespace OpenSim.Services
             }
         }
 
-        private void DoMakeChildAgent(UUID agentID, UUID regionID)
+        private void DoMakeChildAgent(UUID agentID, UUID leavingRegion, UUID regionID, bool markAgentAsLeaving)
         {
-            m_SimulationService.MakeChildAgent(agentID, new GridRegion {RegionID = regionID});
+            m_SimulationService.MakeChildAgent(agentID, leavingRegion, new GridRegion { RegionID = regionID }, markAgentAsLeaving);
         }
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)

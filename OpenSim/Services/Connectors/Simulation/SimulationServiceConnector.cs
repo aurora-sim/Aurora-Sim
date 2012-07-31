@@ -197,9 +197,9 @@ namespace OpenSim.Services.Connectors.Simulation
             return false;
         }
 
-        public bool MakeChildAgent(UUID AgentID, GridRegion destination)
+        public bool MakeChildAgent(UUID AgentID, UUID leavingRegion, GridRegion destination, bool markAgentAsLeaving)
         {
-            if (m_localBackend.MakeChildAgent(AgentID, destination))
+            if (m_localBackend.MakeChildAgent(AgentID, leavingRegion, destination, markAgentAsLeaving))
                 return true;
 
             // Eventually, we want to use a caps url instead of the agentID
@@ -207,6 +207,8 @@ namespace OpenSim.Services.Connectors.Simulation
 
             OSDMap data = new OSDMap();
             data["Method"] = "MakeChildAgent";
+            data["MarkAgentAsLeaving"] = markAgentAsLeaving;
+            data["LeavingRegion"] = leavingRegion;
             try
             {
                 WebUtils.PostToService(uri, data);
