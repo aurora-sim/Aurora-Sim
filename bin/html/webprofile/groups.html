@@ -20,28 +20,20 @@
 
   <tbody>
     <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
-	    <div class="user_agent_profile_picture">
-	    <a href="#">
-	    <img height="256"
-		     src="{UserPictureURL}" 
-		     alt="{UserProfileFor}: {UserName} ({UserType})"
-			 title="{UserProfileFor}: {UserName} ({UserType})" /></a>
-	    <p class="user_agent_profile_picture_text">{UsersGroupsText}: {GroupsJoined}</p></div>
-	  </td>
       <td class="user_agent_profile_left_size"><p>{UsersGroupsText}:</p></td>
 	  <td class="user_agent_profile_right"><p>{GroupsJoined}</p></td>
     </tr>
+
 {GroupsArrayBegin}
     <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
-	    <div class="user_agent_profile_picture">
+	  <td/>
+      <td class="group_profile_picture">
+	    <div class="group_profile_picture">
 	    <a href="#">
-	    <img height="256"
+	    <img height="32"
 		     src="{GroupPictureURL}" 
 		     alt="{GroupName}"
-			 title="{GroupName}" /></a>
-	    <p class="user_agent_profile_picture_text">{GroupName}</p></div>
+			 title="{GroupName}" /></a></div>
 	  </td>
       <td class="user_agent_profile_right"><p>{GroupName}</p></td>
     </tr>
