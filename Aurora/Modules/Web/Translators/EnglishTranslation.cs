@@ -55,7 +55,8 @@ namespace Aurora.Modules.Web.Translators
                     return "Forgot Password?";
                 case "Submit":
                     return "Submit";
-
+                case "TypeUserNameToConfirm":
+                    return "Please type the username of this account to confirm you want to delete this account";
 
                 case "SpecialWindowTitleText":
                     return "Special Info Window Title";

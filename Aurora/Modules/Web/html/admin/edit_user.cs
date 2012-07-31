@@ -74,7 +74,12 @@ namespace Aurora.Modules.Web
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitDeleteUser")
             {
-                userService.DeleteUser(user, "", false, false);
+                string username = requestParameters["username"].ToString();
+                error = "Deleted user successfully";
+                if (username == account.Name)
+                    userService.DeleteUser(user, "", false, false);
+                else
+                    error = "The user name did not match";
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitTempBanUser")
@@ -170,6 +175,7 @@ namespace Aurora.Modules.Web
             vars.Add("DeleteUserInfoText", translator.GetTranslatedString("DeleteUserInfoText"));
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
             vars.Add("Login", translator.GetTranslatedString("Login"));
+            vars.Add("TypeUserNameToConfirm", translator.GetTranslatedString("TypeUserNameToConfirm"));
 
             vars.Add("AdminLoginInAsUserText", translator.GetTranslatedString("AdminLoginInAsUserText"));
 			vars.Add("AdminLoginInAsUserInfoText", translator.GetTranslatedString("AdminLoginInAsUserInfoText"));
