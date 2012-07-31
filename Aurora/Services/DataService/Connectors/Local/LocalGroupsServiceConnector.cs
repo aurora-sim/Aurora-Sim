@@ -178,6 +178,32 @@ namespace Aurora.Services.DataService
             SetAgentActiveGroup(founderID, groupID);
         }
 
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        public void UpdateGroupFounder(UUID groupID, UUID newOwner, bool keepOldOwnerInGroup)
+        {
+            object remoteValue = DoRemote(groupID, newOwner, keepOldOwnerInGroup);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+
+            GroupRecord record = GetGroupRecord(UUID.Zero, groupID, "");
+            bool newUserExists = GetAgentGroupMemberData(newOwner, groupID, newOwner) != null;
+
+            Dictionary<string, object> values = new Dictionary<string, object>(1);
+            values["FounderID"] = newOwner;
+            QueryFilter filter = new QueryFilter();
+            filter.andFilters["GroupID"] = groupID;
+
+            data.Update("osgroup", values, null, filter, null, null);
+
+            if (!newUserExists)
+                AddAgentToGroup(newOwner, newOwner, groupID, record.OwnerRoleID);
+            else
+                AddAgentToRole(newOwner, newOwner, groupID, record.OwnerRoleID);
+
+            if (!keepOldOwnerInGroup)
+                RemoveAgentFromGroup(newOwner, record.FounderID, groupID);
+        }
+
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
         public void UpdateGroup(UUID requestingAgentID, UUID groupID, string charter, int showInList, UUID insigniaID, int membershipFee, int openEnrollment, int allowPublish, int maturePublish)
         {
