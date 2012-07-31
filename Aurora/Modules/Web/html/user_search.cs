@@ -55,7 +55,8 @@ namespace Aurora.Modules.Web
                 foreach (var user in users)
                 {
                     usersList.Add(new Dictionary<string, object> { { "UserName", user.Name }, 
-                        { "UserID", user.PrincipalID } });
+                        { "UserID", user.PrincipalID },
+                        { "CanEdit", Authenticator.CheckAdminAuthentication(httpRequest) } });
                 }
             }
             else

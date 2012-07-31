@@ -21,7 +21,7 @@ namespace Aurora.Modules.Web
                        };
         } }
 
-        public bool RequiresAuthentication { get { return false; } }
+        public bool RequiresAuthentication { get { return true; } }
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,

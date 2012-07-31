@@ -116,8 +116,17 @@ namespace Aurora.Modules.Web
                 if (messageModule != null)
                     messageModule.KickUser(account.PrincipalID, message);
             }
+            if (requestParameters.ContainsKey("Submit") &&
+                requestParameters["Submit"].ToString() == "SubmitMessageUser")
+            {
+                string message = requestParameters["Message"].ToString();
+                IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
+                if (messageModule != null)
+                    messageModule.MessageUser(account.PrincipalID, message);
+            }
             string bannedUntil = "";
             bool userBanned = agent == null ? false : ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);
+            bool TempUserBanned = false;
             if (userBanned)
             {
                 if ((agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan && agent.OtherAgentInformation["TemperaryBanInfo"].AsDate() < DateTime.Now)
@@ -131,11 +140,18 @@ namespace Aurora.Modules.Web
                 else
                 {
                     DateTime bannedTime = agent.OtherAgentInformation["TemperaryBanInfo"].AsDate();
+                    TempUserBanned = bannedTime != Util.UnixEpoch;
                     bannedUntil = string.Format("{0} {1}", bannedTime.ToShortDateString(), bannedTime.ToLongTimeString());
                 }
             }
+            bool userOnline = false;
+            ICapsService capsService = webInterface.Registry.RequestModuleInterface<ICapsService>();
+            if (capsService != null)
+                userOnline = capsService.GetClientCapsService(account.PrincipalID) != null;
+            vars.Add("UserOnline", userOnline);
             vars.Add("NotUserBanned", !userBanned);
             vars.Add("UserBanned", userBanned);
+            vars.Add("TempUserBanned", TempUserBanned);
             vars.Add("BannedUntil", bannedUntil);
             vars.Add("EmailValue", account.Email);
             vars.Add("UserID", account.PrincipalID);
@@ -170,9 +186,14 @@ namespace Aurora.Modules.Web
             vars.Add("EdittingText", translator.GetTranslatedString("EdittingText"));
             vars.Add("BannedUntilText", translator.GetTranslatedString("BannedUntilText"));
 
+            vars.Add("KickAUserInfoText", translator.GetTranslatedString("KickAUserInfoText"));
             vars.Add("KickAUserText", translator.GetTranslatedString("KickAUserText"));
             vars.Add("KickMessageText", translator.GetTranslatedString("KickMessageText"));
             vars.Add("KickUserText", translator.GetTranslatedString("KickUserText"));
+
+            vars.Add("MessageAUserText", translator.GetTranslatedString("MessageAUserText"));
+            vars.Add("MessageAUserInfoText", translator.GetTranslatedString("MessageAUserInfoText"));
+            vars.Add("MessageUserText", translator.GetTranslatedString("MessageUserText"));
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
             for (int i = 0; i <= 100; i++)

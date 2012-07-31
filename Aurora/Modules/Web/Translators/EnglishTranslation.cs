@@ -510,11 +510,19 @@ namespace Aurora.Modules.Web.Translators
                 case "BannedUntilText":
                     return "User banned until:";
                 case "KickAUserText":
-                    return "Kick A User (Logs them out within 30 seconds)";
+                    return "Kick User";
+                case "KickAUserInfoText":
+                    return "Kicks a user from the grid (logs them out within 30 seconds)";
                 case "KickMessageText":
                     return "Message To User";
                 case "KickUserText":
                     return "Kick User";
+                case "MessageAUserText":
+                    return "Send User A Message";
+                case "MessageAUserInfoText":
+                    return "Sends a user a blue-box message (will arrive within 30 seconds)";
+                case "MessageUserText":
+                    return "Message User";
 
                 //factory_reset
                 case "FactoryReset":

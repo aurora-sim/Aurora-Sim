@@ -40,68 +40,20 @@
 	</form>
 
 {IfUserBannedBegin}
-<form action="index.html?page=edit_user" method="post">
-<table id="login">
-  <caption></caption>
-  
-  <thead>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-    </tr>
-  </thead>
-  
-  <tfoot>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-    </tr>
-  </tfoot>
-
-  <tbody>
-    <tr>
-      <td class="login_left"><p id="logname_label">{AdminUnbanUserText}</p></td>
-      <td class="login_right">{BannedUntilText} {BannedUntil}</td>
-    </tr>
-
-    <tr>
-      <td class="login_left"></td>
-      <td class="login_right">
-	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
-		<button id="login_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
-	  </td>
-    </tr>
-  </tbody>
-</table>
-</form>
+	<h3>{AdminUnbanUserText}</h3>
+{IfTempUserBannedBegin}
+	<p class="info">{BannedUntilText} {BannedUntil}</p>
+{IfTempUserBannedEnd}
+	<form action="index.html?page=edit_user" method="post">
+		<input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="delete_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
+	</form>
 {IfUserBannedEnd}
-
-
 {IfNotUserBannedBegin}
 <h3>{AdminTempBanUserText}</h3>
 <p class="info">{AdminTempBanUserInfoText}</p>
 <form action="index.html?page=edit_user" method="post">
 <table id="login">
-  <caption></caption>
-  
-  <thead>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-      <th class="login_right"></th>
-      <th class="login_right"></th>
-    </tr>
-  </thead>
-  
-  <tfoot>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-      <th class="login_right"></th>
-      <th class="login_right"></th>
-    </tr>
-  </tfoot>
-
   <tbody>
     <tr>
       <td class="login_left"><p id="logname_label">{TimeUntilUnbannedText}</p></td>
@@ -146,26 +98,11 @@
 </form>
 {IfNotUserBannedEnd}
 
-
-<p class="info">{KickAUserText}</p>
+{IfUserOnlineBegin}
+<h3>{KickAUserText}</h3>
+<p class="info">{KickAUserInfoText}</p>
 <form action="index.html?page=edit_user" method="post">
 <table id="login">
-  <caption></caption>
-  
-  <thead>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-    </tr>
-  </thead>
-  
-  <tfoot>
-    <tr>
-      <th class="login_left"></th>
-      <th class="login_right"></th>
-    </tr>
-  </tfoot>
-
   <tbody>
     <tr>
       <td class="login_left"><p id="logname_label">{KickMessageText}</p></td>
@@ -181,4 +118,24 @@
   </tbody>
 </table>
 </form>
+<h3>{MessageAUserText}</h3>
+<p class="info">{MessageAUserInfoText}</p>
+<form action="index.html?page=edit_user" method="post">
+<table id="login">
+  <tbody>
+    <tr>
+      <td class="login_left"><p id="logname_label">{KickMessageText}</p></td>
+      <td class="login_right"><input label="Message" id="Message" name="Message" type="text" size="25" maxlength="15" value=""></td>
+    </tr>
+    <tr>
+      <td class="login_left"></td>
+      <td class="login_right">
+	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<button id="login_bouton" type="Submit" name="Submit" value="SubmitMessageUser">{MessageUserText}</button>
+	  </td>
+    </tr>
+  </tbody>
+</table>
+</form>
+{IfUserOnlineEnd}
 </div>

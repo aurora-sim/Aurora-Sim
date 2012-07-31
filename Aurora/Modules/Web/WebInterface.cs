@@ -250,11 +250,11 @@ namespace Aurora.Modules.Web
                 {
                     if (!Authenticator.CheckAuthentication(httpRequest))
                         return null;
-                    if (page.RequiresAdminAuthentication)
-                    {
-                        if (!Authenticator.CheckAdminAuthentication(httpRequest))
-                            return null;
-                    }
+                }
+                if (page.RequiresAdminAuthentication)
+                {
+                    if (!Authenticator.CheckAdminAuthentication(httpRequest))
+                        return null;
                 }
                 vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator);
                 return vars;
