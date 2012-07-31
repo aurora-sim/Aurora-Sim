@@ -81,7 +81,7 @@ namespace Aurora.Framework
         GroupMembersData GetAgentGroupMemberData(UUID requestingAgentID, UUID GroupID, UUID AgentID);
         List<GroupMembersData> GetGroupMembers(UUID requestingAgentID, UUID GroupID);
 
-        List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags);
+        List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, uint? start, uint? count, uint queryflags);
 
         List<GroupRolesData> GetAgentGroupRoles(UUID requestingAgentID, UUID AgentID, UUID GroupID);
         List<GroupRolesData> GetGroupRoles(UUID requestingAgentID, UUID GroupID);

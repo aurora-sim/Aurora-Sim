@@ -359,7 +359,7 @@ namespace Aurora.Modules.Groups
             XmlRpcCall(requestingAgentID, "groups.removeAgentFromGroupRole", param);
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart,
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, uint? start, uint? count,
                                                    uint queryflags)
         {
             Hashtable param = new Hashtable();

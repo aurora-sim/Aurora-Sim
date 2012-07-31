@@ -662,7 +662,6 @@ namespace Aurora.Modules.Groups
 
         public void InviteGroupRequest(IClientAPI remoteClient, UUID groupID, UUID invitedAgentID, UUID roleID)
         {
-
             InviteGroup(remoteClient, GetRequestingAgentID(remoteClient), groupID, invitedAgentID, roleID);
         }
 
@@ -1060,6 +1059,25 @@ namespace Aurora.Modules.Groups
             }
         }
 
+        private void OutgoingInstantMessage(GridInstantMessage msg, UUID msgTo, bool localOnly)
+        {
+            if (m_debugEnabled) MainConsole.Instance.InfoFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
+
+            IClientAPI localClient = GetActiveClient(msgTo);
+            if (localClient != null)
+            {
+                if (m_debugEnabled)
+                    MainConsole.Instance.InfoFormat("[GROUPS]: MsgTo ({0}) is local, delivering directly", localClient.Name);
+                localClient.SendInstantMessage(msg);
+            }
+            else if(!localOnly)
+            {
+                if (m_debugEnabled)
+                    MainConsole.Instance.InfoFormat("[GROUPS]: MsgTo ({0}) is not local, delivering via TransferModule", msgTo);
+                m_msgTransferModule.SendInstantMessage(msg);
+            }
+        }
+
         #endregion
 
         #region ISharedRegionModule Members
@@ -1441,7 +1459,7 @@ namespace Aurora.Modules.Groups
 
                 remoteClient.SendDirGroupsReply(queryID,
                                                 m_groupData.FindGroups(GetRequestingAgentID(remoteClient), queryText,
-                                                                       queryStart, queryFlags).ToArray());
+                                                                       (uint)queryStart, 50, queryFlags).ToArray());
             }
         }
 
@@ -1649,40 +1667,7 @@ namespace Aurora.Modules.Groups
                         }
                     };
 
-                    // Send notice out to everyone that wants notices
-                    foreach (
-                        GroupMembersData member in
-                            m_groupData.GetGroupMembers(GetRequestingAgentID(remoteClient), GroupID))
-                    {
-                        if (m_debugEnabled)
-                        {
-                            UserAccount targetUser =
-                                m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.AllScopeIDs,
-                                                                                 member.AgentID);
-                            if (targetUser != null)
-                            {
-                                MainConsole.Instance.DebugFormat(
-                                    "[GROUPS]: Prepping group notice {0} for agent: {1} who Accepts Notices ({2})",
-                                    NoticeID, targetUser.FirstName + " " + targetUser.LastName, member.AcceptNotices);
-                            }
-                            else
-                            {
-                                MainConsole.Instance.DebugFormat(
-                                    "[GROUPS]: Prepping group notice {0} for agent: {1} who Accepts Notices ({2})",
-                                    NoticeID, member.AgentID, member.AcceptNotices);
-                            }
-                        }
-
-                        if (member.AcceptNotices)
-                        {
-                            // Build notice IIM
-                            GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), notice,
-                                                                         (byte) InstantMessageDialog.GroupNotice);
-
-                            msg.toAgentID = member.AgentID;
-                            OutgoingInstantMessage(msg, member.AgentID);
-                        }
-                    }
+                    SendGroupNoticeToUsers(remoteClient, notice, false);
                 }
             }
             else if ((im.dialog == (byte) InstantMessageDialog.GroupNoticeInventoryDeclined) ||
@@ -1761,6 +1746,44 @@ namespace Aurora.Modules.Groups
                 // as it goes through OnGridInstantMessage
                 // which will check and then reresent the notice
                 im.dialog = 211;
+            }
+        }
+
+        public void SendGroupNoticeToUsers(IClientAPI remoteClient, GroupNoticeInfo notice, bool localOnly)
+        {
+            // Send notice out to everyone that wants notices
+            foreach (
+                GroupMembersData member in
+                    m_groupData.GetGroupMembers(GetRequestingAgentID(remoteClient), notice.GroupID))
+            {
+                if (m_debugEnabled)
+                {
+                    UserAccount targetUser =
+                        m_sceneList[0].UserAccountService.GetUserAccount(remoteClient.Scene.RegionInfo.AllScopeIDs,
+                                                                         member.AgentID);
+                    if (targetUser != null)
+                    {
+                        MainConsole.Instance.DebugFormat(
+                            "[GROUPS]: Prepping group notice {0} for agent: {1} who Accepts Notices ({2})",
+                            notice.noticeData.NoticeID, targetUser.FirstName + " " + targetUser.LastName, member.AcceptNotices);
+                    }
+                    else
+                    {
+                        MainConsole.Instance.DebugFormat(
+                            "[GROUPS]: Prepping group notice {0} for agent: {1} who Accepts Notices ({2})",
+                            notice.noticeData.NoticeID, member.AgentID, member.AcceptNotices);
+                    }
+                }
+
+                if (member.AcceptNotices)
+                {
+                    // Build notice IIM
+                    GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), notice,
+                                                                 (byte)InstantMessageDialog.GroupNotice);
+
+                    msg.toAgentID = member.AgentID;
+                    OutgoingInstantMessage(msg, member.AgentID, localOnly);
+                }
             }
         }
 

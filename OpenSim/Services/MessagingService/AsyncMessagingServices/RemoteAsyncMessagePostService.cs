@@ -26,10 +26,11 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using Aurora.Framework;
 using Aurora.Simulation.Base;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
-using Aurora.Framework;
 using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
@@ -43,6 +44,13 @@ namespace OpenSim.Services.MessagingService
         protected IAsyncMessageRecievedService m_asyncReceiverService;
 
         protected Dictionary<ulong, OSDArray> m_regionMessages = new Dictionary<ulong, OSDArray>();
+        protected List<MessageHolder> m_allRegionMessages = new List<MessageHolder>();
+
+        protected class MessageHolder
+        {
+            public List<ulong> RegionsPreviouslyPosted = new List<ulong>();
+            public OSDMap Message;
+        }
         protected IRegistryCore m_registry;
 
         public string Name
@@ -63,6 +71,16 @@ namespace OpenSim.Services.MessagingService
                 m_regionMessages.Add(RegionHandle, new OSDArray());
 
             m_regionMessages[RegionHandle].Add(request);
+        }
+
+        /// <summary>
+        ///   Post a new message to the given region by region handle
+        /// </summary>
+        /// <param name = "RegionHandle"></param>
+        /// <param name = "request"></param>
+        public void PostToAll(OSDMap request)
+        {
+            m_allRegionMessages.Add(new MessageHolder { Message = request });
         }
 
         #endregion
@@ -122,6 +140,11 @@ namespace OpenSim.Services.MessagingService
                                         //Get the array, then remove it
                                         OSDArray array = m_regionMessages[regionHandle];
                                         m_regionMessages.Remove(regionHandle);
+                                        foreach(var test in m_allRegionMessages.Where(u => !u.RegionsPreviouslyPosted.Contains(regionHandle)))
+                                        {
+                                            array.Add(test.Message);
+                                            test.RegionsPreviouslyPosted.Add(regionHandle);
+                                        }
                                         mapresponse[regionHandle.ToString()] = array;
                                     }
                                 }

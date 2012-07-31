@@ -46,6 +46,14 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateCachedData(UUID agentID, CachedUserInfo cachedInfo);
 
         /// <summary>
+        /// Sends a new notice out to all users in the sim
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="notice"></param>
+        /// <param name="localOnly"></param>
+        void SendGroupNoticeToUsers(IClientAPI remoteClient, GroupNoticeInfo notice, bool localOnly);
+
+        /// <summary>
         ///   Create a group
         /// </summary>
         /// <param name = "remoteClient"></param>

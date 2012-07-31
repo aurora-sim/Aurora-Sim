@@ -151,11 +151,11 @@ namespace Aurora.Modules.Groups
             GroupsConnector.RemoveAgentFromRole(requestingAgentID, AgentID, GroupID, RoleID);
         }
 
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int queryStart,
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, uint? start, uint? count,
                                                    uint queryflags)
         {
             //TODO: Fix this.. should be in the search module
-            return GroupsConnector.FindGroups(requestingAgentID, search, queryStart, queryflags);
+            return GroupsConnector.FindGroups(requestingAgentID, search, start, count, queryflags);
         }
 
         public GroupProfileData GetGroupProfile(UUID requestingAgentID, UUID GroupID)

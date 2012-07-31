@@ -95,6 +95,14 @@ namespace OpenSim.Services.Interfaces
         /// <param name = "RegionHandle"></param>
         /// <param name = "request"></param>
         void Post(ulong RegionHandle, OSDMap request);
+
+        /// <summary>
+        ///   Post a request to all regions asyncronously
+        ///   This request will be picked up by the regions normally within 30 seconds
+        /// </summary>
+        /// <param name = "RegionHandle"></param>
+        /// <param name = "request"></param>
+        void PostToAll(OSDMap request);
     }
 
     public class LoginAgentArgs : IDataTransferable

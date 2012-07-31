@@ -1358,9 +1358,9 @@ namespace Aurora.Services.DataService
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
-        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, int StartQuery, uint queryflags)
+        public List<DirGroupsReplyData> FindGroups(UUID requestingAgentID, string search, uint? start, uint? count, uint queryflags)
         {
-            object remoteValue = DoRemote(requestingAgentID, search, StartQuery, queryflags);
+            object remoteValue = DoRemote(requestingAgentID, search, start, count, queryflags);
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<DirGroupsReplyData>)remoteValue;
 
@@ -1373,7 +1373,7 @@ namespace Aurora.Services.DataService
                 "ShowInList",
                 "AllowPublish",
                 "MaturePublish"
-            }, "osgroup", filter, null, (uint)StartQuery, 50);
+            }, "osgroup", filter, null, start, count);
 
             List<DirGroupsReplyData> Reply = new List<DirGroupsReplyData>();
 

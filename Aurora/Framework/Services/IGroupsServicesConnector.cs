@@ -43,7 +43,7 @@ namespace Aurora.Framework
 
         GroupRecord GetGroupRecord(UUID RequestingAgentID, UUID GroupID, string GroupName);
         GroupProfileData GetGroupProfile(UUID RequestingAgentID, UUID GroupID);
-        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, int queryStart, uint queryFlags);
+        List<DirGroupsReplyData> FindGroups(UUID RequestingAgentID, string search, uint? start, uint? count, uint queryFlags);
         List<GroupMembersData> GetGroupMembers(UUID RequestingAgentID, UUID GroupID);
 
         void AddGroupRole(UUID RequestingAgentID, UUID groupID, UUID roleID, string name, string description,

@@ -39,7 +39,7 @@ using OpenSim.Services.Interfaces;
 
 namespace OpenSim.Services.MessagingService
 {
-    public class GroupProcessing : IService
+    public class GroupProcessing : IGroupNotificationService, IService
     {
         #region Declares
 
@@ -168,7 +168,28 @@ namespace OpenSim.Services.MessagingService
                 if (gm != null)
                     gm.UpdateUsersForExternalRoleUpdate(groupID, roleID, regionID);
             }
+            else if (message.ContainsKey("Method") && message["Method"] == "SendGroupNoticeToUsers")
+            {
+                //COMES IN ON REGION SIDE FROM AURORA.SERVER
+                GroupNoticeInfo notice = new GroupNoticeInfo();
+                notice.FromOSD((OSDMap)message["Notice"]);
+                IGroupsModule gm = m_registry.RequestModuleInterface<IGroupsModule>();
+                if (gm != null)
+                    gm.SendGroupNoticeToUsers(null, notice, true);
+            }
             return null;
+        }
+
+        public void InformAllUsersOfNewGroupNotice(GroupNoticeInfo groupNotice)
+        {
+            IAsyncMessagePostService messagePost = m_registry.RequestModuleInterface<IAsyncMessagePostService>();
+            if (messagePost != null)
+            {
+                OSDMap outgoingMessage = new OSDMap();
+                outgoingMessage["Method"] = "SendGroupNoticeToUsers";
+                outgoingMessage["Notice"] = groupNotice.ToOSD();
+                messagePost.PostToAll(outgoingMessage);
+            }
         }
     }
 }

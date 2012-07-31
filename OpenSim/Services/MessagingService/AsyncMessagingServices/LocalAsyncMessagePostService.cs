@@ -59,6 +59,16 @@ namespace OpenSim.Services.MessagingService
             m_asyncReceiverService.FireMessageReceived(RegionHandle.ToString(), request);
         }
 
+        /// <summary>
+        ///   Post a new message to all regions
+        /// </summary>
+        /// <param name = "RegionHandle"></param>
+        /// <param name = "request"></param>
+        public void PostToAll(OSDMap request)
+        {
+            m_asyncReceiverService.FireMessageReceived("0", request);
+        }
+
         #endregion
 
         #region IService Members
