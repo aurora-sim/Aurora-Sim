@@ -147,6 +147,7 @@ namespace Griffin.Networking.Channels
                     _socket.Disconnect(true);
                 }
                 catch (SocketException) { }
+                catch (NullReferenceException) { }
             }
             Dispose(true);
             SendUpstream(new Disconnected(null));
