@@ -28,6 +28,12 @@ body  {
 #st4 {display: none;}
 #st5 {color: #FF0000;}
 
+#lg1 {{DisplayLG1}color: #FF0000;}
+#lg2 {{DisplayLG2}color: #FF0000;}
+#lg3 {{DisplayLG3}color: #FF0000;}
+#lg4 {{DisplayLG4}color: #FF0000;}
+#lg5 {{DisplayLG5}color: #FF0000;}
+
 #st1, #st2, #st3, #st4, #st5, #lg1, #lg2, #lg3, #lg4, #lg5, a.styleswitch, a.languageswitch {
 	background: #333;
 	margin-right: 5px;
