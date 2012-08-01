@@ -51,11 +51,7 @@ namespace Aurora.Modules.Web
                 var submitWebPage = webInterface.GetPage("html/" + submitPage.Location);
                 if (submitWebPage != null)
                 {
-                    var submitVars = submitWebPage.Fill(webInterface, "html/" + submitPage.Location, httpRequest, httpResponse, requestParameters, translator);
-                    if (httpResponse.StatusCode == 200)
-                        webInterface.CookieLockPageVars("html/" + submitPage.Location, submitVars, httpResponse);
-                    else
-                        return vars;//It redirected
+                    webInterface.CookieLockPageVars("html/" + submitPage.Location, requestParameters, httpResponse);
                 }
             }
 

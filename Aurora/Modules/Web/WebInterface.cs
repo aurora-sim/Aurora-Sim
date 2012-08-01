@@ -159,7 +159,9 @@ namespace Aurora.Modules.Web
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
-            MainConsole.Instance.Debug("[WebInterface]: Serving " + filename);
+            if (httpRequest.HttpMethod == "POST")
+                httpResponse.KeepAlive = false;
+            MainConsole.Instance.Debug("[WebInterface]: Serving " + filename + ", keep-alive: " + httpResponse.KeepAlive);
             IWebInterfacePage page = GetPage(filename);
             if (page != null)
             {
@@ -193,9 +195,11 @@ namespace Aurora.Modules.Web
                 }
                 else
                 {
-                    Dictionary<string, object> vars;
-                    if(!CheckCookieLocked(filename, httpRequest, httpResponse, out vars))
-                        vars = AddVarsForPage(filename, filename, httpRequest, httpResponse, requestParameters);
+                    Dictionary<string, object> requestParams;
+                    if (CheckCookieLocked(filename, httpRequest, httpResponse, out requestParams))
+                        requestParameters = requestParams;
+                    Dictionary<string, object> vars = AddVarsForPage(filename, filename, httpRequest,
+                        httpResponse, requestParameters);
 
                     AddDefaultVarsForPage(ref vars);
 
@@ -203,7 +207,8 @@ namespace Aurora.Modules.Web
                         return MainServer.NoResponse;
                     if (vars == null)
                         return MainServer.BadRequest;
-                    response = Encoding.UTF8.GetBytes(ConvertHTML(filename, text, httpRequest, httpResponse, requestParameters, vars));
+                    response = Encoding.UTF8.GetBytes(ConvertHTML(filename, text, httpRequest, httpResponse,
+                        requestParameters, vars));
                 }
             }
             else
