@@ -115,7 +115,7 @@ namespace Aurora.Modules.WorldMap
 
             WarpRenderer renderer = new WarpRenderer();
             warp_Object terrainObj = null;
-            renderer.CreateScene(width, height);
+            renderer.CreateScene(m_scene.RegionInfo.RegionSizeX, m_scene.RegionInfo.RegionSizeX);
             renderer.Scene.autoCalcNormals = false;
 
             #region Camera

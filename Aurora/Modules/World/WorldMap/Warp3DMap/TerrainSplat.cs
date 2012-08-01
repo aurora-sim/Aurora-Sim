@@ -187,7 +187,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 }
                 else if (detailTexture[i].Width != region.RegionSizeX || detailTexture[i].Height != region.RegionSizeY)
                 {
-                    detailTexture[i] = ResizeBitmap(detailTexture[i], region.RegionSizeX, region.RegionSizeY);
+                    detailTexture[i] = FixVariableSizedRegionTerrainSize(region, detailTexture[i]);
                 }
             }
 
@@ -236,7 +236,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     float layer = ((height + noise - startHeight)/heightRange)*4f;
                     if (Single.IsNaN(layer))
                         layer = 0f;
-                    layermap[(int)(y * Constants.RegionSize + x)] = Utils.Clamp(layer, 0f, 3f);
+                    layermap[(int)(y * heightmap.Width + x)] = Utils.Clamp(layer, 0f, 3f);
                 }
             }
 
@@ -279,7 +279,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 {
                     for (int x = 0; x < region.RegionSizeX; x++)
                     {
-                        float layer = layermap[y*Constants.RegionSize + x];
+                        float layer = layermap[y*heightmap.Width + x];
 
                         // Select two textures
                         int l0 = (int) Math.Floor(layer);
@@ -322,6 +322,21 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
             #endregion Texture Compositing
 
             return output;
+        }
+
+        private static Bitmap FixVariableSizedRegionTerrainSize(RegionInfo region, Bitmap image)
+        {
+            if (region.RegionSizeX == Constants.RegionSize && region.RegionSizeY == Constants.RegionSize)
+                return image;
+            Bitmap destImage = new Bitmap(region.RegionSizeX, region.RegionSizeY);
+            using(TextureBrush brush = new TextureBrush(new Bitmap(image), System.Drawing.Drawing2D.WrapMode.Tile))
+            using (Graphics g = Graphics.FromImage(destImage))
+                {
+                    // do your painting in here
+                    g.FillRectangle(brush, 0, 0, destImage.Width, destImage.Height);
+                }
+            image.Dispose();
+            return destImage;
         }
 
         public static Bitmap ResizeBitmap(Bitmap b, int nWidth, int nHeight)

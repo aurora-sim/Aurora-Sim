@@ -28,7 +28,6 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using OpenMetaverse;
-using WarpRenderer = Warp3D.Warp3D;
 
 namespace Aurora.Modules.WorldMap.Warp3DMap
 {
