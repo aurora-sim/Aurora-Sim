@@ -322,12 +322,27 @@ namespace Aurora.Modules.WorldMap
 
             Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges,
                                               new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
-            warp_Texture texture = new warp_Texture(image);
+            warp_Texture texture = new warp_Texture(FixVariableSizedRegionTerrainSize(m_scene.RegionInfo, image));
             warp_Material material = new warp_Material(texture);
             material.setReflectivity(0); // reduces tile seams a bit thanks lkalif
             renderer.Scene.addMaterial("TerrainColor", material);
             renderer.SetObjectMaterial("Terrain", "TerrainColor");
             return obj;
+        }
+
+        private Bitmap FixVariableSizedRegionTerrainSize(RegionInfo region, Bitmap image)
+        {
+            if(region.RegionSizeX == Constants.RegionSize && region.RegionSizeY == Constants.RegionSize)
+                return image;
+            Bitmap destImage = new Bitmap(region.RegionSizeX, region.RegionSizeY);
+            using (TextureBrush brush = new TextureBrush(image, WrapMode.Tile))
+            using (Graphics g = Graphics.FromImage(destImage))
+            {
+                // do your painting in here
+                g.FillRectangle(brush, 0, 0, destImage.Width, destImage.Height);
+            }
+            image.Dispose();
+            return destImage;
         }
 
         private static Vector3 SurfaceNormal(Vector3 c1, Vector3 c2, Vector3 c3)
