@@ -79,7 +79,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
         /// </remarks>
         public static Bitmap Splat(ITerrainChannel heightmap, UUID[] textureIDs, float[] startHeights,
                                    float[] heightRanges, Vector3d regionPosition, IAssetService assetService,
-                                   bool textureTerrain)
+                                   bool textureTerrain, RegionInfo region)
         {
             Debug.Assert(textureIDs.Length == 4);
             Debug.Assert(startHeights.Length == 4);
@@ -139,8 +139,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                 Bitmap bitmap = detailTexture[i];
 
                                 // Make sure this texture is the correct size, otherwise resize
-                                if (bitmap.Width != 256 || bitmap.Height != 256)
-                                    bitmap = ImageUtils.ResizeImage(bitmap, 256, 256);
+                                if (bitmap.Width != region.RegionSizeX || bitmap.Height != region.RegionSizeY)
+                                    bitmap = ImageUtils.ResizeImage(bitmap, region.RegionSizeX, region.RegionSizeY);
 
                                 // Save the decoded and resized texture to the cache
                                 byte[] data;
@@ -178,34 +178,28 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 if (detailTexture[i] == null)
                 {
                     // Create a solid color texture for this layer
-                    detailTexture[i] = new Bitmap(256, 256, PixelFormat.Format24bppRgb);
+                    detailTexture[i] = new Bitmap(region.RegionSizeX, region.RegionSizeY, PixelFormat.Format24bppRgb);
                     using (Graphics gfx = Graphics.FromImage(detailTexture[i]))
                     {
                         using (SolidBrush brush = new SolidBrush(DEFAULT_TERRAIN_COLOR[i]))
-                            gfx.FillRectangle(brush, 0, 0, 256, 256);
+                            gfx.FillRectangle(brush, 0, 0, region.RegionSizeX, region.RegionSizeY);
                     }
                 }
-                else if (detailTexture[i].Width != 256 || detailTexture[i].Height != 256)
+                else if (detailTexture[i].Width != region.RegionSizeX || detailTexture[i].Height != region.RegionSizeY)
                 {
-                    detailTexture[i] = ResizeBitmap(detailTexture[i], 256, 256);
+                    detailTexture[i] = ResizeBitmap(detailTexture[i], region.RegionSizeX, region.RegionSizeY);
                 }
             }
 
             #region Layer Map
 
-            float diff = (float)heightmap.Height / (float)Constants.RegionSize;
-            float[] layermap = new float[Constants.RegionSize*Constants.RegionSize];
+            float[] layermap = new float[region.RegionSizeX * region.RegionSizeY];
 
-            for (float y = 0; y < heightmap.Height; y += diff)
+            for (float y = 0; y < heightmap.Height; y++)
             {
-                for (float x = 0; x < heightmap.Height; x += diff)
+                for (float x = 0; x < heightmap.Height; x++)
                 {
-                    float newX = x / diff;
-                    float newY = y / diff;
-                    float height = heightmap[(int)newX, (int)newY];
-
-                    float pctX = newX/255f;
-                    float pctY = newY/255f;
+                    float height = heightmap[(int)x, (int)y];
 
                     // Use bilinear interpolation between the four corners of start height and
                     // height range to select the current values at this position
@@ -214,7 +208,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                         startHeights[2],
                         startHeights[1],
                         startHeights[3],
-                        pctX, pctY);
+                        x, y);
                     startHeight = Utils.Clamp(startHeight, 0f, 255f);
 
                     float heightRange = ImageUtils.Bilinear(
@@ -222,15 +216,15 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                         heightRanges[2],
                         heightRanges[1],
                         heightRanges[3],
-                        pctX, pctY);
+                        x, y);
                     heightRange = Utils.Clamp(heightRange, 0f, 255f);
 
                     // Generate two frequencies of perlin noise based on our global position
                     // The magic values were taken from http://opensimulator.org/wiki/Terrain_Splatting
                     Vector3 vec = new Vector3
                         (
-                        ((float) regionPosition.X + newX)*0.20319f,
-                        ((float) regionPosition.Y + newY)*0.20319f,
+                        ((float) regionPosition.X + x)*0.20319f,
+                        ((float) regionPosition.Y + y)*0.20319f,
                         height*0.25f
                         );
 
@@ -242,7 +236,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                     float layer = ((height + noise - startHeight)/heightRange)*4f;
                     if (Single.IsNaN(layer))
                         layer = 0f;
-                    layermap[(int)(newY * Constants.RegionSize + newX)] = Utils.Clamp(layer, 0f, 3f);
+                    layermap[(int)(y * Constants.RegionSize + x)] = Utils.Clamp(layer, 0f, 3f);
                 }
             }
 
@@ -250,8 +244,8 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
 
             #region Texture Compositing
 
-            Bitmap output = new Bitmap(256, 256, PixelFormat.Format24bppRgb);
-            BitmapData outputData = output.LockBits(new Rectangle(0, 0, 256, 256), ImageLockMode.WriteOnly,
+            Bitmap output = new Bitmap(region.RegionSizeX, region.RegionSizeY, PixelFormat.Format24bppRgb);
+            BitmapData outputData = output.LockBits(new Rectangle(0, 0, region.RegionSizeX, region.RegionSizeY), ImageLockMode.WriteOnly,
                                                     PixelFormat.Format24bppRgb);
 
             unsafe
@@ -259,16 +253,16 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                 // Get handles to all of the texture data arrays
                 BitmapData[] datas = new[]
                                          {
-                                             detailTexture[0].LockBits(new Rectangle(0, 0, 256, 256),
+                                             detailTexture[0].LockBits(new Rectangle(0, 0, region.RegionSizeX, region.RegionSizeY),
                                                                        ImageLockMode.ReadOnly,
                                                                        detailTexture[0].PixelFormat),
-                                             detailTexture[1].LockBits(new Rectangle(0, 0, 256, 256),
+                                             detailTexture[1].LockBits(new Rectangle(0, 0, region.RegionSizeX, region.RegionSizeY),
                                                                        ImageLockMode.ReadOnly,
                                                                        detailTexture[1].PixelFormat),
-                                             detailTexture[2].LockBits(new Rectangle(0, 0, 256, 256),
+                                             detailTexture[2].LockBits(new Rectangle(0, 0, region.RegionSizeX, region.RegionSizeY),
                                                                        ImageLockMode.ReadOnly,
                                                                        detailTexture[2].PixelFormat),
-                                             detailTexture[3].LockBits(new Rectangle(0, 0, 256, 256),
+                                             detailTexture[3].LockBits(new Rectangle(0, 0, region.RegionSizeX, region.RegionSizeY),
                                                                        ImageLockMode.ReadOnly,
                                                                        detailTexture[3].PixelFormat)
                                          };
@@ -281,9 +275,9 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                       (datas[3].PixelFormat == PixelFormat.Format32bppArgb) ? 4 : 3
                                   };
 
-                for (int y = 0; y < Constants.RegionSize; y++)
+                for (int y = 0; y < region.RegionSizeY; y++)
                 {
-                    for (int x = 0; x < Constants.RegionSize; x++)
+                    for (int x = 0; x < region.RegionSizeX; x++)
                     {
                         float layer = layermap[y*Constants.RegionSize + x];
 

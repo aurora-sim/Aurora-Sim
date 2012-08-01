@@ -321,8 +321,10 @@ namespace Aurora.Modules.WorldMap
             Utils.LongToUInts(m_scene.RegionInfo.RegionHandle, out globalX, out globalY);
 
             Bitmap image = TerrainSplat.Splat(terrain, textureIDs, startHeights, heightRanges,
-                                              new Vector3d(globalX, globalY, 0.0), m_scene.AssetService, textureTerrain);
-            warp_Texture texture = new warp_Texture(FixVariableSizedRegionTerrainSize(m_scene.RegionInfo, image));
+                                              new Vector3d(globalX, globalY, 0.0),
+                                              m_scene.AssetService, textureTerrain, 
+                                              m_scene.RegionInfo);
+            warp_Texture texture = new warp_Texture(image);
             warp_Material material = new warp_Material(texture);
             material.setReflectivity(0); // reduces tile seams a bit thanks lkalif
             renderer.Scene.addMaterial("TerrainColor", material);
