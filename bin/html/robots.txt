@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /css/
+Disallow: /images/
+Disallow: /javascripts/
+Disallow: /map/
+Disallow: /webprofile/
