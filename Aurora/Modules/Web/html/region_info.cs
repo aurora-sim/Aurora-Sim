@@ -43,8 +43,9 @@ namespace Aurora.Modules.Web
 
                 vars.Add("RegionName", region.RegionName);
                 vars.Add("OwnerUUID", estate.EstateOwner);
-                vars.Add("OwnerName", webInterface.Registry.RequestModuleInterface<IUserAccountService>().
-                    GetUserAccount(null, estate.EstateOwner).Name);
+                var estateOwnerAccount = webInterface.Registry.RequestModuleInterface<IUserAccountService>().
+                    GetUserAccount(null, estate.EstateOwner);
+                vars.Add("OwnerName", estateOwnerAccount == null ? "No account found" : estateOwnerAccount.Name);
                 vars.Add("RegionLocX", region.RegionLocX / Constants.RegionSize);
                 vars.Add("RegionLocY", region.RegionLocY / Constants.RegionSize);
                 vars.Add("RegionSizeX", region.RegionSizeX);
