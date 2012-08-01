@@ -123,20 +123,20 @@ namespace Aurora.Modules.Web
                 if(!_cookieLockedVars.TryGetValue(path, out locks))
                     return false;
             }
-            foreach(var l in locks)
+            foreach (var c in request.Cookies.Keys)
             {
-                foreach(var c in request.Cookies.Keys)
+                foreach (var l in locks)
                 {
                     UUID cookieID;
-                    if(UUID.TryParse(c.ToString(), out cookieID))
+                    if (UUID.TryParse(c.ToString(), out cookieID))
                     {
-                        if(l.CookieUUID == cookieID)
+                        if (l.CookieUUID == cookieID)
                         {
                             vars = l.Vars;
-                            lock(_cookieLockedVars)
+                            lock (_cookieLockedVars)
                                 _cookieLockedVars[path].Remove(l);
                             //Attempt to nuke the cookie now
-                            response.AddCookie(new System.Web.HttpCookie(c.ToString()) { Expires = Util.UnixEpoch });
+                            response.AddCookie(new System.Web.HttpCookie(c.ToString()) { Expires = Util.UnixEpoch, Name = c.ToString() });
                             return true;
                         }
                     }
@@ -459,6 +459,7 @@ namespace Aurora.Modules.Web
                 case ".html":
                 case ".htm":
                 case ".xsl":
+                    response.AddHeader("Cache-Control", "no-cache");
                     return "text/html";
                 case ".css":
                     //response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
