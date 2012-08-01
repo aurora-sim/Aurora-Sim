@@ -10,6 +10,8 @@ html, body {
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#010843), color-stop(100%,#6EA6FB)); 
 	/* webkit */
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#010843', endColorstr='#6EA6FB',GradientType=0 ); /* ie */ 
+	/* ie 10 */
+	background-image: -ms-linear-gradient(top, #010843 0%,#6EA6FB 100%);
 }
 
 body  {
