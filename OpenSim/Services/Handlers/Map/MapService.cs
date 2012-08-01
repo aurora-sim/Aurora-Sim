@@ -195,26 +195,27 @@ namespace OpenSim.Services.Handlers.Map
             }
             string[] splitUri = uri.Split ('-');
             byte[] jpeg = FindCachedImage(uri);
-            if (jpeg.Length != 0)
+            /*if (jpeg.Length != 0)
             {
                 reply["str_response_string"] = Convert.ToBase64String (jpeg);
                 reply["int_response_code"] = 200;
                 reply["content_type"] = "image/jpeg";
 
                 return reply;
-            }
+            }*/
             try
             {
                 int mapLayer = int.Parse (uri.Substring (4, 1));
                 int mapView = (int)Math.Pow(2, (mapLayer - 1));
                 int regionX = int.Parse (splitUri[2]);
                 int regionY = int.Parse (splitUri[3]);
-
+                int maxRegionSize = m_gridService.GetMaxRegionSize();
+                if (maxRegionSize == 0) maxRegionSize = 8192;
                 List<GridRegion> regions = m_gridService.GetRegionRange(null,
-                        (regionX * Constants.RegionSize) - (mapView * Constants.RegionSize),
-                        (regionX * Constants.RegionSize) + (mapView * Constants.RegionSize),
-                        (regionY * Constants.RegionSize) - (mapView * Constants.RegionSize),
-                        (regionY * Constants.RegionSize) + (mapView * Constants.RegionSize));
+                        (regionX * Constants.RegionSize) - maxRegionSize,
+                        (regionX * Constants.RegionSize) + maxRegionSize,
+                        (regionY * Constants.RegionSize) - maxRegionSize,
+                        (regionY * Constants.RegionSize) + maxRegionSize);
                 List<AssetBase> textures = new List<AssetBase> ();
                 List<Image> bitImages = new List<Image> ();
                 List<GridRegion> badRegions = new List<GridRegion> ();
