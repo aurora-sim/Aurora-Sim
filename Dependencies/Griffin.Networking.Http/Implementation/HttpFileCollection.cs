@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Griffin.Networking.Http.Implementation
 {
-    internal class HttpFileCollection : IHttpFileCollection
+    internal class HttpFileCollection : IHttpFileCollection, IEnumerable<IHttpFile>
     {
         List<IHttpFile>  _files = new List<IHttpFile>();
 
@@ -57,6 +57,16 @@ namespace Griffin.Networking.Http.Implementation
         public void Clear()
         {
             _files.Clear();
+        }
+
+        public IEnumerator<IHttpFile> GetEnumerator()
+        {
+            return _files.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return _files.GetEnumerator();
         }
     }
 }

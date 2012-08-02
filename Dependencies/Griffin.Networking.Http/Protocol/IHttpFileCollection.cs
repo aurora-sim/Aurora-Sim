@@ -1,6 +1,6 @@
 namespace Griffin.Networking.Http
 {
-    public interface IHttpFileCollection
+    public interface IHttpFileCollection : System.Collections.Generic.IEnumerable<IHttpFile>
     {
         /// <summary>
         /// Get a file

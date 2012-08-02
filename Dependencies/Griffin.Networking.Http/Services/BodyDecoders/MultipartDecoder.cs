@@ -28,9 +28,12 @@ namespace Griffin.Networking.Http.Services.BodyDecoders
         {
             var contentType = message.Headers["Content-Type"];
             //multipart/form-data, boundary=AaB03x
-            var boundry = contentType.GetParameter("boundry");
-            if (boundry == null)
+            var boundry = contentType.GetParameter("boundary");
+            if (string.IsNullOrEmpty(boundry))
                 throw new FormatException("Missing boundary in content type.");
+
+            if (message.ContentEncoding == null)
+                message.ContentEncoding = System.Text.Encoding.UTF8;
 
             var multipart = new HttpMultipart(message.Body, boundry, message.ContentEncoding);
 

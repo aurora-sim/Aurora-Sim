@@ -44,7 +44,12 @@ namespace Griffin.Networking.Http.Services.BodyDecoders
         {
             IBodyDecoder decoder;
             if (!_decoders.TryGetValue(message.ContentType, out decoder))
-                throw new HttpException(HttpStatusCode.UnsupportedMediaType, "Unrecognized mime type: " + message.ContentType);
+            {
+                if (message.ContentType.StartsWith(MultipartDecoder.MimeType))
+                    decoder = _decoders[MultipartDecoder.MimeType];
+                else
+                    throw new HttpException(HttpStatusCode.UnsupportedMediaType, "Unrecognized mime type: " + message.ContentType);
+            }
 
             decoder.Decode(message);
         }

@@ -50,6 +50,15 @@ namespace Griffin.Networking.Http.Implementation
         /// <returns></returns>
         public string GetParameter(string name)
         {
+            string[] split = Value.Split(';');
+            foreach (string s in split)
+            {
+                if (s.TrimStart().StartsWith(name + "="))
+                {
+                    int i = s.IndexOf(name + "=");
+                    return s.Substring(s.IndexOf(name + "=") + (name + "=").Length);
+                }
+            }
             return "";
         }
 
