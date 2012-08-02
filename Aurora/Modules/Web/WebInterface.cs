@@ -103,24 +103,25 @@ namespace Aurora.Modules.Web
         {
             public UUID CookieUUID;
             public Dictionary<string, object> Vars;
+            public OSHttpRequest Request;
         }
 
         protected PreAddedDictionary<string, List<CookieLock>> _cookieLockedVars = new PreAddedDictionary<string, List<CookieLock>>(() => new List<CookieLock>());
-        public void CookieLockPageVars(string path, Dictionary<string, object> vars, OSHttpResponse response)
+        public void CookieLockPageVars(string path, Dictionary<string, object> vars, OSHttpRequest request, OSHttpResponse response)
         {
             UUID random = UUID.Random();
             response.AddCookie(new System.Web.HttpCookie(random.ToString()));
-            lock(_cookieLockedVars)
-                _cookieLockedVars[path].Add(new CookieLock { CookieUUID = random, Vars = vars });
+            lock (_cookieLockedVars)
+                _cookieLockedVars[path].Add(new CookieLock { CookieUUID = random, Vars = vars, Request = request });
         }
 
         protected bool CheckCookieLocked(string path, OSHttpRequest request, OSHttpResponse response, out Dictionary<string, object> vars)
         {
             vars = null;
             List<CookieLock> locks = new List<CookieLock>();
-            lock(_cookieLockedVars)
+            lock (_cookieLockedVars)
             {
-                if(!_cookieLockedVars.TryGetValue(path, out locks))
+                if (!_cookieLockedVars.TryGetValue(path, out locks))
                     return false;
             }
             foreach (var c in request.Cookies.Keys)
@@ -133,6 +134,8 @@ namespace Aurora.Modules.Web
                         if (l.CookieUUID == cookieID)
                         {
                             vars = l.Vars;
+                            request.Files = l.Request.Files;
+                            request.Form = l.Request.Form;
                             lock (_cookieLockedVars)
                                 _cookieLockedVars[path].Remove(l);
                             //Attempt to nuke the cookie now
@@ -445,16 +448,16 @@ namespace Aurora.Modules.Web
             {
                 case ".jpeg":
                 case ".jpg":
-                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
+                    response.AddHeader("Cache-Control", "Public;max-age=" + CLIENT_CACHE_TIME.ToString());
                     return "image/jpeg";
                 case ".gif":
-                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
+                    response.AddHeader("Cache-Control", "Public;max-age=" + CLIENT_CACHE_TIME.ToString());
                     return "image/gif";
                 case ".png":
-                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
+                    response.AddHeader("Cache-Control", "Public;max-age=" + CLIENT_CACHE_TIME.ToString());
                     return "image/png";
                 case ".tiff":
-                    response.AddHeader("Cache-Control", "max-age=" + CLIENT_CACHE_TIME.ToString() + ", public");
+                    response.AddHeader("Cache-Control", "Public;max-age=" + CLIENT_CACHE_TIME.ToString());
                     return "image/tiff";
                 case ".html":
                 case ".htm":

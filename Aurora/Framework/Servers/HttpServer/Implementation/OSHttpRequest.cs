@@ -44,6 +44,8 @@ namespace Aurora.Framework.Servers.HttpServer
         private readonly Hashtable _query;
         private readonly NameValueCollection _queryString;
         private IPEndPoint _remoteIPEndPoint;
+        private Dictionary<string, HttpFile> _files = new Dictionary<string, HttpFile>();
+        private NameValueCollection _form = new NameValueCollection();
 
         protected IRequest _httpRequest;
         protected IPipelineHandlerContext _httpContext;
@@ -80,12 +82,23 @@ namespace Aurora.Framework.Servers.HttpServer
                 MainConsole.Instance.ErrorFormat("[OSHttpRequest]: Error parsing querystring");
             }
 
-//            Form = new Hashtable();
-//            foreach (HttpInputItem item in req.Form)
-//            {
-//                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
-//                Form.Add(item.Name, item.Value);
-//            }
+            foreach (var header in _httpRequest.Files)
+                _files[header.Name] = new HttpFile
+                {
+                    ContentType = header.ContentType,
+                    Name = header.Name,
+                    OriginalFileName = header.OriginalFileName,
+                    TempFileName = header.TempFileName
+                };
+            foreach (var header in _httpRequest.Form)
+                _form.Add(header.Name, header.Value);
+
+            //            Form = new Hashtable();
+            //            foreach (HttpInputItem item in req.Form)
+            //            {
+            //                MainConsole.Instance.DebugFormat("[OSHttpRequest]: Got form item {0}={1}", item.Name, item.Value);
+            //                Form.Add(item.Name, item.Value);
+            //            }
         }
 
         public string[] AcceptTypes
@@ -127,13 +140,57 @@ namespace Aurora.Framework.Servers.HttpServer
 
         public NameValueCollection Headers
         {
-            get 
+            get
             {
                 NameValueCollection nvc = new NameValueCollection();
                 foreach (var header in _httpRequest.Headers)
                     nvc.Add(header.Name, header.Value);
                 return nvc;
             }
+        }
+
+        public NameValueCollection Form
+        {
+            get { return _form; }
+            set { _form = value; }
+        }
+
+        public class HttpFile : IDisposable
+        {
+            /// <summary>
+            /// Gets or sets form element name
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Gets or sets client side file name
+            /// </summary>
+            public string OriginalFileName { get; set; }
+
+            /// <summary>
+            /// Gets or sets mime content type
+            /// </summary>
+            public string ContentType { get; set; }
+
+            /// <summary>
+            /// Gets or sets full path to local file
+            /// </summary>
+            public string TempFileName { get; set; }
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                File.Delete(TempFileName);
+            }
+        }
+
+        public Dictionary<string, HttpFile> Files
+        {
+            get { return _files; }
+            set { _files = value; }
         }
 
         public string HttpMethod
@@ -165,7 +222,7 @@ namespace Aurora.Framework.Servers.HttpServer
         /// <value>
         ///   POST request values, if applicable
         /// </value>
-//        public Hashtable Form { get; private set; }
+        //        public Hashtable Form { get; private set; }
         public string RawUrl
         {
             get { return _httpRequest.Uri.AbsolutePath; }

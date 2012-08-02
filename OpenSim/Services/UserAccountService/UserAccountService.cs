@@ -318,44 +318,53 @@ namespace OpenSim.Services.UserAccountService
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
         public string CreateUser(UUID userID, UUID scopeID, string name, string password, string email)
         {
-            object remoteValue = DoRemote(userID, scopeID, name, password, email);
+            return CreateUser(new UserAccount(scopeID, userID, name, email), password);
+        }
+        
+        /// <summary>
+        ///   Create a user
+        /// </summary>
+        /// <param name = "account"></param>
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Full)]
+        public string CreateUser(UserAccount newAcc, string password)
+        {
+            object remoteValue = DoRemote(newAcc, password);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? "" : remoteValue.ToString();
 
-            UserAccount account = GetUserAccount(null, userID);
-            UserAccount nameaccount = GetUserAccount(null, name);
+            UserAccount account = GetUserAccount(null, newAcc.PrincipalID);
+            UserAccount nameaccount = GetUserAccount(null, newAcc.Name);
             if (null == account && nameaccount == null)
             {
-                account = new UserAccount(scopeID, userID, name, email);
-                if (StoreUserAccount(account))
+                if (StoreUserAccount(newAcc))
                 {
                     bool success;
                     if (m_AuthenticationService != null && password != "")
                     {
-                        success = m_AuthenticationService.SetPasswordHashed(account.PrincipalID, "UserAccount", password);
+                        success = m_AuthenticationService.SetPasswordHashed(newAcc.PrincipalID, "UserAccount", password);
                         if (!success)
                         {
                             MainConsole.Instance.WarnFormat("[USER ACCOUNT SERVICE]: Unable to set password for account {0}.",
-                                             name);
+                                             newAcc.Name);
                             return "Unable to set password";
                         }
                     }
 
-                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", name);
+                    MainConsole.Instance.InfoFormat("[USER ACCOUNT SERVICE]: Account {0} created successfully", newAcc.Name);
                     //Cache it as well
-                    CacheAccount(account);
-                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("CreateUserInformation", userID);
+                    CacheAccount(newAcc);
+                    m_registry.RequestModuleInterface<ISimulationBase>().EventManager.FireGenericEventHandler("CreateUserInformation", newAcc.PrincipalID);
                     return "";
                 }
                 else
                 {
-                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", name);
+                    MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: Account creation failed for account {0}", newAcc.Name);
                     return "Unable to save account";
                 }
             }
             else
             {
-                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", name);
+                MainConsole.Instance.ErrorFormat("[USER ACCOUNT SERVICE]: A user with the name {0} already exists!", newAcc.Name);
                 return "A user with the same name already exists";
             }
         }

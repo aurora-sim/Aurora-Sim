@@ -901,7 +901,7 @@ namespace Aurora.Framework.Servers.HttpServer
         private void HandleContentVerbs(OSHttpRequest request, OSHttpResponse response)
         {
             string requestBody = "";
-            if (request.InputStream != null)
+            if (request.InputStream != null && request.InputStream.CanRead)
             {
                 using (StreamReader reader = new StreamReader(request.InputStream, Encoding.UTF8))
                     requestBody = reader.ReadToEnd();
@@ -1337,6 +1337,12 @@ namespace Aurora.Framework.Servers.HttpServer
                         HandleLLSDRequests(request, response);
                         return;
                     }
+                }
+
+                if (request.ContentType != null && request.ContentType.StartsWith("multipart/form-data"))
+                {
+                    HandleHTTPRequest(request, response);
+                    return;
                 }
 
                 switch (request.ContentType)

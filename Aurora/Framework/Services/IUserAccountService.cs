@@ -303,6 +303,14 @@ namespace OpenSim.Services.Interfaces
         string CreateUser(UUID userID, UUID scopeID, string name, string md5password, string email);
 
         /// <summary>
+        ///   Create the user with the given info
+        /// </summary>
+        /// <param name = "account"></param>
+        /// <param name = "password"></param>
+        /// <returns>The error message (if one exists)</returns>
+        string CreateUser(UserAccount account, string password);
+
+        /// <summary>
         /// Delete a user from the database permanently
         /// </summary>
         /// <param name="userID">The user's ID</param>

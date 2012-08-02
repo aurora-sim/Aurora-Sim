@@ -309,6 +309,11 @@ namespace OpenSim.Services.Robust
             return "";
         }
 
+        public string CreateUser(UserAccount account, string password)
+        {
+            return "";
+        }
+
         public void DeleteUser(UUID userID, string password, bool archiveInformation, bool wipeFromDatabase)
         {
         }

@@ -49,9 +49,15 @@ namespace Aurora.Modules.Web
                 GridPage submitPage = rootPage.GetPage(page);
 
                 var submitWebPage = webInterface.GetPage("html/" + submitPage.Location);
-                if (submitWebPage != null)
+                if (!(submitPage.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest)) &&
+                    !(submitPage.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest)) &&
+                    !(submitPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest, submitPage.AdminLevelRequired)) &&
+                    submitWebPage != null)
                 {
-                    webInterface.CookieLockPageVars("html/" + submitPage.Location, requestParameters, httpResponse);
+                    submitWebPage.Fill(webInterface, page, httpRequest, httpResponse, requestParameters, translator);
+                    if (httpResponse.StatusCode != 200)
+                        return vars;//Redirected
+                    webInterface.CookieLockPageVars("html/" + submitPage.Location, requestParameters, httpRequest, httpResponse);
                 }
             }
 
