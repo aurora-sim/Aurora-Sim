@@ -1571,10 +1571,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if(part.PhysActor != null)
                         part.PhysActor.Selected = false;
                 }
+                m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f * m_sitAvatarHeight);
+                m_parentPosition = Vector3.Zero;
+                Rotation = Quaternion.Identity;
                 if(m_physicsActor == null)
                     AddToPhysicalScene(false, false);
-                m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f*m_sitAvatarHeight);
-                m_parentPosition = Vector3.Zero;
             }
 
             if(m_physicsActor == null)

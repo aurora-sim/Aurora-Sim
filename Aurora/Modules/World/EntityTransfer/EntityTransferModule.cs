@@ -771,8 +771,8 @@ namespace Aurora.Modules.EntityTransfer
                     }
                     if(success)
                     {
-                        foreach(ISceneChildEntity part in grp.ChildrenEntities())
-                            part.SitTargetAvatar.Clear();
+                        foreach (ISceneChildEntity part in grp.ChildrenEntities())
+                            part.SitTargetAvatar = new List<UUID>();
 
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if(backup != null)
@@ -793,7 +793,7 @@ namespace Aurora.Modules.EntityTransfer
                     try
                     {
                         foreach (ISceneChildEntity part in grp.ChildrenEntities())
-                            part.SitTargetAvatar.Clear();
+                            part.SitTargetAvatar = new List<UUID>();
 
                         IBackupModule backup = grp.Scene.RequestModuleInterface<IBackupModule>();
                         if (backup != null)

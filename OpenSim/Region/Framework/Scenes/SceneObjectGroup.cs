@@ -290,7 +290,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 List<UUID> sittingAvatars = new List<UUID>();
                 foreach (var prim in ChildrenEntities())
-                    sittingAvatars.AddRange(prim.SitTargetAvatar);
+                    sittingAvatars.AddRange(new List<UUID>(prim.SitTargetAvatar));
                 return sittingAvatars;
             }
         }

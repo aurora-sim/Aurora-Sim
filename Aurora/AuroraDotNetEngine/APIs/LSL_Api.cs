@@ -7453,7 +7453,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return "";
 
-            return m_host.SitTargetAvatar.Count != 0
+            return m_host.SitTargetAvatar.Count > 0
                        ? new LSL_String(m_host.SitTargetAvatar[0].ToString())
                        : ScriptBaseClass.NULL_KEY;
         }
@@ -7462,7 +7462,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return new LSL_Key();
 
-            return m_host.SitTargetAvatar.Count != 0
+            return m_host.SitTargetAvatar.Count > 0
                        ? new LSL_String(m_host.SitTargetAvatar[0].ToString())
                        : ScriptBaseClass.NULL_KEY;
         }

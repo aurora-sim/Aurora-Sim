@@ -667,6 +667,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectPart()
         {
+            SitTargetAvatar = new List<UUID>();
         }
 
         public SceneObjectPart(IRegistryCore scene)
@@ -675,6 +676,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_initialScene = scene;
 
             m_inventory = new SceneObjectPartInventory(this);
+            SitTargetAvatar = new List<UUID>();
         }
 
         /// <summary>
@@ -712,6 +714,7 @@ namespace OpenSim.Region.Framework.Scenes
             Velocity = Vector3.Zero;
             AngularVelocity = Vector3.Zero;
             Acceleration = Vector3.Zero;
+            SitTargetAvatar = new List<UUID>();
 
             ValidpartOOB = false;
 
@@ -755,7 +758,6 @@ namespace OpenSim.Region.Framework.Scenes
         private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
         private string m_currentMediaVersion = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
         private int m_passCollision;
-        private List<UUID> m_sitTargetAvatar = new List<UUID>();
         private byte[] m_textureAnimation;
 
         [XmlIgnore]
@@ -1855,7 +1857,8 @@ namespace OpenSim.Region.Framework.Scenes
         [XmlIgnore]
         public List<UUID> SitTargetAvatar
         {
-            get { return m_sitTargetAvatar; }
+            get;
+            set;
         }
 
         [XmlIgnore]
@@ -4108,14 +4111,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            if (m_sitTargetAvatar.Count != 0)
+            lock (SitTargetAvatar)
             {
-                foreach (UUID avID in m_sitTargetAvatar.Where(avID => m_parentGroup != null))
+                if (SitTargetAvatar.Count != 0)
                 {
-                    IScenePresence avatar;
-                    if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
+                    foreach (UUID avID in SitTargetAvatar.Where(avID => m_parentGroup != null))
                     {
-                        avatar.ParentPosition = GetWorldPosition();
+                        IScenePresence avatar;
+                        if (m_parentGroup.Scene.TryGetScenePresence(avID, out avatar))
+                        {
+                            avatar.ParentPosition = GetWorldPosition();
+                        }
                     }
                 }
             }
@@ -4203,6 +4209,9 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.AngularVelocity = new Vector3(0, 0, 0);
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
+            dupe.SitTargetAvatar = new List<UUID>();
+            dupe.m_LoopSoundSlavePrims = new List<SceneObjectPart>();
+            dupe.m_PlaySoundSlavePrims = new List<SceneObjectPart>();
 
             dupe.m_ValidpartOOB = false;
 

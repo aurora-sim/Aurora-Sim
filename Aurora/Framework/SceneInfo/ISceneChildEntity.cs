@@ -357,7 +357,7 @@ namespace Aurora.Framework
 
         bool UpdatePrimFlags(bool UsePhysics, bool IsTemporary, bool IsPhantom, bool IsVolumeDetect, ObjectFlagUpdatePacket.ExtraPhysicsBlock[] blocks);
 
-        List<UUID> SitTargetAvatar { get; }
+        List<UUID> SitTargetAvatar { get; set; }
         Dictionary<int, string> CollisionFilter { get; }
 
         bool GetBlockGrab(bool wholeObjectBlock);
