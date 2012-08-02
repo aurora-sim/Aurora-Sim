@@ -93,15 +93,15 @@
 <!-- #include file="/maintenance.html" -->
 {IfMaintenanceEnd}
 {IfNoMaintenanceBegin}
-<a href="https://github.com/aurora-sim/" target="_blank">
-<img style="position: absolute; top: 0; right: 0; border: 0;" src="images/icons/aurora-forkme.png" alt="Fork me on GitHub"></a>
 <div id="container">
+<a href="https://github.com/aurora-sim/" target="_blank">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="images/icons/aurora-forkme.png" title="Fork&nbspme&nbspon&nbspGitHub" alt="Fork&nbspme&nbspon&nbspGitHub"></a>
 	<div id="top">
 		<h1><a class="logofade" href="/" alt="{SystemName}" title="{SystemName}">{SystemName}</a></h1>
 		<ul id="menu">
 {MenuItemsArrayBegin}
 {IfShowInMenuBegin}
-			<li id="{MenuItemID}" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}
+			<li id="{MenuItemID}" class="active" alt="{MenuItemTitle}" title="{MenuItemTitleHelp}">{MenuItemTitle}
 {IfHasChildrenBegin}
 				<ul>
 {ChildrenMenuItemsArrayBegin}
@@ -115,8 +115,9 @@
 {IfShowInMenuEnd}
 {MenuItemsArrayEnd}
 		</ul>
-		<span class="clear"></span>
 	</div>
+	
+	<span class="clear"></span>
 
 	<div id="loading">
 		<img src="../images/icons/loading.gif" alt="Loading..." />

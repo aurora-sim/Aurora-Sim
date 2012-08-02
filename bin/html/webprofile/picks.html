@@ -1,52 +1,52 @@
-<div id="user_agent_profile_container">
-<table id="user_agent_profile">
-  <caption></caption>
-  
-  <thead>
-    <tr>
-      <th class="user_agent_profile_left"></th>
-      <th class="user_agent_profile_right"></th>
-	  <th class="user_agent_profile_right"></th>
-    </tr>
-  </thead>
-  
-  <tfoot>
-    <tr>
-      <th class="user_agent_profile_left"></th>
-      <th class="user_agent_profile_right"></th>
-	  <th class="user_agent_profile_right"></th>
-    </tr>
-  </tfoot>
+<!-- Caption -->
+<script>
+	/* <![CDATA[ */
+		jQuery(document).ready(function($) {
+			$('div.picks_profile_picture').each(function(i) {
+				var img_ = $('img', this);			
+				var img_height = img_.attr('height');
+				var p_height = $('p', this).outerHeight();
+				$(this).height(img_height);
+				$(this).hover(function() {
+					img_.animate({marginTop : -p_height-5}, 500);
+				}, function() {
+					img_.animate({marginTop : '0'}, 500);
+				});
+			});		
+		});
+	/* ]]> */
+</script>
 
-  <tbody>
-    <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
-	    <div class="user_agent_profile_picture">
-	    <a href="#">
-	    <img height="256"
-		     src="{UserPictureURL}" 
-		     alt="{UserProfileFor}: {UserName}"
-			 title="{UserProfileFor}: {UserName}" /></a>
-	    <p class="user_agent_profile_picture_text">{UsersPicksText}: {UserName}</p></div>
-	  </td>
-      <td class="user_agent_profile_left_size"><p>{UsersPicksText}:</p></td>
-	  <td class="user_agent_profile_right"><p>{UserName}</p></td>
-    </tr>
+<script>
+// jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel();});
+jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel({wrap: 'circular'});});
+</script>
+
+<h2>{SystemName}: {UsersPicksText} {UserName}</h2>
+<div id="picks_profile_container">
+  <center>
+  <ul id="avatarcarousel" class="jcarousel-skin-aurora-bigsize jcarousel-bigsize">
 {PicksArrayBegin}
-    <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
-	    <div class="user_agent_profile_picture">
+    <li>
+      <div class="picks_profile_picture">
 	    <a href="#">
 	    <img height="256"
 		     src="{PickSnapshotURL}" 
-		     alt="{PickName}"
-			 title="{PickName}" /></a>
-	    <p class="user_agent_profile_picture_text">{PickName}</p></div>
-	  </td>
-      <td class="user_agent_profile_right"><p>{PickInfo}</p></td>
-      <td class="user_agent_profile_right"><p>{PickSim} @ {PickLocation}</p></td>
-    </tr>
+		     alt="{PickNameText}: {PickName}"
+			 title="{PickNameText}: {PickName}" /></a>
+	    <p class="picks_profile_picture_text">
+	    {UsersPicksText}:&nbsp;<img height="16" width="16"
+									   src="{UserPictureURL}"
+									   alt="{UserProfileFor}: {UserName}"
+									   title="{UserProfileFor}: {UserName}" />&nbsp;{UserName}<br />
+		{PickNameText}: {PickName}<br />
+		{PickSimText}: {PickSim}<br />
+		@&nbsp;{PickLocation}	
+		</p>
+	  </div>
+	</li>
 {PicksArrayEnd}
-  </tbody>
-</table>
+  </ul>
+  </center>
+<span class="clear"></span>
 </div>

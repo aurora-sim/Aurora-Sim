@@ -1,3 +1,23 @@
+<!-- Caption -->
+<script type="text/javascript" rel="javasript">
+	/* <![CDATA[ */
+		jQuery(document).ready(function($) {
+			$('div.user_agent_profile_picture').each(function(i) {
+				var img_ = $('img', this);			
+				var img_height = img_.attr('height');
+				var p_height = $('p', this).outerHeight();
+				$(this).height(img_height);
+				$(this).hover(function() {
+					img_.animate({marginTop : -p_height-10}, 500);
+				}, function() {
+					img_.animate({marginTop : '0'}, 500);
+				});
+			});		
+		});
+	/* ]]> */
+</script>
+
+<h2>{SystemName}: {UserProfileFor} {UserName}</h2>
 <div id="user_agent_profile_container">
 <table id="user_agent_profile">
   <caption></caption>
@@ -20,7 +40,7 @@
 
   <tbody>
     <tr>
-      <td class="user_agent_profile_picture" rowspan="7">
+      <td class="user_agent_profile_picture" rowspan="6"> <!-- we need a variable for rowspan -->
 	    <div class="user_agent_profile_picture">
 	    <a href="#">
 	    <img height="256"

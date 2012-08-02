@@ -18,7 +18,7 @@
 	<link href="{SystemURL}/css/styles5.css" rel="alternate stylesheet" type="text/css" title="styles5" media="screen" />
 	
 	<!-- date time -->
-	<script src="{SystemURL}/javascripts/jquery.jclock.js" type="text/javascript" language="javascript"></script>
+	<script src="{SystemURL}/javascripts/jquery.jclock.js"></script>
 	<script type="text/javascript">
 		$(function($) {var options1 = {format: '%A %B %d, %Y %I:%M:%S %p'} // 12-hour
 		$('#jclock1').jclock(options1);
@@ -33,28 +33,11 @@
 	</script>
 	
 	<!-- Tooltips -->
-	<script src="{SystemURL}/javascripts/jquery.tooltip.js" type="text/javascript" language="javascript"></script>
-	<script type="text/javascript">$(function() {$('#container *').tooltip({showURL: false});});</script>
+	<script src="{SystemURL}/javascripts/jquery.tooltip.js"></script>
+	<script>$(function() {$('#container *').tooltip({showURL: false});});</script>
 
-    <!-- Caption -->
-	<script type="text/javascript" rel="javasript">
-		/* <![CDATA[ */
-			jQuery(document).ready(function($) {
-				$('.user_agent_profile_picture').each(function(i) {
-					var img_ = $('img', this);			
-					var img_height = img_.attr('height');
-					var p_height = $('p', this).outerHeight();
-					$(this).height(img_height);
-					$(this).hover(function() {
-						img_.animate({marginTop : -p_height-5}, 500);
-					}, function() {
-						img_.animate({marginTop : '0'}, 500);
-					});
-				});		
-			});
-		/* ]]> */
-	</script>
-	<script type="text/javascript">
+	<script src="{SystemURL}/javascripts/menu.profile.js"></script>
+	<script>
 	  $(document).ready(function() 
 	  {
 		$( '#container' ).fadeIn("slow");
@@ -94,35 +77,39 @@
 			content.load("base.html" + window.location.search);
 	});
     </script>
+	
+	<!-- Carousel -->
+	<script src="../javascripts/jquery.jcarousel.min.js"></script>
+
 </head>
 
 <body>
 <div id="container">
-<script src="{SystemURL}/javascripts/menu.profile.js"></script>
+
 <div id="topprofile">
 	<ul id="menuprofile">
 		<li id="base" class="fade active" alt="{TooltipsMenuHome}" title="{TooltipsMenuHome}">{MenuProfileTitle}</li>
 		<li id="groups" class="fade" alt="{TooltipsMenuLogin}" title="{TooltipsMenuLogin}">{MenuGroupTitle}</li>
 		<li id="picks" class="fade" alt="{TooltipsMenuRegister}" title="{TooltipsMenuRegister}">{MenuPicksTitle}</li>
 	</ul>
-	<span class="clear"></span>
 </div>
+<span class="clear"></span>
 
-<h2>{SystemName}: {UserName}</h2>
 <!-- <p class=jclock1><span id=jclock1></span></p> -->
-<!-- <div id="loading"><img src="../images/icons/loading.gif" alt="Loading..." /></div> -->
-<div id="content">
-</div>
-	<div id="footer">
+<!-- <div id="loading"><img src="../images/icons/loading.gif" alt="Loading..." /></div> -->	
+<div id="content"></div>
+<span class="clear"></span>
+
+<div id="footer">
 {IfShowLanguageTranslatorBarBegin}
 	  <div class=languageswitch>
 	    <ul>
 		{StyleSwitcherLanguagesText}:
-		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
-		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
-		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
-		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
-		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
+		  <li><a href="?language=en" rel="en" class="languageswitch" alt="{en}" title="<img src='../images/flags/flag-en.png' alt='en' /> {en}">en</a></li>
+		  <li><a href="?language=fr" rel="fr" class="languageswitch" alt="{fr}" title="<img src='../images/flags/flag-fr.png' alt='fr' /> {fr}">fr</a></li>
+		  <li><a href="?language=de" rel="de" class="languageswitch" alt="{de}" title="<img src='../images/flags/flag-de.png' alt='de' /> {de}">de</a></li>
+		  <li><a href="?language=it" rel="it" class="languageswitch" alt="{it}" title="<img src='../images/flags/flag-it.png' alt='it' /> {it}">it</a></li>
+		  <li><a href="?language=es" rel="es" class="languageswitch" alt="{es}" title="<img src='../images/flags/flag-es.png' alt='es' /> {es}">es</a></li>
 		{StyleSwitcherChoiceText}: <span id="lg1">en</span><span id="lg2">fr</span><span id="lg3">de</span><span id="lg4">it</span><span id="lg5">es</span>  
 		</ul>
 	  </div>
@@ -144,13 +131,14 @@
 	  <span class="clear"></span>
 	</div>
 </div>
-<script type="text/javascript">
+
+<script>
 	// fade class
 	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
-	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
-	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
-	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.languageswitch, a.styleswitch").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
+	$("a.webprofile, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
 </script>
+
 </body>
 </html>
 

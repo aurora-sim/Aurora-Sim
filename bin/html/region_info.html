@@ -139,7 +139,7 @@ For regionprofil:
     <tr>
       <td class="region_info_left"><p>{OwnerNameText}:</p></td>
       <td class="region_info_right" colspan="2">
-	  <a class="webprofile" href="webprofile/?userid={OwnerUUID}"  alt="{OwnerNameText}: {OwnerName}" title="{OwnerNameText}: {OwnerName}" >{OwnerName}</a></td>
+	  <a class="webprofile" href="webprofile/?userid={OwnerUUID}"  alt="{OwnerNameText}: {OwnerName}" title="{OwnerNameText}: {OwnerName}">{OwnerName}</a></td>
     </tr>
 	
     <tr>
@@ -156,7 +156,7 @@ For regionprofil:
 {UsersInRegionArrayBegin}
       <tr>
         <td class="region_info_left"><p>{UserNameText}:</p></td>
-        <td class="region_info_right" colspan="2"><a class="webprofile"  href="webprofile/?userid={UserUUID}"><p>{UserName}</p></a></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile" href="webprofile/?userid={UserUUID}">{UserName}</a></td>
       </tr>
 {UsersInRegionArrayEnd}
 
@@ -167,11 +167,11 @@ For regionprofil:
 {ParcelInRegionArrayBegin}
       <tr>
         <td class="region_info_left"><p>{ParcelNameText}:</p></td>
-        <td class="region_info_right" colspan="2"><a class="webprofile" href="parcel_info?infouuid={ParcelUUID}"><p>{ParcelName}</p></a></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile" href="parcel_info?infouuid={ParcelUUID}" alt="{ParcelNameText}: {ParcelName}" title="{ParcelNameText}: {ParcelName}">{ParcelName}</a></td>
       </tr>
       <tr>
         <td class="region_info_left"><p>{ParcelOwnerText}:</p></td>
-        <td class="region_info_right" colspan="2"><a class="webprofile" href="webprofile/?userid={ParcelOwnerUUID}"><p>{ParcelOwnerName}</p></a></td>
+        <td class="region_info_right" colspan="2"><a class="webprofile" href="webprofile/?userid={ParcelOwnerUUID}" alt="{ParcelOwnerText}: {ParcelOwnerName}" title="{ParcelOwnerText}: {ParcelOwnerName}">{ParcelOwnerName}</a></td>
       </tr>
 {ParcelInRegionArrayEnd}
   </tbody>
@@ -211,7 +211,6 @@ For regionprofil:
 <script type="text/javascript">
 	// fade class
 	$("li.fade, a.fade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
-	$("a.logofade").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
 	$("a.languageswitch, a.styleswitch, a.webprofile").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
 	$("a.welcomescreen, a.world_map, a.copyright").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});
 </script>
