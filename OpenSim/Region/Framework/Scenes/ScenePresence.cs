@@ -1823,7 +1823,8 @@ namespace OpenSim.Region.Framework.Scenes
             ControllingClient.SendSitResponse(part.UUID, offset, sitOrientation, autopilot, cameraAtOffset,
                                               cameraEyeOffset, forceMouselook);
             //Remove any bad terse updates lieing around
-            SceneViewer.ClearPresenceUpdates(this);
+            foreach (IScenePresence sp in Scene.GetScenePresences())
+                sp.SceneViewer.ClearPresenceUpdates(this);
             System.Threading.Thread.Sleep(10);
                 //Sleep for a little bit to make sure all other threads are finished sending anything
             // This calls HandleAgentSit twice, once from here, and the client calls
