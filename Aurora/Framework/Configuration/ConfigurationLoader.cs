@@ -490,16 +490,23 @@ namespace Aurora.Framework
             }
             else
             {
-                Console.WriteLine(string.Format("[CONFIG]: {0} is a http:// URI, fetching ...", iniPath));
-
                 // The ini file path is a http URI
                 // Try to read it
                 try
                 {
-                    XmlReader r = XmlReader.Create(iniPath);
-                    XmlConfigSource cs = new XmlConfigSource(r);
-                    source.Merge(cs);
+                    string file = Utilities.ReadExternalWebsite(iniPath);
+                    string filename = Path.GetTempFileName();
+                    File.WriteAllText(filename, file);
 
+                    if (showIniLoading)
+                        Console.WriteLine(string.Format("[CONFIG]: Reading configuration file {0}", Util.BasePathCombine(iniPath)));
+
+                    source.Merge(new IniConfigSource(filename, IniFileType.AuroraStyle));
+                    if (inidbg)
+                    {
+                        WriteConfigFile(i, source);
+                    }
+                    File.Delete(filename);
                     success = true;
                 }
                 catch (Exception e)
