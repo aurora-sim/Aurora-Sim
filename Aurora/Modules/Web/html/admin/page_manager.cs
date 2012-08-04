@@ -25,8 +25,9 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
             
             #region Find pages
@@ -53,13 +54,15 @@ namespace Aurora.Modules.Web
 
             #endregion
 
-            bool changed = false;
-            string error = translator.GetTranslatedString("ChangesSavedSuccessfully");
             if (requestParameters.ContainsKey("DeleteItem"))
             {
                 rootPage.RemovePageByLocation(MenuItem, null);
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
-                webInterface.Redirect(httpResponse, "index.html?page=page_manager", filename);
+                response = "<h3>Successfully updated menu</h3>" +
+                    "<script language=\"javascript\">" +
+                    "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                    "</script>";
+                return null;
             }
             if (requestParameters.ContainsKey("AddItem"))
             {
@@ -127,7 +130,6 @@ namespace Aurora.Modules.Web
             }
             if (requestParameters.ContainsKey("SaveMenuItem"))
             {
-                changed = true;
                 string edittingPageID = requestParameters["EdittingPageID"].ToString();
                 string PageTitle = requestParameters["PageTitle"].ToString();
                 string PageTooltip = requestParameters["PageTooltip"].ToString();
@@ -167,12 +169,17 @@ namespace Aurora.Modules.Web
                         parent.Children.Add(page);
                     else //Top Level
                         rootPage.Children.Add(page);
+
+                    response = "<h3>Successfully updated menu</h3>" +
+                        "<script language=\"javascript\">" +
+                        "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                        "</script>";
                 }
                 else
-                    error = translator.GetTranslatedString("CannotSetParentToChild");
+                    response = "<h3>" + translator.GetTranslatedString("CannotSetParentToChild") + "</h3>";
 
                 generics.AddGeneric(UUID.Zero, "WebPages", "Root", rootPage.ToOSD());
-                webInterface.Redirect(httpResponse, "index.html?page=page_manager", filename);
+                return null;
             }
 
             vars.Add("PageTitleText", translator.GetTranslatedString("PageTitleText"));
@@ -193,8 +200,6 @@ namespace Aurora.Modules.Web
             vars.Add("ParentText", translator.GetTranslatedString("ParentText"));
             vars.Add("Yes", translator.GetTranslatedString("Yes"));
             vars.Add("No", translator.GetTranslatedString("No"));
-            
-            vars.Add("ChangesSavedSuccessfully", changed ? error : "");
 
             return vars;
         }

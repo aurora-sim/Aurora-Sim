@@ -14,9 +14,10 @@
   $(document).ready(function(){$(".regioninfo").colorbox({iframe:true, width:"990px", height:"440px"});});
 </script>
 
+<div id="fullPage">
 <h2>{SystemName}: {RegionSearchText}</h2>
 <h3>{SearchForRegionText}</h3>
-<form action="index.html?page=region_search" method="POST">
+<form id="region_search_form" action="region_search.html" method="POST">
 <table id="user_search">
   <caption></caption>
   
@@ -37,6 +38,7 @@
     <tr>
       <td class="user_search_left"><p>{RegionNameText}*</p></td>
       <td class="user_search_right">
+	    <input hidden label="Submit" type="hidden" id="Submit" name="Submit" value="Submit" />
 	    <input require="true" label="regionname" name="regionname" />
 		<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
 	  </td>
@@ -44,6 +46,23 @@
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#region_search_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#fullPage").empty().append(data);
+      }
+    );
+  });
+</script>
 <h3>{SearchResultForRegionText}</h3>
 <table id="user_search_result_navigation_top">
   <caption></caption>			
@@ -96,12 +115,12 @@
   </tfoot>
   <tbody>
 
-    <tr>
 {RegionsListArrayBegin}
+    <tr>
       <td class="user_search_result_left"><p>{RegionName}</p></td>
       <td class="user_search_result_right"><a target="_blank" class='regioninfo' href="region_info.html?regionid={RegionID}"><p>{MoreInfoText}</p></a></td>
-{RegionsListArrayEnd}
     </tr>
+{RegionsListArrayEnd}
 
   </tbody>
 </table>
@@ -140,3 +159,4 @@
 -->
 </table>
 <script>$("li.fade, a.fade, a.regioninfo").hover(function(){$(this).fadeOut(150);$(this).fadeIn(150);});</script>
+</div>

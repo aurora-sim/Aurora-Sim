@@ -9,13 +9,10 @@
 
 -->
 
-{IsNotAdminAuthenticatedBegin}
-<meta http-equiv="REFRESH" content="0;url={SystemURL}">
-{IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
-<h2>{AddNewsText}: {SystemName}</h2>
-<form action="index.html?page=add_news" method="post">
-<div id="error_message" class="error_message">{ErrorMessage}</div>
+<h2>{SystemName}: {AddNewsText}</h2>
+<div id="info_message" class="error_message"></div>
+<form id="add_news_form" action="admin/add_news.html" method="post">
 <table id="add_news">
   <caption></caption>
   
@@ -43,10 +40,27 @@
       <td class="add_news_right"><textarea name="NewsText" cols="91" rows="10" id="NewsText"></textarea></td>
     </tr>
     <tr>
-      <td class="add_news_left"></td>
-      <td class="add_news_right"><input type="hidden" name="action" value="check"><button id="Submit" name="Submit" type="Submit">{Submit}</button></input></td>
+      <td class="add_news_left"></td><input type="hidden" label="Submit" id="Submit" name="Submit" value="Submit" />
+      <td class="add_news_right"><button id="Submit" name="Submit" type="Submit">{Submit}</button></td>
     </tr>
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#add_news_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append(data);
+      }
+    );
+  });
+</script>
 {IsAdminAuthenticatedEnd}

@@ -14,8 +14,8 @@
 -->
 
 <h2>{SystemName}: {SettingsManager}</h2>
-<form action="index.html?page=settings_manager" method="post">
-<div id="error_message" class="error"><h3>{ChangesSavedSuccessfully}</h3></div>
+<form id="settings_manager_form" action="admin/settings_manager.html" method="post">
+<div id="error_message" class="error"><h3></h3></div>
 <table id="settings_manager">
   <caption></caption>
   
@@ -61,8 +61,26 @@
 	  </td>
     </tr>
     <tr>
-      <td class="settings_manager_right"><button id="SetGridCenter" type="Submit" name="SetGridCenter">{Save}</button></td>
+	  <input hidden type="hidden" label="Submit" id="Submit" name="Submit" value="Submit" />
+      <td class="settings_manager_right"><button id="Submit" type="Submit" name="Submit">{Save}</button></td>
     </tr>
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#settings_manager_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#error_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>

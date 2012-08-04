@@ -28,8 +28,9 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
             GridNewsItem news;
@@ -42,12 +43,12 @@ namespace Aurora.Modules.Web
                 connector.RemoveGeneric(UUID.Zero, "WebGridNews", id);
                 GridNewsItem item = new GridNewsItem { Text = text, Time = news.Time, Title = title, ID = int.Parse(id) };
                 connector.AddGeneric(UUID.Zero, "WebGridNews", id, item.ToOSD());
-                vars["ErrorMessage"] = "News item edit successfully";
-                webInterface.Redirect(httpResponse, "index.html?page=news_manager", filename);
-                return vars;
+                response = "<h3>News item editted successfully, redirecting to main page</h3>" +
+                    "<script language=\"javascript\">" +
+                    "setTimeout(function() {window.location.href = \"index.html?page=news_manager\";}, 0);" +
+                    "</script>";
+                return null;
             }
-            else
-                vars["ErrorMessage"] = "";
 
 
             news = connector.GetGeneric<GridNewsItem>(UUID.Zero, "WebGridNews", httpRequest.Query["newsid"].ToString());

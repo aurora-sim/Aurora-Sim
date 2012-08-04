@@ -27,8 +27,9 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return false; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
 
             #region Find pages
@@ -39,29 +40,6 @@ namespace Aurora.Modules.Web
             var settings = generics.GetGeneric<GridSettings>(UUID.Zero, "WebSettings", "Settings");
             GridPage rootPage = generics.GetGeneric<GridPage>(UUID.Zero, "WebPages", "Root");
             rootPage.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
-
-
-            #region Form submission hack
-
-            if (requestParameters.Count > 0 && httpRequest.Query.ContainsKey("page"))
-            {
-                string page = httpRequest.Query["page"].ToString();
-                GridPage submitPage = rootPage.GetPage(page);
-
-                var submitWebPage = webInterface.GetPage("html/" + submitPage.Location);
-                if (!(submitPage.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest)) &&
-                    !(submitPage.LoggedInRequired && !Authenticator.CheckAuthentication(httpRequest)) &&
-                    !(submitPage.AdminRequired && !Authenticator.CheckAdminAuthentication(httpRequest, submitPage.AdminLevelRequired)) &&
-                    submitWebPage != null)
-                {
-                    submitWebPage.Fill(webInterface, page, httpRequest, httpResponse, requestParameters, translator);
-                    if (httpResponse.StatusCode != 200)
-                        return vars;//Redirected
-                    webInterface.CookieLockPageVars("html/" + submitPage.Location, requestParameters, httpRequest, httpResponse);
-                }
-            }
-
-            #endregion
 
             foreach (GridPage page in rootPage.Children)
             {
@@ -74,7 +52,6 @@ namespace Aurora.Modules.Web
 
                 List<Dictionary<string, object>> childPages = new List<Dictionary<string, object>>();
                 page.Children.Sort((a, b) => a.MenuPosition.CompareTo(b.MenuPosition));
-                //page.Children.Add(page);
                 foreach (GridPage childPage in page.Children)
                 {
                     if (childPage.LoggedOutRequired && Authenticator.CheckAuthentication(httpRequest))

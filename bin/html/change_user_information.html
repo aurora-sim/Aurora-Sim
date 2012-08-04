@@ -18,8 +18,8 @@
 
 <h2>{SystemName}: {ChangeUserInformationText}</h2>
 <h3>{ChangePasswordText}</h3>
-<form action="index.html?page=change_user_information" method="post">
-<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<form action="change_user_information.html" id="change_password" method="post">
+<div id="password_error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
 <table id="change_user_password">
   <caption></caption>
   
@@ -47,7 +47,7 @@
       <td class="change_user_information_right"><input require="true" label="passwordconf" id="login_input" type="password" name="passwordconf" /></td>
     </tr>
     <tr>
-      <td class="change_user_information_left"></td>
+      <td class="change_user_information_left"></td><input type="hidden" hidden label="Submit" id="Submit" name="Submit" value="SubmitPasswordChange" />
       <td class="change_user_information_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitPasswordChange">{Submit}</button></td>
     </tr>
   </tbody>
@@ -55,8 +55,8 @@
 </form>
 
 <h3>{ChangeEmailText}</h3>
-<form action="index.html?page=change_user_information" method="post">
-<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<form action="change_user_information.html" id="change_email" method="post">
+<div id="email_error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
 <table id="change_user_email_adress">
   <caption></caption>
   
@@ -80,7 +80,7 @@
       <td class="change_user_email_adress_right"><input require="true" label="email" id="email" name="email" /></td>
     </tr>
     <tr>
-      <td class="change_user_email_adress_left"></td>
+      <td class="change_user_email_adress_left"></td><input type="hidden" hidden label="Submit" id="Submit" name="Submit" value="SubmitEmailChange" />
       <td class="change_user_email_adress_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitEmailChange">{Submit}</button></td>
     </tr>
   </tbody>
@@ -89,8 +89,8 @@
 
 <h3>{DeleteUserText}</h3>
 <p class="alert">{DeleteUserInfoText}</p>
-<form action="index.html?page=change_user_information" method="post">
-<div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<form action="change_user_information.html" id="delete_my_account" method="post">
+<div id="delete_error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
 <table id="delete_my_account">
   <caption></caption>
   
@@ -118,9 +118,56 @@
       <td class="delete_my_account_right"><input require="true" label="password" id="login_input" type="password" name="password" /></td>
     </tr>
     <tr>
-      <td class="delete_my_account_left"></td>
+      <td class="delete_my_account_left"></td><input type="hidden" hidden label="Submit" id="Submit" name="Submit" value="SubmitDeleteUser" />
       <td class="delete_my_account_right"><button id="login_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button></td>
     </tr>
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#delete_my_account").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#delete_error_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#change_email").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#email_error_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#change_password").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#password_error_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>

@@ -28,9 +28,10 @@ namespace Aurora.Modules.Web
         public bool RequiresAuthentication { get { return false; } }
         public bool RequiresAdminAuthentication { get { return false; } }
         
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest, 
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
 
             string error = "";
@@ -49,11 +50,14 @@ namespace Aurora.Modules.Web
                         Authenticator.AddAdminAuthentication(sessionID, account);
                     httpResponse.AddCookie(new System.Web.HttpCookie("SessionID", sessionID.ToString()) { Expires = DateTime.MinValue, Path = "" });
 
-                    webInterface.Redirect(httpResponse, "/index.html", filename);
-                    return vars;
+                    response = "<h3>Successfully logged in, redirecting to main page</h3>" +
+                        "<script language=\"javascript\">" +
+                        "setTimeout(function() {window.location.href = \"index.html\";}, 0);" +
+                        "</script>";
                 }
                 else
-                    error = "Failed to verify user name and password";
+                    response = "<h3>Failed to verify user name and password</h3>";
+                return null;
             }
 
             vars.Add("ErrorMessage", error);

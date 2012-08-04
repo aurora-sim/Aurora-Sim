@@ -24,23 +24,25 @@
 -->
 <div id="content">
     <div id="ContentHeaderCenter"><h2>{SystemName}: {EdittingText} {UserName}</h2></div>
-	<div><h4>{ErrorMessage}</h4></div>
+	<div id="info_message"><h3>{ErrorMessage}</h3></div>
 	<h3>{AdminLoginInAsUserText}</h3>
 	<p class="info">{AdminLoginInAsUserInfoText}</p>
-	<form action="index.html?page=edit_user" method="post">
+	<form id="login_as_user_form" action="admin/edit_user.html" method="post">
 		<input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitLoginAsUser" />
 		<button id="login_bouton" type="Submit" name="Submit" value="SubmitLoginAsUser">{Login}</button>
 	</form>
 	
 	<h3>{AdminDeleteUserText}</h3>
 	<p class="info">{AdminDeleteUserInfoText}</p>
-	<form action="index.html?page=edit_user" method="post">
+	<form id="delete_user_form" action="admin/edit_user.html" method="post">
 		<tr>
 		  <td class="delete_my_account_left"><p id="username_label">{TypeUserNameToConfirm}</p></td>
 		  <td class="delete_my_account_right"><input require="true" label="username" id="login_input" name="username" /></td>
 		</tr>
 		<tr>
 		  <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		  <input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitDeleteUser" />
 		  <button id="delete_bouton" type="Submit" name="Submit" value="SubmitDeleteUser">{DeleteText}</button>
 		</tr>
 	</form>
@@ -50,15 +52,16 @@
 {IfTempUserBannedBegin}
 	<p class="info">{BannedUntilText} {BannedUntil}</p>
 {IfTempUserBannedEnd}
-	<form action="index.html?page=edit_user" method="post">
+	<form id="unban_user_form" action="admin/edit_user.html" method="post">
 		<input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitUnbanUser" />
 		<button id="delete_bouton" type="Submit" name="Submit" value="SubmitUnbanUser">{UnbanText}</button>
 	</form>
 {IfUserBannedEnd}
 {IfNotUserBannedBegin}
 <h3>{AdminTempBanUserText}</h3>
 <p class="info">{AdminTempBanUserInfoText}</p>
-<form action="index.html?page=edit_user" method="post">
+<form id="temp_ban_form" action="admin/edit_user.html" method="post">
 <table id="login">
   <tbody>
     <tr>
@@ -90,6 +93,7 @@
       <td class="login_left"></td>
       <td class="login_right" colspan="3">
 	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitTempBanUser" />
 	    <button id="login_bouton" type="Submit" name="Submit" value="SubmitTempBanUser">{BanText}</button>
 	  </td>
     </tr>
@@ -98,8 +102,9 @@
 </form>
 <h3>{AdminBanUserText}</h3>
 <p class="info">{AdminBanUserInfoText}</p>
-<form action="index.html?page=edit_user" method="post">
+<form id="ban_user_form" action="admin/edit_user.html" method="post">
   <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+	<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitBanUser" />
   <button id="login_bouton" type="Submit" name="Submit" value="SubmitBanUser">{BanText}</button>
 </form>
 {IfNotUserBannedEnd}
@@ -107,7 +112,7 @@
 {IfUserOnlineBegin}
 <h3>{KickAUserText}</h3>
 <p class="info">{KickAUserInfoText}</p>
-<form action="index.html?page=edit_user" method="post">
+<form id="kick_user_form" action="admin/edit_user.html" method="post">
 <table id="login">
   <tbody>
     <tr>
@@ -118,6 +123,7 @@
       <td class="login_left"></td>
       <td class="login_right">
 	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitKickUser" />
 		<button id="login_bouton" type="Submit" name="Submit" value="SubmitKickUser">{KickUserText}</button>
 	  </td>
     </tr>
@@ -126,7 +132,7 @@
 </form>
 <h3>{MessageAUserText}</h3>
 <p class="info">{MessageAUserInfoText}</p>
-<form action="index.html?page=edit_user" method="post">
+<form id="message_user_form" action="admin/edit_user.html" method="post">
 <table id="login">
   <tbody>
     <tr>
@@ -137,6 +143,7 @@
       <td class="login_left"></td>
       <td class="login_right">
 	    <input hidden="true" label="userid" id="userid" name="userid" value="{UserID}"/>
+		<input type="hidden" label="Submit" id="Submit" name="Submit" value="SubmitMessageUser" />
 		<button id="login_bouton" type="Submit" name="Submit" value="SubmitMessageUser">{MessageUserText}</button>
 	  </td>
     </tr>
@@ -145,3 +152,110 @@
 </form>
 {IfUserOnlineEnd}
 </div>
+<script>
+  /* attach a submit handler to the form */
+  $("#login_as_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#delete_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#unban_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#content").empty().append(data);
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#temp_ban_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#content").empty().append(data);
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#ban_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#content").empty().append(data);
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#kick_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#message_user_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>

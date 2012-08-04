@@ -12,41 +12,59 @@
 
 -->
 
-{IsNotAdminAuthenticatedBegin}
-<meta http-equiv="REFRESH" content="0;url={SystemURL}">
-{IsNotAdminAuthenticatedEnd}
 {IsAdminAuthenticatedBegin}
-<div id="content">
-    <div id="ContentHeaderCenter"><h2>{EditNewsText}: {SystemName}</h2></div>
-    <div id="register">
-        <form action="index.html?page=edit_news" METHOD="POST">
-            <table>
-                <tr><td class="error" colspan="2" align="center" id="error_message">{ErrorMessage}</td></tr>
-				
-				<tr><td colspan="6"></td></tr>
-				<tr>
-					<td>{NewsItemTitle}</td>
-					<td colspan="5">
-						<input name="NewsTitle" type="text" id="NewsTitle" size="119" value="{NewsTitle}"/>
-					</td>
-				</tr>
+<h2>{SystemName}: {EditNewsText}</h2>
+<div id="info_message" class="error_message"></div>
+<form id="edit_news_form" action="admin/edit_news.html" method="post">
+<table id="edit_news">
+  <caption></caption>
+  
+  <thead>
+    <tr>
+      <th class="add_news_left"></th>
+      <th class="add_news_right"></th>
+    </tr>
+  </thead>
+  
+  <tfoot>
+    <tr>
+      <th class="add_news_left"></th>
+      <th class="add_news_right"></th>
+    </tr>
+  </tfoot>
 
-				<tr>
-					<td class="odd">{NewsItemText}</td>
-					<td colspan="2" valign="top">
-						<textarea name="NewsText" cols="91" rows="10" id="NewsText">{NewsText}</textarea>
-					</td>
-				</tr>
-				
-				<input type="hidden" name="NewsID" id="NewsID" value="{NewsID}" />
-				
-				<tr>
-					<td class="even">
-						<input type="hidden" name="action" value="check"><button id="Submit" name="Submit" type="Submit">{Submit}</button></input>
-					</td>
-				</tr>
-			</table>
-		</form>
-	</div>
-</div>
+  <tbody>
+    <tr>
+      <td class="add_news_left"><p>{NewsItemTitle}</p></td>
+      <td class="add_news_right"><input name="NewsTitle" type="text" id="NewsTitle" size="119" value="{NewsTitle}"/></td>
+    </tr>
+    <tr>
+      <td class="add_news_left"><p>{NewsItemText}</p></td>
+      <td class="add_news_right"><textarea name="NewsText" cols="91" rows="10" id="NewsText">{NewsText}</textarea></td>
+    </tr>
+    <tr>
+      <td class="add_news_left"></td><input type="hidden" label="Submit" id="Submit" name="Submit" value="Submit" />
+      <td class="add_news_left"></td><input type="hidden" label="NewsID" id="NewsID" name="NewsID" value="{NewsID}" />
+      <td class="add_news_right"><button id="Submit" name="Submit" type="Submit">{Submit}</button></td>
+    </tr>
+  </tbody>
+</table>
+</form>
+<script>
+  /* attach a submit handler to the form */
+  $("#edit_news_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>
 {IsAdminAuthenticatedEnd}

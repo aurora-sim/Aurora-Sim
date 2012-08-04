@@ -29,8 +29,9 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
 
             string error = "";
@@ -48,15 +49,16 @@ namespace Aurora.Modules.Web
                 string passwordconf = requestParameters["passwordconf"].ToString();
 
                 if (password != passwordconf)
-                    error = "Passwords do not match";
+                    response = "Passwords do not match";
                 else
                 {
                     IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
                     if (authService != null)
-                        error = authService.SetPassword(user, "UserAccount", password) ? "" : "Failed to set your password, try again later";
+                        response = authService.SetPassword(user, "UserAccount", password) ? "Successfully set password" : "Failed to set your password, try again later";
                     else
-                        error = "No authentication service was available to change your password";
+                        response = "No authentication service was available to change your password";
                 }
+                return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitEmailChange")
@@ -67,19 +69,22 @@ namespace Aurora.Modules.Web
                 {
                     account.Email = email;
                     userService.StoreUserAccount(account);
+                    response = "Successfully updated email";
                 }
                 else
-                    error = "No authentication service was available to change your password";
+                    response = "No authentication service was available to change your password";
+                return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitDeleteUser")
             {
                 string username = requestParameters["username"].ToString();
-                error = "Deleted user successfully";
+                response = "Deleted user successfully";
                 if (username == account.Name)
                     userService.DeleteUser(user, "", false, false);
                 else
-                    error = "The user name did not match";
+                    response = "The user name did not match";
+                return null;
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitTempBanUser")
@@ -91,12 +96,14 @@ namespace Aurora.Modules.Web
                 DateTime until = DateTime.Now.AddDays(timeDays).AddHours(timeHours).AddMinutes(timeMinutes);
                 agent.OtherAgentInformation["TemperaryBanInfo"] = until;
                 agentService.UpdateAgent(agent);
+                error = "User has been banned.";
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitBanUser")
             {
                 agent.Flags |= IAgentFlags.PermBan;
                 agentService.UpdateAgent(agent);
+                error = "User has been banned.";
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitUnbanUser")
@@ -105,6 +112,7 @@ namespace Aurora.Modules.Web
                 agent.Flags &= ~IAgentFlags.PermBan;
                 agent.OtherAgentInformation.Remove("TemperaryBanInfo");
                 agentService.UpdateAgent(agent);
+                error = "User has been unbanned.";
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitLoginAsUser")
@@ -120,6 +128,8 @@ namespace Aurora.Modules.Web
                 IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
                 if (messageModule != null)
                     messageModule.KickUser(account.PrincipalID, message);
+                response = "User has been kicked.";
+                return null;
             }
             if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitMessageUser")
@@ -128,6 +138,8 @@ namespace Aurora.Modules.Web
                 IGridWideMessageModule messageModule = webInterface.Registry.RequestModuleInterface<IGridWideMessageModule>();
                 if (messageModule != null)
                     messageModule.MessageUser(account.PrincipalID, message);
+                response = "User has been sent the message.";
+                return null;
             }
             string bannedUntil = "";
             bool userBanned = agent == null ? false : ((agent.Flags & IAgentFlags.PermBan) == IAgentFlags.PermBan || (agent.Flags & IAgentFlags.TempBan) == IAgentFlags.TempBan);

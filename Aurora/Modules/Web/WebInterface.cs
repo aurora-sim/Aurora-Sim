@@ -103,21 +103,23 @@ namespace Aurora.Modules.Web
         {
             public UUID CookieUUID;
             public Dictionary<string, object> Vars;
+            public Dictionary<string, object> RequestParameters;
             public OSHttpRequest Request;
         }
 
         protected PreAddedDictionary<string, List<CookieLock>> _cookieLockedVars = new PreAddedDictionary<string, List<CookieLock>>(() => new List<CookieLock>());
-        public void CookieLockPageVars(string path, Dictionary<string, object> vars, OSHttpRequest request, OSHttpResponse response)
+        public void CookieLockPageVars(string path, Dictionary<string, object> vars, Dictionary<string, object> requestParams, OSHttpRequest request, OSHttpResponse response)
         {
             UUID random = UUID.Random();
             response.AddCookie(new System.Web.HttpCookie(random.ToString()));
             lock (_cookieLockedVars)
-                _cookieLockedVars[path].Add(new CookieLock { CookieUUID = random, Vars = vars, Request = request });
+                _cookieLockedVars[path].Add(new CookieLock { CookieUUID = random, Vars = vars, RequestParameters = requestParams, Request = request });
         }
 
-        protected bool CheckCookieLocked(string path, OSHttpRequest request, OSHttpResponse response, out Dictionary<string, object> vars)
+        protected bool CheckCookieLocked(string path, OSHttpRequest request, OSHttpResponse response, out Dictionary<string, object> requestParameters, out Dictionary<string, object> vars)
         {
             vars = null;
+            requestParameters = null;
             List<CookieLock> locks = new List<CookieLock>();
             lock (_cookieLockedVars)
             {
@@ -134,6 +136,7 @@ namespace Aurora.Modules.Web
                         if (l.CookieUUID == cookieID)
                         {
                             vars = l.Vars;
+                            requestParameters = l.RequestParameters;
                             request.Files = l.Request.Files;
                             request.Form = l.Request.Form;
                             lock (_cookieLockedVars)
@@ -162,6 +165,8 @@ namespace Aurora.Modules.Web
         {
             byte[] response = MainServer.BlankResponse;
             string filename = GetFileNameFromHTMLPath(path);
+            if (filename == null)
+                return MainServer.NoResponse;
             if (httpRequest.HttpMethod == "POST")
                 httpResponse.KeepAlive = false;
             MainConsole.Instance.Debug("[WebInterface]: Serving " + filename + ", keep-alive: " + httpResponse.KeepAlive);
@@ -199,13 +204,18 @@ namespace Aurora.Modules.Web
                 else
                 {
                     Dictionary<string, object> requestParams;
-                    if (CheckCookieLocked(filename, httpRequest, httpResponse, out requestParams))
-                        requestParameters = requestParams;
-                    Dictionary<string, object> vars = AddVarsForPage(filename, filename, httpRequest,
-                        httpResponse, requestParameters);
+                    Dictionary<string, object> vars;
+                    string respStr = null;
+                    //if (CheckCookieLocked(filename, httpRequest, httpResponse, out requestParams, out vars))
+                    //    requestParameters = requestParams;
+                    //else
+                        vars = AddVarsForPage(filename, filename, httpRequest,
+                            httpResponse, requestParameters, out respStr);
 
                     AddDefaultVarsForPage(ref vars);
 
+                    if (!string.IsNullOrEmpty(respStr))
+                        return response = Encoding.UTF8.GetBytes(respStr);
                     if (httpResponse.StatusCode != 200)
                         return MainServer.NoResponse;
                     if (vars == null)
@@ -230,12 +240,16 @@ namespace Aurora.Modules.Web
 
         protected void AddDefaultVarsForPage(ref Dictionary<string, object> vars)
         {
-            vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
-            vars.Add("SystemName", GridName);
+            if (vars != null)
+            {
+                vars.Add("SystemURL", MainServer.Instance.FullHostName + ":" + _port);
+                vars.Add("SystemName", GridName);
+            }
         }
 
-        protected Dictionary<string, object> AddVarsForPage(string filename, string parentFileName, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters)
+        protected Dictionary<string, object> AddVarsForPage(string filename, string parentFileName, OSHttpRequest httpRequest, OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, out string response)
         {
+            response = null;
             Dictionary<string, object> vars = new Dictionary<string, object>();
             IWebInterfacePage page = GetPage(filename);
             if (page != null)
@@ -264,7 +278,7 @@ namespace Aurora.Modules.Web
                     if (!Authenticator.CheckAdminAuthentication(httpRequest))
                         return null;
                 }
-                vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator);
+                vars = page.Fill(this, parentFileName, httpRequest, httpResponse, requestParameters, translator, out response);
                 return vars;
             }
             return null;
@@ -291,7 +305,8 @@ namespace Aurora.Modules.Web
                             return null;
                     }
                 }
-                return (AuroraXmlDocument)page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator)["xml"];
+                string response = null;
+                return (AuroraXmlDocument)page.Fill(this, filename, httpRequest, httpResponse, requestParameters, translator, out response)["xml"];
             }
             return null;
         }
@@ -311,8 +326,9 @@ namespace Aurora.Modules.Web
                     for (int i = 0; i < split.Length; i += 2)
                     {
                         string filename = GetFileNameFromHTMLPath(split[i]);
+                        string response = null;
                         Dictionary<string, object> newVars = AddVarsForPage(filename, originalFileName,
-                            request, httpResponse, requestParameters);
+                            request, httpResponse, requestParameters, out response);
                         AddDefaultVarsForPage(ref newVars);
                         sb.AppendLine(ConvertHTML(filename, File.ReadAllText(filename), 
                             request, httpResponse, requestParameters, newVars));
@@ -326,13 +342,14 @@ namespace Aurora.Modules.Web
                         string filename = GetFileNameFromHTMLPath(split[i]).Replace("index.html", "");
                         if (Directory.Exists(filename))
                         {
+                            string response = null;
                             Dictionary<string, object> newVars = AddVarsForPage(filename, filename, request, httpResponse,
-                                                                                requestParameters);
+                                                                                requestParameters, out response);
                             string[] files = Directory.GetFiles(filename);
                             foreach (string f in files)
                             {
                                 if (!f.EndsWith(".html")) continue;
-                                Dictionary<string, object> newVars2 = AddVarsForPage(f, filename, request, httpResponse, requestParameters) ??
+                                Dictionary<string, object> newVars2 = AddVarsForPage(f, filename, request, httpResponse, requestParameters, out response) ??
                                                                       new Dictionary<string, object>();
                                 foreach (KeyValuePair<string, object> pair in newVars.Where(pair => !newVars2.ContainsKey(pair.Key)))
                                     newVars2.Add(pair.Key, pair.Value);
@@ -476,11 +493,18 @@ namespace Aurora.Modules.Web
 
         protected string GetFileNameFromHTMLPath(string path)
         {
-            string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
-			if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/"))) return "html/index.html";
-            if (Path.GetFileName(file) == "")
-                file = Path.Combine(file, "index.html");
-            return file;
+            try
+            {
+                string file = Path.Combine("html/", path.StartsWith("/") ? path.Remove(0, 1) : path);
+                if (!Path.GetFullPath(file).StartsWith(Path.GetFullPath("html/"))) return "html/index.html";
+                if (Path.GetFileName(file) == "")
+                    file = Path.Combine(file, "index.html");
+                return file;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion

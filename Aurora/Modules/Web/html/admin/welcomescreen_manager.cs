@@ -25,15 +25,14 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
             IGenericsConnector connector = Aurora.DataManager.DataManager.RequestPlugin<IGenericsConnector>();
 
-            bool changed = false;
             if (requestParameters.ContainsKey("Submit"))
             {
-                changed = true;
                 GridWelcomeScreen submittedInfo = new GridWelcomeScreen();
                 submittedInfo.SpecialWindowMessageTitle = requestParameters["SpecialWindowTitle"].ToString();
                 submittedInfo.SpecialWindowMessageText = requestParameters["SpecialWindowText"].ToString();
@@ -42,6 +41,9 @@ namespace Aurora.Modules.Web
                 submittedInfo.GridStatus = requestParameters["GridStatus"].ToString() == "1";
 
                 connector.AddGeneric(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen", submittedInfo.ToOSD());
+
+                response = "Successfully saved data";
+                return null;
             }
 
             GridWelcomeScreen welcomeInfo = connector.GetGeneric<GridWelcomeScreen>(UUID.Zero, "GridWelcomeScreen", "GridWelcomeScreen");
@@ -70,7 +72,6 @@ namespace Aurora.Modules.Web
             vars.Add("SpecialWindowColorGreen", welcomeInfo.SpecialWindowMessageColor == "green" ? "selected" : "");
             vars.Add("SpecialWindowColorWhite", welcomeInfo.SpecialWindowMessageColor == "white" ? "selected" : "");
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
-            vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 
             return vars;
         }

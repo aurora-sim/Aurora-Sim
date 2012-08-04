@@ -27,9 +27,9 @@
 -->
 
 {IsAdminAuthenticatedBegin}
+<div id="fullPage">
 <h2>{SystemName}: {PageManager}</h2>
-<div id="error_message" class="error_message"><h3>{ChangesSavedSuccessfully}</h3></div>
-<form action="index.html?page=page_manager" method="post">
+<div id="info_message" class="info_message"></div>
 <table id="page_manager_select">
   <caption></caption>
   
@@ -48,23 +48,79 @@
   <tbody>
     <tr>
       <th class="page_manager_select_left"></th>
-	    <button id="AddItem" type="Submit" name="AddItem">{AddItem}</button>
+        <form id="page_manager_add_form" action="admin/page_manager.html" method="post">
+		  <input type="hidden" label="Submit" id="AddItem" name="AddItem" value="AddItem" />
+	      <button id="AddItem" type="Submit" name="AddItem">{AddItem}</button>
+        </form>
     </tr>
     <tr>
       <td class="page_manager_select_left">
-	    <select id="MenuItem" require="true" name="MenuItem">
+        <form id="page_manager_select_form" action="admin/page_manager.html" method="post">
+	      <select id="MenuItem" require="true" name="MenuItem">
 {PagesListArrayBegin}
-		  <option value="{Value}" {PageSelected}>{Name}</option>
+		    <option value="{Value}" {PageSelected}>{Name}</option>
 {PagesListArrayEnd}
-	    </select><button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button>
-	    <button id="DeleteItem" type="Submit" name="DeleteItem">{DeleteItem}</button>
+	      </select>
+		  <button id="SelectItem" type="Submit" name="SelectItem">{SelectItem}</button>
+	      <button id="DeleteItem" type="Submit" name="DeleteItem">{DeleteItem}</button>
+        </form>
 	  </td>
     </tr>
   </tbody>
 </table>
-</form>
+<script>
+  /* attach a submit handler to the form */
+  $("#page_manager_add_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#fullPage").empty().append(data);
+      }
+    );
+  });
+  $("#SelectItem").click(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $(this).closest('form'),
+        url = $form.attr( 'action' );
+		
+    var formData = $form.serializeArray();
+    formData.push({ name: this.name, value: this.value });
+    /* Send the data using post and put the results in a div */
+    $.post( url, formData,
+      function( data ) {
+		$("#fullPage").empty().append(data);
+      }
+    );
+  });
+  /* attach a submit handler to the form */
+  $("#DeleteItem").click(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $(this).closest('form'),
+        url = $form.attr( 'action' );
+    var formData = $form.serializeArray();
+    formData.push({ name: this.name, value: this.value });
+    /* Send the data using post and put the results in a div */
+    $.post( url, formData,
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>
 {IfDisplayEditBegin}
-<form action="index.html?page=page_manager" method="post">
+<form id="page_manager_edit_form" action="admin/page_manager.html" method="post">
 <table id="page_manager">
   <caption></caption>
   
@@ -159,5 +215,23 @@
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#page_manager_edit_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#info_message").empty().append("<h3>" + data + "</h3>");
+      }
+    );
+  });
+</script>
+</div>
 {IfDisplayEditEnd}
 {IsAdminAuthenticatedEnd}

@@ -28,20 +28,22 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return true; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
             
-            bool changed = false;
             if (requestParameters.ContainsKey("ResetMenu"))
             {
-                changed = true;
                 PagesMigrator.ResetToDefaults();
+                response = translator.GetTranslatedString("ChangesSavedSuccessfully");
+                return null;
             }
             if (requestParameters.ContainsKey("ResetSettings"))
             {
-                changed = true;
                 SettingsMigrator.ResetToDefaults();
+                response = translator.GetTranslatedString("ChangesSavedSuccessfully");
+                return null;
             }
 
             vars.Add("FactoryReset", translator.GetTranslatedString("FactoryReset"));
@@ -50,7 +52,6 @@ namespace Aurora.Modules.Web
             vars.Add("ResetMenuInfoText", translator.GetTranslatedString("ResetMenuText"));
             vars.Add("ResetSettingsInfoText", translator.GetTranslatedString("ResetSettingsInfoText"));
             vars.Add("Reset", translator.GetTranslatedString("Reset"));
-            vars.Add("ChangesSavedSuccessfully", changed ? translator.GetTranslatedString("ChangesSavedSuccessfully") : "");
 
             return vars;
         }

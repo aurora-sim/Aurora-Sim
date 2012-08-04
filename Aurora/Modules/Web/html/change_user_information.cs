@@ -28,9 +28,10 @@ namespace Aurora.Modules.Web
         public bool RequiresAuthentication { get { return true; } }
         public bool RequiresAdminAuthentication { get { return false; } }
         
-        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest, 
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+        public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
 
             string error = "";
@@ -41,17 +42,18 @@ namespace Aurora.Modules.Web
             {
                 string password = requestParameters["password"].ToString();
                 string passwordconf = requestParameters["passwordconf"].ToString();
-
+                response = "Success";
                 if (passwordconf != password)
-                    error = "Passwords do not match";
+                    response = "Passwords do not match";
                 else
                 {
                     IAuthenticationService authService = webInterface.Registry.RequestModuleInterface<IAuthenticationService>();
                     if (authService != null)
                         error = authService.SetPassword(user.PrincipalID, "UserAccount", password) ? "" : "Failed to set your password, try again later";
                     else
-                        error = "No authentication service was available to change your password";
+                        response = "No authentication service was available to change your password";
                 }
+                return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitEmailChange")
@@ -63,9 +65,11 @@ namespace Aurora.Modules.Web
                 {
                     user.Email = email;
                     userService.StoreUserAccount(user);
+                    response = "Success";
                 }
                 else
-                    error = "No authentication service was available to change your password";
+                    response = "No authentication service was available to change your password";
+                return null;
             }
             else if (requestParameters.ContainsKey("Submit") &&
                 requestParameters["Submit"].ToString() == "SubmitDeleteUser")
@@ -80,13 +84,14 @@ namespace Aurora.Modules.Web
                     if (userService != null)
                     {
                         userService.DeleteUser(user.PrincipalID, password, true, false);
-                        error = "Successfully deleted account.";
+                        response = "Successfully deleted account.";
                     }
                     else
-                        error = "User service unavailable, please try again later";
+                        response = "User service unavailable, please try again later";
                 }
                 else
-                    error = "Wrong username or password";
+                    response = "Wrong username or password";
+                return null;
             }
             vars.Add("ErrorMessage", error);
             vars.Add("ChangeUserInformationText", translator.GetTranslatedString("ChangeUserInformationText"));

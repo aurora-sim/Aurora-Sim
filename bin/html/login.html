@@ -10,13 +10,9 @@
 
 -->
 
-<script language="javascript" type="text/javascript">
-  addEvent(window, "load", function() { document.getElementById("login_input").focus(); } );
-</script>
-
 <h2>{SystemName}: {Login}</h2>
-<form action="index.html?page=login" method="post">
 <div id="error_message" class="error_message"><h3>{ErrorMessage}</h3></div>
+<form action="login.html" id="login_form" method="POST">
 <table id="login">
   <caption></caption>
   
@@ -50,3 +46,20 @@
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#login_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#error_message").empty().append(data);
+      }
+    );
+  });
+</script>

@@ -29,11 +29,11 @@ namespace Aurora.Modules.Web
         public bool RequiresAdminAuthentication { get { return false; } }
 
         public Dictionary<string, object> Fill(WebInterface webInterface, string filename, OSHttpRequest httpRequest,
-            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator)
+            OSHttpResponse httpResponse, Dictionary<string, object> requestParameters, ITranslator translator, out string response)
         {
+            response = null;
             var vars = new Dictionary<string, object>();
 
-            string error = "";
             if (requestParameters.ContainsKey("Submit"))
             {
                 string AvatarName = requestParameters["AvatarName"].ToString();
@@ -59,7 +59,7 @@ namespace Aurora.Modules.Web
 
                     IUserAccountService accountService = webInterface.Registry.RequestModuleInterface<IUserAccountService>();
                     UUID userID = UUID.Random();
-                    error = accountService.CreateUser(userID, settings.DefaultScopeID, AvatarName, AvatarPassword, UserEmail);
+                    string error = accountService.CreateUser(userID, settings.DefaultScopeID, AvatarName, AvatarPassword, UserEmail);
                     if (error == "")
                     {
                         IAgentConnector con = Aurora.DataManager.DataManager.RequestPlugin<IAgentConnector>();
@@ -92,13 +92,17 @@ namespace Aurora.Modules.Web
                             profileData.UpdateUserProfile(profile);
                         }
 
-                        webInterface.Redirect(httpResponse, "/", filename);
-
-                        return vars;
+                        response = "<h3>Successfully created account, redirecting to main page</h3>" +
+                            "<script language=\"javascript\">" +
+                            "setTimeout(function() {window.location.href = \"index.html\";}, 3000);" +
+                            "</script>";
                     }
+                    else
+                        response = "<h3>" + error + "</h3>";
                 }
                 else
-                    error = "You did not accept the Terms of Service agreement.";
+                    response = "<h3>You did not accept the Terms of Service agreement.</h3>";
+                return null;
             }
 
             List<Dictionary<string, object>> daysArgs = new List<Dictionary<string, object>>();
@@ -163,8 +167,7 @@ namespace Aurora.Modules.Web
             vars.Add("UserEmailText", translator.GetTranslatedString("UserEmailText"));
             vars.Add("Accept", translator.GetTranslatedString("Accept"));
             vars.Add("Submit", translator.GetTranslatedString("Submit"));
-            vars.Add("ErrorMessage", error);
-            vars.Add("SubmitURL", "index.html?page=register");
+            vars.Add("SubmitURL", "register.html");
 
             return vars;
         }

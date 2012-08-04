@@ -4,9 +4,9 @@ jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel({wrap: 'c
 </script>
   
 <h2>{SystemName}: {RegistrationText}</h2>
-<form action="{SubmitURL}" method="post">
 <div id="error_message" class="error">{ErrorMessage}</div>
-<table id="register">
+<form id="region_form" action="{SubmitURL}" method="POST">
+<table>
   <caption></caption>
   
   <thead>
@@ -126,13 +126,26 @@ jQuery(document).ready(function() {jQuery('#avatarcarousel').jcarousel({wrap: 'c
       <td class="register_right" colspan="3"><input class="checkbox" id="checkbox" type="checkbox" name="ToSAccept" value="Accepted" /><label for="checkbox">{Accept}</label></td>
     </tr>
     <tr>
-	  <td class="register_left"></td>
+	  <td class="register_left"></td><input hidden type="hidden" label="Submit" id="Submit" name="Submit" value="Submit" />
       <td class="register_right" colspan="3"><input type="hidden" name="action" value="check"><button id="Submit" name="Submit" type="Submit">{Submit}</button></input></td>
     </tr>
   </tbody>
 </table>
+</form>
+<script>
+  /* attach a submit handler to the form */
+  $("#region_form").submit(function(event) {
 
-<!--
-<h2>{RegistrationForText} {SystemName}</h2>
-<div id="alert_message" class="alert">{RegistrationsDisabled}</div>
--->
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#error_message").empty().append(data);
+      }
+    );
+  });
+</script>

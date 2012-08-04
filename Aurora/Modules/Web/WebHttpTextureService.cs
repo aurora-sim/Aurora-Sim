@@ -56,16 +56,9 @@ namespace Aurora.Modules.Web
             byte[] jpeg = new byte[0];
             IAssetService m_AssetService = _registry.RequestModuleInterface<IAssetService>();
 
-            MemoryStream imgstream = new MemoryStream();
-            Bitmap texture = new Bitmap(1, 1);
-            ManagedImage managedImage;
-            Image image = (Image)texture;
-
-            try
+            using (MemoryStream imgstream = new MemoryStream())
             {
                 // Taking our jpeg2000 data, decoding it, then saving it to a byte array with regular jpeg data
-
-                imgstream = new MemoryStream();
 
                 // non-async because we know we have the asset immediately.
                 AssetBase mapasset = m_AssetService.Get(keysvals["uuid"].ToString());
@@ -73,42 +66,27 @@ namespace Aurora.Modules.Web
                 if (mapasset != null)
                 {
                     // Decode image to System.Drawing.Image
+                    Image image = null;
+                    ManagedImage managedImage;
                     if (OpenJPEG.DecodeToImage(mapasset.Data, out managedImage, out image))
                     {
                         // Save to bitmap
+                        using (Bitmap texture = ResizeBitmap(image, 256, 256))
+                        {
+                            EncoderParameters myEncoderParameters = new EncoderParameters();
+                            myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
 
-                        texture = ResizeBitmap(image, 256, 256);
-                        EncoderParameters myEncoderParameters = new EncoderParameters();
-                        myEncoderParameters.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
+                            // Save bitmap to stream
+                            texture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
 
-                        // Save bitmap to stream
-                        texture.Save(imgstream, GetEncoderInfo("image/jpeg"), myEncoderParameters);
-
-                        // Write the stream to a byte array for output
-                        jpeg = imgstream.ToArray();
+                            // Write the stream to a byte array for output
+                            jpeg = imgstream.ToArray();
+                        }
+                        image.Dispose();
                     }
+                    mapasset.Dispose();
                 }
             }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                // Reclaim memory, these are unmanaged resources
-                // If we encountered an exception, one or more of these will be null
-                if (texture != null)
-                    texture.Dispose();
-
-                if (image != null)
-                    image.Dispose();
-
-                if (imgstream != null)
-                {
-                    imgstream.Close();
-                    imgstream.Dispose();
-                }
-            }
-
 
             reply["str_response_string"] = Convert.ToBase64String(jpeg);
             reply["int_response_code"] = statuscode;
@@ -117,7 +95,7 @@ namespace Aurora.Modules.Web
             return reply;
         }
 
-        public Bitmap ResizeBitmap(Image b, int nWidth, int nHeight)
+        private Bitmap ResizeBitmap(Image b, int nWidth, int nHeight)
         {
             Bitmap newsize = new Bitmap(nWidth, nHeight);
             Graphics temp = Graphics.FromImage(newsize);

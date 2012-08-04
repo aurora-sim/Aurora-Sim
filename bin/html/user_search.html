@@ -10,13 +10,14 @@
 {Search}              Search
 -->
 
+<div id="fullPage">
 <script type="text/javascript">
   $(document).ready(function(){$(".agentinfo, .agentedit").colorbox({iframe:true, width:"990px", height:"440px"});});
 </script>
 
 <h2>{SystemName}: {UserSearchText}</h2>
 <h3>{SearchForUserText}</h3>
-<form action="index.html?page=user_search" method="post">
+<form id="user_search_form" action="user_search.html" method="post">
 <table id="user_search">
   <caption></caption>
   
@@ -37,12 +38,30 @@
       <td class="user_search_left"><p>{UserNameText}*</p></td>
       <td class="user_search_right">
 	    <input require="true" label="username" name="username" />
+		<input hidden type="hidden" label="Submit" id="Submit" name="Submit" value="Submit" />
 		<button id="login_bouton" type="Submit" name="Submit" value="Submit">{Search}</button>
 	  </td>
     </tr>
   </tbody>
 </table>
 </form>
+<script>
+  /* attach a submit handler to the form */
+  $("#user_search_form").submit(function(event) {
+
+    /* stop form from submitting normally */
+    event.preventDefault(); 
+    /* get some values from elements on the page: */
+    var $form = $( this ),
+        url = $form.attr( 'action' );
+    /* Send the data using post and put the results in a div */
+    $.post( url, $form.serialize(),
+      function( data ) {
+		$("#fullPage").empty().append(data);
+      }
+    );
+  });
+</script>
 <h3>{SearchResultForUserText}</h3>
 <table id="user_search_result_navigation_top">
   <caption></caption>
@@ -138,3 +157,4 @@
   </tbody>
 -->
 </table>
+</div>
