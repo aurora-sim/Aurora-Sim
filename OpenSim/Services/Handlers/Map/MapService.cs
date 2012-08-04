@@ -216,7 +216,6 @@ namespace OpenSim.Services.Handlers.Map
                         (regionX * Constants.RegionSize) + maxRegionSize,
                         (regionY * Constants.RegionSize) - maxRegionSize,
                         (regionY * Constants.RegionSize) + maxRegionSize);
-                List<AssetBase> textures = new List<AssetBase> ();
                 List<Image> bitImages = new List<Image> ();
                 List<GridRegion> badRegions = new List<GridRegion> ();
                 foreach (GridRegion r in regions)
@@ -225,7 +224,6 @@ namespace OpenSim.Services.Handlers.Map
 
                     if (texAsset != null)
                     {
-                        textures.Add(texAsset);
                         Image image;
                         ManagedImage mImage;
                         if ((OpenJPEG.DecodeToImage(texAsset.Data, out mImage, out image)) && image != null)
@@ -242,20 +240,27 @@ namespace OpenSim.Services.Handlers.Map
                 const int SizeOfImage = 256;
 
                 Bitmap mapTexture = new Bitmap (SizeOfImage, SizeOfImage);
-                Graphics g = Graphics.FromImage (mapTexture);
-                SolidBrush sea = new SolidBrush (Color.FromArgb (29, 71, 95));
-                g.FillRectangle (sea, 0, 0, SizeOfImage, SizeOfImage);
-
-                for (int i = 0; i < regions.Count; i++)
+                using (Graphics g = Graphics.FromImage(mapTexture))
                 {
-                    //Find the offsets first
-                    float x = (regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / Constants.RegionSize;
-                    float y = (regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / Constants.RegionSize;
-                    y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
-                    float xx = (float)(x * (SizeOfImage / mapView));
-                    float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
-                    g.DrawImage (bitImages[i], xx, yy,
-                        (int)(SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / Constants.RegionSize)), (int)(SizeOfImage / (float)mapView * (regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
+                    SolidBrush sea = new SolidBrush(Color.FromArgb(29, 71, 95));
+                    g.FillRectangle(sea, 0, 0, SizeOfImage, SizeOfImage);
+
+                    for (int i = 0; i < regions.Count; i++)
+                    {
+                        //Find the offsets first
+                        float x = (regions[i].RegionLocX - (regionX * (float)Constants.RegionSize)) / Constants.RegionSize;
+                        float y = (regions[i].RegionLocY - (regionY * (float)Constants.RegionSize)) / Constants.RegionSize;
+                        y += (regions[i].RegionSizeX - Constants.RegionSize) / Constants.RegionSize;
+                        float xx = (float)(x * (SizeOfImage / mapView));
+                        float yy = SizeOfImage - (y * (SizeOfImage / mapView) + (SizeOfImage / (mapView)));
+                        g.DrawImage(bitImages[i], xx, yy,
+                            (int)(SizeOfImage / (float)mapView * ((float)regions[i].RegionSizeX / Constants.RegionSize)), (int)(SizeOfImage / (float)mapView * (regions[i].RegionSizeY / (float)Constants.RegionSize))); // y origin is top
+                    }
+                }
+
+                foreach (var bmp in bitImages)
+                {
+                    bmp.Dispose();
                 }
 
                 EncoderParameters myEncoderParameters = new EncoderParameters ();
@@ -268,6 +273,8 @@ namespace OpenSim.Services.Handlers.Map
                 // Write the stream to a byte array for output
                 jpeg = imgstream.ToArray ();
                 SaveCachedImage (uri, jpeg);
+                imgstream.Dispose();
+                mapTexture.Dispose();
             }
             catch
             {
