@@ -726,16 +726,8 @@ namespace Aurora.Modules.Startup.FileBasedSimulationData
                                                       ? m_fileName
                                                       : Path.Combine(m_loadDirectory, m_fileName));
             if(stream == null)
-            {
-                lock (m_saveLock)
-                {
-                    if (!m_shutdown)
-                    {
-                        SaveBackup(m_saveDirectory, false);
-                    }
-                }
                 return;
-            }
+
             GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
 

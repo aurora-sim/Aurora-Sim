@@ -32,7 +32,7 @@ namespace Aurora.Framework
         /// </summary>
         /// <param name="regionID"></param>
         /// <returns></returns>
-        bool StopRegion(UUID regionID);
+        bool StopRegion(UUID regionID, int secondsBeforeShutdown);
 
         /// <summary>
         /// Clears all objects from the region

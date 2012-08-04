@@ -453,6 +453,19 @@ namespace Aurora.Framework.Servers.HttpServer
                 if (path == "/")
                     return false;
 
+                if (!String.IsNullOrEmpty(bestMatch))
+                    return true;
+            }
+            lock (m_HTTPStreamHandlers)
+            {
+                foreach (string pattern in m_HTTPStreamHandlers.Keys)
+                {
+                    if (searchquery.StartsWith(pattern) && searchquery.Length >= pattern.Length)
+                    {
+                        bestMatch = pattern;
+                    }
+                }
+
                 return !String.IsNullOrEmpty(bestMatch);
             }
         }

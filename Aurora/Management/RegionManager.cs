@@ -579,7 +579,7 @@ Note: Neither 'None' nor 'Soft' nor 'Medium' start the heartbeats immediately.")
             SetStoppingStatus();
             Util.FireAndForget (delegate
             {
-                if (_regionManager.StopRegion(CurrentRegionID))
+                if (_regionManager.StopRegion(CurrentRegionID, 0))
                 {
                     SetOfflineStatus();
                     RefreshCurrentRegionsThreaded();

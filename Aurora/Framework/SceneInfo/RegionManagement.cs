@@ -118,9 +118,9 @@ namespace Aurora.Framework
         }
 
         [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.None, UsePassword = true)]
-        public bool StopRegion(UUID regionID)
+        public bool StopRegion(UUID regionID, int secondsBeforeShutdown)
         {
-            object remoteValue = InternalDoRemote(regionID);
+            object remoteValue = InternalDoRemote(regionID, secondsBeforeShutdown);
             if (remoteValue != null || m_doRemoteOnly)
                 return remoteValue == null ? false : (bool)remoteValue;
 
@@ -128,7 +128,7 @@ namespace Aurora.Framework
             if (_sceneManager.TryGetScene(regionID, out scene))
             {
                 _sceneManager.AllRegions--;
-                _sceneManager.CloseRegion(scene, ShutdownType.Immediate, 0);
+                _sceneManager.CloseRegion(scene, secondsBeforeShutdown == 0 ? ShutdownType.Immediate : ShutdownType.Delayed, secondsBeforeShutdown);
                 return true;
             }
             return false;
