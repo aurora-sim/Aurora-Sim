@@ -57,7 +57,7 @@ namespace Aurora.Modules.Web
             else
             {
                 username = username.Replace("%20", " ");
-                webInterface.Redirect(httpResponse, "/webprofile/?name=" + username, filename);
+                webInterface.Redirect(httpResponse, "/webprofile/?name=" + username);
                 return vars;
             }
 
