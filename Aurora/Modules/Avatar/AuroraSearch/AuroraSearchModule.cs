@@ -396,24 +396,12 @@ namespace Aurora.Modules.Search
                     LandData landdata = directoryService.GetParcelInfo(landDir.parcelID);
                     if (landdata == null || landdata.Maturity != 0)
                         continue; //Not a PG land 
-#if (!ISWIN)
-                    foreach (IScene scene in m_Scenes)
-                    {
-                        if (scene.RegionInfo.RegionID == landdata.RegionID)
-                        {
-                            //Global coords, so add the meters
-                            locX = scene.RegionInfo.RegionLocX;
-                            locY = scene.RegionInfo.RegionLocY;
-                        }
-                    }
-#else
                     foreach (IScene scene in m_Scenes.Where(scene => scene.RegionInfo.RegionID == landdata.RegionID))
                     {
                         //Global coords, so add the meters
                         locX = scene.RegionInfo.RegionLocX;
                         locY = scene.RegionInfo.RegionLocY;
                     }
-#endif
                     if (locY == 0 && locX == 0)
                     {
                         //Ask the grid service for the coordinates if the region is not local

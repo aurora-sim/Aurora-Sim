@@ -174,8 +174,10 @@ namespace Aurora.Framework
             foreach(ParameterInfo info in parameters)
             {
                 OSD osd = o[i] == null ? null : Util.MakeOSD(o[i], o[i].GetType());
-                if(osd != null)
+                if (osd != null)
                     map.Add(info.Name, osd);
+                else
+                    map.Add(info.Name, new OSD());
                 i++;
             }
             List<string> m_ServerURIs = GetURIs(urlOverrides, map, url, userID);
@@ -352,7 +354,9 @@ namespace Aurora.Framework
                         int paramNum = 0;
                         foreach (ParameterInfo param in paramInfo)
                         {
-                            if(param.ParameterType == typeof(OSD))
+                            if (args[param.Name].Type == OSDType.Unknown)
+                                parameters[paramNum++] = null;
+                            else if(param.ParameterType == typeof(OSD))
                                 parameters[paramNum++] = args[param.Name];
                             else
                                 parameters[paramNum++] = Util.OSDToObject(args[param.Name], param.ParameterType);
