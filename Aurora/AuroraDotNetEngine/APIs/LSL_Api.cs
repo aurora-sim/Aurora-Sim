@@ -213,6 +213,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llResetScript()
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+            if (m_UrlModule != null)
+            {
+                m_UrlModule.ScriptRemoved(m_itemID);
+            }
             m_ScriptEngine.ResetScript(m_host.UUID, m_itemID, true);
         }
 
