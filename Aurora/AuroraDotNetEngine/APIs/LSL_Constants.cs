@@ -226,6 +226,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger ATTACH_BELLY = 28;
         public static readonly LSL_Types.LSLInteger ATTACH_RPEC = 29;
         public static readonly LSL_Types.LSLInteger ATTACH_LPEC = 30;
+        public static readonly LSL_Types.LSLInteger ATTACH_LEFT_PEC = 29;
+        public static readonly LSL_Types.LSLInteger ATTACH_RIGHT_PEC = 30;
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_CENTER_2 = 31;
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_TOP_RIGHT = 32;
         public static readonly LSL_Types.LSLInteger ATTACH_HUD_TOP_CENTER = 33;
