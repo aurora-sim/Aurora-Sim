@@ -39,6 +39,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         private readonly Dictionary<string, SYMBOL> m_duplicatedGlobalVariableValues = new Dictionary<string, SYMBOL>();
         private Dictionary<string, Dictionary<string, SYMBOL>> m_localVariableValues = new Dictionary<string, Dictionary<string, SYMBOL>>();
         private Dictionary<string, Dictionary<string, string>> m_localVariableValuesStr = new Dictionary<string, Dictionary<string, string>>();
+        private Dictionary<string, Dictionary<string, int>> m_localVariableScope = new Dictionary<string, Dictionary<string, int>>();
         private readonly Dictionary<string, Dictionary<string, SYMBOL>> m_duplicatedLocalVariableValues = new Dictionary<string, Dictionary<string, SYMBOL>>();
         private string m_currentEvent = "";
         private string m_currentState = "";
@@ -108,8 +109,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         ///   node, then all it's children.
         /// </summary>
         /// <param name = "s">The current node to transform.</param>
+        /// <param name="GlobalMethods"> </param>
+        /// <param name="MethodArguements"> </param>
         private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods,
                                    Dictionary<string, ObjectList> MethodArguements)
+        {
+            TransformNode(s, GlobalMethods, MethodArguements, new List<int>(), 0);
+        }
+
+        /// <summary>
+        ///   Recursively called to transform each type of node. Will transform this
+        ///   node, then all it's children.
+        /// </summary>
+        /// <param name = "s">The current node to transform.</param>
+        /// <param name="GlobalMethods"> </param>
+        /// <param name="MethodArguements"> </param>
+        /// <param name="scopesParent"> </param>
+        /// <param name="scopeCurrent"> </param>
+        private void TransformNode(SYMBOL s, Dictionary<string, string> GlobalMethods,
+                                   Dictionary<string, ObjectList> MethodArguements, List<int> scopesParent, int scopeCurrent)
         {
             // make sure to put type lower in the inheritance hierarchy first
             // ie: since IdentConstant and StringConstant inherit from Constant,
@@ -146,6 +164,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 m_localVariableValues.Add("global_function_" + fun.Name, new Dictionary<string, SYMBOL>());
                 m_localVariableValuesStr.Add("global_function_" + fun.Name, new Dictionary<string, string>());
                 m_duplicatedLocalVariableValues.Add("global_function_" + fun.Name, new Dictionary<string, SYMBOL>());
+                m_localVariableScope.Add("global_function_" + fun.Name, new Dictionary<string, int>());
+                // this is a new function, lets clear the parent scopes and set the current scope to this
+                scopesParent.Clear();
+                scopeCurrent = s.pos;
+                scopesParent.Add(scopeCurrent);
             }
             else if (s is State)
             {
@@ -161,6 +184,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 m_localVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
                 m_localVariableValuesStr.Add(m_currentState + "_" + evt.Name, new Dictionary<string, string>());
                 m_duplicatedLocalVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
+                m_localVariableScope.Add(m_currentState + "_" + evt.Name, new Dictionary<string, int>());
+                // this is a new state event, lets clear the parent scopes and set the current scope to this
+                scopesParent.Clear();
+                scopeCurrent = s.pos;
+                scopesParent.Add(scopeCurrent);
             }
             else if (s is GlobalVariableDeclaration)
             {
@@ -304,11 +332,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         IdentExpression identEx = (IdentExpression)assignmentChild;
                         if (isDeclaration)
                         {
-                            if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) && 
-                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                            if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
+                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
+                                scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
                                 m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = identEx.Name;
+                            m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
                         }
                     }
                     else if (assignmentChild is ListConstant)
@@ -350,10 +380,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                                 if (isDeclaration)
                                 {
                                     if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
-                                        !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                        !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
+                                        scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
                                         m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                                     m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
                                     m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
+                                    m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
                                 }
                             }
                         }
@@ -392,10 +424,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
-                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
+                                scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
                                 m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = listConst;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = listConst.Value;
+                            m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
                         }
                     }
                     else if (assignmentChild is Constant)
@@ -404,14 +438,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                         if (isDeclaration)
                         {
                             if (m_localVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
-                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID))
+                                !m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()].ContainsKey(decID) &&
+                                scopesParent.Contains(m_localVariableScope[GetLocalVariableDictionaryKey()][decID]))
                                 m_duplicatedLocalVariableValues[GetLocalVariableDictionaryKey()][decID] = m_localVariableValues[GetLocalVariableDictionaryKey()][decID];
                             m_localVariableValues[GetLocalVariableDictionaryKey()][decID] = identEx;
                             m_localVariableValuesStr[GetLocalVariableDictionaryKey()][decID] = identEx.Value;
+                            m_localVariableScope[GetLocalVariableDictionaryKey()][decID] = scopeCurrent;
                         }
                     }
                 }
             }
+            
             /*if(s is Statement)
             {
                 if(s.kids.Count == 1 && s.kids[0] is Assignment)
@@ -470,14 +507,26 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 //
                 // We need to check for that here.
 
-                if (null != s.kids[i])
+                if (null == s.kids[i]) continue;
+                bool scopeAdded = false;
+                // we need to keep track of the scope for dulicate variables
+                if ((s is IfStatement) || (s is WhileStatement) || (s is ForLoopStatement) || (s is DoWhileStatement))
                 {
-                    if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
-                        AddImplicitInitialization(s, i);
-
-                    TransformNode((SYMBOL)s.kids[i], null, null);
+                    scopeCurrent = ((SYMBOL)s.kids[i]).pos;
+                    scopesParent.Add(scopeCurrent);
+                    scopeAdded = true;
                 }
+
+                if (!(s is Assignment || s is ArgumentDeclarationList) && s.kids[i] is Declaration)
+                    AddImplicitInitialization(s, i);
+
+                TransformNode((SYMBOL)s.kids[i], null, null, scopesParent, scopeCurrent);
+
+                // we need to remove the current scope from the parent since we are no longer in that scope
+                if (scopeAdded)
+                    scopesParent.Remove(scopeCurrent);
             }
+
         }
 
         private string GetLocalVariableDictionaryKey()
