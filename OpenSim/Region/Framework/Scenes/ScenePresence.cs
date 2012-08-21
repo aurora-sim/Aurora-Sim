@@ -1574,14 +1574,11 @@ namespace OpenSim.Region.Framework.Scenes
                 m_pos += m_parentPosition + new Vector3(0.0f, 0.0f, 2.0f * m_sitAvatarHeight);
                 m_parentPosition = Vector3.Zero;
                 Rotation = Quaternion.Identity;
-                if(m_physicsActor == null)
-                    AddToPhysicalScene(false, false);
             }
-
+            m_parentID = UUID.Zero;
             if(m_physicsActor == null)
                 AddToPhysicalScene(false, false);
 
-            m_parentID = UUID.Zero;
             m_requestedSitTargetUUID = UUID.Zero;
             m_sitting = false;
             foreach(IScenePresence sp in m_scene.GetScenePresences())
