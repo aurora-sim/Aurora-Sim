@@ -2732,6 +2732,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             }
         }
 
+        public LSL_Float osGetHealth(string avatar)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.High, "osGetHealth", m_host, "OSSL", m_itemID))
+                return new LSL_Float();
+
+            UUID avatarId = new UUID(avatar);
+            
+            LSL_Float health = new LSL_Float(-1);
+            IScenePresence presence = World.GetScenePresence(avatarId);
+            Vector3 pos = m_host.GetWorldPosition();
+
+            IParcelManagementModule parcelManagement = World.RequestModuleInterface<IParcelManagementModule>();
+            if (parcelManagement != null)
+            {
+                LandData land = parcelManagement.GetLandObject(pos.X, pos.Y).LandData;
+                if ((land.Flags & (uint)ParcelFlags.AllowDamage) == (uint)ParcelFlags.AllowDamage)
+                {
+                    ICombatPresence cp = presence.RequestModuleInterface<ICombatPresence>(); 
+                    health = cp.Health;
+                }
+            }
+            return health;
+        }
+
         #endregion
 
         #region IScriptApi Members
