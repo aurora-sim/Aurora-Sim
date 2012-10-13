@@ -13112,8 +13112,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         || packet.Type == PacketType.CoarseLocationUpdate))
                     outputPacket = false;
 
-                if (m_debugPacketLevel <= 100 &&
-                    (packet.Type == PacketType.AvatarAnimation || packet.Type == PacketType.ViewerEffect))
+                if (m_debugPacketLevel <= 100 
+                    && (packet.Type == PacketType.AvatarAnimation 
+                        || packet.Type == PacketType.ViewerEffect))
+                    outputPacket = false;
+
+                if (m_debugPacketLevel <= 50 
+                    && (packet.Type == PacketType.ImprovedTerseObjectUpdate 
+                        || packet.Type == PacketType.ObjectUpdate))
+                    outputPacket = false;
+
+                if (m_debugPacketLevel <= 25 
+                    && packet.Type == PacketType.ObjectPropertiesFamily)
                     outputPacket = false;
 
                 if (outputPacket)
