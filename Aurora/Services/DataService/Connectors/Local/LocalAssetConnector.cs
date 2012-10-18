@@ -61,9 +61,13 @@ namespace Aurora.Services.DataService
             get { return "IAssetConnector"; }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]        public void UpdateLSLData(string token, string key, string value)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]
+        public void UpdateLSLData(string token, string key, string value)
         {
-            object remoteValue = DoRemote(token, key, value);            if (remoteValue != null || m_doRemoteOnly)                return;            if (FindLSLData(token, key).Count == 0)
+            object remoteValue = DoRemote(token, key, value);
+            if (remoteValue != null || m_doRemoteOnly)
+                return;
+            if (FindLSLData(token, key).Count == 0)
             {
                 GD.Insert("lslgenericdata", new[] {token, key, value});
             }
@@ -79,7 +83,8 @@ namespace Aurora.Services.DataService
             }
         }
 
-        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)]        public List<string> FindLSLData(string token, string key)
+        [CanBeReflected(ThreatLevel = OpenSim.Services.Interfaces.ThreatLevel.Low)] 
+        public List<string> FindLSLData(string token, string key)
         {
             object remoteValue = DoRemote(token, key);
             if (remoteValue != null || m_doRemoteOnly)
@@ -87,7 +92,7 @@ namespace Aurora.Services.DataService
             
             QueryFilter filter = new QueryFilter();
             filter.andFilters["Token"] = token;
-            filter.andFilters["KeySetting"] = token;
+            filter.andFilters["KeySetting"] = key;
             return GD.Query(new string[1] { "*" }, "lslgenericdata", filter, null, null, null);
         }
 
