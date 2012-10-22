@@ -165,17 +165,18 @@ namespace Aurora.Modules.Sound
                                                      return;
                                                          //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
 
+                                                 float thisSpGain;
 
                                                  // Scale by distance
                                                  if (radius == 0)
-                                                     gain = (float) (gain*((100.0 - dis)/100.0));
+                                                     thisSpGain = (float)((double)gain * ((100.0 - dis) / 100.0));
                                                  else
-                                                     gain = (float) (gain*((radius - dis)/radius));
+                                                     thisSpGain = (float)((double)gain * ((radius - dis) / radius));
 
                                                  if (sp.Scene.GetSceneObjectPart(objectID).UseSoundQueue == 1)
                                                      flags += (int) SoundFlags.Queue;
                                                  sp.ControllingClient.SendPlayAttachedSound(soundID, objectID, ownerID,
-                                                                                            (float) gain, flags);
+                                                                                            thisSpGain, flags);
                                              });
         }
 

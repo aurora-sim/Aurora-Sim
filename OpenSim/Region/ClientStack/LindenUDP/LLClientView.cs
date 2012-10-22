@@ -10118,7 +10118,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             #endregion
 
-            switch (Utils.BytesToString(messagePacket.MethodData.Method))
+            string method = Utils.BytesToString(messagePacket.MethodData.Method);
+
+            switch (method)
             {
                 case "getinfo":
                     if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
@@ -10489,8 +10491,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                     return true;
                 default:
-                    MainConsole.Instance.Error("EstateOwnerMessage: Unknown method requested " +
-                                Utils.BytesToString(messagePacket.MethodData.Method));
+                    MainConsole.Instance.WarnFormat(
+                        "[LLCLIENTVIEW]: EstateOwnerMessage: Unknown method {0} requested for {1}",
+                        method, Name);
+
+                    for (int i = 0; i < messagePacket.ParamList.Length; i++)
+                    {
+                        EstateOwnerMessagePacket.ParamListBlock block = messagePacket.ParamList[i];
+                        string data = (string)Utils.BytesToString(block.Parameter);
+                        MainConsole.Instance.DebugFormat("[LLCLIENTVIEW]: Param {0}={1}", i, data);
+                    }
+
                     return true;
             }
         }
@@ -13101,8 +13112,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         || packet.Type == PacketType.CoarseLocationUpdate))
                     outputPacket = false;
 
-                if (m_debugPacketLevel <= 100 &&
-                    (packet.Type == PacketType.AvatarAnimation || packet.Type == PacketType.ViewerEffect))
+                if (m_debugPacketLevel <= 100 
+                    && (packet.Type == PacketType.AvatarAnimation 
+                        || packet.Type == PacketType.ViewerEffect))
+                    outputPacket = false;
+
+                if (m_debugPacketLevel <= 50 
+                    && (packet.Type == PacketType.ImprovedTerseObjectUpdate 
+                        || packet.Type == PacketType.ObjectUpdate))
+                    outputPacket = false;
+
+                if (m_debugPacketLevel <= 25 
+                    && packet.Type == PacketType.ObjectPropertiesFamily)
                     outputPacket = false;
 
                 if (outputPacket)

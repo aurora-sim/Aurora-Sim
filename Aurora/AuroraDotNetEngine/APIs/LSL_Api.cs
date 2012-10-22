@@ -213,6 +213,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         public void llResetScript()
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+            if (m_UrlModule != null)
+            {
+                m_UrlModule.ScriptRemoved(m_itemID);
+            }
             m_ScriptEngine.ResetScript(m_host.UUID, m_itemID, true);
         }
 
@@ -6165,12 +6169,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             {
                 for (int i = 0; i < length; i++)
                 {
-                    if (src.Data[i].Equals(test.Data[0]))
+                    if (src.Data[i].Equals(test.Data[0]) || test.Data[0].Equals(src.Data[i]))
                     {
                         int j;
                         for (j = 1; j < test.Length; j++)
-                            if (!src.Data[i + j].Equals(test.Data[j]))
+                            if (!(src.Data[i + j].Equals(test.Data[j]) || test.Data[j].Equals(src.Data[i + j])))
                                 break;
+                        
                         if (j == test.Length)
                         {
                             index = i;

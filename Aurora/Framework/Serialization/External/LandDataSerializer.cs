@@ -102,8 +102,9 @@ namespace Aurora.Framework.Serialization.External
 
                     xtr.ReadStartElement("ParcelAccessEntry");
                     pae.AgentID = UUID.Parse(xtr.ReadElementString("AgentID"));
-                    pae.Time = Convert.ToDateTime(xtr.ReadElementString("Time"));
-                    pae.Flags = (AccessList) Convert.ToUInt32(xtr.ReadElementString("AccessList"));
+                    xtr.ReadElementString("Time");
+                    pae.Flags = (AccessList)Convert.ToUInt32(xtr.ReadElementString("AccessList"));
+                    pae.Time = DateTime.UtcNow;
                     xtr.ReadEndElement();
 
                     landData.ParcelAccessList.Add(pae);
