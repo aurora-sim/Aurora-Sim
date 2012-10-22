@@ -92,8 +92,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
             if (script.Script != null)
                 script.Script.NeedsStateSaved = false;
-            if (saveBackup)
-                script.Part.ParentEntity.HasGroupChanged = true;
             StateSave stateSave = new StateSave
                                       {
                                           State = script.State,
@@ -135,6 +133,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             stateSave.Plugins = m_module.GetSerializationData(script.ItemID, script.Part.UUID);
 
             CreateOSDMapForState(script, stateSave);
+            if (saveBackup)
+                script.Part.ParentEntity.HasGroupChanged = true;
         }
 
         public void Deserialize(ScriptData instance, StateSave save)
