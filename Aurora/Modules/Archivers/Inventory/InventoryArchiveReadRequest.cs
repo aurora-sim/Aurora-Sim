@@ -234,22 +234,26 @@ namespace Aurora.Modules.Archivers
                 {
                     foreach (Match match in mc)
                     {
-                        UUID thematch = new UUID(match.Value);
-                        UUID newvalue = thematch;
-                        if ((thematch == UUID.Zero) || (thematch == key)) continue;
-                        if (assetNonBinaryCollection.ContainsKey(thematch))
+                        try
                         {
-                            AssetBase subasset = assetNonBinaryCollection[thematch];
-                            if (!subasset.HasBeenSaved)
-                                subasset = SaveNonBinaryAssets(thematch, subasset, assetService);
-                            newvalue = subasset.ID;
-                        }
-                        else if (assetBinaryChangeRecord.ContainsKey(thematch))
-                            newvalue = assetBinaryChangeRecord[thematch];
+                            UUID thematch = new UUID(match.Value);
+                            UUID newvalue = thematch;
+                            if ((thematch == UUID.Zero) || (thematch == key)) continue;
+                            if (assetNonBinaryCollection.ContainsKey(thematch))
+                            {
+                                AssetBase subasset = assetNonBinaryCollection[thematch];
+                                if (!subasset.HasBeenSaved)
+                                    subasset = SaveNonBinaryAssets(thematch, subasset, assetService);
+                                newvalue = subasset.ID;
+                            }
+                            else if (assetBinaryChangeRecord.ContainsKey(thematch))
+                                newvalue = assetBinaryChangeRecord[thematch];
 
-                        if (thematch == newvalue) continue;
-                        stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
-                        didChange = true;
+                            if (thematch == newvalue) continue;
+                            stringData = stringData.Replace(thematch.ToString(), newvalue.ToString());
+                            didChange = true;
+                        }
+                        catch { }
                     }
                     if (didChange)
                     {
