@@ -771,10 +771,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                     this.State = DefaultState;
                     m_ScriptEngine.StateSave.SaveStateTo(this, true);
                 }
-                // we get new rez events on sim restart, too
-                // but if there is state, then we fire the change
-                // event
-                StartedFromSavedState = true;
+                else
+                {
+                    // we get new rez events on sim restart, too
+                    // but if there is state, then we fire the change
+                    // event
+                    StartedFromSavedState = true;
+                }
 
                 // ItemID changes sometimes (not sure why, but observed it)
                 // If so we want to clear out the old save state,
