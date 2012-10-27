@@ -5120,7 +5120,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
                 AnimationSet currentAnims = presence.Animator.Animations;
                 string currentAnimationState = String.Empty;
-                if (animationstateNames.TryGetValue(currentAnims.DefaultAnimation.AnimID, out currentAnimationState))
+                if (animationstateNames.TryGetValue(currentAnims.ImplicitDefaultAnimation.AnimID, out currentAnimationState))
                     return currentAnimationState;
             }
 
@@ -6397,7 +6397,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 flags |= ScriptBaseClass.AGENT_SITTING;
             }
 
-            if (agent.Animator.Animations.DefaultAnimation.AnimID
+            if (agent.Animator.Animations.ImplicitDefaultAnimation.AnimID
                == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
             {
                 flags |= ScriptBaseClass.AGENT_SITTING;
@@ -8868,7 +8868,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     LSL_Vector lower = new LSL_Vector();
                     LSL_Vector upper = new LSL_Vector();
-                    if (presence.Animator.Animations.DefaultAnimation.AnimID
+                    if (presence.Animator.Animations.ImplicitDefaultAnimation.AnimID
                         == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
                     {
                         // This is for ground sitting avatars
