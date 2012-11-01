@@ -517,7 +517,7 @@ namespace Aurora.Modules.Groups
 
             if (m_groupsMessagingModule != null)
             {
-                // SL sends out notifcations to the group messaging session that the person has left
+                // SL sends out notifications to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
                                             {
                                                 fromAgentID = groupID,
@@ -597,7 +597,7 @@ namespace Aurora.Modules.Groups
             if ((groupInfo == null) || (account == null))
                 return;
 
-            // Send Message to Ejectee
+            // Send Message to avatar being ejected from the group
             GridInstantMessage msg = new GridInstantMessage
             {
                 imSessionID = UUID.Zero,
@@ -630,7 +630,7 @@ namespace Aurora.Modules.Groups
             }
 
 
-            // Message to ejector
+            // Message to ejected person
             // Interop, received special 210 code for ejecting a group member
             // this only works within the comms servers domain, and won't work hypergrid
 
@@ -726,7 +726,7 @@ namespace Aurora.Modules.Groups
                                                      fromAgentName = agentName
                                                  };
                     // msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
-                    //msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
+                    // msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
                     GroupRecord groupInfo = GetGroupRecord(groupID);
                     string MemberShipCost = ". There is no cost to join this group.";
                     if (groupInfo.MembershipFee != 0)
@@ -927,7 +927,8 @@ namespace Aurora.Modules.Groups
                                                     MainConsole.Instance.InfoFormat(
                                                         "[GROUPS]: SendAgentGroupDataUpdate called for {0}", client.Name);
 
-                                                // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
+                                                // TODO: All the client update functions need to be re-examined 
+                                                // because most do too much and send too much stuff
                                                 OnAgentDataUpdateRequest(client, dataForAgentID, UUID.Zero, false);
 
                                                 GroupMembershipData[] membershipArray;
@@ -962,7 +963,8 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", remoteClient.Name);
 
-            // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
+            // TODO: All the client update functions need to be re-examined 
+            // because most do too much and send too much stuff
             OnAgentDataUpdateRequest(remoteClient, dataForAgentID, UUID.Zero);
 
             GroupMembershipData[] membershipArray = GetProfileListedGroupMemberships(remoteClient, dataForAgentID);
@@ -977,7 +979,8 @@ namespace Aurora.Modules.Groups
             if (m_debugEnabled)
                 MainConsole.Instance.InfoFormat("[GROUPS]: SendAgentGroupDataUpdate called for {0}", remoteClient.Name);
 
-            // TODO: All the client update functions need to be reexamined because most do too much and send too much stuff
+            // TODO: All the client update functions need to be re-examined 
+            // because most do too much and send too much stuff
             OnAgentDataUpdateRequest(remoteClient, remoteClient.AgentId, UUID.Zero, false);
 
             GroupMembershipData[] membershipArray = GetProfileListedGroupMemberships(remoteClient, remoteClient.AgentId);
@@ -1035,7 +1038,7 @@ namespace Aurora.Modules.Groups
 
         public void NotifyChange(UUID groupID)
         {
-            // Notify all group members of a chnge in group roles and/or
+            // Notify all group members of a change in group roles and/or
             // permissions
             //
         }

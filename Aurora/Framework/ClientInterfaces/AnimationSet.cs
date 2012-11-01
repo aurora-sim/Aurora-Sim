@@ -38,6 +38,7 @@ namespace Aurora.Framework
         public static AvatarAnimations Animations = new AvatarAnimations();
 
         private readonly List<Animation> m_animations = new List<Animation>();
+        private Animation m_implicitDefaultAnimation = new Animation();
         private Animation m_defaultAnimation = new Animation();
 
         public AnimationSet(AvatarAnimations animations)
@@ -46,9 +47,9 @@ namespace Aurora.Framework
             ResetDefaultAnimation();
         }
 
-        public Animation DefaultAnimation
+        public Animation ImplicitDefaultAnimation
         {
-            get { return m_defaultAnimation; }
+            get { return m_implicitDefaultAnimation; }
         }
 
         public bool HasAnimation(UUID animID)
@@ -118,6 +119,7 @@ namespace Aurora.Framework
             if (m_defaultAnimation.AnimID != animID)
             {
                 m_defaultAnimation = new Animation(animID, sequenceNum, objectID);
+                m_implicitDefaultAnimation = m_defaultAnimation;
                 return true;
             }
             return false;
