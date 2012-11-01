@@ -307,14 +307,14 @@ namespace Aurora.Framework
                     continue;
                 }
 
-                if (input[idx] == "}")
+                if ((input[idx] == "}") && (level > 0))
                 {
                     level--;
                     idx++;
                     continue;
                 }
 
-                if (input[idx].EndsWith("}"))
+                if ((input[idx].EndsWith("}")) && (level > 0))
                 {
                     input[idx] = input[idx].Remove(input[idx].Length - 1, 1);
                     level--;
@@ -358,20 +358,6 @@ namespace Aurora.Framework
                                 int need = len - count - 1;
                                 if (ln.Length > need)
                                     ln = ln.Substring(0, need);
-
-                                if (ln.EndsWith("}"))
-                                {
-                                    ln = ln.Remove(ln.Length - 1, 1);
-                                    level--;
-                                    if(level == 0)
-                                        break;
-                                }
-
-                                if (ln.StartsWith("{"))
-                                {
-                                    ln = ln.Remove(0, 1);
-                                    level++;
-                                }
 
                                 //                            MainConsole.Instance.DebugFormat("[PARSE NOTECARD]: Adding line {0}", ln);
                                 output.Add(ln);
