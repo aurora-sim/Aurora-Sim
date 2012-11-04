@@ -39,7 +39,7 @@ using PrimType = Aurora.Framework.PrimType;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-    public delegate void SendCourseLocationsMethod (UUID scene, IScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
+    public delegate void SendCoarseLocationsMethod (UUID scene, IScenePresence presence, List<Vector3> coarseLocations, List<UUID> avatarUUIDs);
 
     public class ScenePresence : EntityBase, IScenePresence
     {
@@ -123,7 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool SitGround { get; set; }
 
-        protected SendCourseLocationsMethod m_sendCourseLocationsMethod;
+        protected SendCoarseLocationsMethod m_sendCoarseLocationsMethod;
 
         protected float m_sitAvatarHeight = 2.0f;
 
@@ -684,7 +684,7 @@ namespace OpenSim.Region.Framework.Scenes
             IsTainted = false;
             SitGround = false;
             CurrentParcel = null;
-            m_sendCourseLocationsMethod = SendCoarseLocationsDefault;
+            m_sendCoarseLocationsMethod = SendCoarseLocationsDefault;
         }
 
         public ScenePresence(IClientAPI client, IScene world)
@@ -2124,17 +2124,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void SendCoarseLocations (List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
         {
-            SendCourseLocationsMethod d = m_sendCourseLocationsMethod;
+            SendCoarseLocationsMethod d = m_sendCoarseLocationsMethod;
             if (d != null)
             {
                 d.Invoke(m_scene.RegionInfo.RegionID, this, coarseLocations, avatarUUIDs);
             }
         }
 
-        public virtual void SetSendCourseLocationMethod (SendCourseLocationsMethod d)
+        public virtual void SetSendCourseLocationMethod (SendCoarseLocationsMethod d)
         {
             if (d != null)
-                m_sendCourseLocationsMethod = d;
+                m_sendCoarseLocationsMethod = d;
         }
 
         public virtual void SendCoarseLocationsDefault (UUID sceneId, IScenePresence p, List<Vector3> coarseLocations, List<UUID> avatarUUIDs)
