@@ -4664,7 +4664,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // simplest case, this prims link number
-            if (m_host.LinkNum == linknum)
+            if (linknum == m_host.LinkNum)
                 return m_host.Name;
 
             // Single prim
