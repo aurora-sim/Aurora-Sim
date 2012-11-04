@@ -4664,7 +4664,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // simplest case, this prims link number
-            if (m_host.LinkNum == linknum)
+            if (linknum == m_host.LinkNum)
                 return m_host.Name;
 
             // Single prim
@@ -6635,10 +6635,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
-            float radius1 = (float)llVecDist(llGetPos(), top_north_east);
-            float radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
-            float radius = Math.Abs(radius1 - radius2);
-            m_host.SendSound(KeyOrName(sound, true).ToString(), volume, true, 0, radius, false, false);
+            double radius1 = (float)llVecDist(llGetPos(), top_north_east);
+            double radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
+            double radius = Math.Abs(radius1 - radius2);
+            m_host.SendSound(KeyOrName(sound, true).ToString(), volume, true, 0, (float)radius, false, false);
         }
 
         public DateTime llEjectFromLand(string pest)
