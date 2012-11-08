@@ -357,6 +357,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void Close()
         {
+            if (shuttingdown)
+            {
+                MainConsole.Instance.WarnFormat("[SCENE]: Ignoring close request because already closing {0}", RegionInfo.RegionName);
+                return;
+            }
+
             MainConsole.Instance.InfoFormat ("[Scene]: Closing down the single simulator: {0}", RegionInfo.RegionName);
 
             SimulationDataService.Shutdown ();

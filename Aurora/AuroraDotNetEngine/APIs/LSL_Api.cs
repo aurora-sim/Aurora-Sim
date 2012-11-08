@@ -4697,7 +4697,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // simplest case, this prims link number
-            if (m_host.LinkNum == linknum)
+            if (linknum == m_host.LinkNum)
                 return m_host.Name;
 
             // Single prim
@@ -5153,7 +5153,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 Dictionary<UUID, string> animationstateNames = AnimationSet.Animations.AnimStateNames;
                 AnimationSet currentAnims = presence.Animator.Animations;
                 string currentAnimationState = String.Empty;
-                if (animationstateNames.TryGetValue(currentAnims.DefaultAnimation.AnimID, out currentAnimationState))
+                if (animationstateNames.TryGetValue(currentAnims.ImplicitDefaultAnimation.AnimID, out currentAnimationState))
                     return currentAnimationState;
             }
 
@@ -6430,7 +6430,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 flags |= ScriptBaseClass.AGENT_SITTING;
             }
 
-            if (agent.Animator.Animations.DefaultAnimation.AnimID
+            if (agent.Animator.Animations.ImplicitDefaultAnimation.AnimID
                == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
             {
                 flags |= ScriptBaseClass.AGENT_SITTING;
@@ -6668,10 +6668,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
-            float radius1 = (float)llVecDist(llGetPos(), top_north_east);
-            float radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
-            float radius = Math.Abs(radius1 - radius2);
-            m_host.SendSound(KeyOrName(sound, true).ToString(), volume, true, 0, radius, false, false);
+            double radius1 = (float)llVecDist(llGetPos(), top_north_east);
+            double radius2 = (float)llVecDist(llGetPos(), bottom_south_west);
+            double radius = Math.Abs(radius1 - radius2);
+            m_host.SendSound(KeyOrName(sound, true).ToString(), volume, true, 0, (float)radius, false, false);
         }
 
         public DateTime llEjectFromLand(string pest)
@@ -8901,7 +8901,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 {
                     LSL_Vector lower = new LSL_Vector();
                     LSL_Vector upper = new LSL_Vector();
-                    if (presence.Animator.Animations.DefaultAnimation.AnimID
+                    if (presence.Animator.Animations.ImplicitDefaultAnimation.AnimID
                         == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
                     {
                         // This is for ground sitting avatars
