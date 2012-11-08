@@ -2302,7 +2302,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     }
                 }
             }
-            return rot;
         }
 
         public DateTime llSetLocalRot(LSL_Rotation rot)
