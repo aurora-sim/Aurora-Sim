@@ -11876,6 +11876,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         {
                             ret.Add(0);
                         }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_CHARACTER_TIME)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROOT)
+                        {
+                            ret.Add(av.Sitting ? av.SittingOnUUID : av.UUID);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ATTACHED_POINT)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PATHFINDING_TYPE)
+                        {
+                            ret.Add(0);
+                        }
                         else
                         {
                             ret.Add(ScriptBaseClass.OBJECT_UNKNOWN_DETAIL);
@@ -11950,6 +11966,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                         else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_SCRIPT_MEMORY)
                         {
                             ret.Add(new LSL_Integer(0));
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_CHARACTER_TIME)
+                        {
+                            ret.Add(0);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ROOT)
+                        {
+                            ret.Add(obj.ParentEntity.RootChild.UUID);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_ATTACHED_POINT)
+                        {
+                            ret.Add(obj.ParentEntity.RootChild.AttachmentPoint);
+                        }
+                        else if ((LSL_Integer)o == ScriptBaseClass.OBJECT_PATHFINDING_TYPE)
+                        {
+                            ret.Add(0);
                         }
                         else
                         {

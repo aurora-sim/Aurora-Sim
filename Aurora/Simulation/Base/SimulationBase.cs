@@ -212,26 +212,9 @@ namespace Aurora.Simulation.Base
         /// </summary>
         public virtual void Run()
         {
-            while (true)
-            {
-                try
-                {
-                    //Start the prompt
-                    if (MainConsole.Instance != null)
-                    {
-                        MainConsole.Instance.ReadConsole();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    //Only error that ever could occur is the restart one
-                    MainConsole.Instance.InfoFormat("[Console]: Exception {0}", ex.Message);
-                    MainConsole.Instance.InfoFormat("[Console]: App {0}", ex.Source);
-                    MainConsole.Instance.InfoFormat("[Console]: tgt {0}", ex.TargetSite);
-                    Shutdown(true);
-                    throw;
-                }
-            }
+            //Start the prompt
+            if (MainConsole.Instance != null)
+                MainConsole.Instance.ReadConsole();
         }
 
         public virtual void AddPluginCommands()

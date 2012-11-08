@@ -593,6 +593,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger OBJECT_SERVER_COST = 14;
         public static readonly LSL_Types.LSLInteger OBJECT_STREAMING_COST = 15;
         public static readonly LSL_Types.LSLInteger OBJECT_PHYSICS_COST = 16;
+        public static readonly LSL_Types.LSLInteger OBJECT_CHARACTER_TIME = 17;
+        public static readonly LSL_Types.LSLInteger OBJECT_ROOT = 18;
+        public static readonly LSL_Types.LSLInteger OBJECT_ATTACHED_POINT = 19;
+        public static readonly LSL_Types.LSLInteger OBJECT_PATHFINDING_TYPE = 20;
 
         public static readonly vector ZERO_VECTOR = new vector(0.0, 0.0, 0.0);
         public static readonly rotation ZERO_ROTATION = new rotation(0.0, 0.0, 0.0, 1.0);
