@@ -529,7 +529,6 @@ namespace Aurora.Modules.InventoryAccess
 
         public virtual UUID SaveAsAsset(List<ISceneEntity> objectGroups, out AssetBase asset)
         {
-            UUID assetID = UUID.Zero;
             Vector3 GroupMiddle = Vector3.Zero;
             string AssetXML = "<groups>";
 
@@ -578,7 +577,7 @@ namespace Aurora.Modules.InventoryAccess
                 objectGroups[0].OwnerID.ToString());
             asset.ID = m_scene.AssetService.Store(asset);
             AssetXML = null;
-            return assetID;
+            return asset.ID;
         }
 
         public virtual SceneObjectGroup CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, out InventoryItemBase item)

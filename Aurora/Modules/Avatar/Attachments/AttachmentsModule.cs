@@ -330,7 +330,7 @@ namespace Aurora.Modules.Attachments
         public bool AttachObjectFromInworldObject(uint localID, IClientAPI remoteClient,
             ISceneEntity group, int AttachmentPt, bool isTempAttach)
         {
-            if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
+            if (isTempAttach || m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
                 FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero, true, isTempAttach);
             else
             {
