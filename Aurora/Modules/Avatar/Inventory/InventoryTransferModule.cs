@@ -203,7 +203,8 @@ namespace Aurora.Modules.Inventory
                                 if (user != null)
                                     user.ControllingClient.SendBulkUpdateInventory(folder);
 
-                                im.imSessionID = folderID;
+                                im.imSessionID = copyID;
+                                user.ControllingClient.SendInstantMessage(im);
                             });
                     }
                     else
@@ -235,12 +236,10 @@ namespace Aurora.Modules.Inventory
                                 user.ControllingClient.SendBulkUpdateInventory(itemCopy);
                             }
 
-                            im.imSessionID = itemID;
+                            im.imSessionID = itemCopy.ID;
+                            user.ControllingClient.SendInstantMessage(im);
                         });
                     }
-
-                    user.ControllingClient.SendInstantMessage(im);
-                    return;
                 }
                 else
                 {
@@ -299,6 +298,7 @@ namespace Aurora.Modules.Inventory
                     {
                         folder.ParentID = trashFolder.ID;
                         invService.MoveFolder(folder);
+                        client.SendBulkUpdateInventory(folder);
                     }
                 }
 
