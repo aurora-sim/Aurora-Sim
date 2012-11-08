@@ -2278,25 +2278,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // try to let this work as in SL...
-            if (m_host.ParentID == 0)
+            SetLinkRot(m_host, rot);
+            return PScriptSleep(200);
+        }
+
+        private void SetLinkRot(ISceneChildEntity obj, LSL_Rotation rot)
+        {
+            if (obj.ParentID == 0)
             {
                 // special case: If we are root, rotate complete SOG to new rotation
-                SetRot(m_host, Rot2Quaternion(rot));
+                SetRot(obj, Rot2Quaternion(rot));
             }
             else
             {
                 // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                ISceneEntity group = m_host.ParentEntity;
+                ISceneEntity group = obj.ParentEntity;
                 if (group != null) // a bit paranoid, maybe
                 {
                     ISceneChildEntity rootPart = group.RootChild;
                     if (rootPart != null) // again, better safe than sorry
                     {
-                        SetRot(m_host, rootPart.RotationOffset * Rot2Quaternion(rot));
+                        SetRot(obj, rootPart.RotationOffset * Rot2Quaternion(rot));
                     }
                 }
             }
-            return PScriptSleep(200);
+            return rot;
         }
 
         public DateTime llSetLocalRot(LSL_Rotation rot)
@@ -3585,16 +3591,31 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
+            LookAt(target, strength, damping, m_host);
+        }
+
+        public void llLinkLookAt(LSL_Integer link, LSL_Vector target, double strength, double damping)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+
+            List<ISceneChildEntity> parts = GetLinkParts(link);
+
+            foreach (ISceneChildEntity part in parts)
+                LookAt(target, strength, damping, part);
+        }
+
+        private void LookAt(LSL_Vector target, double strength, double damping, ISceneChildEntity obj)
+        {
             // Determine where we are looking from
-            LSL_Vector from = llGetPos();
+            LSL_Vector from = new LSL_Vector(obj.GetWorldPosition());
 
             // Work out the normalised vector from the source to the target
             LSL_Vector delta = llVecNorm(target - from);
             LSL_Vector angle = new LSL_Vector(0, 0, 0)
-                                   {
-                                       x = llAtan2(delta.z, delta.y) - ScriptBaseClass.PI_BY_TWO,
-                                       y = llAtan2(delta.x, llSqrt((delta.y * delta.y) + (delta.z * delta.z)))
-                                   };
+            {
+                x = llAtan2(delta.z, delta.y) - ScriptBaseClass.PI_BY_TWO,
+                y = llAtan2(delta.x, llSqrt((delta.y * delta.y) + (delta.z * delta.z)))
+            };
 
             // Calculate the yaw
             // subtracting PI_BY_TWO is required to compensate for the odd SL co-ordinate system
@@ -3606,10 +3627,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             LSL_Types.Quaternion rot = llEuler2Rot(angle);
             //If the strength is 0, or we are non-physical, set the rotation
-            if (strength == 0 || m_host.PhysActor == null || !m_host.PhysActor.IsPhysical)
-                llSetRot(rot);
+            if (strength == 0 || obj.PhysActor == null || !obj.PhysActor.IsPhysical)
+                SetLinkRot(obj, rot);
             else
-                m_host.startLookAt(Rot2Quaternion(rot), (float)strength, (float)damping);
+                obj.startLookAt(Rot2Quaternion(rot), (float)strength, (float)damping);
         }
 
         public void llRotLookAt(LSL_Rotation target, double strength, double damping)
@@ -3618,6 +3639,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             Quaternion rot = new Quaternion((float)target.x, (float)target.y, (float)target.z, (float)target.s);
             m_host.RotLookAt(rot, (float)strength, (float)damping);
+        }
+
+        public void llLinkRotLookAt(LSL_Integer link, LSL_Rotation target, double strength, double damping)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+
+            Quaternion rot = new Quaternion((float)target.x, (float)target.y, (float)target.z, (float)target.s);
+            List<ISceneChildEntity> parts = GetLinkParts(link);
+
+            foreach (ISceneChildEntity part in parts)
+                part.RotLookAt(rot, (float)strength, (float)damping);
         }
 
         public void llStopLookAt()

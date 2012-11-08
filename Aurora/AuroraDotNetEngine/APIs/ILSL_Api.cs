@@ -240,6 +240,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Float llLog(double val);
         LSL_Float llLog10(double val);
         void llLookAt(LSL_Vector target, double strength, double damping);
+        void llLinkLookAt(LSL_Integer link, LSL_Vector target, double strength, double damping);
         void llLoopSound(string sound, double volume);
         void llLoopSoundMaster(string sound, double volume);
         void llLoopSoundSlave(string sound, double volume);
@@ -317,6 +318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         DateTime llRotateTexture(double rotation, int face);
         LSL_Rotation llRotBetween(LSL_Vector start, LSL_Vector end);
         void llRotLookAt(LSL_Rotation target, double strength, double damping);
+        void llLinkRotLookAt(LSL_Integer link, LSL_Rotation target, double strength, double damping);
         LSL_Integer llRotTarget(LSL_Rotation rot, double error);
         void llRotTargetRemove(int number);
         LSL_Integer llRound(double f);
