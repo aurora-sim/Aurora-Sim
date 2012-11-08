@@ -155,7 +155,10 @@ namespace Aurora.Modules.Archivers
 
             var stream = ArchiveHelpers.GetStream(fileName);
             if (stream == null)
-                throw new FileNotFoundException();
+            {
+                MainConsole.Instance.Warn("No file found with the specified name.");
+                return;
+            }
             GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
 
