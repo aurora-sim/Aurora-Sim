@@ -966,8 +966,12 @@ namespace Aurora.Modules.InventoryAccess
                 // Since renaming the item in the inventory does not affect the name stored
                 // in the serialization, transfer the correct name from the inventory to the
                 // object itself before we rez.
-                rootPart.Name = item.Name;
-                rootPart.Description = item.Description;
+                if (NewGroup.Count == 1)
+                {
+                    //Only do this to the first object, as it is the only one that will need to be renamed
+                    rootPart.Name = item.Name;
+                    rootPart.Description = item.Description;
+                }
 
                 List<SceneObjectPart> partList = new List<SceneObjectPart>(group.ChildrenList);
 
