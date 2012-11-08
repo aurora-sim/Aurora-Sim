@@ -3773,16 +3773,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         /// Attach the object containing this script to the avatar that owns it.
         /// </summary>
         /// <returns>true if the attach suceeded, false if it did not</returns>
-        public bool AttachToAvatar(int attachmentPoint)
+        public bool AttachToAvatar(int attachmentPoint, bool temp)
         {
-          var grp = (SceneObjectGroup) m_host.ParentEntity;
-          ScenePresence presence = (ScenePresence) World.GetScenePresence(m_host.OwnerID);
-          IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
-             if (attachmentsModule != null)
-                return attachmentsModule.AttachObjectFromInworldObject(m_localID, presence.ControllingClient, grp, attachmentPoint);
+            var grp = (SceneObjectGroup) m_host.ParentEntity;
+            ScenePresence presence = (ScenePresence) World.GetScenePresence(m_host.OwnerID);
+            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+            if (attachmentsModule != null)
+                return attachmentsModule.AttachObjectFromInworldObject(m_localID, presence.ControllingClient, grp, attachmentPoint, temp);
             else
                 return false;
         }
+
         /// <summary>
         /// Detach the object containing this script from the avatar it is attached to.
         /// </summary>
@@ -3793,16 +3794,48 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             Util.FireAndForget(DetachWrapper, m_host);
         }
+
         private void DetachWrapper(object o)
         {
-           SceneObjectPart host = (SceneObjectPart)o;
-           SceneObjectGroup grp = host.ParentGroup;
-           UUID itemID = grp.GroupID;
-           ScenePresence presence = (ScenePresence) World.GetScenePresence(host.OwnerID);
-           IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
-          if (attachmentsModule != null)
+            SceneObjectPart host = (SceneObjectPart)o;
+            SceneObjectGroup grp = host.ParentGroup;
+            UUID itemID = grp.GroupID;
+            ScenePresence presence = (ScenePresence) World.GetScenePresence(host.OwnerID);
+            IAttachmentsModule attachmentsModule = World.RequestModuleInterface<IAttachmentsModule>();
+            if (attachmentsModule != null)
                 attachmentsModule.DetachSingleAttachmentToInventory(itemID, presence.ControllingClient);
-         }
+        }
+
+        public void llAttachToAvatarTemp(int attachmentPoint)
+        {
+            if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
+
+            if (m_host.ParentEntity.RootChild.AttachmentPoint != 0)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter != m_host.OwnerID)
+                return;
+
+            if ((item.NextPermissions & (uint)PermissionMask.Transfer) != (uint)PermissionMask.Transfer)
+            {
+                ShoutError("No permission to transfer");
+                return;
+            }
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
+            {
+                AttachToAvatar(attachmentPoint, true);
+            }
+        }
 
         public void llAttachToAvatar(int attachmentPoint)
         {
@@ -3826,7 +3859,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             if ((item.PermsMask & ScriptBaseClass.PERMISSION_ATTACH) != 0)
             {
-                AttachToAvatar(attachmentPoint);
+                AttachToAvatar(attachmentPoint, false);
             }
         }
 

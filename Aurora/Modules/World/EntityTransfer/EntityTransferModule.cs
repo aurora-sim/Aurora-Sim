@@ -883,7 +883,7 @@ namespace Aurora.Modules.EntityTransfer
             }
 
             IAttachmentsModule attachmentsModule = scene.RequestModuleInterface<IAttachmentsModule>();
-            attachmentsModule.AttachObjectFromInworldObject(sog.LocalId, scene.GetScenePresence(sog.OwnerID).ControllingClient, newObject, 0);
+            attachmentsModule.AttachObjectFromInworldObject(sog.LocalId, scene.GetScenePresence(sog.OwnerID).ControllingClient, newObject, 0, false);
             /*newObject.RootPart.IsAttachment = true;
             newObject.RootPart.AttachedAvatar = sog.OwnerID;
             newObject.RootPart.AttachmentPoint = 0;

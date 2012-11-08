@@ -43,7 +43,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name = "attachPos"></param>
         /// <returns>true if the object was successfully attached, false otherwise</returns>
         bool AttachObjectFromInworldObject(
-            uint localID, IClientAPI remoteClient, ISceneEntity grp, int AttachmentPt);
+            uint localID, IClientAPI remoteClient, ISceneEntity grp, int AttachmentPt, bool isTempAttach);
 
         /// <summary>
         ///   Rez an attachment from user inventory

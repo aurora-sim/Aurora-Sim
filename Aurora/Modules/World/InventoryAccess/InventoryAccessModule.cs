@@ -290,46 +290,6 @@ namespace Aurora.Modules.InventoryAccess
             if (objectGroups.Count == 0)
                 return UUID.Zero;
 
-            UUID assetID = UUID.Zero;
-            Vector3 GroupMiddle = Vector3.Zero;
-            string AssetXML = "<groups>";
-
-            if (objectGroups.Count == 1)
-            {
-                m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroups[0]);
-                AssetXML = ((ISceneObject)objectGroups[0]).ToXml2();
-            }
-            else
-            {
-                foreach (ISceneEntity objectGroup in objectGroups)
-                {
-                    Vector3 inventoryStoredPosition = new Vector3
-                                (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
-                                      ? m_scene.RegionInfo.RegionSizeX - 1
-                                      : objectGroup.AbsolutePosition.X)
-                                 ,
-                                 (objectGroup.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY)
-                                     ? m_scene.RegionInfo.RegionSizeY - 1
-                                     : objectGroup.AbsolutePosition.Y,
-                                 objectGroup.AbsolutePosition.Z);
-                    GroupMiddle += inventoryStoredPosition;
-                    Vector3 originalPosition = objectGroup.AbsolutePosition;
-
-                    objectGroup.AbsolutePosition = inventoryStoredPosition;
-
-                    m_scene.AuroraEventManager.FireGenericEventHandler ("DeleteToInventory", objectGroup);
-                    AssetXML += ((ISceneObject)objectGroup).ToXml2();
-
-                    objectGroup.AbsolutePosition = originalPosition;
-                }
-                GroupMiddle.X /= objectGroups.Count;
-                GroupMiddle.Y /= objectGroups.Count;
-                GroupMiddle.Z /= objectGroups.Count;
-                AssetXML += "<middle>";
-                AssetXML += "<mid>" + GroupMiddle.ToRawString() + "</mid>";
-                AssetXML += "</middle>";
-                AssetXML += "</groups>";
-            }
             // Get the user info of the item destination
             //
             IScenePresence SP = m_scene.GetScenePresence (agentId);
@@ -466,14 +426,8 @@ namespace Aurora.Modules.InventoryAccess
                            };
             }
 
-            AssetBase asset = CreateAsset(
-                objectGroups[0].Name,
-                objectGroups[0].RootChild.Description,
-                (sbyte)AssetType.Object,
-                Utils.StringToBytes(AssetXML),
-                objectGroups[0].OwnerID.ToString());
-            asset.ID = m_scene.AssetService.Store(asset);
-            assetID = asset.ID;
+            AssetBase asset;
+            UUID assetID = SaveAsAsset(objectGroups, out asset);
             item.AssetID = assetID;
             if (DeRezAction.SaveToExistingUserInventoryItem != action)
             {
@@ -481,8 +435,6 @@ namespace Aurora.Modules.InventoryAccess
                 item.Name = asset.Name;
                 item.AssetType = asset.Type;
             }
-            AssetXML = null;
-            asset = null;
 
             if (DeRezAction.SaveToExistingUserInventoryItem == action)
             {
@@ -572,6 +524,60 @@ namespace Aurora.Modules.InventoryAccess
                 }
             }
             itemID = item.ID;
+            return assetID;
+        }
+
+        public virtual UUID SaveAsAsset(List<ISceneEntity> objectGroups, out AssetBase asset)
+        {
+            UUID assetID = UUID.Zero;
+            Vector3 GroupMiddle = Vector3.Zero;
+            string AssetXML = "<groups>";
+
+            if (objectGroups.Count == 1)
+            {
+                m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroups[0]);
+                AssetXML = ((ISceneObject)objectGroups[0]).ToXml2();
+            }
+            else
+            {
+                foreach (ISceneEntity objectGroup in objectGroups)
+                {
+                    Vector3 inventoryStoredPosition = new Vector3
+                                (((objectGroup.AbsolutePosition.X > m_scene.RegionInfo.RegionSizeX)
+                                      ? m_scene.RegionInfo.RegionSizeX - 1
+                                      : objectGroup.AbsolutePosition.X)
+                                 ,
+                                 (objectGroup.AbsolutePosition.Y > m_scene.RegionInfo.RegionSizeY)
+                                     ? m_scene.RegionInfo.RegionSizeY - 1
+                                     : objectGroup.AbsolutePosition.Y,
+                                 objectGroup.AbsolutePosition.Z);
+                    GroupMiddle += inventoryStoredPosition;
+                    Vector3 originalPosition = objectGroup.AbsolutePosition;
+
+                    objectGroup.AbsolutePosition = inventoryStoredPosition;
+
+                    m_scene.AuroraEventManager.FireGenericEventHandler("DeleteToInventory", objectGroup);
+                    AssetXML += ((ISceneObject)objectGroup).ToXml2();
+
+                    objectGroup.AbsolutePosition = originalPosition;
+                }
+                GroupMiddle.X /= objectGroups.Count;
+                GroupMiddle.Y /= objectGroups.Count;
+                GroupMiddle.Z /= objectGroups.Count;
+                AssetXML += "<middle>";
+                AssetXML += "<mid>" + GroupMiddle.ToRawString() + "</mid>";
+                AssetXML += "</middle>";
+                AssetXML += "</groups>";
+            }
+
+            asset = CreateAsset(
+                objectGroups[0].Name,
+                objectGroups[0].RootChild.Description,
+                (sbyte)AssetType.Object,
+                Utils.StringToBytes(AssetXML),
+                objectGroups[0].OwnerID.ToString());
+            asset.ID = m_scene.AssetService.Store(asset);
+            AssetXML = null;
             return assetID;
         }
 

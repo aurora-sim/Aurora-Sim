@@ -296,7 +296,7 @@ namespace Aurora.Modules.Attachments
                     return;
 
                 // Calls attach with a Zero position
-                AttachObjectFromInworldObject(objectLocalID, remoteClient, part.ParentEntity, AttachmentPt);
+                AttachObjectFromInworldObject(objectLocalID, remoteClient, part.ParentEntity, AttachmentPt, false);
             }
             catch (Exception e)
             {
@@ -328,10 +328,10 @@ namespace Aurora.Modules.Attachments
         #region Attach
 
         public bool AttachObjectFromInworldObject(uint localID, IClientAPI remoteClient,
-            ISceneEntity group, int AttachmentPt)
+            ISceneEntity group, int AttachmentPt, bool isTempAttach)
         {
             if (m_scene.Permissions.CanTakeObject(group.UUID, remoteClient.AgentId))
-                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero, true);
+                FindAttachmentPoint(remoteClient, localID, group, AttachmentPt, UUID.Zero, true, isTempAttach);
             else
             {
                 remoteClient.SendAgentAlertMessage(
@@ -479,7 +479,7 @@ namespace Aurora.Modules.Attachments
                     //If we updated the attachment, we need to save the change
                     IScenePresence presence = m_scene.GetScenePresence(remoteClient.AgentId);
                     if (presence != null)
-                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID, forceUpdateOnNextDeattach);
+                        FindAttachmentPoint(remoteClient, objatt.LocalId, objatt, AttachmentPt, assetID, forceUpdateOnNextDeattach, false);
                     else
                         objatt = null;//Presence left, kill the attachment
                     #endregion
@@ -671,8 +671,9 @@ namespace Aurora.Modules.Attachments
         /// This is the Item that the object is in (if it is in one yet)</param>
         /// <param name="assetID"/>
         /// <param name="forceUpdatePrim">Force updating of the prim the next time the user attempts to deattach it</param>
+        /// <param name="isTempAttach">Is a temporary attachment</param>
         protected void FindAttachmentPoint (IClientAPI remoteClient, uint localID, ISceneEntity group,
-            int AttachmentPt, UUID assetID, bool forceUpdatePrim)
+            int AttachmentPt, UUID assetID, bool forceUpdatePrim, bool isTempAttach)
         {
             //Make sure that we arn't over the limit of attachments
             ISceneEntity[] attachments = GetAttachmentsForAvatar (remoteClient.AgentId);
@@ -797,32 +798,48 @@ namespace Aurora.Modules.Attachments
             // So until that is changed, this MUST stay. The client will instantly reselect it, so this value doesn't stay borked for long.
             group.IsSelected = false;
 
-            if (itemID == UUID.Zero)
+            if (!isTempAttach)
             {
-                //Delete the object inworld to inventory
+                if (itemID == UUID.Zero)
+                {
+                    //Delete the object inworld to inventory
 
-                List<ISceneEntity> groups = new List<ISceneEntity> (1) { group };
+                    List<ISceneEntity> groups = new List<ISceneEntity>(1) { group };
 
-                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
-                if (inventoryAccess != null)
-                    inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
-                        groups, remoteClient.AgentId, out itemID);
+                    IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                    if (inventoryAccess != null)
+                        inventoryAccess.DeleteToInventory(DeRezAction.AcquireToUserInventory, UUID.Zero,
+                            groups, remoteClient.AgentId, out itemID);
+                }
+                else
+                {
+                    //it came from an item, we need to start the scripts
+
+                    // Fire after attach, so we don't get messy perms dialogs
+                    // 4 == AttachedRez
+                    group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero, false);
+                }
+
+                if (UUID.Zero == itemID)
+                {
+                    MainConsole.Instance.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
+                    remoteClient.SendAgentAlertMessage(
+                        "Unable to save attachment. Error inventory item ID.", false);
+                    return;
+                }
             }
             else
             {
-                //it came from an item, we need to start the scripts
-
                 // Fire after attach, so we don't get messy perms dialogs
                 // 4 == AttachedRez
                 group.CreateScriptInstances(0, true, StateSource.AttachedRez, UUID.Zero, false);
-            }
+                group.RootChild.FromUserInventoryItemID = UUID.Zero;
 
-            if (UUID.Zero == itemID)
-            {
-                MainConsole.Instance.Error("[ATTACHMENTS MODULE]: Unable to save attachment. Error inventory item ID.");
-                remoteClient.SendAgentAlertMessage(
-                    "Unable to save attachment. Error inventory item ID.", false);
-                return;
+                IInventoryAccessModule inventoryAccess = m_scene.RequestModuleInterface<IInventoryAccessModule>();
+                AssetBase asset;
+                if (inventoryAccess != null)
+                    assetID = inventoryAccess.SaveAsAsset(new List<ISceneEntity>(1) { group }, out asset);
+                group.SetFromItemID(UUID.Zero, assetID);
             }
 
             // XXYY!!

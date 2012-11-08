@@ -40,6 +40,14 @@ namespace OpenSim.Region.Framework.Interfaces
                                out UUID itemID);
 
         /// <summary>
+        /// Saves the given objects as an asset and returns the UUID of it
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="asset"></param>
+        /// <returns></returns>
+        UUID SaveAsAsset(List<ISceneEntity> list, out AssetBase asset);
+
+        /// <summary>
         ///   Create a SceneObjectGroup representation of an asset xml of the given item
         /// </summary>
         /// <param name = "remoteClient"></param>

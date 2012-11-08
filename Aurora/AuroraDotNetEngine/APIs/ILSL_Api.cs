@@ -52,6 +52,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces
         LSL_Float llAsin(double val);
         LSL_Float llAtan2(double x, double y);
         void llAttachToAvatar(int attachment);
+        void llAttachToAvatarTemp(int attachment);
         LSL_Key llAvatarOnSitTarget();
         LSL_Key llAvatarOnLinkSitTarget();
         LSL_Rotation llAxes2Rot(LSL_Vector fwd, LSL_Vector left, LSL_Vector up);
