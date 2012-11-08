@@ -420,9 +420,9 @@ namespace OpenSim.Services.LLLoginService
                     string archiveName = (UPI.AArchiveName != "" && UPI.AArchiveName != " ") ? UPI.AArchiveName : m_DefaultUserAvatarArchive;
                     if (UPI.IsNewUser && archiveName != "")
                     {
-                        AvatarAppearance appearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
+                        avappearance = m_ArchiveService.LoadAvatarArchive(archiveName, account.Name);
                         UPI.AArchiveName = "";
-                        m_AvatarService.SetAppearance(account.PrincipalID, appearance);
+                        m_AvatarService.SetAppearance(account.PrincipalID, avappearance);
                     }
                     if (UPI.IsNewUser)
                     {
