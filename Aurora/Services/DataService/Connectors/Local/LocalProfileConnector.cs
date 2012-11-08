@@ -200,9 +200,9 @@ namespace Aurora.Services.DataService
                 classified.Category,
                 classified.SimName,
                 classified.CreatorUUID,
+                classified.ScopeID,
                 classified.ClassifiedUUID,
                 OSDParser.SerializeJsonString(classified.ToOSD()),
-                classified.ScopeID,
                 classified.PriceForListing,
                 keywords
             };
@@ -229,7 +229,7 @@ namespace Aurora.Services.DataService
             for (int i = 0; i < query.Count; i += 9)
             {
                 Classified classified = new Classified();
-                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 5]));
+                classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[i + 6]));
                 classifieds.Add(classified);
             }
             return classifieds;
@@ -247,12 +247,12 @@ namespace Aurora.Services.DataService
 
             List<string> query = GD.Query(new[] { "*" }, "userclassifieds", filter, null, null, null);
 
-            if (query.Count < 6)
+            if (query.Count < 9)
             {
                 return null;
             }
             Classified classified = new Classified();
-            classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[5]));
+            classified.FromOSD((OSDMap) OSDParser.DeserializeJson(query[6]));
             return classified;
         }
 
